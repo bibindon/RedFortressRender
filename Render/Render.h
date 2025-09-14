@@ -41,6 +41,15 @@ private:
     eWindowMode m_eWindowModeCurrent = eWindowMode::NONE;
     eWindowMode m_eWindowModeRequest = eWindowMode::NONE;
 
+    LPDIRECT3D9 m_pD3D = NULL;
+    LPDIRECT3DDEVICE9 m_pd3dDevice = NULL;
+    LPD3DXFONT m_pFont = NULL;
+    LPD3DXMESH m_pMesh = NULL;
+    std::vector<D3DMATERIAL9> m_pMaterials;
+    std::vector<LPDIRECT3DTEXTURE9> m_pTextures;
+    DWORD m_dwNumMaterials = 0;
+    LPD3DXEFFECT m_pEffect = NULL;
+
 };
 }
 
