@@ -18,6 +18,8 @@ enum class eWindowMode
     NONE,
 };
 
+class Mesh;
+
 class Render
 {
 public:
@@ -29,6 +31,11 @@ public:
     void ChangeResolution(const int W, const int H);
 
     void ChangeWindowMode(const eWindowMode eWindowMode_);
+    void AddMesh(const std::wstring& filePath,
+                 const D3DXVECTOR3& pos,
+                 const D3DXVECTOR3& rot,
+                 const float scale,
+                 const float radius = -1.f);
 
 private:
 
@@ -49,6 +56,8 @@ private:
     std::vector<LPDIRECT3DTEXTURE9> m_pTextures;
     DWORD m_dwNumMaterials = 0;
     LPD3DXEFFECT m_pEffect = NULL;
+
+    Mesh* m_pMesh2 = nullptr;
 
 };
 }

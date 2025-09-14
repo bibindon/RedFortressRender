@@ -15,6 +15,9 @@
 #include <crtdbg.h>
 #include <vector>
 
+#include "Common.h"
+#include "Mesh.h"
+
 #define SAFE_RELEASE(p) { if (p) { (p)->Release(); (p) = NULL; } }
 
 const int WINDOW_SIZE_W = 1600;
@@ -63,6 +66,8 @@ void NSRender::Render::Initialize(HWND hWnd)
 
         assert(hResult == S_OK);
     }
+
+    Common::SetD3DDevice(m_pd3dDevice);
 
     hResult = D3DXCreateFont(m_pd3dDevice,
                              20,
@@ -230,6 +235,11 @@ void NSRender::Render::Draw()
         assert(hResult == S_OK);
     }
 
+    if (m_pMesh2 != nullptr)
+    {
+        m_pMesh2->Render();
+    }
+
     hResult = m_pEffect->EndPass();
     assert(hResult == S_OK);
 
@@ -259,6 +269,16 @@ void NSRender::Render::ChangeWindowMode(const eWindowMode eWindowMode_)
     {
         m_eWindowModeRequest = eWindowMode_;
     }
+}
+
+void NSRender::Render::AddMesh(const std::wstring& filePath,
+                               const D3DXVECTOR3& pos,
+                               const D3DXVECTOR3& rot,
+                               const float scale,
+                               const float radius)
+{
+    m_pMesh2 = new Mesh(filePath, pos, rot, scale, radius);
+    m_pMesh2->Init();
 }
 
 void NSRender::Render::TextDraw(LPD3DXFONT pFont, TCHAR* text, int X, int Y)
