@@ -38,9 +38,9 @@ void PixelShader1(in float4 inScreenColor : COLOR0,
 
 technique Technique1
 {
-   pass Pass1
-   {
-      VertexShader = compile vs_3_0 VertexShader1();
-      PixelShader = compile ps_3_0 PixelShader1();
-   }
+    pass Pass1
+    {
+        VertexShader = compile vs_3_0 VertexShader1();
+        PixelShader = compile ps_3_0 PixelShader1();
+    }
 }

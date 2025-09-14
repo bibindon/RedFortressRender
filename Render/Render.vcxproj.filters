@@ -24,8 +24,10 @@
     <ClCompile Include="Common.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Util.cpp" />
     <ClCompile Include="Light.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Util.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -42,13 +44,21 @@
     <ClInclude Include="Common.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Util.h" />
     <ClInclude Include="Light.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Util.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="simple.fx">
+    <FxCompile Include="shader\simple.fx">
+      <Filter>シェーダー</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\Common.fx">
+      <Filter>シェーダー</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\MeshShader.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
   </ItemGroup>
