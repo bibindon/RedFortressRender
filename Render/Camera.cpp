@@ -49,6 +49,11 @@ D3DXVECTOR3 NSRender::Camera::GetEyePos()
     return m_eyePos;
 }
 
+void NSRender::Camera::SetEyePos(const D3DXVECTOR3& eye)
+{
+    m_eyePos = eye;
+}
+
 float NSRender::Camera::GetRadian()
 {
     return m_radian;

@@ -17,6 +17,7 @@
 
 #include "Common.h"
 #include "Mesh.h"
+#include "Camera.h"
 
 #define SAFE_RELEASE(p) { if (p) { (p)->Release(); (p) = NULL; } }
 
@@ -188,6 +189,7 @@ void NSRender::Render::Draw()
                                10000.0f);
 
     D3DXVECTOR3 vec1(10 * sinf(f), 10, -10 * cosf(f));
+    Camera::SetEyePos(vec1);
     D3DXVECTOR3 vec2(0, 0, 0);
     D3DXVECTOR3 vec3(0, 1, 0);
     D3DXMatrixLookAtLH(&View, &vec1, &vec2, &vec3);
