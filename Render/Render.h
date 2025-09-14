@@ -9,6 +9,15 @@
 
 namespace NSRender
 {
+
+enum class eWindowMode
+{
+    WINDOW,
+    BORDERLESS,
+    FULLSCREEN,
+    NONE,
+};
+
 class Render
 {
 public:
@@ -17,7 +26,20 @@ public:
     void Finalize();
     void Draw();
 
+    void ChangeResolution(const int W, const int H);
+
+    void ChangeWindowMode(const eWindowMode eWindowMode_);
+
 private:
+
+    HWND m_hWnd = NULL;
+
+    void TextDraw(LPD3DXFONT pFont, TCHAR* text, int X, int Y);
+
+    void ChangeWindowMode();
+
+    eWindowMode m_eWindowModeCurrent = eWindowMode::NONE;
+    eWindowMode m_eWindowModeRequest = eWindowMode::NONE;
 
 };
 }

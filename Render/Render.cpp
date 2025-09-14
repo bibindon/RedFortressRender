@@ -29,29 +29,12 @@ std::vector<LPDIRECT3DTEXTURE9> g_pTextures;
 DWORD g_dwNumMaterials = 0;
 LPD3DXEFFECT g_pEffect = NULL;
 
-using namespace NSRender;
-
-static void TextDraw(LPD3DXFONT pFont, TCHAR* text, int X, int Y);
-
-void TextDraw(LPD3DXFONT pFont, TCHAR* text, int X, int Y)
-{
-    RECT rect = { X, Y, 0, 0 };
-
-    // DrawTextの戻り値は文字数である。
-    // そのため、hResultの中身が整数でもエラーが起きているわけではない。
-    HRESULT hResult = pFont->DrawText(NULL,
-                                      text,
-                                      -1,
-                                      &rect,
-                                      DT_LEFT | DT_NOCLIP,
-                                      D3DCOLOR_ARGB(255, 0, 0, 0));
-
-    assert((int)hResult >= 0);
-}
-
-void Render::Initialize(HWND hWnd)
+void NSRender::Render::Initialize(HWND hWnd)
 {
     HRESULT hResult = E_FAIL;
+
+    m_hWnd = hWnd;
+    m_eWindowModeCurrent = eWindowMode::WINDOW;
 
     g_pD3D = Direct3DCreate9(D3D_SDK_VERSION);
     assert(g_pD3D != NULL);
@@ -65,15 +48,15 @@ void Render::Initialize(HWND hWnd)
     d3dpp.MultiSampleType = D3DMULTISAMPLE_NONE;
     d3dpp.MultiSampleQuality = 0;
     d3dpp.EnableAutoDepthStencil = TRUE;
-    d3dpp.AutoDepthStencilFormat = D3DFMT_D16;
-    d3dpp.hDeviceWindow = hWnd;
+    d3dpp.AutoDepthStencilFormat = D3DFMT_D24S8;
+    d3dpp.hDeviceWindow = m_hWnd;
     d3dpp.Flags = 0;
     d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
     d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
 
     hResult = g_pD3D->CreateDevice(D3DADAPTER_DEFAULT,
                                    D3DDEVTYPE_HAL,
-                                   hWnd,
+                                   m_hWnd,
                                    D3DCREATE_HARDWARE_VERTEXPROCESSING,
                                    &d3dpp,
                                    &g_pd3dDevice);
@@ -82,7 +65,7 @@ void Render::Initialize(HWND hWnd)
     {
         hResult = g_pD3D->CreateDevice(D3DADAPTER_DEFAULT,
                                        D3DDEVTYPE_HAL,
-                                       hWnd,
+                                       m_hWnd,
                                        D3DCREATE_SOFTWARE_VERTEXPROCESSING,
                                        &d3dpp,
                                        &g_pd3dDevice);
@@ -178,7 +161,7 @@ void Render::Initialize(HWND hWnd)
     assert(hResult == S_OK);
 }
 
-void Render::Finalize()
+void NSRender::Render::Finalize()
 {
     for (auto& texture : g_pTextures)
     {
@@ -192,7 +175,7 @@ void Render::Finalize()
     SAFE_RELEASE(g_pD3D);
 }
 
-void Render::Draw()
+void NSRender::Render::Draw()
 {
     HRESULT hResult = E_FAIL;
 
@@ -267,5 +250,92 @@ void Render::Draw()
 
     hResult = g_pd3dDevice->Present(NULL, NULL, NULL, NULL);
     assert(hResult == S_OK);
+
+    if (m_eWindowModeRequest != eWindowMode::NONE)
+    {
+        ChangeWindowMode();
+    }
+
+}
+
+void NSRender::Render::ChangeResolution(const int W, const int H)
+{
+}
+
+void NSRender::Render::ChangeWindowMode(const eWindowMode eWindowMode_)
+{
+    if (m_eWindowModeRequest != eWindowMode_)
+    {
+        m_eWindowModeRequest = eWindowMode_;
+    }
+}
+
+void NSRender::Render::TextDraw(LPD3DXFONT pFont, TCHAR* text, int X, int Y)
+{
+    RECT rect = { X, Y, 0, 0 };
+
+    // DrawTextの戻り値は文字数である。
+    // そのため、hResultの中身が整数でもエラーが起きているわけではない。
+    HRESULT hResult = pFont->DrawText(NULL,
+                                      text,
+                                      -1,
+                                      &rect,
+                                      DT_LEFT | DT_NOCLIP,
+                                      D3DCOLOR_ARGB(255, 0, 0, 0));
+
+    assert((int)hResult >= 0);
+}
+
+void NSRender::Render::ChangeWindowMode()
+{
+    HRESULT hResult = E_FAIL;
+
+    g_pFont->OnLostDevice();
+    g_pEffect->OnLostDevice();
+
+    D3DPRESENT_PARAMETERS d3dpp;
+    ZeroMemory(&d3dpp, sizeof(d3dpp));
+
+    if (m_eWindowModeRequest == eWindowMode::FULLSCREEN)
+    {
+        d3dpp.Windowed = FALSE;
+        d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
+        d3dpp.BackBufferFormat = D3DFMT_A8R8G8B8;
+        d3dpp.BackBufferCount = 1;
+        d3dpp.BackBufferWidth = 1600;
+        d3dpp.BackBufferHeight = 900;
+        d3dpp.MultiSampleType = D3DMULTISAMPLE_NONE;
+        d3dpp.MultiSampleQuality = 0;
+        d3dpp.EnableAutoDepthStencil = TRUE;
+        d3dpp.AutoDepthStencilFormat = D3DFMT_D24S8;
+        d3dpp.hDeviceWindow = m_hWnd;
+        d3dpp.Flags = 0;
+        d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
+        d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
+    }
+    else
+    {
+        d3dpp.Windowed = TRUE;
+        d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
+        d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
+        d3dpp.BackBufferCount = 1;
+        d3dpp.MultiSampleType = D3DMULTISAMPLE_NONE;
+        d3dpp.MultiSampleQuality = 0;
+        d3dpp.EnableAutoDepthStencil = TRUE;
+        d3dpp.AutoDepthStencilFormat = D3DFMT_D24S8;
+        d3dpp.hDeviceWindow = m_hWnd;
+        d3dpp.Flags = 0;
+        d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
+        d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
+    }
+
+    hResult = g_pd3dDevice->Reset(&d3dpp);
+    assert(hResult == S_OK);
+
+    g_pEffect->OnResetDevice();
+    g_pFont->OnResetDevice();
+
+    m_eWindowModeCurrent = m_eWindowModeRequest;
+    m_eWindowModeRequest = eWindowMode::NONE;
 }
 

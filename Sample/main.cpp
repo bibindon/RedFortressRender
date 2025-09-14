@@ -108,6 +108,22 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         g_bClose = true;
         return 0;
     }
+    case WM_KEYDOWN:
+    {
+        if (wParam == '8')
+        {
+            g_Render.ChangeWindowMode(NSRender::eWindowMode::WINDOW);
+        }
+        else if (wParam == '9')
+        {
+            g_Render.ChangeWindowMode(NSRender::eWindowMode::BORDERLESS);
+        }
+        else if (wParam == '0')
+        {
+            g_Render.ChangeWindowMode(NSRender::eWindowMode::FULLSCREEN);
+        }
+
+    }
     }
 
     return DefWindowProc(hWnd, msg, wParam, lParam);
