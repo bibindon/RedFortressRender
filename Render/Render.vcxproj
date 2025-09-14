@@ -198,9 +198,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>robocopy "$(ProjectDir)shader" "$(SolutionDir)Sample\res\shader" *.fx /S /R:0 /W:0 &gt;nul
-if %ERRORLEVEL% LSS 8 exit /B 0
-exit /B %ERRORLEVEL%</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_VisualStudio2019|x64'">

@@ -193,6 +193,11 @@
     <FxCompile>
       <ShaderModel>2.0</ShaderModel>
     </FxCompile>
+    <PreBuildEvent>
+      <Command>robocopy "$(SolutionDir)Render\shader" "$(SolutionDir)Sample\res\shader" *.fx /S /R:0 /W:0 &gt;nul
+if %ERRORLEVEL% LSS 8 exit /B 0
+exit /B %ERRORLEVEL%</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_VisualStudio2019|x64'">
     <ClCompile>
