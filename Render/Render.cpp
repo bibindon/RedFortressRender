@@ -21,9 +21,6 @@
 
 #define SAFE_RELEASE(p) { if (p) { (p)->Release(); (p) = NULL; } }
 
-const int WINDOW_SIZE_W = 1600;
-const int WINDOW_SIZE_H = 900;
-
 void NSRender::Render::Initialize(HWND hWnd)
 {
     HRESULT hResult = E_FAIL;
@@ -184,7 +181,7 @@ void NSRender::Render::Draw()
 
     D3DXMatrixPerspectiveFovLH(&Proj,
                                D3DXToRadian(45),
-                               (float)WINDOW_SIZE_W / WINDOW_SIZE_H,
+                               (float)m_windowSizeWidth / m_windowSizeHeight,
                                1.0f,
                                10000.0f);
 

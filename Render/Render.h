@@ -59,6 +59,8 @@ private:
 
     Mesh* m_pMesh2 = nullptr;
 
+    int m_windowSizeWidth = 1600;
+    int m_windowSizeHeight = 900;
 };
 }
 
