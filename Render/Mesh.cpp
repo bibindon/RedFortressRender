@@ -247,7 +247,7 @@ void NSRender::Mesh::Render()
     normal.z = std::cos(work + D3DX_PI);
     D3DXVec4Normalize(&normal, &normal);
 
-    hResult = m_D3DEffect->SetVector("g_vecLightNormal", &normal);
+    hResult = m_D3DEffect->SetVector("g_lightNormal", &normal);
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
@@ -291,8 +291,8 @@ void NSRender::Mesh::Render()
     //--------------------------------------------------------
     // 光源の明るさを設定
     //--------------------------------------------------------
-    hResult = m_D3DEffect->SetFloat("g_fLightBrigntness", Light::GetBrightness());
-    assert(hResult == S_OK);
+    //hResult = m_D3DEffect->SetFloat("g_fLightBrigntness", Light::GetBrightness());
+    //assert(hResult == S_OK);
 
     //--------------------------------------------------------
     // 洞窟
@@ -386,8 +386,8 @@ void NSRender::Mesh::Render()
         }
     }
 
-    hResult = m_D3DEffect->SetMatrix("g_matWorld", &worldViewProjMatrix);
-    assert(hResult == S_OK);
+//    hResult = m_D3DEffect->SetMatrix("g_matWorld", &worldViewProjMatrix);
+//    assert(hResult == S_OK);
 
     //--------------------------------------------------------
     // カメラの位置を設定
@@ -398,8 +398,8 @@ void NSRender::Mesh::Render()
     cameraPos.z = Camera::GetEyePos().z;
     cameraPos.w = 0.f;
 
-    hResult = m_D3DEffect->SetVector("g_vecCameraPos", &cameraPos);
-    assert(hResult == S_OK);
+//    hResult = m_D3DEffect->SetVector("g_vecCameraPos", &cameraPos);
+//    assert(hResult == S_OK);
 
     //--------------------------------------------------------
     // ワールドビュー射影変換行列を設定
@@ -435,8 +435,8 @@ void NSRender::Mesh::Render()
     //--------------------------------------------------------
     for (DWORD i = 0; i < m_materialCount; ++i)
     {
-        hResult = m_D3DEffect->SetVector("g_vecDiffuse", &m_vecDiffuse.at(i));
-        assert(hResult == S_OK);
+//        hResult = m_D3DEffect->SetVector("g_vecDiffuse", &m_vecDiffuse.at(i));
+//        assert(hResult == S_OK);
 
         if (i < m_vecTexture.size())
         {

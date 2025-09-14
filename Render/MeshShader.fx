@@ -5,7 +5,7 @@
 float4x4 g_matWorld;
 float4x4 g_matWorldViewProj;
 
-float4 g_vecLightNormal;
+float4 g_lightNormal;
 float4 g_vecPointLightColor = { 0.5f, 0.25f, 0.0f, 1.0f };
 float g_fLightBrigntness;
 
@@ -55,7 +55,7 @@ void VertexShader1(in  float4 inPos          : POSITION,
     // ハーフランバート
     float dot_ = 0.f;
     {
-        dot_ = dot(inNormal, g_vecLightNormal);
+        dot_ = dot(inNormal, g_lightNormal);
         dot_ += 1.f;
         dot_ *= 0.5f;
     }
