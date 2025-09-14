@@ -1,149 +1,271 @@
-﻿#include "Render.h"
-#include <sstream>
-#include <algorithm>
+﻿#pragma comment( lib, "d3d9.lib" )
+#if defined(DEBUG) || defined(_DEBUG)
+#pragma comment( lib, "d3dx9d.lib" )
+#else
+#pragma comment( lib, "d3dx9.lib" )
+#endif
 
-using namespace NSHud;
+#include "Render.h"
 
-static std::vector<std::wstring> split(const std::wstring& s, wchar_t delim)
+#include <d3d9.h>
+#include <d3dx9.h>
+#include <string>
+#include <tchar.h>
+#include <cassert>
+#include <crtdbg.h>
+#include <vector>
+
+#define SAFE_RELEASE(p) { if (p) { (p)->Release(); (p) = NULL; } }
+
+const int WINDOW_SIZE_W = 1600;
+const int WINDOW_SIZE_H = 900;
+
+LPDIRECT3D9 g_pD3D = NULL;
+LPDIRECT3DDEVICE9 g_pd3dDevice = NULL;
+LPD3DXFONT g_pFont = NULL;
+LPD3DXMESH g_pMesh = NULL;
+std::vector<D3DMATERIAL9> g_pMaterials;
+std::vector<LPDIRECT3DTEXTURE9> g_pTextures;
+DWORD g_dwNumMaterials = 0;
+LPD3DXEFFECT g_pEffect = NULL;
+
+using namespace NSRender;
+
+static void TextDraw(LPD3DXFONT pFont, TCHAR* text, int X, int Y);
+
+void TextDraw(LPD3DXFONT pFont, TCHAR* text, int X, int Y)
 {
-    std::vector<std::wstring> result;
-    std::wstringstream ss(s);
-    std::wstring item;
+    RECT rect = { X, Y, 0, 0 };
 
-    while (getline(ss, item, delim))
+    // DrawTextの戻り値は文字数である。
+    // そのため、hResultの中身が整数でもエラーが起きているわけではない。
+    HRESULT hResult = pFont->DrawText(NULL,
+                                      text,
+                                      -1,
+                                      &rect,
+                                      DT_LEFT | DT_NOCLIP,
+                                      D3DCOLOR_ARGB(255, 0, 0, 0));
+
+    assert((int)hResult >= 0);
+}
+
+void Render::Initialize(HWND hWnd)
+{
+    HRESULT hResult = E_FAIL;
+
+    g_pD3D = Direct3DCreate9(D3D_SDK_VERSION);
+    assert(g_pD3D != NULL);
+
+    D3DPRESENT_PARAMETERS d3dpp;
+    ZeroMemory(&d3dpp, sizeof(d3dpp));
+    d3dpp.Windowed = TRUE;
+    d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
+    d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
+    d3dpp.BackBufferCount = 1;
+    d3dpp.MultiSampleType = D3DMULTISAMPLE_NONE;
+    d3dpp.MultiSampleQuality = 0;
+    d3dpp.EnableAutoDepthStencil = TRUE;
+    d3dpp.AutoDepthStencilFormat = D3DFMT_D16;
+    d3dpp.hDeviceWindow = hWnd;
+    d3dpp.Flags = 0;
+    d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
+    d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
+
+    hResult = g_pD3D->CreateDevice(D3DADAPTER_DEFAULT,
+                                   D3DDEVTYPE_HAL,
+                                   hWnd,
+                                   D3DCREATE_HARDWARE_VERTEXPROCESSING,
+                                   &d3dpp,
+                                   &g_pd3dDevice);
+
+    if (FAILED(hResult))
     {
-        result.push_back(item);
+        hResult = g_pD3D->CreateDevice(D3DADAPTER_DEFAULT,
+                                       D3DDEVTYPE_HAL,
+                                       hWnd,
+                                       D3DCREATE_SOFTWARE_VERTEXPROCESSING,
+                                       &d3dpp,
+                                       &g_pd3dDevice);
+
+        assert(hResult == S_OK);
     }
 
-    return result;
-}
+    hResult = D3DXCreateFont(g_pd3dDevice,
+                             20,
+                             0,
+                             FW_HEAVY,
+                             1,
+                             FALSE,
+                             SHIFTJIS_CHARSET,
+                             OUT_TT_ONLY_PRECIS,
+                             CLEARTYPE_NATURAL_QUALITY,
+                             FF_DONTCARE,
+                             _T("ＭＳ ゴシック"),
+                             &g_pFont);
 
-void hud::Init(IFont* font, ISprite* sprBack, ISprite* sprMiddle, ISprite* sprFront, const bool bEnglish)
-{
-    m_font = font;
-    m_sprBack = sprBack;
-    m_sprMiddle = sprMiddle;
-    m_sprFront = sprFront;
-    m_bEnglish = bEnglish;
+    assert(hResult == S_OK);
 
-    m_font->Init(m_bEnglish);
-}
+    LPD3DXBUFFER pD3DXMtrlBuffer = NULL;
 
-void NSHud::hud::Finalize()
-{
-    delete m_font;
-    delete m_sprBack;
-    delete m_sprMiddle;
-    delete m_sprFront;
-}
+    hResult = D3DXLoadMeshFromX(_T("cube.x"),
+                                D3DXMESH_SYSTEMMEM,
+                                g_pd3dDevice,
+                                NULL,
+                                &pD3DXMtrlBuffer,
+                                NULL,
+                                &g_dwNumMaterials,
+                                &g_pMesh);
 
-void NSHud::hud::UpsertStatus(const std::wstring& name,
-                                        const int percent,
-                                        const int percentSub,
-                                        const bool visible)
-{
-    auto result = std::find_if(m_statusList.begin(), m_statusList.end(),
-                               [&](const StatusItem& x)
-                               {
-                                   return x.GetName() == name;
-                               });
+    assert(hResult == S_OK);
 
-    if (result != m_statusList.end())
+    D3DXMATERIAL* d3dxMaterials = (D3DXMATERIAL*)pD3DXMtrlBuffer->GetBufferPointer();
+    g_pMaterials.resize(g_dwNumMaterials);
+    g_pTextures.resize(g_dwNumMaterials);
+
+    for (DWORD i = 0; i < g_dwNumMaterials; i++)
     {
-        result->SetPercent(percent);
-        result->SetPercentSub(percentSub);
-        result->SetBarVisible(visible);
-    }
-    else
-    {
-        StatusItem statusItem;
-        statusItem.SetName(name);
-        statusItem.SetPercent(percent);
-        statusItem.SetPercentSub(percentSub);
-        statusItem.SetBarVisible(visible);
+        g_pMaterials[i] = d3dxMaterials[i].MatD3D;
+        g_pMaterials[i].Ambient = g_pMaterials[i].Diffuse;
+        g_pTextures[i] = NULL;
+        
+        //--------------------------------------------------------------
+        // Unicode文字セットでもマルチバイト文字セットでも
+        // "d3dxMaterials[i].pTextureFilename"はマルチバイト文字セットになる。
+        // 
+        // 一方で、D3DXCreateTextureFromFileはプロジェクト設定で
+        // Unicode文字セットかマルチバイト文字セットか変わる。
+        //--------------------------------------------------------------
 
-        m_statusList.push_back(statusItem);
-    }
-}
+        std::string pTexPath(d3dxMaterials[i].pTextureFilename);
 
-void NSHud::hud::RemoveStatus(const std::wstring& name)
-{
-    auto result = std::remove_if(m_statusList.begin(), m_statusList.end(),
-                                 [&](const StatusItem& x)
-                                 {
-                                     return x.GetName() == name;
-                                 });
-
-    m_statusList.erase(result, m_statusList.end());
-}
-
-void hud::Draw()
-{
-    // どれだけステータス異常があっても表示できるのは8行までとする？
-    for (size_t i = 0; i < 8; ++i)
-    {
-        if (m_statusList.size() <= i)
+        if (!pTexPath.empty())
         {
-            break;
-        }
+            bool bUnicode = false;
 
-        m_font->DrawText_(m_statusList.at(i).GetName(),
-                          STARTX + 10,
-                          STARTY + (INTERVAL * (int)i));
+#ifdef UNICODE
+            bUnicode = true;
+#endif
 
-        if (m_statusList.at(i).GetBarVisible())
-        {
-            m_sprBack->DrawImage(100,
-                                 STARTX,
-                                 PADDING + STARTY + (INTERVAL * (int)i));
+            if (!bUnicode)
+            {
+                hResult = D3DXCreateTextureFromFileA(g_pd3dDevice, pTexPath.c_str(), &g_pTextures[i]);
+                assert(hResult == S_OK);
+            }
+            else
+            {
+                int len = MultiByteToWideChar(CP_ACP, 0, pTexPath.c_str(), -1, nullptr, 0);
+                std::wstring pTexPathW(len, 0);
+                MultiByteToWideChar(CP_ACP, 0, pTexPath.c_str(), -1, &pTexPathW[0], len);
 
-            m_sprMiddle->DrawImage(m_statusList.at(i).GetPercentSub(),
-                                   STARTX,
-                                   PADDING + STARTY + (INTERVAL * (int)i));
-
-            m_sprFront->DrawImage(m_statusList.at(i).GetPercent(),
-                                  STARTX,
-                                  PADDING + STARTY + (INTERVAL * (int)i));
+                hResult = D3DXCreateTextureFromFileW(g_pd3dDevice, pTexPathW.c_str(), &g_pTextures[i]);
+                assert(hResult == S_OK);
+            }
         }
     }
+
+    hResult = pD3DXMtrlBuffer->Release();
+    assert(hResult == S_OK);
+
+    hResult = D3DXCreateEffectFromFile(g_pd3dDevice,
+                                       _T("simple.fx"),
+                                       NULL,
+                                       NULL,
+                                       D3DXSHADER_DEBUG,
+                                       NULL,
+                                       &g_pEffect,
+                                       NULL);
+
+    assert(hResult == S_OK);
 }
 
-void NSHud::StatusItem::SetName(const std::wstring& arg)
+void Render::Finalize()
 {
-    m_name = arg;
+    for (auto& texture : g_pTextures)
+    {
+        SAFE_RELEASE(texture);
+    }
+
+    SAFE_RELEASE(g_pMesh);
+    SAFE_RELEASE(g_pEffect);
+    SAFE_RELEASE(g_pFont);
+    SAFE_RELEASE(g_pd3dDevice);
+    SAFE_RELEASE(g_pD3D);
 }
 
-std::wstring NSHud::StatusItem::GetName() const
+void Render::Draw()
 {
-    return m_name;
+    HRESULT hResult = E_FAIL;
+
+    static float f = 0.0f;
+    f += 0.025f;
+
+    D3DXMATRIX mat;
+    D3DXMATRIX View, Proj;
+
+    D3DXMatrixPerspectiveFovLH(&Proj,
+                               D3DXToRadian(45),
+                               (float)WINDOW_SIZE_W / WINDOW_SIZE_H,
+                               1.0f,
+                               10000.0f);
+
+    D3DXVECTOR3 vec1(10 * sinf(f), 10, -10 * cosf(f));
+    D3DXVECTOR3 vec2(0, 0, 0);
+    D3DXVECTOR3 vec3(0, 1, 0);
+    D3DXMatrixLookAtLH(&View, &vec1, &vec2, &vec3);
+    D3DXMatrixIdentity(&mat);
+    mat = mat * View * Proj;
+
+    hResult = g_pEffect->SetMatrix("g_matWorldViewProj", &mat);
+    assert(hResult == S_OK);
+
+    hResult = g_pd3dDevice->Clear(0,
+                                  NULL,
+                                  D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
+                                  D3DCOLOR_XRGB(100, 100, 100),
+                                  1.0f,
+                                  0);
+
+    assert(hResult == S_OK);
+
+    hResult = g_pd3dDevice->BeginScene();
+    assert(hResult == S_OK);
+
+    TCHAR msg[100];
+    _tcscpy_s(msg, 100, _T("Xファイルの読み込みと表示"));
+    TextDraw(g_pFont, msg, 0, 0);
+
+    hResult = g_pEffect->SetTechnique("Technique1");
+    assert(hResult == S_OK);
+
+    UINT numPass;
+    hResult = g_pEffect->Begin(&numPass, 0);
+    assert(hResult == S_OK);
+
+    hResult = g_pEffect->BeginPass(0);
+    assert(hResult == S_OK);
+
+    for (DWORD i = 0; i < g_dwNumMaterials; i++)
+    {
+        hResult = g_pEffect->SetTexture("texture1", g_pTextures[i]);
+        assert(hResult == S_OK);
+
+        hResult = g_pEffect->CommitChanges();
+        assert(hResult == S_OK);
+
+        hResult = g_pMesh->DrawSubset(i);
+        assert(hResult == S_OK);
+    }
+
+    hResult = g_pEffect->EndPass();
+    assert(hResult == S_OK);
+
+    hResult = g_pEffect->End();
+    assert(hResult == S_OK);
+
+    hResult = g_pd3dDevice->EndScene();
+    assert(hResult == S_OK);
+
+    hResult = g_pd3dDevice->Present(NULL, NULL, NULL, NULL);
+    assert(hResult == S_OK);
 }
 
-void NSHud::StatusItem::SetPercent(const int arg)
-{
-    m_percent = arg;
-}
-
-int NSHud::StatusItem::GetPercent() const
-{
-    return m_percent;
-}
-
-void NSHud::StatusItem::SetPercentSub(const int arg)
-{
-    m_percentSub = arg;
-}
-
-int NSHud::StatusItem::GetPercentSub() const
-{
-    return m_percentSub;
-}
-
-void NSHud::StatusItem::SetBarVisible(const bool arg)
-{
-    m_visible = arg;
-}
-
-bool NSHud::StatusItem::GetBarVisible() const
-{
-    return m_visible;
-}
