@@ -77,10 +77,10 @@ void pixel_shader(
 
 int current_bone_numbers;
 VertexShader vsArray[4] = {
-    compile vs_2_0 vertex_shader(1),
-    compile vs_2_0 vertex_shader(2),
-    compile vs_2_0 vertex_shader(3),
-    compile vs_2_0 vertex_shader(4)
+    compile vs_3_0 vertex_shader(1),
+    compile vs_3_0 vertex_shader(2),
+    compile vs_3_0 vertex_shader(3),
+    compile vs_3_0 vertex_shader(4)
 };
 
 technique technique_
@@ -92,6 +92,6 @@ technique technique_
         DestBlend = INVSRCALPHA;
 
         VertexShader = (vsArray[current_bone_numbers]);
-        PixelShader = compile ps_2_0 pixel_shader();
+        PixelShader = compile ps_3_0 pixel_shader();
     }
 }
