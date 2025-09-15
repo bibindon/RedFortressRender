@@ -122,25 +122,66 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {
             g_Render.ChangeWindowMode(NSRender::eWindowMode::FULLSCREEN);
         }
-        else if (wParam == 'M')
+
+        if (wParam == 'M')
         {
-            g_Render.AddMesh(L"cube.x", D3DXVECTOR3(1, 0, 0), D3DXVECTOR3(0, 0, 0), 1.f, 1.f);
+            auto pos = g_Render.GetLookAtPos();
+            D3DXVECTOR3 forward = g_Render.GetCameraRotate();
+            D3DXVec3Normalize(&forward, &forward);
+
+            // Yaw, Pitch を計算
+            float yaw = atan2f(forward.x, forward.z);
+
+            // AddMeshの第3引数が「回転角 (ラジアン)」だと仮定
+            g_Render.AddMesh(L"cube.x", pos, D3DXVECTOR3(0, yaw, 0.0f), 1.f, 1.f);
         }
-        else if (wParam == 'W')
+
         {
-            g_Render.MoveCamera(D3DXVECTOR3(0, 0, 0.2f));
+            // 現在向いている前方向ベクトル
+            D3DXVECTOR3 forward = g_Render.GetCameraRotate();
+            D3DXVec3Normalize(&forward, &forward); // 念のため正規化
+
+            // 右方向は 前方向×(世界上方向)
+            D3DXVECTOR3 worldUp(0, 1, 0);
+            D3DXVECTOR3 right;
+            D3DXVec3Cross(&right, &worldUp, &forward);
+            D3DXVec3Normalize(&right, &right);
+
+            const float speed = 0.2f;
+
+            if (wParam == 'W')
+            {
+                g_Render.MoveCamera(forward * speed);
+            }
+            else if (wParam == 'S')
+            {
+                g_Render.MoveCamera(forward * -speed);
+            }
+            else if (wParam == 'D')
+            {
+                g_Render.MoveCamera(right * speed);
+            }
+            else if (wParam == 'A')
+            {
+                g_Render.MoveCamera(right * -speed);
+            }
         }
-        else if (wParam == 'A')
+
+        if (wParam == VK_UP)
         {
-            g_Render.MoveCamera(D3DXVECTOR3(-0.2f, 0, 0));
+            g_Render.RotateCamera(D3DXVECTOR3(0.2f, 0, 0));
         }
-        else if (wParam == 'S')
+        else if (wParam == VK_DOWN)
         {
-            g_Render.MoveCamera(D3DXVECTOR3(0, 0, -0.2f));
+            g_Render.RotateCamera(D3DXVECTOR3(-0.2f, 0, 0));
         }
-        else if (wParam == 'D')
+        else if (wParam == VK_LEFT)
         {
-            g_Render.MoveCamera(D3DXVECTOR3(0.2f, 0, 0));
+            g_Render.RotateCamera(D3DXVECTOR3(0, 0.2f, 0));
+        }
+        else if (wParam == VK_RIGHT)
+        {
+            g_Render.RotateCamera(D3DXVECTOR3(0, -0.2f, 0));
         }
     }
     }

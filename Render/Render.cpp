@@ -177,8 +177,55 @@ void NSRender::Render::MoveCamera(const D3DXVECTOR3& pos)
     Camera::SetLookAtPos(lookAtPos + pos);
 }
 
+D3DXVECTOR3 NSRender::Render::GetLookAtPos()
+{
+    return Camera::GetLookAtPos();
+}
+
+D3DXVECTOR3 NSRender::Render::GetCameraRotate()
+{
+    auto eyePos = Camera::GetEyePos();
+    auto lookAtPos = Camera::GetLookAtPos();
+    auto dir(lookAtPos - eyePos);
+    D3DXVec3Normalize(&dir, &dir);
+    return dir;
+}
+
 void NSRender::Render::RotateCamera(const D3DXVECTOR3& rot)
 {
+    D3DXVECTOR3 lookAt = Camera::GetLookAtPos();
+    D3DXVECTOR3 eye = Camera::GetEyePos();
+
+    // 注視点から見た相対位置
+    D3DXVECTOR3 rel = eye - lookAt;
+
+    // 現在の距離
+    float r = D3DXVec3Length(&rel);
+
+    // 現在の角度を求める（spherical座標）
+    float yaw = atan2f(rel.x, rel.z);             // 水平方向
+    float pitch = asinf(rel.y / r);                 // 上下方向
+
+    // 回転を加える
+    yaw += rot.y;
+    pitch += rot.x;
+
+    // --- ピッチ角を制限する ---
+    const float limit = D3DXToRadian(89.0f);        // 真上/真下を少し手前で止める
+    if (pitch > limit) pitch = limit;
+    if (pitch < -limit) pitch = -limit;
+
+    // 極座標 → デカルト座標に戻す
+    D3DXVECTOR3 newRel;
+    newRel.x = r * cosf(pitch) * sinf(yaw);
+    newRel.y = r * sinf(pitch);
+    newRel.z = r * cosf(pitch) * cosf(yaw);
+
+    // 新しいeye位置をセット
+    D3DXVECTOR3 newEye = lookAt + newRel;
+
+    Camera::SetEyePos(newEye);
+    Camera::SetLookAtPos(lookAt);
 }
 
 void NSRender::Render::TextDraw(const std::wstring& text, int X, int Y)

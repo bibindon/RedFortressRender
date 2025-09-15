@@ -41,6 +41,9 @@ public:
     void MoveCamera(const D3DXVECTOR3& pos);
     void RotateCamera(const D3DXVECTOR3& rot);
 
+    D3DXVECTOR3 GetLookAtPos();
+    D3DXVECTOR3 GetCameraRotate();
+
 private:
 
     HWND m_hWnd = NULL;
