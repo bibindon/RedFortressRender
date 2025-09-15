@@ -184,7 +184,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             g_Render.AddSkinAnimMesh(L"res\\model\\wolf.x",
                                      pos,
                                      D3DXVECTOR3(0, yaw, 0.0f),
-                                     1.f,
+                                     3.f,
                                      animMap);
         }
 
