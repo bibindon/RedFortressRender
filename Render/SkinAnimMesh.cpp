@@ -135,7 +135,7 @@ void SkinAnimMesh::render_impl(const D3DXMATRIX &view_matrix,
         D3DXMatrixScaling(&mat, scale_, scale_, scale_);
         world_matrix *= mat;
 
-        D3DXMatrixRotationYawPitchRoll(&mat, rotation_.x, rotation_.y, rotation_.z);
+        D3DXMatrixRotationYawPitchRoll(&mat, rotation_.y, rotation_.x, rotation_.z);
         world_matrix *= mat;
 
         D3DXMatrixTranslation(&mat, position_.x, position_.y, position_.z);
