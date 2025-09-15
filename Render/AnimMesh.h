@@ -16,12 +16,12 @@ class AnimMeshAllocator;
 class AnimMesh
 {
 public:
-    AnimMesh(
-        const std::wstring&,
-        const D3DXVECTOR3&,
-        const D3DXVECTOR3&,
-        const float&,
-        const AnimSetMap&);
+    AnimMesh(const std::wstring&,
+             const D3DXVECTOR3&,
+             const D3DXVECTOR3&,
+             const float&,
+             const AnimSetMap&);
+
     ~AnimMesh();
 
     void Render();
@@ -39,8 +39,6 @@ public:
 
     // 解像度やウィンドウモードを変更したときのための関数
     void OnDeviceLost();
-
-    // 解像度やウィンドウモードを変更したときのための関数
     void OnDeviceReset();
 
 private:

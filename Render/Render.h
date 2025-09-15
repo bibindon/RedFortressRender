@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "Mesh.h"
+#include "AnimMesh.h"
 
 namespace NSRender
 {
@@ -37,6 +38,12 @@ public:
                  const float scale,
                  const float radius = -1.f);
 
+    void AddAnimMesh(const std::wstring& filePath,
+                     const D3DXVECTOR3& pos,
+                     const D3DXVECTOR3& rot,
+                     const float scale,
+                     const AnimSetMap& animSetMap);
+
     void SetCamera(const D3DXVECTOR3& pos, const D3DXVECTOR3& lookAt);
     void MoveCamera(const D3DXVECTOR3& pos);
     void RotateCamera(const D3DXVECTOR3& rot);
@@ -59,6 +66,7 @@ private:
     LPD3DXFONT m_pFont = NULL;
 
     std::vector<Mesh> m_meshList;
+    std::vector<AnimMesh*> m_animMeshList;
 
     int m_windowSizeWidth = 1600;
     int m_windowSizeHeight = 900;

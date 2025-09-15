@@ -127,6 +127,11 @@ void NSRender::Render::Draw()
         elem.Render();
     }
 
+    for (auto& elem : m_animMeshList)
+    {
+        elem->Render();
+    }
+
     hResult = Common::D3DDevice()->EndScene();
     assert(hResult == S_OK);
 
@@ -160,6 +165,16 @@ void NSRender::Render::AddMesh(const std::wstring& filePath,
 {
     m_meshList.push_back(Mesh(filePath, pos, rot, scale, radius));
     m_meshList.rbegin()->Init();
+}
+
+void NSRender::Render::AddAnimMesh(const std::wstring& filePath,
+                                   const D3DXVECTOR3& pos,
+                                   const D3DXVECTOR3& rot,
+                                   const float scale,
+                                   const AnimSetMap& animSetMap)
+{
+    AnimMesh* animMesh = NEW AnimMesh(filePath, pos, rot, scale, animSetMap);
+    m_animMeshList.push_back(animMesh);
 }
 
 void NSRender::Render::SetCamera(const D3DXVECTOR3& pos, const D3DXVECTOR3& lookAt)
@@ -254,6 +269,11 @@ void NSRender::Render::ChangeWindowMode()
     for (auto& elem : m_meshList)
     {
         elem.OnDeviceLost();
+    }
+
+    for (auto& elem : m_animMeshList)
+    {
+        elem->OnDeviceLost();
     }
 
     D3DPRESENT_PARAMETERS d3dpp;
@@ -367,7 +387,12 @@ void NSRender::Render::ChangeWindowMode()
 
     for (auto& elem : m_meshList)
     {
-        elem.OnDeviceLost();
+        elem.OnDeviceReset();
+    }
+
+    for (auto& elem : m_animMeshList)
+    {
+        elem->OnDeviceReset();
     }
 
     m_pFont->OnResetDevice();
