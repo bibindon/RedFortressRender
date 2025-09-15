@@ -18,6 +18,8 @@
 #include "Common.h"
 #include "Mesh.h"
 #include "Camera.h"
+#include "Light.h"
+#include "SkinAnimMesh.h"
 
 #define SAFE_RELEASE(p) { if (p) { (p)->Release(); (p) = NULL; } }
 
@@ -122,6 +124,7 @@ void NSRender::Render::Draw()
         text += L"0 : フルスクリーンモード\n";
         text += L"m : メッシュ追加\n";
         text += L"n : アニメーションメッシュ追加\n";
+        text += L"k : スキンアニメーションメッシュ追加\n";
         TextDraw(text, 0, 0);
     }
 
@@ -133,6 +136,14 @@ void NSRender::Render::Draw()
     for (auto& elem : m_animMeshList)
     {
         elem->Render();
+    }
+
+    for (auto& elem : m_skinAnimMeshList)
+    {
+        elem->Render(Camera::GetViewMatrix(),
+                     Camera::GetProjMatrix(),
+                     Light::GetLightNormal(),
+                     Light::GetBrightness());
     }
 
     hResult = Common::D3DDevice()->EndScene();
@@ -178,6 +189,16 @@ void NSRender::Render::AddAnimMesh(const std::wstring& filePath,
 {
     AnimMesh* animMesh = NEW AnimMesh(filePath, pos, rot, scale, animSetMap);
     m_animMeshList.push_back(animMesh);
+}
+
+void NSRender::Render::AddSkinAnimMesh(const std::wstring& filePath,
+                                       const D3DXVECTOR3& pos,
+                                       const D3DXVECTOR3& rot,
+                                       const float scale,
+                                       const AnimSetMap& animSetMap)
+{
+    SkinAnimMesh* mesh = NEW SkinAnimMesh(filePath, pos, rot, scale, animSetMap);
+    m_skinAnimMeshList.push_back(mesh);
 }
 
 void NSRender::Render::SetCamera(const D3DXVECTOR3& pos, const D3DXVECTOR3& lookAt)

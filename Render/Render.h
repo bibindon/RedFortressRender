@@ -9,6 +9,7 @@
 
 #include "Mesh.h"
 #include "AnimMesh.h"
+#include "SkinAnimMesh.h"
 
 namespace NSRender
 {
@@ -44,6 +45,12 @@ public:
                      const float scale,
                      const AnimSetMap& animSetMap);
 
+    void AddSkinAnimMesh(const std::wstring& filePath,
+                         const D3DXVECTOR3& pos,
+                         const D3DXVECTOR3& rot,
+                         const float scale,
+                         const AnimSetMap& animSetMap);
+
     void SetCamera(const D3DXVECTOR3& pos, const D3DXVECTOR3& lookAt);
     void MoveCamera(const D3DXVECTOR3& pos);
     void RotateCamera(const D3DXVECTOR3& rot);
@@ -67,6 +74,7 @@ private:
 
     std::vector<Mesh> m_meshList;
     std::vector<AnimMesh*> m_animMeshList;
+    std::vector<SkinAnimMesh*> m_skinAnimMeshList;
 
     int m_windowSizeWidth = 1600;
     int m_windowSizeHeight = 900;

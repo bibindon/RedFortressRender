@@ -136,9 +136,9 @@ technique technique_
 {
     pass pass_
     {
-        AlphaBlendEnable = TRUE;
-        SrcBlend = SRCALPHA;
-        DestBlend = INVSRCALPHA;
+//        AlphaBlendEnable = TRUE;
+//        SrcBlend = SRCALPHA;
+//        DestBlend = INVSRCALPHA;
 
         VertexShader = (vsArray[current_bone_numbers]);
         PixelShader = compile ps_2_0 pixel_shader();

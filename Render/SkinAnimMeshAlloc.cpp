@@ -1,8 +1,8 @@
-#include "SkinAnimMesh.hpp"
+#include "SkinAnimMesh.h"
 
 #include "Common.h"
 #include "Util.h"
-#include "SkinAnimMeshAlloc.hpp"
+#include "SkinAnimMeshAlloc.h"
 
 using std::vector;
 using std::string;
@@ -91,13 +91,11 @@ void SkinAnimMesh_container::initialize_materials(const DWORD &materials_count,
                                                   const std::wstring &x_filename,
                                                   const LPDIRECT3DDEVICE9 &d3d_device)
 {
-    // This strange bracket is measures of being interpretered as WinAPI macro. 
     NumMaterials = (std::max)(1UL, materials_count);
     pMaterials = NEW D3DXMATERIAL[NumMaterials];
     vector<std::shared_ptr<IDirect3DTexture9> > temp_texture(NumMaterials);
     texture_.swap(temp_texture);
 
-    // Initialize the 'pMaterials' and the 'texture_' of member variables if there are.
     if (materials_count > 0)
     {
         for (DWORD i{}; i < materials_count; ++i)
@@ -107,6 +105,14 @@ void SkinAnimMesh_container::initialize_materials(const DWORD &materials_count,
             {
                 LPDIRECT3DTEXTURE9 temp_texture{};
                 std::wstring filename = Util::Utf8ToWstring(pMaterials[i].pTextureFilename);
+
+                size_t pos = x_filename.find_last_of(L"\\/"); // ÅŒã‚Ì‹æØ‚è‚ð’T‚·
+                std::wstring directory = (pos == std::string::npos)
+                    ? L""
+                    : x_filename.substr(0, pos);
+
+                filename = directory + L'\\' + filename;
+
                 if (FAILED(D3DXCreateTextureFromFile(d3d_device,
                                                      filename.c_str(),
                                                      &temp_texture)))
@@ -180,11 +186,10 @@ void SkinAnimMesh_container::initialize_FVF(
     if (new_FVF != MeshData.pMesh->GetFVF())
     {
         LPD3DXMESH p_mesh{};
-        HRESULT hresult = MeshData.pMesh->CloneMeshFVF(
-            MeshData.pMesh->GetOptions(),
-            new_FVF,
-            d3d_device,
-            &p_mesh);
+        HRESULT hresult = MeshData.pMesh->CloneMeshFVF(MeshData.pMesh->GetOptions(),
+                                                       new_FVF,
+                                                       d3d_device,
+                                                       &p_mesh);
         if (SUCCEEDED(hresult))
         {
             MeshData.pMesh->Release();

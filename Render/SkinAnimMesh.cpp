@@ -1,15 +1,15 @@
 
-#include "SkinAnimMesh.hpp"
+#include "SkinAnimMesh.h"
 
 #include <exception>
 
 #include "Common.h"
 #include "Util.h"
-#include "SkinAnimMeshAlloc.hpp"
+#include "SkinAnimMeshAlloc.h"
 
 namespace NSRender
 {
-const std::wstring SkinAnimMesh::SHADER_FILENAME = L"SkinAnimMeshShader.fx";
+const std::wstring SkinAnimMesh::SHADER_FILENAME = L"res\\shader\\SkinAnimMeshShader.fx";
 
 // Custom deleter.
 void SkinAnimMesh::frame_root_deleter_object::operator()(const LPD3DXFRAME frame_root)
@@ -43,28 +43,41 @@ void SkinAnimMesh::frame_root_deleter_object::release_mesh_allocator(
 }
 
 // Reads a mesh file, and sets the frame and the animation controller given to member variables.
-SkinAnimMesh::SkinAnimMesh(const std::shared_ptr<IDirect3DDevice9> &d3d_device,
-                           const std::wstring &x_filename,
+SkinAnimMesh::SkinAnimMesh(const std::wstring &x_filename,
                            const D3DXVECTOR3 &position,
                            const D3DXVECTOR3 &rotation,
                            const float &scale,
                            const AnimSetMap& animSetMap)
-    : d3d_device_{d3d_device},
-      allocator_{NEW SkinAnimMeshAlloc(x_filename)},
+    : allocator_{NEW SkinAnimMeshAlloc(x_filename)},
       frame_root_{nullptr, frame_root_deleter_object{allocator_}},
       rotation_matrix_{D3DMATRIX{}},
       center_coodinate_{0.0f, 0.0f, 0.0f},
       view_projection_handle_{},
       scale_handle_{}
 {
+    HRESULT hr = E_FAIL;
+
+    hr = D3DXCreateEffectFromFile(Common::D3DDevice(),
+                                  SHADER_FILENAME.c_str(),
+                                  nullptr,
+                                  nullptr,
+                                  0,
+                                  nullptr,
+                                  &m_D3DEffect,
+                                  nullptr);
+
+    if (FAILED(hr))
+    {
+        throw std::exception("Failed to create an effect file.");
+    }
+
     view_projection_handle_ = m_D3DEffect->GetParameterByName(nullptr, "g_view_projection");
     LPD3DXFRAME temp_frame_root{nullptr};
     LPD3DXANIMATIONCONTROLLER temp_animation_controller{nullptr};
 
-//    std::vector<char> buffer = util::get_model_resource(x_filename);
     if (FAILED(D3DXLoadMeshHierarchyFromX(x_filename.c_str(),
                                           D3DXMESH_MANAGED,
-                                          d3d_device_.get(),
+                                          Common::D3DDevice(),
                                           allocator_.get(),
                                           nullptr,
                                           &temp_frame_root,
@@ -85,6 +98,17 @@ SkinAnimMesh::SkinAnimMesh(const std::shared_ptr<IDirect3DDevice9> &d3d_device,
 
 SkinAnimMesh::~SkinAnimMesh()
 {
+}
+
+void SkinAnimMesh::Render(const D3DXMATRIX& view_matrix,
+                          const D3DXMATRIX& projection_matrix,
+                          const D3DXVECTOR4& light_normal,
+                          const float& brightness)
+{
+    m_D3DEffect->SetVector("g_light_normal", &light_normal);
+    m_D3DEffect->SetFloat("g_light_brightness", brightness);
+
+    render_impl(view_matrix, projection_matrix);
 }
 
 // Renders its own animation mesh. 

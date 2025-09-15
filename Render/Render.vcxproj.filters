@@ -95,10 +95,10 @@
     <ClInclude Include="AnimationStrategy.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="SkinAnimMesh.hpp">
+    <ClInclude Include="SkinAnimMesh.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="SkinAnimMeshAlloc.hpp">
+    <ClInclude Include="SkinAnimMeshAlloc.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
@@ -113,6 +113,9 @@
       <Filter>シェーダー</Filter>
     </FxCompile>
     <FxCompile Include="shader\AnimationMeshShader.fx">
+      <Filter>シェーダー</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\SkinAnimMeshShader.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
   </ItemGroup>
