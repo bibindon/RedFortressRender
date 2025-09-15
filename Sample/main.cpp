@@ -124,7 +124,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
         else if (wParam == 'M')
         {
-            g_Render.AddMesh(L"cube.x", D3DXVECTOR3(0, 1, 0), D3DXVECTOR3(0, 0, 0), 1.f, 1.f);
+            g_Render.AddMesh(L"cube.x", D3DXVECTOR3(1, 0, 0), D3DXVECTOR3(0, 0, 0), 1.f, 1.f);
         }
     }
     }

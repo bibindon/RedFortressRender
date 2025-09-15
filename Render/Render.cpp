@@ -46,12 +46,14 @@ void NSRender::Render::Initialize(HWND hWnd)
     d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
     d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
 
+    LPDIRECT3DDEVICE9 D3DDevice = NULL;
+
     hResult = m_pD3D->CreateDevice(D3DADAPTER_DEFAULT,
                                    D3DDEVTYPE_HAL,
                                    m_hWnd,
                                    D3DCREATE_HARDWARE_VERTEXPROCESSING,
                                    &d3dpp,
-                                   &m_pd3dDevice);
+                                   &D3DDevice);
 
     if (FAILED(hResult))
     {
@@ -60,14 +62,14 @@ void NSRender::Render::Initialize(HWND hWnd)
                                        m_hWnd,
                                        D3DCREATE_SOFTWARE_VERTEXPROCESSING,
                                        &d3dpp,
-                                       &m_pd3dDevice);
+                                       &D3DDevice);
 
         assert(hResult == S_OK);
     }
 
-    Common::SetD3DDevice(m_pd3dDevice);
+    Common::SetD3DDevice(D3DDevice);
 
-    hResult = D3DXCreateFont(m_pd3dDevice,
+    hResult = D3DXCreateFont(Common::D3DDevice(),
                              20,
                              0,
                              FW_HEAVY,
@@ -82,90 +84,16 @@ void NSRender::Render::Initialize(HWND hWnd)
 
     assert(hResult == S_OK);
 
-    LPD3DXBUFFER pD3DXMtrlBuffer = NULL;
-
-    hResult = D3DXLoadMeshFromX(_T("cube.x"),
-                                D3DXMESH_SYSTEMMEM,
-                                m_pd3dDevice,
-                                NULL,
-                                &pD3DXMtrlBuffer,
-                                NULL,
-                                &m_dwNumMaterials,
-                                &m_pMesh);
-
-    assert(hResult == S_OK);
-
-    D3DXMATERIAL* d3dxMaterials = (D3DXMATERIAL*)pD3DXMtrlBuffer->GetBufferPointer();
-    m_pMaterials.resize(m_dwNumMaterials);
-    m_pTextures.resize(m_dwNumMaterials);
-
-    for (DWORD i = 0; i < m_dwNumMaterials; i++)
-    {
-        m_pMaterials[i] = d3dxMaterials[i].MatD3D;
-        m_pMaterials[i].Ambient = m_pMaterials[i].Diffuse;
-        m_pTextures[i] = NULL;
-        
-        //--------------------------------------------------------------
-        // Unicode文字セットでもマルチバイト文字セットでも
-        // "d3dxMaterials[i].pTextureFilename"はマルチバイト文字セットになる。
-        // 
-        // 一方で、D3DXCreateTextureFromFileはプロジェクト設定で
-        // Unicode文字セットかマルチバイト文字セットか変わる。
-        //--------------------------------------------------------------
-
-        std::string pTexPath(d3dxMaterials[i].pTextureFilename);
-
-        if (!pTexPath.empty())
-        {
-            bool bUnicode = false;
-
-#ifdef UNICODE
-            bUnicode = true;
-#endif
-
-            if (!bUnicode)
-            {
-                hResult = D3DXCreateTextureFromFileA(m_pd3dDevice, pTexPath.c_str(), &m_pTextures[i]);
-                assert(hResult == S_OK);
-            }
-            else
-            {
-                int len = MultiByteToWideChar(CP_ACP, 0, pTexPath.c_str(), -1, nullptr, 0);
-                std::wstring pTexPathW(len, 0);
-                MultiByteToWideChar(CP_ACP, 0, pTexPath.c_str(), -1, &pTexPathW[0], len);
-
-                hResult = D3DXCreateTextureFromFileW(m_pd3dDevice, pTexPathW.c_str(), &m_pTextures[i]);
-                assert(hResult == S_OK);
-            }
-        }
-    }
-
-    hResult = pD3DXMtrlBuffer->Release();
-    assert(hResult == S_OK);
-
-    hResult = D3DXCreateEffectFromFile(m_pd3dDevice,
-                                       _T("simple.fx"),
-                                       NULL,
-                                       NULL,
-                                       D3DXSHADER_DEBUG,
-                                       NULL,
-                                       &m_pEffect,
-                                       NULL);
-
-    assert(hResult == S_OK);
+    AddMesh(L"cube.x", D3DXVECTOR3(0, 0, 0), D3DXVECTOR3(0, 0, 0), 1.f, 1.f);
 }
 
 void NSRender::Render::Finalize()
 {
-    for (auto& texture : m_pTextures)
-    {
-        SAFE_RELEASE(texture);
-    }
-
-    SAFE_RELEASE(m_pMesh);
-    SAFE_RELEASE(m_pEffect);
     SAFE_RELEASE(m_pFont);
-    SAFE_RELEASE(m_pd3dDevice);
+
+    Common::D3DDevice()->Release();
+    Common::SetD3DDevice(NULL);
+
     SAFE_RELEASE(m_pD3D);
 }
 
@@ -173,82 +101,31 @@ void NSRender::Render::Draw()
 {
     HRESULT hResult = E_FAIL;
 
-    static float f = 0.0f;
-    f += 0.025f;
-
-    D3DXMATRIX mat;
-    D3DXMATRIX View, Proj;
-
-    D3DXMatrixPerspectiveFovLH(&Proj,
-                               D3DXToRadian(45),
-                               (float)m_windowSizeWidth / m_windowSizeHeight,
-                               1.0f,
-                               10000.0f);
-
-    D3DXVECTOR3 vec1(10 * sinf(f), 10, -10 * cosf(f));
-    Camera::SetEyePos(vec1);
-    D3DXVECTOR3 vec2(0, 0, 0);
-    D3DXVECTOR3 vec3(0, 1, 0);
-    D3DXMatrixLookAtLH(&View, &vec1, &vec2, &vec3);
-    D3DXMatrixIdentity(&mat);
-    mat = mat * View * Proj;
-
-    hResult = m_pEffect->SetMatrix("g_matWorldViewProj", &mat);
-    assert(hResult == S_OK);
-
-    hResult = m_pd3dDevice->Clear(0,
-                                  NULL,
-                                  D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
-                                  D3DCOLOR_XRGB(100, 100, 100),
-                                  1.0f,
-                                  0);
+    hResult = Common::D3DDevice()->Clear(0,
+                                         NULL,
+                                         D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
+                                         D3DCOLOR_XRGB(100, 100, 100),
+                                         1.0f,
+                                         0);
 
     assert(hResult == S_OK);
 
-    hResult = m_pd3dDevice->BeginScene();
+    hResult = Common::D3DDevice()->BeginScene();
     assert(hResult == S_OK);
 
     TCHAR msg[100];
     _tcscpy_s(msg, 100, _T("Xファイルの読み込みと表示"));
     TextDraw(m_pFont, msg, 0, 0);
 
-    hResult = m_pEffect->SetTechnique("Technique1");
-    assert(hResult == S_OK);
-
-    UINT numPass;
-    hResult = m_pEffect->Begin(&numPass, 0);
-    assert(hResult == S_OK);
-
-    hResult = m_pEffect->BeginPass(0);
-    assert(hResult == S_OK);
-
-    for (DWORD i = 0; i < m_dwNumMaterials; i++)
-    {
-        hResult = m_pEffect->SetTexture("texture1", m_pTextures[i]);
-        assert(hResult == S_OK);
-
-        hResult = m_pEffect->CommitChanges();
-        assert(hResult == S_OK);
-
-        hResult = m_pMesh->DrawSubset(i);
-        assert(hResult == S_OK);
-    }
-
     if (m_pMesh2 != nullptr)
     {
         m_pMesh2->Render();
     }
 
-    hResult = m_pEffect->EndPass();
+    hResult = Common::D3DDevice()->EndScene();
     assert(hResult == S_OK);
 
-    hResult = m_pEffect->End();
-    assert(hResult == S_OK);
-
-    hResult = m_pd3dDevice->EndScene();
-    assert(hResult == S_OK);
-
-    hResult = m_pd3dDevice->Present(NULL, NULL, NULL, NULL);
+    hResult = Common::D3DDevice()->Present(NULL, NULL, NULL, NULL);
     assert(hResult == S_OK);
 
     if (m_eWindowModeRequest != eWindowMode::NONE)
@@ -280,6 +157,12 @@ void NSRender::Render::AddMesh(const std::wstring& filePath,
     m_pMesh2->Init();
 }
 
+void NSRender::Render::SetCamera(const D3DXVECTOR3& pos, const D3DXVECTOR3& lookAt)
+{
+    Camera::SetEyePos(pos);
+    Camera::SetLookAtPos(lookAt);
+}
+
 void NSRender::Render::TextDraw(LPD3DXFONT pFont, TCHAR* text, int X, int Y)
 {
     RECT rect = { X, Y, 0, 0 };
@@ -302,7 +185,7 @@ void NSRender::Render::ChangeWindowMode()
     HRESULT hResult = E_FAIL;
 
     m_pFont->OnLostDevice();
-    m_pEffect->OnLostDevice();
+    m_pMesh2->OnDeviceLost();
 
     D3DPRESENT_PARAMETERS d3dpp;
     ZeroMemory(&d3dpp, sizeof(d3dpp));
@@ -410,10 +293,10 @@ void NSRender::Render::ChangeWindowMode()
         d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
     }
 
-    hResult = m_pd3dDevice->Reset(&d3dpp);
+    hResult = Common::D3DDevice()->Reset(&d3dpp);
     assert(hResult == S_OK);
 
-    m_pEffect->OnResetDevice();
+    m_pMesh2->OnDeviceReset();
     m_pFont->OnResetDevice();
 
     m_eWindowModeCurrent = m_eWindowModeRequest;
