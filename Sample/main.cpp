@@ -126,6 +126,22 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {
             g_Render.AddMesh(L"cube.x", D3DXVECTOR3(1, 0, 0), D3DXVECTOR3(0, 0, 0), 1.f, 1.f);
         }
+        else if (wParam == 'W')
+        {
+            g_Render.MoveCamera(D3DXVECTOR3(0, 0, 0.2f));
+        }
+        else if (wParam == 'A')
+        {
+            g_Render.MoveCamera(D3DXVECTOR3(-0.2f, 0, 0));
+        }
+        else if (wParam == 'S')
+        {
+            g_Render.MoveCamera(D3DXVECTOR3(0, 0, -0.2f));
+        }
+        else if (wParam == 'D')
+        {
+            g_Render.MoveCamera(D3DXVECTOR3(0.2f, 0, 0));
+        }
     }
     }
 

@@ -44,6 +44,11 @@ void NSRender::Camera::SetLookAtPos(const D3DXVECTOR3& lookAtPos)
     m_lookAtPos = lookAtPos;
 }
 
+D3DXVECTOR3 NSRender::Camera::GetLookAtPos()
+{
+    return m_lookAtPos;
+}
+
 D3DXVECTOR3 NSRender::Camera::GetEyePos()
 {
     return m_eyePos;

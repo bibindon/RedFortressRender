@@ -168,6 +168,19 @@ void NSRender::Render::SetCamera(const D3DXVECTOR3& pos, const D3DXVECTOR3& look
     Camera::SetLookAtPos(lookAt);
 }
 
+void NSRender::Render::MoveCamera(const D3DXVECTOR3& pos)
+{
+    auto eyePos = Camera::GetEyePos();
+    Camera::SetEyePos(eyePos + pos);
+
+    auto lookAtPos = Camera::GetLookAtPos();
+    Camera::SetLookAtPos(lookAtPos + pos);
+}
+
+void NSRender::Render::RotateCamera(const D3DXVECTOR3& rot)
+{
+}
+
 void NSRender::Render::TextDraw(const std::wstring& text, int X, int Y)
 {
     RECT rect = { X, Y, 0, 0 };

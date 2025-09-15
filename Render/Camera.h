@@ -19,12 +19,18 @@ public:
 
     static D3DXMATRIX GetViewMatrix();
     static D3DXMATRIX GetProjMatrix();
+
     static void SetLookAtPos(const D3DXVECTOR3& lookAtPos);
+    static D3DXVECTOR3 GetLookAtPos();
+
     static D3DXVECTOR3 GetEyePos();
     static void SetEyePos(const D3DXVECTOR3& eye);
+
     static float GetRadian();
     static void SetRadian(const float radian);
+
     static void Update();
+
     static POINT GetScreenPos(const D3DXVECTOR3& world);
 
     static void SetCameraMode(const eCameraMode arg);
