@@ -8,8 +8,6 @@
 #include "Camera.h"
 #include "Light.h"
 
-#define SAFE_RELEASE(p) { if (p) { (p)->Release(); (p) = NULL; } }
-
 NSRender::Mesh::Mesh(const std::wstring& xFilename,
            const D3DXVECTOR3& position,
            const D3DXVECTOR3& rotation,
