@@ -86,7 +86,7 @@ void NSRender::Render::Initialize(HWND hWnd)
 
     assert(hResult == S_OK);
 
-    AddMesh(L"cube.x", D3DXVECTOR3(0, 0, 0), D3DXVECTOR3(0, 0, 0), 1.f, 1.f);
+    // AddMesh(L"cube.x", D3DXVECTOR3(0, 0, 0), D3DXVECTOR3(0, 0, 0), 1.f, 1.f);
 }
 
 void NSRender::Render::Finalize()

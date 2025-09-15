@@ -1,4 +1,4 @@
-
+﻿
 #include "SkinAnimMesh.h"
 
 #include <exception>
@@ -53,7 +53,10 @@ SkinAnimMesh::SkinAnimMesh(const std::wstring &x_filename,
       rotation_matrix_{D3DMATRIX{}},
       center_coodinate_{0.0f, 0.0f, 0.0f},
       view_projection_handle_{},
-      scale_handle_{}
+      scale_handle_{},
+      scale_(scale),
+      position_(position),
+      rotation_(rotation)
 {
     HRESULT hr = E_FAIL;
 

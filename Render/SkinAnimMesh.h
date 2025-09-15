@@ -60,8 +60,8 @@ private:
     HRESULT allocate_all_bone_matrices(LPD3DXFRAME);
 
     LPD3DXEFFECT m_D3DEffect = nullptr;
-    D3DXVECTOR3 position_;
-    D3DXVECTOR3 rotation_;
+    D3DXVECTOR3 position_ = {0, 0, 0};
+    D3DXVECTOR3 rotation_ = {0, 0, 0};
 
     AnimController m_animCtrlr;
 };
