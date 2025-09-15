@@ -3,12 +3,15 @@
   <ItemGroup>
     <Filter Include="ソース ファイル">
       <UniqueIdentifier>{e12fbd76-fcbf-48e9-be7a-9019e3495524}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;cu;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
     <Filter Include="ヘッダー ファイル">
       <UniqueIdentifier>{32ded9cb-8cc6-4d0b-928e-36cddf0c407e}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;ipp;cuh</Extensions>
     </Filter>
     <Filter Include="シェーダー">
       <UniqueIdentifier>{fa0d1834-c295-4845-b7ae-5081eaf597d4}</UniqueIdentifier>
+      <Extensions>fx</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -30,6 +33,12 @@
     <ClCompile Include="Util.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="Text.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Sprite.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Render.h">
@@ -48,6 +57,12 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Util.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Text.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Sprite.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
