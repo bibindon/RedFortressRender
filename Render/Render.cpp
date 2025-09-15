@@ -115,10 +115,13 @@ void NSRender::Render::Draw()
 
     {
         std::wstring text;
+        text += L"WASD : カメラ移動\n";
+        text += L"矢印キー : カメラ回転\n";
         text += L"8 : ウィンドウモード\n";
         text += L"9 : ボーダーレスウィンドウモード\n";
         text += L"0 : フルスクリーンモード\n";
         text += L"m : メッシュ追加\n";
+        text += L"n : アニメーションメッシュ追加\n";
         TextDraw(text, 0, 0);
     }
 
