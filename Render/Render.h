@@ -43,7 +43,7 @@ private:
 
     HWND m_hWnd = NULL;
 
-    void TextDraw(LPD3DXFONT pFont, TCHAR* text, int X, int Y);
+    void TextDraw(const std::wstring& text, int X, int Y);
 
     void ChangeWindowMode();
 

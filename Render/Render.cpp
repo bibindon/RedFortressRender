@@ -113,9 +113,14 @@ void NSRender::Render::Draw()
     hResult = Common::D3DDevice()->BeginScene();
     assert(hResult == S_OK);
 
-    TCHAR msg[100];
-    _tcscpy_s(msg, 100, _T("Xファイルの読み込みと表示"));
-    TextDraw(m_pFont, msg, 0, 0);
+    {
+        std::wstring text;
+        text += L"8 : ウィンドウモード\n";
+        text += L"9 : ボーダーレスウィンドウモード\n";
+        text += L"0 : フルスクリーンモード\n";
+        text += L"m : メッシュ追加\n";
+        TextDraw(text, 0, 0);
+    }
 
     if (m_pMesh2 != nullptr)
     {
@@ -163,14 +168,14 @@ void NSRender::Render::SetCamera(const D3DXVECTOR3& pos, const D3DXVECTOR3& look
     Camera::SetLookAtPos(lookAt);
 }
 
-void NSRender::Render::TextDraw(LPD3DXFONT pFont, TCHAR* text, int X, int Y)
+void NSRender::Render::TextDraw(const std::wstring& text, int X, int Y)
 {
     RECT rect = { X, Y, 0, 0 };
 
     // DrawTextの戻り値は文字数である。
     // そのため、hResultの中身が整数でもエラーが起きているわけではない。
-    HRESULT hResult = pFont->DrawText(NULL,
-                                      text,
+    HRESULT hResult = m_pFont->DrawText(NULL,
+                                      text.c_str(),
                                       -1,
                                       &rect,
                                       DT_LEFT | DT_NOCLIP,
