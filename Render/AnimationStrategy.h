@@ -1,4 +1,7 @@
-﻿#pragma once
+﻿// TODO 削除
+/*
+
+#pragma once
 
 #include <d3d9.h>
 #include <d3dx9.h>
@@ -59,4 +62,4 @@ private:
     std::unordered_map<std::wstring, animation_config> animation_configs_;
 };
 }
-
+*/

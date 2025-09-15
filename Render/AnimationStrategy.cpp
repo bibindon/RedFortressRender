@@ -1,4 +1,5 @@
-﻿#include "AnimationStrategy.h"
+﻿/*
+#include "AnimationStrategy.h"
 #include "Util.h"
 
 void NSRender::no_animation::update()
@@ -101,4 +102,4 @@ void NSRender::normal_animation::SetTrackPos(const DOUBLE& pos)
 {
     animation_time_ = pos;
 }
-
+*/

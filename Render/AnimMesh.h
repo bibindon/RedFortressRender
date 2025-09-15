@@ -61,7 +61,7 @@ private:
     D3DXVECTOR3 m_centerPos;
     D3DXVECTOR3 m_rotateLocal { 0.f, 0.f, 0.f };
 
-    LPD3DXEFFECT m_D3DEffect { nullptr };
+    LPD3DXEFFECT m_D3DEffect = nullptr;
 
     D3DXHANDLE m_worldHandle { nullptr };
     D3DXHANDLE m_worldViewProjHandle { nullptr };
