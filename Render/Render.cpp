@@ -122,9 +122,9 @@ void NSRender::Render::Draw()
         TextDraw(text, 0, 0);
     }
 
-    if (m_pMesh2 != nullptr)
+    for (auto& elem : m_meshList)
     {
-        m_pMesh2->Render();
+        elem.Render();
     }
 
     hResult = Common::D3DDevice()->EndScene();
@@ -158,8 +158,8 @@ void NSRender::Render::AddMesh(const std::wstring& filePath,
                                const float scale,
                                const float radius)
 {
-    m_pMesh2 = new Mesh(filePath, pos, rot, scale, radius);
-    m_pMesh2->Init();
+    m_meshList.push_back(Mesh(filePath, pos, rot, scale, radius));
+    m_meshList.rbegin()->Init();
 }
 
 void NSRender::Render::SetCamera(const D3DXVECTOR3& pos, const D3DXVECTOR3& lookAt)
@@ -190,7 +190,11 @@ void NSRender::Render::ChangeWindowMode()
     HRESULT hResult = E_FAIL;
 
     m_pFont->OnLostDevice();
-    m_pMesh2->OnDeviceLost();
+
+    for (auto& elem : m_meshList)
+    {
+        elem.OnDeviceLost();
+    }
 
     D3DPRESENT_PARAMETERS d3dpp;
     ZeroMemory(&d3dpp, sizeof(d3dpp));
@@ -301,7 +305,11 @@ void NSRender::Render::ChangeWindowMode()
     hResult = Common::D3DDevice()->Reset(&d3dpp);
     assert(hResult == S_OK);
 
-    m_pMesh2->OnDeviceReset();
+    for (auto& elem : m_meshList)
+    {
+        elem.OnDeviceLost();
+    }
+
     m_pFont->OnResetDevice();
 
     m_eWindowModeCurrent = m_eWindowModeRequest;

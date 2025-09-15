@@ -7,6 +7,8 @@
 #include <crtdbg.h>
 #include <vector>
 
+#include "Mesh.h"
+
 namespace NSRender
 {
 
@@ -17,8 +19,6 @@ enum class eWindowMode
     FULLSCREEN,
     NONE,
 };
-
-class Mesh;
 
 class Render
 {
@@ -53,7 +53,7 @@ private:
     LPDIRECT3D9 m_pD3D = NULL;
     LPD3DXFONT m_pFont = NULL;
 
-    Mesh* m_pMesh2 = nullptr;
+    std::vector<Mesh> m_meshList;
 
     int m_windowSizeWidth = 1600;
     int m_windowSizeHeight = 900;
