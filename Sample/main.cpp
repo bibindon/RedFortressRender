@@ -96,7 +96,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                 text += L"m : メッシュ追加\n";
                 text += L"n : アニメーションメッシュ追加\n";
                 text += L"k : スキンアニメーションメッシュ追加\n";
-                g_Render.AddText(g_fontId, text, 10, 10);
+                g_Render.DrawText_(g_fontId, text, 10, 10);
             }
 
             g_Render.Draw();
@@ -126,6 +126,13 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
     case WM_KEYDOWN:
     {
+        bool shift = false;
+
+        if ((GetKeyState(VK_SHIFT) & 0x8000) != 0)
+        {
+            shift = true;
+        }
+
         if (wParam == '8')
         {
             g_Render.ChangeWindowMode(NSRender::eWindowMode::WINDOW);
@@ -250,6 +257,18 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         else if (wParam == VK_RIGHT)
         {
             g_Render.RotateCamera(D3DXVECTOR3(0, -0.2f, 0));
+        }
+
+        if (wParam == 'P')
+        {
+            if (shift)
+            {
+
+            }
+            else
+            {
+                g_Render.DrawImage(L"cursor.png", 200, 10);
+            }
         }
     }
     }

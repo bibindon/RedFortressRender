@@ -5,6 +5,10 @@ namespace NSRender
 
 void Sprite::Initialize()
 {
+    HRESULT hResult = E_FAIL;
+    hResult = D3DXCreateSprite(Common::D3DDevice(), &m_pSprite);
+
+    assert(hResult == S_OK);
 }
 
 void Sprite::Finalize()
@@ -35,6 +39,14 @@ void Sprite::LoadImage_(const std::wstring& filename)
 
 void Sprite::PlaceImage(const std::wstring& filename, const int X, const int Y, const int transparency)
 {
+    SpriteInfo spriteInfo;
+
+    spriteInfo.m_rect.left = X;
+    spriteInfo.m_rect.top = Y;
+    spriteInfo.m_imageName = filename;
+    spriteInfo.m_transparency = transparency;
+
+    m_spriteInfoList.push_back(spriteInfo);
 }
 
 void Sprite::RemoveImage(const std::wstring& filename)

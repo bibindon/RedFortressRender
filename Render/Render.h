@@ -70,31 +70,36 @@ public:
 
     // フォント作成時に取得したIDを指定して文字を描画する
     // 文字が表示され続けるためにはこの関数を毎フレーム実行する必要がある。
-    void AddText(const int fontId,
-                 const std::wstring& text,
-                 const int X,
-                 const int Y);
+    void DrawText_(const int fontId,
+                   const std::wstring& text,
+                   const int X,
+                   const int Y);
 
-    void AddText(const int fontId,
-                 const std::wstring& text,
-                 const int X,
-                 const int Y,
-                 const UINT color);
+    void DrawText_(const int fontId,
+                   const std::wstring& text,
+                   const int X,
+                   const int Y,
+                   const UINT color);
 
-    void AddTextCenter(const int fontId,
-                       const std::wstring& text,
-                       const int X,
-                       const int Y,
-                       const int Width,
-                       const int Height);
+    void DrawTextCenter(const int fontId,
+                        const std::wstring& text,
+                        const int X,
+                        const int Y,
+                        const int Width,
+                        const int Height);
 
-    void AddTextCenter(const int fontId,
-                       const std::wstring& text,
-                       const int X,
-                       const int Y,
-                       const int Width,
-                       const int Height,
-                       const UINT color);
+    void DrawTextCenter(const int fontId,
+                        const std::wstring& text,
+                        const int X,
+                        const int Y,
+                        const int Width,
+                        const int Height,
+                        const UINT color);
+
+    void DrawImage(const std::wstring& text,
+                   const int X,
+                   const int Y,
+                   const int transparency = 255);
 
 private:
 
@@ -115,7 +120,7 @@ private:
     int m_windowSizeHeight = 900;
 
     std::vector<Font> m_fontList;
-    std::vector<Sprite> m_spriteList;
+    Sprite m_sprite;
 };
 }
 

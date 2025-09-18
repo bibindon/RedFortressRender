@@ -76,6 +76,8 @@ void NSRender::Render::Initialize(HWND hWnd)
 
     Common::SetD3DDevice(D3DDevice);
 
+    m_sprite.Initialize();
+
     AddMesh(L"cube.x", D3DXVECTOR3(0, 0, 0), D3DXVECTOR3(0, 0, 0), 1.f, 1.f);
 }
 
@@ -125,6 +127,8 @@ void NSRender::Render::Draw()
     {
         elem.Draw();
     }
+
+    m_sprite.Draw();
 
     hResult = Common::D3DDevice()->EndScene();
     assert(hResult == S_OK);
@@ -221,7 +225,7 @@ int NSRender::Render::SetUpFont(const std::wstring& fontName,
     return (int)(m_fontList.size() - 1);
 }
 
-void NSRender::Render::AddText(const int fontId,
+void NSRender::Render::DrawText_(const int fontId,
                                    const std::wstring& text,
                                    const int X,
                                    const int Y)
@@ -234,7 +238,7 @@ void NSRender::Render::AddText(const int fontId,
     m_fontList.at(fontId).AddText(text, X, Y);
 }
 
-void NSRender::Render::AddText(const int fontId,
+void NSRender::Render::DrawText_(const int fontId,
                                const std::wstring& text,
                                const int X,
                                const int Y,
@@ -248,7 +252,7 @@ void NSRender::Render::AddText(const int fontId,
     m_fontList.at(fontId).AddText(text, X, Y, color);
 }
 
-void NSRender::Render::AddTextCenter(const int fontId,
+void NSRender::Render::DrawTextCenter(const int fontId,
                                      const std::wstring& text,
                                      const int X,
                                      const int Y,
@@ -263,7 +267,7 @@ void NSRender::Render::AddTextCenter(const int fontId,
     m_fontList.at(fontId).AddTextCenter(text, X, Y, Width, Height);
 }
 
-void NSRender::Render::AddTextCenter(const int fontId,
+void NSRender::Render::DrawTextCenter(const int fontId,
                                      const std::wstring& text,
                                      const int X,
                                      const int Y,
@@ -277,6 +281,15 @@ void NSRender::Render::AddTextCenter(const int fontId,
     }
 
     m_fontList.at(fontId).AddTextCenter(text, X, Y, Width, Height, color);
+}
+
+void NSRender::Render::DrawImage(const std::wstring& text,
+                                 const int X,
+                                 const int Y,
+                                 const int transparency)
+{
+    m_sprite.LoadImage_(text);
+    m_sprite.PlaceImage(text, X, Y, transparency);
 }
 
 void NSRender::Render::RotateCamera(const D3DXVECTOR3& rot)
