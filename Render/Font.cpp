@@ -1,9 +1,9 @@
-#include "Text.h"
+#include "Font.h"
 
 namespace NSRender
 {
 
-void Text::Initialize(const std::wstring& fontName,
+void Font::Initialize(const std::wstring& fontName,
                       const int fontSize,
                       const UINT fontColor)
 {
@@ -33,57 +33,57 @@ void Text::Initialize(const std::wstring& fontName,
     m_fontColor = fontColor;
 }
 
-void Text::SetMsgLeft(const std::wstring& msg,
+void Font::AddTextLeft(const std::wstring& text,
                       const int X,
                       const int Y)
 {
-    Item item;
+    TextInfo textInfo;
 
-    item.m_rect.left = X;
-    item.m_rect.top = Y;
-    item.m_rect.right = 0;
-    item.m_rect.bottom = 0;
+    textInfo.m_rect.left = X;
+    textInfo.m_rect.top = Y;
+    textInfo.m_rect.right = 0;
+    textInfo.m_rect.bottom = 0;
 
-    item.m_msg = msg;
-    item.m_bCenter = false;
+    textInfo.m_text = text;
+    textInfo.m_bCenter = false;
 
-    m_msgList.push_back(item);
+    m_textList.push_back(textInfo);
 }
 
-void Text::SetMsgCenter(const std::wstring& msg,
+void Font::AddTextCenter(const std::wstring& text,
                         const int X,
                         const int Y,
                         const int Width,
                         const int Height)
 {
-    Item item;
+    TextInfo textInfo;
 
-    item.m_rect.left = X;
-    item.m_rect.top = Y;
-    item.m_rect.right = X + Width;
-    item.m_rect.bottom = Y + Height;
+    textInfo.m_rect.left = X;
+    textInfo.m_rect.top = Y;
+    textInfo.m_rect.right = X + Width;
+    textInfo.m_rect.bottom = Y + Height;
 
-    item.m_msg = msg;
-    item.m_bCenter = true;
+    textInfo.m_text = text;
+    textInfo.m_bCenter = true;
 
-    m_msgList.push_back(item);
+    m_textList.push_back(textInfo);
 }
 
-void Text::Draw()
+void Font::Draw()
 {
-    for (auto& item : m_msgList)
+    for (auto& textInfo : m_textList)
     {
-        if (item.m_bCenter)
+        if (textInfo.m_bCenter)
         {
             // DrawTextの戻り値は文字数である。
             // そのため、hResultの中身が整数でもエラーが起きているわけではない。
             HRESULT hResult = m_pFont->DrawText(NULL,
-                                                item.m_msg.c_str(),
+                                                textInfo.m_text.c_str(),
 
                                                 // -1 = 長さ自動
                                                 -1,
 
-                                                &item.m_rect,
+                                                &textInfo.m_rect,
                                                 DT_CENTER | DT_NOCLIP,
                                                 m_fontColor);
 
@@ -94,12 +94,12 @@ void Text::Draw()
             // DrawTextの戻り値は文字数である。
             // そのため、hResultの中身が整数でもエラーが起きているわけではない。
             HRESULT hResult = m_pFont->DrawText(NULL,
-                                                item.m_msg.c_str(),
+                                                textInfo.m_text.c_str(),
 
                                                 // -1 = 長さ自動
                                                 -1,
 
-                                                &item.m_rect,
+                                                &textInfo.m_rect,
                                                 DT_LEFT | DT_NOCLIP,
                                                 m_fontColor);
 
@@ -108,20 +108,20 @@ void Text::Draw()
 
     }
 
-    m_msgList.clear();
+    m_textList.clear();
 }
 
-void Text::Finalize()
+void Font::Finalize()
 {
     SAFE_RELEASE(m_pFont);
 }
 
-void Text::OnDeviceLost()
+void Font::OnDeviceLost()
 {
     m_pFont->OnLostDevice();
 }
 
-void Text::OnDeviceReset()
+void Font::OnDeviceReset()
 {
     m_pFont->OnResetDevice();
 }

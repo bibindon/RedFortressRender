@@ -14,6 +14,8 @@
 #include "AnimMesh.h"
 #include "SkinAnimMesh.h"
 
+#include "Font.h"
+
 namespace NSRender
 {
 
@@ -61,6 +63,20 @@ public:
     D3DXVECTOR3 GetLookAtPos();
     D3DXVECTOR3 GetCameraRotate();
 
+    // フォント作成
+    // IDが返ってくるので、そのIDを文字描画するときに指定する
+    int SetUpFont(const std::wstring& fontName, const int fontSize, const UINT fontColor);
+
+    // フォント作成時に取得したIDを指定して文字を描画する
+    // 文字が表示され続けるためにはこの関数を毎フレーム実行する必要がある。
+    void AddTextLeft(const int fontId, const std::wstring& text, const int X, const int Y);
+    void AddTextCenter(const int fontId,
+                       const std::wstring& text,
+                       const int X,
+                       const int Y,
+                       const int Width,
+                       const int Height);
+
 private:
 
     HWND m_hWnd = NULL;
@@ -81,6 +97,8 @@ private:
 
     int m_windowSizeWidth = 1600;
     int m_windowSizeHeight = 900;
+
+    std::vector<Font> m_fontList;
 };
 }
 

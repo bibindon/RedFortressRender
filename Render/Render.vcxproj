@@ -38,7 +38,7 @@
     <ClCompile Include="SkinAnimMesh.cpp" />
     <ClCompile Include="SkinAnimMeshAlloc.cpp" />
     <ClCompile Include="Sprite.cpp" />
-    <ClCompile Include="Text.cpp" />
+    <ClCompile Include="Font.cpp" />
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -53,7 +53,7 @@
     <ClInclude Include="SkinAnimMesh.h" />
     <ClInclude Include="SkinAnimMeshAlloc.h" />
     <ClInclude Include="Sprite.h" />
-    <ClInclude Include="Text.h" />
+    <ClInclude Include="Font.h" />
     <ClInclude Include="Util.h" />
   </ItemGroup>
   <ItemGroup>

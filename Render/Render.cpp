@@ -16,10 +16,15 @@
 #include <vector>
 
 #include "Common.h"
+
 #include "Mesh.h"
+#include "AnimMesh.h"
+#include "SkinAnimMesh.h"
+
 #include "Camera.h"
 #include "Light.h"
-#include "SkinAnimMesh.h"
+
+#include "Font.h"
 
 #define SAFE_RELEASE(p) { if (p) { (p)->Release(); (p) = NULL; } }
 
@@ -115,19 +120,6 @@ void NSRender::Render::Draw()
     hResult = Common::D3DDevice()->BeginScene();
     assert(hResult == S_OK);
 
-    {
-        std::wstring text;
-        text += L"WASD : カメラ移動\n";
-        text += L"矢印キー : カメラ回転\n";
-        text += L"8 : ウィンドウモード\n";
-        text += L"9 : ボーダーレスウィンドウモード\n";
-        text += L"0 : フルスクリーンモード\n";
-        text += L"m : メッシュ追加\n";
-        text += L"n : アニメーションメッシュ追加\n";
-        text += L"k : スキンアニメーションメッシュ追加\n";
-        TextDraw(text, 0, 0);
-    }
-
     for (auto& elem : m_meshList)
     {
         elem.Render();
@@ -144,6 +136,11 @@ void NSRender::Render::Draw()
                      Camera::GetProjMatrix(),
                      Light::GetLightNormal(),
                      Light::GetBrightness());
+    }
+
+    for (auto& elem : m_fontList)
+    {
+        elem.Draw();
     }
 
     hResult = Common::D3DDevice()->EndScene();
@@ -228,6 +225,45 @@ D3DXVECTOR3 NSRender::Render::GetCameraRotate()
     auto dir(lookAtPos - eyePos);
     D3DXVec3Normalize(&dir, &dir);
     return dir;
+}
+
+int NSRender::Render::SetUpFont(const std::wstring& fontName,
+                                const int fontSize,
+                                const UINT fontColor)
+{
+    Font font;
+    font.Initialize(fontName, fontSize, fontColor);
+    m_fontList.push_back(font);
+
+    return (int)(m_fontList.size() - 1);
+}
+
+void NSRender::Render::AddTextLeft(const int fontId,
+                                   const std::wstring& text,
+                                   const int X,
+                                   const int Y)
+{
+    if (fontId >= m_fontList.size())
+    {
+        throw std::exception("Illegal fontId");
+    }
+
+    m_fontList.at(fontId).AddTextLeft(text, X, Y);
+}
+
+void NSRender::Render::AddTextCenter(const int fontId,
+                                     const std::wstring& text,
+                                     const int X,
+                                     const int Y,
+                                     const int Width,
+                                     const int Height)
+{
+    if (fontId >= m_fontList.size())
+    {
+        throw std::exception("Illegal fontId");
+    }
+
+    m_fontList.at(fontId).AddTextCenter(text, X, Y, Width, Height);
 }
 
 void NSRender::Render::RotateCamera(const D3DXVECTOR3& rot)

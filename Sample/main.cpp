@@ -15,6 +15,7 @@ const int WINDOW_SIZE_H = 900;
 
 bool g_bClose = false;
 NSRender::Render g_Render;
+int g_fontId = 0;
 
 LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -68,6 +69,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                              NULL);
 
     g_Render.Initialize(hWnd);
+    g_fontId = g_Render.SetUpFont(L"ＭＳ ゴシック", 20, D3DCOLOR_RGBA(255, 255, 255, 255));
 
     ShowWindow(hWnd, SW_SHOWDEFAULT);
     UpdateWindow(hWnd);
@@ -83,6 +85,20 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
         else
         {
             Sleep(16);
+
+            {
+                std::wstring text;
+                text += L"WASD : カメラ移動\n";
+                text += L"矢印キー : カメラ回転\n";
+                text += L"8 : ウィンドウモード\n";
+                text += L"9 : ボーダーレスウィンドウモード\n";
+                text += L"0 : フルスクリーンモード\n";
+                text += L"m : メッシュ追加\n";
+                text += L"n : アニメーションメッシュ追加\n";
+                text += L"k : スキンアニメーションメッシュ追加\n";
+                g_Render.AddTextLeft(g_fontId, text, 10, 10);
+            }
+
             g_Render.Draw();
         }
 
