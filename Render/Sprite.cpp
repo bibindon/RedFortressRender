@@ -75,6 +75,8 @@ void Sprite::Draw()
     }
 
     m_pSprite->End();
+
+    m_spriteInfoList.clear();
 }
 
 void Sprite::OnDeviceLost()

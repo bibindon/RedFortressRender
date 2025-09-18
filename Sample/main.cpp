@@ -17,6 +17,14 @@ bool g_bClose = false;
 NSRender::Render g_Render;
 int g_fontId = 0;
 
+struct ImageInfo
+{
+    std::wstring m_imageName;
+    RECT m_rect { };
+};
+
+std::vector<ImageInfo> g_imageInfoList;
+
 LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 extern int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
@@ -97,6 +105,11 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                 text += L"n : アニメーションメッシュ追加\n";
                 text += L"k : スキンアニメーションメッシュ追加\n";
                 g_Render.DrawText_(g_fontId, text, 10, 10);
+            }
+
+            for (auto& elem : g_imageInfoList)
+            {
+                g_Render.DrawImage(elem.m_imageName, elem.m_rect.left, elem.m_rect.top);
             }
 
             g_Render.Draw();
@@ -263,11 +276,22 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {
             if (shift)
             {
-
+                g_imageInfoList.clear();
             }
             else
             {
-                g_Render.DrawImage(L"cursor.png", 200, 10);
+                ImageInfo imageInfo;
+                imageInfo.m_imageName = L"cursor.png";
+
+                int randX = std::abs(rand());
+                randX %= 1300;
+                int randY = std::abs(rand());
+                randY %= 700;
+
+                imageInfo.m_rect.left = randX;
+                imageInfo.m_rect.top = randY;
+
+                g_imageInfoList.push_back(imageInfo);
             }
         }
     }
