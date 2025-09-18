@@ -27,7 +27,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AnimationStrategy.cpp" />
     <ClCompile Include="AnimController.cpp" />
     <ClCompile Include="AnimMesh.cpp" />
     <ClCompile Include="AnimMeshAlloc.cpp" />
@@ -43,7 +42,6 @@
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AnimationStrategy.h" />
     <ClInclude Include="AnimController.h" />
     <ClInclude Include="AnimMesh.h" />
     <ClInclude Include="AnimMeshAlloc.h" />

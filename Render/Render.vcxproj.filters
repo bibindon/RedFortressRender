@@ -48,9 +48,6 @@
     <ClCompile Include="AnimMeshAlloc.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="AnimationStrategy.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="SkinAnimMesh.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -90,9 +87,6 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="AnimMeshAlloc.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="AnimationStrategy.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="SkinAnimMesh.h">
