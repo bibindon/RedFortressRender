@@ -33,7 +33,7 @@ void Font::Initialize(const std::wstring& fontName,
     m_fontColor = fontColor;
 }
 
-void Font::AddTextLeft(const std::wstring& text,
+void Font::AddText(const std::wstring& text,
                       const int X,
                       const int Y)
 {
@@ -46,6 +46,28 @@ void Font::AddTextLeft(const std::wstring& text,
 
     textInfo.m_text = text;
     textInfo.m_bCenter = false;
+
+    textInfo.m_color = m_fontColor;
+
+    m_textList.push_back(textInfo);
+}
+
+void Font::AddText(const std::wstring& text,
+                       const int X,
+                       const int Y,
+                       const UINT fontColor)
+{
+    TextInfo textInfo;
+
+    textInfo.m_rect.left = X;
+    textInfo.m_rect.top = Y;
+    textInfo.m_rect.right = 0;
+    textInfo.m_rect.bottom = 0;
+
+    textInfo.m_text = text;
+    textInfo.m_bCenter = false;
+
+    textInfo.m_color = fontColor;
 
     m_textList.push_back(textInfo);
 }
@@ -66,6 +88,30 @@ void Font::AddTextCenter(const std::wstring& text,
     textInfo.m_text = text;
     textInfo.m_bCenter = true;
 
+    textInfo.m_color = m_fontColor;
+
+    m_textList.push_back(textInfo);
+}
+
+void Font::AddTextCenter(const std::wstring& text,
+                         const int X,
+                         const int Y,
+                         const int Width,
+                         const int Height,
+                         const UINT fontColor)
+{
+    TextInfo textInfo;
+
+    textInfo.m_rect.left = X;
+    textInfo.m_rect.top = Y;
+    textInfo.m_rect.right = X + Width;
+    textInfo.m_rect.bottom = Y + Height;
+
+    textInfo.m_text = text;
+    textInfo.m_bCenter = true;
+
+    textInfo.m_color = fontColor;
+
     m_textList.push_back(textInfo);
 }
 
@@ -85,7 +131,7 @@ void Font::Draw()
 
                                                 &textInfo.m_rect,
                                                 DT_CENTER | DT_NOCLIP,
-                                                m_fontColor);
+                                                textInfo.m_color);
 
             assert(hResult >= 0);
         }
@@ -101,7 +147,7 @@ void Font::Draw()
 
                                                 &textInfo.m_rect,
                                                 DT_LEFT | DT_NOCLIP,
-                                                m_fontColor);
+                                                textInfo.m_color);
 
             assert(hResult >= 0);
         }

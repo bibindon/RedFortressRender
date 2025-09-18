@@ -238,7 +238,7 @@ int NSRender::Render::SetUpFont(const std::wstring& fontName,
     return (int)(m_fontList.size() - 1);
 }
 
-void NSRender::Render::AddTextLeft(const int fontId,
+void NSRender::Render::AddText(const int fontId,
                                    const std::wstring& text,
                                    const int X,
                                    const int Y)
@@ -248,7 +248,21 @@ void NSRender::Render::AddTextLeft(const int fontId,
         throw std::exception("Illegal fontId");
     }
 
-    m_fontList.at(fontId).AddTextLeft(text, X, Y);
+    m_fontList.at(fontId).AddText(text, X, Y);
+}
+
+void NSRender::Render::AddText(const int fontId,
+                               const std::wstring& text,
+                               const int X,
+                               const int Y,
+                               const UINT color)
+{
+    if (fontId >= m_fontList.size())
+    {
+        throw std::exception("Illegal fontId");
+    }
+
+    m_fontList.at(fontId).AddText(text, X, Y, color);
 }
 
 void NSRender::Render::AddTextCenter(const int fontId,
@@ -264,6 +278,22 @@ void NSRender::Render::AddTextCenter(const int fontId,
     }
 
     m_fontList.at(fontId).AddTextCenter(text, X, Y, Width, Height);
+}
+
+void NSRender::Render::AddTextCenter(const int fontId,
+                                     const std::wstring& text,
+                                     const int X,
+                                     const int Y,
+                                     const int Width,
+                                     const int Height,
+                                     const UINT color)
+{
+    if (fontId >= m_fontList.size())
+    {
+        throw std::exception("Illegal fontId");
+    }
+
+    m_fontList.at(fontId).AddTextCenter(text, X, Y, Width, Height, color);
 }
 
 void NSRender::Render::RotateCamera(const D3DXVECTOR3& rot)

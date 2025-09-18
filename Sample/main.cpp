@@ -96,7 +96,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                 text += L"m : メッシュ追加\n";
                 text += L"n : アニメーションメッシュ追加\n";
                 text += L"k : スキンアニメーションメッシュ追加\n";
-                g_Render.AddTextLeft(g_fontId, text, 10, 10);
+                g_Render.AddText(g_fontId, text, 10, 10);
             }
 
             g_Render.Draw();
