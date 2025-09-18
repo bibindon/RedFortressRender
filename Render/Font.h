@@ -52,6 +52,8 @@ public:
     void OnDeviceLost();
     void OnDeviceReset();
 
+private:
+
     struct TextInfo
     {
         RECT m_rect { };
@@ -59,8 +61,6 @@ public:
         bool m_bCenter = false;
         UINT m_color = D3DCOLOR_RGBA(255, 255, 255, 255);
     };
-
-private:
 
     LPD3DXFONT m_pFont = NULL;
     UINT m_fontColor = UINT_MAX;

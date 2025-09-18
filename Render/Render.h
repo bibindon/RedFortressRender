@@ -15,6 +15,7 @@
 #include "SkinAnimMesh.h"
 
 #include "Font.h"
+#include "Sprite.h"
 
 namespace NSRender
 {
@@ -99,15 +100,12 @@ private:
 
     HWND m_hWnd = NULL;
 
-    void TextDraw(const std::wstring& text, int X, int Y);
-
     void ChangeWindowMode();
 
     eWindowMode m_eWindowModeCurrent = eWindowMode::NONE;
     eWindowMode m_eWindowModeRequest = eWindowMode::NONE;
 
     LPDIRECT3D9 m_pD3D = NULL;
-    LPD3DXFONT m_pFont = NULL;
 
     std::vector<Mesh> m_meshList;
     std::vector<AnimMesh*> m_animMeshList;
@@ -117,6 +115,7 @@ private:
     int m_windowSizeHeight = 900;
 
     std::vector<Font> m_fontList;
+    std::vector<Sprite> m_spriteList;
 };
 }
 

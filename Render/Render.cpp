@@ -76,28 +76,11 @@ void NSRender::Render::Initialize(HWND hWnd)
 
     Common::SetD3DDevice(D3DDevice);
 
-    hResult = D3DXCreateFont(Common::D3DDevice(),
-                             20,
-                             0,
-                             FW_HEAVY,
-                             1,
-                             FALSE,
-                             SHIFTJIS_CHARSET,
-                             OUT_TT_ONLY_PRECIS,
-                             CLEARTYPE_NATURAL_QUALITY,
-                             FF_DONTCARE,
-                             _T("ＭＳ ゴシック"),
-                             &m_pFont);
-
-    assert(hResult == S_OK);
-
-    // AddMesh(L"cube.x", D3DXVECTOR3(0, 0, 0), D3DXVECTOR3(0, 0, 0), 1.f, 1.f);
+    AddMesh(L"cube.x", D3DXVECTOR3(0, 0, 0), D3DXVECTOR3(0, 0, 0), 1.f, 1.f);
 }
 
 void NSRender::Render::Finalize()
 {
-    SAFE_RELEASE(m_pFont);
-
     Common::D3DDevice()->Release();
     Common::SetD3DDevice(NULL);
 
@@ -333,28 +316,10 @@ void NSRender::Render::RotateCamera(const D3DXVECTOR3& rot)
     Camera::SetLookAtPos(lookAt);
 }
 
-void NSRender::Render::TextDraw(const std::wstring& text, int X, int Y)
-{
-    RECT rect = { X, Y, 0, 0 };
-
-    // DrawTextの戻り値は文字数である。
-    // そのため、hResultの中身が整数でもエラーが起きているわけではない。
-    HRESULT hResult = m_pFont->DrawText(NULL,
-                                      text.c_str(),
-                                      -1,
-                                      &rect,
-                                      DT_LEFT | DT_NOCLIP,
-                                      D3DCOLOR_ARGB(255, 0, 0, 0));
-
-    assert((int)hResult >= 0);
-}
-
 // TODO いずれちゃんと書くこと
 void NSRender::Render::ChangeWindowMode()
 {
     HRESULT hResult = E_FAIL;
-
-    m_pFont->OnLostDevice();
 
     for (auto& elem : m_meshList)
     {
@@ -484,8 +449,6 @@ void NSRender::Render::ChangeWindowMode()
     {
         elem->OnDeviceReset();
     }
-
-    m_pFont->OnResetDevice();
 
     m_eWindowModeCurrent = m_eWindowModeRequest;
     m_eWindowModeRequest = eWindowMode::NONE;

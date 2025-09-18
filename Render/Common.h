@@ -29,11 +29,21 @@ public:
 
     static constexpr float ANIMATION_SPEED { 1.0f / 60 };
 
+    static void OnDeviceLostAll();
+    static void OnDeviceResetAll();
+
+    static void AddDeviceLostResource(const LPD3DXFONT font);
+    static void AddDeviceLostResource(const LPD3DXSPRITE sprite);
+    static void AddDeviceLostResource(const LPD3DXEFFECT effect);
+
 private:
 
     static LPDIRECT3D9 m_pD3D;
     static LPDIRECT3DDEVICE9 m_pD3DDev;
 
+    static std::vector<LPD3DXFONT> m_fontList;
+    static std::vector<LPD3DXSPRITE> m_spriteList;
+    static std::vector<LPD3DXEFFECT> m_effectList;
 };
 
 template <typename T>
