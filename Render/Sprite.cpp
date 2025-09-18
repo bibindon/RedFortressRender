@@ -62,7 +62,7 @@ void Sprite::RemoveImage(const std::wstring& filename)
 
 void Sprite::Draw()
 {
-    m_pSprite->Begin(0);
+    m_pSprite->Begin(D3DXSPRITE_ALPHABLEND);
 
     for (auto& elem : m_spriteInfoList)
     {
