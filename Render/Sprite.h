@@ -9,7 +9,7 @@ namespace NSRender
 // スプライトは描画するときにテクスチャを指定することができるので
 // 一つのスプライトで沢山のテクスチャを表示できる。
 // 問題が起きるまでは、スプライト1枚だけを使うようにする
-// 毎フレーム、AddImage関数を実行しないと絵が表示され続けない
+// LoadImage_は1回でいいけど、PlaceImage関数は毎フレーム実行する必要がある。
 // 
 // TODO 解像度によって適切な解像度の画像が表示されるようにしたい
 //-------------------------------------------------------------------
@@ -45,6 +45,8 @@ private:
     LPD3DXSPRITE m_pSprite = NULL;
 
     std::vector<SpriteInfo> m_spriteInfoList;
+
+    std::unordered_map<std::wstring, LPDIRECT3DTEXTURE9> m_textureMap;
 
 };
 }
