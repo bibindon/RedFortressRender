@@ -1,8 +1,7 @@
 float4 g_light_normal;
 float g_light_brightness;
-//float4 g_light_diffuse = {1, 0, 0, 0}; // TODO
 float4 g_diffuse;
-float4 g_ambient = { 0.2f, 0.2f, 0.5f, 0.0f };
+float4 g_ambient = { 0.2f, 0.2f, 0.2f, 0.0f };
 
 // Matrix Palette 
 static const int MAX_MATRICES = 26;
@@ -78,10 +77,10 @@ void pixel_shader(
 
 int current_bone_numbers;
 VertexShader vsArray[4] = {
-    compile vs_2_0 vertex_shader(1),
-    compile vs_2_0 vertex_shader(2),
-    compile vs_2_0 vertex_shader(3),
-    compile vs_2_0 vertex_shader(4)
+    compile vs_3_0 vertex_shader(1),
+    compile vs_3_0 vertex_shader(2),
+    compile vs_3_0 vertex_shader(3),
+    compile vs_3_0 vertex_shader(4)
 };
 
 technique technique_
@@ -93,6 +92,6 @@ technique technique_
         DestBlend = INVSRCALPHA;
 
         VertexShader = (vsArray[current_bone_numbers]);
-        PixelShader = compile ps_2_0 pixel_shader();
+        PixelShader = compile ps_3_0 pixel_shader();
     }
 }

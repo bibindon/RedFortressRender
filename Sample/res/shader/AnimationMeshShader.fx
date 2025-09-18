@@ -6,23 +6,25 @@
 float4x4 g_matWorld;
 float4x4 g_matWorldViewProj;
 
-float4 g_vecLightNormal;
-float g_fLightBrigntness;
+float4 g_vecLightNormal = { 1.f, 0.f, 0.f, 0.f };
+float g_fLightBrigntness = 0.f;
 
-float4 g_vecDiffuse;
+// 基本は灰色。
+float4 g_vecDiffuse = { 0.5f, 0.5f, 0.5f, 1.f };
 
 texture g_texture;
 sampler g_textureSampler = sampler_state
 {
     Texture   = (g_texture);
     MipFilter = LINEAR;
-    MinFilter = LINEAR;
-    MagFilter = LINEAR;
+    MinFilter = ANISOTROPIC;
+    MagFilter = ANISOTROPIC;
+    MaxAnisotropy = 8;
 };
 
-//-----------------------------------------------------
+//----------------------------------------------------------------------
 // 頂点シェーダー
-//-----------------------------------------------------
+//----------------------------------------------------------------------
 void VertexShader1(in  float4 inPos        : POSITION,
                    in  float4 inNormal     : NORMAL0,
                    in  float4 inTexCoord   : TEXCOORD0,
@@ -32,13 +34,13 @@ void VertexShader1(in  float4 inPos        : POSITION,
 {
     outPos  = mul(inPos, g_matWorldViewProj);
 
-    //-----------------------------------------------------
+    //----------------------------------------------------------------------
     // ハーフランバート、という方法で陰影をつける。
     // 通常のランバート拡散照明は、光源の方角とモデルの面の法線の角度に応じて陰影をつけるが、
     // このやり方だと、球に光を当てた場合、光が当たっていない側のすべて黒になる。
     // ハーフランバートは、これに対処するために、光源と法線が真逆の時に０になるようにする。
     // 物理的には正しくない。
-    //-----------------------------------------------------
+    //----------------------------------------------------------------------
 
     float dot_ = 0.f;
 

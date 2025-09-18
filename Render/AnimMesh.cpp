@@ -2,7 +2,6 @@
 
 #include "AnimMeshAlloc.h"
 #include "Common.h"
-#include "AnimationStrategy.h"
 #include "Light.h"
 #include "Camera.h"
 #include <cassert>

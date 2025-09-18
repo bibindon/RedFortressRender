@@ -33,21 +33,24 @@ sampler g_textureSampler = sampler_state
 //==================================================================
 // 頂点シェーダー
 //==================================================================
-void VertexShader1(in  float4 inPos          : POSITION,
-                   in  float4 inNormal       : NORMAL0,
-                   in  float4 inTexCoord     : TEXCOORD0,
+void VertexShader1(in  float3 inPos          : POSITION,
+                   in  float3 inNormal       : NORMAL0,
+                   in  float2 inTexCoord     : TEXCOORD0,
 
                    out float4 outPos         : POSITION,
                    out float4 outVecColor    : COLOR0,
-                   out float4 outTexCoord    : TEXCOORD0,
+                   out float2 outTexCoord    : TEXCOORD0,
                    out float  outFogStrength : TEXCOORD1,
                    out float3 outWorldPos    : TEXCOORD2,
                    out float3 outNormal      : TEXCOORD3)
 {
+    float4 inPos4 = float4(inPos, 1.f);
+    float4 inNorm4 = float4(inNormal, 1.f);
+
     //==================================================================
     // outPos
     //==================================================================
-    outPos  = mul(inPos, g_matWorldViewProj);
+    outPos  = mul(inPos4, g_matWorldViewProj);
 
     //==================================================================
     // outVecColor
@@ -55,7 +58,7 @@ void VertexShader1(in  float4 inPos          : POSITION,
     // ハーフランバート
     float dot_ = 0.f;
     {
-        dot_ = dot(inNormal, g_lightNormal);
+        dot_ = dot(inNorm4, g_lightNormal);
         dot_ += 1.f;
         dot_ *= 0.5f;
     }
@@ -79,11 +82,11 @@ void VertexShader1(in  float4 inPos          : POSITION,
     //==================================================================
     // outFogStrength
     //==================================================================
-    //----------------------------------
+    //------------------------------------------------------------------
     // 霧の描画
-    //----------------------------------
+    //------------------------------------------------------------------
     // ワールド座標に変換
-    float4 worldPos = mul(inPos, g_matWorld);
+    float4 worldPos = mul(inPos4, g_matWorld);
 
     // カメラからの距離をワールド空間で計算
     float distance = length(worldPos.xyz - g_vecCameraPos.xyz);
@@ -108,12 +111,12 @@ void VertexShader1(in  float4 inPos          : POSITION,
     //==================================================================
     // outWorldPos
     //==================================================================
-    outWorldPos = mul(inPos, g_matWorld).xyz;
+    outWorldPos = mul(inPos4, g_matWorld).xyz;
 
     //==================================================================
     // outNormal
     //==================================================================
-    outNormal = mul(inNormal, g_matWorld).xyz;
+    outNormal = mul(inNorm4, g_matWorld).xyz;
 }
 
 //==================================================================
@@ -124,6 +127,7 @@ void PixelShader1(in float4 inDiffuse    : COLOR0,
                   in float  inFog        : TEXCOORD1,
                   in float3 inWorldPos   : TEXCOORD2,
                   in float3 inNormal     : TEXCOORD3,
+
                   out float4 outVecColor : COLOR0)
 {
     float4 vecColorWork = float4(0.f, 0.f, 0.f, 0.f);

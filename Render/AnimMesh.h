@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include "AnimationStrategy.h"
 #include "AnimController.h"
 #include <tchar.h>
 
