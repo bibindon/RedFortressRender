@@ -34,6 +34,7 @@
     <ClCompile Include="Common.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="MeshInstancing.cpp" />
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="SkinAnimMesh.cpp" />
     <ClCompile Include="SkinAnimMeshAlloc.cpp" />
@@ -49,6 +50,7 @@
     <ClInclude Include="Common.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="MeshInstancing.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="SkinAnimMesh.h" />
     <ClInclude Include="SkinAnimMeshAlloc.h" />
