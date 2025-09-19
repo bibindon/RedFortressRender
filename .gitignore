@@ -13,3 +13,8 @@
 /x64/Debug/Sample.exe
 /x64/Debug/Sample.pdb
 *.user
+/UnitTest1/x64/Debug
+/x64/Debug/UnitTest1.dll
+/x64/Debug/UnitTest1.exp
+/x64/Debug/UnitTest1.lib
+/x64/Debug/UnitTest1.pdb
