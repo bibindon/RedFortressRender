@@ -7,9 +7,11 @@ namespace NSRender
 LPDIRECT3D9 Common::m_pD3D = NULL;
 LPDIRECT3DDEVICE9 Common::m_pD3DDev = NULL;
 
-std::vector<LPD3DXFONT> Common::m_fontList;
-std::vector<LPD3DXSPRITE> Common::m_spriteList;
-std::vector<LPD3DXEFFECT> Common::m_effectList;
+std::vector<Font> Common::m_fontList;
+std::vector<Sprite> Common::m_spriteList;
+std::vector<Mesh> Common::m_meshList;
+std::vector<AnimMesh> Common::m_animMeshList;
+std::vector<SkinAnimMesh> Common::m_skinAnimMeshList;
 
 void Common::Initialize()
 {
@@ -20,7 +22,9 @@ void Common::Finalize()
 {
     m_fontList.clear();
     m_spriteList.clear();
-    m_effectList.clear();
+    m_meshList.clear();
+    m_animMeshList.clear();
+    m_skinAnimMeshList.clear();
 }
 
 LPDIRECT3DDEVICE9 Common::D3DDevice()
@@ -37,17 +41,27 @@ void Common::OnDeviceLostAll()
 {
     for (auto& elem : m_fontList)
     {
-        elem->OnLostDevice();
+        elem.OnDeviceLost();
     }
 
     for (auto& elem : m_spriteList)
     {
-        elem->OnLostDevice();
+        elem.OnDeviceLost();
     }
 
-    for (auto& elem : m_effectList)
+    for (auto& elem : m_meshList)
     {
-        elem->OnLostDevice();
+        elem.OnDeviceLost();
+    }
+
+    for (auto& elem : m_animMeshList)
+    {
+        elem.OnDeviceLost();
+    }
+
+    for (auto& elem : m_skinAnimMeshList)
+    {
+        elem.OnDeviceLost();
     }
 }
 
@@ -55,48 +69,78 @@ void Common::OnDeviceResetAll()
 {
     for (auto& elem : m_fontList)
     {
-        elem->OnResetDevice();
+        elem.OnDeviceReset();
     }
 
     for (auto& elem : m_spriteList)
     {
-        elem->OnResetDevice();
+        elem.OnDeviceReset();
     }
 
-    for (auto& elem : m_effectList)
+    for (auto& elem : m_meshList)
     {
-        elem->OnResetDevice();
+        elem.OnDeviceReset();
+    }
+
+    for (auto& elem : m_animMeshList)
+    {
+        elem.OnDeviceReset();
+    }
+
+    for (auto& elem : m_skinAnimMeshList)
+    {
+        elem.OnDeviceReset();
     }
 }
 
-void Common::AddDeviceLostResource(const LPD3DXFONT font)
+void Common::AddDeviceLostResource(const Font font)
 {
     m_fontList.push_back(font);
 }
 
-void Common::AddDeviceLostResource(const LPD3DXSPRITE sprite)
+void Common::AddDeviceLostResource(const Sprite sprite)
 {
     m_spriteList.push_back(sprite);
 }
 
-void Common::AddDeviceLostResource(const LPD3DXEFFECT effect)
+void Common::AddDeviceLostResource(const Mesh res)
 {
-    m_effectList.push_back(effect);
+    m_meshList.push_back(res);
 }
 
-void Common::RemoveDeviceLostResource(const LPD3DXFONT font)
+void Common::AddDeviceLostResource(const AnimMesh res)
 {
-    Util::Remove(m_fontList, font);
+    m_animMeshList.push_back(res);
 }
 
-void Common::RemoveDeviceLostResource(const LPD3DXSPRITE sprite)
+void Common::AddDeviceLostResource(const SkinAnimMesh res)
 {
-    Util::Remove(m_spriteList, sprite);
+    m_skinAnimMeshList.push_back(res);
 }
 
-void Common::RemoveDeviceLostResource(const LPD3DXEFFECT effect)
+void Common::RemoveDeviceLostResource(const Font res)
 {
-    Util::Remove(m_effectList, effect);
+    Util::Remove(m_fontList, res);
+}
+
+void Common::RemoveDeviceLostResource(const Sprite res)
+{
+    Util::Remove(m_spriteList, res);
+}
+
+void Common::RemoveDeviceLostResource(const Mesh res)
+{
+    Util::Remove(m_meshList, res);
+}
+
+void Common::RemoveDeviceLostResource(const AnimMesh res)
+{
+    Util::Remove(m_animMeshList, res);
+}
+
+void Common::RemoveDeviceLostResource(const SkinAnimMesh res)
+{
+    Util::Remove(m_skinAnimMeshList, res);
 }
 
 }

@@ -310,5 +310,18 @@ HRESULT SkinAnimMesh::allocate_all_bone_matrices(LPD3DXFRAME frame)
     }
     return S_OK;
 }
+
+void SkinAnimMesh::OnDeviceLost()
+{
+    HRESULT hr = m_D3DEffect->OnLostDevice();
+    assert(hr == S_OK);
+}
+
+void SkinAnimMesh::OnDeviceReset()
+{
+    HRESULT hr = m_D3DEffect->OnResetDevice();
+    assert(hr == S_OK);
+}
+
 }
 

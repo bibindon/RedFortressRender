@@ -8,6 +8,12 @@
 #include <cassert>
 #include <memory>
 
+#include "Font.h"
+#include "Sprite.h"
+#include "Mesh.h"
+#include "AnimMesh.h"
+#include "SkinAnimMesh.h"
+
 #if defined(_DEBUG)
 #define NEW ::new(_NORMAL_BLOCK, __FILE__, __LINE__)
 #else
@@ -32,22 +38,28 @@ public:
     static void OnDeviceLostAll();
     static void OnDeviceResetAll();
 
-    static void AddDeviceLostResource(const LPD3DXFONT font);
-    static void AddDeviceLostResource(const LPD3DXSPRITE sprite);
-    static void AddDeviceLostResource(const LPD3DXEFFECT effect);
+    static void AddDeviceLostResource(const Font res);
+    static void AddDeviceLostResource(const Sprite res);
+    static void AddDeviceLostResource(const Mesh res);
+    static void AddDeviceLostResource(const AnimMesh res);
+    static void AddDeviceLostResource(const SkinAnimMesh res);
 
-    static void RemoveDeviceLostResource(const LPD3DXFONT font);
-    static void RemoveDeviceLostResource(const LPD3DXSPRITE sprite);
-    static void RemoveDeviceLostResource(const LPD3DXEFFECT effect);
+    static void RemoveDeviceLostResource(const Font res);
+    static void RemoveDeviceLostResource(const Sprite res);
+    static void RemoveDeviceLostResource(const Mesh res);
+    static void RemoveDeviceLostResource(const AnimMesh res);
+    static void RemoveDeviceLostResource(const SkinAnimMesh res);
 
 private:
 
     static LPDIRECT3D9 m_pD3D;
     static LPDIRECT3DDEVICE9 m_pD3DDev;
 
-    static std::vector<LPD3DXFONT> m_fontList;
-    static std::vector<LPD3DXSPRITE> m_spriteList;
-    static std::vector<LPD3DXEFFECT> m_effectList;
+    static std::vector<Font> m_fontList;
+    static std::vector<Sprite> m_spriteList;
+    static std::vector<Mesh> m_meshList;
+    static std::vector<AnimMesh> m_animMeshList;
+    static std::vector<SkinAnimMesh> m_skinAnimMeshList;
 };
 
 template <typename T>

@@ -30,6 +30,9 @@ public:
                 const D3DXVECTOR4&,
                 const float&);
 
+    void OnDeviceLost();
+    void OnDeviceReset();
+
 private:
     void render_impl(const D3DXMATRIX &, const D3DXMATRIX &);
 
