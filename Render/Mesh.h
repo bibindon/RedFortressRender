@@ -29,7 +29,7 @@ public:
          const float,
          const float = -1.f);
 
-    ~Mesh();
+    virtual ~Mesh();
 
     void Initialize();
     void SetPos(const D3DXVECTOR3& pos);
@@ -48,7 +48,6 @@ public:
     void OnDeviceReset();
 
 private:
-    //const std::wstring SHADER_FILENAME = _T("res\\shader\\MeshShader.fx");
     const std::wstring SHADER_FILENAME = _T("res\\shader\\simple.fx");
     std::wstring m_meshName;
 

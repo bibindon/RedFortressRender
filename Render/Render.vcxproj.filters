@@ -57,6 +57,9 @@
     <ClCompile Include="MeshInstancing.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="MeshSmooth.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Render.h">
@@ -101,6 +104,9 @@
     <ClInclude Include="MeshInstancing.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="MeshSmooth.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shader\simple.fx">
@@ -112,13 +118,16 @@
     <FxCompile Include="shader\MeshShader.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
-    <FxCompile Include="shader\AnimationMeshShader.fx">
+    <FxCompile Include="shader\AnimMeshShader.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
     <FxCompile Include="shader\SkinAnimMeshShader.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
     <FxCompile Include="shader\MeshInstancing.fx">
+      <Filter>シェーダー</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\MeshSmooth.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
   </ItemGroup>
