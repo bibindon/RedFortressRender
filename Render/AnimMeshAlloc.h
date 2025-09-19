@@ -12,7 +12,6 @@ namespace NSRender
 struct AnimMeshFrame : public D3DXFRAME
 {
     D3DXMATRIX m_combinedMatrix;
-//    explicit AnimMeshFrame(const std::string&);
 };
 
 struct AnimMeshContainer : public D3DXMESHCONTAINER

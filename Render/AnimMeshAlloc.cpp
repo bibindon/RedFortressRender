@@ -7,17 +7,6 @@
 namespace NSRender
 {
 
-//AnimMeshFrame::AnimMeshFrame(const std::string& name)
-//    : D3DXFRAME { },
-//    m_combinedMatrix { }
-//{
-//    Name = NEW char[name.length() + 1];
-//    strcpy_s(Name, name.length() + 1, name.c_str());
-//
-//    D3DXMatrixIdentity(&TransformationMatrix);
-//    D3DXMatrixIdentity(&m_combinedMatrix);
-//}
-
 AnimMeshContainer::AnimMeshContainer(const std::wstring& xFilename,
                                      const std::string& meshName,
                                      LPD3DXMESH d3dMesh,
