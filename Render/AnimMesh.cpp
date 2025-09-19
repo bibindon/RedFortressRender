@@ -63,29 +63,29 @@ NSRender::AnimMesh::AnimMesh(
     m_meshTextureHandle = m_D3DEffect->GetParameterByName(nullptr, "g_texture");
     m_diffuseHandle = m_D3DEffect->GetParameterByName(nullptr, "g_vecDiffuse");
 
-    LPD3DXFRAME temp_root_frame { nullptr };
-    LPD3DXANIMATIONCONTROLLER temp_animation_controller { nullptr };
+    LPD3DXFRAME tempRootFrame = nullptr;
+    LPD3DXANIMATIONCONTROLLER tempAnimController = NULL;
 
     result = D3DXLoadMeshHierarchyFromX(xFilename.c_str(),
                                         D3DXMESH_MANAGED,
                                         Common::D3DDevice(),
                                         m_allocator.get(),
                                         nullptr,
-                                        &temp_root_frame,
-                                        &temp_animation_controller);
+                                        &tempRootFrame,
+                                        &tempAnimController);
 
     if (FAILED(result))
     {
         throw std::exception("Failed to load a x-file.");
     }
 
-    if (temp_animation_controller == nullptr)
+    if (tempAnimController == nullptr)
     {
         throw std::exception("Failed to load a x-file.2");
     }
     // lazy initialization 
-    m_frameRoot.reset(temp_root_frame);
-    m_animCtrlr.Init(temp_animation_controller, animSetMap);
+    m_frameRoot.reset(tempRootFrame);
+    m_animCtrlr.Init(tempAnimController, animSetMap);
 
     m_scale = scale;
     m_meshName = xFilename;

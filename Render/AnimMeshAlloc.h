@@ -17,12 +17,6 @@ struct AnimMeshFrame : public D3DXFRAME
 struct AnimMeshContainer : public D3DXMESHCONTAINER
 {
     std::vector<LPDIRECT3DTEXTURE9> m_vecTexture;
-//    AnimMeshContainer(const std::wstring&,
-//                      const std::string&,
-//                      LPD3DXMESH,
-//                      const D3DXMATERIAL*,
-//                      const DWORD,
-//                      const DWORD*);
 };
 
 class AnimMeshAllocator : public ID3DXAllocateHierarchy
