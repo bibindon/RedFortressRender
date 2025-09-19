@@ -5,8 +5,10 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include "AnimController.h"
 #include <tchar.h>
+
+#include "AnimController.h"
+#include "AnimMeshAlloc.h"
 
 namespace NSRender
 {
@@ -44,14 +46,16 @@ private:
 
     struct frameRootDeleterObject
     {
-        std::shared_ptr<AnimMeshAllocator> allocator_;
+        AnimMeshAllocator* allocator_;
 
         void operator()(const LPD3DXFRAME);
         void releaseMeshAllocator(const LPD3DXFRAME);
     };
 
     const std::wstring SHADER_FILENAME = _T("res\\shader\\AnimationMeshShader.fx");
-    std::shared_ptr<AnimMeshAllocator> m_allocator;
+
+    AnimMeshAllocator m_allocator;
+
     std::unique_ptr<D3DXFRAME, frameRootDeleterObject> m_frameRoot;
     D3DXMATRIX m_rotationMatrix;
     D3DXMATRIX m_viewMatrix;

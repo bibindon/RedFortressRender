@@ -36,8 +36,8 @@ NSRender::AnimMesh::AnimMesh(const std::wstring& xFilename,
                              const D3DXVECTOR3& rotation,
                              const float& scale,
                              const AnimSetMap& animSetMap)
-    : m_allocator(NEW AnimMeshAllocator(xFilename))
-    , m_frameRoot { nullptr, frameRootDeleterObject { m_allocator } }
+    : m_allocator(xFilename)
+    , m_frameRoot { nullptr, frameRootDeleterObject { &m_allocator } }
     , m_rotationMatrix()
     , m_position(position)
     , m_rotation(rotation)
@@ -64,7 +64,7 @@ NSRender::AnimMesh::AnimMesh(const std::wstring& xFilename,
     result = D3DXLoadMeshHierarchyFromX(xFilename.c_str(),
                                         D3DXMESH_MANAGED,
                                         Common::D3DDevice(),
-                                        m_allocator.get(),
+                                        &m_allocator,
                                         nullptr,
                                         &tempRootFrame,
                                         &tempAnimController);
