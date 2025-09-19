@@ -17,14 +17,17 @@ void NSRender::AnimMesh::frameRootDeleterObject::releaseMeshAllocator(const LPD3
     {
         allocator_->DestroyMeshContainer(frame->pMeshContainer);
     }
+
     if (frame->pFrameSibling != nullptr)
     {
         releaseMeshAllocator(frame->pFrameSibling);
     }
+
     if (frame->pFrameFirstChild != nullptr)
     {
         releaseMeshAllocator(frame->pFrameFirstChild);
     }
+
     allocator_->DestroyFrame(frame);
 }
 
@@ -35,7 +38,7 @@ NSRender::AnimMesh::AnimMesh(const std::wstring& xFilename,
                              const AnimSetMap& animSetMap)
     : m_allocator(NEW AnimMeshAllocator(xFilename))
     , m_frameRoot { nullptr, frameRootDeleterObject { m_allocator } }
-    , m_rotationMatrix(D3DMATRIX { })
+    , m_rotationMatrix()
     , m_position(position)
     , m_rotation(rotation)
     , m_centerPos(0.0f, 0.0f, 0.0f)
@@ -119,10 +122,12 @@ void NSRender::AnimMesh::Render()
 
     m_animCtrlr.Update();
 
-    D3DXMATRIX worldMatrix { };
+    D3DXMATRIX worldMatrix;
     D3DXMatrixIdentity(&worldMatrix);
+
     {
-        D3DXMATRIX mat { };
+        D3DXMATRIX mat;
+
         D3DXMatrixTranslation(&mat, -m_centerPos.x, -m_centerPos.y, -m_centerPos.z);
         worldMatrix *= mat;
 
@@ -141,6 +146,7 @@ void NSRender::AnimMesh::Render()
         D3DXMatrixTranslation(&mat, m_position.x, m_position.y, m_position.z);
         worldMatrix *= mat;
     }
+
     UpdateFrameMatrix(m_frameRoot.get(), &worldMatrix);
     RenderFrame(m_frameRoot.get());
 }
@@ -216,6 +222,7 @@ void NSRender::AnimMesh::UpdateFrameMatrix(const LPD3DXFRAME frameBase, const LP
     {
         UpdateFrameMatrix(frame->pFrameSibling, parentMatrix);
     }
+
     if (frame->pFrameFirstChild != nullptr)
     {
         UpdateFrameMatrix(frame->pFrameFirstChild, &frame->m_combinedMatrix);
@@ -225,7 +232,7 @@ void NSRender::AnimMesh::UpdateFrameMatrix(const LPD3DXFRAME frameBase, const LP
 void NSRender::AnimMesh::RenderFrame(const LPD3DXFRAME frame)
 {
     {
-        LPD3DXMESHCONTAINER mesh_container { frame->pMeshContainer };
+        LPD3DXMESHCONTAINER mesh_container = frame->pMeshContainer;
         while (mesh_container != nullptr)
         {
             RenderMeshContainer(mesh_container, frame);
@@ -237,14 +244,15 @@ void NSRender::AnimMesh::RenderFrame(const LPD3DXFRAME frame)
     {
         RenderFrame(frame->pFrameSibling);
     }
+
     if (frame->pFrameFirstChild != nullptr)
     {
         RenderFrame(frame->pFrameFirstChild);
     }
 }
 
-void NSRender::AnimMesh::RenderMeshContainer(
-    const LPD3DXMESHCONTAINER meshContainerBase, const LPD3DXFRAME frameBase)
+void NSRender::AnimMesh::RenderMeshContainer(const LPD3DXMESHCONTAINER meshContainerBase,
+                                             const LPD3DXFRAME frameBase)
 {
     AnimMeshFrame* frame = (AnimMeshFrame*)frameBase;
 
@@ -270,7 +278,7 @@ void NSRender::AnimMesh::RenderMeshContainer(
 
     for (DWORD i = 0; i < meshContainer->NumMaterials; ++i)
     {
-        D3DXVECTOR4 vecDiffuse { 0.f, 0.f, 0.f, 0.f };
+        D3DXVECTOR4 vecDiffuse(0.f, 0.f, 0.f, 0.f);
 
         if (true)
         {
