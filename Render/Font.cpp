@@ -31,6 +31,9 @@ void Font::Initialize(const std::wstring& fontName,
     assert(hResult == S_OK);
 
     m_fontColor = fontColor;
+
+    // デバイスロストを管理する機能にこのリソースを登録
+    Common::AddDeviceLostResource(m_pFont);
 }
 
 void Font::AddText(const std::wstring& text,

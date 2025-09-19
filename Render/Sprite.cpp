@@ -68,10 +68,22 @@ void Sprite::Draw()
     {
         D3DXVECTOR3 pos((float)elem.m_rect.left, (float)elem.m_rect.top, 0);
         m_pSprite->Draw(m_textureMap.at(elem.m_imageName),
+
+                        // 切り抜くエリア
+                        // NULLだったら全体を使う
                         NULL,
+
+                        // どこを中心とみなすか
+                        // NULLだったら左上
                         NULL,
+
+                        // スクリーン上のどこに表示するか
                         &pos,
-                        0xFFFFFFFF);
+
+                        // 乗算する値
+                        // (255, 0, 0, 255)だったら赤色だけ残る
+                        // (255, 255, 255, 127)だったら半透明
+                        D3DCOLOR_RGBA(255, 255, 255, elem.m_transparency));
     }
 
     m_pSprite->End();

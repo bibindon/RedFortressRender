@@ -1,4 +1,5 @@
 #include "Common.h"
+#include "Util.h"
 
 namespace NSRender
 {
@@ -81,6 +82,21 @@ void Common::AddDeviceLostResource(const LPD3DXSPRITE sprite)
 void Common::AddDeviceLostResource(const LPD3DXEFFECT effect)
 {
     m_effectList.push_back(effect);
+}
+
+void Common::RemoveDeviceLostResource(const LPD3DXFONT font)
+{
+    Util::Remove(m_fontList, font);
+}
+
+void Common::RemoveDeviceLostResource(const LPD3DXSPRITE sprite)
+{
+    Util::Remove(m_spriteList, sprite);
+}
+
+void Common::RemoveDeviceLostResource(const LPD3DXEFFECT effect)
+{
+    Util::Remove(m_effectList, effect);
 }
 
 }

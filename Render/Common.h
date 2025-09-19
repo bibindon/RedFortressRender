@@ -36,6 +36,10 @@ public:
     static void AddDeviceLostResource(const LPD3DXSPRITE sprite);
     static void AddDeviceLostResource(const LPD3DXEFFECT effect);
 
+    static void RemoveDeviceLostResource(const LPD3DXFONT font);
+    static void RemoveDeviceLostResource(const LPD3DXSPRITE sprite);
+    static void RemoveDeviceLostResource(const LPD3DXEFFECT effect);
+
 private:
 
     static LPDIRECT3D9 m_pD3D;
