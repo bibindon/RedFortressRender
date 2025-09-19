@@ -49,8 +49,10 @@ private:
         AnimMeshAllocator* allocator_;
 
         void operator()(const LPD3DXFRAME);
-        void releaseMeshAllocator(const LPD3DXFRAME);
+        void releaseMeshAllocator2(const LPD3DXFRAME);
     };
+
+    void ReleaseMeshAllocator(const LPD3DXFRAME);
 
     const std::wstring SHADER_FILENAME = _T("res\\shader\\AnimationMeshShader.fx");
 

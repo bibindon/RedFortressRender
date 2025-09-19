@@ -8,10 +8,10 @@
 
 void NSRender::AnimMesh::frameRootDeleterObject::operator()(const LPD3DXFRAME frameRoot)
 {
-    releaseMeshAllocator(frameRoot);
+    releaseMeshAllocator2(frameRoot);
 }
 
-void NSRender::AnimMesh::frameRootDeleterObject::releaseMeshAllocator(const LPD3DXFRAME frame)
+void NSRender::AnimMesh::frameRootDeleterObject::releaseMeshAllocator2(const LPD3DXFRAME frame)
 {
     if (frame->pMeshContainer != nullptr)
     {
@@ -20,15 +20,35 @@ void NSRender::AnimMesh::frameRootDeleterObject::releaseMeshAllocator(const LPD3
 
     if (frame->pFrameSibling != nullptr)
     {
-        releaseMeshAllocator(frame->pFrameSibling);
+        releaseMeshAllocator2(frame->pFrameSibling);
     }
 
     if (frame->pFrameFirstChild != nullptr)
     {
-        releaseMeshAllocator(frame->pFrameFirstChild);
+        releaseMeshAllocator2(frame->pFrameFirstChild);
     }
 
     allocator_->DestroyFrame(frame);
+}
+
+void NSRender::AnimMesh::ReleaseMeshAllocator(const LPD3DXFRAME frame)
+{
+    if (frame->pMeshContainer != nullptr)
+    {
+        m_allocator.DestroyMeshContainer(frame->pMeshContainer);
+    }
+
+    if (frame->pFrameSibling != nullptr)
+    {
+        ReleaseMeshAllocator(frame->pFrameSibling);
+    }
+
+    if (frame->pFrameFirstChild != nullptr)
+    {
+        ReleaseMeshAllocator(frame->pFrameFirstChild);
+    }
+
+    m_allocator.DestroyFrame(frame);
 }
 
 NSRender::AnimMesh::AnimMesh(const std::wstring& xFilename,
@@ -89,6 +109,7 @@ NSRender::AnimMesh::AnimMesh(const std::wstring& xFilename,
 NSRender::AnimMesh::~AnimMesh()
 {
     m_animCtrlr.Finalize();
+    ReleaseMeshAllocator(m_frameRoot.get());
     SAFE_RELEASE(m_D3DEffect);
 }
 
