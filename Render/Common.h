@@ -23,6 +23,12 @@
 namespace NSRender
 {
 
+class Font;
+class Sprite;
+class Mesh;
+class AnimMesh;
+class SkinAnimMesh;
+
 class Common
 {
 public:
@@ -38,28 +44,28 @@ public:
     static void OnDeviceLostAll();
     static void OnDeviceResetAll();
 
-    static void AddDeviceLostResource(const Font res);
-    static void AddDeviceLostResource(const Sprite res);
-    static void AddDeviceLostResource(const Mesh res);
-    static void AddDeviceLostResource(const AnimMesh res);
-    static void AddDeviceLostResource(const SkinAnimMesh res);
+    static void AddDeviceLostResource(Font* res);
+    static void AddDeviceLostResource(Sprite* res);
+    static void AddDeviceLostResource(Mesh* res);
+    static void AddDeviceLostResource(AnimMesh* res);
+    static void AddDeviceLostResource(SkinAnimMesh* res);
 
-    static void RemoveDeviceLostResource(const Font res);
-    static void RemoveDeviceLostResource(const Sprite res);
-    static void RemoveDeviceLostResource(const Mesh res);
-    static void RemoveDeviceLostResource(const AnimMesh res);
-    static void RemoveDeviceLostResource(const SkinAnimMesh res);
+    static void RemoveDeviceLostResource(const Font* res);
+    static void RemoveDeviceLostResource(const Sprite* res);
+    static void RemoveDeviceLostResource(const Mesh* res);
+    static void RemoveDeviceLostResource(const AnimMesh* res);
+    static void RemoveDeviceLostResource(const SkinAnimMesh* res);
 
 private:
 
     static LPDIRECT3D9 m_pD3D;
     static LPDIRECT3DDEVICE9 m_pD3DDev;
 
-    static std::vector<Font> m_fontList;
-    static std::vector<Sprite> m_spriteList;
-    static std::vector<Mesh> m_meshList;
-    static std::vector<AnimMesh> m_animMeshList;
-    static std::vector<SkinAnimMesh> m_skinAnimMeshList;
+    static std::vector<Font*> m_fontList;
+    static std::vector<Sprite*> m_spriteList;
+    static std::vector<Mesh*> m_meshList;
+    static std::vector<AnimMesh*> m_animMeshList;
+    static std::vector<SkinAnimMesh*> m_skinAnimMeshList;
 };
 
 template <typename T>

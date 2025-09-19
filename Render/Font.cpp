@@ -33,7 +33,7 @@ void Font::Initialize(const std::wstring& fontName,
     m_fontColor = fontColor;
 
     // デバイスロストを管理する機能にこのリソースを登録
-    Common::AddDeviceLostResource(m_pFont);
+    Common::AddDeviceLostResource(this);
 }
 
 void Font::AddText(const std::wstring& text,
@@ -163,7 +163,7 @@ void Font::Draw()
 void Font::Finalize()
 {
     SAFE_RELEASE(m_pFont);
-    Common::RemoveDeviceLostResource(m_pFont);
+    Common::RemoveDeviceLostResource(this);
 }
 
 void Font::OnDeviceLost()
