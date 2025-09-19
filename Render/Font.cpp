@@ -163,6 +163,7 @@ void Font::Draw()
 void Font::Finalize()
 {
     SAFE_RELEASE(m_pFont);
+    Common::RemoveDeviceLostResource(m_pFont);
 }
 
 void Font::OnDeviceLost()
