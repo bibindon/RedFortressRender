@@ -115,6 +115,11 @@ void NSRender::Render::Draw()
         elem.Draw();
     }
 
+    for (auto& elem : m_meshSSSLikeList)
+    {
+        elem.Draw();
+    }
+
     for (auto& elem : m_animMeshList)
     {
         elem->Render();
@@ -184,6 +189,17 @@ void NSRender::Render::AddMeshSmooth(const std::wstring& filePath,
     MeshSmooth mesh;
     m_meshSmoothList.push_back(mesh);
     m_meshSmoothList.rbegin()->Initialize(filePath, pos, rot, scale, radius);
+}
+
+void NSRender::Render::AddMeshSSSLike(const std::wstring& filePath,
+                                     const D3DXVECTOR3& pos,
+                                     const D3DXVECTOR3& rot,
+                                     const float scale,
+                                     const float radius)
+{
+    MeshSSSLike mesh;
+    m_meshSSSLikeList.push_back(mesh);
+    m_meshSSSLikeList.rbegin()->Initialize(filePath, pos, rot, scale, radius);
 }
 
 void NSRender::Render::AddAnimMesh(const std::wstring& filePath,
@@ -382,6 +398,11 @@ void NSRender::Render::ChangeWindowMode()
         elem.OnDeviceLost();
     }
 
+    for (auto& elem : m_meshSSSLikeList)
+    {
+        elem.OnDeviceLost();
+    }
+
     for (auto& elem : m_animMeshList)
     {
         elem->OnDeviceLost();
@@ -502,6 +523,11 @@ void NSRender::Render::ChangeWindowMode()
     }
 
     for (auto& elem : m_meshSmoothList)
+    {
+        elem.OnDeviceReset();
+    }
+
+    for (auto& elem : m_meshSSSLikeList)
     {
         elem.OnDeviceReset();
     }
