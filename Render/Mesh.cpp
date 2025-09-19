@@ -8,7 +8,10 @@
 #include "Camera.h"
 #include "Light.h"
 
-NSRender::Mesh::Mesh(const std::wstring& xFilename,
+namespace NSRender
+{
+
+Mesh::Mesh(const std::wstring& xFilename,
            const D3DXVECTOR3& position,
            const D3DXVECTOR3& rotation,
            const float scale,
@@ -22,7 +25,7 @@ NSRender::Mesh::Mesh(const std::wstring& xFilename,
 }
 
 // シェーダーファイルを指定できるコンストラクタ
-NSRender::Mesh::Mesh(const std::wstring& shaderName,
+Mesh::Mesh(const std::wstring& shaderName,
            const std::wstring& xFilename,
            const D3DXVECTOR3& position,
            const D3DXVECTOR3& rotation,
@@ -37,11 +40,11 @@ NSRender::Mesh::Mesh(const std::wstring& shaderName,
 {
 }
 
-NSRender::Mesh::~Mesh()
+Mesh::~Mesh()
 {
 }
 
-void NSRender::Mesh::Init()
+void Mesh::Initialize()
 {
     HRESULT hResult = E_FAIL;
 
@@ -123,13 +126,8 @@ void NSRender::Mesh::Init()
     //--------------------------------------------------------
     // 法線情報を再計算
     //--------------------------------------------------------
-
-    // フラットシェーディングを行う場合、再計算しない
-    if (!FLAT_SHADING)
-    {
-        hResult = D3DXComputeNormals(m_D3DMesh, adjacencyList);
-        assert(hResult == S_OK);
-    }
+    hResult = D3DXComputeNormals(m_D3DMesh, adjacencyList);
+    assert(hResult == S_OK);
 
     //--------------------------------------------------------
     // 面と頂点を並べ替えてメッシュを生成し、描画パフォーマンスを最適化
@@ -150,7 +148,7 @@ void NSRender::Mesh::Init()
 
     // Xファイルのディレクトリ
     std::wstring xFileDir = m_meshName;
-    std::size_t lastPos = xFileDir.find_last_of(_T("\\"));
+    std::size_t lastPos = xFileDir.find_last_of(L"\\");
     xFileDir = xFileDir.substr(0, lastPos + 1);
 
     for (DWORD i = 0; i < m_materialCount; ++i)
@@ -158,16 +156,9 @@ void NSRender::Mesh::Init()
         //--------------------------------------------------------
         // 拡散反射色の読み込み
         //--------------------------------------------------------
-        D3DXVECTOR4 diffuce { 0.f, 0.f, 0.f, 0.f };
+        D3DXVECTOR4 diffuce(1.0f, 1.0f, 1.0f, 1.0f);
 
         if (true)
-        {
-            diffuce.x = 1.0f;
-            diffuce.y = 1.0f;
-            diffuce.z = 1.0f;
-            diffuce.w = 1.0f;
-        }
-        else
         {
             diffuce.x = materialList[i].MatD3D.Diffuse.r;
             diffuce.y = materialList[i].MatD3D.Diffuse.g;
@@ -202,27 +193,27 @@ void NSRender::Mesh::Init()
     m_bLoaded = true;
 }
 
-void NSRender::Mesh::SetPos(const D3DXVECTOR3& pos)
+void Mesh::SetPos(const D3DXVECTOR3& pos)
 {
     m_pos = pos;
 }
 
-void NSRender::Mesh::SetRotY(const float rotY)
+void Mesh::SetRotY(const float rotY)
 {
     m_rotate.y = rotY;
 }
 
-D3DXVECTOR3 NSRender::Mesh::GetPos() const
+D3DXVECTOR3 Mesh::GetPos() const
 {
     return m_pos;
 }
 
-float NSRender::Mesh::GetScale() const
+float Mesh::GetScale() const
 {
     return m_scale;
 }
 
-void NSRender::Mesh::Render()
+void Mesh::Render()
 {
     HRESULT hResult = E_FAIL;
 
@@ -357,8 +348,9 @@ void NSRender::Mesh::Render()
     //--------------------------------------------------------
     D3DXMATRIX worldViewProjMatrix { };
     D3DXMatrixIdentity(&worldViewProjMatrix);
+
     {
-        D3DXMATRIX mat { };
+        D3DXMATRIX mat;
 
         // 武器か否か
 //        if (m_bWeapon)
@@ -384,8 +376,8 @@ void NSRender::Mesh::Render()
         }
     }
 
-//    hResult = m_D3DEffect->SetMatrix("g_matWorld", &worldViewProjMatrix);
-//    assert(hResult == S_OK);
+    //    hResult = m_D3DEffect->SetMatrix("g_matWorld", &worldViewProjMatrix);
+    //    assert(hResult == S_OK);
 
     //--------------------------------------------------------
     // カメラの位置を設定
@@ -396,8 +388,8 @@ void NSRender::Mesh::Render()
     cameraPos.z = Camera::GetEyePos().z;
     cameraPos.w = 0.f;
 
-//    hResult = m_D3DEffect->SetVector("g_vecCameraPos", &cameraPos);
-//    assert(hResult == S_OK);
+    //    hResult = m_D3DEffect->SetVector("g_vecCameraPos", &cameraPos);
+    //    assert(hResult == S_OK);
 
     //--------------------------------------------------------
     // ワールドビュー射影変換行列を設定
@@ -433,8 +425,8 @@ void NSRender::Mesh::Render()
     //--------------------------------------------------------
     for (DWORD i = 0; i < m_materialCount; ++i)
     {
-//        hResult = m_D3DEffect->SetVector("g_vecDiffuse", &m_vecDiffuse.at(i));
-//        assert(hResult == S_OK);
+        //        hResult = m_D3DEffect->SetVector("g_vecDiffuse", &m_vecDiffuse.at(i));
+        //        assert(hResult == S_OK);
 
         if (i < m_vecTexture.size())
         {
@@ -463,38 +455,37 @@ void NSRender::Mesh::Render()
     assert(hResult == S_OK);
 }
 
-LPD3DXMESH NSRender::Mesh::GetD3DMesh() const
+LPD3DXMESH Mesh::GetD3DMesh() const
 {
     return m_D3DMesh;
 }
 
-void NSRender::Mesh::SetWeapon(const bool arg)
+void Mesh::SetWeapon(const bool arg)
 {
     m_bWeapon = arg;
 }
 
-float NSRender::Mesh::GetRadius() const
+float Mesh::GetRadius() const
 {
     return m_radius;
 }
 
-std::wstring NSRender::Mesh::GetMeshName()
+std::wstring Mesh::GetMeshName()
 {
     return m_meshName;
 }
 
-// 解像度やウィンドウモードを変更したときのための関数
-void NSRender::Mesh::OnDeviceLost()
+void Mesh::OnDeviceLost()
 {
     HRESULT hr = m_D3DEffect->OnLostDevice();
     assert(hr == S_OK);
 }
 
-// 解像度やウィンドウモードを変更したときのための関数
-void NSRender::Mesh::OnDeviceReset()
+void Mesh::OnDeviceReset()
 {
     HRESULT hr = m_D3DEffect->OnResetDevice();
     assert(hr == S_OK);
 }
 
+}
 

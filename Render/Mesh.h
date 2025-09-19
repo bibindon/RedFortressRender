@@ -31,7 +31,7 @@ public:
 
     ~Mesh();
 
-    void Init();
+    void Initialize();
     void SetPos(const D3DXVECTOR3& pos);
     D3DXVECTOR3 GetPos() const;
     void SetRotY(const float rotY);
@@ -48,7 +48,6 @@ public:
     void OnDeviceReset();
 
 private:
-    const bool FLAT_SHADING = false;
     //const std::wstring SHADER_FILENAME = _T("res\\shader\\MeshShader.fx");
     const std::wstring SHADER_FILENAME = _T("res\\shader\\simple.fx");
     std::wstring m_meshName;

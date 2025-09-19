@@ -162,7 +162,7 @@ void NSRender::Render::AddMesh(const std::wstring& filePath,
                                const float radius)
 {
     m_meshList.push_back(Mesh(filePath, pos, rot, scale, radius));
-    m_meshList.rbegin()->Init();
+    m_meshList.rbegin()->Initialize();
 }
 
 void NSRender::Render::AddAnimMesh(const std::wstring& filePath,
