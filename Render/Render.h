@@ -14,6 +14,8 @@
 #include "AnimMesh.h"
 #include "SkinAnimMesh.h"
 
+#include "MeshInstancing.h"
+
 #include "Font.h"
 #include "Sprite.h"
 
@@ -57,6 +59,12 @@ public:
                          const D3DXVECTOR3& rot,
                          const float scale,
                          const AnimSetMap& animSetMap);
+
+    // インスタンシング可能なメッシュ
+    void AddMeshInstansing(const std::wstring& filePath,
+                           const D3DXVECTOR3& pos,
+                           const D3DXVECTOR3& rot,
+                           const float scale);
 
     void SetCamera(const D3DXVECTOR3& pos, const D3DXVECTOR3& lookAt);
     void MoveCamera(const D3DXVECTOR3& pos);
@@ -116,6 +124,8 @@ private:
     std::vector<Mesh> m_meshList;
     std::vector<AnimMesh*> m_animMeshList;
     std::vector<SkinAnimMesh*> m_skinAnimMeshList;
+
+    std::unordered_map<std::wstring, MeshInstancing*> m_meshInstancingMap;
 
     int m_windowSizeWidth = 1600;
     int m_windowSizeHeight = 900;

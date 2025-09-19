@@ -104,6 +104,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                 text += L"m : メッシュ追加\n";
                 text += L"n : アニメーションメッシュ追加\n";
                 text += L"k : スキンアニメーションメッシュ追加\n";
+                text += L"i : インスタンシングメッシュ追加\n";
                 g_Render.DrawText_(g_fontId, text, 10, 10);
             }
 
@@ -222,6 +223,20 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                                      D3DXVECTOR3(0, yaw, 0.0f),
                                      3.f,
                                      animMap);
+        }
+
+        if (wParam == 'I')
+        {
+            auto pos = g_Render.GetLookAtPos();
+            D3DXVECTOR3 forward = g_Render.GetCameraRotate();
+            D3DXVec3Normalize(&forward, &forward);
+
+            // Yaw, Pitch を計算
+            float yaw = atan2f(forward.x, forward.z);
+
+            // AddMeshの第3引数が「回転角 (ラジアン)」だと仮定
+            //g_Render.AddMesh(L"cube.x", pos, D3DXVECTOR3(0, yaw, 0.0f), 1.f, 1.f);
+            g_Render.AddMeshInstansing(L"cube.x", pos, D3DXVECTOR3(0, yaw, 0.0f), 1.f);
         }
 
         {

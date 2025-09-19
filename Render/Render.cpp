@@ -123,6 +123,11 @@ void NSRender::Render::Draw()
                      Light::GetBrightness());
     }
 
+    for (auto& elem : m_meshInstancingMap)
+    {
+        elem.second->Draw();
+    }
+
     for (auto& elem : m_fontList)
     {
         elem.Draw();
@@ -183,6 +188,23 @@ void NSRender::Render::AddSkinAnimMesh(const std::wstring& filePath,
 {
     SkinAnimMesh* mesh = NEW SkinAnimMesh(filePath, pos, rot, scale, animSetMap);
     m_skinAnimMeshList.push_back(mesh);
+}
+
+void NSRender::Render::AddMeshInstansing(const std::wstring& filePath,
+                                         const D3DXVECTOR3& pos,
+                                         const D3DXVECTOR3& rot,
+                                         const float scale)
+{
+
+    if (m_meshInstancingMap.find(filePath) == m_meshInstancingMap.end())
+    {
+        MeshInstancing* mesh = NEW MeshInstancing();
+        mesh->Initialize();
+
+        m_meshInstancingMap[filePath] = mesh;
+    }
+
+    m_meshInstancingMap[filePath]->AddInstance(pos);
 }
 
 void NSRender::Render::SetCamera(const D3DXVECTOR3& pos, const D3DXVECTOR3& lookAt)

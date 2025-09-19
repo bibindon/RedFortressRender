@@ -65,7 +65,7 @@ void MeshInstancing::Initialize()
     assert(hResult == S_OK);
 
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                       _T("simple.fx"),
+                                       L"res\\shader\\MeshInstancing.fx",
                                        NULL,
                                        NULL,
                                        D3DXSHADER_DEBUG,
@@ -152,7 +152,7 @@ void MeshInstancing::Draw()
                                1.0f,
                                10000.0f);
 
-    D3DXVECTOR3 vec1(2000 * sinf(f), 100, -2000 * cosf(f));
+    D3DXVECTOR3 vec1(200 * sinf(f), 10, -200 * cosf(f));
     D3DXVECTOR3 vec2(0, 0, 0);
     D3DXVECTOR3 vec3(0, 1, 0);
     D3DXMatrixLookAtLH(&View, &vec1, &vec2, &vec3);
@@ -179,18 +179,6 @@ void MeshInstancing::Draw()
     m_pMesh->GetIndexBuffer(&pIB);
     Common::D3DDevice()->SetIndices(pIB);
     pIB->Release();
-
-    hResult = Common::D3DDevice()->Clear(0,
-                                  NULL,
-                                  D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
-                                  D3DCOLOR_XRGB(100, 100, 100),
-                                  1.0f,
-                                  0);
-
-    assert(hResult == S_OK);
-
-    hResult = Common::D3DDevice()->BeginScene();
-    assert(hResult == S_OK);
 
     hResult = m_pEffect->SetTechnique("Technique1");
     assert(hResult == S_OK);
@@ -230,12 +218,10 @@ void MeshInstancing::Draw()
     hResult = m_pEffect->End();
     assert(hResult == S_OK);
 
-    Common::D3DDevice()->SetStreamSourceFreq(1, 0);
-
-    hResult = Common::D3DDevice()->EndScene();
+    hResult = Common::D3DDevice()->SetStreamSourceFreq(0, 1);
     assert(hResult == S_OK);
 
-    hResult = Common::D3DDevice()->Present(NULL, NULL, NULL, NULL);
+    hResult = Common::D3DDevice()->SetStreamSourceFreq(1, 1);
     assert(hResult == S_OK);
 }
 
