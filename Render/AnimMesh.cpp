@@ -231,13 +231,12 @@ void NSRender::AnimMesh::UpdateFrameMatrix(const LPD3DXFRAME frameBase, const LP
 
 void NSRender::AnimMesh::RenderFrame(const LPD3DXFRAME frame)
 {
+    LPD3DXMESHCONTAINER mesh_container = frame->pMeshContainer;
+
+    while (mesh_container != nullptr)
     {
-        LPD3DXMESHCONTAINER mesh_container = frame->pMeshContainer;
-        while (mesh_container != nullptr)
-        {
-            RenderMeshContainer(mesh_container, frame);
-            mesh_container = mesh_container->pNextMeshContainer;
-        }
+        RenderMeshContainer(mesh_container, frame);
+        mesh_container = mesh_container->pNextMeshContainer;
     }
 
     if (frame->pFrameSibling != nullptr)
@@ -278,16 +277,9 @@ void NSRender::AnimMesh::RenderMeshContainer(const LPD3DXMESHCONTAINER meshConta
 
     for (DWORD i = 0; i < meshContainer->NumMaterials; ++i)
     {
-        D3DXVECTOR4 vecDiffuse(0.f, 0.f, 0.f, 0.f);
+        D3DXVECTOR4 vecDiffuse(1.0f, 1.0f, 1.0f, 1.0f);
 
         if (true)
-        {
-            vecDiffuse.x = 1.f;
-            vecDiffuse.y = 1.f;
-            vecDiffuse.z = 1.f;
-            vecDiffuse.w = 1.f;
-        }
-        else
         {
             vecDiffuse.x = meshContainer->pMaterials[i].MatD3D.Diffuse.r;
             vecDiffuse.y = meshContainer->pMaterials[i].MatD3D.Diffuse.g;
