@@ -46,11 +46,18 @@ private:
 
     void ReleaseMeshAllocator(const LPD3DXFRAME);
 
+    void UpdateFrameMatrix(const LPD3DXFRAME, const LPD3DXMATRIX);
+    void RenderFrame(const LPD3DXFRAME);
+    void RenderMeshContainer(const LPD3DXMESHCONTAINER, const LPD3DXFRAME);
+
     const std::wstring SHADER_FILENAME = _T("res\\shader\\AnimationMeshShader.fx");
+
+    LPD3DXEFFECT m_D3DEffect = NULL;
 
     AnimMeshAllocator m_allocator;
 
-    std::unique_ptr<D3DXFRAME> m_frameRoot;
+    LPD3DXFRAME m_frameRoot = NULL;
+
     D3DXMATRIX m_rotationMatrix;
     D3DXMATRIX m_viewMatrix;
     D3DXMATRIX m_projMatrix;
@@ -58,19 +65,13 @@ private:
     D3DXVECTOR3 m_centerPos;
     D3DXVECTOR3 m_rotateLocal = D3DXVECTOR3(0.f, 0.f, 0.f);
 
-    LPD3DXEFFECT m_D3DEffect = NULL;
-
-    void UpdateFrameMatrix(const LPD3DXFRAME, const LPD3DXMATRIX);
-    void RenderFrame(const LPD3DXFRAME);
-    void RenderMeshContainer(const LPD3DXMESHCONTAINER, const LPD3DXFRAME);
-
-
     D3DXVECTOR3 m_position;
     D3DXVECTOR3 m_rotation;
     float m_scale = 1.0f;
+
     std::wstring m_meshName;
 
-    AnimController m_animCtrlr;
+    AnimController m_animController;
 };
 }
 

@@ -12,13 +12,14 @@ NSRender::AnimMesh::AnimMesh(const std::wstring& xFilename,
                              const float& scale,
                              const AnimSetMap& animSetMap)
     : m_allocator(xFilename)
-    , m_frameRoot { nullptr }
+    , m_frameRoot(NULL)
     , m_rotationMatrix()
     , m_position(position)
     , m_rotation(rotation)
     , m_centerPos(0.0f, 0.0f, 0.0f)
 {
     HRESULT result = E_FAIL;
+
     result = D3DXCreateEffectFromFile(Common::D3DDevice(),
                                       SHADER_FILENAME.c_str(),
                                       nullptr,
@@ -28,12 +29,8 @@ NSRender::AnimMesh::AnimMesh(const std::wstring& xFilename,
                                       &m_D3DEffect,
                                       nullptr);
 
-    if (FAILED(result))
-    {
-        throw std::exception("Failed to create an effect file.");
-    }
+    assert(result == S_OK);
 
-    LPD3DXFRAME tempRootFrame = nullptr;
     LPD3DXANIMATIONCONTROLLER tempAnimController = NULL;
 
     result = D3DXLoadMeshHierarchyFromX(xFilename.c_str(),
@@ -41,21 +38,13 @@ NSRender::AnimMesh::AnimMesh(const std::wstring& xFilename,
                                         Common::D3DDevice(),
                                         &m_allocator,
                                         nullptr,
-                                        &tempRootFrame,
+                                        &m_frameRoot,
                                         &tempAnimController);
 
-    if (FAILED(result))
-    {
-        throw std::exception("Failed to load a x-file.");
-    }
+    assert(result == S_OK);
+    assert(tempAnimController != NULL);
 
-    if (tempAnimController == nullptr)
-    {
-        throw std::exception("Failed to load a x-file.2");
-    }
-    // lazy initialization 
-    m_frameRoot.reset(tempRootFrame);
-    m_animCtrlr.Init(tempAnimController, animSetMap);
+    m_animController.Init(tempAnimController, animSetMap);
 
     m_scale = scale;
     m_meshName = xFilename;
@@ -65,8 +54,8 @@ NSRender::AnimMesh::~AnimMesh()
 {
     SAFE_RELEASE(m_D3DEffect);
 
-    m_animCtrlr.Finalize();
-    ReleaseMeshAllocator(m_frameRoot.get());
+    m_animController.Finalize();
+    ReleaseMeshAllocator(m_frameRoot);
 }
 
 void NSRender::AnimMesh::Render()
@@ -97,7 +86,7 @@ void NSRender::AnimMesh::Render()
     m_viewMatrix = Camera::GetViewMatrix();
     m_projMatrix = Camera::GetProjMatrix();
 
-    m_animCtrlr.Update();
+    m_animController.Update();
 
     D3DXMATRIX worldMatrix;
     D3DXMatrixIdentity(&worldMatrix);
@@ -124,8 +113,8 @@ void NSRender::AnimMesh::Render()
         worldMatrix *= mat;
     }
 
-    UpdateFrameMatrix(m_frameRoot.get(), &worldMatrix);
-    RenderFrame(m_frameRoot.get());
+    UpdateFrameMatrix(m_frameRoot, &worldMatrix);
+    RenderFrame(m_frameRoot);
 }
 
 void NSRender::AnimMesh::SetPos(const D3DXVECTOR3& pos)
@@ -153,19 +142,19 @@ void NSRender::AnimMesh::SetRotate(const D3DXVECTOR3& rotate)
 
 void NSRender::AnimMesh::SetAnim(const std::wstring& animName, const DOUBLE& pos)
 {
-    m_animCtrlr.SetAnim(animName, pos);
+    m_animController.SetAnim(animName, pos);
 }
 
 void NSRender::AnimMesh::SetAnimSpeed(const float speed)
 {
-    m_animCtrlr.SetAnimSpeed(speed);
+    m_animController.SetAnimSpeed(speed);
 }
 
 void NSRender::AnimMesh::SetTrackPos(const DOUBLE& pos)
 {
     // TODO remove
 //    m_animationStrategy->SetTrackPos(m_pos);
-//    m_animCtrlr.SetTrackPos();
+//    m_animController.SetTrackPos();
 }
 
 void NSRender::AnimMesh::SetCenterPos(const D3DXVECTOR3& pos)
