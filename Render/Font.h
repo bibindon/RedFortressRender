@@ -28,13 +28,13 @@ public:
                     const UINT fontColor);
 
     void AddText(const std::wstring& text,
-                     const int X,
-                     const int Y);
+                 const int X,
+                 const int Y);
 
     void AddText(const std::wstring& text,
-                     const int X,
-                     const int Y,
-                     const UINT fontColor);
+                 const int X,
+                 const int Y,
+                 const UINT fontColor);
 
     void AddTextCenter(const std::wstring& text,
                        const int X,
