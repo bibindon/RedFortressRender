@@ -42,28 +42,25 @@ public:
 
 private:
 
-    struct frame_root_deleter_object
+    struct frameRootDeleterObject
     {
         std::shared_ptr<AnimMeshAllocator> allocator_;
 
         void operator()(const LPD3DXFRAME);
-        void release_mesh_allocator(const LPD3DXFRAME);
+        void releaseMeshAllocator(const LPD3DXFRAME);
     };
 
     const std::wstring SHADER_FILENAME = _T("res\\shader\\AnimationMeshShader.fx");
     std::shared_ptr<AnimMeshAllocator> m_allocator;
-    std::unique_ptr<D3DXFRAME, frame_root_deleter_object> m_frameRoot;
+    std::unique_ptr<D3DXFRAME, frameRootDeleterObject> m_frameRoot;
     D3DXMATRIX m_rotationMatrix;
     D3DXMATRIX m_viewMatrix;
     D3DXMATRIX m_projMatrix;
 
     D3DXVECTOR3 m_centerPos;
-    D3DXVECTOR3 m_rotateLocal { 0.f, 0.f, 0.f };
+    D3DXVECTOR3 m_rotateLocal = D3DXVECTOR3(0.f, 0.f, 0.f);
 
-    LPD3DXEFFECT m_D3DEffect = nullptr;
-
-    D3DXHANDLE m_worldHandle { nullptr };
-    D3DXHANDLE m_worldViewProjHandle { nullptr };
+    LPD3DXEFFECT m_D3DEffect = NULL;
 
     void UpdateFrameMatrix(const LPD3DXFRAME, const LPD3DXMATRIX);
     void RenderFrame(const LPD3DXFRAME);
@@ -72,13 +69,8 @@ private:
 
     D3DXVECTOR3 m_position;
     D3DXVECTOR3 m_rotation;
-    float m_scale { 1.0f };
+    float m_scale = 1.0f;
     std::wstring m_meshName;
-
-    D3DXHANDLE m_meshTextureHandle { nullptr };
-    D3DXHANDLE m_diffuseHandle { nullptr };
-    D3DXHANDLE m_lightNormalHandle { nullptr };
-    D3DXHANDLE m_brightnessHandle { nullptr };
 
     AnimController m_animCtrlr;
 };

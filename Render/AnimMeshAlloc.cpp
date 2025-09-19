@@ -113,7 +113,7 @@ STDMETHODIMP AnimMeshAllocator::CreateMeshContainer(LPCSTR meshName_,
                                                      texPath.c_str(),
                                                      &tempTexture)))
                 {
-                    throw std::exception("texture file is not found.");
+                    return E_FAIL;
                 }
                 else
                 {

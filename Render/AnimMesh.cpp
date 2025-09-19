@@ -6,12 +6,12 @@
 #include "Camera.h"
 #include <cassert>
 
-void NSRender::AnimMesh::frame_root_deleter_object::operator()(const LPD3DXFRAME frameRoot)
+void NSRender::AnimMesh::frameRootDeleterObject::operator()(const LPD3DXFRAME frameRoot)
 {
-    release_mesh_allocator(frameRoot);
+    releaseMeshAllocator(frameRoot);
 }
 
-void NSRender::AnimMesh::frame_root_deleter_object::release_mesh_allocator(const LPD3DXFRAME frame)
+void NSRender::AnimMesh::frameRootDeleterObject::releaseMeshAllocator(const LPD3DXFRAME frame)
 {
     if (frame->pMeshContainer != nullptr)
     {
@@ -19,29 +19,28 @@ void NSRender::AnimMesh::frame_root_deleter_object::release_mesh_allocator(const
     }
     if (frame->pFrameSibling != nullptr)
     {
-        release_mesh_allocator(frame->pFrameSibling);
+        releaseMeshAllocator(frame->pFrameSibling);
     }
     if (frame->pFrameFirstChild != nullptr)
     {
-        release_mesh_allocator(frame->pFrameFirstChild);
+        releaseMeshAllocator(frame->pFrameFirstChild);
     }
     allocator_->DestroyFrame(frame);
 }
 
-NSRender::AnimMesh::AnimMesh(
-    const std::wstring& xFilename,
-    const D3DXVECTOR3& position,
-    const D3DXVECTOR3& rotation,
-    const float& scale,
-    const AnimSetMap& animSetMap)
-    : m_allocator { NEW AnimMeshAllocator { xFilename } }
-    , m_frameRoot { nullptr, frame_root_deleter_object { m_allocator } }
-    , m_rotationMatrix { D3DMATRIX { } }
-    , m_position { position }
-    , m_rotation { rotation }
-    , m_centerPos { 0.0f, 0.0f, 0.0f }
+NSRender::AnimMesh::AnimMesh(const std::wstring& xFilename,
+                             const D3DXVECTOR3& position,
+                             const D3DXVECTOR3& rotation,
+                             const float& scale,
+                             const AnimSetMap& animSetMap)
+    : m_allocator(NEW AnimMeshAllocator(xFilename))
+    , m_frameRoot { nullptr, frameRootDeleterObject { m_allocator } }
+    , m_rotationMatrix(D3DMATRIX { })
+    , m_position(position)
+    , m_rotation(rotation)
+    , m_centerPos(0.0f, 0.0f, 0.0f)
 {
-    HRESULT result { 0 };
+    HRESULT result = E_FAIL;
     result = D3DXCreateEffectFromFile(Common::D3DDevice(),
                                       SHADER_FILENAME.c_str(),
                                       nullptr,
@@ -55,13 +54,6 @@ NSRender::AnimMesh::AnimMesh(
     {
         throw std::exception("Failed to create an effect file.");
     }
-
-    m_worldHandle = m_D3DEffect->GetParameterByName(nullptr, "g_matWorld");
-    m_worldViewProjHandle = m_D3DEffect->GetParameterByName(nullptr, "g_matWorldViewProj");
-    m_lightNormalHandle = m_D3DEffect->GetParameterByName(nullptr, "g_vecLightNormal");
-    m_brightnessHandle = m_D3DEffect->GetParameterByName(nullptr, "g_fLightBrigntness");
-    m_meshTextureHandle = m_D3DEffect->GetParameterByName(nullptr, "g_texture");
-    m_diffuseHandle = m_D3DEffect->GetParameterByName(nullptr, "g_vecDiffuse");
 
     LPD3DXFRAME tempRootFrame = nullptr;
     LPD3DXANIMATIONCONTROLLER tempAnimController = NULL;
@@ -102,10 +94,10 @@ void NSRender::AnimMesh::Render()
     D3DXVECTOR4 lightNormal = Light::GetLightNormal();
 
     // モデルが太陽のほうを向いているか
-    D3DXVECTOR4 dirToLight { 0.f,0.f,0.f,0.f };
+    D3DXVECTOR4 dirToLight(0.f,0.f,0.f,0.f);
 
     // モデルの方向ベクトル
-    D3DXVECTOR4 modelDir { 0.f,0.f,0.f,0.f };
+    D3DXVECTOR4 modelDir(0.f,0.f,0.f,0.f);
 
     modelDir.x = std::sin(m_rotation.y);
     modelDir.z = std::cos(m_rotation.y + D3DX_PI);
@@ -118,9 +110,9 @@ void NSRender::AnimMesh::Render()
 
     D3DXVec4Normalize(&dirToLight, &dirToLight);
 
-    m_D3DEffect->SetVector(m_lightNormalHandle, &dirToLight);
+    m_D3DEffect->SetVector("g_vecLightNormal", &dirToLight);
 
-    m_D3DEffect->SetFloat(m_brightnessHandle, Light::GetBrightness());
+    m_D3DEffect->SetFloat("g_fLightBrigntness", Light::GetBrightness());
 
     m_viewMatrix = Camera::GetViewMatrix();
     m_projMatrix = Camera::GetProjMatrix();
@@ -170,6 +162,7 @@ float NSRender::AnimMesh::GetScale() const
 
 void NSRender::AnimMesh::SetRotate(const D3DXVECTOR3& rotate)
 {
+    // fmodは浮動小数点数に対して剰余演算を行う関数
     m_rotation.x = fmod(rotate.x, D3DX_PI * 2);
     m_rotation.y = fmod(rotate.y, D3DX_PI * 2);
     m_rotation.z = fmod(rotate.z, D3DX_PI * 2);
@@ -253,16 +246,16 @@ void NSRender::AnimMesh::RenderFrame(const LPD3DXFRAME frame)
 void NSRender::AnimMesh::RenderMeshContainer(
     const LPD3DXMESHCONTAINER meshContainerBase, const LPD3DXFRAME frameBase)
 {
-    AnimMeshFrame* frame { static_cast<AnimMeshFrame*>(frameBase) };
+    AnimMeshFrame* frame = (AnimMeshFrame*)frameBase;
 
-    D3DXMATRIX worldViewProjMatrix { frame->m_combinedMatrix };
+    D3DXMATRIX worldViewProjMatrix = frame->m_combinedMatrix;
 
-    m_D3DEffect->SetMatrix(m_worldHandle, &worldViewProjMatrix);
+    m_D3DEffect->SetMatrix("g_matWorld", &worldViewProjMatrix);
 
     worldViewProjMatrix *= m_viewMatrix;
     worldViewProjMatrix *= m_projMatrix;
 
-    m_D3DEffect->SetMatrix(m_worldViewProjHandle, &worldViewProjMatrix);
+    m_D3DEffect->SetMatrix("g_matWorldViewProj", &worldViewProjMatrix);
 
     m_D3DEffect->Begin(nullptr, 0);
 
@@ -273,7 +266,7 @@ void NSRender::AnimMesh::RenderMeshContainer(
         throw std::exception("Failed 'BeginPass' function.");
     }
 
-    AnimMeshContainer* meshContainer { static_cast<AnimMeshContainer*>(meshContainerBase) };
+    AnimMeshContainer* meshContainer = (AnimMeshContainer*)meshContainerBase;
 
     for (DWORD i = 0; i < meshContainer->NumMaterials; ++i)
     {
@@ -294,24 +287,23 @@ void NSRender::AnimMesh::RenderMeshContainer(
             vecDiffuse.w = meshContainer->pMaterials[i].MatD3D.Diffuse.a;
         }
 
-        m_D3DEffect->SetVector(m_diffuseHandle, &vecDiffuse);
-        m_D3DEffect->SetTexture(m_meshTextureHandle, meshContainer->m_vecTexture.at(i));
+        m_D3DEffect->SetVector("g_vecDiffuse", &vecDiffuse);
+        m_D3DEffect->SetTexture("g_texture", meshContainer->m_vecTexture.at(i));
 
         m_D3DEffect->CommitChanges();
         meshContainer->MeshData.pMesh->DrawSubset(i);
     }
+
     m_D3DEffect->EndPass();
     m_D3DEffect->End();
 }
 
-// 解像度やウィンドウモードを変更したときのための関数
 void NSRender::AnimMesh::OnDeviceLost()
 {
     HRESULT hr = m_D3DEffect->OnLostDevice();
     assert(hr == S_OK);
 }
 
-// 解像度やウィンドウモードを変更したときのための関数
 void NSRender::AnimMesh::OnDeviceReset()
 {
     HRESULT hr = m_D3DEffect->OnResetDevice();
