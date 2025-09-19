@@ -44,21 +44,13 @@ public:
 
 private:
 
-    struct frameRootDeleterObject
-    {
-        AnimMeshAllocator* allocator_;
-
-        void operator()(const LPD3DXFRAME);
-        void releaseMeshAllocator2(const LPD3DXFRAME);
-    };
-
     void ReleaseMeshAllocator(const LPD3DXFRAME);
 
     const std::wstring SHADER_FILENAME = _T("res\\shader\\AnimationMeshShader.fx");
 
     AnimMeshAllocator m_allocator;
 
-    std::unique_ptr<D3DXFRAME, frameRootDeleterObject> m_frameRoot;
+    std::unique_ptr<D3DXFRAME> m_frameRoot;
     D3DXMATRIX m_rotationMatrix;
     D3DXMATRIX m_viewMatrix;
     D3DXMATRIX m_projMatrix;

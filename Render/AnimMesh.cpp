@@ -6,58 +6,13 @@
 #include "Camera.h"
 #include <cassert>
 
-void NSRender::AnimMesh::frameRootDeleterObject::operator()(const LPD3DXFRAME frameRoot)
-{
-    releaseMeshAllocator2(frameRoot);
-}
-
-void NSRender::AnimMesh::frameRootDeleterObject::releaseMeshAllocator2(const LPD3DXFRAME frame)
-{
-    if (frame->pMeshContainer != nullptr)
-    {
-        allocator_->DestroyMeshContainer(frame->pMeshContainer);
-    }
-
-    if (frame->pFrameSibling != nullptr)
-    {
-        releaseMeshAllocator2(frame->pFrameSibling);
-    }
-
-    if (frame->pFrameFirstChild != nullptr)
-    {
-        releaseMeshAllocator2(frame->pFrameFirstChild);
-    }
-
-    allocator_->DestroyFrame(frame);
-}
-
-void NSRender::AnimMesh::ReleaseMeshAllocator(const LPD3DXFRAME frame)
-{
-    if (frame->pMeshContainer != nullptr)
-    {
-        m_allocator.DestroyMeshContainer(frame->pMeshContainer);
-    }
-
-    if (frame->pFrameSibling != nullptr)
-    {
-        ReleaseMeshAllocator(frame->pFrameSibling);
-    }
-
-    if (frame->pFrameFirstChild != nullptr)
-    {
-        ReleaseMeshAllocator(frame->pFrameFirstChild);
-    }
-
-    m_allocator.DestroyFrame(frame);
-}
-
 NSRender::AnimMesh::AnimMesh(const std::wstring& xFilename,
                              const D3DXVECTOR3& position,
                              const D3DXVECTOR3& rotation,
                              const float& scale,
                              const AnimSetMap& animSetMap)
     : m_allocator(xFilename)
-    , m_frameRoot { nullptr, frameRootDeleterObject { &m_allocator } }
+    , m_frameRoot { nullptr }
     , m_rotationMatrix()
     , m_position(position)
     , m_rotation(rotation)
@@ -108,9 +63,10 @@ NSRender::AnimMesh::AnimMesh(const std::wstring& xFilename,
 
 NSRender::AnimMesh::~AnimMesh()
 {
+    SAFE_RELEASE(m_D3DEffect);
+
     m_animCtrlr.Finalize();
     ReleaseMeshAllocator(m_frameRoot.get());
-    SAFE_RELEASE(m_D3DEffect);
 }
 
 void NSRender::AnimMesh::Render()
@@ -329,5 +285,25 @@ void NSRender::AnimMesh::OnDeviceReset()
 {
     HRESULT hr = m_D3DEffect->OnResetDevice();
     assert(hr == S_OK);
+}
+
+void NSRender::AnimMesh::ReleaseMeshAllocator(const LPD3DXFRAME frame)
+{
+    if (frame->pMeshContainer != nullptr)
+    {
+        m_allocator.DestroyMeshContainer(frame->pMeshContainer);
+    }
+
+    if (frame->pFrameSibling != nullptr)
+    {
+        ReleaseMeshAllocator(frame->pFrameSibling);
+    }
+
+    if (frame->pFrameFirstChild != nullptr)
+    {
+        ReleaseMeshAllocator(frame->pFrameFirstChild);
+    }
+
+    m_allocator.DestroyFrame(frame);
 }
 
