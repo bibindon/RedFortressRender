@@ -1,10 +1,11 @@
 ﻿#include "AnimMesh.h"
 
+#include <cassert>
+
 #include "AnimMeshAlloc.h"
 #include "Common.h"
 #include "Light.h"
 #include "Camera.h"
-#include <cassert>
 
 NSRender::AnimMesh::AnimMesh(const std::wstring& xFilename,
                              const D3DXVECTOR3& position,

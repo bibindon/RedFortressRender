@@ -2,7 +2,8 @@ float4x4 g_matWorldViewProj;
 float4 g_lightNormal = { 0.3f, 1.0f, 0.5f, 0.0f };
 
 texture g_texture;
-sampler textureSampler = sampler_state {
+sampler textureSampler = sampler_state
+{
     Texture = (g_texture);
     MipFilter = LINEAR;
     MinFilter = LINEAR;
