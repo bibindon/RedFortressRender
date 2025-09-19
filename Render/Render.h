@@ -39,6 +39,7 @@ public:
     void ChangeResolution(const int W, const int H);
 
     void ChangeWindowMode(const eWindowMode eWindowMode_);
+
     void AddMesh(const std::wstring& filePath,
                  const D3DXVECTOR3& pos,
                  const D3DXVECTOR3& rot,
