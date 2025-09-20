@@ -4,10 +4,10 @@ float4 g_lightPos = float4(-10.f, 10.f, -10.f, 0.0f);
 float4 g_cameraPos = float4(10.f, 5.f, 10.f, 0.0f);
 float3 g_ambient = float3(0.2f, 0.2f, 0.2f);
 
-// ƒsƒNƒZƒ‹EƒXƒyƒLƒ…ƒ‰‚Ì’²®—p
-float g_SpecPower = 128.0f; // ‰s‚³iƒnƒCƒ‰ƒCƒg‚ÌL‚ª‚èj
-float g_SpecIntensity = 1.0f; // ‹­‚³
-float3 g_SpecColor = float3(1, 1, 1); // Fi•K—v‚È‚ç•ÏXj
+// ãƒ”ã‚¯ã‚»ãƒ«ãƒ»ã‚¹ãƒšã‚­ãƒ¥ãƒ©ã®èª¿æ•´ç”¨
+float g_SpecPower = 128.0f; // é‹­ã•ï¼ˆãƒã‚¤ãƒ©ã‚¤ãƒˆã®åºƒãŒã‚Šï¼‰
+float g_SpecIntensity = 1.0f; // å¼·ã•
+float3 g_SpecColor = float3(1, 1, 1); // è‰²ï¼ˆå¿…è¦ãªã‚‰å¤‰æ›´ï¼‰
 
 texture texture1;
 sampler textureSampler = sampler_state
@@ -19,7 +19,7 @@ sampler textureSampler = sampler_state
     MaxAnisotropy = 8;
 };
 
-// -------------------- VS: ˆÊ’u•ÏŠ·{PS—p‘®«‚Ìó‚¯“n‚µ --------------------
+// -------------------- VS: ä½ç½®å¤‰æ›ï¼‹PSç”¨å±æ€§ã®å—ã‘æ¸¡ã— --------------------
 struct VSIn
 {
     float4 pos : POSITION;
@@ -30,8 +30,8 @@ struct VSIn
 struct VSOut
 {
     float4 pos : POSITION;
-    float3 opos : TEXCOORD0; // ƒIƒuƒWƒFƒNƒgÀ•Wi=ƒ[ƒ‹ƒhÀ•WAWorld=I‘z’èj
-    float3 onrm : TEXCOORD1; // ƒIƒuƒWƒFƒNƒg–@ü
+    float3 opos : TEXCOORD0; // ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆåº§æ¨™ï¼ˆ=ãƒ¯ãƒ¼ãƒ«ãƒ‰åº§æ¨™ã€World=Iæƒ³å®šï¼‰
+    float3 onrm : TEXCOORD1; // ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆæ³•ç·š
     float2 uv : TEXCOORD2;
 };
 
@@ -45,10 +45,10 @@ VSOut VertexShader1(VSIn i)
     return o;
 }
 
-// -------------------- PS: ŠgU{ƒXƒyƒLƒ…ƒ‰‚ğƒsƒNƒZƒ‹‚ÅŒvZ --------------------
+// -------------------- PS: æ‹¡æ•£ï¼‹ã‚¹ãƒšã‚­ãƒ¥ãƒ©ã‚’ãƒ”ã‚¯ã‚»ãƒ«ã§è¨ˆç®— --------------------
 float4 PixelShader1(VSOut i) : COLOR0
 {
-    // ƒIƒuƒWƒFƒNƒg‹óŠÔ‚ÅŒvZiWorld=I‚Ì‚½‚ßjB«—ˆWorld‚I‚É‚·‚é‚È‚ç here ‚ğƒ[ƒ‹ƒh‚É‡‚í‚¹‚ÄC³B
+    // ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆç©ºé–“ã§è¨ˆç®—ï¼ˆWorld=Iã®ãŸã‚ï¼‰ã€‚å°†æ¥Worldâ‰ Iã«ã™ã‚‹ãªã‚‰ here ã‚’ãƒ¯ãƒ¼ãƒ«ãƒ‰ã«åˆã‚ã›ã¦ä¿®æ­£ã€‚
     float3 N = normalize(i.onrm);
     float3 L = normalize(g_lightPos.xyz - i.opos);
     float3 V = normalize(g_cameraPos.xyz - i.opos);
@@ -59,11 +59,11 @@ float4 PixelShader1(VSOut i) : COLOR0
 
     float3 albedo = tex2D(textureSampler, i.uv).rgb;
 
-    // ŠgUiLambertj{ ŠÂ‹«
+    // æ‹¡æ•£ï¼ˆLambertï¼‰ï¼‹ ç’°å¢ƒ
     float3 diffuse = albedo * NdotL;
     float3 ambient = albedo * g_ambient;
 
-    // ƒXƒyƒLƒ…ƒ‰iBlinn-Phongj
+    // ã‚¹ãƒšã‚­ãƒ¥ãƒ©ï¼ˆBlinn-Phongï¼‰
     float3 spec = g_SpecColor * (pow(NdotH, g_SpecPower) * g_SpecIntensity);
 
     float3 color = ambient + diffuse + spec;
