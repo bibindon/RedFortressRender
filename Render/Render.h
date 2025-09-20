@@ -125,6 +125,9 @@ public:
                    const int Y,
                    const int transparency = 255);
 
+    // 彩度をどれくらい上げるか（下げるか）を設定
+    void SetFilterSaturate(const float level);
+
 private:
 
     HWND m_hWnd = NULL;
@@ -149,6 +152,37 @@ private:
 
     std::vector<Font> m_fontList;
     Sprite m_sprite;
+
+    //---------------------------------------------------------------
+    // マルチパスレンダリング関連
+    //---------------------------------------------------------------
+
+    void DrawPass1();
+    void DrawPass2();
+
+    LPD3DXEFFECT g_pEffect2 = NULL;
+
+    LPDIRECT3DTEXTURE9 g_pRenderTarget = NULL;
+    LPDIRECT3DTEXTURE9 g_pRenderTarget2 = NULL;
+
+    // フルスクリーンクアッド用
+    LPDIRECT3DVERTEXDECLARATION9 g_pQuadDecl = NULL;
+
+    // 追加: スプライト
+    LPD3DXSPRITE g_pSprite = NULL;
+
+    struct QuadVertex
+    {
+        float x, y, z, w; // クリップ空間（-1..1, w=1）
+        float u, v;       // テクスチャ座標
+    };
+
+    void DrawFullscreenQuad();
+
+    // 彩度フィルター
+    float m_saturateLevel = 1.0f;
+
+
 };
 }
 

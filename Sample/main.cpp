@@ -102,11 +102,13 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                 text += L"9 : ボーダーレスウィンドウモード\n";
                 text += L"0 : フルスクリーンモード\n";
                 text += L"m : メッシュ追加\n";
-                text += L"M : スムーズなメッシュ追加\n";
-                text += L"Ctrl+m : SSS風メッシュ追加\n";
+                text += L"Shift + m : スムーズなメッシュ追加\n";
+                text += L"Ctrl + m : SSS風メッシュ追加\n";
                 text += L"n : アニメーションメッシュ追加\n";
                 text += L"k : スキンアニメーションメッシュ追加\n";
                 text += L"i : インスタンシングメッシュ追加\n";
+                text += L"Shift + s : 彩度を上げる\n";
+                text += L"Control + s : 彩度を下げる\n";
                 g_Render.DrawText_(g_fontId, text, 10, 10);
             }
 
@@ -273,6 +275,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             g_Render.AddMeshInstansing(L"cube.x", pos, D3DXVECTOR3(0, yaw, 0.0f), 1.f);
         }
 
+        if (!shift && !control)
         {
             // 現在向いている前方向ベクトル
             D3DXVECTOR3 forward = g_Render.GetCameraRotate();
@@ -341,6 +344,29 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 imageInfo.m_rect.top = randY;
 
                 g_imageInfoList.push_back(imageInfo);
+            }
+        }
+
+        // 彩度
+        {
+            static float saturateLevel = 1.0f;
+
+            if (wParam == 'S' && shift)
+            {
+                saturateLevel += 0.1f;
+                g_Render.SetFilterSaturate(saturateLevel);
+            }
+
+            if (wParam == 'S' && control)
+            {
+                saturateLevel -= 0.1f;
+
+                if (saturateLevel < 0.0f)
+                {
+                    saturateLevel = 0.0f;
+                }
+
+                g_Render.SetFilterSaturate(saturateLevel);
             }
         }
     }

@@ -28,7 +28,10 @@
 
 #define SAFE_RELEASE(p) { if (p) { (p)->Release(); (p) = NULL; } }
 
-void NSRender::Render::Initialize(HWND hWnd)
+namespace NSRender
+{
+
+void Render::Initialize(HWND hWnd)
 {
     HRESULT hResult = E_FAIL;
 
@@ -78,10 +81,59 @@ void NSRender::Render::Initialize(HWND hWnd)
 
     m_sprite.Initialize();
 
+    // マルチパスレンダリング関連
+    {
+        hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
+                                           L"res\\shader\\FilterSaturate.fx",
+                                           NULL,
+                                           NULL,
+                                           D3DXSHADER_DEBUG,
+                                           NULL,
+                                           &g_pEffect2,
+                                           NULL);
+        assert(hResult == S_OK);
+
+        // === 変更: RT を 2 枚作成（両方 A8R8G8B8） ===
+        hResult = D3DXCreateTexture(Common::D3DDevice(),
+                                    1600,
+                                    900,
+                                    1,
+                                    D3DUSAGE_RENDERTARGET,
+                                    D3DFMT_A8R8G8B8,
+                                    D3DPOOL_DEFAULT,
+                                    &g_pRenderTarget);
+        assert(hResult == S_OK);
+
+        hResult = D3DXCreateTexture(Common::D3DDevice(),
+                                    1600,
+                                    900,
+                                    1,
+                                    D3DUSAGE_RENDERTARGET,
+                                    D3DFMT_A8R8G8B8,
+                                    D3DPOOL_DEFAULT,
+                                    &g_pRenderTarget2);
+        assert(hResult == S_OK);
+
+        // フルスクリーンクアッドの頂宣言
+        D3DVERTEXELEMENT9 elems[] =
+        {
+            { 0,  0, D3DDECLTYPE_FLOAT4, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0 },
+            { 0, 16, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0 },
+            D3DDECL_END()
+        };
+        hResult = Common::D3DDevice()->CreateVertexDeclaration(elems, &g_pQuadDecl);
+        assert(hResult == S_OK);
+
+        // スプライト
+        hResult = D3DXCreateSprite(Common::D3DDevice(), &g_pSprite);
+        assert(hResult == S_OK);
+
+    }
+
     AddMesh(L"cube.x", D3DXVECTOR3(0, 0, 0), D3DXVECTOR3(0, 0, 0), 1.f, 1.f);
 }
 
-void NSRender::Render::Finalize()
+void Render::Finalize()
 {
     Common::D3DDevice()->Release();
     Common::SetD3DDevice(NULL);
@@ -89,64 +141,13 @@ void NSRender::Render::Finalize()
     SAFE_RELEASE(m_pD3D);
 }
 
-void NSRender::Render::Draw()
+void Render::Draw()
 {
     HRESULT hResult = E_FAIL;
 
-    hResult = Common::D3DDevice()->Clear(0,
-                                         NULL,
-                                         D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
-                                         D3DCOLOR_XRGB(100, 100, 100),
-                                         1.0f,
-                                         0);
+    DrawPass1();
 
-    assert(hResult == S_OK);
-
-    hResult = Common::D3DDevice()->BeginScene();
-    assert(hResult == S_OK);
-
-    for (auto& elem : m_meshList)
-    {
-        elem.Render();
-    }
-
-    for (auto& elem : m_meshSmoothList)
-    {
-        elem.Draw();
-    }
-
-    for (auto& elem : m_meshSSSLikeList)
-    {
-        elem.Draw();
-    }
-
-    for (auto& elem : m_animMeshList)
-    {
-        elem->Render();
-    }
-
-    for (auto& elem : m_skinAnimMeshList)
-    {
-        elem->Render(Camera::GetViewMatrix(),
-                     Camera::GetProjMatrix(),
-                     Light::GetLightNormal(),
-                     Light::GetBrightness());
-    }
-
-    for (auto& elem : m_meshInstancingMap)
-    {
-        elem.second->Draw();
-    }
-
-    for (auto& elem : m_fontList)
-    {
-        elem.Draw();
-    }
-
-    m_sprite.Draw();
-
-    hResult = Common::D3DDevice()->EndScene();
-    assert(hResult == S_OK);
+    DrawPass2();
 
     hResult = Common::D3DDevice()->Present(NULL, NULL, NULL, NULL);
     assert(hResult == S_OK);
@@ -158,11 +159,11 @@ void NSRender::Render::Draw()
 
 }
 
-void NSRender::Render::ChangeResolution(const int W, const int H)
+void Render::ChangeResolution(const int W, const int H)
 {
 }
 
-void NSRender::Render::ChangeWindowMode(const eWindowMode eWindowMode_)
+void Render::ChangeWindowMode(const eWindowMode eWindowMode_)
 {
     if (m_eWindowModeRequest != eWindowMode_)
     {
@@ -170,7 +171,7 @@ void NSRender::Render::ChangeWindowMode(const eWindowMode eWindowMode_)
     }
 }
 
-void NSRender::Render::AddMesh(const std::wstring& filePath,
+void Render::AddMesh(const std::wstring& filePath,
                                const D3DXVECTOR3& pos,
                                const D3DXVECTOR3& rot,
                                const float scale,
@@ -180,7 +181,7 @@ void NSRender::Render::AddMesh(const std::wstring& filePath,
     m_meshList.rbegin()->Initialize();
 }
 
-void NSRender::Render::AddMeshSmooth(const std::wstring& filePath,
+void Render::AddMeshSmooth(const std::wstring& filePath,
                                      const D3DXVECTOR3& pos,
                                      const D3DXVECTOR3& rot,
                                      const float scale,
@@ -191,18 +192,18 @@ void NSRender::Render::AddMeshSmooth(const std::wstring& filePath,
     m_meshSmoothList.rbegin()->Initialize(filePath, pos, rot, scale, radius);
 }
 
-void NSRender::Render::AddMeshSSSLike(const std::wstring& filePath,
-                                     const D3DXVECTOR3& pos,
-                                     const D3DXVECTOR3& rot,
-                                     const float scale,
-                                     const float radius)
+void Render::AddMeshSSSLike(const std::wstring& filePath,
+                                      const D3DXVECTOR3& pos,
+                                      const D3DXVECTOR3& rot,
+                                      const float scale,
+                                      const float radius)
 {
     MeshSSSLike mesh;
     m_meshSSSLikeList.push_back(mesh);
     m_meshSSSLikeList.rbegin()->Initialize(filePath, pos, rot, scale, radius);
 }
 
-void NSRender::Render::AddAnimMesh(const std::wstring& filePath,
+void Render::AddAnimMesh(const std::wstring& filePath,
                                    const D3DXVECTOR3& pos,
                                    const D3DXVECTOR3& rot,
                                    const float scale,
@@ -212,7 +213,7 @@ void NSRender::Render::AddAnimMesh(const std::wstring& filePath,
     m_animMeshList.push_back(animMesh);
 }
 
-void NSRender::Render::AddSkinAnimMesh(const std::wstring& filePath,
+void Render::AddSkinAnimMesh(const std::wstring& filePath,
                                        const D3DXVECTOR3& pos,
                                        const D3DXVECTOR3& rot,
                                        const float scale,
@@ -222,7 +223,7 @@ void NSRender::Render::AddSkinAnimMesh(const std::wstring& filePath,
     m_skinAnimMeshList.push_back(mesh);
 }
 
-void NSRender::Render::AddMeshInstansing(const std::wstring& filePath,
+void Render::AddMeshInstansing(const std::wstring& filePath,
                                          const D3DXVECTOR3& pos,
                                          const D3DXVECTOR3& rot,
                                          const float scale)
@@ -239,13 +240,13 @@ void NSRender::Render::AddMeshInstansing(const std::wstring& filePath,
     m_meshInstancingMap[filePath]->AddInstance(pos);
 }
 
-void NSRender::Render::SetCamera(const D3DXVECTOR3& pos, const D3DXVECTOR3& lookAt)
+void Render::SetCamera(const D3DXVECTOR3& pos, const D3DXVECTOR3& lookAt)
 {
     Camera::SetEyePos(pos);
     Camera::SetLookAtPos(lookAt);
 }
 
-void NSRender::Render::MoveCamera(const D3DXVECTOR3& pos)
+void Render::MoveCamera(const D3DXVECTOR3& pos)
 {
     auto eyePos = Camera::GetEyePos();
     Camera::SetEyePos(eyePos + pos);
@@ -254,12 +255,12 @@ void NSRender::Render::MoveCamera(const D3DXVECTOR3& pos)
     Camera::SetLookAtPos(lookAtPos + pos);
 }
 
-D3DXVECTOR3 NSRender::Render::GetLookAtPos()
+D3DXVECTOR3 Render::GetLookAtPos()
 {
     return Camera::GetLookAtPos();
 }
 
-D3DXVECTOR3 NSRender::Render::GetCameraRotate()
+D3DXVECTOR3 Render::GetCameraRotate()
 {
     auto eyePos = Camera::GetEyePos();
     auto lookAtPos = Camera::GetLookAtPos();
@@ -268,7 +269,7 @@ D3DXVECTOR3 NSRender::Render::GetCameraRotate()
     return dir;
 }
 
-int NSRender::Render::SetUpFont(const std::wstring& fontName,
+int Render::SetUpFont(const std::wstring& fontName,
                                 const int fontSize,
                                 const UINT fontColor)
 {
@@ -279,10 +280,10 @@ int NSRender::Render::SetUpFont(const std::wstring& fontName,
     return (int)(m_fontList.size() - 1);
 }
 
-void NSRender::Render::DrawText_(const int fontId,
-                                   const std::wstring& text,
-                                   const int X,
-                                   const int Y)
+void Render::DrawText_(const int fontId,
+                                 const std::wstring& text,
+                                 const int X,
+                                 const int Y)
 {
     if (fontId >= m_fontList.size())
     {
@@ -292,11 +293,11 @@ void NSRender::Render::DrawText_(const int fontId,
     m_fontList.at(fontId).AddText(text, X, Y);
 }
 
-void NSRender::Render::DrawText_(const int fontId,
-                               const std::wstring& text,
-                               const int X,
-                               const int Y,
-                               const UINT color)
+void Render::DrawText_(const int fontId,
+                                 const std::wstring& text,
+                                 const int X,
+                                 const int Y,
+                                 const UINT color)
 {
     if (fontId >= m_fontList.size())
     {
@@ -306,12 +307,12 @@ void NSRender::Render::DrawText_(const int fontId,
     m_fontList.at(fontId).AddText(text, X, Y, color);
 }
 
-void NSRender::Render::DrawTextCenter(const int fontId,
-                                     const std::wstring& text,
-                                     const int X,
-                                     const int Y,
-                                     const int Width,
-                                     const int Height)
+void Render::DrawTextCenter(const int fontId,
+                                      const std::wstring& text,
+                                      const int X,
+                                      const int Y,
+                                      const int Width,
+                                      const int Height)
 {
     if (fontId >= m_fontList.size())
     {
@@ -321,13 +322,13 @@ void NSRender::Render::DrawTextCenter(const int fontId,
     m_fontList.at(fontId).AddTextCenter(text, X, Y, Width, Height);
 }
 
-void NSRender::Render::DrawTextCenter(const int fontId,
-                                     const std::wstring& text,
-                                     const int X,
-                                     const int Y,
-                                     const int Width,
-                                     const int Height,
-                                     const UINT color)
+void Render::DrawTextCenter(const int fontId,
+                                      const std::wstring& text,
+                                      const int X,
+                                      const int Y,
+                                      const int Width,
+                                      const int Height,
+                                      const UINT color)
 {
     if (fontId >= m_fontList.size())
     {
@@ -337,7 +338,7 @@ void NSRender::Render::DrawTextCenter(const int fontId,
     m_fontList.at(fontId).AddTextCenter(text, X, Y, Width, Height, color);
 }
 
-void NSRender::Render::DrawImage(const std::wstring& text,
+void Render::DrawImage(const std::wstring& text,
                                  const int X,
                                  const int Y,
                                  const int transparency)
@@ -346,7 +347,12 @@ void NSRender::Render::DrawImage(const std::wstring& text,
     m_sprite.PlaceImage(text, X, Y, transparency);
 }
 
-void NSRender::Render::RotateCamera(const D3DXVECTOR3& rot)
+void Render::SetFilterSaturate(const float level)
+{
+    m_saturateLevel = level;
+}
+
+void Render::RotateCamera(const D3DXVECTOR3& rot)
 {
     D3DXVECTOR3 lookAt = Camera::GetLookAtPos();
     D3DXVECTOR3 eye = Camera::GetEyePos();
@@ -384,7 +390,7 @@ void NSRender::Render::RotateCamera(const D3DXVECTOR3& rot)
 }
 
 // TODO いずれちゃんと書くこと
-void NSRender::Render::ChangeWindowMode()
+void Render::ChangeWindowMode()
 {
     HRESULT hResult = E_FAIL;
 
@@ -541,3 +547,226 @@ void NSRender::Render::ChangeWindowMode()
     m_eWindowModeRequest = eWindowMode::NONE;
 }
 
+void Render::DrawPass1()
+{
+    HRESULT hResult = E_FAIL;
+
+    // 既存の RT0 を保存
+    LPDIRECT3DSURFACE9 pOldRT0 = NULL;
+    hResult = Common::D3DDevice()->GetRenderTarget(0, &pOldRT0);
+    assert(hResult == S_OK);
+
+    // 2 枚の RT サーフェスを取得
+    LPDIRECT3DSURFACE9 pRT0 = NULL;
+    LPDIRECT3DSURFACE9 pRT1 = NULL;
+
+    hResult = g_pRenderTarget->GetSurfaceLevel(0, &pRT0);
+    assert(hResult == S_OK);
+
+    hResult = g_pRenderTarget2->GetSurfaceLevel(0, &pRT1);
+    assert(hResult == S_OK);
+
+    // MRT セット（スロット 0 と 1）
+    hResult = Common::D3DDevice()->SetRenderTarget(0, pRT0);
+    assert(hResult == S_OK);
+
+    hResult = Common::D3DDevice()->SetRenderTarget(1, pRT1);
+    assert(hResult == S_OK);
+
+
+
+
+    hResult = Common::D3DDevice()->Clear(0,
+                                         NULL,
+                                         D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
+                                         D3DCOLOR_XRGB(100, 100, 100),
+                                         1.0f,
+                                         0);
+
+    assert(hResult == S_OK);
+
+    hResult = Common::D3DDevice()->BeginScene();
+    assert(hResult == S_OK);
+
+    for (auto& elem : m_meshList)
+    {
+        elem.Render();
+    }
+
+    for (auto& elem : m_meshSmoothList)
+    {
+        elem.Draw();
+    }
+
+    for (auto& elem : m_meshSSSLikeList)
+    {
+        elem.Draw();
+    }
+
+    for (auto& elem : m_animMeshList)
+    {
+        elem->Render();
+    }
+
+    for (auto& elem : m_skinAnimMeshList)
+    {
+        elem->Render(Camera::GetViewMatrix(),
+                     Camera::GetProjMatrix(),
+                     Light::GetLightNormal(),
+                     Light::GetBrightness());
+    }
+
+    for (auto& elem : m_meshInstancingMap)
+    {
+        elem.second->Draw();
+    }
+
+    for (auto& elem : m_fontList)
+    {
+        elem.Draw();
+    }
+
+    m_sprite.Draw();
+
+    hResult = Common::D3DDevice()->EndScene();
+    assert(hResult == S_OK);
+
+    // MRT を解除してバックバッファへ戻す
+    hResult = Common::D3DDevice()->SetRenderTarget(1, NULL);
+    assert(hResult == S_OK);
+
+    hResult = Common::D3DDevice()->SetRenderTarget(0, pOldRT0);
+    assert(hResult == S_OK);
+
+    SAFE_RELEASE(pRT0);
+    SAFE_RELEASE(pRT1);
+    SAFE_RELEASE(pOldRT0);
+
+
+}
+
+void Render::DrawPass2()
+{
+    HRESULT hResult = E_FAIL;
+
+    hResult = Common::D3DDevice()->Clear(0, NULL,
+                                  D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
+                                  D3DCOLOR_XRGB(0, 0, 0),
+                                  1.0f, 0);
+
+    assert(hResult == S_OK);
+
+    // 2D 全面描画なので Z 無効
+    hResult = Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
+    assert(hResult == S_OK);
+
+    hResult = Common::D3DDevice()->BeginScene();
+    assert(hResult == S_OK);
+
+    // フルスクリーン: RT0 を FilterSaturate.fx で表示
+    hResult = g_pEffect2->SetTechnique("Technique1");
+    assert(hResult == S_OK);
+
+    UINT numPass = 0;
+    hResult = g_pEffect2->Begin(&numPass, 0);
+    assert(hResult == S_OK);
+
+    hResult = g_pEffect2->BeginPass(0);
+    assert(hResult == S_OK);
+
+    hResult = g_pEffect2->SetFloat("g_level", m_saturateLevel);
+    assert(hResult == S_OK);
+
+    hResult = g_pEffect2->SetTexture("texture1", g_pRenderTarget);
+    assert(hResult == S_OK);
+
+    hResult = g_pEffect2->CommitChanges();
+    assert(hResult == S_OK);
+
+    DrawFullscreenQuad();
+
+    hResult = g_pEffect2->EndPass();
+    assert(hResult == S_OK);
+
+    hResult = g_pEffect2->End();
+    assert(hResult == S_OK);
+
+    // === 追加: 左上に RT1 を 1/2 スケールで表示（D3DXSPRITE） ===
+    if (false)
+    {
+        if (g_pSprite)
+        {
+            hResult = g_pSprite->Begin(D3DXSPRITE_ALPHABLEND);
+            assert(hResult == S_OK);
+
+            D3DXMATRIX mat;
+            D3DXVECTOR2 scaling(0.5f, 0.5f);     // 半分
+            D3DXVECTOR2 trans(0.0f, 0.0f);       // 左上
+            D3DXMatrixTransformation2D(&mat, NULL, 0.0f, &scaling, NULL, 0.0f, &trans);
+            g_pSprite->SetTransform(&mat);
+
+            // そのまま (0,0) へ描画
+
+            // マルチターゲットレンダリングが未実装なので何も映らない。
+            // 同実装すればいいのか謎
+            //hResult = g_pSprite->Draw(g_pRenderTarget2, NULL, NULL, NULL, 0xFFFFFFFF);
+            
+            hResult = g_pSprite->Draw(g_pRenderTarget, NULL, NULL, NULL, 0xFFFFFFFF);
+            assert(hResult == S_OK);
+
+            hResult = g_pSprite->End();
+            assert(hResult == S_OK);
+        }
+    }
+
+    hResult = Common::D3DDevice()->EndScene();
+    assert(hResult == S_OK);
+
+    hResult = Common::D3DDevice()->Present(NULL, NULL, NULL, NULL);
+    assert(hResult == S_OK);
+
+    hResult = Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
+    assert(hResult == S_OK);
+
+}
+
+void Render::DrawFullscreenQuad()
+{
+    QuadVertex v[4] { };
+
+    float du = 0.5f / 1600.f;
+    float dv = 0.5f / 900.f;
+
+    v[0].x = -1.0f;
+    v[0].y = -1.0f;
+    v[0].z = 0.0f;
+    v[0].w = 1.0f;
+    v[0].u = 0.0f + du;
+    v[0].v = 1.0f - dv;
+
+    v[1].x = -1.0f;
+    v[1].y = 1.0f;
+    v[1].z = 0.0f;
+    v[1].w = 1.0f;
+    v[1].u = 0.0f + du;
+    v[1].v = 0.0f + dv;
+
+    v[2].x = 1.0f;
+    v[2].y = -1.0f;
+    v[2].z = 0.0f;
+    v[2].w = 1.0f;
+    v[2].u = 1.0f - du;
+    v[2].v = 1.0f - dv;
+
+    v[3].x = 1.0f;
+    v[3].y = 1.0f;
+    v[3].z = 0.0f;
+    v[3].w = 1.0f;
+    v[3].u = 1.0f - du;
+    v[3].v = 0.0f + dv;
+
+    Common::D3DDevice()->SetVertexDeclaration(g_pQuadDecl);
+    Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, v, sizeof(QuadVertex));
+}
+
+}
