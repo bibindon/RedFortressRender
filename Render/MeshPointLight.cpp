@@ -134,14 +134,13 @@ void MeshPointLight::Draw()
     D3DXVECTOR3 lightPos(30.f * sinf(f), 10.f, -30.f * cosf(f));
     D3DXVECTOR4 lightPos2(lightPos.x, lightPos.y, lightPos.z, 0.f);
 
-//    hResult = m_D3DEffect->SetVector("g_cameraPos", &cameraPos);
-//    assert(hResult == S_OK);
-
-//    hResult = m_D3DEffect->SetVector("g_lightPos", &lightPos2);
-//    assert(hResult == S_OK);
-
     {
         // ===== ライト10個をリング状に配置 =====
+
+        // TODO
+        // 適当にポイントライトを置くのではなく、
+        // Lightクラスから取得して配置できないといけない
+
         PointLight lights[10];
         const float R = 50.0f;
         for (int i = 0; i < 10; i++)
