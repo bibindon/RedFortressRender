@@ -1,8 +1,8 @@
 
-// Ê“x‚ÌƒŒƒxƒ‹
-// 1.0f : –³’²®
-// 0.0f : ƒOƒŒ[ƒXƒP[ƒ‹
-// 2.0f : Ê“x2”{
+// å½©åº¦ã®ãƒ¬ãƒ™ãƒ«
+// 1.0f : ç„¡èª¿æ•´
+// 0.0f : ã‚°ãƒ¬ãƒ¼ã‚¹ã‚±ãƒ¼ãƒ«
+// 2.0f : å½©åº¦2å€
 float g_level = 1.0f;
 
 texture texture1;
@@ -33,7 +33,7 @@ void PixelShader1(in float4 inPosition    : POSITION,
 
     float average = (workColor.r + workColor.g + workColor.b) / 3;
 
-    // Ê“x‚ğã‚°‰º‚°‚·‚é
+    // å½©åº¦ã‚’ä¸Šã’ä¸‹ã’ã™ã‚‹
     workColor.r = average + (workColor.r - average) * g_level;
     workColor.g = average + (workColor.g - average) * g_level;
     workColor.b = average + (workColor.b - average) * g_level;

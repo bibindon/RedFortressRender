@@ -165,6 +165,17 @@ void Render::Initialize(HWND hWnd)
 
     }
 
+    {
+        HRESULT hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
+                                                   L"res\\shader\\PostEffectEnd.fx",
+                                                   NULL, NULL,
+                                                   D3DXSHADER_DEBUG,
+                                                   NULL,
+                                                   &g_pEffectEnd,
+                                                   NULL);
+        assert(SUCCEEDED(hResult));
+    }
+
 //    AddMesh(L"cube.x", D3DXVECTOR3(0, 0, 0), D3DXVECTOR3(0, 0, 0), 1.f, 1.f);
 }
 
@@ -185,6 +196,8 @@ void Render::Draw()
     DrawPass2();
 
     DrawPass3();
+
+    DrawPassEnd();
 
     Draw2D();
 
@@ -776,39 +789,83 @@ void Render::DrawPass2()
     hResult = Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
     assert(hResult == S_OK);
 
+    Common::D3DDevice()->SetRenderTarget(0, pOldRT0);
+    SAFE_RELEASE(pOldRT0);
 }
 
 void Render::DrawPass3()
 {
-    HRESULT hResult = E_FAIL;
-
-    // 2) 横方向ブラー → g_pTempTex（ローカルでRT面取得）
+    // 2) 横ブラー: 入力=g_pSceneTex, 出力=g_pTempTex（現状のままでOK）
     {
         IDirect3DSurface9* pTempRT = NULL;
         g_pTempTex->GetSurfaceLevel(0, &pTempRT);
         Common::D3DDevice()->SetRenderTarget(0, pTempRT);
-        SAFE_RELEASE(pTempRT); // Device内でAddRefされるので即ReleaseでOK
+        SAFE_RELEASE(pTempRT);
 
         Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
         Common::D3DDevice()->BeginScene();
         DrawFullscreenQuad(g_pSceneTex, "GaussianH");
-//        DrawFullscreenQuad(g_pRenderTarget, "GaussianH");
         Common::D3DDevice()->EndScene();
     }
 
-    // 3) 縦方向ブラー → バックバッファ（毎回取得）
+    // 3) 縦ブラー: 入力=g_pTempTex, 出力=★g_pSceneTex（←ここを画面ではなくRTへ）
     {
-        IDirect3DSurface9* pBackBuffer = NULL;
-        Common::D3DDevice()->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
-        Common::D3DDevice()->SetRenderTarget(0, pBackBuffer);
-        SAFE_RELEASE(pBackBuffer);
+        IDirect3DSurface9* pSceneRT = NULL;
+        g_pSceneTex->GetSurfaceLevel(0, &pSceneRT);
+        Common::D3DDevice()->SetRenderTarget(0, pSceneRT);
+        SAFE_RELEASE(pSceneRT);
 
         Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
         Common::D3DDevice()->BeginScene();
         DrawFullscreenQuad(g_pTempTex, "GaussianV");
         Common::D3DDevice()->EndScene();
     }
+}
 
+void Render::DrawPassEnd()
+{
+    // 1) バックバッファを RT に
+    IDirect3DSurface9* pBackBuffer = NULL;
+    Common::D3DDevice()->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
+    Common::D3DDevice()->SetRenderTarget(0, pBackBuffer);
+    SAFE_RELEASE(pBackBuffer);
+
+    // 2) クリア
+    Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
+
+    // 3) シーン開始
+    Common::D3DDevice()->BeginScene();
+
+    // === ここがポイント: エフェクト End(Copy) + 頂点宣言で描く ===
+    //LPDIRECT3DTEXTURE9 srcTex = /* 例: ガウス有効なら g_pTempTex、無効なら g_pSceneTex */;
+    LPDIRECT3DTEXTURE9 srcTex = g_pSceneTex;
+//    LPDIRECT3DTEXTURE9 srcTex = g_pTempTex;
+    g_pEffectEnd->SetTechnique("Copy");
+    g_pEffectEnd->SetTexture("g_SrcTex", srcTex);
+
+    // DrawFullscreenQuad() の頂点をそのまま利用
+    QuadVertex v[4] {};
+    const float du = 0.5f / 1600.f;
+    const float dv = 0.5f / 900.f;
+    v[0] = { -1.0f, -1.0f, 0, 1, 0.0f + du, 1.0f - dv };
+    v[1] = { -1.0f,  1.0f, 0, 1, 0.0f + du, 0.0f + dv };
+    v[2] = { 1.0f, -1.0f, 0, 1, 1.0f - du, 1.0f - dv };
+    v[3] = { 1.0f,  1.0f, 0, 1, 1.0f - du, 0.0f + dv };
+
+    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
+    Common::D3DDevice()->SetVertexDeclaration(g_pQuadDecl);
+
+    UINT passes = 0;
+    g_pEffectEnd->Begin(&passes, 0);
+    g_pEffectEnd->BeginPass(0);
+    Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, v, sizeof(QuadVertex));
+    g_pEffectEnd->EndPass();
+    g_pEffectEnd->End();
+
+    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
+
+    // 4) シーン終了
+    Common::D3DDevice()->EndScene();
 }
 
 void Render::Draw2D()

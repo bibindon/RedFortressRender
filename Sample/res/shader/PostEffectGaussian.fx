@@ -1,6 +1,6 @@
 /*
 
-// ƒVƒ“ƒvƒ‹ƒo[ƒWƒ‡ƒ“
+// ã‚·ãƒ³ãƒ—ãƒ«ãƒãƒ¼ã‚¸ãƒ§ãƒ³
 
 float4x4 g_matWorldViewProj;
 float4 g_lightNormal = { 0.3f, 1.0f, 0.5f, 0.0f };
@@ -14,7 +14,7 @@ sampler textureSampler = sampler_state
 };
 
 // ============================
-// —§•û‘Ì•`‰æ—p
+// ç«‹æ–¹ä½“æç”»ç”¨
 // ============================
 void VS_Default(in float4 inPosition : POSITION,
                 in float4 inNormal : NORMAL0,
@@ -48,7 +48,7 @@ technique Technique1
 }
 
 // ============================
-// ƒ|ƒXƒgƒGƒtƒFƒNƒg—p
+// ãƒã‚¹ãƒˆã‚¨ãƒ•ã‚§ã‚¯ãƒˆç”¨
 // ============================
 float2 g_TexelSize;
 texture g_SrcTex;
@@ -112,7 +112,7 @@ sampler textureSampler = sampler_state
 };
 
 // ============================
-// —§•û‘Ì•`‰æ—p
+// ç«‹æ–¹ä½“æç”»ç”¨
 // ============================
 void VS_Default(in float4 inPosition : POSITION,
                 in float4 inNormal : NORMAL0,
@@ -146,9 +146,9 @@ technique Technique1
 }
 
 // ============================
-// ƒ|ƒXƒgƒGƒtƒFƒNƒgi201~201, tap=25, step=8j
-// ƒTƒ“ƒvƒ‹: 0, }8, }16, c, }96
-// ƒĞ=40, —£U˜a(ŠÔˆø‚«)‚Å³‹K‰»Ï‚İi1D˜a=1j
+// ãƒã‚¹ãƒˆã‚¨ãƒ•ã‚§ã‚¯ãƒˆï¼ˆ201Ã—201, tap=25, step=8ï¼‰
+// ã‚µãƒ³ãƒ—ãƒ«: 0, Â±8, Â±16, â€¦, Â±96
+// Ïƒ=40, é›¢æ•£å’Œ(é–“å¼•ã)ã§æ­£è¦åŒ–æ¸ˆã¿ï¼ˆ1Då’Œ=1ï¼‰
 // ============================
 float2 g_TexelSize;
 texture g_SrcTex;
@@ -161,25 +161,25 @@ sampler SrcSampler = sampler_state
     AddressV = CLAMP;
 };
 
-// ³‹K‰»Ï‚İisum = w0 + 2*ƒ°w[i] = 1j
+// æ­£è¦åŒ–æ¸ˆã¿ï¼ˆsum = w0 + 2*Î£w[i] = 1ï¼‰
 static const float w[13] =
 {
     0.0807799342, // 0
-    0.0791803843, // }8
-    0.0745692777, // }16
-    0.0674730727, // }24
-    0.0586582714, // }32
-    0.0489955068, // }40
-    0.0393198152, // }48
-    0.0303176059, // }56
-    0.0224598348, // }64
-    0.0159862439, // }72
-    0.0109323753, // }80
-    0.0071830824, // }88
-    0.0045345624 // }96
+    0.0791803843, // Â±8
+    0.0745692777, // Â±16
+    0.0674730727, // Â±24
+    0.0586582714, // Â±32
+    0.0489955068, // Â±40
+    0.0393198152, // Â±48
+    0.0303176059, // Â±56
+    0.0224598348, // Â±64
+    0.0159862439, // Â±72
+    0.0109323753, // Â±80
+    0.0071830824, // Â±88
+    0.0045345624 // Â±96
 };
 
-// ---- ‰¡•ûŒü ----
+// ---- æ¨ªæ–¹å‘ ----
 float4 GaussianSparseH(float2 texCoord : TEXCOORD0) : COLOR
 {
     float2 step = float2(g_TexelSize.x, 0.0);
@@ -195,7 +195,7 @@ float4 GaussianSparseH(float2 texCoord : TEXCOORD0) : COLOR
     return c;
 }
 
-// ---- c•ûŒü ----
+// ---- ç¸¦æ–¹å‘ ----
 float4 GaussianSparseV(float2 texCoord : TEXCOORD0) : COLOR
 {
     float2 step = float2(0.0, g_TexelSize.y);

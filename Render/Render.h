@@ -175,6 +175,8 @@ private:
     // TODO ポストエフェクト用のクラスを作る
     void DrawPass3();
 
+    void DrawPassEnd();
+
     void Draw2D();
 
     LPD3DXEFFECT g_pEffect2 = NULL;
@@ -221,6 +223,10 @@ private:
         float u, v;
     };
 
+    //---------------------------------------------------------------
+    // テクスチャ―の内容を画面に出力
+    //---------------------------------------------------------------
+    LPD3DXEFFECT g_pEffectEnd = NULL;
 
 };
 }
