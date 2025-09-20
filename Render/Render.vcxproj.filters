@@ -63,6 +63,9 @@
     <ClCompile Include="MeshSSSLike.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="MeshPointLight.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Render.h">
@@ -113,6 +116,9 @@
     <ClInclude Include="MeshSSSLike.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="MeshPointLight.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shader\simple.fx">
@@ -137,6 +143,9 @@
       <Filter>シェーダー</Filter>
     </FxCompile>
     <FxCompile Include="shader\FilterSaturate.fx">
+      <Filter>シェーダー</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\MeshPointLight.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
   </ItemGroup>

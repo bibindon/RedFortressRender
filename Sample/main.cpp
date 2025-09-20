@@ -25,6 +25,13 @@ struct ImageInfo
 
 std::vector<ImageInfo> g_imageInfoList;
 
+struct TextInfo
+{
+    std::wstring m_text;
+    RECT m_rect { };
+};
+std::vector<TextInfo> g_textInfoList;
+
 LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 extern int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
@@ -77,7 +84,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                              NULL);
 
     g_Render.Initialize(hWnd);
-    g_fontId = g_Render.SetUpFont(L"ＭＳ ゴシック", 20, D3DCOLOR_RGBA(255, 255, 255, 255));
+    g_fontId = g_Render.SetUpFont(L"BIZ UDゴシック", 20, D3DCOLOR_RGBA(255, 255, 255, 255));
 
     ShowWindow(hWnd, SW_SHOWDEFAULT);
     UpdateWindow(hWnd);
@@ -101,6 +108,10 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                 text += L"8 : ウィンドウモード\n";
                 text += L"9 : ボーダーレスウィンドウモード\n";
                 text += L"0 : フルスクリーンモード\n";
+                text += L"c : 文字を追加\n";
+                text += L"Shift + c : 文字を削除\n";
+                text += L"p : 画像を追加\n";
+                text += L"Shift + p : 画像を削除\n";
                 text += L"m : メッシュ追加\n";
                 text += L"Shift + m : スムーズなメッシュ追加\n";
                 text += L"Ctrl + m : SSS風メッシュ追加\n";
@@ -110,6 +121,15 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                 text += L"Shift + s : 彩度を上げる\n";
                 text += L"Control + s : 彩度を下げる\n";
                 g_Render.DrawText_(g_fontId, text, 10, 10);
+            }
+
+            for (auto& elem : g_textInfoList)
+            {
+                g_Render.DrawText_(g_fontId,
+                                   elem.m_text,
+                                   elem.m_rect.left,
+                                   elem.m_rect.top,
+                                   0xFFAA88FF);
             }
 
             for (auto& elem : g_imageInfoList)
@@ -344,6 +364,29 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 imageInfo.m_rect.top = randY;
 
                 g_imageInfoList.push_back(imageInfo);
+            }
+        }
+
+        if (wParam == 'C')
+        {
+            if (shift)
+            {
+                g_textInfoList.clear();
+            }
+            else
+            {
+                TextInfo textInfo;
+                textInfo.m_text = L"サンプルテキスト";
+
+                int randX = std::abs(rand());
+                randX %= 1300;
+                int randY = std::abs(rand());
+                randY %= 700;
+
+                textInfo.m_rect.left = randX;
+                textInfo.m_rect.top = randY;
+
+                g_textInfoList.push_back(textInfo);
             }
         }
 

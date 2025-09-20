@@ -130,7 +130,7 @@ void Render::Initialize(HWND hWnd)
 
     }
 
-    AddMesh(L"cube.x", D3DXVECTOR3(0, 0, 0), D3DXVECTOR3(0, 0, 0), 1.f, 1.f);
+//    AddMesh(L"cube.x", D3DXVECTOR3(0, 0, 0), D3DXVECTOR3(0, 0, 0), 1.f, 1.f);
 }
 
 void Render::Finalize()
@@ -201,6 +201,17 @@ void Render::AddMeshSSSLike(const std::wstring& filePath,
     MeshSSSLike mesh;
     m_meshSSSLikeList.push_back(mesh);
     m_meshSSSLikeList.rbegin()->Initialize(filePath, pos, rot, scale, radius);
+}
+
+void Render::AddMeshPointLight(const std::wstring& filePath,
+                               const D3DXVECTOR3& pos,
+                               const D3DXVECTOR3& rot,
+                               const float scale,
+                               const float radius)
+{
+    MeshPointLight mesh;
+    m_meshPointLightList.push_back(mesh);
+    m_meshPointLightList.rbegin()->Initialize(filePath, pos, rot, scale, radius);
 }
 
 void Render::AddAnimMesh(const std::wstring& filePath,
@@ -409,6 +420,11 @@ void Render::ChangeWindowMode()
         elem.OnDeviceLost();
     }
 
+    for (auto& elem : m_meshPointLightList)
+    {
+        elem.OnDeviceLost();
+    }
+
     for (auto& elem : m_animMeshList)
     {
         elem->OnDeviceLost();
@@ -538,6 +554,11 @@ void Render::ChangeWindowMode()
         elem.OnDeviceReset();
     }
 
+    for (auto& elem : m_meshPointLightList)
+    {
+        elem.OnDeviceReset();
+    }
+
     for (auto& elem : m_animMeshList)
     {
         elem->OnDeviceReset();
@@ -603,6 +624,11 @@ void Render::DrawPass1()
         elem.Draw();
     }
 
+    for (auto& elem : m_meshPointLightList)
+    {
+        elem.Draw();
+    }
+
     for (auto& elem : m_animMeshList)
     {
         elem->Render();
@@ -620,13 +646,6 @@ void Render::DrawPass1()
     {
         elem.second->Draw();
     }
-
-    for (auto& elem : m_fontList)
-    {
-        elem.Draw();
-    }
-
-    m_sprite.Draw();
 
     hResult = Common::D3DDevice()->EndScene();
     assert(hResult == S_OK);
@@ -718,6 +737,14 @@ void Render::DrawPass2()
             assert(hResult == S_OK);
         }
     }
+
+    // 文字と画像は彩度フィルタの影響を受けないようにする
+    for (auto& elem : m_fontList)
+    {
+        elem.Draw();
+    }
+
+    m_sprite.Draw();
 
     hResult = Common::D3DDevice()->EndScene();
     assert(hResult == S_OK);
