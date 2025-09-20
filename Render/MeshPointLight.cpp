@@ -121,6 +121,7 @@ void MeshPointLight::Draw()
 
     D3DXMatrixTranslation(&mat, m_pos.x, m_pos.y, m_pos.z);
 
+
     D3DXVECTOR4 cameraPos { };
     cameraPos.x = Camera::GetEyePos().x;
     cameraPos.y = Camera::GetEyePos().y;
@@ -136,8 +137,8 @@ void MeshPointLight::Draw()
 //    hResult = m_D3DEffect->SetVector("g_cameraPos", &cameraPos);
 //    assert(hResult == S_OK);
 
-    hResult = m_D3DEffect->SetVector("g_lightPos", &lightPos2);
-    assert(hResult == S_OK);
+//    hResult = m_D3DEffect->SetVector("g_lightPos", &lightPos2);
+//    assert(hResult == S_OK);
 
     {
         // ===== ライト10個をリング状に配置 =====
@@ -160,6 +161,13 @@ void MeshPointLight::Draw()
     }
 
     hResult = m_D3DEffect->SetMatrix("g_matWorldViewProj", &mat);
+    assert(hResult == S_OK);
+
+    D3DXMATRIX matWorld, matScale, View, Proj;
+    D3DXMatrixScaling(&matScale, 100.0f, 100.0f, 100.0f);
+    D3DXMatrixIdentity(&matWorld);
+    matWorld = matScale;
+    hResult = m_D3DEffect->SetMatrix("g_matWorld", &matWorld);
     assert(hResult == S_OK);
 
     hResult = m_D3DEffect->SetTechnique("Technique1");

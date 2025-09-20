@@ -51,10 +51,13 @@ private:
 
     struct PointLight
     {
-        D3DXVECTOR3 pos;
-        float range;  // 1 float4
-        D3DXVECTOR3 color;
-        float pad;    // 1 float4（アラインメント）
+        D3DXVECTOR3 pos = D3DXVECTOR3(0.f, 0.f, 0.f);
+
+        float range = 1.f;  // 1 float4
+
+        D3DXVECTOR3 color = D3DXVECTOR3(0.f, 0.f, 0.f);
+
+        float pad = 0.f;    // 1 float4（アラインメント）
     };
 
 };
