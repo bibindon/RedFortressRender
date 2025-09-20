@@ -157,6 +157,9 @@
     <FxCompile Include="shader\PostEffectGaussian.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
+    <FxCompile Include="shader\PostEffectEnd.fx">
+      <Filter>シェーダー</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

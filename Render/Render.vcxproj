@@ -80,6 +80,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_VisualStudio2019|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
+    <FxCompile Include="shader\PostEffectEnd.fx" />
     <FxCompile Include="shader\PostEffectGaussian.fx" />
     <FxCompile Include="shader\PostEffectSaturate.fx" />
     <FxCompile Include="shader\MeshInstancing.fx">
