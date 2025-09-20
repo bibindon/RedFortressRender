@@ -85,9 +85,9 @@ void MeshInstancing::Initialize()
             for (int h = 0; h < H; h++)
             {
                 int e = H * W * d + h * W + w;
-                worldPos[e].x = 10.f * (w - (W / 2));
-                worldPos[e].y = 10.f * (h - (H / 2));
-                worldPos[e].z = 10.f * (d - (D / 2));
+                worldPos[e].x = 10.f * (w - (W / 2.f));
+                worldPos[e].y = 10.f * (h - (H / 2.f));
+                worldPos[e].z = 10.f * (d - (D / 2.f));
             }
         }
     }
