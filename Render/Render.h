@@ -166,7 +166,16 @@ private:
     //---------------------------------------------------------------
 
     void DrawPass1();
+
+    // 彩度フィルター
+    // TODO ポストエフェクト用のクラスを作る
     void DrawPass2();
+
+    // ガウスフィルター
+    // TODO ポストエフェクト用のクラスを作る
+    void DrawPass3();
+
+    void Draw2D();
 
     LPD3DXEFFECT g_pEffect2 = NULL;
 
@@ -189,6 +198,28 @@ private:
 
     // 彩度フィルター
     float m_saturateLevel = 1.0f;
+
+    //---------------------------------------------------------------
+    // ガウスフィルター
+    // TODO 別のクラスにする
+    //---------------------------------------------------------------
+
+    LPD3DXEFFECT g_pEffect3 = NULL;
+
+    LPDIRECT3DTEXTURE9 g_pSceneTex = NULL;
+    LPDIRECT3DTEXTURE9 g_pTempTex = NULL;
+
+
+    // フルスクリーンクアッド用
+//    LPDIRECT3DVERTEXDECLARATION9 g_pQuadDecl = NULL;
+
+    void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 tex, const char* tech);
+
+    struct ScreenVertex
+    {
+        float x, y, z, rhw;
+        float u, v;
+    };
 
 
 };

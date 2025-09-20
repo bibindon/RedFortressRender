@@ -66,6 +66,9 @@
     <ClCompile Include="MeshPointLight.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="MeshMix.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Render.h">
@@ -119,6 +122,9 @@
     <ClInclude Include="MeshPointLight.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="MeshMix.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shader\simple.fx">
@@ -142,10 +148,13 @@
     <FxCompile Include="shader\MeshSmooth.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
-    <FxCompile Include="shader\FilterSaturate.fx">
+    <FxCompile Include="shader\PostEffectSaturate.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
     <FxCompile Include="shader\MeshPointLight.fx">
+      <Filter>シェーダー</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\PostEffectGaussian.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
   </ItemGroup>

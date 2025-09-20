@@ -84,7 +84,7 @@ void Render::Initialize(HWND hWnd)
     // マルチパスレンダリング関連
     {
         hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                           L"res\\shader\\FilterSaturate.fx",
+                                           L"res\\shader\\PostEffectSaturate.fx",
                                            NULL,
                                            NULL,
                                            D3DXSHADER_DEBUG,
@@ -130,6 +130,41 @@ void Render::Initialize(HWND hWnd)
 
     }
 
+    // ガウスフィルター
+    {
+        // エフェクト読み込み
+        hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
+                                           _T("res\\shader\\PostEffectGaussian.fx"),
+                                           NULL,
+                                           NULL,
+                                           D3DXSHADER_DEBUG,
+                                           NULL,
+                                           &g_pEffect3,
+                                           NULL);
+        assert(SUCCEEDED(hResult));
+
+        // オフスクリーン用テクスチャ
+        D3DXCreateTexture(Common::D3DDevice(),
+                          m_windowSizeWidth,
+                          m_windowSizeHeight,
+                          1,
+                          D3DUSAGE_RENDERTARGET,
+                          D3DFMT_A8R8G8B8,
+                          D3DPOOL_DEFAULT,
+                          &g_pSceneTex);
+
+        // ブラー用一時テクスチャ
+        D3DXCreateTexture(Common::D3DDevice(),
+                          m_windowSizeWidth,
+                          m_windowSizeHeight,
+                          1,
+                          D3DUSAGE_RENDERTARGET,
+                          D3DFMT_A8R8G8B8,
+                          D3DPOOL_DEFAULT,
+                          &g_pTempTex);
+
+    }
+
 //    AddMesh(L"cube.x", D3DXVECTOR3(0, 0, 0), D3DXVECTOR3(0, 0, 0), 1.f, 1.f);
 }
 
@@ -148,6 +183,10 @@ void Render::Draw()
     DrawPass1();
 
     DrawPass2();
+
+    DrawPass3();
+
+    Draw2D();
 
     hResult = Common::D3DDevice()->Present(NULL, NULL, NULL, NULL);
     assert(hResult == S_OK);
@@ -664,51 +703,43 @@ void Render::DrawPass1()
 
 }
 
+
+// TODO ポストエフェクト用のクラスを作成する
 void Render::DrawPass2()
 {
     HRESULT hResult = E_FAIL;
 
-    hResult = Common::D3DDevice()->Clear(0, NULL,
-                                  D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
-                                  D3DCOLOR_XRGB(0, 0, 0),
-                                  1.0f, 0);
+    // 既存RT0を退避
+    LPDIRECT3DSURFACE9 pOldRT0 = NULL;
+    Common::D3DDevice()->GetRenderTarget(0, &pOldRT0);
 
-    assert(hResult == S_OK);
+    // ★ g_pSceneTex のサーフェスを取得して RT0 にセット
+    LPDIRECT3DSURFACE9 pSceneRT = NULL;
+    g_pSceneTex->GetSurfaceLevel(0, &pSceneRT);
+    Common::D3DDevice()->SetRenderTarget(0, pSceneRT);
+    SAFE_RELEASE(pSceneRT);
 
-    // 2D 全面描画なので Z 無効
-    hResult = Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
-    assert(hResult == S_OK);
+    // Zは使わない
+    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
 
-    hResult = Common::D3DDevice()->BeginScene();
-    assert(hResult == S_OK);
+    Common::D3DDevice()->Clear(0, NULL,
+                               D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
 
-    // フルスクリーン: RT0 を FilterSaturate.fx で表示
-    hResult = g_pEffect2->SetTechnique("Technique1");
-    assert(hResult == S_OK);
+    Common::D3DDevice()->BeginScene();
 
-    UINT numPass = 0;
-    hResult = g_pEffect2->Begin(&numPass, 0);
-    assert(hResult == S_OK);
+    // フルスクリーン: RT0(=g_pSceneTex) へ彩度フィルタ適用
+    g_pEffect2->SetTechnique("Technique1");
+    UINT numPass = 0; g_pEffect2->Begin(&numPass, 0);
+    g_pEffect2->BeginPass(0);
 
-    hResult = g_pEffect2->BeginPass(0);
-    assert(hResult == S_OK);
+    g_pEffect2->SetFloat("g_level", m_saturateLevel);
+    g_pEffect2->SetTexture("texture1", g_pRenderTarget); // 入力はPass1の結果
+    g_pEffect2->CommitChanges();
 
-    hResult = g_pEffect2->SetFloat("g_level", m_saturateLevel);
-    assert(hResult == S_OK);
+    DrawFullscreenQuad(); // 現在のテクニックで全画面描画
 
-    hResult = g_pEffect2->SetTexture("texture1", g_pRenderTarget);
-    assert(hResult == S_OK);
-
-    hResult = g_pEffect2->CommitChanges();
-    assert(hResult == S_OK);
-
-    DrawFullscreenQuad();
-
-    hResult = g_pEffect2->EndPass();
-    assert(hResult == S_OK);
-
-    hResult = g_pEffect2->End();
-    assert(hResult == S_OK);
+    g_pEffect2->EndPass();
+    g_pEffect2->End();
 
     // === 追加: 左上に RT1 を 1/2 スケールで表示（D3DXSPRITE） ===
     if (false)
@@ -727,10 +758,11 @@ void Render::DrawPass2()
             // そのまま (0,0) へ描画
 
             // マルチターゲットレンダリングが未実装なので何も映らない。
-            // 同実装すればいいのか謎
+            // どう実装すればいいのか謎
             //hResult = g_pSprite->Draw(g_pRenderTarget2, NULL, NULL, NULL, 0xFFFFFFFF);
-            
-            hResult = g_pSprite->Draw(g_pRenderTarget, NULL, NULL, NULL, 0xFFFFFFFF);
+
+            //hResult = g_pSprite->Draw(g_pRenderTarget, NULL, NULL, NULL, 0xFFFFFFFF);
+            hResult = g_pSprite->Draw(g_pSceneTex, NULL, NULL, NULL, 0xFFFFFFFF);
             assert(hResult == S_OK);
 
             hResult = g_pSprite->End();
@@ -738,6 +770,49 @@ void Render::DrawPass2()
         }
     }
 
+    hResult = Common::D3DDevice()->EndScene();
+    assert(hResult == S_OK);
+
+    hResult = Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
+    assert(hResult == S_OK);
+
+}
+
+void Render::DrawPass3()
+{
+    HRESULT hResult = E_FAIL;
+
+    // 2) 横方向ブラー → g_pTempTex（ローカルでRT面取得）
+    {
+        IDirect3DSurface9* pTempRT = NULL;
+        g_pTempTex->GetSurfaceLevel(0, &pTempRT);
+        Common::D3DDevice()->SetRenderTarget(0, pTempRT);
+        SAFE_RELEASE(pTempRT); // Device内でAddRefされるので即ReleaseでOK
+
+        Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
+        Common::D3DDevice()->BeginScene();
+        DrawFullscreenQuad(g_pSceneTex, "GaussianH");
+//        DrawFullscreenQuad(g_pRenderTarget, "GaussianH");
+        Common::D3DDevice()->EndScene();
+    }
+
+    // 3) 縦方向ブラー → バックバッファ（毎回取得）
+    {
+        IDirect3DSurface9* pBackBuffer = NULL;
+        Common::D3DDevice()->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
+        Common::D3DDevice()->SetRenderTarget(0, pBackBuffer);
+        SAFE_RELEASE(pBackBuffer);
+
+        Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
+        Common::D3DDevice()->BeginScene();
+        DrawFullscreenQuad(g_pTempTex, "GaussianV");
+        Common::D3DDevice()->EndScene();
+    }
+
+}
+
+void Render::Draw2D()
+{
     // 文字と画像は彩度フィルタの影響を受けないようにする
     for (auto& elem : m_fontList)
     {
@@ -745,15 +820,6 @@ void Render::DrawPass2()
     }
 
     m_sprite.Draw();
-
-    hResult = Common::D3DDevice()->EndScene();
-    assert(hResult == S_OK);
-
-    hResult = Common::D3DDevice()->Present(NULL, NULL, NULL, NULL);
-    assert(hResult == S_OK);
-
-    hResult = Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
-    assert(hResult == S_OK);
 
 }
 
@@ -795,5 +861,33 @@ void Render::DrawFullscreenQuad()
     Common::D3DDevice()->SetVertexDeclaration(g_pQuadDecl);
     Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, v, sizeof(QuadVertex));
 }
+
+void Render::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 tex, const char* tech)
+{
+    Common::D3DDevice()->SetVertexShader(NULL);
+
+    g_pEffect3->SetTechnique(tech);
+    g_pEffect3->SetTexture("g_SrcTex", tex);
+
+    float texelSize[2] = { 1.0f / m_windowSizeWidth, 1.0f / m_windowSizeHeight };
+    g_pEffect3->SetFloatArray("g_TexelSize", texelSize, 2);
+
+    ScreenVertex quad[4] = {
+        {                    -0.5f,                     -0.5f, 0, 1, 0, 0 },
+        { m_windowSizeWidth - 0.5f,                     -0.5f, 0, 1, 1, 0 },
+        {                    -0.5f, m_windowSizeHeight - 0.5f, 0, 1, 0, 1 },
+        { m_windowSizeWidth - 0.5f, m_windowSizeHeight - 0.5f, 0, 1, 1, 1 }
+    };
+
+    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
+    Common::D3DDevice()->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
+    g_pEffect3->Begin(NULL, 0);
+    g_pEffect3->BeginPass(0);
+    Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, quad, sizeof(ScreenVertex));
+    g_pEffect3->EndPass();
+    g_pEffect3->End();
+    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
+}
+
 
 }
