@@ -105,6 +105,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                 std::wstring text;
                 text += L"WASD : カメラ移動\n";
                 text += L"矢印キー : カメラ回転\n";
+                text += L"\n";
                 text += L"8 : ウィンドウモード\n";
                 text += L"9 : ボーダーレスウィンドウモード\n";
                 text += L"0 : フルスクリーンモード\n";
@@ -127,6 +128,8 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                 text += L"\n";
                 text += L"Shift + s : 彩度を上げる\n";
                 text += L"Control + s : 彩度を下げる\n";
+                text += L"\n";
+                text += L"g : ガウスフィルターON/OFF\n";
                 g_Render.DrawText_(g_fontId, text, 10, 10);
             }
 
@@ -418,7 +421,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             if (wParam == 'S' && shift)
             {
                 saturateLevel += 0.1f;
-                g_Render.SetFilterSaturate(saturateLevel);
+                g_Render.SetPostEffectSaturate(saturateLevel);
             }
 
             if (wParam == 'S' && control)
@@ -430,7 +433,17 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     saturateLevel = 0.0f;
                 }
 
-                g_Render.SetFilterSaturate(saturateLevel);
+                g_Render.SetPostEffectSaturate(saturateLevel);
+            }
+        }
+
+        // ガウスフィルター
+        {
+            static bool bGauss = false;
+            if (wParam == 'G')
+            {
+                bGauss = !bGauss;
+                g_Render.SetPostEffectGaussianFilter(bGauss);
             }
         }
     }

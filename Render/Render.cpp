@@ -410,9 +410,14 @@ void Render::DrawImage(const std::wstring& text,
     m_sprite.PlaceImage(text, X, Y, transparency);
 }
 
-void Render::SetFilterSaturate(const float level)
+void Render::SetPostEffectSaturate(const float level)
 {
     m_saturateLevel = level;
+}
+
+void Render::SetPostEffectGaussianFilter(const bool arg)
+{
+    m_bGaussianON = arg;
 }
 
 void Render::RotateCamera(const D3DXVECTOR3& rot)
@@ -795,6 +800,8 @@ void Render::DrawPass2()
 
 void Render::DrawPass3()
 {
+    g_pEffect3->SetBool("g_bFilterON", m_bGaussianON);
+
     // 2) 横ブラー: 入力=g_pSceneTex, 出力=g_pTempTex（現状のままでOK）
     {
         IDirect3DSurface9* pTempRT = NULL;
@@ -837,9 +844,7 @@ void Render::DrawPassEnd()
     Common::D3DDevice()->BeginScene();
 
     // === ここがポイント: エフェクト End(Copy) + 頂点宣言で描く ===
-    //LPDIRECT3DTEXTURE9 srcTex = /* 例: ガウス有効なら g_pTempTex、無効なら g_pSceneTex */;
     LPDIRECT3DTEXTURE9 srcTex = g_pSceneTex;
-//    LPDIRECT3DTEXTURE9 srcTex = g_pTempTex;
     g_pEffectEnd->SetTechnique("Copy");
     g_pEffectEnd->SetTexture("g_SrcTex", srcTex);
 

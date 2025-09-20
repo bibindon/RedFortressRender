@@ -133,7 +133,9 @@ public:
                    const int transparency = 255);
 
     // 彩度をどれくらい上げるか（下げるか）を設定
-    void SetFilterSaturate(const float level);
+    void SetPostEffectSaturate(const float level);
+
+    void SetPostEffectGaussianFilter(const bool arg);
 
 private:
 
@@ -222,6 +224,8 @@ private:
         float x, y, z, rhw;
         float u, v;
     };
+
+    bool m_bGaussianON = false;
 
     //---------------------------------------------------------------
     // テクスチャ―の内容を画面に出力
