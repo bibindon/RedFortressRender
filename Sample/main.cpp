@@ -309,19 +309,19 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         if (wParam == VK_UP)
         {
-            g_Render.RotateCamera(D3DXVECTOR3(0.2f, 0, 0));
+            g_Render.RotateCamera(D3DXVECTOR3(-0.2f, 0, 0));
         }
         else if (wParam == VK_DOWN)
         {
-            g_Render.RotateCamera(D3DXVECTOR3(-0.2f, 0, 0));
+            g_Render.RotateCamera(D3DXVECTOR3(0.2f, 0, 0));
         }
         else if (wParam == VK_LEFT)
         {
-            g_Render.RotateCamera(D3DXVECTOR3(0, 0.2f, 0));
+            g_Render.RotateCamera(D3DXVECTOR3(0, -0.2f, 0));
         }
         else if (wParam == VK_RIGHT)
         {
-            g_Render.RotateCamera(D3DXVECTOR3(0, -0.2f, 0));
+            g_Render.RotateCamera(D3DXVECTOR3(0, 0.2f, 0));
         }
 
         if (wParam == 'P')
