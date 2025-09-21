@@ -905,103 +905,181 @@ void Render::SetRTBackBuffer()
 
 void Render::DrawPass4()
 {
-    // ブラー用のテクセルサイズを設定 (解像度依存)
-    D3DXVECTOR4 texelSize(1.0f / 1600.0f, 1.0f / 900.0f, 0, 0);
-    g_pBloomEffect->SetVector("g_TexelSize", &texelSize);
+    // Bloom 用シェーダが未ロードなら何もしない
+    if (g_pBloomEffect == NULL) return;
 
-    static float f = 0.0f; f += 0.025f;
+    // テクセルサイズ（ブラーで使用）
+    float texelSize[2] = { 1.0f / m_windowSizeWidth, 1.0f / m_windowSizeHeight };
+    g_pBloomEffect->SetFloatArray("g_TexelSize", texelSize, 2);
 
-    // (1) シーンをテクスチャに描画 : 出力 = g_pSceneTex
-    SetRTFromTex(g_pSceneTex2);
-    Common::D3DDevice()->Clear(0,
-                               NULL,
-                               D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
-                               D3DCOLOR_XRGB(10, 10, 10),
-                               1.0f,
-                               0);
-
-    // (2) 輝度抽出 : 入力 = g_pSceneTex, 出力 = g_pBrightTex
-    SetRTFromTex(g_pBrightTex);
-    Common::D3DDevice()->BeginScene();
-    DrawFullScreenQuad(g_pSceneTex2, g_pBloomEffect, "BrightPass");
-    Common::D3DDevice()->EndScene();
-
-    // (3a) 横ブラー : 入力 = g_pBrightTex, 出力 = g_pBlurTexH
-    SetRTFromTex(g_pBlurTexH);
-    Common::D3DDevice()->BeginScene();
+    // フルスクリーン板ポリ
+    ScreenVertex quad[4] =
     {
-        D3DXVECTOR4 direction1(1, 0, 0, 0);
-        g_pBloomEffect->SetVector("g_Direction", &direction1);
-        DrawFullScreenQuad(g_pBrightTex, g_pBloomEffect, "Blur");
+        {                     -0.5f,                      -0.5f, 0, 1, 0, 0 },
+        {  m_windowSizeWidth - 0.5f,                      -0.5f, 0, 1, 1, 0 },
+        {                     -0.5f,   m_windowSizeHeight - 0.5f, 0, 1, 0, 1 },
+        {  m_windowSizeWidth - 0.5f,   m_windowSizeHeight - 0.5f, 0, 1, 1, 1 },
+    };
+
+    // ------------------------------------------------------------
+    // (1) BrightPass : 入力 = g_pSceneTex, 出力 = g_pBrightTex
+    // ------------------------------------------------------------
+    {
+        LPDIRECT3DSURFACE9 pRT = NULL;
+        g_pBrightTex->GetSurfaceLevel(0, &pRT);
+        Common::D3DDevice()->SetRenderTarget(0, pRT);
+        SAFE_RELEASE(pRT);
+
+        Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
+        Common::D3DDevice()->BeginScene();
+
+        g_pBloomEffect->SetTechnique("BrightPass");
+        g_pBloomEffect->SetTexture("g_SrcTex", g_pSceneTex);
+
+        Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
+        Common::D3DDevice()->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
+        g_pBloomEffect->Begin(NULL, 0);
+        g_pBloomEffect->BeginPass(0);
+        Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, quad, sizeof(ScreenVertex));
+        g_pBloomEffect->EndPass();
+        g_pBloomEffect->End();
+        Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
+
+        Common::D3DDevice()->EndScene();
     }
-    Common::D3DDevice()->EndScene();
 
-    // (3b) 縦ブラー : 入力 = g_pBlurTexH, 出力 = g_pBlurTexV
-    SetRTFromTex(g_pBlurTexV);
-    Common::D3DDevice()->BeginScene();
+    // ------------------------------------------------------------
+    // (2) Horizontal Blur : 入力 = g_pBrightTex, 出力 = g_pBlurTexH
+    // ------------------------------------------------------------
     {
-        D3DXVECTOR4 direction2(0, 1, 0, 0);
-        g_pBloomEffect->SetVector("g_Direction", &direction2);
-        DrawFullScreenQuad(g_pBlurTexH, g_pBloomEffect, "Blur");
+        LPDIRECT3DSURFACE9 pRT = NULL;
+        g_pBlurTexH->GetSurfaceLevel(0, &pRT);
+        Common::D3DDevice()->SetRenderTarget(0, pRT);
+        SAFE_RELEASE(pRT);
+
+        Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
+        Common::D3DDevice()->BeginScene();
+
+        g_pBloomEffect->SetTechnique("Blur");
+        g_pBloomEffect->SetTexture("g_SrcTex", g_pBrightTex);
+        {
+            // 横方向
+            float dir[4] = { 1, 0, 0, 0 };
+            g_pBloomEffect->SetFloatArray("g_Direction", dir, 4);
+        }
+
+        Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
+        Common::D3DDevice()->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
+        g_pBloomEffect->Begin(NULL, 0);
+        g_pBloomEffect->BeginPass(0);
+        Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, quad, sizeof(ScreenVertex));
+        g_pBloomEffect->EndPass();
+        g_pBloomEffect->End();
+        Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
+
+        Common::D3DDevice()->EndScene();
     }
-    Common::D3DDevice()->EndScene();
 
-    // (4) 合成 : SceneTex + BlurTexV → BackBuffer
-    SetRTBackBuffer();
-    Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
-    Common::D3DDevice()->BeginScene();
+    // ------------------------------------------------------------
+    // (3) Vertical Blur : 入力 = g_pBlurTexH, 出力 = g_pBlurTexV
+    // ------------------------------------------------------------
     {
-        g_pBloomEffect->SetTexture("g_SceneTex", g_pSceneTex2);
+        LPDIRECT3DSURFACE9 pRT = NULL;
+        g_pBlurTexV->GetSurfaceLevel(0, &pRT);
+        Common::D3DDevice()->SetRenderTarget(0, pRT);
+        SAFE_RELEASE(pRT);
+
+        Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
+        Common::D3DDevice()->BeginScene();
+
+        g_pBloomEffect->SetTechnique("Blur");
+        g_pBloomEffect->SetTexture("g_SrcTex", g_pBlurTexH);
+        {
+            // 縦方向
+            float dir[4] = { 0, 1, 0, 0 };
+            g_pBloomEffect->SetFloatArray("g_Direction", dir, 4);
+        }
+
+        Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
+        Common::D3DDevice()->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
+        g_pBloomEffect->Begin(NULL, 0);
+        g_pBloomEffect->BeginPass(0);
+        Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, quad, sizeof(ScreenVertex));
+        g_pBloomEffect->EndPass();
+        g_pBloomEffect->End();
+        Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
+
+        Common::D3DDevice()->EndScene();
+    }
+
+    // ------------------------------------------------------------
+    // (4) Combine : (SceneTex + BlurTexV) → g_pSceneTex2
+    // ------------------------------------------------------------
+    {
+        LPDIRECT3DSURFACE9 pRT = NULL;
+        g_pSceneTex2->GetSurfaceLevel(0, &pRT);
+        Common::D3DDevice()->SetRenderTarget(0, pRT);
+        SAFE_RELEASE(pRT);
+
+        Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
+        Common::D3DDevice()->BeginScene();
+
+        g_pBloomEffect->SetTechnique("Combine");
+        g_pBloomEffect->SetTexture("g_SceneTex", g_pSceneTex);
         g_pBloomEffect->SetTexture("g_BlurTex", g_pBlurTexV);
-        DrawFullScreenQuad(NULL, g_pBloomEffect, "Combine");
-    }
-    Common::D3DDevice()->EndScene();
 
+        Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
+        Common::D3DDevice()->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
+        g_pBloomEffect->Begin(NULL, 0);
+        g_pBloomEffect->BeginPass(0);
+        Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, quad, sizeof(ScreenVertex));
+        g_pBloomEffect->EndPass();
+        g_pBloomEffect->End();
+        Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
+
+        Common::D3DDevice()->EndScene();
+    }
 }
 
 void Render::DrawPassEnd()
 {
-    // 1) バックバッファを RT に
-    IDirect3DSurface9* pBackBuffer = NULL;
+    // 最終表示（固定機能ではなくシェーダでコピー）
+    if (g_pEffectEnd == NULL) return;
+
+    // バックバッファを RT にセット（都度取得→即 Release）
+    LPDIRECT3DSURFACE9 pBackBuffer = NULL;
     Common::D3DDevice()->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
     Common::D3DDevice()->SetRenderTarget(0, pBackBuffer);
     SAFE_RELEASE(pBackBuffer);
 
-    // 2) クリア
     Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
-
-    // 3) シーン開始
     Common::D3DDevice()->BeginScene();
 
-    // === ここがポイント: エフェクト End(Copy) + 頂点宣言で描く ===
-    LPDIRECT3DTEXTURE9 srcTex = g_pSceneTex;
-    g_pEffectEnd->SetTechnique("Copy");
-    g_pEffectEnd->SetTexture("g_SrcTex", srcTex);
+    // フルスクリーン板ポリ
+    ScreenVertex quad[4] =
+    {
+        {                     -0.5f,                      -0.5f, 0, 1, 0, 0 },
+        {  m_windowSizeWidth - 0.5f,                      -0.5f, 0, 1, 1, 0 },
+        {                     -0.5f,   m_windowSizeHeight - 0.5f, 0, 1, 0, 1 },
+        {  m_windowSizeWidth - 0.5f,   m_windowSizeHeight - 0.5f, 0, 1, 1, 1 },
+    };
 
-    // DrawFullscreenQuad() の頂点をそのまま利用
-    QuadVertex v[4] {};
-    const float du = 0.5f / 1600.f;
-    const float dv = 0.5f / 900.f;
-    v[0] = { -1.0f, -1.0f, 0, 1, 0.0f + du, 1.0f - dv };
-    v[1] = { -1.0f,  1.0f, 0, 1, 0.0f + du, 0.0f + dv };
-    v[2] = { 1.0f, -1.0f, 0, 1, 1.0f - du, 1.0f - dv };
-    v[3] = { 1.0f,  1.0f, 0, 1, 1.0f - du, 0.0f + dv };
+    // ここでは DrawPass4 の合成結果（g_pSceneTex2）を画面にコピー
+    g_pEffectEnd->SetTechnique("Copy");
+    g_pEffectEnd->SetTexture("g_SrcTex", g_pSceneTex2);
 
     Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
-    Common::D3DDevice()->SetVertexDeclaration(g_pQuadDecl);
-
-    UINT passes = 0;
-    g_pEffectEnd->Begin(&passes, 0);
+    Common::D3DDevice()->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
+    g_pEffectEnd->Begin(NULL, 0);
     g_pEffectEnd->BeginPass(0);
-    Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, v, sizeof(QuadVertex));
+    Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, quad, sizeof(ScreenVertex));
     g_pEffectEnd->EndPass();
     g_pEffectEnd->End();
-
     Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
 
-    // 4) シーン終了
     Common::D3DDevice()->EndScene();
 }
+
 
 void Render::Draw2D()
 {
