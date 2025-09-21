@@ -165,6 +165,58 @@ void Render::Initialize(HWND hWnd)
 
     }
 
+    // ブルーム
+    {
+        // エフェクト読み込み
+        hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
+                                           _T("res\\shader\\PostEffectBloom.fx"),
+                                           NULL,
+                                           NULL,
+                                           D3DXSHADER_DEBUG,
+                                           NULL,
+                                           &g_pBloomEffect,
+                                           NULL);
+        assert(SUCCEEDED(hResult));
+
+        // 各テクスチャ作成（サーフェイスは保持しない）
+        D3DXCreateTexture(Common::D3DDevice(),
+                          1600,
+                          900,
+                          1,
+                          D3DUSAGE_RENDERTARGET,
+                          D3DFMT_A8R8G8B8,
+                          D3DPOOL_DEFAULT,
+                          &g_pSceneTex);
+
+        D3DXCreateTexture(Common::D3DDevice(),
+                          1600,
+                          900,
+                          1,
+                          D3DUSAGE_RENDERTARGET,
+                          D3DFMT_A8R8G8B8,
+                          D3DPOOL_DEFAULT,
+                          &g_pBrightTex);
+
+        D3DXCreateTexture(Common::D3DDevice(),
+                          1600,
+                          900,
+                          1,
+                          D3DUSAGE_RENDERTARGET,
+                          D3DFMT_A8R8G8B8,
+                          D3DPOOL_DEFAULT,
+                          &g_pBlurTexH);
+
+        D3DXCreateTexture(Common::D3DDevice(),
+                          1600,
+                          900,
+                          1,
+                          D3DUSAGE_RENDERTARGET,
+                          D3DFMT_A8R8G8B8,
+                          D3DPOOL_DEFAULT,
+                          &g_pBlurTexV);
+
+    }
+
     {
         HRESULT hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
                                                    L"res\\shader\\PostEffectEnd.fx",
@@ -829,6 +881,79 @@ void Render::DrawPass3()
     }
 }
 
+void Render::SetRTFromTex(LPDIRECT3DTEXTURE9 tex)
+{
+    LPDIRECT3DSURFACE9 rt = NULL;
+    tex->GetSurfaceLevel(0, &rt);                 // AddRef 済みで返る
+    Common::D3DDevice()->SetRenderTarget(0, rt);         // Device 側が参照を保持
+    SAFE_RELEASE(rt);                             // 即ReleaseでOK
+}
+
+void Render::SetRTBackBuffer()
+{
+    LPDIRECT3DSURFACE9 bb = NULL;
+    Common::D3DDevice()->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &bb);
+    Common::D3DDevice()->SetRenderTarget(0, bb);
+    SAFE_RELEASE(bb);
+}
+
+
+void Render::DrawPass4()
+{
+    // ブラー用のテクセルサイズを設定 (解像度依存)
+    D3DXVECTOR4 texelSize(1.0f / 1600.0f, 1.0f / 900.0f, 0, 0);
+    g_pBloomEffect->SetVector("g_TexelSize", &texelSize);
+
+    static float f = 0.0f; f += 0.025f;
+
+    // (1) シーンをテクスチャに描画 : 出力 = g_pSceneTex
+    SetRTFromTex(g_pSceneTex2);
+    Common::D3DDevice()->Clear(0,
+                               NULL,
+                               D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
+                               D3DCOLOR_XRGB(10, 10, 10),
+                               1.0f,
+                               0);
+
+    // (2) 輝度抽出 : 入力 = g_pSceneTex, 出力 = g_pBrightTex
+    SetRTFromTex(g_pBrightTex);
+    Common::D3DDevice()->BeginScene();
+    DrawFullScreenQuad(g_pSceneTex2, g_pBloomEffect, "BrightPass");
+    Common::D3DDevice()->EndScene();
+
+    // (3a) 横ブラー : 入力 = g_pBrightTex, 出力 = g_pBlurTexH
+    SetRTFromTex(g_pBlurTexH);
+    Common::D3DDevice()->BeginScene();
+    {
+        D3DXVECTOR4 direction1(1, 0, 0, 0);
+        g_pBloomEffect->SetVector("g_Direction", &direction1);
+        DrawFullScreenQuad(g_pBrightTex, g_pBloomEffect, "Blur");
+    }
+    Common::D3DDevice()->EndScene();
+
+    // (3b) 縦ブラー : 入力 = g_pBlurTexH, 出力 = g_pBlurTexV
+    SetRTFromTex(g_pBlurTexV);
+    Common::D3DDevice()->BeginScene();
+    {
+        D3DXVECTOR4 direction2(0, 1, 0, 0);
+        g_pBloomEffect->SetVector("g_Direction", &direction2);
+        DrawFullScreenQuad(g_pBlurTexH, g_pBloomEffect, "Blur");
+    }
+    Common::D3DDevice()->EndScene();
+
+    // (4) 合成 : SceneTex + BlurTexV → BackBuffer
+    SetRTBackBuffer();
+    Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
+    Common::D3DDevice()->BeginScene();
+    {
+        g_pBloomEffect->SetTexture("g_SceneTex", g_pSceneTex2);
+        g_pBloomEffect->SetTexture("g_BlurTex", g_pBlurTexV);
+        DrawFullScreenQuad(NULL, g_pBloomEffect, "Combine");
+    }
+    Common::D3DDevice()->EndScene();
+
+}
+
 void Render::DrawPassEnd()
 {
     // 1) バックバッファを RT に
@@ -948,6 +1073,38 @@ void Render::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 tex, const char* tech)
     Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, quad, sizeof(ScreenVertex));
     g_pEffect3->EndPass();
     g_pEffect3->End();
+    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
+}
+
+void Render::DrawFullScreenQuad(LPDIRECT3DTEXTURE9 tex, LPD3DXEFFECT effect, const char* technique)
+{
+    // 固定機能（FVF）で描くため、前のパスの VS/頂点宣言を解除
+    Common::D3DDevice()->SetVertexShader(NULL);
+    Common::D3DDevice()->SetVertexDeclaration(NULL);
+
+    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
+
+    SCREENVERTEX vertices[4] =
+    {
+        { -0.5f,  -0.5f,   0, 1, 0, 0 },
+        { 1599.5f, -0.5f,   0, 1, 1, 0 },
+        { -0.5f,  899.5f,  0, 1, 0, 1 },
+        { 1599.5f, 899.5f,  0, 1, 1, 1 },
+    };
+
+    Common::D3DDevice()->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
+
+    effect->SetTechnique(technique);
+    if (tex) effect->SetTexture("g_SrcTex", tex);
+
+    UINT nPass = 0;
+    effect->Begin(&nPass, 0);
+    effect->BeginPass(0);
+    // （BeginPass後にVSがバインドされるテクでも、上でNULLにしているので固定機能で通る）
+    Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, vertices, sizeof(SCREENVERTEX));
+    effect->EndPass();
+    effect->End();
+
     Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
 }
 

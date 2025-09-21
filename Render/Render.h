@@ -177,6 +177,10 @@ private:
     // TODO ポストエフェクト用のクラスを作る
     void DrawPass3();
 
+    // ブルームフィルター
+    // TODO ポストエフェクト用のクラスを作る
+    void DrawPass4();
+
     void DrawPassEnd();
 
     void Draw2D();
@@ -219,6 +223,7 @@ private:
 
     void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 tex, const char* tech);
 
+
     struct ScreenVertex
     {
         float x, y, z, rhw;
@@ -226,6 +231,33 @@ private:
     };
 
     bool m_bGaussianON = false;
+
+    //---------------------------------------------------------------
+    // ブルームフィルター
+    // TODO 別のクラスにする
+    //---------------------------------------------------------------
+
+    LPD3DXEFFECT g_pBloomEffect = NULL;
+
+    LPDIRECT3DTEXTURE9 g_pSceneTex2 = NULL;
+    LPDIRECT3DTEXTURE9 g_pBrightTex = NULL;
+    LPDIRECT3DTEXTURE9 g_pBlurTexH = NULL;
+    LPDIRECT3DTEXTURE9 g_pBlurTexV = NULL;
+
+    void DrawFullScreenQuad(LPDIRECT3DTEXTURE9 tex, LPD3DXEFFECT effect, const char* technique);
+
+    void SetRTFromTex(LPDIRECT3DTEXTURE9 tex);
+    void SetRTBackBuffer();
+
+    struct SCREENVERTEX
+    {
+        float x, y, z, rhw;
+        float u, v;
+    };
+
+
+    bool m_bBloomON = false;
+
 
     //---------------------------------------------------------------
     // テクスチャ―の内容を画面に出力
