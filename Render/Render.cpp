@@ -186,7 +186,7 @@ void Render::Initialize(HWND hWnd)
                           D3DUSAGE_RENDERTARGET,
                           D3DFMT_A8R8G8B8,
                           D3DPOOL_DEFAULT,
-                          &g_pSceneTex);
+                          &g_pSceneTex2);
 
         D3DXCreateTexture(Common::D3DDevice(),
                           1600,
@@ -245,9 +245,14 @@ void Render::Draw()
 
     DrawPass1();
 
+    // 彩度変更
     DrawPass2();
 
+    // ガウス
     DrawPass3();
+
+    // ブルーム
+    DrawPass4();
 
     DrawPassEnd();
 
