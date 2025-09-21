@@ -130,6 +130,9 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                 text += L"Control + s : 彩度を下げる\n";
                 text += L"\n";
                 text += L"g : ガウスフィルターON/OFF\n";
+                text += L"\n";
+                text += L"b : ブルームON/OFF\n";
+                text += L"Shift + b : アナモルフィックON/OFF\n";
                 g_Render.DrawText_(g_fontId, text, 10, 10);
             }
 
