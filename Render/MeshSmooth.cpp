@@ -114,7 +114,7 @@ void MeshSmooth::Draw()
     HRESULT hResult = E_FAIL;
 
     static float f = 0.0f;
-    f += 0.01f;
+    f += 0.03f;
 
     D3DXMATRIX mat;
     D3DXMatrixIdentity(&mat);
@@ -130,7 +130,7 @@ void MeshSmooth::Draw()
     mat *= Camera::GetViewMatrix();
     mat *= Camera::GetProjMatrix();
 
-    D3DXVECTOR3 lightPos(30.f * sinf(f), 10.f, -30.f * cosf(f));
+    D3DXVECTOR3 lightPos(30.f * sinf(f), -10.f, -30.f * cosf(f));
     D3DXVECTOR4 lightPos2(lightPos.x, lightPos.y, lightPos.z, 0.f);
 
     hResult = m_D3DEffect->SetVector("g_cameraPos", &cameraPos);

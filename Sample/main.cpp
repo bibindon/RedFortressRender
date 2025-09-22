@@ -132,7 +132,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                 text += L"g : ガウスフィルターON/OFF\n";
                 text += L"\n";
                 text += L"b : ブルームON/OFF\n";
-                text += L"Shift + b : アナモルフィックON/OFF\n";
+                text += L"Shift + b : スターバーストON/OFF\n";
                 g_Render.DrawText_(g_fontId, text, 10, 10);
             }
 
@@ -447,6 +447,16 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             {
                 bGauss = !bGauss;
                 g_Render.SetPostEffectGaussianFilter(bGauss);
+            }
+        }
+
+        // スターバースト
+        {
+            static bool bStarBurst = false;
+            if (wParam == 'B')
+            {
+                bStarBurst = !bStarBurst;
+                g_Render.SetPostEffectStarBurst(bStarBurst);
             }
         }
     }

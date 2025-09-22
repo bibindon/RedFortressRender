@@ -137,6 +137,8 @@ public:
 
     void SetPostEffectGaussianFilter(const bool arg);
 
+    void SetPostEffectStarBurst(const bool arg);
+
 private:
 
     HWND m_hWnd = NULL;
@@ -180,6 +182,10 @@ private:
     // ブルームフィルター
     // TODO ポストエフェクト用のクラスを作る
     void DrawPass4();
+
+    // スターバースト
+    // TODO ポストエフェクト用のクラスを作る
+    void DrawPass5();
 
     void DrawPassEnd();
 
@@ -237,6 +243,8 @@ private:
     // TODO 別のクラスにする
     //---------------------------------------------------------------
 
+    bool m_bBloomON = false;
+
     LPD3DXEFFECT g_pBloomEffect = NULL;
 
     LPDIRECT3DTEXTURE9 g_pSceneTex2 = NULL;
@@ -255,8 +263,26 @@ private:
         float u, v;
     };
 
+    //---------------------------------------------------------------
+    // スターバースト
+    // TODO 別のクラスにする
+    //---------------------------------------------------------------
 
-    bool m_bBloomON = false;
+    bool m_bStarBurstON = false;
+
+    LPD3DXEFFECT g_pStarBusrtEffect = NULL;   // bloom.fx
+
+    // --- Anamorphic 用リソース（★サーフェイスは保持しない） ---
+    LPDIRECT3DTEXTURE9 g_pSceneTex3 = NULL;
+    LPDIRECT3DTEXTURE9 g_pBrightTex2 = NULL;
+    LPDIRECT3DTEXTURE9 g_pBlurTexH2 = NULL;
+    LPDIRECT3DTEXTURE9 g_pBlurTexV2 = NULL;
+    LPDIRECT3DTEXTURE9 g_pBlurTexD = NULL; // 120°（★追加）
+
+//    struct SCREENVERTEX {
+//        float x, y, z, rhw;
+//        float u, v;
+//    };
 
 
     //---------------------------------------------------------------
