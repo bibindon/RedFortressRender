@@ -58,13 +58,15 @@ float4 BlurPS(float2 texCoord : TEXCOORD0) : COLOR
 
     // 半径固定（7 → 15tap）
     static const int RADIUS = 71; // 奇数
-    static const float SIGMA = 40.0f;
+    static const float SIGMA = 160.0f;
+    static const float STRETCH = 10.0f;
 
     [unroll]
     for (int i = -RADIUS; i <= RADIUS; i++)
     {
-        float w = exp(-(i * i) / (2.0 * SIGMA * SIGMA));
-        sum += tex2D(SrcSampler, texCoord + step * i) * w;
+        float t = i * STRETCH;
+        float w = exp(-(t * t) / (2.0 * SIGMA * SIGMA));
+        sum += tex2D(SrcSampler, texCoord + step * t) * w;
         weightSum += w;
     }
     return sum / weightSum;
@@ -78,7 +80,7 @@ float4 CombinePS(float2 texCoord : TEXCOORD0) : COLOR
     float4 bloom = tex2D(BlurSampler, texCoord);
 
     // ブルームの濃さ
-    return scene + bloom * 5.7f;
+    return scene + bloom * 1.0f;
 }
 
 // === Techniques ===
