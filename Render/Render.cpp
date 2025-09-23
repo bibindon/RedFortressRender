@@ -390,6 +390,18 @@ void Render::AddMeshPointLight(const std::wstring& filePath,
     m_meshPointLightList.rbegin()->Initialize(filePath, pos, rot, scale, radius);
 }
 
+void Render::AddMeshNormalMapping(const std::wstring& filePath,
+                                  const std::wstring& normalMap,
+                                  const D3DXVECTOR3& pos,
+                                  const D3DXVECTOR3& rot,
+                                  const float scale,
+                                  const float radius)
+{
+    MeshNormalMapping mesh;
+    m_meshNormalMapList.push_back(mesh);
+    m_meshNormalMapList.rbegin()->Initialize(filePath, normalMap, pos, rot, scale, radius);
+}
+
 void Render::AddAnimMesh(const std::wstring& filePath,
                                    const D3DXVECTOR3& pos,
                                    const D3DXVECTOR3& rot,
@@ -611,6 +623,11 @@ void Render::ChangeWindowMode()
         elem.OnDeviceLost();
     }
 
+    for (auto& elem : m_meshNormalMapList)
+    {
+        elem.OnDeviceLost();
+    }
+
     for (auto& elem : m_animMeshList)
     {
         elem->OnDeviceLost();
@@ -745,6 +762,11 @@ void Render::ChangeWindowMode()
         elem.OnDeviceReset();
     }
 
+    for (auto& elem : m_meshNormalMapList)
+    {
+        elem.OnDeviceReset();
+    }
+
     for (auto& elem : m_animMeshList)
     {
         elem->OnDeviceReset();
@@ -811,6 +833,11 @@ void Render::DrawPass1()
     }
 
     for (auto& elem : m_meshPointLightList)
+    {
+        elem.Draw();
+    }
+
+    for (auto& elem : m_meshNormalMapList)
     {
         elem.Draw();
     }

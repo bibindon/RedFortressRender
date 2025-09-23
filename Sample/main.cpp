@@ -126,6 +126,8 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                 text += L"\n";
                 text += L"o : ポイントライトが反映されるメッシュ追加\n";
                 text += L"\n";
+                text += L"Shift + n : 法線マッピング対応のメッシュ追加\n";
+                text += L"\n";
                 text += L"Shift + s : 彩度を上げる\n";
                 text += L"Control + s : 彩度を下げる\n";
                 text += L"\n";
@@ -242,7 +244,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             g_Render.AddMeshSSSLike(L"cube.x", pos, D3DXVECTOR3(0, yaw, 0.0f), 1.f, 1.f);
         }
 
-        if (wParam == 'N')
+        if (wParam == 'N' && shift)
         {
             auto pos = g_Render.GetLookAtPos();
             D3DXVECTOR3 forward = g_Render.GetCameraRotate();
@@ -251,21 +253,11 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             // Yaw, Pitch を計算
             float yaw = atan2f(forward.x, forward.z);
 
-            // AddMeshの第3引数が「回転角 (ラジアン)」だと仮定
-            NSRender::AnimSetMap animMap;
-            NSRender::AnimSetting animSetting;
-            animSetting.m_startPos = 0.f;
-            animSetting.m_duration = 1.f;
-            animSetting.m_loop = true;
-            animSetting.m_stopEnd = false;
-
-            animMap[L"0_Idle"] = animSetting;
-
-            g_Render.AddAnimMesh(L"enemyOrangeCube.x",
-                                 pos,
-                                 D3DXVECTOR3(0, yaw, 0.0f),
-                                 1.f,
-                                 animMap);
+            g_Render.AddMeshNormalMapping(L"cubeNormalMap.x",
+                                          L"normalMap.png",
+                                          pos,
+                                          D3DXVECTOR3(0, yaw, 0.0f),
+                                          1.f);
         }
 
         if (wParam == 'K')
@@ -309,6 +301,20 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
 
         if (wParam == 'O')
+        {
+            auto pos = g_Render.GetLookAtPos();
+            D3DXVECTOR3 forward = g_Render.GetCameraRotate();
+            D3DXVec3Normalize(&forward, &forward);
+
+            // Yaw, Pitch を計算
+            float yaw = atan2f(forward.x, forward.z);
+
+            // AddMeshの第3引数が「回転角 (ラジアン)」だと仮定
+            //g_Render.AddMesh(L"cube.x", pos, D3DXVECTOR3(0, yaw, 0.0f), 1.f, 1.f);
+            g_Render.AddMeshPointLight(L"cube.x", pos, D3DXVECTOR3(0, yaw, 0.0f), 1.f);
+        }
+
+        if (wParam == 'N' && !shift)
         {
             auto pos = g_Render.GetLookAtPos();
             D3DXVECTOR3 forward = g_Render.GetCameraRotate();

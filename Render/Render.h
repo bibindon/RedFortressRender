@@ -14,6 +14,7 @@
 #include "MeshSmooth.h"
 #include "MeshSSSLike.h"
 #include "MeshPointLight.h"
+#include "MeshNormalMapping.h"
 
 #include "AnimMesh.h"
 #include "SkinAnimMesh.h"
@@ -69,6 +70,13 @@ public:
                         const D3DXVECTOR3& rot,
                         const float scale,
                         const float radius = -1.f);
+
+    void AddMeshNormalMapping(const std::wstring& filePath,
+                              const std::wstring& normalMap,
+                              const D3DXVECTOR3& pos,
+                              const D3DXVECTOR3& rot,
+                              const float scale,
+                              const float radius = -1.f);
 
     void AddAnimMesh(const std::wstring& filePath,
                      const D3DXVECTOR3& pos,
@@ -156,6 +164,7 @@ private:
     std::vector<MeshSmooth> m_meshSmoothList;
     std::vector<MeshSSSLike> m_meshSSSLikeList;
     std::vector<MeshPointLight> m_meshPointLightList;
+    std::vector<MeshNormalMapping> m_meshNormalMapList;
 
     std::unordered_map<std::wstring, MeshInstancing*> m_meshInstancingMap;
 
