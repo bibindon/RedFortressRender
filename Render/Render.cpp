@@ -312,14 +312,14 @@ void Render::Draw()
     // 彩度変更
     DrawPass2();
 
-    // ガウス
-    DrawPass3();
-
     // ブルーム
     DrawPass4();
 
     // スターバースト
     DrawPass5();
+
+    // ガウス
+    DrawPassGaussian();
 
     DrawPassEnd();
 
@@ -927,27 +927,27 @@ void Render::DrawPass2()
     SAFE_RELEASE(pOldRT0);
 }
 
-void Render::DrawPass3()
+void Render::DrawPassGaussian()
 {
     g_pEffect3->SetBool("g_bFilterON", m_bGaussianON);
 
-    // 2) 横ブラー: 入力=g_pSceneTex, 出力=g_pTempTex（現状のままでOK）
+    // 2) 横ブラー: 入力=g_pSceneTex3, 出力=g_pTempTex
     {
-        IDirect3DSurface9* pTempRT = NULL;
+        LPDIRECT3DSURFACE9 pTempRT = NULL;
         g_pTempTex->GetSurfaceLevel(0, &pTempRT);
         Common::D3DDevice()->SetRenderTarget(0, pTempRT);
         SAFE_RELEASE(pTempRT);
 
         Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
         Common::D3DDevice()->BeginScene();
-        DrawFullscreenQuad(g_pSceneTex, "GaussianH");
+        DrawFullscreenQuad(g_pSceneTex3, "GaussianH");
         Common::D3DDevice()->EndScene();
     }
 
-    // 3) 縦ブラー: 入力=g_pTempTex, 出力=★g_pSceneTex（←ここを画面ではなくRTへ）
+    // 3) 縦ブラー: 入力=g_pTempTex, 出力=g_pSceneTex3（最終テクスチャを更新）
     {
-        IDirect3DSurface9* pSceneRT = NULL;
-        g_pSceneTex->GetSurfaceLevel(0, &pSceneRT);
+        LPDIRECT3DSURFACE9 pSceneRT = NULL;
+        g_pSceneTex3->GetSurfaceLevel(0, &pSceneRT);
         Common::D3DDevice()->SetRenderTarget(0, pSceneRT);
         SAFE_RELEASE(pSceneRT);
 
