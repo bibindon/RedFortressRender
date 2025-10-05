@@ -72,7 +72,7 @@ void pixel_shader(in  float4 in_diffuse  : COLOR0,
     color_result = tex2D(mesh_texture_sampler, in_texcood);
 
     out_diffuse = (in_diffuse * color_result);
-    out_diffuse.a = 1.0f;
+//    out_diffuse.a = 1.0f;
 }
 
 int current_bone_numbers;

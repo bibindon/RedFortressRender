@@ -87,7 +87,6 @@ STDMETHODIMP SkinAnimMeshAlloc::CreateMeshContainer(LPCSTR meshName,
     InitializeMaterials(materialCount, materials, m_xFilename);
     InitializeBone(skinInfo, meshData->pMesh);
     InitializeFVF();
-    InitializeVertexElement();
 
     *meshContainer = m_container;
 
