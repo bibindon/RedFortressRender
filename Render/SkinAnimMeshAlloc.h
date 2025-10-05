@@ -9,43 +9,10 @@
 
 namespace NSRender
 {
-struct SkinAnimMeshFrame : public D3DXFRAME
-{
-    D3DXMATRIX m_combinedMatrix;
-    explicit SkinAnimMeshFrame(const std::string &);
-};
-
-struct SkinAnimMeshContainer : public D3DXMESHCONTAINER
-{
-    std::vector<std::shared_ptr<IDirect3DTexture9> > m_textureList;
-
-    DWORD m_paletteSize = 0;
-    DWORD m_influenceCount = 0;
-    DWORD m_boneCount = 0;
-    LPD3DXBUFFER m_boneBuffer = NULL;
-    std::vector<LPD3DXMATRIX> m_frameCombinedMatrix;
-    std::vector<D3DXMATRIX> m_boneOffsetMatrices;
-
-    SkinAnimMeshContainer(const std::wstring &,
-                          const std::string &,
-                          LPD3DXMESH,
-                          const D3DXMATERIAL *,
-                          const DWORD,
-                          const DWORD *,
-                          LPD3DXSKININFO);
-
-    void InitializeMaterials(const DWORD &,
-                             const D3DXMATERIAL *,
-                             const std::wstring &,
-                             const LPDIRECT3DDEVICE9 &);
-
-    void InitializeBone(const LPD3DXSKININFO &, const LPD3DXMESH &);
-    void InitializeFVF(const LPDIRECT3DDEVICE9 &);
-    void InitializeVertexElement();
-};
 
 class SkinAnimMeshAlloc : public ID3DXAllocateHierarchy
 {
+
 public:
     SkinAnimMeshAlloc(const std::wstring &);
 
@@ -65,6 +32,42 @@ public:
 private:
 
     std::wstring m_xFilename;
+
+};
+
+struct SkinAnimMeshFrame : public D3DXFRAME
+{
+    D3DXMATRIX m_combinedMatrix;
+    explicit SkinAnimMeshFrame(const std::string& name);
+};
+
+struct SkinAnimMeshContainer : public D3DXMESHCONTAINER
+{
+    std::vector<std::shared_ptr<IDirect3DTexture9> > m_textureList;
+
+    DWORD m_paletteSize = 0;
+    DWORD m_influenceCount = 0;
+    DWORD m_boneCount = 0;
+    LPD3DXBUFFER m_boneBuffer = NULL;
+    std::vector<LPD3DXMATRIX> m_frameCombinedMatrix;
+    std::vector<D3DXMATRIX> m_boneOffsetMatrices;
+
+    SkinAnimMeshContainer(const std::wstring&,
+                          const std::string&,
+                          LPD3DXMESH,
+                          const D3DXMATERIAL*,
+                          const DWORD,
+                          const DWORD *,
+                          LPD3DXSKININFO);
+
+    void InitializeMaterials(const DWORD&,
+                             const D3DXMATERIAL*,
+                             const std::wstring&,
+                             const LPDIRECT3DDEVICE9&);
+
+    void InitializeBone(const LPD3DXSKININFO&, const LPD3DXMESH&);
+    void InitializeFVF(const LPDIRECT3DDEVICE9&);
+    void InitializeVertexElement();
 };
 
 }

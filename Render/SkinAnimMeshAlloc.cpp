@@ -9,9 +9,78 @@ using std::string;
 
 namespace NSRender
 {
-SkinAnimMeshFrame::SkinAnimMeshFrame(const string &name)
+
+//---------------------------------------------------------------
+// SkinAnimMeshAlloc
+//---------------------------------------------------------------
+
+SkinAnimMeshAlloc::SkinAnimMeshAlloc(const std::wstring &xFilename)
+    : ID3DXAllocateHierarchy { },
+      m_xFilename(xFilename)
+{
+}
+
+STDMETHODIMP SkinAnimMeshAlloc::CreateFrame(LPCSTR name, LPD3DXFRAME *newFrame)
+{
+    *newFrame = NEW SkinAnimMeshFrame(name);
+    return S_OK;
+}
+
+STDMETHODIMP SkinAnimMeshAlloc::CreateMeshContainer(LPCSTR meshName,
+                                                    CONST D3DXMESHDATA *meshData,
+                                                    CONST D3DXMATERIAL *materials,
+                                                    CONST D3DXEFFECTINSTANCE *,
+                                                    DWORD materialCount,
+                                                    CONST DWORD *adjacency,
+                                                    LPD3DXSKININFO skinInfo,
+                                                    LPD3DXMESHCONTAINER *meshContainer)
+{
+    try
+    {
+        *meshContainer = NEW SkinAnimMeshContainer(m_xFilename,
+                                                   meshName,
+                                                   meshData->pMesh,
+                                                   materials,
+                                                   materialCount,
+                                                   adjacency,
+                                                   skinInfo);
+    }
+    catch (const std::exception&)
+    {
+        return E_FAIL;
+    }
+
+    return S_OK;
+}
+
+STDMETHODIMP SkinAnimMeshAlloc::DestroyFrame(LPD3DXFRAME frame)
+{
+    SAFE_DELETE_ARRAY(frame->Name);
+    SAFE_DELETE(frame);
+    return S_OK;
+}
+
+STDMETHODIMP SkinAnimMeshAlloc::DestroyMeshContainer(LPD3DXMESHCONTAINER meshContainerBase)
+{
+    auto *meshContainer = (SkinAnimMeshContainer*)meshContainerBase;
+
+    SAFE_RELEASE(meshContainer->pSkinInfo);
+    SAFE_DELETE_ARRAY(meshContainer->Name);
+    SAFE_DELETE_ARRAY(meshContainer->pAdjacency);
+    SAFE_DELETE_ARRAY(meshContainer->pMaterials);
+    SAFE_RELEASE(meshContainer->MeshData.pMesh);
+    SAFE_DELETE(meshContainer);
+
+    return S_OK;
+}
+
+//---------------------------------------------------------------
+// SkinAnimMeshFrame
+//---------------------------------------------------------------
+
+SkinAnimMeshFrame::SkinAnimMeshFrame(const string& name)
     : D3DXFRAME { },
-      m_combinedMatrix ()
+      m_combinedMatrix()
 {
     Name = NEW char[name.length() + 1];
     strcpy_s(Name, name.length() + 1, name.c_str());
@@ -19,6 +88,10 @@ SkinAnimMeshFrame::SkinAnimMeshFrame(const string &name)
     D3DXMatrixIdentity(&TransformationMatrix);
     D3DXMatrixIdentity(&m_combinedMatrix);
 }
+
+//---------------------------------------------------------------
+// SkinAnimMeshContainer
+//---------------------------------------------------------------
 
 SkinAnimMeshContainer::SkinAnimMeshContainer(const std::wstring &xFilename,
                                              const string &meshFilename,
@@ -94,9 +167,12 @@ void SkinAnimMeshContainer::InitializeMaterials(const DWORD &materialCount,
                 std::wstring filename = Util::Utf8ToWstring(pMaterials[i].pTextureFilename);
 
                 size_t pos = xFilename.find_last_of(L"\\/");
-                std::wstring directory = (pos == std::string::npos)
-                    ? L""
-                    : xFilename.substr(0, pos);
+
+                std::wstring directory;
+                if (pos != std::string::npos)
+                {
+                    directory = xFilename.substr(0, pos);
+                }
 
                 filename = directory + L'\\' + filename;
 
@@ -131,10 +207,10 @@ void SkinAnimMeshContainer::InitializeBone(const LPD3DXSKININFO &skinInfo,
     pSkinInfo = skinInfo;
     pSkinInfo->AddRef();
 
-    UINT bone_count = pSkinInfo->GetNumBones();
-    m_boneOffsetMatrices.resize(bone_count);
+    UINT boneCount = pSkinInfo->GetNumBones();
+    m_boneOffsetMatrices.resize(boneCount);
 
-    for (DWORD i = 0; i < bone_count; ++i)
+    for (DWORD i = 0; i < boneCount; ++i)
     {
         m_boneOffsetMatrices[i] = *pSkinInfo->GetBoneOffsetMatrix(i);
     }
@@ -165,8 +241,11 @@ void SkinAnimMeshContainer::InitializeBone(const LPD3DXSKININFO &skinInfo,
 
 void SkinAnimMeshContainer::InitializeFVF(const LPDIRECT3DDEVICE9 &d3dDevice)
 {
-    DWORD newFVF = (MeshData.pMesh->GetFVF() & D3DFVF_POSITION_MASK) |
-                    D3DFVF_NORMAL | D3DFVF_TEX1 | D3DFVF_LASTBETA_UBYTE4;
+    DWORD newFVF = (MeshData.pMesh->GetFVF() &
+                    D3DFVF_POSITION_MASK) |
+                    D3DFVF_NORMAL |
+                    D3DFVF_TEX1 |
+                    D3DFVF_LASTBETA_UBYTE4;
 
     if (newFVF != MeshData.pMesh->GetFVF())
     {
@@ -175,6 +254,7 @@ void SkinAnimMeshContainer::InitializeFVF(const LPDIRECT3DDEVICE9 &d3dDevice)
                                                        newFVF,
                                                        d3dDevice,
                                                        &pMesh);
+
         if (SUCCEEDED(hresult))
         {
             MeshData.pMesh->Release();
@@ -209,67 +289,6 @@ void SkinAnimMeshContainer::InitializeVertexElement()
     {
         throw std::exception("Failed to get skin info.");
     }
-}
-
-SkinAnimMeshAlloc::SkinAnimMeshAlloc(const std::wstring &xFilename)
-    : ID3DXAllocateHierarchy{},
-      m_xFilename(xFilename)
-{
-}
-
-STDMETHODIMP SkinAnimMeshAlloc::CreateFrame(LPCSTR name, LPD3DXFRAME *newFrame)
-{
-    *newFrame = NEW SkinAnimMeshFrame(name);
-    return S_OK;
-}
-
-STDMETHODIMP SkinAnimMeshAlloc::CreateMeshContainer(LPCSTR meshName,
-                                                    CONST D3DXMESHDATA *meshData,
-                                                    CONST D3DXMATERIAL *materials,
-                                                    CONST D3DXEFFECTINSTANCE *,
-                                                    DWORD materialCount,
-                                                    CONST DWORD *adjacency,
-                                                    LPD3DXSKININFO skinInfo,
-                                                    LPD3DXMESHCONTAINER *meshContainer)
-{
-    try
-    {
-        *meshContainer = NEW SkinAnimMeshContainer(m_xFilename,
-                                                    meshName,
-                                                    meshData->pMesh,
-                                                    materials,
-                                                    materialCount,
-                                                    adjacency,
-                                                    skinInfo);
-    }
-    catch (const std::exception&)
-    {
-        return E_FAIL;
-    }
-
-    return S_OK;
-}
-
-STDMETHODIMP SkinAnimMeshAlloc::DestroyFrame(LPD3DXFRAME frame)
-{
-    SAFE_DELETE_ARRAY(frame->Name);
-    frame->~D3DXFRAME();
-    SAFE_DELETE(frame);
-    return S_OK;
-}
-
-STDMETHODIMP SkinAnimMeshAlloc::DestroyMeshContainer(LPD3DXMESHCONTAINER mesh_container_base)
-{
-    auto *mesh_container = (SkinAnimMeshContainer*)mesh_container_base;
-
-    SAFE_RELEASE(mesh_container->pSkinInfo);
-    SAFE_DELETE_ARRAY(mesh_container->Name);
-    SAFE_DELETE_ARRAY(mesh_container->pAdjacency);
-    SAFE_DELETE_ARRAY(mesh_container->pMaterials);
-    SAFE_RELEASE(mesh_container->MeshData.pMesh);
-    SAFE_DELETE(mesh_container);
-
-    return S_OK;
 }
 
 }
