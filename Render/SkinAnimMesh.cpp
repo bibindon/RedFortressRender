@@ -9,14 +9,15 @@
 
 namespace NSRender
 {
+
 const std::wstring SkinAnimMesh::SHADER_FILENAME = L"res\\shader\\SkinAnimMeshShader.fx";
 
-void SkinAnimMesh::frame_root_deleter_object::operator()(const LPD3DXFRAME frame_root)
+void SkinAnimMesh::m_frameRootdeleter_object::operator()(const LPD3DXFRAME frame_root)
 {
     release_mesh_allocator(frame_root);
 }
 
-void SkinAnimMesh::frame_root_deleter_object::release_mesh_allocator(
+void SkinAnimMesh::m_frameRootdeleter_object::release_mesh_allocator(
     const LPD3DXFRAME frame)
 {
     if (frame->pMeshContainer != nullptr)
@@ -43,8 +44,8 @@ SkinAnimMesh::SkinAnimMesh(const std::wstring &x_filename,
                            const float &scale,
                            const AnimSetMap& animSetMap)
     : m_allocator{NEW SkinAnimMeshAlloc(x_filename)},
-      frame_root_{nullptr, frame_root_deleter_object{m_allocator}},
-      m_matRotate{D3DMATRIX{}},
+      m_frameRoot{nullptr, m_frameRootdeleter_object{m_allocator}},
+      m_matRotate(),
       m_position(position),
       m_rotate(rotation),
       m_scale(scale)
@@ -65,32 +66,26 @@ SkinAnimMesh::SkinAnimMesh(const std::wstring &x_filename,
         throw std::exception("Failed to create an effect file.");
     }
 
-    LPD3DXFRAME temp_frame_root = NULL;
-    LPD3DXANIMATIONCONTROLLER temp_animation_controller = NULL;
+    LPD3DXFRAME tempFrameRoot = NULL;
+    LPD3DXANIMATIONCONTROLLER tempAnimController = NULL;
 
     if (FAILED(D3DXLoadMeshHierarchyFromX(x_filename.c_str(),
                                           D3DXMESH_MANAGED,
                                           Common::D3DDevice(),
                                           m_allocator.get(),
                                           nullptr,
-                                          &temp_frame_root,
-                                          &temp_animation_controller)))
+                                          &tempFrameRoot,
+                                          &tempAnimController)))
     {
         auto msg = L"Failed to load a x-file.: " + x_filename;
         auto msg2 = Util::WstringToUtf8(msg);
         throw std::exception(msg2.c_str());
     }
 
-    frame_root_.reset(temp_frame_root);
-    m_animCtrlr.Init(temp_animation_controller, animSetMap);
+    m_frameRoot.reset(tempFrameRoot);
+    m_animCtrlr.Init(tempAnimController, animSetMap);
 
-    AllocateAllBoneMatrix(frame_root_.get());
-
-    m_scale = scale;
-}
-
-SkinAnimMesh::~SkinAnimMesh()
-{
+    AllocateAllBoneMatrix(m_frameRoot.get());
 }
 
 void SkinAnimMesh::Render(const D3DXMATRIX& view_matrix,
@@ -131,18 +126,18 @@ void SkinAnimMesh::RenderImpl(const D3DXMATRIX &view_matrix,
         world_matrix *= mat;
     }
 
-    UpdateFrameMatrix(frame_root_.get(), &world_matrix);
-    RenderFrame(frame_root_.get());
+    UpdateFrameMatrix(m_frameRoot.get(), &world_matrix);
+    RenderFrame(m_frameRoot.get());
 }
 
-void SkinAnimMesh::UpdateFrameMatrix(const LPD3DXFRAME frame_base,
-                                       const LPD3DXMATRIX parent_matrix)
+void SkinAnimMesh::UpdateFrameMatrix(const LPD3DXFRAME frameBase,
+                                       const LPD3DXMATRIX matParent)
 {
-    auto frame = (SkinAnimMeshFrame*)frame_base;
+    auto frame = (SkinAnimMeshFrame*)frameBase;
     
-    if (parent_matrix != nullptr)
+    if (matParent != nullptr)
     {
-        frame->m_combinedMatrix = frame->TransformationMatrix * (*parent_matrix);
+        frame->m_combinedMatrix = frame->TransformationMatrix * (*matParent);
     }
     else
     {
@@ -151,7 +146,7 @@ void SkinAnimMesh::UpdateFrameMatrix(const LPD3DXFRAME frame_base,
 
     if (frame->pFrameSibling != nullptr)
     {
-        UpdateFrameMatrix(frame->pFrameSibling, parent_matrix);
+        UpdateFrameMatrix(frame->pFrameSibling, matParent);
     }
 
     if (frame->pFrameFirstChild != nullptr)
@@ -163,11 +158,12 @@ void SkinAnimMesh::UpdateFrameMatrix(const LPD3DXFRAME frame_base,
 void SkinAnimMesh::RenderFrame(const LPD3DXFRAME frame)
 {
     {
-        LPD3DXMESHCONTAINER mesh_container{frame->pMeshContainer};
-        while (mesh_container != nullptr)
+        LPD3DXMESHCONTAINER container = frame->pMeshContainer;
+
+        while (container != nullptr)
         {
-            RenderMeshContainer(mesh_container);
-            mesh_container = mesh_container->pNextMeshContainer;
+            RenderMeshContainer(container);
+            container = container->pNextMeshContainer;
         }
     }
 
@@ -182,17 +178,17 @@ void SkinAnimMesh::RenderFrame(const LPD3DXFRAME frame)
     }
 }
 
-void SkinAnimMesh::RenderMeshContainer(const LPD3DXMESHCONTAINER mesh_container_base)
+void SkinAnimMesh::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBase)
 {
-    auto mesh_container = (SkinAnimMeshContainer*)mesh_container_base;
+    auto container = (SkinAnimMeshContainer*)containerBase;
 
     LPD3DXBONECOMBINATION bone_combination = NULL;
 
-    bone_combination = (LPD3DXBONECOMBINATION)mesh_container->m_boneBuffer->GetBufferPointer();
+    bone_combination = (LPD3DXBONECOMBINATION)container->m_boneBuffer->GetBufferPointer();
 
-    const DWORD dw_palette_size = mesh_container->m_paletteSize;
+    const DWORD dw_palette_size = container->m_paletteSize;
 
-    for (DWORD i = 0; i < mesh_container->m_boneCount; ++i)
+    for (DWORD i = 0; i < container->m_boneCount; ++i)
     {
         for (DWORD k = 0; k < dw_palette_size; ++k)
         {
@@ -201,9 +197,8 @@ void SkinAnimMesh::RenderMeshContainer(const LPD3DXMESHCONTAINER mesh_container_
             {
                 continue;
             }
-            m_matWorldArray[k] =
-                mesh_container->m_boneOffsetMatrices[dw_bone_id] *
-                (*mesh_container->m_frameCombinedMatrix[dw_bone_id]);
+            m_matWorldArray[k] = container->m_boneOffsetMatrices[dw_bone_id] *
+                                 (*container->m_frameCombinedMatrix[dw_bone_id]);
         }
         m_D3DEffect->SetMatrixArray("g_matWorldArray",
                                     &m_matWorldArray[0],
@@ -211,17 +206,17 @@ void SkinAnimMesh::RenderMeshContainer(const LPD3DXMESHCONTAINER mesh_container_
 
         DWORD bone_id = bone_combination[i].AttribId;
         D3DXVECTOR4 vec4_color{
-            mesh_container->pMaterials[bone_id].MatD3D.Diffuse.r,
-            mesh_container->pMaterials[bone_id].MatD3D.Diffuse.g,
-            mesh_container->pMaterials[bone_id].MatD3D.Diffuse.b,
-            mesh_container->pMaterials[bone_id].MatD3D.Diffuse.a};
+            container->pMaterials[bone_id].MatD3D.Diffuse.r,
+            container->pMaterials[bone_id].MatD3D.Diffuse.g,
+            container->pMaterials[bone_id].MatD3D.Diffuse.b,
+            container->pMaterials[bone_id].MatD3D.Diffuse.a};
 
         m_D3DEffect->SetVector("g_diffuse", &vec4_color);
 
-        if (bone_id < mesh_container->m_textureList.size())
+        if (bone_id < container->m_textureList.size())
         {
             m_D3DEffect->SetTexture("g_texture",
-                                    mesh_container->m_textureList.at(bone_id));
+                                    container->m_textureList.at(bone_id));
         }
 
         m_D3DEffect->Begin(nullptr, 0);
@@ -232,31 +227,31 @@ void SkinAnimMesh::RenderMeshContainer(const LPD3DXMESHCONTAINER mesh_container_
             throw std::exception("Failed 'BeginPass' function.");
         }
         m_D3DEffect->CommitChanges();
-        mesh_container->MeshData.pMesh->DrawSubset(i);
+        container->MeshData.pMesh->DrawSubset(i);
         m_D3DEffect->EndPass();
         m_D3DEffect->End();
     }
 }
 
-HRESULT SkinAnimMesh::AllocateBoneMatrix(LPD3DXMESHCONTAINER mesh_container)
+HRESULT SkinAnimMesh::AllocateBoneMatrix(LPD3DXMESHCONTAINER containerBase)
 {
     SkinAnimMeshFrame *frame = nullptr;
 
-    auto skinned_mesh_container = (SkinAnimMeshContainer*)mesh_container;
+    auto container = (SkinAnimMeshContainer*)containerBase;
 
-    DWORD bone_count = skinned_mesh_container->pSkinInfo->GetNumBones();
-    skinned_mesh_container->m_frameCombinedMatrix.resize(bone_count);
+    DWORD boneCount = container->pSkinInfo->GetNumBones();
+    container->m_frameCombinedMatrix.resize(boneCount);
 
     // TODO Improve.
     DWORD MAX_MATRICES = 26;
-    m_matWorldArray.resize((std::min)(MAX_MATRICES, bone_count));
+    m_matWorldArray.resize((std::min)(MAX_MATRICES, boneCount));
 
-    m_D3DEffect->SetInt("g_currentBoneIndex", skinned_mesh_container->m_influenceCount - 1);
+    m_D3DEffect->SetInt("g_currentBoneIndex", container->m_influenceCount - 1);
 
-    for (DWORD i = 0; i < bone_count; ++i)
+    for (DWORD i = 0; i < boneCount; ++i)
     {
-        LPD3DXFRAME p = D3DXFrameFind(frame_root_.get(),
-                                      skinned_mesh_container->pSkinInfo->GetBoneName(i));
+        LPD3DXFRAME p = D3DXFrameFind(m_frameRoot.get(),
+                                      container->pSkinInfo->GetBoneName(i));
 
         frame = (SkinAnimMeshFrame*)p;
 
@@ -264,8 +259,9 @@ HRESULT SkinAnimMesh::AllocateBoneMatrix(LPD3DXMESHCONTAINER mesh_container)
         {
             return E_FAIL;
         }
-        LPD3DXMATRIX p_matrix = &frame->m_combinedMatrix;
-        skinned_mesh_container->m_frameCombinedMatrix.at(i) = p_matrix;
+
+        LPD3DXMATRIX pMat = &frame->m_combinedMatrix;
+        container->m_frameCombinedMatrix.at(i) = pMat;
     }
     return S_OK;
 }

@@ -22,8 +22,6 @@ public:
                  const float &,
                  const AnimSetMap& animSetMap);
 
-    ~SkinAnimMesh();
-
     void Render(const D3DXMATRIX&,
                 const D3DXMATRIX&,
                 const D3DXVECTOR4&,
@@ -36,7 +34,7 @@ private:
 
     void RenderImpl(const D3DXMATRIX &, const D3DXMATRIX &);
 
-    struct frame_root_deleter_object
+    struct m_frameRootdeleter_object
     {
         std::shared_ptr<SkinAnimMeshAlloc> m_allocator;
         void operator()(const LPD3DXFRAME);
@@ -45,7 +43,7 @@ private:
 
     const static std::wstring SHADER_FILENAME;
     std::shared_ptr<SkinAnimMeshAlloc> m_allocator;
-    std::unique_ptr<D3DXFRAME, frame_root_deleter_object> frame_root_;
+    std::unique_ptr<D3DXFRAME, m_frameRootdeleter_object> m_frameRoot;
     D3DXMATRIX m_matRotate;
     std::vector<D3DXMATRIX> m_matWorldArray;
     D3DXVECTOR3 m_centerPos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
