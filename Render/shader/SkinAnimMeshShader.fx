@@ -3,10 +3,18 @@ float g_light_brightness;
 float4 g_diffuse;
 float4 g_ambient = { 0.2f, 0.2f, 0.2f, 0.0f };
 
-// Matrix Palette 
 static const int MAX_MATRICES = 26;
 float4x3 g_world_matrix_array[MAX_MATRICES];
 float4x4 g_view_projection;
+
+texture g_mesh_texture;
+sampler mesh_texture_sampler = sampler_state
+{
+    Texture   = (g_mesh_texture);
+    MipFilter = LINEAR;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+};
 
 void vertex_shader(in  float4  in_position      : POSITION,
                    in  float4  in_blend_weights : BLENDWEIGHT,
@@ -54,18 +62,10 @@ void vertex_shader(in  float4  in_position      : POSITION,
     out_texcoord0 = in_texcoord0.xy;
 }
 
-texture g_mesh_texture;
-sampler mesh_texture_sampler = sampler_state {
-    Texture   = (g_mesh_texture);
-    MipFilter = LINEAR;
-    MinFilter = LINEAR;
-    MagFilter = LINEAR;
-};
+void pixel_shader(in  float4 in_diffuse  : COLOR0,
+                  in  float2 in_texcood  : TEXCOORD0,
 
-void pixel_shader(
-    in  float4 in_diffuse  : COLOR0,
-    in  float2 in_texcood  : TEXCOORD0,
-    out float4 out_diffuse : COLOR0)
+                  out float4 out_diffuse : COLOR0)
 {
     float4 color_result = (float4)0;
 
@@ -76,7 +76,8 @@ void pixel_shader(
 }
 
 int current_bone_numbers;
-VertexShader vsArray[4] = {
+VertexShader vsArray[4] =
+{
     compile vs_3_0 vertex_shader(1),
     compile vs_3_0 vertex_shader(2),
     compile vs_3_0 vertex_shader(3),

@@ -10,7 +10,7 @@
 namespace NSRender
 {
 
-class SkinAnimMeshContainer;
+struct SkinAnimMeshContainer;
 
 class SkinAnimMeshAlloc : public ID3DXAllocateHierarchy
 {
@@ -31,13 +31,12 @@ public:
     STDMETHOD(DestroyFrame)(THIS_ LPD3DXFRAME);
     STDMETHOD(DestroyMeshContainer)(THIS_ LPD3DXMESHCONTAINER);
 
-    void InitializeMaterials(const DWORD&,
+    void InitializeMaterials(const DWORD,
                              const D3DXMATERIAL*,
-                             const std::wstring&,
-                             const LPDIRECT3DDEVICE9&);
+                             const std::wstring&);
 
-    void InitializeBone(const LPD3DXSKININFO&, const LPD3DXMESH&);
-    void InitializeFVF(const LPDIRECT3DDEVICE9&);
+    void InitializeBone(const LPD3DXSKININFO, const LPD3DXMESH);
+    void InitializeFVF();
     void InitializeVertexElement();
 
 private:
@@ -62,16 +61,6 @@ struct SkinAnimMeshContainer : public D3DXMESHCONTAINER
     LPD3DXBUFFER m_boneBuffer = NULL;
     std::vector<LPD3DXMATRIX> m_frameCombinedMatrix;
     std::vector<D3DXMATRIX> m_boneOffsetMatrices;
-
-    /*
-    SkinAnimMeshContainer(const std::wstring&,
-                          const std::string&,
-                          LPD3DXMESH,
-                          const D3DXMATERIAL*,
-                          const DWORD,
-                          const DWORD *,
-                          LPD3DXSKININFO);
-                          */
 };
 
 }
