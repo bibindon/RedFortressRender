@@ -140,6 +140,8 @@ void Render::Initialize(HWND hWnd)
 
     }
 
+    m_postEffectSaturate.Initialize();
+
     // ガウスフィルター
     m_postEffectGauss.Initialize();
 
@@ -288,7 +290,8 @@ void Render::Draw()
     DrawPass1();
 
     // 彩度変更
-    DrawPass2();
+//    DrawPass2();
+    g_pSceneTex = m_postEffectSaturate.Draw(g_pRenderTarget);
 
     // ブルーム
     DrawPass4();
@@ -527,13 +530,12 @@ void Render::DrawImage(const std::wstring& text,
 
 void Render::SetPostEffectSaturate(const float level)
 {
-    m_saturateLevel = level;
+    m_postEffectSaturate.SetPostEffectSaturate(level);
 }
 
 void Render::SetPostEffectGaussianFilter(const bool arg)
 {
     m_postEffectGauss.SetEnable(arg);
-//    m_bGaussianON = arg;
 }
 
 void Render::SetPostEffectStarBurst(const bool arg)
@@ -883,7 +885,8 @@ void Render::DrawPass2()
 
     // フルスクリーン: RT0(=g_pSceneTex) へ彩度フィルタ適用
     g_pEffect2->SetTechnique("Technique1");
-    UINT numPass = 0; g_pEffect2->Begin(&numPass, 0);
+    UINT numPass = 0;
+    g_pEffect2->Begin(&numPass, 0);
     g_pEffect2->BeginPass(0);
 
     g_pEffect2->SetFloat("g_level", m_saturateLevel);

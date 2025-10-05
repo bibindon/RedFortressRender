@@ -1,11 +1,13 @@
 #pragma once
 
+#pragma once
+
 #include "Common.h"
 
 namespace NSRender
 {
 
-class PostEffectGauss
+class PostEffectSaturate
 {
 
 public:
@@ -14,8 +16,8 @@ public:
     LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget);
     void Finalize();
 
-    void SetEnable(const bool arg);
-    bool GetEnable() const;
+    void SetPostEffectSaturate(const float arg);
+    float GetPostEffectSaturate() const;
 
 private:
 
@@ -33,7 +35,7 @@ private:
         float u, v;
     };
 
-    bool m_bEnable = false;
+    float m_saturateLevel = 1.0f;
 
 };
 

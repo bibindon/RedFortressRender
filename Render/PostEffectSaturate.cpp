@@ -1,14 +1,14 @@
-#include "PostEffectGauss.h"
+#include "PostEffectSaturate.h"
 
 namespace NSRender
 {
 
-void PostEffectGauss::Initialize()
+void PostEffectSaturate::Initialize()
 {
     HRESULT hResult = E_FAIL;
 
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                       L"res\\shader\\PostEffectGaussian.fx",
+                                       L"res\\shader\\PostEffectSaturate.fx",
                                        NULL,
                                        NULL,
                                        D3DXSHADER_DEBUG,
@@ -27,33 +27,34 @@ void PostEffectGauss::Initialize()
                       &m_texWork);
 }
 
-LPDIRECT3DTEXTURE9 PostEffectGauss::Draw(LPDIRECT3DTEXTURE9 renderTarget)
+LPDIRECT3DTEXTURE9 PostEffectSaturate::Draw(LPDIRECT3DTEXTURE9 renderTarget)
 {
-    m_d3dEffect->SetBool("g_bFilterON", m_bEnable);
+    m_d3dEffect->SetFloat("g_level", m_saturateLevel);
 
-    DrawFullscreenQuad(renderTarget, m_texWork, "GaussianH");
-    DrawFullscreenQuad(m_texWork, renderTarget, "GaussianV");
+    m_d3dEffect->SetTexture("texture1", renderTarget);
 
-    return renderTarget;
+    DrawFullscreenQuad(renderTarget, m_texWork, "Technique1");
+
+    return m_texWork;
 }
 
-void PostEffectGauss::Finalize()
+void PostEffectSaturate::Finalize()
 {
     SAFE_RELEASE(m_texWork);
     SAFE_RELEASE(m_d3dEffect);
 }
 
-void PostEffectGauss::SetEnable(const bool arg)
+void PostEffectSaturate::SetPostEffectSaturate(const float level)
 {
-    m_bEnable = arg;
+    m_saturateLevel = level;
 }
 
-bool PostEffectGauss::GetEnable() const
+float PostEffectSaturate::GetPostEffectSaturate() const
 {
-    return m_bEnable;
+    return m_saturateLevel;
 }
 
-void PostEffectGauss::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
+void PostEffectSaturate::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
                                          LPDIRECT3DTEXTURE9 texTarget,
                                          const std::string& technique)
 {
@@ -65,10 +66,6 @@ void PostEffectGauss::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
     Common::D3DDevice()->SetVertexShader(NULL);
 
     m_d3dEffect->SetTechnique(technique.c_str());
-    m_d3dEffect->SetTexture("g_SrcTex", texSource);
-
-    float texelSize[2] = { 1.0f / 1600, 1.0f / 900};
-    m_d3dEffect->SetFloatArray("g_TexelSize", texelSize, 2);
 
     ScreenVertex quad[4] = {
         {                    -0.5f,                     -0.5f, 0, 1, 0, 0 },

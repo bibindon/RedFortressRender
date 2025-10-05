@@ -24,6 +24,7 @@
 #include "Font.h"
 #include "Sprite.h"
 #include "PostEffectGauss.h"
+#include "PostEffectSaturate.h"
 
 namespace NSRender
 {
@@ -184,6 +185,7 @@ private:
     // 彩度フィルター
     // TODO ポストエフェクト用のクラスを作る
     void DrawPass2();
+    PostEffectSaturate m_postEffectSaturate;
 
     // ブルームフィルター
     // TODO ポストエフェクト用のクラスを作る
