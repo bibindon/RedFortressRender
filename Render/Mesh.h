@@ -51,8 +51,8 @@ private:
     const std::wstring SHADER_FILENAME = _T("res\\shader\\simple.fx");
     std::wstring m_meshName;
 
-    CComPtr<ID3DXEffect> m_D3DEffect = nullptr;
-    CComPtr<ID3DXMesh> m_D3DMesh = nullptr;
+    LPD3DXEFFECT m_D3DEffect = nullptr;
+    LPD3DXMESH m_D3DMesh = nullptr;
 
     DWORD m_materialCount = 0;
     std::vector<D3DXVECTOR4> m_vecDiffuse;

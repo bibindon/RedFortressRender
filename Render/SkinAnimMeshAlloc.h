@@ -24,7 +24,7 @@ struct SkinAnimMesh_container : public D3DXMESHCONTAINER
     DWORD palette_size_;
     DWORD influence_count_;
     DWORD bone_count_;
-    CComPtr<ID3DXBuffer> bone_buffer_;
+    LPD3DXBUFFER bone_buffer_;
     std::vector<LPD3DXMATRIX> frame_combined_matrix_;
     std::vector<D3DXMATRIX> bone_offset_matrices_;
 
