@@ -23,6 +23,7 @@
 
 #include "Font.h"
 #include "Sprite.h"
+#include "PostEffectGauss.h"
 
 namespace NSRender
 {
@@ -247,6 +248,8 @@ private:
 
     bool m_bGaussianON = false;
 
+    PostEffectGauss m_postEffectGauss;
+
     //---------------------------------------------------------------
     // ブルームフィルター
     // TODO 別のクラスにする
@@ -282,7 +285,7 @@ private:
     LPD3DXEFFECT g_pStarBusrtEffect = NULL;   // bloom.fx
 
     // --- Anamorphic 用リソース（★サーフェイスは保持しない） ---
-    LPDIRECT3DTEXTURE9 g_pSceneTex3 = NULL;
+    LPDIRECT3DTEXTURE9  g_pSceneTex3 = NULL;
     LPDIRECT3DTEXTURE9 g_pBrightTex2 = NULL;
     LPDIRECT3DTEXTURE9 g_pBlurTexH2 = NULL;
     LPDIRECT3DTEXTURE9 g_pBlurTexV2 = NULL;
@@ -298,6 +301,7 @@ private:
     // テクスチャ―の内容を画面に出力
     //---------------------------------------------------------------
     LPD3DXEFFECT g_pEffectEnd = NULL;
+
 
 };
 }

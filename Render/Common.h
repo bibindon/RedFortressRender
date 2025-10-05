@@ -76,6 +76,18 @@ inline void SAFE_RELEASE(T*& p)
         return;
     }
 
+    p->Release();
+    p = nullptr;
+}
+
+template <typename T>
+inline void FORCE_RELEASE(T*& p)
+{
+    if (p == nullptr)
+    {
+        return;
+    }
+
     while (true)
     {
         auto refCnt = p->Release();

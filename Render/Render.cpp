@@ -131,6 +131,7 @@ void Render::Initialize(HWND hWnd)
     }
 
     // ガウスフィルター
+//    m_postEffectGauss.Initialize();
     {
         // エフェクト読み込み
         hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
@@ -320,6 +321,7 @@ void Render::Draw()
 
     // ガウス
     DrawPassGaussian();
+    //m_postEffectGauss.Draw();
 
     DrawPassEnd();
 

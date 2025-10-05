@@ -40,6 +40,7 @@
     <ClCompile Include="MeshPointLight.cpp" />
     <ClCompile Include="MeshSmooth.cpp" />
     <ClCompile Include="MeshSSSLike.cpp" />
+    <ClCompile Include="PostEffectGauss.cpp" />
     <ClCompile Include="PtrManager.cpp" />
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="SkinAnimMesh.cpp" />
@@ -62,6 +63,7 @@
     <ClInclude Include="MeshPointLight.h" />
     <ClInclude Include="MeshSmooth.h" />
     <ClInclude Include="MeshSSSLike.h" />
+    <ClInclude Include="PostEffectGauss.h" />
     <ClInclude Include="PtrManager.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="SkinAnimMesh.h" />
