@@ -249,10 +249,12 @@ HRESULT SkinAnimMesh::AllocateBoneMatrix(LPD3DXMESHCONTAINER containerBase)
     DWORD MAX_MATRICES = 26;
     if (boneCount > MAX_MATRICES)
     {
-        boneCount = MAX_MATRICES;
+        m_matWorldArray.resize(MAX_MATRICES);
     }
-
-    m_matWorldArray.resize(boneCount);
+    else
+    {
+        m_matWorldArray.resize(boneCount);
+    }
 
     m_D3DEffect->SetInt("g_currentBoneIndex", container->m_influenceCount - 1);
 
