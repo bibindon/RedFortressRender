@@ -9,96 +9,83 @@ using std::string;
 
 namespace NSRender
 {
-// c'tor 
-SkinAnimMesh_frame::SkinAnimMesh_frame(const string &name)
-    : D3DXFRAME{}, // Initializes member with zero. 
-      combined_matrix_{}
+SkinAnimMeshFrame::SkinAnimMeshFrame(const string &name)
+    : D3DXFRAME { },
+      m_combinedMatrix ()
 {
     Name = NEW char[name.length() + 1];
     strcpy_s(Name, name.length() + 1, name.c_str());
 
-    // Make an argument an identity matrix. 
     D3DXMatrixIdentity(&TransformationMatrix);
-    D3DXMatrixIdentity(&combined_matrix_);
+    D3DXMatrixIdentity(&m_combinedMatrix);
 }
 
-// A constructor which only initializes member variables from the beginning to the end.
-SkinAnimMesh_container::SkinAnimMesh_container(
-    const std::wstring &x_filename,
-    const string &mesh_name,
-    LPD3DXMESH mesh,
-    const D3DXMATERIAL *materials,
-    const DWORD materials_count,
-    const DWORD *adjacency,
-    LPD3DXSKININFO skin_info)
-    : D3DXMESHCONTAINER{}, // Initializes with zero. 
-      texture_{},
-      palette_size_{},
-      influence_count_{},
-      bone_count_{},
-      bone_buffer_{nullptr},
-      frame_combined_matrix_{},
-      bone_offset_matrices_{}
+SkinAnimMeshContainer::SkinAnimMeshContainer(const std::wstring &xFilename,
+                                             const string &meshFilename,
+                                             LPD3DXMESH pMesh,
+                                             const D3DXMATERIAL *materials,
+                                             const DWORD materialCount,
+                                             const DWORD *adjacency,
+                                             LPD3DXSKININFO skinInfo)
+    : D3DXMESHCONTAINER { }
 {
-    Name = NEW char[mesh_name.length() + 1];
-    strcpy_s(Name, mesh_name.length() + 1, mesh_name.c_str());
+    Name = NEW char[meshFilename.length() + 1];
+    strcpy_s(Name, meshFilename.length() + 1, meshFilename.c_str());
 
-    LPDIRECT3DDEVICE9 d3d_device{nullptr};
-    mesh->GetDevice(&d3d_device);
+    LPDIRECT3DDEVICE9 d3d_device = NULL;
+    pMesh->GetDevice(&d3d_device);
 
-    // This IF sentence is just initializing the 'MeshData' of a member variable.
-    // When this mesh doesn't have normal vector, add it.
-    HRESULT result{};
-    if (!(mesh->GetFVF() & D3DFVF_NORMAL))
+    HRESULT result = E_FAIL;
+    if (!(pMesh->GetFVF() & D3DFVF_NORMAL))
     {
         MeshData.Type = D3DXMESHTYPE_MESH;
-        result = mesh->CloneMeshFVF(
-            mesh->GetOptions(),
-            mesh->GetFVF() | D3DFVF_NORMAL,
-            d3d_device,
-            &MeshData.pMesh);
+        result = pMesh->CloneMeshFVF(pMesh->GetOptions(),
+                                    pMesh->GetFVF() | D3DFVF_NORMAL,
+                                    d3d_device,
+                                    &MeshData.pMesh);
+
         if (FAILED(result))
         {
             throw std::exception("Failed 'CloneMeshFVF' function.");
         }
-        mesh = MeshData.pMesh;
-        D3DXComputeNormals(mesh, nullptr);
+
+        pMesh = MeshData.pMesh;
+        D3DXComputeNormals(pMesh, nullptr);
     }
     else
     {
-        MeshData.pMesh = mesh;
+        MeshData.pMesh = pMesh;
         MeshData.Type = D3DXMESHTYPE_MESH;
-        mesh->AddRef();
+        pMesh->AddRef();
     }
 
-    // Initialize the 'pAdjacency' of a member variable. 
-    DWORD adjacency_count{mesh->GetNumFaces() * 3};
+    DWORD adjacency_count = pMesh->GetNumFaces() * 3;
     pAdjacency = NEW DWORD[adjacency_count];
 
-    for (DWORD i{}; i < adjacency_count; ++i)
+    for (DWORD i = 0; i < adjacency_count; ++i)
     {
         pAdjacency[i] = adjacency[i];
     }
 
-    initialize_materials(materials_count, materials, x_filename, d3d_device);
-    initialize_bone(skin_info, mesh);
-    initialize_FVF(d3d_device);
-    initialize_vertex_element();
+    InitializeMaterials(materialCount, materials, xFilename, d3d_device);
+    InitializeBone(skinInfo, pMesh);
+    InitializeFVF(d3d_device);
+    InitializeVertexElement();
 }
 
-void SkinAnimMesh_container::initialize_materials(const DWORD &materials_count,
-                                                  const D3DXMATERIAL *materials,
-                                                  const std::wstring &x_filename,
-                                                  const LPDIRECT3DDEVICE9 &d3d_device)
+void SkinAnimMeshContainer::InitializeMaterials(const DWORD &materialCount,
+                                                const D3DXMATERIAL *materials,
+                                                const std::wstring &xFilename,
+                                                const LPDIRECT3DDEVICE9 &d3dDevice)
 {
-    NumMaterials = (std::max)(1UL, materials_count);
+    NumMaterials = (std::max)(1UL, materialCount);
     pMaterials = NEW D3DXMATERIAL[NumMaterials];
     vector<std::shared_ptr<IDirect3DTexture9> > temp_texture(NumMaterials);
-    texture_.swap(temp_texture);
+    m_textureList.swap(temp_texture);
 
-    if (materials_count > 0)
+    if (materialCount > 0)
     {
-        for (DWORD i{}; i < materials_count; ++i)
+        for (DWORD i = 0; i < materialCount; ++i)
         {
             pMaterials[i] = materials[i];
             if (pMaterials[i].pTextureFilename != nullptr)
@@ -106,14 +93,14 @@ void SkinAnimMesh_container::initialize_materials(const DWORD &materials_count,
                 LPDIRECT3DTEXTURE9 temp_texture{};
                 std::wstring filename = Util::Utf8ToWstring(pMaterials[i].pTextureFilename);
 
-                size_t pos = x_filename.find_last_of(L"\\/"); // ÅŒã‚Ì‹æØ‚è‚ð’T‚·
+                size_t pos = xFilename.find_last_of(L"\\/");
                 std::wstring directory = (pos == std::string::npos)
                     ? L""
-                    : x_filename.substr(0, pos);
+                    : xFilename.substr(0, pos);
 
                 filename = directory + L'\\' + filename;
 
-                if (FAILED(D3DXCreateTextureFromFile(d3d_device,
+                if (FAILED(D3DXCreateTextureFromFile(d3dDevice,
                                                      filename.c_str(),
                                                      &temp_texture)))
                 {
@@ -121,7 +108,7 @@ void SkinAnimMesh_container::initialize_materials(const DWORD &materials_count,
                 }
                 else
                 {
-                    texture_.at(i).reset(temp_texture);
+                    m_textureList.at(i).reset(temp_texture);
                 }
             }
         }
@@ -134,89 +121,87 @@ void SkinAnimMesh_container::initialize_materials(const DWORD &materials_count,
     }
 }
 
-void SkinAnimMesh_container::initialize_bone(
-    const LPD3DXSKININFO &skin_info, const LPD3DXMESH &mesh)
+void SkinAnimMeshContainer::InitializeBone(const LPD3DXSKININFO &skinInfo,
+                                           const LPD3DXMESH &mesh)
 {
-    if (skin_info == nullptr)
+    if (skinInfo == NULL)
     {
         throw std::exception("Failed to get skin info.");
     }
-    pSkinInfo = skin_info;
+    pSkinInfo = skinInfo;
     pSkinInfo->AddRef();
 
     UINT bone_count = pSkinInfo->GetNumBones();
-    bone_offset_matrices_.resize(bone_count);
+    m_boneOffsetMatrices.resize(bone_count);
 
     for (DWORD i = 0; i < bone_count; ++i)
     {
-        bone_offset_matrices_[i] = *pSkinInfo->GetBoneOffsetMatrix(i);
+        m_boneOffsetMatrices[i] = *pSkinInfo->GetBoneOffsetMatrix(i);
     }
 
     // TODO Improve.
     DWORD MAX_MATRICES = 26;
-    palette_size_ = (std::min)(MAX_MATRICES, pSkinInfo->GetNumBones());
+    m_paletteSize = (std::min)(MAX_MATRICES, pSkinInfo->GetNumBones());
 
-    // generate skinned mesh
     SAFE_RELEASE(MeshData.pMesh);
 
     LPD3DXBUFFER bone_buffer{};
     if (FAILED(pSkinInfo->ConvertToIndexedBlendedMesh(mesh,
                                                       0 /* not used */, 
-                                                      palette_size_,
+                                                      m_paletteSize,
                                                       pAdjacency,
                                                       nullptr,
                                                       nullptr,
                                                       nullptr,
-                                                      &influence_count_,
-                                                      &bone_count_,
+                                                      &m_influenceCount,
+                                                      &m_boneCount,
                                                       &bone_buffer,
                                                       &MeshData.pMesh)))
     {
         throw std::exception("Failed to get skin info.");
     }
-    bone_buffer_ = bone_buffer;
+    m_boneBuffer = bone_buffer;
 }
 
-void SkinAnimMesh_container::initialize_FVF(
-    const LPDIRECT3DDEVICE9 &d3d_device)
+void SkinAnimMeshContainer::InitializeFVF(const LPDIRECT3DDEVICE9 &d3dDevice)
 {
-    DWORD new_FVF = (MeshData.pMesh->GetFVF() & D3DFVF_POSITION_MASK) |
+    DWORD newFVF = (MeshData.pMesh->GetFVF() & D3DFVF_POSITION_MASK) |
                     D3DFVF_NORMAL | D3DFVF_TEX1 | D3DFVF_LASTBETA_UBYTE4;
 
-    if (new_FVF != MeshData.pMesh->GetFVF())
+    if (newFVF != MeshData.pMesh->GetFVF())
     {
-        LPD3DXMESH p_mesh{};
+        LPD3DXMESH pMesh = NULL;
         HRESULT hresult = MeshData.pMesh->CloneMeshFVF(MeshData.pMesh->GetOptions(),
-                                                       new_FVF,
-                                                       d3d_device,
-                                                       &p_mesh);
+                                                       newFVF,
+                                                       d3dDevice,
+                                                       &pMesh);
         if (SUCCEEDED(hresult))
         {
             MeshData.pMesh->Release();
-            MeshData.pMesh = p_mesh;
-            p_mesh = NULL;
+            MeshData.pMesh = pMesh;
+            pMesh = NULL;
         }
     }
 }
 
-void SkinAnimMesh_container::initialize_vertex_element()
+void SkinAnimMeshContainer::InitializeVertexElement()
 {
     D3DVERTEXELEMENT9 decl[MAX_FVF_DECL_SIZE];
-    LPD3DVERTEXELEMENT9 current_decl;
+    LPD3DVERTEXELEMENT9 currentDecl;
     HRESULT result = MeshData.pMesh->GetDeclaration(decl);
     if (FAILED(result))
     {
         throw std::exception("Failed to get skin info.");
     }
 
-    current_decl = decl;
-    while (current_decl->Stream != 0xff)
+    currentDecl = decl;
+    while (currentDecl->Stream != 0xff)
     {
-        if ((current_decl->Usage == D3DDECLUSAGE_BLENDINDICES) && (current_decl->UsageIndex == 0))
+        if ((currentDecl->Usage == D3DDECLUSAGE_BLENDINDICES) && (currentDecl->UsageIndex == 0))
         {
-            current_decl->Type = D3DDECLTYPE_D3DCOLOR;
+            currentDecl->Type = D3DDECLTYPE_D3DCOLOR;
         }
-        current_decl++;
+        currentDecl++;
     }
 
     result = MeshData.pMesh->UpdateSemantics(decl);
@@ -226,49 +211,45 @@ void SkinAnimMesh_container::initialize_vertex_element()
     }
 }
 
-SkinAnimMeshAlloc::SkinAnimMeshAlloc(const std::wstring &x_filename)
+SkinAnimMeshAlloc::SkinAnimMeshAlloc(const std::wstring &xFilename)
     : ID3DXAllocateHierarchy{},
-      x_filename_(x_filename) {}
-
-// Alghough it's camel case and a strange type name, because this function is a pure virtual
-// function of 'ID3DXAllocateHierarchy'.
-STDMETHODIMP SkinAnimMeshAlloc::CreateFrame(LPCSTR name, LPD3DXFRAME *new_frame)
+      m_xFilename(xFilename)
 {
-    *new_frame = NEW SkinAnimMesh_frame(name);
+}
+
+STDMETHODIMP SkinAnimMeshAlloc::CreateFrame(LPCSTR name, LPD3DXFRAME *newFrame)
+{
+    *newFrame = NEW SkinAnimMeshFrame(name);
     return S_OK;
 }
 
-// Alghough it's camel case and a strange type name, because this function is a pure virtual
-// function of 'ID3DXAllocateHierarchy'.
-STDMETHODIMP SkinAnimMeshAlloc::CreateMeshContainer(
-    LPCSTR mesh_name,
-    CONST D3DXMESHDATA *mesh_data,
-    CONST D3DXMATERIAL *materials,
-    CONST D3DXEFFECTINSTANCE *,
-    DWORD materials_count,
-    CONST DWORD *adjacency,
-    LPD3DXSKININFO skin_info,
-    LPD3DXMESHCONTAINER *mesh_container)
+STDMETHODIMP SkinAnimMeshAlloc::CreateMeshContainer(LPCSTR meshName,
+                                                    CONST D3DXMESHDATA *meshData,
+                                                    CONST D3DXMATERIAL *materials,
+                                                    CONST D3DXEFFECTINSTANCE *,
+                                                    DWORD materialCount,
+                                                    CONST DWORD *adjacency,
+                                                    LPD3DXSKININFO skinInfo,
+                                                    LPD3DXMESHCONTAINER *meshContainer)
 {
     try
     {
-        *mesh_container = NEW SkinAnimMesh_container(x_filename_,
-                                                     mesh_name,
-                                                     mesh_data->pMesh,
-                                                     materials,
-                                                     materials_count,
-                                                     adjacency,
-                                                     skin_info);
+        *meshContainer = NEW SkinAnimMeshContainer(m_xFilename,
+                                                    meshName,
+                                                    meshData->pMesh,
+                                                    materials,
+                                                    materialCount,
+                                                    adjacency,
+                                                    skinInfo);
     }
     catch (const std::exception&)
     {
         return E_FAIL;
     }
+
     return S_OK;
 }
 
-// Alghough it's camel case and a strange type name, because this function is a pure virtual
-// function of 'ID3DXAllocateHierarchy'.
 STDMETHODIMP SkinAnimMeshAlloc::DestroyFrame(LPD3DXFRAME frame)
 {
     SAFE_DELETE_ARRAY(frame->Name);
@@ -277,13 +258,9 @@ STDMETHODIMP SkinAnimMeshAlloc::DestroyFrame(LPD3DXFRAME frame)
     return S_OK;
 }
 
-// Alghough it's camel case and a strange type name, because this function is a pure virtual
-// function of 'ID3DXAllocateHierarchy'.
-STDMETHODIMP SkinAnimMeshAlloc::DestroyMeshContainer(
-    LPD3DXMESHCONTAINER mesh_container_base)
+STDMETHODIMP SkinAnimMeshAlloc::DestroyMeshContainer(LPD3DXMESHCONTAINER mesh_container_base)
 {
-    SkinAnimMesh_container *mesh_container{
-        static_cast<SkinAnimMesh_container *>(mesh_container_base)};
+    auto *mesh_container = (SkinAnimMeshContainer*)mesh_container_base;
 
     SAFE_RELEASE(mesh_container->pSkinInfo);
     SAFE_DELETE_ARRAY(mesh_container->Name);
@@ -294,4 +271,6 @@ STDMETHODIMP SkinAnimMeshAlloc::DestroyMeshContainer(
 
     return S_OK;
 }
-} // namespace early_go 
+
+}
+

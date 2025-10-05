@@ -62,7 +62,7 @@ private:
     HRESULT allocate_bone_matrix(LPD3DXMESHCONTAINER);
     HRESULT allocate_all_bone_matrices(LPD3DXFRAME);
 
-    LPD3DXEFFECT m_D3DEffect = nullptr;
+    LPD3DXEFFECT m_D3DEffect = NULL;
     D3DXVECTOR3 position_ = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
     D3DXVECTOR3 rotation_ = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 

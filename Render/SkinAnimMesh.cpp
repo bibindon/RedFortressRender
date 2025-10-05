@@ -18,7 +18,7 @@ void SkinAnimMesh::frame_root_deleter_object::operator()(const LPD3DXFRAME frame
     release_mesh_allocator(frame_root);
 }
 
-// Releases recursively mesh containers owned by the 'SkinAnimMesh_frame' inheriting
+// Releases recursively mesh containers owned by the 'SkinAnimMeshFrame' inheriting
 // 'D3DXFRAME'.
 void SkinAnimMesh::frame_root_deleter_object::release_mesh_allocator(
     const LPD3DXFRAME frame)
@@ -124,10 +124,10 @@ void SkinAnimMesh::render_impl(const D3DXMATRIX &view_matrix,
 
     m_animCtrlr.Update();
 
-    D3DXMATRIX world_matrix{};
+    D3DXMATRIX world_matrix;
     D3DXMatrixIdentity(&world_matrix);
     {
-        D3DXMATRIX mat{};
+        D3DXMATRIX mat;
         D3DXMatrixTranslation(
             &mat, -center_coodinate_.x, -center_coodinate_.y, -center_coodinate_.z);
         world_matrix *= mat;
@@ -151,17 +151,17 @@ void SkinAnimMesh::render_impl(const D3DXMATRIX &view_matrix,
 void SkinAnimMesh::update_frame_matrix(const LPD3DXFRAME frame_base,
                                        const LPD3DXMATRIX parent_matrix)
 {
-    SkinAnimMesh_frame *frame{
-        static_cast<SkinAnimMesh_frame *>(frame_base)};
+    SkinAnimMeshFrame *frame{
+        static_cast<SkinAnimMeshFrame *>(frame_base)};
     
     // Multiply its own transformation matrix by the parent transformation matrix.
     if (parent_matrix != nullptr)
     {
-        frame->combined_matrix_ = frame->TransformationMatrix * (*parent_matrix);
+        frame->m_combinedMatrix = frame->TransformationMatrix * (*parent_matrix);
     }
     else
     {
-        frame->combined_matrix_ = frame->TransformationMatrix;
+        frame->m_combinedMatrix = frame->TransformationMatrix;
     }
 
     // Call oneself. 
@@ -172,7 +172,7 @@ void SkinAnimMesh::update_frame_matrix(const LPD3DXFRAME frame_base,
     // Call oneself. 
     if (frame->pFrameFirstChild != nullptr)
     {
-        update_frame_matrix(frame->pFrameFirstChild, &frame->combined_matrix_);
+        update_frame_matrix(frame->pFrameFirstChild, &frame->m_combinedMatrix);
     }
 }
 
@@ -201,17 +201,17 @@ void SkinAnimMesh::render_frame(const LPD3DXFRAME frame)
 
 void SkinAnimMesh::render_mesh_container(const LPD3DXMESHCONTAINER mesh_container_base)
 {
-    SkinAnimMesh_container *mesh_container{
-        static_cast<SkinAnimMesh_container *>(mesh_container_base)};
+    SkinAnimMeshContainer *mesh_container{
+        static_cast<SkinAnimMeshContainer *>(mesh_container_base)};
 
     LPD3DXBONECOMBINATION bone_combination{};
 
     bone_combination = static_cast<LPD3DXBONECOMBINATION>(
-        mesh_container->bone_buffer_->GetBufferPointer());
+        mesh_container->m_boneBuffer->GetBufferPointer());
 
-    const DWORD dw_palette_size { mesh_container->palette_size_ };
+    const DWORD dw_palette_size { mesh_container->m_paletteSize };
 
-    for (DWORD i { 0 }; i < mesh_container->bone_count_; ++i)
+    for (DWORD i { 0 }; i < mesh_container->m_boneCount; ++i)
     {
         for (DWORD k { 0 }; k < dw_palette_size; ++k)
         {
@@ -221,8 +221,8 @@ void SkinAnimMesh::render_mesh_container(const LPD3DXMESHCONTAINER mesh_containe
                 continue;
             }
             world_matrix_array_[k] =
-                mesh_container->bone_offset_matrices_[dw_bone_id] *
-                (*mesh_container->frame_combined_matrix_[dw_bone_id]);
+                mesh_container->m_boneOffsetMatrices[dw_bone_id] *
+                (*mesh_container->m_frameCombinedMatrix[dw_bone_id]);
         }
         m_D3DEffect->SetMatrixArray("g_world_matrix_array",
                                 &world_matrix_array_[0], dw_palette_size);
@@ -235,7 +235,7 @@ void SkinAnimMesh::render_mesh_container(const LPD3DXMESHCONTAINER mesh_containe
             mesh_container->pMaterials[bone_id].MatD3D.Diffuse.a};
         m_D3DEffect->SetVector("g_diffuse", &vec4_color);
         m_D3DEffect->SetTexture("g_mesh_texture",
-                                mesh_container->texture_.at(bone_id).get());
+                                mesh_container->m_textureList.at(bone_id).get());
 
         m_D3DEffect->Begin(nullptr, 0);
 
@@ -253,40 +253,40 @@ void SkinAnimMesh::render_mesh_container(const LPD3DXMESHCONTAINER mesh_containe
 
 HRESULT SkinAnimMesh::allocate_bone_matrix(LPD3DXMESHCONTAINER mesh_container)
 {
-    SkinAnimMesh_frame *frame{};
+    SkinAnimMeshFrame *frame = nullptr;
 
-    SkinAnimMesh_container *skinned_mesh_container =
-        static_cast<SkinAnimMesh_container *>(mesh_container);
+    SkinAnimMeshContainer *skinned_mesh_container =
+        static_cast<SkinAnimMeshContainer *>(mesh_container);
 
     DWORD bone_count = skinned_mesh_container->pSkinInfo->GetNumBones();
-    skinned_mesh_container->frame_combined_matrix_.resize(bone_count);
+    skinned_mesh_container->m_frameCombinedMatrix.resize(bone_count);
 
     // TODO Improve.
     DWORD MAX_MATRICES = 26;
     world_matrix_array_.resize((std::min)(MAX_MATRICES, bone_count));
 
-    m_D3DEffect->SetInt("current_bone_numbers", skinned_mesh_container->influence_count_ - 1);
+    m_D3DEffect->SetInt("current_bone_numbers", skinned_mesh_container->m_influenceCount - 1);
 
-    for (DWORD i{}; i < bone_count; ++i)
+    for (DWORD i = 0; i < bone_count; ++i)
     {
         LPD3DXFRAME p = D3DXFrameFind(frame_root_.get(),
                                       skinned_mesh_container->pSkinInfo->GetBoneName(i));
 
-        frame = static_cast<SkinAnimMesh_frame *>(p);
+        frame = static_cast<SkinAnimMeshFrame *>(p);
 
         if (frame == nullptr)
         {
             return E_FAIL;
         }
-        LPD3DXMATRIX p_matrix = &frame->combined_matrix_;
-        skinned_mesh_container->frame_combined_matrix_.at(i) = p_matrix;
+        LPD3DXMATRIX p_matrix = &frame->m_combinedMatrix;
+        skinned_mesh_container->m_frameCombinedMatrix.at(i) = p_matrix;
     }
     return S_OK;
 }
 
 HRESULT SkinAnimMesh::allocate_all_bone_matrices(LPD3DXFRAME frame)
 {
-    if (frame->pMeshContainer != nullptr)
+    if (frame->pMeshContainer != NULL)
     {
         // TODO why frame->pMeshContainer->pNextMeshContainer is unnecessary?
         if (FAILED(allocate_bone_matrix(frame->pMeshContainer)))
@@ -294,14 +294,16 @@ HRESULT SkinAnimMesh::allocate_all_bone_matrices(LPD3DXFRAME frame)
             return E_FAIL;
         }
     }
-    if (frame->pFrameSibling != nullptr)
+
+    if (frame->pFrameSibling != NULL)
     {
         if (FAILED(allocate_all_bone_matrices(frame->pFrameSibling)))
         {
             return E_FAIL;
         }
     }
-    if (frame->pFrameFirstChild != nullptr)
+
+    if (frame->pFrameFirstChild != NULL)
     {
         if (FAILED(allocate_all_bone_matrices(frame->pFrameFirstChild)))
         {

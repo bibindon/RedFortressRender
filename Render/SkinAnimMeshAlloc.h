@@ -9,44 +9,41 @@
 
 namespace NSRender
 {
-// A struct inheriting the 'D3DXFRAME' for owing a transform matrix.
-struct SkinAnimMesh_frame : public D3DXFRAME
+struct SkinAnimMeshFrame : public D3DXFRAME
 {
-    D3DXMATRIX combined_matrix_;
-    explicit SkinAnimMesh_frame(const std::string &);
+    D3DXMATRIX m_combinedMatrix;
+    explicit SkinAnimMeshFrame(const std::string &);
 };
 
-// A struct inheriting the 'D3DXMESHCONTAINER' for owing textures.
-struct SkinAnimMesh_container : public D3DXMESHCONTAINER
+struct SkinAnimMeshContainer : public D3DXMESHCONTAINER
 {
-    std::vector<std::shared_ptr<IDirect3DTexture9> > texture_;
+    std::vector<std::shared_ptr<IDirect3DTexture9> > m_textureList;
 
-    DWORD palette_size_;
-    DWORD influence_count_;
-    DWORD bone_count_;
-    LPD3DXBUFFER bone_buffer_;
-    std::vector<LPD3DXMATRIX> frame_combined_matrix_;
-    std::vector<D3DXMATRIX> bone_offset_matrices_;
+    DWORD m_paletteSize = 0;
+    DWORD m_influenceCount = 0;
+    DWORD m_boneCount = 0;
+    LPD3DXBUFFER m_boneBuffer = NULL;
+    std::vector<LPD3DXMATRIX> m_frameCombinedMatrix;
+    std::vector<D3DXMATRIX> m_boneOffsetMatrices;
 
-    SkinAnimMesh_container(const std::wstring &,
-                           const std::string &,
-                           LPD3DXMESH,
-                           const D3DXMATERIAL *,
-                           const DWORD,
-                           const DWORD *,
-                           LPD3DXSKININFO);
+    SkinAnimMeshContainer(const std::wstring &,
+                          const std::string &,
+                          LPD3DXMESH,
+                          const D3DXMATERIAL *,
+                          const DWORD,
+                          const DWORD *,
+                          LPD3DXSKININFO);
 
-    void initialize_materials(const DWORD &,
-                              const D3DXMATERIAL *,
-                              const std::wstring &,
-                              const LPDIRECT3DDEVICE9 &);
+    void InitializeMaterials(const DWORD &,
+                             const D3DXMATERIAL *,
+                             const std::wstring &,
+                             const LPDIRECT3DDEVICE9 &);
 
-    void initialize_bone(const LPD3DXSKININFO &, const LPD3DXMESH &);
-    void initialize_FVF(const LPDIRECT3DDEVICE9 &);
-    void initialize_vertex_element();
+    void InitializeBone(const LPD3DXSKININFO &, const LPD3DXMESH &);
+    void InitializeFVF(const LPDIRECT3DDEVICE9 &);
+    void InitializeVertexElement();
 };
 
-// A class inheriting the 'ID3DXAllocateHierarchy' for implementing an animation mesh.
 class SkinAnimMeshAlloc : public ID3DXAllocateHierarchy
 {
 public:
@@ -67,7 +64,7 @@ public:
 
 private:
 
-    std::wstring x_filename_;
+    std::wstring m_xFilename;
 };
 
 }
