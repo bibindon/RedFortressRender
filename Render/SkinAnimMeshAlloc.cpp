@@ -18,6 +18,7 @@ SkinAnimMeshAlloc::SkinAnimMeshAlloc(const std::wstring &xFilename)
     : ID3DXAllocateHierarchy { },
       m_xFilename(xFilename)
 {
+    // Nothing to do.
 }
 
 STDMETHODIMP SkinAnimMeshAlloc::CreateFrame(LPCSTR name, LPD3DXFRAME *newFrame)

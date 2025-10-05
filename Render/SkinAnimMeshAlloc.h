@@ -37,8 +37,9 @@ private:
 
 struct SkinAnimMeshFrame : public D3DXFRAME
 {
-    D3DXMATRIX m_combinedMatrix;
     explicit SkinAnimMeshFrame(const std::string& name);
+
+    D3DXMATRIX m_combinedMatrix;
 };
 
 struct SkinAnimMeshContainer : public D3DXMESHCONTAINER

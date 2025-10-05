@@ -9,16 +9,6 @@
 namespace NSRender
 {
 
-struct AnimMeshFrame : public D3DXFRAME
-{
-    D3DXMATRIX m_combinedMatrix;
-};
-
-struct AnimMeshContainer : public D3DXMESHCONTAINER
-{
-    std::vector<LPDIRECT3DTEXTURE9> m_vecTexture;
-};
-
 class AnimMeshAllocator : public ID3DXAllocateHierarchy
 {
 
@@ -42,6 +32,16 @@ public:
 private:
 
     std::wstring m_xFilename;
+};
+
+struct AnimMeshFrame : public D3DXFRAME
+{
+    D3DXMATRIX m_combinedMatrix;
+};
+
+struct AnimMeshContainer : public D3DXMESHCONTAINER
+{
+    std::vector<LPDIRECT3DTEXTURE9> m_vecTexture;
 };
 
 }
