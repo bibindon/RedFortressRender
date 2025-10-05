@@ -114,8 +114,7 @@ void SkinAnimMesh::RenderImpl(const D3DXMATRIX &view_matrix,
     D3DXMatrixIdentity(&world_matrix);
     {
         D3DXMATRIX mat;
-        D3DXMatrixTranslation(
-            &mat, -m_centerPos.x, -m_centerPos.y, -m_centerPos.z);
+        D3DXMatrixTranslation(&mat, -m_centerPos.x, -m_centerPos.y, -m_centerPos.z);
         world_matrix *= mat;
 
         D3DXMatrixScaling(&mat, m_scale, m_scale, m_scale);
