@@ -56,7 +56,7 @@ private:
 
     DWORD m_materialCount = 0;
     std::vector<D3DXVECTOR4> m_vecDiffuse;
-    std::vector<CComPtr<IDirect3DTexture9> > m_vecTexture;
+    std::vector<LPDIRECT3DTEXTURE9> m_vecTexture;
 
     D3DXVECTOR3 m_pos = { 0.f, 0.f, 0.f };
     D3DXVECTOR3 m_rotate = { 0.f, 0.f, 0.f };
