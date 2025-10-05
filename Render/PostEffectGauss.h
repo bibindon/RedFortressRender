@@ -11,17 +11,18 @@ class PostEffectGauss
 public:
 
     void Initialize();
-    void Draw();
+    LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget);
     void Finalize();
+
+    void SetEnable(const bool arg);
+    bool GetEnable() const;
 
 private:
 
-    LPD3DXEFFECT g_pEffect3 = NULL;
+    LPD3DXEFFECT m_d3dEffect = NULL;
 
-    LPDIRECT3DTEXTURE9 g_pSceneTex = NULL;
-    LPDIRECT3DTEXTURE9 g_pTempTex = NULL;
+    LPDIRECT3DTEXTURE9 m_texWork = NULL;
 
-    LPDIRECT3DTEXTURE9 g_pSceneTex3 = NULL;
 
     // フルスクリーンクアッド用
 //    LPDIRECT3DVERTEXDECLARATION9 g_pQuadDecl = NULL;

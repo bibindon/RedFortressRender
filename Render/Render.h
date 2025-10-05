@@ -225,21 +225,14 @@ private:
 
     //---------------------------------------------------------------
     // ガウスフィルター
-    // TODO 別のクラスにする
     //---------------------------------------------------------------
 
     LPD3DXEFFECT g_pEffect3 = NULL;
 
     LPDIRECT3DTEXTURE9 g_pSceneTex = NULL;
-    LPDIRECT3DTEXTURE9 m_texPostEffectBack1 = NULL;
     LPDIRECT3DTEXTURE9 m_texPostEffectBack2 = NULL;
 
-
-    // フルスクリーンクアッド用
-//    LPDIRECT3DVERTEXDECLARATION9 g_pQuadDecl = NULL;
-
     void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 tex, const char* tech);
-
 
     struct ScreenVertex
     {
@@ -286,7 +279,7 @@ private:
     LPD3DXEFFECT g_pStarBusrtEffect = NULL;   // bloom.fx
 
     // --- Anamorphic 用リソース（★サーフェイスは保持しない） ---
-    LPDIRECT3DTEXTURE9  m_texPostEffectBack3 = NULL;
+    LPDIRECT3DTEXTURE9  m_texPostEffectBack1 = NULL;
     LPDIRECT3DTEXTURE9 g_pBrightTex2 = NULL;
     LPDIRECT3DTEXTURE9 g_pBlurTexH2 = NULL;
     LPDIRECT3DTEXTURE9 g_pBlurTexV2 = NULL;
