@@ -4,9 +4,6 @@
 #include "Util.h"
 #include "SkinAnimMeshAlloc.h"
 
-using std::vector;
-using std::string;
-
 namespace NSRender
 {
 
@@ -15,15 +12,24 @@ namespace NSRender
 //---------------------------------------------------------------
 
 SkinAnimMeshAlloc::SkinAnimMeshAlloc(const std::wstring &xFilename)
-    : ID3DXAllocateHierarchy { },
-      m_xFilename(xFilename)
+    : m_xFilename(xFilename)
 {
     // Nothing to do.
 }
 
 STDMETHODIMP SkinAnimMeshAlloc::CreateFrame(LPCSTR name, LPD3DXFRAME *newFrame)
 {
-    *newFrame = NEW SkinAnimMeshFrame(name);
+    auto animMeshFrame = NEW SkinAnimMeshFrame();
+
+    auto len = strlen(name);
+    animMeshFrame->Name = NEW char[len + 1];
+    strcpy_s(animMeshFrame->Name, len + 1, name);
+
+    D3DXMatrixIdentity(&animMeshFrame->TransformationMatrix);
+    D3DXMatrixIdentity(&animMeshFrame->m_combinedMatrix);
+
+    *newFrame = animMeshFrame;
+
     return S_OK;
 }
 
@@ -36,20 +42,13 @@ STDMETHODIMP SkinAnimMeshAlloc::CreateMeshContainer(LPCSTR meshName,
                                                     LPD3DXSKININFO skinInfo,
                                                     LPD3DXMESHCONTAINER *meshContainer)
 {
-    try
-    {
-        *meshContainer = NEW SkinAnimMeshContainer(m_xFilename,
-                                                   meshName,
-                                                   meshData->pMesh,
-                                                   materials,
-                                                   materialCount,
-                                                   adjacency,
-                                                   skinInfo);
-    }
-    catch (const std::exception&)
-    {
-        return E_FAIL;
-    }
+    *meshContainer = NEW SkinAnimMeshContainer(m_xFilename,
+                                               meshName,
+                                               meshData->pMesh,
+                                               materials,
+                                               materialCount,
+                                               adjacency,
+                                               skinInfo);
 
     return S_OK;
 }
@@ -76,26 +75,11 @@ STDMETHODIMP SkinAnimMeshAlloc::DestroyMeshContainer(LPD3DXMESHCONTAINER meshCon
 }
 
 //---------------------------------------------------------------
-// SkinAnimMeshFrame
-//---------------------------------------------------------------
-
-SkinAnimMeshFrame::SkinAnimMeshFrame(const string& name)
-    : D3DXFRAME { },
-      m_combinedMatrix()
-{
-    Name = NEW char[name.length() + 1];
-    strcpy_s(Name, name.length() + 1, name.c_str());
-
-    D3DXMatrixIdentity(&TransformationMatrix);
-    D3DXMatrixIdentity(&m_combinedMatrix);
-}
-
-//---------------------------------------------------------------
 // SkinAnimMeshContainer
 //---------------------------------------------------------------
 
 SkinAnimMeshContainer::SkinAnimMeshContainer(const std::wstring &xFilename,
-                                             const string &meshFilename,
+                                             const std::string &meshFilename,
                                              LPD3DXMESH pMesh,
                                              const D3DXMATERIAL *materials,
                                              const DWORD materialCount,
@@ -154,8 +138,6 @@ void SkinAnimMeshContainer::InitializeMaterials(const DWORD &materialCount,
 {
     NumMaterials = (std::max)(1UL, materialCount);
     pMaterials = NEW D3DXMATERIAL[NumMaterials];
-    vector<std::shared_ptr<IDirect3DTexture9> > temp_texture(NumMaterials);
-    m_textureList.swap(temp_texture);
 
     if (materialCount > 0)
     {
@@ -164,7 +146,7 @@ void SkinAnimMeshContainer::InitializeMaterials(const DWORD &materialCount,
             pMaterials[i] = materials[i];
             if (pMaterials[i].pTextureFilename != nullptr)
             {
-                LPDIRECT3DTEXTURE9 temp_texture{};
+                LPDIRECT3DTEXTURE9 tempTexture = NULL;
                 std::wstring filename = Util::Utf8ToWstring(pMaterials[i].pTextureFilename);
 
                 size_t pos = xFilename.find_last_of(L"\\/");
@@ -179,13 +161,13 @@ void SkinAnimMeshContainer::InitializeMaterials(const DWORD &materialCount,
 
                 if (FAILED(D3DXCreateTextureFromFile(d3dDevice,
                                                      filename.c_str(),
-                                                     &temp_texture)))
+                                                     &tempTexture)))
                 {
                     throw std::exception("texture file is not found.");
                 }
                 else
                 {
-                    m_textureList.at(i).reset(temp_texture);
+                    m_textureList.push_back(tempTexture);
                 }
             }
         }
@@ -268,7 +250,7 @@ void SkinAnimMeshContainer::InitializeFVF(const LPDIRECT3DDEVICE9 &d3dDevice)
 void SkinAnimMeshContainer::InitializeVertexElement()
 {
     D3DVERTEXELEMENT9 decl[MAX_FVF_DECL_SIZE];
-    LPD3DVERTEXELEMENT9 currentDecl;
+    LPD3DVERTEXELEMENT9 currentDecl = NULL;
     HRESULT result = MeshData.pMesh->GetDeclaration(decl);
     if (FAILED(result))
     {

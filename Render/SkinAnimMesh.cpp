@@ -11,38 +11,32 @@ namespace NSRender
 {
 const std::wstring SkinAnimMesh::SHADER_FILENAME = L"res\\shader\\SkinAnimMeshShader.fx";
 
-// Custom deleter.
 void SkinAnimMesh::frame_root_deleter_object::operator()(const LPD3DXFRAME frame_root)
 {
-    // Call the recursive release function. 
     release_mesh_allocator(frame_root);
 }
 
-// Releases recursively mesh containers owned by the 'SkinAnimMeshFrame' inheriting
-// 'D3DXFRAME'.
 void SkinAnimMesh::frame_root_deleter_object::release_mesh_allocator(
     const LPD3DXFRAME frame)
 {
-    // Release the 'pMeshContainer' of the member variable. 
     if (frame->pMeshContainer != nullptr)
     {
         allocator_->DestroyMeshContainer(frame->pMeshContainer);
     }
-    // Call oneself. 
+
     if (frame->pFrameSibling != nullptr)
     {
         release_mesh_allocator(frame->pFrameSibling);
     }
-    // Call oneself. 
+
     if (frame->pFrameFirstChild != nullptr)
     {
         release_mesh_allocator(frame->pFrameFirstChild);
     }
-    // Release oneself. 
+
     allocator_->DestroyFrame(frame);
 }
 
-// Reads a mesh file, and sets the frame and the animation controller given to member variables.
 SkinAnimMesh::SkinAnimMesh(const std::wstring &x_filename,
                            const D3DXVECTOR3 &position,
                            const D3DXVECTOR3 &rotation,
@@ -75,8 +69,8 @@ SkinAnimMesh::SkinAnimMesh(const std::wstring &x_filename,
     }
 
     view_projection_handle_ = m_D3DEffect->GetParameterByName(nullptr, "g_view_projection");
-    LPD3DXFRAME temp_frame_root{nullptr};
-    LPD3DXANIMATIONCONTROLLER temp_animation_controller{nullptr};
+    LPD3DXFRAME temp_frame_root = NULL;
+    LPD3DXANIMATIONCONTROLLER temp_animation_controller = NULL;
 
     if (FAILED(D3DXLoadMeshHierarchyFromX(x_filename.c_str(),
                                           D3DXMESH_MANAGED,
@@ -90,6 +84,7 @@ SkinAnimMesh::SkinAnimMesh(const std::wstring &x_filename,
         auto msg2 = Util::WstringToUtf8(msg);
         throw std::exception(msg2.c_str());
     }
+
     // lazy initialization 
     frame_root_.reset(temp_frame_root);
     m_animCtrlr.Init(temp_animation_controller, animSetMap);
@@ -114,11 +109,10 @@ void SkinAnimMesh::Render(const D3DXMATRIX& view_matrix,
     render_impl(view_matrix, projection_matrix);
 }
 
-// Renders its own animation mesh. 
 void SkinAnimMesh::render_impl(const D3DXMATRIX &view_matrix,
                                const D3DXMATRIX &projection_matrix)
 {
-    D3DXMATRIX view_projection_matrix{view_matrix * projection_matrix};
+    D3DXMATRIX view_projection_matrix = view_matrix * projection_matrix;
 
     m_D3DEffect->SetMatrix(view_projection_handle_, &view_projection_matrix);
 
@@ -146,15 +140,11 @@ void SkinAnimMesh::render_impl(const D3DXMATRIX &view_matrix,
     render_frame(frame_root_.get());
 }
 
-// Updates a world-transformation-matrix each the mesh in the frame. Also, this is a recursive
-// function.
 void SkinAnimMesh::update_frame_matrix(const LPD3DXFRAME frame_base,
                                        const LPD3DXMATRIX parent_matrix)
 {
-    SkinAnimMeshFrame *frame{
-        static_cast<SkinAnimMeshFrame *>(frame_base)};
+    auto frame = (SkinAnimMeshFrame*)frame_base;
     
-    // Multiply its own transformation matrix by the parent transformation matrix.
     if (parent_matrix != nullptr)
     {
         frame->m_combinedMatrix = frame->TransformationMatrix * (*parent_matrix);
@@ -164,19 +154,17 @@ void SkinAnimMesh::update_frame_matrix(const LPD3DXFRAME frame_base,
         frame->m_combinedMatrix = frame->TransformationMatrix;
     }
 
-    // Call oneself. 
     if (frame->pFrameSibling != nullptr)
     {
         update_frame_matrix(frame->pFrameSibling, parent_matrix);
     }
-    // Call oneself. 
+
     if (frame->pFrameFirstChild != nullptr)
     {
         update_frame_matrix(frame->pFrameFirstChild, &frame->m_combinedMatrix);
     }
 }
 
-// Calls the 'render_mesh_container' function recursively. 
 void SkinAnimMesh::render_frame(const LPD3DXFRAME frame)
 {
     {
@@ -187,12 +175,12 @@ void SkinAnimMesh::render_frame(const LPD3DXFRAME frame)
             mesh_container = mesh_container->pNextMeshContainer;
         }
     }
-    // Call oneself. 
+
     if (frame->pFrameSibling != nullptr)
     {
         render_frame(frame->pFrameSibling);
     }
-    // Call oneself. 
+
     if (frame->pFrameFirstChild != nullptr)
     {
         render_frame(frame->pFrameFirstChild);
@@ -201,19 +189,17 @@ void SkinAnimMesh::render_frame(const LPD3DXFRAME frame)
 
 void SkinAnimMesh::render_mesh_container(const LPD3DXMESHCONTAINER mesh_container_base)
 {
-    SkinAnimMeshContainer *mesh_container{
-        static_cast<SkinAnimMeshContainer *>(mesh_container_base)};
+    auto mesh_container = (SkinAnimMeshContainer*)mesh_container_base;
 
-    LPD3DXBONECOMBINATION bone_combination{};
+    LPD3DXBONECOMBINATION bone_combination = NULL;
 
-    bone_combination = static_cast<LPD3DXBONECOMBINATION>(
-        mesh_container->m_boneBuffer->GetBufferPointer());
+    bone_combination = (LPD3DXBONECOMBINATION)mesh_container->m_boneBuffer->GetBufferPointer();
 
-    const DWORD dw_palette_size { mesh_container->m_paletteSize };
+    const DWORD dw_palette_size = mesh_container->m_paletteSize;
 
-    for (DWORD i { 0 }; i < mesh_container->m_boneCount; ++i)
+    for (DWORD i = 0; i < mesh_container->m_boneCount; ++i)
     {
-        for (DWORD k { 0 }; k < dw_palette_size; ++k)
+        for (DWORD k = 0; k < dw_palette_size; ++k)
         {
             DWORD dw_bone_id = bone_combination[i].BoneId[k];
             if (dw_bone_id == UINT_MAX)
@@ -225,7 +211,8 @@ void SkinAnimMesh::render_mesh_container(const LPD3DXMESHCONTAINER mesh_containe
                 (*mesh_container->m_frameCombinedMatrix[dw_bone_id]);
         }
         m_D3DEffect->SetMatrixArray("g_world_matrix_array",
-                                &world_matrix_array_[0], dw_palette_size);
+                                    &world_matrix_array_[0],
+                                    dw_palette_size);
 
         DWORD bone_id = bone_combination[i].AttribId;
         D3DXVECTOR4 vec4_color{
@@ -233,9 +220,10 @@ void SkinAnimMesh::render_mesh_container(const LPD3DXMESHCONTAINER mesh_containe
             mesh_container->pMaterials[bone_id].MatD3D.Diffuse.g,
             mesh_container->pMaterials[bone_id].MatD3D.Diffuse.b,
             mesh_container->pMaterials[bone_id].MatD3D.Diffuse.a};
+
         m_D3DEffect->SetVector("g_diffuse", &vec4_color);
         m_D3DEffect->SetTexture("g_mesh_texture",
-                                mesh_container->m_textureList.at(bone_id).get());
+                                mesh_container->m_textureList.at(bone_id));
 
         m_D3DEffect->Begin(nullptr, 0);
 
@@ -255,8 +243,7 @@ HRESULT SkinAnimMesh::allocate_bone_matrix(LPD3DXMESHCONTAINER mesh_container)
 {
     SkinAnimMeshFrame *frame = nullptr;
 
-    SkinAnimMeshContainer *skinned_mesh_container =
-        static_cast<SkinAnimMeshContainer *>(mesh_container);
+    auto skinned_mesh_container = (SkinAnimMeshContainer*)mesh_container;
 
     DWORD bone_count = skinned_mesh_container->pSkinInfo->GetNumBones();
     skinned_mesh_container->m_frameCombinedMatrix.resize(bone_count);
@@ -272,7 +259,7 @@ HRESULT SkinAnimMesh::allocate_bone_matrix(LPD3DXMESHCONTAINER mesh_container)
         LPD3DXFRAME p = D3DXFrameFind(frame_root_.get(),
                                       skinned_mesh_container->pSkinInfo->GetBoneName(i));
 
-        frame = static_cast<SkinAnimMeshFrame *>(p);
+        frame = (SkinAnimMeshFrame*)p;
 
         if (frame == nullptr)
         {

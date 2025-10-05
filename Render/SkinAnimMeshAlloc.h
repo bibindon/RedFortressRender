@@ -37,14 +37,12 @@ private:
 
 struct SkinAnimMeshFrame : public D3DXFRAME
 {
-    explicit SkinAnimMeshFrame(const std::string& name);
-
     D3DXMATRIX m_combinedMatrix;
 };
 
 struct SkinAnimMeshContainer : public D3DXMESHCONTAINER
 {
-    std::vector<std::shared_ptr<IDirect3DTexture9> > m_textureList;
+    std::vector<LPDIRECT3DTEXTURE9> m_textureList;
 
     DWORD m_paletteSize = 0;
     DWORD m_influenceCount = 0;

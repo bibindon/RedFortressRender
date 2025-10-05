@@ -9,8 +9,7 @@ namespace NSRender
 {
 
 AnimMeshAllocator::AnimMeshAllocator(const std::wstring& xFilename)
-    : ID3DXAllocateHierarchy(),
-    m_xFilename(xFilename)
+    : m_xFilename(xFilename)
 {
     // Nothing to do
 }
