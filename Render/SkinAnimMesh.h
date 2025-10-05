@@ -13,7 +13,6 @@ namespace NSRender
 
 class SkinAnimMeshAlloc;
 
-// A class that provides operations for a mesh file having animations.
 class SkinAnimMesh
 {
 public:
@@ -34,40 +33,38 @@ public:
     void OnDeviceReset();
 
 private:
-    void render_impl(const D3DXMATRIX &, const D3DXMATRIX &);
+
+    void RenderImpl(const D3DXMATRIX &, const D3DXMATRIX &);
 
     struct frame_root_deleter_object
     {
-        std::shared_ptr<SkinAnimMeshAlloc> allocator_;
+        std::shared_ptr<SkinAnimMeshAlloc> m_allocator;
         void operator()(const LPD3DXFRAME);
         void release_mesh_allocator(const LPD3DXFRAME);
     };
 
     const static std::wstring SHADER_FILENAME;
-    std::shared_ptr<SkinAnimMeshAlloc> allocator_;
+    std::shared_ptr<SkinAnimMeshAlloc> m_allocator;
     std::unique_ptr<D3DXFRAME, frame_root_deleter_object> frame_root_;
-    D3DXMATRIX rotation_matrix_;
-    std::vector<D3DXMATRIX> world_matrix_array_;
-    D3DXVECTOR3 center_coodinate_ = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-    float scale_ = 1.0f;
+    D3DXMATRIX m_matRotate;
+    std::vector<D3DXMATRIX> m_matWorldArray;
+    D3DXVECTOR3 m_centerPos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 
-    // For effect.
-    D3DXHANDLE view_projection_handle_;
-    D3DXHANDLE scale_handle_;
+    void UpdateFrameMatrix(const LPD3DXFRAME, const LPD3DXMATRIX);
+    void RenderFrame(const LPD3DXFRAME);
+    void RenderMeshContainer(const LPD3DXMESHCONTAINER);
 
-    void update_frame_matrix(const LPD3DXFRAME, const LPD3DXMATRIX);
-    void render_frame(const LPD3DXFRAME);
-    void render_mesh_container(const LPD3DXMESHCONTAINER);
-
-    HRESULT allocate_bone_matrix(LPD3DXMESHCONTAINER);
-    HRESULT allocate_all_bone_matrices(LPD3DXFRAME);
+    HRESULT AllocateBoneMatrix(LPD3DXMESHCONTAINER);
+    HRESULT AllocateAllBoneMatrix(LPD3DXFRAME);
 
     LPD3DXEFFECT m_D3DEffect = NULL;
-    D3DXVECTOR3 position_ = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-    D3DXVECTOR3 rotation_ = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+    D3DXVECTOR3 m_position = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+    D3DXVECTOR3 m_rotate = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+    float m_scale = 1.0f;
 
     AnimController m_animCtrlr;
 };
 
-} // namespace early_go 
+}
+
 
