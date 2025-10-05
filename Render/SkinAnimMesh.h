@@ -6,12 +6,11 @@
 #include <vector>
 #include <memory>
 #include "AnimController.h"
+#include "SkinAnimMeshAlloc.h"
 
 namespace NSRender
 
 {
-
-class SkinAnimMeshAlloc;
 
 class SkinAnimMesh
 {
@@ -21,6 +20,8 @@ public:
                  const D3DXVECTOR3 &,
                  const float &,
                  const AnimSetMap& animSetMap);
+
+    ~SkinAnimMesh();
 
     void Render(const D3DXMATRIX&,
                 const D3DXMATRIX&,
@@ -34,16 +35,13 @@ private:
 
     void RenderImpl(const D3DXMATRIX &, const D3DXMATRIX &);
 
-    struct m_frameRootdeleter_object
-    {
-        std::shared_ptr<SkinAnimMeshAlloc> m_allocator;
-        void operator()(const LPD3DXFRAME);
-        void ReleaseMeshAllocator(const LPD3DXFRAME);
-    };
+    void ReleaseMeshAllocator(const LPD3DXFRAME);
 
     const static std::wstring SHADER_FILENAME;
-    std::shared_ptr<SkinAnimMeshAlloc> m_allocator;
-    std::unique_ptr<D3DXFRAME, m_frameRootdeleter_object> m_frameRoot;
+    SkinAnimMeshAlloc m_allocator;
+
+    LPD3DXFRAME m_frameRoot = NULL;
+
     D3DXMATRIX m_matRotate;
     std::vector<D3DXMATRIX> m_matWorldArray;
     D3DXVECTOR3 m_centerPos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
@@ -60,7 +58,7 @@ private:
     D3DXVECTOR3 m_rotate = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
     float m_scale = 1.0f;
 
-    AnimController m_animCtrlr;
+    AnimController m_animController;
 };
 
 }

@@ -191,7 +191,7 @@ void SkinAnimMeshAlloc::InitializeBone(const LPD3DXSKININFO skinInfo,
 
     m_container->m_paletteSize = boneNum;
 
-    SAFE_RELEASE(m_container->MeshData.pMesh);
+    m_container->MeshData.pMesh->Release();
 
     LPD3DXBUFFER bone_buffer = NULL;
     HRESULT hResult = skinInfo->ConvertToIndexedBlendedMesh(d3dMesh,

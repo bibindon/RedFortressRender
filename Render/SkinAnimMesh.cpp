@@ -12,39 +12,12 @@ namespace NSRender
 
 const std::wstring SkinAnimMesh::SHADER_FILENAME = L"res\\shader\\SkinAnimMeshShader.fx";
 
-void SkinAnimMesh::m_frameRootdeleter_object::operator()(const LPD3DXFRAME frame_root)
-{
-    ReleaseMeshAllocator(frame_root);
-}
-
-void SkinAnimMesh::m_frameRootdeleter_object::ReleaseMeshAllocator(
-    const LPD3DXFRAME frame)
-{
-    if (frame->pMeshContainer != nullptr)
-    {
-        m_allocator->DestroyMeshContainer(frame->pMeshContainer);
-    }
-
-    if (frame->pFrameSibling != nullptr)
-    {
-        ReleaseMeshAllocator(frame->pFrameSibling);
-    }
-
-    if (frame->pFrameFirstChild != nullptr)
-    {
-        ReleaseMeshAllocator(frame->pFrameFirstChild);
-    }
-
-    m_allocator->DestroyFrame(frame);
-}
-
 SkinAnimMesh::SkinAnimMesh(const std::wstring &x_filename,
                            const D3DXVECTOR3 &position,
                            const D3DXVECTOR3 &rotation,
                            const float &scale,
                            const AnimSetMap& animSetMap)
-    : m_allocator{NEW SkinAnimMeshAlloc(x_filename)},
-      m_frameRoot{nullptr, m_frameRootdeleter_object{m_allocator}},
+    : m_allocator(x_filename),
       m_matRotate(),
       m_position(position),
       m_rotate(rotation),
@@ -66,28 +39,30 @@ SkinAnimMesh::SkinAnimMesh(const std::wstring &x_filename,
         throw std::exception("Failed to create an effect file.");
     }
 
-    LPD3DXFRAME tempFrameRoot = NULL;
     LPD3DXANIMATIONCONTROLLER tempAnimController = NULL;
 
     hr = D3DXLoadMeshHierarchyFromX(x_filename.c_str(),
                                     D3DXMESH_MANAGED,
                                     Common::D3DDevice(),
-                                    m_allocator.get(),
+                                    &m_allocator,
                                     nullptr,
-                                    &tempFrameRoot,
+                                    &m_frameRoot,
                                     &tempAnimController);
 
-    if (FAILED(hr))
-    {
-        auto msg = L"Failed to load a x-file.: " + x_filename;
-        auto msg2 = Util::WstringToUtf8(msg);
-        throw std::exception(msg2.c_str());
-    }
+    assert(hr == S_OK);
+    assert(tempAnimController != NULL);
 
-    m_frameRoot.reset(tempFrameRoot);
-    m_animCtrlr.Init(tempAnimController, animSetMap);
+    m_animController.Init(tempAnimController, animSetMap);
 
-    AllocateAllBoneMatrix(m_frameRoot.get());
+    AllocateAllBoneMatrix(m_frameRoot);
+}
+
+SkinAnimMesh::~SkinAnimMesh()
+{
+    SAFE_RELEASE(m_D3DEffect);
+
+    m_animController.Finalize();
+    ReleaseMeshAllocator(m_frameRoot);
 }
 
 void SkinAnimMesh::Render(const D3DXMATRIX& view_matrix,
@@ -108,7 +83,7 @@ void SkinAnimMesh::RenderImpl(const D3DXMATRIX &view_matrix,
 
     m_D3DEffect->SetMatrix("g_matViewProj", &view_projection_matrix);
 
-    m_animCtrlr.Update();
+    m_animController.Update();
 
     D3DXMATRIX world_matrix;
     D3DXMatrixIdentity(&world_matrix);
@@ -127,8 +102,8 @@ void SkinAnimMesh::RenderImpl(const D3DXMATRIX &view_matrix,
         world_matrix *= mat;
     }
 
-    UpdateFrameMatrix(m_frameRoot.get(), &world_matrix);
-    RenderFrame(m_frameRoot.get());
+    UpdateFrameMatrix(m_frameRoot, &world_matrix);
+    RenderFrame(m_frameRoot);
 }
 
 void SkinAnimMesh::UpdateFrameMatrix(const LPD3DXFRAME frameBase,
@@ -259,7 +234,7 @@ HRESULT SkinAnimMesh::AllocateBoneMatrix(LPD3DXMESHCONTAINER containerBase)
 
     for (DWORD i = 0; i < boneCount; ++i)
     {
-        LPD3DXFRAME p = D3DXFrameFind(m_frameRoot.get(),
+        LPD3DXFRAME p = D3DXFrameFind(m_frameRoot,
                                       container->pSkinInfo->GetBoneName(i));
 
         frame = (SkinAnimMeshFrame*)p;
@@ -314,6 +289,26 @@ void SkinAnimMesh::OnDeviceReset()
 {
     HRESULT hr = m_D3DEffect->OnResetDevice();
     assert(hr == S_OK);
+}
+
+void SkinAnimMesh::ReleaseMeshAllocator(const LPD3DXFRAME frame)
+{
+    if (frame->pMeshContainer != nullptr)
+    {
+        m_allocator.DestroyMeshContainer(frame->pMeshContainer);
+    }
+
+    if (frame->pFrameSibling != nullptr)
+    {
+        ReleaseMeshAllocator(frame->pFrameSibling);
+    }
+
+    if (frame->pFrameFirstChild != nullptr)
+    {
+        ReleaseMeshAllocator(frame->pFrameFirstChild);
+    }
+
+    m_allocator.DestroyFrame(frame);
 }
 
 }
