@@ -185,10 +185,6 @@ private:
     // TODO ポストエフェクト用のクラスを作る
     void DrawPass2();
 
-    // ガウスフィルター
-    // TODO ポストエフェクト用のクラスを作る
-    void DrawPassGaussian();
-
     // ブルームフィルター
     // TODO ポストエフェクト用のクラスを作る
     void DrawPass4();
