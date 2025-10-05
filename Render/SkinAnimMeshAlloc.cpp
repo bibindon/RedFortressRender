@@ -179,12 +179,11 @@ void SkinAnimMeshAlloc::InitializeBone(const LPD3DXSKININFO skinInfo,
         m_container->m_boneOffsetMatrices[i] = *skinInfo->GetBoneOffsetMatrix(i);
     }
 
-    DWORD MAX_MATRICES = 26;
+    DWORD MAX_MATRICES = 8;
     auto boneNum = skinInfo->GetNumBones();
 
     if (boneNum >= MAX_MATRICES)
     {
-        // throw std::exception("boneNum is too many.");
         boneNum = MAX_MATRICES;
     }
 

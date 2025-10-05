@@ -3,7 +3,7 @@ float g_lightBrightness;
 float4 g_diffuse;
 float4 g_ambient = { 0.2f, 0.2f, 0.2f, 1.0f };
 
-static const int MAX_MATRICES = 26;
+static const int MAX_MATRICES = 8;
 float4x3 g_matWorldArray[MAX_MATRICES];
 float4x4 g_matViewProj;
 
@@ -77,7 +77,7 @@ void VertexShader1(in  float4  in_position      : POSITION,
 
     float light_intensity = g_lightBrightness * dot(normal4, g_lightNormal);
     out_diffuse = g_diffuse * max(0, light_intensity) + g_ambient;
-    out_diffuse.a = 1.0f;
+    out_diffuse.a = 0.5f;
 
     out_texcoord0 = in_texcoord0.xy;
 }
