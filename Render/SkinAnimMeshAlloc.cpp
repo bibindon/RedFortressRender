@@ -42,13 +42,64 @@ STDMETHODIMP SkinAnimMeshAlloc::CreateMeshContainer(LPCSTR meshName,
                                                     LPD3DXSKININFO skinInfo,
                                                     LPD3DXMESHCONTAINER *meshContainer)
 {
-    *meshContainer = NEW SkinAnimMeshContainer(m_xFilename,
-                                               meshName,
-                                               meshData->pMesh,
-                                               materials,
-                                               materialCount,
-                                               adjacency,
-                                               skinInfo);
+    /*
+    auto m_container = NEW SkinAnimMeshContainer(m_xFilename,
+                                                       meshName,
+                                                       meshData->pMesh,
+                                                       materials,
+                                                       materialCount,
+                                                       adjacency,
+                                                       skinInfo);
+*/
+    m_container = NEW SkinAnimMeshContainer();
+
+    std::string meshFilename = meshName;
+
+    m_container->Name = NEW char[meshFilename.length() + 1];
+    strcpy_s(m_container->Name, meshFilename.length() + 1, meshFilename.c_str());
+
+    LPDIRECT3DDEVICE9 d3d_device = NULL;
+    meshData->pMesh->GetDevice(&d3d_device);
+
+    HRESULT result = E_FAIL;
+    if (!(meshData->pMesh->GetFVF() & D3DFVF_NORMAL))
+    {
+        m_container->MeshData.Type = D3DXMESHTYPE_MESH;
+        result = meshData->pMesh->CloneMeshFVF(meshData->pMesh->GetOptions(),
+                                     meshData->pMesh->GetFVF() | D3DFVF_NORMAL,
+                                     d3d_device,
+                                     &m_container->MeshData.pMesh);
+
+        if (FAILED(result))
+        {
+            throw std::exception("Failed 'CloneMeshFVF' function.");
+        }
+
+        LPD3DXMESH temp = meshData->pMesh;
+        temp = m_container->MeshData.pMesh;
+        D3DXComputeNormals(temp, nullptr);
+    }
+    else
+    {
+        m_container->MeshData.pMesh = meshData->pMesh;
+        m_container->MeshData.Type = D3DXMESHTYPE_MESH;
+        meshData->pMesh->AddRef();
+    }
+
+    DWORD adjacency_count = meshData->pMesh->GetNumFaces() * 3;
+    m_container->pAdjacency = NEW DWORD[adjacency_count];
+
+    for (DWORD i = 0; i < adjacency_count; ++i)
+    {
+        m_container->pAdjacency[i] = adjacency[i];
+    }
+
+    InitializeMaterials(materialCount, materials, m_xFilename, d3d_device);
+    InitializeBone(skinInfo, meshData->pMesh);
+    InitializeFVF(d3d_device);
+    InitializeVertexElement();
+
+    *meshContainer = m_container;
 
     return S_OK;
 }
@@ -78,76 +129,80 @@ STDMETHODIMP SkinAnimMeshAlloc::DestroyMeshContainer(LPD3DXMESHCONTAINER meshCon
 // SkinAnimMeshContainer
 //---------------------------------------------------------------
 
-SkinAnimMeshContainer::SkinAnimMeshContainer(const std::wstring &xFilename,
-                                             const std::string &meshFilename,
-                                             LPD3DXMESH pMesh,
-                                             const D3DXMATERIAL *materials,
-                                             const DWORD materialCount,
-                                             const DWORD *adjacency,
-                                             LPD3DXSKININFO skinInfo)
-    : D3DXMESHCONTAINER { }
-{
-    Name = NEW char[meshFilename.length() + 1];
-    strcpy_s(Name, meshFilename.length() + 1, meshFilename.c_str());
+//SkinAnimMeshContainer::SkinAnimMeshContainer(const std::wstring &xFilename,
+//                                             const std::string &meshFilename,
+//                                             LPD3DXMESH pMesh,
+//                                             const D3DXMATERIAL *materials,
+//                                             const DWORD materialCount,
+//                                             const DWORD *adjacency,
+//                                             LPD3DXSKININFO skinInfo)
+//    : D3DXMESHCONTAINER { }
+//{
+//    LPDIRECT3DDEVICE9 d3d_device = NULL;
+//    pMesh->GetDevice(&d3d_device);
+//
+//    /*
+//    Name = NEW char[meshFilename.length() + 1];
+//    strcpy_s(Name, meshFilename.length() + 1, meshFilename.c_str());
+//
+//    HRESULT result = E_FAIL;
+//    if (!(pMesh->GetFVF() & D3DFVF_NORMAL))
+//    {
+//        MeshData.Type = D3DXMESHTYPE_MESH;
+//        result = pMesh->CloneMeshFVF(pMesh->GetOptions(),
+//                                    pMesh->GetFVF() | D3DFVF_NORMAL,
+//                                    d3d_device,
+//                                    &MeshData.pMesh);
+//
+//        if (FAILED(result))
+//        {
+//            throw std::exception("Failed 'CloneMeshFVF' function.");
+//        }
+//
+//        pMesh = MeshData.pMesh;
+//        D3DXComputeNormals(pMesh, nullptr);
+//    }
+//    else
+//    {
+//        MeshData.pMesh = pMesh;
+//        MeshData.Type = D3DXMESHTYPE_MESH;
+//        pMesh->AddRef();
+//    }
+//
+//    DWORD adjacency_count = pMesh->GetNumFaces() * 3;
+//    pAdjacency = NEW DWORD[adjacency_count];
+//
+//    for (DWORD i = 0; i < adjacency_count; ++i)
+//    {
+//        pAdjacency[i] = adjacency[i];
+//    }
+//    */
+//
+//    /*
+//    InitializeMaterials(materialCount, materials, xFilename, d3d_device);
+//    InitializeBone(skinInfo, pMesh);
+//    InitializeFVF(d3d_device);
+//    InitializeVertexElement();
+//    */
+//}
 
-    LPDIRECT3DDEVICE9 d3d_device = NULL;
-    pMesh->GetDevice(&d3d_device);
-
-    HRESULT result = E_FAIL;
-    if (!(pMesh->GetFVF() & D3DFVF_NORMAL))
-    {
-        MeshData.Type = D3DXMESHTYPE_MESH;
-        result = pMesh->CloneMeshFVF(pMesh->GetOptions(),
-                                    pMesh->GetFVF() | D3DFVF_NORMAL,
-                                    d3d_device,
-                                    &MeshData.pMesh);
-
-        if (FAILED(result))
-        {
-            throw std::exception("Failed 'CloneMeshFVF' function.");
-        }
-
-        pMesh = MeshData.pMesh;
-        D3DXComputeNormals(pMesh, nullptr);
-    }
-    else
-    {
-        MeshData.pMesh = pMesh;
-        MeshData.Type = D3DXMESHTYPE_MESH;
-        pMesh->AddRef();
-    }
-
-    DWORD adjacency_count = pMesh->GetNumFaces() * 3;
-    pAdjacency = NEW DWORD[adjacency_count];
-
-    for (DWORD i = 0; i < adjacency_count; ++i)
-    {
-        pAdjacency[i] = adjacency[i];
-    }
-
-    InitializeMaterials(materialCount, materials, xFilename, d3d_device);
-    InitializeBone(skinInfo, pMesh);
-    InitializeFVF(d3d_device);
-    InitializeVertexElement();
-}
-
-void SkinAnimMeshContainer::InitializeMaterials(const DWORD &materialCount,
+void SkinAnimMeshAlloc::InitializeMaterials(const DWORD &materialCount,
                                                 const D3DXMATERIAL *materials,
                                                 const std::wstring &xFilename,
                                                 const LPDIRECT3DDEVICE9 &d3dDevice)
 {
-    NumMaterials = (std::max)(1UL, materialCount);
-    pMaterials = NEW D3DXMATERIAL[NumMaterials];
+    m_container->NumMaterials = (std::max)(1UL, materialCount);
+    m_container->pMaterials = NEW D3DXMATERIAL[m_container->NumMaterials];
 
     if (materialCount > 0)
     {
         for (DWORD i = 0; i < materialCount; ++i)
         {
-            pMaterials[i] = materials[i];
-            if (pMaterials[i].pTextureFilename != nullptr)
+            m_container->pMaterials[i] = materials[i];
+            if (m_container->pMaterials[i].pTextureFilename != nullptr)
             {
                 LPDIRECT3DTEXTURE9 tempTexture = NULL;
-                std::wstring filename = Util::Utf8ToWstring(pMaterials[i].pTextureFilename);
+                std::wstring filename = Util::Utf8ToWstring(m_container->pMaterials[i].pTextureFilename);
 
                 size_t pos = xFilename.find_last_of(L"\\/");
 
@@ -167,91 +222,94 @@ void SkinAnimMeshContainer::InitializeMaterials(const DWORD &materialCount,
                 }
                 else
                 {
-                    m_textureList.push_back(tempTexture);
+                    m_container->m_textureList.push_back(tempTexture);
                 }
             }
         }
     }
     else
     {
-        pMaterials[0].MatD3D.Diffuse = D3DCOLORVALUE{0.5f, 0.5f, 0.5f, 0};
-        pMaterials[0].MatD3D.Ambient = D3DCOLORVALUE{0.5f, 0.5f, 0.5f, 0};
-        pMaterials[0].MatD3D.Specular = pMaterials[0].MatD3D.Diffuse;
+        m_container->pMaterials[0].MatD3D.Diffuse = D3DCOLORVALUE{0.5f, 0.5f, 0.5f, 0};
+        m_container->pMaterials[0].MatD3D.Ambient = D3DCOLORVALUE{0.5f, 0.5f, 0.5f, 0};
+        m_container->pMaterials[0].MatD3D.Specular = m_container->pMaterials[0].MatD3D.Diffuse;
     }
 }
 
-void SkinAnimMeshContainer::InitializeBone(const LPD3DXSKININFO &skinInfo,
+void SkinAnimMeshAlloc::InitializeBone(const LPD3DXSKININFO &skinInfo,
                                            const LPD3DXMESH &mesh)
 {
     if (skinInfo == NULL)
     {
         throw std::exception("Failed to get skin info.");
     }
-    pSkinInfo = skinInfo;
-    pSkinInfo->AddRef();
+    m_container->pSkinInfo = skinInfo;
+    m_container->pSkinInfo->AddRef();
 
-    UINT boneCount = pSkinInfo->GetNumBones();
-    m_boneOffsetMatrices.resize(boneCount);
+    UINT boneCount = m_container->pSkinInfo->GetNumBones();
+    m_container->m_boneOffsetMatrices.resize(boneCount);
 
     for (DWORD i = 0; i < boneCount; ++i)
     {
-        m_boneOffsetMatrices[i] = *pSkinInfo->GetBoneOffsetMatrix(i);
+        m_container->m_boneOffsetMatrices[i] = *m_container->pSkinInfo->GetBoneOffsetMatrix(i);
     }
 
     // TODO Improve.
     DWORD MAX_MATRICES = 26;
-    m_paletteSize = (std::min)(MAX_MATRICES, pSkinInfo->GetNumBones());
+    auto boneNum = m_container->pSkinInfo->GetNumBones();
+    m_container->m_paletteSize = (std::min)(MAX_MATRICES, boneNum);
 
-    SAFE_RELEASE(MeshData.pMesh);
+    SAFE_RELEASE(m_container->MeshData.pMesh);
 
-    LPD3DXBUFFER bone_buffer{};
-    if (FAILED(pSkinInfo->ConvertToIndexedBlendedMesh(mesh,
+    LPD3DXBUFFER bone_buffer = NULL;
+    HRESULT hr = m_container->pSkinInfo->ConvertToIndexedBlendedMesh(mesh,
                                                       0 /* not used */, 
-                                                      m_paletteSize,
-                                                      pAdjacency,
+                                                      m_container->m_paletteSize,
+                                                      m_container->pAdjacency,
                                                       nullptr,
                                                       nullptr,
                                                       nullptr,
-                                                      &m_influenceCount,
-                                                      &m_boneCount,
+                                                      &m_container->m_influenceCount,
+                                                      &m_container->m_boneCount,
                                                       &bone_buffer,
-                                                      &MeshData.pMesh)))
+                                                                     &m_container->MeshData.pMesh);
+    if (hr != S_OK)
     {
         throw std::exception("Failed to get skin info.");
     }
-    m_boneBuffer = bone_buffer;
+
+    m_container->m_boneBuffer = bone_buffer;
 }
 
-void SkinAnimMeshContainer::InitializeFVF(const LPDIRECT3DDEVICE9 &d3dDevice)
+void SkinAnimMeshAlloc::InitializeFVF(const LPDIRECT3DDEVICE9 &d3dDevice)
 {
-    DWORD newFVF = (MeshData.pMesh->GetFVF() &
+    DWORD newFVF = (m_container->MeshData.pMesh->GetFVF() &
                     D3DFVF_POSITION_MASK) |
                     D3DFVF_NORMAL |
                     D3DFVF_TEX1 |
                     D3DFVF_LASTBETA_UBYTE4;
 
-    if (newFVF != MeshData.pMesh->GetFVF())
+    if (newFVF != m_container->MeshData.pMesh->GetFVF())
     {
         LPD3DXMESH pMesh = NULL;
-        HRESULT hresult = MeshData.pMesh->CloneMeshFVF(MeshData.pMesh->GetOptions(),
+        HRESULT hresult = m_container->MeshData.pMesh->CloneMeshFVF(m_container->MeshData.pMesh->GetOptions(),
                                                        newFVF,
                                                        d3dDevice,
                                                        &pMesh);
 
         if (SUCCEEDED(hresult))
         {
-            MeshData.pMesh->Release();
-            MeshData.pMesh = pMesh;
+            m_container->MeshData.pMesh->Release();
+            m_container->MeshData.pMesh = pMesh;
             pMesh = NULL;
         }
     }
 }
 
-void SkinAnimMeshContainer::InitializeVertexElement()
+void SkinAnimMeshAlloc::InitializeVertexElement()
 {
     D3DVERTEXELEMENT9 decl[MAX_FVF_DECL_SIZE];
     LPD3DVERTEXELEMENT9 currentDecl = NULL;
-    HRESULT result = MeshData.pMesh->GetDeclaration(decl);
+    HRESULT result = m_container->MeshData.pMesh->GetDeclaration(decl);
     if (FAILED(result))
     {
         throw std::exception("Failed to get skin info.");
@@ -267,7 +325,7 @@ void SkinAnimMeshContainer::InitializeVertexElement()
         currentDecl++;
     }
 
-    result = MeshData.pMesh->UpdateSemantics(decl);
+    result = m_container->MeshData.pMesh->UpdateSemantics(decl);
     if (FAILED(result))
     {
         throw std::exception("Failed to get skin info.");

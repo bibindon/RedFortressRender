@@ -129,7 +129,7 @@ STDMETHODIMP AnimMeshAllocator::CreateMeshContainer(LPCSTR meshName_,
         container->pMaterials[0].MatD3D.Specular = D3DCOLORVALUE { 0.5f, 0.5f, 0.5f, 1.f };
     }
 
-    *meshContainer = (LPD3DXMESHCONTAINER)container;
+    *meshContainer = container;
 
     return S_OK;
 }

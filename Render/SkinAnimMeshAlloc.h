@@ -10,6 +10,8 @@
 namespace NSRender
 {
 
+class SkinAnimMeshContainer;
+
 class SkinAnimMeshAlloc : public ID3DXAllocateHierarchy
 {
 
@@ -29,10 +31,20 @@ public:
     STDMETHOD(DestroyFrame)(THIS_ LPD3DXFRAME);
     STDMETHOD(DestroyMeshContainer)(THIS_ LPD3DXMESHCONTAINER);
 
+    void InitializeMaterials(const DWORD&,
+                             const D3DXMATERIAL*,
+                             const std::wstring&,
+                             const LPDIRECT3DDEVICE9&);
+
+    void InitializeBone(const LPD3DXSKININFO&, const LPD3DXMESH&);
+    void InitializeFVF(const LPDIRECT3DDEVICE9&);
+    void InitializeVertexElement();
+
 private:
 
     std::wstring m_xFilename;
 
+    SkinAnimMeshContainer* m_container = nullptr;
 };
 
 struct SkinAnimMeshFrame : public D3DXFRAME
@@ -51,6 +63,7 @@ struct SkinAnimMeshContainer : public D3DXMESHCONTAINER
     std::vector<LPD3DXMATRIX> m_frameCombinedMatrix;
     std::vector<D3DXMATRIX> m_boneOffsetMatrices;
 
+    /*
     SkinAnimMeshContainer(const std::wstring&,
                           const std::string&,
                           LPD3DXMESH,
@@ -58,15 +71,7 @@ struct SkinAnimMeshContainer : public D3DXMESHCONTAINER
                           const DWORD,
                           const DWORD *,
                           LPD3DXSKININFO);
-
-    void InitializeMaterials(const DWORD&,
-                             const D3DXMATERIAL*,
-                             const std::wstring&,
-                             const LPDIRECT3DDEVICE9&);
-
-    void InitializeBone(const LPD3DXSKININFO&, const LPD3DXMESH&);
-    void InitializeFVF(const LPDIRECT3DDEVICE9&);
-    void InitializeVertexElement();
+                          */
 };
 
 }

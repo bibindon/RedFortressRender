@@ -222,8 +222,12 @@ void SkinAnimMesh::render_mesh_container(const LPD3DXMESHCONTAINER mesh_containe
             mesh_container->pMaterials[bone_id].MatD3D.Diffuse.a};
 
         m_D3DEffect->SetVector("g_diffuse", &vec4_color);
-        m_D3DEffect->SetTexture("g_mesh_texture",
-                                mesh_container->m_textureList.at(bone_id));
+
+        if (bone_id < mesh_container->m_textureList.size())
+        {
+            m_D3DEffect->SetTexture("g_mesh_texture",
+                                    mesh_container->m_textureList.at(bone_id));
+        }
 
         m_D3DEffect->Begin(nullptr, 0);
 
