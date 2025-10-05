@@ -86,12 +86,32 @@ void ComManager::Release(LPUNKNOWN ptr)
 
 }
 
-void PtrManager::New(void* p)
+void PtrManager::New(void* p,
+                     const std::wstring& typename_,
+                     const std::wstring& filename,
+                     const std::wstring& line,
+                     const std::wstring& id)
 {
+    PtrInfo info;
+    info.m_ptr = p;
+    info.m_typename = typename_;
+    info.m_filename = filename;
+    info.m_line = line;
+    info.m_id = id;
+
+    m_ptrMap[p] = info;
 }
 
 void PtrManager::Delete(void* p)
 {
+
+    if (m_ptrMap.count(p) == 0)
+    {
+        throw std::exception("illegal deletion.");
+    }
+
+    delete m_ptrMap[p].m_ptr;
+
 }
 
 }

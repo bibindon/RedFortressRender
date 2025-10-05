@@ -7,6 +7,9 @@
 namespace NSRender
 {
 
+// Comポインタの管理クラス
+// 通常は使わない。よほど困ったときに詳細な情報を得るために使う想定
+
 struct ComInfo
 {
     LPUNKNOWN m_comPtr;
@@ -72,7 +75,11 @@ class PtrManager
 {
 public:
 
-    void New(void* p);
+    void New(void* p,
+             const std::wstring& typename_,
+             const std::wstring& filename,
+             const std::wstring& line,
+             const std::wstring& id = L"");
 
     void Delete(void* p);
 
