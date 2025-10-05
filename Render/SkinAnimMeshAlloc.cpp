@@ -229,21 +229,25 @@ void SkinAnimMeshAlloc::InitializeFVF()
                     D3DFVF_TEX1 |
                     D3DFVF_LASTBETA_UBYTE4;
 
-    if (newFVF != tempMesh->GetFVF())
+    if (newFVF == tempMesh->GetFVF())
     {
-        LPD3DXMESH tempMesh2 = NULL;
-        HRESULT hResult = tempMesh->CloneMeshFVF(tempMesh->GetOptions(),
-                                                 newFVF,
-                                                 Common::D3DDevice(),
-                                                 &tempMesh2);
-
-        if (SUCCEEDED(hResult))
-        {
-            tempMesh->Release();
-            tempMesh = tempMesh2;
-            tempMesh2 = NULL;
-        }
+        return;
     }
+
+    LPD3DXMESH tempMesh2 = NULL;
+    HRESULT hResult = tempMesh->CloneMeshFVF(tempMesh->GetOptions(),
+                                             newFVF,
+                                             Common::D3DDevice(),
+                                             &tempMesh2);
+
+    if (FAILED(hResult))
+    {
+        throw std::exception("Failed to CloneMeshFVF");
+    }
+
+    tempMesh->Release();
+    tempMesh = tempMesh2;
+    tempMesh2 = NULL;
 }
 
 void SkinAnimMeshAlloc::InitializeVertexElement()
