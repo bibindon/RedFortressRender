@@ -23,11 +23,9 @@ private:
 
     LPDIRECT3DTEXTURE9 m_texWork = NULL;
 
-
-    // フルスクリーンクアッド用
-//    LPDIRECT3DVERTEXDECLARATION9 g_pQuadDecl = NULL;
-
-    void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 tex, const char* tech);
+    void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
+                            LPDIRECT3DTEXTURE9 texTarget,
+                            const std::string& technique);
 
 
     struct ScreenVertex
