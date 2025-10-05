@@ -183,8 +183,6 @@ private:
     void DrawPass1();
 
     // 彩度フィルター
-    // TODO ポストエフェクト用のクラスを作る
-    void DrawPass2();
     PostEffectSaturate m_postEffectSaturate;
 
     // ブルームフィルター

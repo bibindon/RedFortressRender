@@ -83,16 +83,6 @@ void Render::Initialize(HWND hWnd)
 
     // マルチパスレンダリング関連
     {
-        hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                           L"res\\shader\\PostEffectSaturate.fx",
-                                           NULL,
-                                           NULL,
-                                           D3DXSHADER_DEBUG,
-                                           NULL,
-                                           &g_pEffect2,
-                                           NULL);
-        assert(hResult == S_OK);
-
         // === 変更: RT を 2 枚作成（両方 A8R8G8B8） ===
         hResult = D3DXCreateTexture(Common::D3DDevice(),
                                     1600,
@@ -290,7 +280,6 @@ void Render::Draw()
     DrawPass1();
 
     // 彩度変更
-//    DrawPass2();
     g_pSceneTex = m_postEffectSaturate.Draw(g_pRenderTarget);
 
     // ブルーム
@@ -300,7 +289,6 @@ void Render::Draw()
     DrawPass5();
 
     // ガウス
-    //DrawPassGaussian();
     m_texPostEffectBack1 = m_postEffectGauss.Draw(m_texPostEffectBack1);
 
     DrawPassEnd();
@@ -855,86 +843,6 @@ void Render::DrawPass1()
     SAFE_RELEASE(pRT0);
     SAFE_RELEASE(pRT1);
     SAFE_RELEASE(pOldRT0);
-
-
-}
-
-
-// TODO ポストエフェクト用のクラスを作成する
-void Render::DrawPass2()
-{
-    HRESULT hResult = E_FAIL;
-
-    // 既存RT0を退避
-    LPDIRECT3DSURFACE9 pOldRT0 = NULL;
-    Common::D3DDevice()->GetRenderTarget(0, &pOldRT0);
-
-    // ★ g_pSceneTex のサーフェスを取得して RT0 にセット
-    LPDIRECT3DSURFACE9 pSceneRT = NULL;
-    g_pSceneTex->GetSurfaceLevel(0, &pSceneRT);
-    Common::D3DDevice()->SetRenderTarget(0, pSceneRT);
-    SAFE_RELEASE(pSceneRT);
-
-    // Zは使わない
-    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
-
-    Common::D3DDevice()->Clear(0, NULL,
-                               D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
-
-    Common::D3DDevice()->BeginScene();
-
-    // フルスクリーン: RT0(=g_pSceneTex) へ彩度フィルタ適用
-    g_pEffect2->SetTechnique("Technique1");
-    UINT numPass = 0;
-    g_pEffect2->Begin(&numPass, 0);
-    g_pEffect2->BeginPass(0);
-
-    g_pEffect2->SetFloat("g_level", m_saturateLevel);
-    g_pEffect2->SetTexture("texture1", g_pRenderTarget); // 入力はPass1の結果
-    g_pEffect2->CommitChanges();
-
-    DrawFullscreenQuad(); // 現在のテクニックで全画面描画
-
-    g_pEffect2->EndPass();
-    g_pEffect2->End();
-
-    // === 追加: 左上に RT1 を 1/2 スケールで表示（D3DXSPRITE） ===
-    if (false)
-    {
-        if (g_pSprite)
-        {
-            hResult = g_pSprite->Begin(D3DXSPRITE_ALPHABLEND);
-            assert(hResult == S_OK);
-
-            D3DXMATRIX mat;
-            D3DXVECTOR2 scaling(0.5f, 0.5f);     // 半分
-            D3DXVECTOR2 trans(0.0f, 0.0f);       // 左上
-            D3DXMatrixTransformation2D(&mat, NULL, 0.0f, &scaling, NULL, 0.0f, &trans);
-            g_pSprite->SetTransform(&mat);
-
-            // そのまま (0,0) へ描画
-
-            // マルチターゲットレンダリングが未実装なので何も映らない。
-            // どう実装すればいいのか謎
-            //hResult = g_pSprite->Draw(g_pRenderTarget2, NULL, NULL, NULL, 0xFFFFFFFF);
-
-            //hResult = g_pSprite->Draw(g_pRenderTarget, NULL, NULL, NULL, 0xFFFFFFFF);
-            hResult = g_pSprite->Draw(g_pSceneTex, NULL, NULL, NULL, 0xFFFFFFFF);
-            assert(hResult == S_OK);
-
-            hResult = g_pSprite->End();
-            assert(hResult == S_OK);
-        }
-    }
-
-    hResult = Common::D3DDevice()->EndScene();
-    assert(hResult == S_OK);
-
-    hResult = Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
-    assert(hResult == S_OK);
-
-    Common::D3DDevice()->SetRenderTarget(0, pOldRT0);
-    SAFE_RELEASE(pOldRT0);
 }
 
 void Render::SetRTFromTex(LPDIRECT3DTEXTURE9 tex)
@@ -1160,7 +1068,10 @@ void Render::DrawPass5()
 void Render::DrawPassEnd()
 {
     // 最終表示（固定機能ではなくシェーダでコピー）
-    if (g_pEffectEnd == NULL) return;
+    if (g_pEffectEnd == NULL)
+    {
+        return;
+    }
 
     // バックバッファを RT にセット（都度取得→即 Release）
     LPDIRECT3DSURFACE9 pBackBuffer = NULL;
