@@ -43,7 +43,7 @@ void PostEffectGauss::Draw()
 {
     g_pEffect3->SetBool("g_bFilterON", m_bGaussianON);
 
-    // 2) 横ブラー: 入力=g_pSceneTex3, 出力=g_pTempTex
+    // 2) 横ブラー: 入力=m_texPostEffectBack2, 出力=g_pTempTex
     {
         LPDIRECT3DSURFACE9 pTempRT = NULL;
         g_pTempTex->GetSurfaceLevel(0, &pTempRT);
@@ -56,7 +56,7 @@ void PostEffectGauss::Draw()
         Common::D3DDevice()->EndScene();
     }
 
-    // 3) 縦ブラー: 入力=g_pTempTex, 出力=g_pSceneTex3（最終テクスチャを更新）
+    // 3) 縦ブラー: 入力=m_texPostEffectBack1, 出力=g_pSceneTex3（最終テクスチャを更新）
     {
         LPDIRECT3DSURFACE9 pSceneRT = NULL;
         g_pSceneTex3->GetSurfaceLevel(0, &pSceneRT);
