@@ -39,7 +39,7 @@ public:
     static LPDIRECT3DDEVICE9 D3DDevice();
     static void SetD3DDevice(LPDIRECT3DDEVICE9 arg);
 
-    static constexpr float ANIMATION_SPEED { 1.0f / 60 };
+    static constexpr float ANIMATION_SPEED = 1.0f / 60;
 
     static void OnDeviceLostAll();
     static void OnDeviceResetAll();

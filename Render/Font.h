@@ -59,7 +59,7 @@ private:
 
     struct TextInfo
     {
-        RECT m_rect { };
+        RECT m_rect = { 0, 0, 0, 0 };
         std::wstring m_text;
         bool m_bCenter = false;
         UINT m_color = D3DCOLOR_RGBA(255, 255, 255, 255);

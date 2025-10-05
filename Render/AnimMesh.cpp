@@ -13,11 +13,10 @@ NSRender::AnimMesh::AnimMesh(const std::wstring& xFilename,
                              const float& scale,
                              const AnimSetMap& animSetMap)
     : m_allocator(xFilename)
-    , m_frameRoot(NULL)
-    , m_rotationMatrix()
     , m_position(position)
     , m_rotation(rotation)
     , m_centerPos(0.0f, 0.0f, 0.0f)
+    , m_rotateLocal(0.0f, 0.0f, 0.0f)
 {
     HRESULT result = E_FAIL;
 

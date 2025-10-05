@@ -58,8 +58,8 @@ private:
     std::vector<D3DXVECTOR4> m_vecDiffuse;
     std::vector<LPDIRECT3DTEXTURE9> m_vecTexture;
 
-    D3DXVECTOR3 m_pos = { 0.f, 0.f, 0.f };
-    D3DXVECTOR3 m_rotate = { 0.f, 0.f, 0.f };
+    D3DXVECTOR3 m_pos = D3DXVECTOR3(0.f, 0.f, 0.f);
+    D3DXVECTOR3 m_rotate = D3DXVECTOR3(0.f, 0.f, 0.f);
 
     //-------------------------------------------------
     // ‚±‚Ì•¨‘Ì‚Ì”¼Œa

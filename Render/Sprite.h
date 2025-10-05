@@ -37,7 +37,8 @@ private:
 
     struct SpriteInfo
     {
-        RECT m_rect { };
+        RECT m_rect = RECT { 0, 0, 0, 0 };
+
         std::wstring m_imageName;
         int m_transparency = 255;
     };

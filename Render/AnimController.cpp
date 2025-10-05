@@ -9,11 +9,8 @@ NSRender::AnimController::AnimController()
     m_animSpeed /= 80;
 }
 
-NSRender::AnimController::~AnimController()
-{
-}
-
-void NSRender::AnimController::Init(const LPD3DXANIMATIONCONTROLLER controller, const AnimSetMap& animSetMap)
+void NSRender::AnimController::Init(const LPD3DXANIMATIONCONTROLLER controller,
+                                    const AnimSetMap& animSetMap)
 {
     m_controller = controller;
     m_animSettingMap = animSetMap;

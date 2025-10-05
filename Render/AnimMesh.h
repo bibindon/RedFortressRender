@@ -12,7 +12,6 @@
 
 namespace NSRender
 {
-class AnimMeshAllocator;
 
 class AnimMesh
 {
@@ -50,7 +49,7 @@ private:
     void RenderFrame(const LPD3DXFRAME);
     void RenderMeshContainer(const LPD3DXMESHCONTAINER, const LPD3DXFRAME);
 
-    const std::wstring SHADER_FILENAME = _T("res\\shader\\AnimationMeshShader.fx");
+    const std::wstring SHADER_FILENAME = L"res\\shader\\AnimationMeshShader.fx";
 
     LPD3DXEFFECT m_D3DEffect = NULL;
 
@@ -62,11 +61,11 @@ private:
     D3DXMATRIX m_viewMatrix;
     D3DXMATRIX m_projMatrix;
 
-    D3DXVECTOR3 m_centerPos;
+    D3DXVECTOR3 m_centerPos = D3DXVECTOR3(0.f, 0.f, 0.f);
     D3DXVECTOR3 m_rotateLocal = D3DXVECTOR3(0.f, 0.f, 0.f);
 
-    D3DXVECTOR3 m_position;
-    D3DXVECTOR3 m_rotation;
+    D3DXVECTOR3 m_position = D3DXVECTOR3(0.f, 0.f, 0.f);
+    D3DXVECTOR3 m_rotation = D3DXVECTOR3(0.f, 0.f, 0.f);
     float m_scale = 1.0f;
 
     std::wstring m_meshName;
