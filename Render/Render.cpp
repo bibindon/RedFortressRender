@@ -164,6 +164,15 @@ void Render::Initialize(HWND hWnd)
                           D3DPOOL_DEFAULT,
                           &m_texPostEffectBack1);
 
+        // ブラー用一時テクスチャ
+        D3DXCreateTexture(Common::D3DDevice(),
+                          m_windowSizeWidth,
+                          m_windowSizeHeight,
+                          1,
+                          D3DUSAGE_RENDERTARGET,
+                          D3DFMT_A8R8G8B8,
+                          D3DPOOL_DEFAULT,
+                          &m_texPostEffectBack2);
     }
 
     // ブルーム
@@ -239,7 +248,7 @@ void Render::Initialize(HWND hWnd)
                           D3DUSAGE_RENDERTARGET,
                           D3DFMT_A8R8G8B8,
                           D3DPOOL_DEFAULT,
-                          &m_texPostEffectBack2);
+                          &m_texPostEffectBack3);
 
         D3DXCreateTexture(Common::D3DDevice(),
                           1600,
@@ -960,7 +969,7 @@ void Render::DrawPassGaussian()
 {
     g_pEffect3->SetBool("g_bFilterON", m_bGaussianON);
 
-    // 2) 横ブラー: 入力=m_texPostEffectBack2, 出力=g_pTempTex
+    // 2) 横ブラー: 入力=m_texPostEffectBack3, 出力=g_pTempTex
     {
         LPDIRECT3DSURFACE9 tempSurface = NULL;
         m_texPostEffectBack1->GetSurfaceLevel(0, &tempSurface);
@@ -969,14 +978,14 @@ void Render::DrawPassGaussian()
 
         Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
         Common::D3DDevice()->BeginScene();
-        DrawFullscreenQuad(m_texPostEffectBack2, "GaussianH");
+        DrawFullscreenQuad(m_texPostEffectBack3, "GaussianH");
         Common::D3DDevice()->EndScene();
     }
 
     // 3) 縦ブラー: 入力=m_texPostEffectBack1, 出力=g_pSceneTex3（最終テクスチャを更新）
     {
         LPDIRECT3DSURFACE9 tempSurface = NULL;
-        m_texPostEffectBack2->GetSurfaceLevel(0, &tempSurface);
+        m_texPostEffectBack3->GetSurfaceLevel(0, &tempSurface);
         Common::D3DDevice()->SetRenderTarget(0, tempSurface);
         SAFE_RELEASE(tempSurface);
 
@@ -1145,14 +1154,14 @@ void Render::DrawPass4()
 void Render::DrawPass5()
 {
     // 最終表示は DrawPassEnd で g_pSceneTex3 を画面に出す想定
-    // （Render::DrawPassEnd で g_SrcTex ← m_texPostEffectBack2 をコピー） 
+    // （Render::DrawPassEnd で g_SrcTex ← m_texPostEffectBack3 をコピー） 
     // ※ g_pEffectEnd の Copy を使って素通しにも対応。 :contentReference[oaicite:6]{index=6}
 
     // シェーダ未ロード or 機能OFFなら g_pSceneTex2 → g_pSceneTex3 をコピーして終了
     if (g_pStarBusrtEffect == NULL || !m_bStarBurstON)
     {
         LPDIRECT3DSURFACE9 pRT = NULL;
-        m_texPostEffectBack2->GetSurfaceLevel(0, &pRT);
+        m_texPostEffectBack3->GetSurfaceLevel(0, &pRT);
         Common::D3DDevice()->SetRenderTarget(0, pRT);
         SAFE_RELEASE(pRT);
 
@@ -1196,7 +1205,7 @@ void Render::DrawPass5()
     Common::D3DDevice()->EndScene();
 
     // (4) 合成 : (SceneTex2 + 0° + 60° + 120°) → g_pSceneTex3
-    SetRTFromTex(m_texPostEffectBack2);
+    SetRTFromTex(m_texPostEffectBack3);
     Common::D3DDevice()->BeginScene();
     g_pStarBusrtEffect->SetTexture("g_SceneTex", g_pSceneTex2);
     g_pStarBusrtEffect->SetTexture("g_BlurTexH", g_pBlurTexH2);
@@ -1232,7 +1241,7 @@ void Render::DrawPassEnd()
 
     // ここでは DrawPass4 の合成結果（g_pSceneTex2）を画面にコピー
     g_pEffectEnd->SetTechnique("Copy");
-    g_pEffectEnd->SetTexture("g_SrcTex", m_texPostEffectBack2);
+    g_pEffectEnd->SetTexture("g_SrcTex", m_texPostEffectBack3);
 
     Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
     Common::D3DDevice()->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);

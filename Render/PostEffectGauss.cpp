@@ -43,7 +43,7 @@ void PostEffectGauss::Draw()
 {
     g_pEffect3->SetBool("g_bFilterON", m_bGaussianON);
 
-    // 2) 横ブラー: 入力=m_texPostEffectBack2, 出力=g_pTempTex
+    // 2) 横ブラー: 入力=m_texPostEffectBack3, 出力=g_pTempTex
     {
         LPDIRECT3DSURFACE9 pTempRT = NULL;
         g_pTempTex->GetSurfaceLevel(0, &pTempRT);
