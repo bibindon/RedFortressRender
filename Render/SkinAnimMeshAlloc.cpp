@@ -86,7 +86,6 @@ STDMETHODIMP SkinAnimMeshAlloc::CreateMeshContainer(LPCSTR meshName,
 
     InitializeMaterials(materialCount, materials, m_xFilename);
     InitializeBone(skinInfo, meshData->pMesh);
-    InitializeFVF();
 
     *meshContainer = m_container;
 
@@ -216,37 +215,6 @@ void SkinAnimMeshAlloc::InitializeBone(const LPD3DXSKININFO skinInfo,
     m_container->pSkinInfo = skinInfo;
     m_container->pSkinInfo->AddRef();
 
-}
-
-void SkinAnimMeshAlloc::InitializeFVF()
-{
-    LPD3DXMESH tempMesh = m_container->MeshData.pMesh;
-
-    DWORD newFVF = (tempMesh->GetFVF() &
-                    D3DFVF_POSITION_MASK) |
-                    D3DFVF_NORMAL |
-                    D3DFVF_TEX1 |
-                    D3DFVF_LASTBETA_UBYTE4;
-
-    if (newFVF == tempMesh->GetFVF())
-    {
-        return;
-    }
-
-    LPD3DXMESH tempMesh2 = NULL;
-    HRESULT hResult = tempMesh->CloneMeshFVF(tempMesh->GetOptions(),
-                                             newFVF,
-                                             Common::D3DDevice(),
-                                             &tempMesh2);
-
-    if (FAILED(hResult))
-    {
-        throw std::exception("Failed to CloneMeshFVF");
-    }
-
-    tempMesh->Release();
-    tempMesh = tempMesh2;
-    tempMesh2 = NULL;
 }
 
 }

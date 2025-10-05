@@ -36,7 +36,6 @@ public:
                              const std::wstring&);
 
     void InitializeBone(const LPD3DXSKININFO, const LPD3DXMESH);
-    void InitializeFVF();
 
 private:
 
