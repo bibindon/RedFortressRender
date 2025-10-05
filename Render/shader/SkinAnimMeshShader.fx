@@ -1,7 +1,7 @@
 float4 g_light_normal;
 float g_light_brightness;
 float4 g_diffuse;
-float4 g_ambient = { 0.2f, 0.2f, 0.2f, 0.0f };
+float4 g_ambient = { 0.2f, 0.2f, 0.2f, 1.0f };
 
 static const int MAX_MATRICES = 26;
 float4x3 g_world_matrix_array[MAX_MATRICES];
@@ -72,7 +72,6 @@ void pixel_shader(in  float4 in_diffuse  : COLOR0,
     color_result = tex2D(mesh_texture_sampler, in_texcood);
 
     out_diffuse = (in_diffuse * color_result);
-//    out_diffuse.a = 1.0f;
 }
 
 int current_bone_numbers;

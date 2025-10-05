@@ -85,7 +85,6 @@ SkinAnimMesh::SkinAnimMesh(const std::wstring &x_filename,
         throw std::exception(msg2.c_str());
     }
 
-    // lazy initialization 
     frame_root_.reset(temp_frame_root);
     m_animCtrlr.Init(temp_animation_controller, animSetMap);
 
