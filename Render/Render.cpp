@@ -142,29 +142,6 @@ void Render::Initialize(HWND hWnd)
 
     // ガウスフィルター
     m_postEffectGauss.Initialize();
-    {
-        // エフェクト読み込み
-        hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                           _T("res\\shader\\PostEffectGaussian.fx"),
-                                           NULL,
-                                           NULL,
-                                           D3DXSHADER_DEBUG,
-                                           NULL,
-                                           &g_pEffect3,
-                                           NULL);
-        assert(SUCCEEDED(hResult));
-
-
-        // ブラー用一時テクスチャ
-        D3DXCreateTexture(Common::D3DDevice(),
-                          m_windowSizeWidth,
-                          m_windowSizeHeight,
-                          1,
-                          D3DUSAGE_RENDERTARGET,
-                          D3DFMT_A8R8G8B8,
-                          D3DPOOL_DEFAULT,
-                          &m_texPostEffectBack2);
-    }
 
     // ブルーム
     {
@@ -957,37 +934,6 @@ void Render::DrawPass2()
     SAFE_RELEASE(pOldRT0);
 }
 
-void Render::DrawPassGaussian()
-{
-    g_pEffect3->SetBool("g_bFilterON", m_bGaussianON);
-
-    // 2) 横ブラー: 入力=m_texPostEffectBack1, 出力=g_pTempTex
-    {
-        LPDIRECT3DSURFACE9 tempSurface = NULL;
-        m_texPostEffectBack2->GetSurfaceLevel(0, &tempSurface);
-        Common::D3DDevice()->SetRenderTarget(0, tempSurface);
-        SAFE_RELEASE(tempSurface);
-
-        Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
-        Common::D3DDevice()->BeginScene();
-        DrawFullscreenQuad(m_texPostEffectBack1, "GaussianH");
-        Common::D3DDevice()->EndScene();
-    }
-
-    // 3) 縦ブラー: 入力=m_texPostEffectBack2, 出力=g_pSceneTex3（最終テクスチャを更新）
-    {
-        LPDIRECT3DSURFACE9 tempSurface = NULL;
-        m_texPostEffectBack1->GetSurfaceLevel(0, &tempSurface);
-        Common::D3DDevice()->SetRenderTarget(0, tempSurface);
-        SAFE_RELEASE(tempSurface);
-
-        Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
-        Common::D3DDevice()->BeginScene();
-        DrawFullscreenQuad(m_texPostEffectBack2, "GaussianV");
-        Common::D3DDevice()->EndScene();
-    }
-}
-
 void Render::SetRTFromTex(LPDIRECT3DTEXTURE9 tex)
 {
     LPDIRECT3DSURFACE9 rt = NULL;
@@ -1297,33 +1243,6 @@ void Render::DrawFullscreenQuad()
 
     Common::D3DDevice()->SetVertexDeclaration(g_pQuadDecl);
     Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, v, sizeof(QuadVertex));
-}
-
-void Render::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 tex, const char* tech)
-{
-    Common::D3DDevice()->SetVertexShader(NULL);
-
-    g_pEffect3->SetTechnique(tech);
-    g_pEffect3->SetTexture("g_SrcTex", tex);
-
-    float texelSize[2] = { 1.0f / m_windowSizeWidth, 1.0f / m_windowSizeHeight };
-    g_pEffect3->SetFloatArray("g_TexelSize", texelSize, 2);
-
-    ScreenVertex quad[4] = {
-        {                    -0.5f,                     -0.5f, 0, 1, 0, 0 },
-        { m_windowSizeWidth - 0.5f,                     -0.5f, 0, 1, 1, 0 },
-        {                    -0.5f, m_windowSizeHeight - 0.5f, 0, 1, 0, 1 },
-        { m_windowSizeWidth - 0.5f, m_windowSizeHeight - 0.5f, 0, 1, 1, 1 }
-    };
-
-    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
-    Common::D3DDevice()->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
-    g_pEffect3->Begin(NULL, 0);
-    g_pEffect3->BeginPass(0);
-    Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, quad, sizeof(ScreenVertex));
-    g_pEffect3->EndPass();
-    g_pEffect3->End();
-    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
 }
 
 void Render::DrawFullScreenQuad(LPDIRECT3DTEXTURE9 tex, LPD3DXEFFECT effect, const char* technique)

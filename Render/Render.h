@@ -223,24 +223,17 @@ private:
     // 彩度フィルター
     float m_saturateLevel = 1.0f;
 
-    //---------------------------------------------------------------
-    // ガウスフィルター
-    //---------------------------------------------------------------
-
-    LPD3DXEFFECT g_pEffect3 = NULL;
-
-    LPDIRECT3DTEXTURE9 g_pSceneTex = NULL;
-    LPDIRECT3DTEXTURE9 m_texPostEffectBack2 = NULL;
-
-    void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 tex, const char* tech);
-
     struct ScreenVertex
     {
         float x, y, z, rhw;
         float u, v;
     };
 
-    bool m_bGaussianON = false;
+    LPDIRECT3DTEXTURE9 g_pSceneTex = NULL;
+
+    //---------------------------------------------------------------
+    // ガウスフィルター
+    //---------------------------------------------------------------
 
     PostEffectGauss m_postEffectGauss;
 
