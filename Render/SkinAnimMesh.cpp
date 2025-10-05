@@ -14,10 +14,10 @@ const std::wstring SkinAnimMesh::SHADER_FILENAME = L"res\\shader\\SkinAnimMeshSh
 
 void SkinAnimMesh::m_frameRootdeleter_object::operator()(const LPD3DXFRAME frame_root)
 {
-    release_mesh_allocator(frame_root);
+    ReleaseMeshAllocator(frame_root);
 }
 
-void SkinAnimMesh::m_frameRootdeleter_object::release_mesh_allocator(
+void SkinAnimMesh::m_frameRootdeleter_object::ReleaseMeshAllocator(
     const LPD3DXFRAME frame)
 {
     if (frame->pMeshContainer != nullptr)
@@ -27,12 +27,12 @@ void SkinAnimMesh::m_frameRootdeleter_object::release_mesh_allocator(
 
     if (frame->pFrameSibling != nullptr)
     {
-        release_mesh_allocator(frame->pFrameSibling);
+        ReleaseMeshAllocator(frame->pFrameSibling);
     }
 
     if (frame->pFrameFirstChild != nullptr)
     {
-        release_mesh_allocator(frame->pFrameFirstChild);
+        ReleaseMeshAllocator(frame->pFrameFirstChild);
     }
 
     m_allocator->DestroyFrame(frame);
@@ -69,13 +69,15 @@ SkinAnimMesh::SkinAnimMesh(const std::wstring &x_filename,
     LPD3DXFRAME tempFrameRoot = NULL;
     LPD3DXANIMATIONCONTROLLER tempAnimController = NULL;
 
-    if (FAILED(D3DXLoadMeshHierarchyFromX(x_filename.c_str(),
-                                          D3DXMESH_MANAGED,
-                                          Common::D3DDevice(),
-                                          m_allocator.get(),
-                                          nullptr,
-                                          &tempFrameRoot,
-                                          &tempAnimController)))
+    hr = D3DXLoadMeshHierarchyFromX(x_filename.c_str(),
+                                    D3DXMESH_MANAGED,
+                                    Common::D3DDevice(),
+                                    m_allocator.get(),
+                                    nullptr,
+                                    &tempFrameRoot,
+                                    &tempAnimController);
+
+    if (FAILED(hr))
     {
         auto msg = L"Failed to load a x-file.: " + x_filename;
         auto msg2 = Util::WstringToUtf8(msg);
@@ -197,6 +199,7 @@ void SkinAnimMesh::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBase)
             {
                 continue;
             }
+
             m_matWorldArray[k] = container->m_boneOffsetMatrices[dw_bone_id] *
                                  (*container->m_frameCombinedMatrix[dw_bone_id]);
         }
@@ -205,13 +208,14 @@ void SkinAnimMesh::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBase)
                                     dw_palette_size);
 
         DWORD bone_id = bone_combination[i].AttribId;
-        D3DXVECTOR4 vec4_color{
-            container->pMaterials[bone_id].MatD3D.Diffuse.r,
-            container->pMaterials[bone_id].MatD3D.Diffuse.g,
-            container->pMaterials[bone_id].MatD3D.Diffuse.b,
-            container->pMaterials[bone_id].MatD3D.Diffuse.a};
+        D3DXVECTOR4 d3dColor;
 
-        m_D3DEffect->SetVector("g_diffuse", &vec4_color);
+        d3dColor.x = container->pMaterials[bone_id].MatD3D.Diffuse.r;
+        d3dColor.y = container->pMaterials[bone_id].MatD3D.Diffuse.g;
+        d3dColor.z = container->pMaterials[bone_id].MatD3D.Diffuse.b;
+        d3dColor.w = container->pMaterials[bone_id].MatD3D.Diffuse.a;
+
+        m_D3DEffect->SetVector("g_diffuse", &d3dColor);
 
         if (bone_id < container->m_textureList.size())
         {
@@ -242,9 +246,13 @@ HRESULT SkinAnimMesh::AllocateBoneMatrix(LPD3DXMESHCONTAINER containerBase)
     DWORD boneCount = container->pSkinInfo->GetNumBones();
     container->m_frameCombinedMatrix.resize(boneCount);
 
-    // TODO Improve.
     DWORD MAX_MATRICES = 26;
-    m_matWorldArray.resize((std::min)(MAX_MATRICES, boneCount));
+    if (boneCount > MAX_MATRICES)
+    {
+        boneCount = MAX_MATRICES;
+    }
+
+    m_matWorldArray.resize(boneCount);
 
     m_D3DEffect->SetInt("g_currentBoneIndex", container->m_influenceCount - 1);
 

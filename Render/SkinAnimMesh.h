@@ -38,7 +38,7 @@ private:
     {
         std::shared_ptr<SkinAnimMeshAlloc> m_allocator;
         void operator()(const LPD3DXFRAME);
-        void release_mesh_allocator(const LPD3DXFRAME);
+        void ReleaseMeshAllocator(const LPD3DXFRAME);
     };
 
     const static std::wstring SHADER_FILENAME;
