@@ -31,7 +31,7 @@ void vertex_shader(in  float4  in_position      : POSITION,
     float3 normal      = 0.0f;
     float  last_weight = 0.0f;
 
-    int4 index_vector = D3DCOLORtoUBYTE4(in_blend_indices);
+    int4 index_vector = (int4)in_blend_indices;
 
     float blend_weights_array[4] = (float[4])in_blend_weights;
     int   index_array[4]         = (int[4])index_vector;

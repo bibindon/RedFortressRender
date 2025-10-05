@@ -250,36 +250,5 @@ void SkinAnimMeshAlloc::InitializeFVF()
     tempMesh2 = NULL;
 }
 
-void SkinAnimMeshAlloc::InitializeVertexElement()
-{
-    D3DVERTEXELEMENT9 decl[MAX_FVF_DECL_SIZE];
-    LPD3DVERTEXELEMENT9 currentDecl = NULL;
-    HRESULT result = m_container->MeshData.pMesh->GetDeclaration(decl);
-
-    if (FAILED(result))
-    {
-        throw std::exception("Failed to get skin info.");
-    }
-
-    currentDecl = decl;
-
-    while (currentDecl->Stream != 0xff)
-    {
-        if ((currentDecl->Usage == D3DDECLUSAGE_BLENDINDICES) &&
-            (currentDecl->UsageIndex == 0))
-        {
-            currentDecl->Type = D3DDECLTYPE_D3DCOLOR;
-        }
-        currentDecl++;
-    }
-
-    result = m_container->MeshData.pMesh->UpdateSemantics(decl);
-
-    if (FAILED(result))
-    {
-        throw std::exception("Failed to get skin info.");
-    }
-}
-
 }
 

@@ -37,7 +37,6 @@ public:
 
     void InitializeBone(const LPD3DXSKININFO, const LPD3DXMESH);
     void InitializeFVF();
-    void InitializeVertexElement();
 
 private:
 
