@@ -115,10 +115,6 @@ void Render::Initialize(HWND hWnd)
         hResult = Common::D3DDevice()->CreateVertexDeclaration(elems, &g_pQuadDecl);
         assert(hResult == S_OK);
 
-        // スプライト
-        hResult = D3DXCreateSprite(Common::D3DDevice(), &g_pSprite);
-        assert(hResult == S_OK);
-
     }
 
     m_postEffectSaturate.Initialize();
@@ -132,7 +128,6 @@ void Render::Initialize(HWND hWnd)
     // スターバースト
     m_postEffectStarBurst.Initialize();
 
-    // ★ 各テクスチャ作成（サーフェイスは保持しない）
     D3DXCreateTexture(Common::D3DDevice(),
                       1600,
                       900,

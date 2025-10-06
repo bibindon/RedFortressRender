@@ -213,9 +213,6 @@ private:
     // フルスクリーンクアッド用
     LPDIRECT3DVERTEXDECLARATION9 g_pQuadDecl = NULL;
 
-    // 追加: スプライト
-    LPD3DXSPRITE g_pSprite = NULL;
-
     struct ScreenVertex
     {
         float x, y, z, rhw;
