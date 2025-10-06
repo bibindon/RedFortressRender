@@ -113,11 +113,6 @@ void PostEffectBloom::Finalize()
     SAFE_RELEASE(m_d3dEffect);
 }
 
-void PostEffectBloom::SetEnable(const float level)
-{
-    m_saturateLevel = level;
-}
-
 void PostEffectBloom::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
                                          const std::string& technique)
 {
