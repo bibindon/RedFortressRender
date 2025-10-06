@@ -481,6 +481,16 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
         }
 
+        // ブルーム
+        {
+            static bool bBloom = false;
+            if (wParam == 'B' && !shift)
+            {
+                bBloom = !bBloom;
+                g_Render.SetPostEffectBloom(bBloom);
+            }
+        }
+
         // スターバースト
         {
             static bool bStarBurst = false;

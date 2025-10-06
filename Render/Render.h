@@ -27,6 +27,7 @@
 #include "PostEffectGauss.h"
 #include "PostEffectSaturate.h"
 #include "PostEffectBloom.h"
+#include "PostEffectStarBurst.h"
 
 namespace NSRender
 {
@@ -196,8 +197,6 @@ private:
 
     // スターバースト
     // TODO ポストエフェクト用のクラスを作る
-    void DrawPass5();
-
     void DrawPassEnd();
 
     void Draw2D();
@@ -236,12 +235,6 @@ private:
 
     PostEffectGauss m_postEffectGauss;
 
-    //---------------------------------------------------------------
-    // ブルームフィルター
-    //---------------------------------------------------------------
-
-    bool m_bBloomON = false;
-
     LPDIRECT3DTEXTURE9 g_pSceneTex2 = NULL;
 
     void DrawFullScreenQuad(LPDIRECT3DTEXTURE9 tex, LPD3DXEFFECT effect, const char* technique);
@@ -260,6 +253,7 @@ private:
     // TODO 別のクラスにする
     //---------------------------------------------------------------
 
+    PostEffectStarBurst m_postEffectStarBurst;
     bool m_bStarBurstON = false;
 
     LPD3DXEFFECT g_pStarBusrtEffect = NULL;   // bloom.fx

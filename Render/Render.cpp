@@ -140,6 +140,8 @@ void Render::Initialize(HWND hWnd)
                       &g_pSceneTex2);
 
     // スターバースト
+    m_postEffectStarBurst.Initialize();
+
     {
 
         hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
@@ -244,7 +246,7 @@ void Render::Draw()
     g_pSceneTex2 = m_PostEffectBloom.Draw(m_texPostEffectBack1);
 
     // スターバースト
-    DrawPass5();
+    m_texPostEffectBack1 = m_postEffectStarBurst.Draw(g_pSceneTex2);
 
     // ガウス
     m_texPostEffectBack1 = m_postEffectGauss.Draw(m_texPostEffectBack1);
@@ -486,7 +488,7 @@ void Render::SetPostEffectGaussianFilter(const bool arg)
 
 void Render::SetPostEffectBloom(const bool arg)
 {
-    m_bBloomON = arg;
+    m_PostEffectBloom.SetEnable(arg);
 }
 
 void Render::SetPostEffectStarBurst(const bool arg)
@@ -890,71 +892,6 @@ void Render::ShowFPS(const float arg)
     DrawText_(m_fontID, fps, 10, 10);
 }
 
-void Render::DrawPass5()
-{
-    // 最終表示は DrawPassEnd で g_pSceneTex3 を画面に出す想定
-    // （Render::DrawPassEnd で g_SrcTex ← m_texPostEffectBack1 をコピー） 
-    // ※ g_pEffectEnd の Copy を使って素通しにも対応。 :contentReference[oaicite:6]{index=6}
-
-    // シェーダ未ロード or 機能OFFなら m_renderTarget → g_pSceneTex3 をコピーして終了
-    if (g_pStarBusrtEffect == NULL || !m_bStarBurstON)
-    {
-        LPDIRECT3DSURFACE9 pRT = NULL;
-        m_texPostEffectBack1->GetSurfaceLevel(0, &pRT);
-        Common::D3DDevice()->SetRenderTarget(0, pRT);
-        SAFE_RELEASE(pRT);
-
-        Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
-        Common::D3DDevice()->BeginScene();
-        // 汎用コピー（エフェクトEndの"Copy"）
-        DrawFullScreenQuad(g_pSceneTex2, g_pEffectEnd, "Copy");
-        Common::D3DDevice()->EndScene();
-        return;
-    }
-
-    // テクセルサイズ（ブラーで使用）
-    float texelSize[2] = { 1.0f / m_windowSizeWidth, 1.0f / m_windowSizeHeight };
-    g_pStarBusrtEffect->SetFloatArray("g_TexelSize", texelSize, 2); // :contentReference[oaicite:7]{index=7}
-
-    // (2) BrightPass : 入力=m_renderTarget, 出力=g_pBrightTex2
-    SetRTFromTex(g_pBrightTex2);
-    Common::D3DDevice()->BeginScene();
-    DrawFullScreenQuad(g_pSceneTex2, g_pStarBusrtEffect, "BrightPass"); // :contentReference[oaicite:8]{index=8}
-    Common::D3DDevice()->EndScene();
-
-    // (3a) 0° ブラー : 入力=g_pBrightTex2, 出力=g_pBlurTexH2
-    SetRTFromTex(g_pBlurTexH2);
-    Common::D3DDevice()->BeginScene();
-    { float dir[4] = { 1.0f, 0.0f, 0, 0 }; g_pStarBusrtEffect->SetFloatArray("g_Direction", dir, 4); } // :contentReference[oaicite:9]{index=9}
-    DrawFullScreenQuad(g_pBrightTex2, g_pStarBusrtEffect, "Blur"); // :contentReference[oaicite:10]{index=10}
-    Common::D3DDevice()->EndScene();
-
-    // (3b) 60° ブラー : 入力=g_pBrightTex2, 出力=g_pBlurTexV2
-    SetRTFromTex(g_pBlurTexV2);
-    Common::D3DDevice()->BeginScene();
-    { float dir[4] = { 0.5f, 0.8660254f, 0, 0 }; g_pStarBusrtEffect->SetFloatArray("g_Direction", dir, 4); }
-    DrawFullScreenQuad(g_pBrightTex2, g_pStarBusrtEffect, "Blur");
-    Common::D3DDevice()->EndScene();
-
-    // (3c) 120° ブラー : 入力=g_pBrightTex2, 出力=g_pBlurTexD
-    SetRTFromTex(g_pBlurTexD);
-    Common::D3DDevice()->BeginScene();
-    { float dir[4] = { -0.5f, 0.8660254f, 0, 0 }; g_pStarBusrtEffect->SetFloatArray("g_Direction", dir, 4); }
-    DrawFullScreenQuad(g_pBrightTex2, g_pStarBusrtEffect, "Blur");
-    Common::D3DDevice()->EndScene();
-
-    // (4) 合成 : (SceneTex2 + 0° + 60° + 120°) → g_pSceneTex3
-    SetRTFromTex(m_texPostEffectBack1);
-    Common::D3DDevice()->BeginScene();
-    g_pStarBusrtEffect->SetTexture("g_SceneTex", g_pSceneTex2);
-    g_pStarBusrtEffect->SetTexture("g_BlurTexH", g_pBlurTexH2);
-    g_pStarBusrtEffect->SetTexture("g_BlurTexV", g_pBlurTexV2);
-    g_pStarBusrtEffect->SetTexture("g_BlurTex60", g_pBlurTexD); // Combine は3軸を加算 :contentReference[oaicite:11]{index=11}
-    DrawFullScreenQuad(NULL, g_pStarBusrtEffect, "Combine");
-    Common::D3DDevice()->EndScene();
-}
-
-
 void Render::DrawPassEnd()
 {
     // 最終表示（固定機能ではなくシェーダでコピー）
@@ -1068,7 +1005,10 @@ void Render::DrawFullScreenQuad(LPDIRECT3DTEXTURE9 tex, LPD3DXEFFECT effect, con
     Common::D3DDevice()->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
 
     effect->SetTechnique(technique);
-    if (tex) effect->SetTexture("g_SrcTex", tex);
+    if (tex)
+    {
+        effect->SetTexture("g_SrcTex", tex);
+    }
 
     UINT nPass = 0;
     effect->Begin(&nPass, 0);

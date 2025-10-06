@@ -56,6 +56,12 @@ void PostEffectBloom::Initialize()
 
 LPDIRECT3DTEXTURE9 PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource)
 {
+    // TODO “®ì‚µ‚È‚¢
+    if (!m_bEnable)
+    {
+        return renderSource;
+    }
+
     // ------------------------------------------------------------
     // (1) BrightPass : “ü—Í = renderSource, o—Í = m_texWork
     // ------------------------------------------------------------
@@ -171,6 +177,26 @@ void PostEffectBloom::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
 
     Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
     
+}
+
+void PostEffectBloom::SetEnable(const bool arg)
+{
+    m_bEnable = arg;
+}
+
+void PostEffectBloom::SetThreshold(const float arg)
+{
+    m_threshold = arg;
+}
+
+void PostEffectBloom::SetIntensity(const float arg)
+{
+    m_intensity = arg;
+}
+
+void PostEffectBloom::SetSize(const float arg)
+{
+    m_size = arg;
 }
 
 void PostEffectBloom::OnDeviceLost()

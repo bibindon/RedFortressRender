@@ -6,7 +6,7 @@ namespace NSRender
 {
 
 // TODO 一度小さく表示してから拡大する、というのをやった方がきれいらしい
-class PostEffectBloom
+class PostEffectStarBurst
 {
 
 public:
@@ -27,10 +27,17 @@ private:
 
     LPD3DXEFFECT m_d3dEffect = NULL;
 
-    LPDIRECT3DTEXTURE9 m_texBright = NULL;
-    LPDIRECT3DTEXTURE9 m_texBlurH = NULL;
-    LPDIRECT3DTEXTURE9 m_texBlurV = NULL;
-    LPDIRECT3DTEXTURE9 m_renderTarget = NULL;
+//    LPDIRECT3DTEXTURE9 m_texBright = NULL;
+//    LPDIRECT3DTEXTURE9 m_texBlurH = NULL;
+//    LPDIRECT3DTEXTURE9 m_texBlurV = NULL;
+//    LPDIRECT3DTEXTURE9 m_renderTarget = NULL;
+
+    LPDIRECT3DTEXTURE9 g_pSceneTex2 = NULL;
+    LPDIRECT3DTEXTURE9  m_texPostEffectBack1 = NULL;
+    LPDIRECT3DTEXTURE9 g_pBrightTex2 = NULL;
+    LPDIRECT3DTEXTURE9 g_pBlurTexH2 = NULL;
+    LPDIRECT3DTEXTURE9 g_pBlurTexV2 = NULL;
+    LPDIRECT3DTEXTURE9 g_pBlurTexD = NULL; // 120°（★追加）
 
     void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
                             const std::string& technique);
@@ -59,6 +66,8 @@ private:
     float m_size = 1.0f;
 
     bool m_bEnable = true;
+
+    void SetRTFromTex(LPDIRECT3DTEXTURE9 tex);
 };
 
 }

@@ -119,19 +119,9 @@ void PostEffectGauss::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
     Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
 }
 
-void PostEffectBloom::SetThreshold(const float arg)
-{
-    m_threshold = arg;
-}
-
 void PostEffectGauss::SetIntensity(const float arg)
 {
     m_intensity = arg;
-}
-
-void PostEffectBloom::SetSize(const float arg)
-{
-    m_size = arg;
 }
 
 void PostEffectGauss::OnDeviceLost()

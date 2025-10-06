@@ -43,6 +43,7 @@
     <ClCompile Include="PostEffectBloom.cpp" />
     <ClCompile Include="PostEffectGauss.cpp" />
     <ClCompile Include="PostEffectSaturate.cpp" />
+    <ClCompile Include="PostEffectStarBurst.cpp" />
     <ClCompile Include="PtrManager.cpp" />
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="SkinAnimMesh.cpp" />
@@ -68,6 +69,7 @@
     <ClInclude Include="PostEffectBloom.h" />
     <ClInclude Include="PostEffectGauss.h" />
     <ClInclude Include="PostEffectSaturate.h" />
+    <ClInclude Include="PostEffectStarBurst.h" />
     <ClInclude Include="PtrManager.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="SkinAnimMesh.h" />
