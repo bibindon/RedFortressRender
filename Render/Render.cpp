@@ -137,6 +137,7 @@ void Render::Initialize(HWND hWnd)
     m_postEffectGauss.Initialize();
 
     // ブルーム
+    m_PostEffectBloom.Initialize();
     {
         // エフェクト読み込み
         hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
@@ -290,7 +291,8 @@ void Render::Draw()
     g_pSceneTex = m_postEffectSaturate.Draw(g_pRenderTarget);
 
     // ブルーム
-    DrawPass4();
+//    DrawPass4();
+    g_pSceneTex2 = m_PostEffectBloom.Draw(g_pSceneTex);
 
     // スターバースト
     DrawPass5();
@@ -531,6 +533,11 @@ void Render::SetPostEffectSaturate(const float level)
 void Render::SetPostEffectGaussianFilter(const bool arg)
 {
     m_postEffectGauss.SetEnable(arg);
+}
+
+void Render::SetPostEffectBloom(const bool arg)
+{
+    m_bBloomON = arg;
 }
 
 void Render::SetPostEffectStarBurst(const bool arg)

@@ -27,8 +27,7 @@ private:
 
     LPDIRECT3DTEXTURE9 m_texWork = NULL;
 
-    void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
-                            LPDIRECT3DTEXTURE9 texTarget,
+    void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
                             const std::string& technique);
 
     struct ScreenVertex
@@ -52,6 +51,14 @@ private:
 
     // ÉuÉãÅ[ÉÄÇÃçLÇ≥
     float m_area = 1.0f;
+
+    LPDIRECT3DTEXTURE9 g_pSceneTex2 = NULL;
+    LPDIRECT3DTEXTURE9 g_pBrightTex = NULL;
+    LPDIRECT3DTEXTURE9 g_pBlurTexH = NULL;
+    LPDIRECT3DTEXTURE9 g_pBlurTexV = NULL;
+
+    bool m_bBloomON = false;
+
 };
 
 }

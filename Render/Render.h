@@ -26,6 +26,7 @@
 #include "Sprite.h"
 #include "PostEffectGauss.h"
 #include "PostEffectSaturate.h"
+#include "PostEffectBloom.h"
 
 namespace NSRender
 {
@@ -148,6 +149,8 @@ public:
 
     void SetPostEffectGaussianFilter(const bool arg);
 
+    void SetPostEffectBloom(const bool arg);
+
     void SetPostEffectStarBurst(const bool arg);
 
     void SetShowFPS(const bool arg);
@@ -191,6 +194,7 @@ private:
     // ブルームフィルター
     // TODO ポストエフェクト用のクラスを作る
     void DrawPass4();
+    PostEffectBloom m_PostEffectBloom;
 
     // スターバースト
     // TODO ポストエフェクト用のクラスを作る
