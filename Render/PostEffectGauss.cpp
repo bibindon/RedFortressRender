@@ -119,6 +119,11 @@ void PostEffectGauss::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
     
 }
 
+void PostEffectGauss::SetIntensity(const float arg)
+{
+    m_intensity = arg;
+}
+
 void PostEffectGauss::OnDeviceLost()
 {
     m_d3dEffect->OnLostDevice();

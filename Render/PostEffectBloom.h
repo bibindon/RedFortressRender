@@ -5,6 +5,7 @@
 namespace NSRender
 {
 
+// TODO 一度小さく表示してから拡大する、というのをやった方がきれいらしい
 class PostEffectBloom
 {
 
@@ -43,6 +44,14 @@ private:
 
     float m_saturateLevel = 1.0f;
 
+    // どれくらいの明るさからブルームの対象とするか
+    float m_threshold = 1.0f;
+
+    // ブルームの明るさ
+    float m_intensity = 1.0f;
+
+    // ブルームの広さ
+    float m_area = 1.0f;
 };
 
 }

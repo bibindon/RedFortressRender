@@ -17,6 +17,10 @@ public:
     void SetEnable(const bool arg);
     bool GetEnable() const;
 
+    // TODO ŽÀ‘•
+    // 0.0 ~ 1.0
+    void SetIntensity(const float arg);
+
     void OnDeviceLost();
     void OnDeviceReset();
 
@@ -37,6 +41,8 @@ private:
     };
 
     bool m_bEnable = false;
+
+    float m_intensity = 1.0;
 
 };
 
