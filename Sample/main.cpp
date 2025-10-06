@@ -99,6 +99,8 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
         }
         else
         {
+            // Sleep入れなくてよい。
+            // ここでSleepをいれているのは速すぎて疲れるから。
             Sleep(16);
 
             {
