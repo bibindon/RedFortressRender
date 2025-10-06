@@ -17,6 +17,9 @@ public:
     void SetEnable(const bool arg);
     bool GetEnable() const;
 
+    void OnDeviceLost();
+    void OnDeviceReset();
+
 private:
 
     LPD3DXEFFECT m_d3dEffect = NULL;

@@ -10,6 +10,8 @@ namespace NSRender
 // Comポインタの管理クラス
 // 通常は使わない。よほど困ったときに詳細な情報を得るために使う想定
 
+#define SET_COMPTR(ptr) ComManager::Get()->Set(ptr, typeof(ptr), __FILE__, __LINE__);
+
 struct ComInfo
 {
     LPUNKNOWN m_comPtr;

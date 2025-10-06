@@ -67,12 +67,35 @@ void PostEffectSaturate::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
 
     m_d3dEffect->SetTechnique(technique.c_str());
 
-    ScreenVertex quad[4] = {
-        {                    -0.5f,                     -0.5f, 0, 1, 0, 0 },
-        { 1600 - 0.5f,                     -0.5f, 0, 1, 1, 0 },
-        {                    -0.5f, 900 - 0.5f, 0, 1, 0, 1 },
-        { 1600 - 0.5f, 900 - 0.5f, 0, 1, 1, 1 }
-    };
+    ScreenVertex quad[4] { };
+
+    quad[0].x   = -0.5f;
+    quad[0].y   = -0.5f;
+    quad[0].z   = 0.0f;
+    quad[0].rhw = 1.0f;
+    quad[0].u   = 0.0f;
+    quad[0].v   = 0.0f;
+
+    quad[1].x   = -0.5f + Common::ScreenW();
+    quad[1].y   = -0.5f;
+    quad[1].z   = 0.0f;
+    quad[1].rhw = 1.0f;
+    quad[1].u   = 1.0f;
+    quad[1].v   = 0.0f;
+
+    quad[2].x   = -0.5f;
+    quad[2].y   = -0.5f + Common::ScreenH();
+    quad[2].z   = 0.0f;
+    quad[2].rhw = 1.0f;
+    quad[2].u   = 0.0f;
+    quad[2].v   = 1.0f;
+
+    quad[3].x   = -0.5f + Common::ScreenW();
+    quad[3].y   = -0.5f + Common::ScreenH();
+    quad[3].z   = 0.0f;
+    quad[3].rhw = 1.0f;
+    quad[3].u   = 1.0f;
+    quad[3].v   = 1.0f;
 
     Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
     Common::D3DDevice()->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
@@ -90,6 +113,16 @@ void PostEffectSaturate::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
 
     Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
     
+}
+
+void PostEffectSaturate::OnDeviceLost()
+{
+    m_d3dEffect->OnLostDevice();
+}
+
+void PostEffectSaturate::OnDeviceReset()
+{
+    m_d3dEffect->OnResetDevice();
 }
 
 }

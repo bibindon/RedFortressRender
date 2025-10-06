@@ -56,6 +56,12 @@ public:
     static void RemoveDeviceLostResource(const AnimMesh* res);
     static void RemoveDeviceLostResource(const SkinAnimMesh* res);
 
+    static int ScreenW();
+    static void SetScreenW(const int W);
+
+    static int ScreenH();
+    static void SetScreenH(const int H);
+
 private:
 
     static LPDIRECT3D9 m_pD3D;
@@ -66,6 +72,9 @@ private:
     static std::vector<Mesh*> m_meshList;
     static std::vector<AnimMesh*> m_animMeshList;
     static std::vector<SkinAnimMesh*> m_skinAnimMeshList;
+
+    static int m_screenW;
+    static int m_screenH;
 };
 
 template <typename T>

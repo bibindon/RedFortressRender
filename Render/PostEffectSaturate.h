@@ -19,6 +19,9 @@ public:
     void SetPostEffectSaturate(const float arg);
     float GetPostEffectSaturate() const;
 
+    void OnDeviceLost();
+    void OnDeviceReset();
+
 private:
 
     LPD3DXEFFECT m_d3dEffect = NULL;

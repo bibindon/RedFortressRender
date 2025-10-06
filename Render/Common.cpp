@@ -12,6 +12,8 @@ std::vector<Sprite*> Common::m_spriteList;
 std::vector<Mesh*> Common::m_meshList;
 std::vector<AnimMesh*> Common::m_animMeshList;
 std::vector<SkinAnimMesh*> Common::m_skinAnimMeshList;
+int Common::m_screenW = 1600;
+int Common::m_screenH = 900;
 
 void Common::Initialize()
 {
@@ -141,6 +143,26 @@ void Common::RemoveDeviceLostResource(const AnimMesh* res)
 void Common::RemoveDeviceLostResource(const SkinAnimMesh* res)
 {
     Util::Remove(m_skinAnimMeshList, res);
+}
+
+int Common::ScreenW()
+{
+    return m_screenW;
+}
+
+void Common::SetScreenW(const int W)
+{
+    m_screenW = W;
+}
+
+int Common::ScreenH()
+{
+    return m_screenH;
+}
+
+void Common::SetScreenH(const int H)
+{
+    m_screenH = H;
 }
 
 }
