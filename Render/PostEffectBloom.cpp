@@ -18,118 +18,104 @@ void PostEffectBloom::Initialize()
     assert(SUCCEEDED(hResult));
 
     D3DXCreateTexture(Common::D3DDevice(),
-                      1600,
-                      900,
+                      Common::ScreenW(),
+                      Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
                       D3DFMT_A8R8G8B8,
                       D3DPOOL_DEFAULT,
-                      &m_texWork);
+                      &m_texBright);
 
     D3DXCreateTexture(Common::D3DDevice(),
-                      1600,
-                      900,
+                      Common::ScreenW(),
+                      Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
                       D3DFMT_A8R8G8B8,
                       D3DPOOL_DEFAULT,
-                      &g_pSceneTex2);
+                      &m_renderTarget);
 
     D3DXCreateTexture(Common::D3DDevice(),
-                      1600,
-                      900,
+                      Common::ScreenW(),
+                      Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
                       D3DFMT_A8R8G8B8,
                       D3DPOOL_DEFAULT,
-                      &g_pBrightTex);
+                      &m_texBlurH);
 
     D3DXCreateTexture(Common::D3DDevice(),
-                      1600,
-                      900,
+                      Common::ScreenW(),
+                      Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
                       D3DFMT_A8R8G8B8,
                       D3DPOOL_DEFAULT,
-                      &g_pBlurTexH);
-
-    D3DXCreateTexture(Common::D3DDevice(),
-                      1600,
-                      900,
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
-                      D3DPOOL_DEFAULT,
-                      &g_pBlurTexV);
+                      &m_texBlurV);
 }
 
-LPDIRECT3DTEXTURE9 PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderTarget)
+LPDIRECT3DTEXTURE9 PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource)
 {
     // ------------------------------------------------------------
-    // (1) BrightPass : 入力 = g_pSceneTex, 出力 = g_pBrightTex
+    // (1) BrightPass : 入力 = renderSource, 出力 = m_texWork
     // ------------------------------------------------------------
     {
-        m_d3dEffect->SetTexture("g_SrcTex", renderTarget);
+        m_d3dEffect->SetTexture("g_SrcTex", renderSource);
 
         float texelSize[2] = { 1.0f / Common::ScreenW(), 1.0f / Common::ScreenH() };
         m_d3dEffect->SetFloatArray("g_TexelSize", texelSize, 2);
 
-        DrawFullscreenQuad(m_texWork, "BrightPass");
+        DrawFullscreenQuad(m_texBright, "BrightPass");
     }
 
     // ------------------------------------------------------------
-    // (2) Horizontal Blur : 入力 = g_pBrightTex, 出力 = g_pBlurTexH
+    // (2) Horizontal Blur : 入力 = m_texBright, 出力 = m_texBlurH
     // ------------------------------------------------------------
     {
-        m_d3dEffect->SetTexture("g_SrcTex", m_texWork);
+        m_d3dEffect->SetTexture("g_SrcTex", m_texBright);
 
         // 横方向
         float dir[4] = { 1, 0, 0, 0 };
         m_d3dEffect->SetFloatArray("g_Direction", dir, 4);
 
-        DrawFullscreenQuad(g_pBlurTexH, "Blur");
+        DrawFullscreenQuad(m_texBlurH, "Blur");
     }
 
     // ------------------------------------------------------------
-    // (3) Vertical Blur : 入力 = g_pBlurTexH, 出力 = g_pBlurTexV
+    // (3) Vertical Blur : 入力 = m_texBlurH, 出力 = m_texBlurV
     // ------------------------------------------------------------
     {
-        m_d3dEffect->SetTexture("g_SrcTex", g_pBlurTexH);
+        m_d3dEffect->SetTexture("g_SrcTex", m_texBlurH);
 
         // 縦方向
         float dir[4] = { 0, 1, 0, 0 };
         m_d3dEffect->SetFloatArray("g_Direction", dir, 4);
 
-        DrawFullscreenQuad(g_pBlurTexV, "Blur");
+        DrawFullscreenQuad(m_texBlurV, "Blur");
     }
 
     // ------------------------------------------------------------
-    // (4) Combine : (SceneTex + BlurTexV) → g_pSceneTex2
+    // (4) Combine : (renderSource + m_texBlurV) → m_renderTarget
     // ------------------------------------------------------------
     {
-        m_d3dEffect->SetTexture("g_SceneTex", renderTarget);
-        m_d3dEffect->SetTexture("g_BlurTex", g_pBlurTexV);
+        m_d3dEffect->SetTexture("g_SceneTex", renderSource);
+        m_d3dEffect->SetTexture("g_BlurTex", m_texBlurV);
 
-        DrawFullscreenQuad(g_pSceneTex2, "Combine");
+        DrawFullscreenQuad(m_renderTarget, "Combine");
     }
 
-    return g_pSceneTex2;
+    return m_renderTarget;
 }
 
 void PostEffectBloom::Finalize()
 {
-    SAFE_RELEASE(m_texWork);
+    SAFE_RELEASE(m_texBright);
     SAFE_RELEASE(m_d3dEffect);
 }
 
-void PostEffectBloom::SetPostEffectSaturate(const float level)
+void PostEffectBloom::SetEnable(const float level)
 {
     m_saturateLevel = level;
-}
-
-float PostEffectBloom::GetPostEffectSaturate() const
-{
-    return m_saturateLevel;
 }
 
 void PostEffectBloom::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,

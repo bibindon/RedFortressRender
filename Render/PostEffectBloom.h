@@ -15,7 +15,9 @@ public:
     LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget);
     void Finalize();
 
-    void SetPostEffectSaturate(const float arg);
+    void SetThreshold(const float arg);
+    void SetIntensity(const float arg);
+    void SetSize(const float arg);
     float GetPostEffectSaturate() const;
 
     void OnDeviceLost();
@@ -25,7 +27,10 @@ private:
 
     LPD3DXEFFECT m_d3dEffect = NULL;
 
-    LPDIRECT3DTEXTURE9 m_texWork = NULL;
+    LPDIRECT3DTEXTURE9 m_texBright = NULL;
+    LPDIRECT3DTEXTURE9 m_texBlurH = NULL;
+    LPDIRECT3DTEXTURE9 m_texBlurV = NULL;
+    LPDIRECT3DTEXTURE9 m_renderTarget = NULL;
 
     void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
                             const std::string& technique);
@@ -41,23 +46,17 @@ private:
         float v;
     };
 
-    float m_saturateLevel = 1.0f;
-
     // どれくらいの明るさからブルームの対象とするか
+    // 0.0 ~ 1.0
     float m_threshold = 1.0f;
 
     // ブルームの明るさ
+    // 0.0 ~ 1.0
     float m_intensity = 1.0f;
 
     // ブルームの広さ
-    float m_area = 1.0f;
-
-    LPDIRECT3DTEXTURE9 g_pSceneTex2 = NULL;
-    LPDIRECT3DTEXTURE9 g_pBrightTex = NULL;
-    LPDIRECT3DTEXTURE9 g_pBlurTexH = NULL;
-    LPDIRECT3DTEXTURE9 g_pBlurTexV = NULL;
-
-    bool m_bBloomON = false;
+    // 0.0 ~ 1.0
+    float m_size = 1.0f;
 
 };
 

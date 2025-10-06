@@ -896,7 +896,7 @@ void Render::DrawPass5()
     // （Render::DrawPassEnd で g_SrcTex ← m_texPostEffectBack1 をコピー） 
     // ※ g_pEffectEnd の Copy を使って素通しにも対応。 :contentReference[oaicite:6]{index=6}
 
-    // シェーダ未ロード or 機能OFFなら g_pSceneTex2 → g_pSceneTex3 をコピーして終了
+    // シェーダ未ロード or 機能OFFなら m_renderTarget → g_pSceneTex3 をコピーして終了
     if (g_pStarBusrtEffect == NULL || !m_bStarBurstON)
     {
         LPDIRECT3DSURFACE9 pRT = NULL;
@@ -916,7 +916,7 @@ void Render::DrawPass5()
     float texelSize[2] = { 1.0f / m_windowSizeWidth, 1.0f / m_windowSizeHeight };
     g_pStarBusrtEffect->SetFloatArray("g_TexelSize", texelSize, 2); // :contentReference[oaicite:7]{index=7}
 
-    // (2) BrightPass : 入力=g_pSceneTex2, 出力=g_pBrightTex2
+    // (2) BrightPass : 入力=m_renderTarget, 出力=g_pBrightTex2
     SetRTFromTex(g_pBrightTex2);
     Common::D3DDevice()->BeginScene();
     DrawFullScreenQuad(g_pSceneTex2, g_pStarBusrtEffect, "BrightPass"); // :contentReference[oaicite:8]{index=8}
