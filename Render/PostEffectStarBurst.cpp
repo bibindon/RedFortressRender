@@ -64,15 +64,6 @@ void PostEffectStarBurst::Initialize()
                       D3DFMT_A8R8G8B8,
                       D3DPOOL_DEFAULT,
                       &g_pBlurTexD);
-
-    D3DXCreateTexture(Common::D3DDevice(),
-                      1600,
-                      900,
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
-                      D3DPOOL_DEFAULT,
-                      &g_pSceneTex2);
 }
 
 LPDIRECT3DTEXTURE9 PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource)
@@ -81,25 +72,6 @@ LPDIRECT3DTEXTURE9 PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource)
     {
         return renderSource;
     }
-    // 最終表示は DrawPassEnd で g_pSceneTex3 を画面に出す想定
-    // （Render::DrawPassEnd で g_SrcTex ← m_texPostEffectBack1 をコピー） 
-    // ※ g_pEffectEnd の Copy を使って素通しにも対応。 :contentReference[oaicite:6]{index=6}
-
-    // シェーダ未ロード or 機能OFFなら m_renderTarget → g_pSceneTex3 をコピーして終了
-//    if (m_d3dEffect == NULL || !m_bEnable)
-//    {
-//        LPDIRECT3DSURFACE9 pRT = NULL;
-//        m_texPostEffectBack1->GetSurfaceLevel(0, &pRT);
-//        Common::D3DDevice()->SetRenderTarget(0, pRT);
-//        SAFE_RELEASE(pRT);
-//
-//        Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
-//        Common::D3DDevice()->BeginScene();
-//        // 汎用コピー（エフェクトEndの"Copy"）
-//        DrawFullscreenQuad(g_pSceneTex2, g_pEffectEnd, "Copy");
-//        Common::D3DDevice()->EndScene();
-//        return;
-//    }
 
     // テクセルサイズ（ブラーで使用）
     float texelSize[2] = { 1.0f / Common::ScreenW(), 1.0f / Common::ScreenH() };

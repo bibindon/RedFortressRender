@@ -142,68 +142,15 @@ void Render::Initialize(HWND hWnd)
     // スターバースト
     m_postEffectStarBurst.Initialize();
 
-    {
-
-        hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                           L"res\\shader\\PostEffectStarBurst.fx",
-                                           NULL,
-                                           NULL,
-                                           D3DXSHADER_DEBUG,
-                                           NULL,
-                                           &g_pStarBusrtEffect,
-                                           NULL);
-        assert(hResult == S_OK);
-
-        // ★ 各テクスチャ作成（サーフェイスは保持しない）
-        D3DXCreateTexture(Common::D3DDevice(),
-                          1600,
-                          900,
-                          1,
-                          D3DUSAGE_RENDERTARGET,
-                          D3DFMT_A8R8G8B8,
-                          D3DPOOL_DEFAULT,
-                          &m_texPostEffectBack1);
-
-        D3DXCreateTexture(Common::D3DDevice(),
-                          1600,
-                          900,
-                          1,
-                          D3DUSAGE_RENDERTARGET,
-                          D3DFMT_A8R8G8B8,
-                          D3DPOOL_DEFAULT,
-                          &g_pBrightTex2);
-
-        // 0°（水平）
-        D3DXCreateTexture(Common::D3DDevice(),
-                          1600,
-                          900,
-                          1,
-                          D3DUSAGE_RENDERTARGET,
-                          D3DFMT_A8R8G8B8,
-                          D3DPOOL_DEFAULT,
-                          &g_pBlurTexH2);
-
-        // 60°
-        D3DXCreateTexture(Common::D3DDevice(),
-                          1600,
-                          900,
-                          1,
-                          D3DUSAGE_RENDERTARGET,
-                          D3DFMT_A8R8G8B8,
-                          D3DPOOL_DEFAULT,
-                          &g_pBlurTexV2);
-
-        // 120°（★追加）
-        D3DXCreateTexture(Common::D3DDevice(),
-                          1600,
-                          900,
-                          1,
-                          D3DUSAGE_RENDERTARGET,
-                          D3DFMT_A8R8G8B8,
-                          D3DPOOL_DEFAULT,
-                          &g_pBlurTexD);
-
-    }
+    // ★ 各テクスチャ作成（サーフェイスは保持しない）
+    D3DXCreateTexture(Common::D3DDevice(),
+                      1600,
+                      900,
+                      1,
+                      D3DUSAGE_RENDERTARGET,
+                      D3DFMT_A8R8G8B8,
+                      D3DPOOL_DEFAULT,
+                      &m_texPostEffectBack1);
 
     {
         HRESULT hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
@@ -243,10 +190,10 @@ void Render::Draw()
     m_texPostEffectBack1 = m_postEffectSaturate.Draw(g_pRenderTarget);
 
     // ブルーム
-    g_pSceneTex2 = m_PostEffectBloom.Draw(m_texPostEffectBack1);
+    m_texPostEffectBack1 = m_PostEffectBloom.Draw(m_texPostEffectBack1);
 
     // スターバースト
-    m_texPostEffectBack1 = m_postEffectStarBurst.Draw(g_pSceneTex2);
+    m_texPostEffectBack1 = m_postEffectStarBurst.Draw(m_texPostEffectBack1);
 
     // ガウス
     m_texPostEffectBack1 = m_postEffectGauss.Draw(m_texPostEffectBack1);
@@ -493,7 +440,7 @@ void Render::SetPostEffectBloom(const bool arg)
 
 void Render::SetPostEffectStarBurst(const bool arg)
 {
-    m_bStarBurstON = arg;
+    m_postEffectStarBurst.SetEnable(arg);
 }
 
 void Render::SetShowFPS(const bool arg)
@@ -815,22 +762,6 @@ void Render::DrawPass1()
     SAFE_RELEASE(pOldRT0);
 }
 
-void Render::SetRTFromTex(LPDIRECT3DTEXTURE9 tex)
-{
-    LPDIRECT3DSURFACE9 rt = NULL;
-    tex->GetSurfaceLevel(0, &rt);                 // AddRef 済みで返る
-    Common::D3DDevice()->SetRenderTarget(0, rt);         // Device 側が参照を保持
-    SAFE_RELEASE(rt);                             // 即ReleaseでOK
-}
-
-void Render::SetRTBackBuffer()
-{
-    LPDIRECT3DSURFACE9 bb = NULL;
-    Common::D3DDevice()->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &bb);
-    Common::D3DDevice()->SetRenderTarget(0, bb);
-    SAFE_RELEASE(bb);
-}
-
 float Render::CalcFPS()
 {
     //--------------------------------------------------------
@@ -946,80 +877,5 @@ void Render::Draw2D()
     m_sprite.Draw();
 
 }
-
-void Render::DrawFullscreenQuad()
-{
-    QuadVertex v[4] { };
-
-    float du = 0.5f / 1600.f;
-    float dv = 0.5f / 900.f;
-
-    v[0].x = -1.0f;
-    v[0].y = -1.0f;
-    v[0].z = 0.0f;
-    v[0].w = 1.0f;
-    v[0].u = 0.0f + du;
-    v[0].v = 1.0f - dv;
-
-    v[1].x = -1.0f;
-    v[1].y = 1.0f;
-    v[1].z = 0.0f;
-    v[1].w = 1.0f;
-    v[1].u = 0.0f + du;
-    v[1].v = 0.0f + dv;
-
-    v[2].x = 1.0f;
-    v[2].y = -1.0f;
-    v[2].z = 0.0f;
-    v[2].w = 1.0f;
-    v[2].u = 1.0f - du;
-    v[2].v = 1.0f - dv;
-
-    v[3].x = 1.0f;
-    v[3].y = 1.0f;
-    v[3].z = 0.0f;
-    v[3].w = 1.0f;
-    v[3].u = 1.0f - du;
-    v[3].v = 0.0f + dv;
-
-    Common::D3DDevice()->SetVertexDeclaration(g_pQuadDecl);
-    Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, v, sizeof(QuadVertex));
-}
-
-void Render::DrawFullScreenQuad(LPDIRECT3DTEXTURE9 tex, LPD3DXEFFECT effect, const char* technique)
-{
-    // 固定機能（FVF）で描くため、前のパスの VS/頂点宣言を解除
-    Common::D3DDevice()->SetVertexShader(NULL);
-    Common::D3DDevice()->SetVertexDeclaration(NULL);
-
-    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
-
-    SCREENVERTEX vertices[4] =
-    {
-        { -0.5f,  -0.5f,   0, 1, 0, 0 },
-        { 1599.5f, -0.5f,   0, 1, 1, 0 },
-        { -0.5f,  899.5f,  0, 1, 0, 1 },
-        { 1599.5f, 899.5f,  0, 1, 1, 1 },
-    };
-
-    Common::D3DDevice()->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
-
-    effect->SetTechnique(technique);
-    if (tex)
-    {
-        effect->SetTexture("g_SrcTex", tex);
-    }
-
-    UINT nPass = 0;
-    effect->Begin(&nPass, 0);
-    effect->BeginPass(0);
-    // （BeginPass後にVSがバインドされるテクでも、上でNULLにしているので固定機能で通る）
-    Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, vertices, sizeof(SCREENVERTEX));
-    effect->EndPass();
-    effect->End();
-
-    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
-}
-
 
 }

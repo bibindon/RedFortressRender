@@ -212,14 +212,6 @@ private:
     // 追加: スプライト
     LPD3DXSPRITE g_pSprite = NULL;
 
-    struct QuadVertex
-    {
-        float x, y, z, w; // クリップ空間（-1..1, w=1）
-        float u, v;       // テクスチャ座標
-    };
-
-    void DrawFullscreenQuad();
-
     // 彩度フィルター
     float m_saturateLevel = 1.0f;
 
@@ -229,47 +221,17 @@ private:
         float u, v;
     };
 
-    //---------------------------------------------------------------
     // ガウスフィルター
-    //---------------------------------------------------------------
-
     PostEffectGauss m_postEffectGauss;
 
     LPDIRECT3DTEXTURE9 g_pSceneTex2 = NULL;
 
-    void DrawFullScreenQuad(LPDIRECT3DTEXTURE9 tex, LPD3DXEFFECT effect, const char* technique);
-
-    void SetRTFromTex(LPDIRECT3DTEXTURE9 tex);
-    void SetRTBackBuffer();
-
-    struct SCREENVERTEX
-    {
-        float x, y, z, rhw;
-        float u, v;
-    };
-
     //---------------------------------------------------------------
     // スターバースト
-    // TODO 別のクラスにする
     //---------------------------------------------------------------
-
     PostEffectStarBurst m_postEffectStarBurst;
-    bool m_bStarBurstON = false;
 
-    LPD3DXEFFECT g_pStarBusrtEffect = NULL;   // bloom.fx
-
-    // --- Anamorphic 用リソース（★サーフェイスは保持しない） ---
     LPDIRECT3DTEXTURE9  m_texPostEffectBack1 = NULL;
-    LPDIRECT3DTEXTURE9 g_pBrightTex2 = NULL;
-    LPDIRECT3DTEXTURE9 g_pBlurTexH2 = NULL;
-    LPDIRECT3DTEXTURE9 g_pBlurTexV2 = NULL;
-    LPDIRECT3DTEXTURE9 g_pBlurTexD = NULL; // 120°（★追加）
-
-//    struct SCREENVERTEX {
-//        float x, y, z, rhw;
-//        float u, v;
-//    };
-
 
     //---------------------------------------------------------------
     // テクスチャ―の内容を画面に出力
