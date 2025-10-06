@@ -192,8 +192,6 @@ private:
     PostEffectSaturate m_postEffectSaturate;
 
     // ブルームフィルター
-    // TODO ポストエフェクト用のクラスを作る
-    void DrawPass4();
     PostEffectBloom m_PostEffectBloom;
 
     // スターバースト
@@ -232,8 +230,6 @@ private:
         float u, v;
     };
 
-    LPDIRECT3DTEXTURE9 g_pSceneTex = NULL;
-
     //---------------------------------------------------------------
     // ガウスフィルター
     //---------------------------------------------------------------
@@ -242,17 +238,11 @@ private:
 
     //---------------------------------------------------------------
     // ブルームフィルター
-    // TODO 別のクラスにする
     //---------------------------------------------------------------
 
     bool m_bBloomON = false;
 
-    LPD3DXEFFECT g_pBloomEffect = NULL;
-
     LPDIRECT3DTEXTURE9 g_pSceneTex2 = NULL;
-    LPDIRECT3DTEXTURE9 g_pBrightTex = NULL;
-    LPDIRECT3DTEXTURE9 g_pBlurTexH = NULL;
-    LPDIRECT3DTEXTURE9 g_pBlurTexV = NULL;
 
     void DrawFullScreenQuad(LPDIRECT3DTEXTURE9 tex, LPD3DXEFFECT effect, const char* technique);
 
