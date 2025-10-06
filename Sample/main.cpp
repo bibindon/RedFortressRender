@@ -135,7 +135,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                 text += L"\n";
                 text += L"b : ブルームON/OFF\n";
                 text += L"Shift + b : スターバーストON/OFF\n";
-                g_Render.DrawText_(g_fontId, text, 10, 10);
+                g_Render.DrawText_(g_fontId, text, 10, 40);
             }
 
             for (auto& elem : g_textInfoList)

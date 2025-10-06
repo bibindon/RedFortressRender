@@ -5,7 +5,7 @@
 namespace NSRender
 {
 
-class PostEffectSaturate
+class PostEffectBloom
 {
 
 public:

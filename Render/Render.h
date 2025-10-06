@@ -9,6 +9,7 @@
 #include <cassert>
 #include <crtdbg.h>
 #include <vector>
+#include <chrono>
 
 #include "Mesh.h"
 #include "MeshSmooth.h"
@@ -149,6 +150,8 @@ public:
 
     void SetPostEffectStarBurst(const bool arg);
 
+    void SetShowFPS(const bool arg);
+
 private:
 
     HWND m_hWnd = NULL;
@@ -285,7 +288,13 @@ private:
     //---------------------------------------------------------------
     LPD3DXEFFECT g_pEffectEnd = NULL;
 
+    bool m_bShowFPS = true;
 
+    float CalcFPS();
+    void ShowFPS(const float arg);
+
+    int m_fontID = -1;
+    std::vector<std::chrono::steady_clock::time_point> m_vecTime;
 };
 }
 

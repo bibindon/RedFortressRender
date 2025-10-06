@@ -25,6 +25,7 @@
 #include "Light.h"
 
 #include "Font.h"
+#include <chrono>
 
 #define SAFE_RELEASE(p) { if (p) { (p)->Release(); (p) = NULL; } }
 
@@ -276,6 +277,12 @@ void Render::Finalize()
 void Render::Draw()
 {
     HRESULT hResult = E_FAIL;
+
+    if (m_bShowFPS)
+    {
+        float fps = CalcFPS();
+        ShowFPS(fps);
+    }
 
     DrawPass1();
 
@@ -529,6 +536,11 @@ void Render::SetPostEffectGaussianFilter(const bool arg)
 void Render::SetPostEffectStarBurst(const bool arg)
 {
     m_bStarBurstON = arg;
+}
+
+void Render::SetShowFPS(const bool arg)
+{
+    m_bShowFPS = arg;
 }
 
 void Render::RotateCamera(const D3DXVECTOR3& rot)
@@ -859,6 +871,67 @@ void Render::SetRTBackBuffer()
     Common::D3DDevice()->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &bb);
     Common::D3DDevice()->SetRenderTarget(0, bb);
     SAFE_RELEASE(bb);
+}
+
+float Render::CalcFPS()
+{
+    //--------------------------------------------------------
+    // 毎フレーム、現在時刻を記録し、リストの末尾に追加する。
+    // 先頭ほど古い時刻が記録される。
+    // リストの先頭から、記録された時刻と現在時刻の差を比較していくと、
+    // 最初は1秒以上の差があるが、やがて1秒以下の要素が見つかる。（Aとする）
+    // そのときの、A以降の要素の総数がFPSである
+    //--------------------------------------------------------
+
+    using ClockType = std::chrono::steady_clock;
+
+    const int timeRecordCapacity = 300;
+
+    ClockType::time_point nowTime = ClockType::now();
+
+    m_vecTime.push_back(nowTime);
+
+    const int overflowCount = (int)m_vecTime.size() - timeRecordCapacity;
+    if (overflowCount > 0)
+    {
+        m_vecTime.erase(m_vecTime.begin(), m_vecTime.begin() + overflowCount);
+    }
+
+    ClockType::time_point oneSecondAgo = nowTime - std::chrono::seconds(1);
+
+    auto windowBegin = std::lower_bound(m_vecTime.begin(), m_vecTime.end(), oneSecondAgo);
+    int framesInWindow = (int)std::distance(windowBegin, m_vecTime.end());
+
+    if (framesInWindow <= 1)
+    {
+        return 0.0f;
+    }
+
+    double secondsSpan = std::chrono::duration<double>(m_vecTime.back() - *windowBegin).count();
+    if (secondsSpan <= 0.0)
+    {
+        return 0.0f;
+    }
+
+    float fpsFloat = ((float)framesInWindow - 1) / secondsSpan;
+    return fpsFloat;
+}
+
+void Render::ShowFPS(const float arg)
+{
+    if (m_fontID == -1)
+    {
+        m_fontID = SetUpFont(L"BIZ UDゴシック",
+                             20,
+                             D3DCOLOR_RGBA(0, 255, 0, 255));
+    }
+
+    wchar_t buffer[64];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", arg);
+
+    std::wstring fps(buffer);
+
+    DrawText_(m_fontID, fps, 10, 10);
 }
 
 
