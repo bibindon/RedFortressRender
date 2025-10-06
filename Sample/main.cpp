@@ -135,6 +135,8 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                 text += L"\n";
                 text += L"b : ブルームON/OFF\n";
                 text += L"Shift + b : スターバーストON/OFF\n";
+                text += L"\n";
+                text += L"Shift + f : FPS表示ON/OFF\n";
                 g_Render.DrawText_(g_fontId, text, 10, 40);
             }
 
@@ -488,6 +490,17 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 g_Render.SetPostEffectStarBurst(bStarBurst);
             }
         }
+
+        // FPS表示
+        {
+            static bool bShowFPS = true;
+            if (wParam == 'F')
+            {
+                bShowFPS = !bShowFPS;
+                g_Render.SetShowFPS(bShowFPS);
+            }
+        }
+
     }
     }
 
