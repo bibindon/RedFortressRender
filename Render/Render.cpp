@@ -129,16 +129,6 @@ void Render::Initialize(HWND hWnd)
     // ブルーム
     m_PostEffectBloom.Initialize();
 
-    // 各テクスチャ作成（サーフェイスは保持しない）
-    D3DXCreateTexture(Common::D3DDevice(),
-                      1600,
-                      900,
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
-                      D3DPOOL_DEFAULT,
-                      &g_pSceneTex2);
-
     // スターバースト
     m_postEffectStarBurst.Initialize();
 
@@ -849,7 +839,7 @@ void Render::DrawPassEnd()
         {  m_windowSizeWidth - 0.5f,   m_windowSizeHeight - 0.5f, 0, 1, 1, 1 },
     };
 
-    // ここでは DrawPass4 の合成結果（g_pSceneTex2）を画面にコピー
+    // ここでは DrawPass4 の合成結果（m_texPostEffectBack1）を画面にコピー
     g_pEffectEnd->SetTechnique("Copy");
     g_pEffectEnd->SetTexture("g_SrcTex", m_texPostEffectBack1);
 

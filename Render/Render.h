@@ -189,19 +189,23 @@ private:
 
     void DrawPass1();
 
+    LPDIRECT3DTEXTURE9  m_texPostEffectBack1 = NULL;
+
     // 彩度フィルター
     PostEffectSaturate m_postEffectSaturate;
 
     // ブルームフィルター
     PostEffectBloom m_PostEffectBloom;
 
+    // ガウスフィルター
+    PostEffectGauss m_postEffectGauss;
+
     // スターバースト
-    // TODO ポストエフェクト用のクラスを作る
+    PostEffectStarBurst m_postEffectStarBurst;
+
     void DrawPassEnd();
 
     void Draw2D();
-
-    LPD3DXEFFECT g_pEffect2 = NULL;
 
     LPDIRECT3DTEXTURE9 g_pRenderTarget = NULL;
     LPDIRECT3DTEXTURE9 g_pRenderTarget2 = NULL;
@@ -212,26 +216,11 @@ private:
     // 追加: スプライト
     LPD3DXSPRITE g_pSprite = NULL;
 
-    // 彩度フィルター
-    float m_saturateLevel = 1.0f;
-
     struct ScreenVertex
     {
         float x, y, z, rhw;
         float u, v;
     };
-
-    // ガウスフィルター
-    PostEffectGauss m_postEffectGauss;
-
-    LPDIRECT3DTEXTURE9 g_pSceneTex2 = NULL;
-
-    //---------------------------------------------------------------
-    // スターバースト
-    //---------------------------------------------------------------
-    PostEffectStarBurst m_postEffectStarBurst;
-
-    LPDIRECT3DTEXTURE9  m_texPostEffectBack1 = NULL;
 
     //---------------------------------------------------------------
     // テクスチャ―の内容を画面に出力
