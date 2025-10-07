@@ -189,8 +189,6 @@ private:
 
     void DrawPass1();
 
-    LPDIRECT3DTEXTURE9  m_texPostEffectBack1 = NULL;
-
     // 彩度フィルター
     PostEffectSaturate m_postEffectSaturate;
 

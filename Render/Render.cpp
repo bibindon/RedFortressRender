@@ -128,15 +128,6 @@ void Render::Initialize(HWND hWnd)
     // スターバースト
     m_postEffectStarBurst.Initialize();
 
-    D3DXCreateTexture(Common::D3DDevice(),
-                      1600,
-                      900,
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
-                      D3DPOOL_DEFAULT,
-                      &m_texPostEffectBack1);
-
     {
         HRESULT hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
                                                    L"res\\shader\\PostEffectEnd.fx",
@@ -172,16 +163,16 @@ void Render::Draw()
     DrawPass1();
 
     // 彩度変更
-    m_texPostEffectBack1 = m_postEffectSaturate.Draw(g_pRenderTarget);
+    g_pRenderTarget = m_postEffectSaturate.Draw(g_pRenderTarget);
 
     // ブルーム
-    m_texPostEffectBack1 = m_PostEffectBloom.Draw(m_texPostEffectBack1);
+    g_pRenderTarget = m_PostEffectBloom.Draw(g_pRenderTarget);
 
     // スターバースト
-    m_texPostEffectBack1 = m_postEffectStarBurst.Draw(m_texPostEffectBack1);
+    g_pRenderTarget = m_postEffectStarBurst.Draw(g_pRenderTarget);
 
     // ガウス
-    m_texPostEffectBack1 = m_postEffectGauss.Draw(m_texPostEffectBack1);
+    g_pRenderTarget = m_postEffectGauss.Draw(g_pRenderTarget);
 
     DrawPassEnd();
 
@@ -834,9 +825,9 @@ void Render::DrawPassEnd()
         {  m_windowSizeWidth - 0.5f,   m_windowSizeHeight - 0.5f, 0, 1, 1, 1 },
     };
 
-    // ここでは DrawPass4 の合成結果（m_texPostEffectBack1）を画面にコピー
+    // ここでは DrawPass4 の合成結果（g_pRenderTarget）を画面にコピー
     g_pEffectEnd->SetTechnique("Copy");
-    g_pEffectEnd->SetTexture("g_SrcTex", m_texPostEffectBack1);
+    g_pEffectEnd->SetTexture("g_SrcTex", g_pRenderTarget);
 
     Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
     Common::D3DDevice()->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
