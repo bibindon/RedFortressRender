@@ -56,7 +56,6 @@ void PostEffectBloom::Initialize()
 
 LPDIRECT3DTEXTURE9 PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource)
 {
-    // TODO ìÆçÏÇµÇ»Ç¢
     if (!m_bEnable)
     {
         return renderSource;

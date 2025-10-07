@@ -28,6 +28,7 @@
 #include "PostEffectSaturate.h"
 #include "PostEffectBloom.h"
 #include "PostEffectStarBurst.h"
+#include "PostEffectEnd.h"
 
 namespace NSRender
 {
@@ -201,11 +202,12 @@ private:
     // スターバースト
     PostEffectStarBurst m_postEffectStarBurst;
 
-    void DrawPassEnd();
+    // テクスチャ―の内容を画面に出力
+    PostEffectEnd m_postEffectEnd;
 
     void Draw2D();
 
-    LPDIRECT3DTEXTURE9 g_pRenderTarget = NULL;
+    LPDIRECT3DTEXTURE9 m_pRenderTarget1 = NULL;
     LPDIRECT3DTEXTURE9 g_pRenderTarget2 = NULL;
 
     // フルスクリーンクアッド用
@@ -217,10 +219,9 @@ private:
         float u, v;
     };
 
-    //---------------------------------------------------------------
-    // テクスチャ―の内容を画面に出力
-    //---------------------------------------------------------------
-    LPD3DXEFFECT g_pEffectEnd = NULL;
+    //-----------------------------------------------------------------
+    // FPS表示
+    //-----------------------------------------------------------------
 
     bool m_bShowFPS = true;
 

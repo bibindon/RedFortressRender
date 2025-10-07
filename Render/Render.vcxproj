@@ -41,6 +41,7 @@
     <ClCompile Include="MeshSmooth.cpp" />
     <ClCompile Include="MeshSSSLike.cpp" />
     <ClCompile Include="PostEffectBloom.cpp" />
+    <ClCompile Include="PostEffectEnd.cpp" />
     <ClCompile Include="PostEffectGauss.cpp" />
     <ClCompile Include="PostEffectSaturate.cpp" />
     <ClCompile Include="PostEffectStarBurst.cpp" />
@@ -67,6 +68,7 @@
     <ClInclude Include="MeshSmooth.h" />
     <ClInclude Include="MeshSSSLike.h" />
     <ClInclude Include="PostEffectBloom.h" />
+    <ClInclude Include="PostEffectEnd.h" />
     <ClInclude Include="PostEffectGauss.h" />
     <ClInclude Include="PostEffectSaturate.h" />
     <ClInclude Include="PostEffectStarBurst.h" />

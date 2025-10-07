@@ -92,7 +92,7 @@ void Render::Initialize(HWND hWnd)
                                     D3DUSAGE_RENDERTARGET,
                                     D3DFMT_A8R8G8B8,
                                     D3DPOOL_DEFAULT,
-                                    &g_pRenderTarget);
+                                    &m_pRenderTarget1);
         assert(hResult == S_OK);
 
         hResult = D3DXCreateTexture(Common::D3DDevice(),
@@ -128,16 +128,8 @@ void Render::Initialize(HWND hWnd)
     // スターバースト
     m_postEffectStarBurst.Initialize();
 
-    {
-        HRESULT hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                                   L"res\\shader\\PostEffectEnd.fx",
-                                                   NULL, NULL,
-                                                   D3DXSHADER_DEBUG,
-                                                   NULL,
-                                                   &g_pEffectEnd,
-                                                   NULL);
-        assert(SUCCEEDED(hResult));
-    }
+    // 最終処理用ポストエフェクト
+    m_postEffectEnd.Initialize();
 
 //    AddMesh(L"cube.x", D3DXVECTOR3(0, 0, 0), D3DXVECTOR3(0, 0, 0), 1.f, 1.f);
 }
@@ -163,18 +155,19 @@ void Render::Draw()
     DrawPass1();
 
     // 彩度変更
-    g_pRenderTarget = m_postEffectSaturate.Draw(g_pRenderTarget);
+    m_pRenderTarget1 = m_postEffectSaturate.Draw(m_pRenderTarget1);
 
     // ブルーム
-    g_pRenderTarget = m_PostEffectBloom.Draw(g_pRenderTarget);
+    m_pRenderTarget1 = m_PostEffectBloom.Draw(m_pRenderTarget1);
 
     // スターバースト
-    g_pRenderTarget = m_postEffectStarBurst.Draw(g_pRenderTarget);
+    m_pRenderTarget1 = m_postEffectStarBurst.Draw(m_pRenderTarget1);
 
     // ガウス
-    g_pRenderTarget = m_postEffectGauss.Draw(g_pRenderTarget);
+    m_pRenderTarget1 = m_postEffectGauss.Draw(m_pRenderTarget1);
 
-    DrawPassEnd();
+    // g_pRenderTargetの内容を画面に転送
+    m_postEffectEnd.Draw(m_pRenderTarget1);
 
     Draw2D();
 
@@ -652,7 +645,7 @@ void Render::DrawPass1()
     LPDIRECT3DSURFACE9 pRT0 = NULL;
     LPDIRECT3DSURFACE9 pRT1 = NULL;
 
-    hResult = g_pRenderTarget->GetSurfaceLevel(0, &pRT0);
+    hResult = m_pRenderTarget1->GetSurfaceLevel(0, &pRT0);
     assert(hResult == S_OK);
 
     hResult = g_pRenderTarget2->GetSurfaceLevel(0, &pRT1);
@@ -798,49 +791,6 @@ void Render::ShowFPS(const float arg)
 
     DrawText_(m_fontID, fps, 10, 10);
 }
-
-void Render::DrawPassEnd()
-{
-    // 最終表示（固定機能ではなくシェーダでコピー）
-    if (g_pEffectEnd == NULL)
-    {
-        return;
-    }
-
-    // バックバッファを RT にセット（都度取得→即 Release）
-    LPDIRECT3DSURFACE9 pBackBuffer = NULL;
-    Common::D3DDevice()->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
-    Common::D3DDevice()->SetRenderTarget(0, pBackBuffer);
-    SAFE_RELEASE(pBackBuffer);
-
-    Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
-    Common::D3DDevice()->BeginScene();
-
-    // フルスクリーン板ポリ
-    ScreenVertex quad[4] =
-    {
-        {                     -0.5f,                      -0.5f, 0, 1, 0, 0 },
-        {  m_windowSizeWidth - 0.5f,                      -0.5f, 0, 1, 1, 0 },
-        {                     -0.5f,   m_windowSizeHeight - 0.5f, 0, 1, 0, 1 },
-        {  m_windowSizeWidth - 0.5f,   m_windowSizeHeight - 0.5f, 0, 1, 1, 1 },
-    };
-
-    // ここでは DrawPass4 の合成結果（g_pRenderTarget）を画面にコピー
-    g_pEffectEnd->SetTechnique("Copy");
-    g_pEffectEnd->SetTexture("g_SrcTex", g_pRenderTarget);
-
-    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
-    Common::D3DDevice()->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
-    g_pEffectEnd->Begin(NULL, 0);
-    g_pEffectEnd->BeginPass(0);
-    Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, quad, sizeof(ScreenVertex));
-    g_pEffectEnd->EndPass();
-    g_pEffectEnd->End();
-    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
-
-    Common::D3DDevice()->EndScene();
-}
-
 
 void Render::Draw2D()
 {
