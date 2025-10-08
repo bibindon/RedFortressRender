@@ -98,6 +98,7 @@
     </FxCompile>
     <FxCompile Include="shader\MeshMix.fx" />
     <FxCompile Include="shader\MeshNormalMapping.fx" />
+    <FxCompile Include="shader\MeshSSSLike.fx" />
     <FxCompile Include="shader\PostEffectBloom.fx" />
     <FxCompile Include="shader\PostEffectEnd.fx" />
     <FxCompile Include="shader\PostEffectGaussian.fx" />
