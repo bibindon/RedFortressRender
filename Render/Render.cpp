@@ -223,6 +223,17 @@ void Render::AddMeshInstansing(const std::wstring& filePath,
     m_meshInstancingMap[filePath]->AddInstance(pos);
 }
 
+void Render::AddMeshMix(const std::wstring& filePath,
+                        const D3DXVECTOR3& pos,
+                        const D3DXVECTOR3& rot,
+                        const float scale,
+                        const float radius)
+{
+    auto mesh = MeshMix(filePath, pos, rot, scale, radius);
+    m_meshMixList.push_back(mesh);
+    m_meshMixList.rbegin()->Initialize();
+}
+
 void Render::SetCamera(const D3DXVECTOR3& pos, const D3DXVECTOR3& lookAt)
 {
     Camera::SetEyePos(pos);

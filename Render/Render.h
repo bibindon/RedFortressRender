@@ -30,6 +30,7 @@
 #include "PostEffectStarBurst.h"
 #include "PostEffectEnd.h"
 #include "WindowManager.h"
+#include "MeshMix.h"
 
 namespace NSRender
 {
@@ -95,6 +96,12 @@ public:
                            const D3DXVECTOR3& pos,
                            const D3DXVECTOR3& rot,
                            const float scale);
+
+    void AddMeshMix(const std::wstring& filePath,
+                    const D3DXVECTOR3& pos,
+                    const D3DXVECTOR3& rot,
+                    const float scale,
+                    const float radius = -1.f);
 
     void SetCamera(const D3DXVECTOR3& pos, const D3DXVECTOR3& lookAt);
     void MoveCamera(const D3DXVECTOR3& pos);
@@ -169,6 +176,8 @@ private:
     std::vector<MeshSSSLike> m_meshSSSLikeList;
     std::vector<MeshPointLight> m_meshPointLightList;
     std::vector<MeshNormalMapping> m_meshNormalMapList;
+
+    std::vector<MeshMix> m_meshMixList;
 
     std::unordered_map<std::wstring, MeshInstancing*> m_meshInstancingMap;
 
