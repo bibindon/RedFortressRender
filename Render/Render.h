@@ -157,6 +157,9 @@ private:
 
     HWND m_hWnd = NULL;
 
+    // ウィンドウ管理
+    WindowManager m_windowManager;
+
     void ChangeWindowMode();
 
     std::vector<Mesh> m_meshList;
@@ -209,9 +212,6 @@ private:
 
     int m_fontID = -1;
     std::vector<std::chrono::steady_clock::time_point> m_vecTime;
-
-    // ウィンドウ管理
-    WindowManager m_windowManager;
 };
 }
 

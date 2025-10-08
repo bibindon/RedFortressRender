@@ -42,30 +42,25 @@ void Render::Initialize(HWND hWnd)
 
     m_sprite.Initialize();
 
-    // マルチパスレンダリング関連
-    {
-        // === 変更: RT を 2 枚作成（両方 A8R8G8B8） ===
-        hResult = D3DXCreateTexture(Common::D3DDevice(),
-                                    1600,
-                                    900,
-                                    1,
-                                    D3DUSAGE_RENDERTARGET,
-                                    D3DFMT_A8R8G8B8,
-                                    D3DPOOL_DEFAULT,
-                                    &m_pRenderTarget1);
-        assert(hResult == S_OK);
+    hResult = D3DXCreateTexture(Common::D3DDevice(),
+                                1600,
+                                900,
+                                1,
+                                D3DUSAGE_RENDERTARGET,
+                                D3DFMT_A8R8G8B8,
+                                D3DPOOL_DEFAULT,
+                                &m_pRenderTarget1);
+    assert(hResult == S_OK);
 
-        hResult = D3DXCreateTexture(Common::D3DDevice(),
-                                    1600,
-                                    900,
-                                    1,
-                                    D3DUSAGE_RENDERTARGET,
-                                    D3DFMT_A8R8G8B8,
-                                    D3DPOOL_DEFAULT,
-                                    &g_pRenderTarget2);
-        assert(hResult == S_OK);
-
-    }
+    hResult = D3DXCreateTexture(Common::D3DDevice(),
+                                1600,
+                                900,
+                                1,
+                                D3DUSAGE_RENDERTARGET,
+                                D3DFMT_A8R8G8B8,
+                                D3DPOOL_DEFAULT,
+                                &g_pRenderTarget2);
+    assert(hResult == S_OK);
 
     // 彩度フィルター
     m_postEffectSaturate.Initialize();
@@ -388,10 +383,12 @@ void Render::RotateCamera(const D3DXVECTOR3& rot)
     yaw += rot.y;
     pitch += rot.x;
 
-    // --- ピッチ角を制限する ---
+    //---------------------------------------------------------
+    // ピッチ角を制限する
+    //---------------------------------------------------------
 
     // 真上/真下を少し手前で止める
-    const float limit = D3DXToRadian(89.0f);        
+    const float limit = D3DXToRadian(89.0f);
     if (pitch > limit) pitch = limit;
     if (pitch < -limit) pitch = -limit;
 
@@ -412,12 +409,10 @@ void Render::DrawPass1()
 {
     HRESULT hResult = E_FAIL;
 
-    // 既存の RT0 を保存
     LPDIRECT3DSURFACE9 pOldRT0 = NULL;
     hResult = Common::D3DDevice()->GetRenderTarget(0, &pOldRT0);
     assert(hResult == S_OK);
 
-    // 2 枚の RT サーフェスを取得
     LPDIRECT3DSURFACE9 pRT0 = NULL;
     LPDIRECT3DSURFACE9 pRT1 = NULL;
 
@@ -427,15 +422,11 @@ void Render::DrawPass1()
     hResult = g_pRenderTarget2->GetSurfaceLevel(0, &pRT1);
     assert(hResult == S_OK);
 
-    // MRT セット（スロット 0 と 1）
     hResult = Common::D3DDevice()->SetRenderTarget(0, pRT0);
     assert(hResult == S_OK);
 
     hResult = Common::D3DDevice()->SetRenderTarget(1, pRT1);
     assert(hResult == S_OK);
-
-
-
 
     hResult = Common::D3DDevice()->Clear(0,
                                          NULL,
@@ -495,7 +486,6 @@ void Render::DrawPass1()
     hResult = Common::D3DDevice()->EndScene();
     assert(hResult == S_OK);
 
-    // MRT を解除してバックバッファへ戻す
     hResult = Common::D3DDevice()->SetRenderTarget(1, NULL);
     assert(hResult == S_OK);
 
