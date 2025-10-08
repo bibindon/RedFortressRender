@@ -29,28 +29,14 @@
 #include "PostEffectBloom.h"
 #include "PostEffectStarBurst.h"
 #include "PostEffectEnd.h"
+#include "WindowManager.h"
 
 namespace NSRender
 {
 
-enum class eWindowMode
-{
-    WINDOW,
-    BORDERLESS,
-    FULLSCREEN,
-    NONE,
-};
-
-struct DisplayModeInfo
-{
-    UINT width;
-    UINT height;
-    UINT refreshRate;
-    D3DFORMAT format;
-};
-
 class Render
 {
+
 public:
 
     void Initialize(HWND hWnd);
@@ -173,11 +159,6 @@ private:
 
     void ChangeWindowMode();
 
-    eWindowMode m_eWindowModeCurrent = eWindowMode::NONE;
-    eWindowMode m_eWindowModeRequest = eWindowMode::NONE;
-
-    LPDIRECT3D9 m_pD3D = NULL;
-
     std::vector<Mesh> m_meshList;
     std::vector<AnimMesh*> m_animMeshList;
     std::vector<SkinAnimMesh*> m_skinAnimMeshList;
@@ -187,9 +168,6 @@ private:
     std::vector<MeshNormalMapping> m_meshNormalMapList;
 
     std::unordered_map<std::wstring, MeshInstancing*> m_meshInstancingMap;
-
-    int m_windowSizeWidth = 1600;
-    int m_windowSizeHeight = 900;
 
     std::vector<Font> m_fontList;
     Sprite m_sprite;
@@ -217,10 +195,6 @@ private:
 
     void Draw2D();
 
-    std::vector<D3DFORMAT> GetCandidateFormats();
-
-    std::vector<DisplayModeInfo> EnumerateFullscreenModes(LPDIRECT3D9 d3d, UINT adapterIndex);
-
     LPDIRECT3DTEXTURE9 m_pRenderTarget1 = NULL;
     LPDIRECT3DTEXTURE9 g_pRenderTarget2 = NULL;
 
@@ -235,6 +209,9 @@ private:
 
     int m_fontID = -1;
     std::vector<std::chrono::steady_clock::time_point> m_vecTime;
+
+    // ウィンドウ管理
+    WindowManager m_windowManager;
 };
 }
 
