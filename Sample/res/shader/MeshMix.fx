@@ -70,7 +70,6 @@ void PixelShader1(in float4 inPosition : POSITION,
     float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_specularColor;
 
     float3 finalColor = g_ambient.rgb + lambert + specular;
-    finalColor.r = 1.f;
 
     outColor = saturate(float4(finalColor, 1.f));
 }

@@ -230,6 +230,7 @@ void Render::AddMeshMix(const std::wstring& filePath,
                         const float radius)
 {
     auto param = GetMeshParamPreset(eMeshParamPreset::GRASS);
+    param.smooth = false;
     auto mesh = MeshMix(filePath, pos, rot, scale, param);
     m_meshMixList.push_back(mesh);
     m_meshMixList.rbegin()->Initialize();
@@ -370,6 +371,13 @@ void Render::SetShowFPS(const bool arg)
 std::vector<std::pair<int, int>> Render::GetResolutionList()
 {
     return m_windowManager.GetResolutionList();
+}
+
+void Render::SetLightDir(const D3DXVECTOR3& dir)
+{
+    D3DXVECTOR4 normal(dir, 0.f);
+    D3DXVec4Normalize(&normal, &normal);
+    Light::SetLightNormal(normal);
 }
 
 void Render::RotateCamera(const D3DXVECTOR3& rot)

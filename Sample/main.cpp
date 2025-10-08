@@ -156,6 +156,20 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                 g_Render.DrawImage(elem.m_imageName, elem.m_rect.left, elem.m_rect.top);
             }
 
+            // 平行光源の方角を変える
+            {
+                static float work_f = 0.0f;
+                work_f += 0.05f;
+
+                D3DXVECTOR3 lightDir(0.0f, 0.0f, 0.0f);
+
+                lightDir.x = sinf(work_f);
+                lightDir.z = cosf(work_f);
+                lightDir.y = sinf(work_f);
+
+                g_Render.SetLightDir(lightDir);
+            }
+
             g_Render.Draw();
         }
 

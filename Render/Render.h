@@ -160,6 +160,9 @@ public:
 
     std::vector<std::pair<int, int>> GetResolutionList();
 
+    // 平行光源がある方角
+    void SetLightDir(const D3DXVECTOR3& dir);
+
 private:
 
     HWND m_hWnd = NULL;
@@ -221,6 +224,7 @@ private:
 
     int m_fontID = -1;
     std::vector<std::chrono::steady_clock::time_point> m_vecTime;
+
 };
 }
 

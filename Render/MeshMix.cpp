@@ -58,36 +58,12 @@ void MeshMix::Initialize()
     // なめらかなライティングのために法線情報を計算しなおす
     // 例えば半球の法線を再計算するとキノコのようになり、
     // 再計算しないとダイヤモンドのような見た目になる。
-    if (m_param.smooth)
-    {
-
-        DWORD fvf = m_D3DMesh->GetFVF();
-        if ((fvf & D3DFVF_NORMAL) == 0)
-        {
-            LPD3DXMESH meshWithN;
-            m_D3DMesh->CloneMeshFVF(m_D3DMesh->GetOptions(), fvf | D3DFVF_NORMAL,
-                                    Common::D3DDevice(),
-                                    &meshWithN);
-
-            m_D3DMesh->Release();
-            m_D3DMesh = meshWithN;
-        }
-
-        std::vector<DWORD> adj(m_D3DMesh->GetNumFaces() * 3);
-
-        // しきい値はモデルに合わせて
-        m_D3DMesh->GenerateAdjacency(1e-6f, adj.data());
-
-        HRESULT hr = D3DXComputeNormals(m_D3DMesh, adj.data());
-    }
 
     DWORD* adjacencyList = (DWORD*)adjacencyBuffer->GetBufferPointer();
-
-    //--------------------------------------------------------
-    // 法線情報を再計算
-    //--------------------------------------------------------
-    hResult = D3DXComputeNormals(m_D3DMesh, adjacencyList);
-    assert(hResult == S_OK);
+    if (m_param.smooth)
+    {
+        HRESULT hr = D3DXComputeNormals(m_D3DMesh, adjacencyList);
+    }
 
     //--------------------------------------------------------
     // 面と頂点を並べ替えてメッシュを生成し、描画パフォーマンスを最適化
@@ -186,11 +162,6 @@ void MeshMix::Render()
     // 光源の方向を設定
     //--------------------------------------------------------
     D3DXVECTOR4 normal = Light::GetLightNormal();
-
-    float work = m_rotate.y * -1.f;
-    normal.x = std::sin(work + D3DX_PI);
-    normal.z = std::cos(work + D3DX_PI);
-    D3DXVec4Normalize(&normal, &normal);
 
     hResult = m_D3DEffect->SetVector("g_lightNormal", &normal);
     assert(hResult == S_OK);
