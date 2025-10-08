@@ -9,7 +9,7 @@ float4 g_lightPos = { -10.f, 10.f, -10.f, 0.0f };
 
 float4 g_cameraPos = { 10.f, 5.f, 10.f, 0.0f };
 
-float4 g_ambient = { 0.2f, 0.2f, 0.2f, 1.0f };
+float4 g_ambient = { 0.1f, 0.1f, 0.1f, 1.0f };
 float4 g_diffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 float4 g_specularColor = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -47,7 +47,6 @@ void VertexShader1(in  float4 inPosition  : POSITION,
     outTexCood = inTexCood;
 }
 
-// TODO なぜか明るすぎる
 void PixelShader1(in float4 inPosition : POSITION,
                   in float3 inPosLocal : TEXCOORD0,
                   in float3 inNormal   : TEXCOORD1,
@@ -57,7 +56,7 @@ void PixelShader1(in float4 inPosition : POSITION,
 {
     // 正規化はピクセルシェーダーでやらないといけない
     float3 normal = normalize(inNormal);
-    float3 lightDir = normalize(g_lightPos.xyz - inPosLocal);
+    float3 lightDir = normalize(g_lightNormal);
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosLocal);
     float3 halfVector = normalize(lightDir + cameraDir);
 
@@ -70,8 +69,8 @@ void PixelShader1(in float4 inPosition : POSITION,
 
     float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_specularColor;
 
-    //float3 finalColor = g_ambient.rgb + lambert + specular;
-    float3 finalColor = lambert + specular;
+    float3 finalColor = g_ambient.rgb + lambert + specular;
+    finalColor.r = 1.f;
 
     outColor = saturate(float4(finalColor, 1.f));
 }

@@ -56,7 +56,7 @@ void PixelShader1(in float4 inPosition : POSITION,
 {
     // 正規化はピクセルシェーダーでやらないといけない
     float3 normal = normalize(inNormal);
-    float3 lightDir = normalize(g_lightPos.xyz - inPosLocal);
+    float3 lightDir = normalize(g_lightNormal);
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosLocal);
     float3 halfVector = normalize(lightDir + cameraDir);
 

@@ -252,6 +252,26 @@ exit /B %ERRORLEVEL%</Command>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="..\Render\shader\AnimMeshShader.fx" />
+    <FxCompile Include="..\Render\shader\Common.fx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="..\Render\shader\MeshInstancing.fx" />
+    <FxCompile Include="..\Render\shader\MeshMix.fx" />
+    <FxCompile Include="..\Render\shader\MeshNormalMapping.fx" />
+    <FxCompile Include="..\Render\shader\MeshPointLight.fx" />
+    <FxCompile Include="..\Render\shader\MeshShader.fx" />
+    <FxCompile Include="..\Render\shader\MeshSmooth.fx" />
+    <FxCompile Include="..\Render\shader\MeshSSSLike.fx" />
+    <FxCompile Include="..\Render\shader\PostEffectBloom.fx" />
+    <FxCompile Include="..\Render\shader\PostEffectEnd.fx" />
+    <FxCompile Include="..\Render\shader\PostEffectGaussian.fx" />
+    <FxCompile Include="..\Render\shader\PostEffectSaturate.fx" />
+    <FxCompile Include="..\Render\shader\PostEffectStarBurst.fx" />
+    <FxCompile Include="..\Render\shader\simple.fx" />
+    <FxCompile Include="..\Render\shader\SkinAnimMeshShader.fx" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\packages\Microsoft.DXSDK.D3DX.9.29.952.8\build\native\Microsoft.DXSDK.D3DX.targets" Condition="Exists('..\packages\Microsoft.DXSDK.D3DX.9.29.952.8\build\native\Microsoft.DXSDK.D3DX.targets')" />
