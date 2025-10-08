@@ -19,6 +19,18 @@ float g_specularPower = 128.0f;
 // スペキュラ光の強さ
 float g_specularIntensity = 1.0f;
 
+// 距離フォグの色
+float4 g_fogDistanceColor = { 0.5f, 0.5f, 1.0f, 1.0f };
+
+// 距離フォグの強さ
+float g_fogDistanceDensity = 0.01f;
+
+// 高さフォグの色
+float4 g_fogHeightColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+// 高さフォグの強さ
+float g_fogHeightDensity = 0.01f;
+
 texture g_texture;
 sampler g_textureSampler = sampler_state
 {
@@ -29,33 +41,35 @@ sampler g_textureSampler = sampler_state
     MaxAnisotropy = 8;
 };
 
-void VertexShader1(in  float4 inPosition  : POSITION,
-                   in  float4 inNormal    : NORMAL0,
-                   in  float4 inTexCood   : TEXCOORD0,
+// 視差マッピングは「1パス目では実施せず、2パス目で実装する」というようなことはできない
+//
+void VertexShader1(in  float4 inPosition     : POSITION,
+                   in  float4 inNormal       : NORMAL0,
+                   in  float4 inTexCood      : TEXCOORD0,
 
-                   out float4 outPosition : POSITION,
-                   out float3 outPosLocal : TEXCOORD0,
-                   out float3 outNormal   : TEXCOORD1,
-                   out float2 outTexCood  : TEXCOORD2)
+                   out float4 outPosition    : POSITION,
+                   out float3 outPosWorld    : TEXCOORD0,
+                   out float3 outNormalWorld : TEXCOORD1,
+                   out float2 outTexCood     : TEXCOORD2)
 {
     outPosition = mul(inPosition, g_matWorldViewProj);
 
-    outPosLocal = mul(inPosition, g_matWorld).xyz;
-    outNormal = mul(inNormal, g_matWorld).xyz;
+    outPosWorld = mul(inPosition, g_matWorld).xyz;
+    outNormalWorld = mul(inNormal, g_matWorld).xyz;
     outTexCood = inTexCood;
 }
 
-void PixelShader1(in float4 inPosition : POSITION,
-                  in float3 inPosLocal : TEXCOORD0,
-                  in float3 inNormal   : TEXCOORD1,
-                  in float2 inTexCood  : TEXCOORD2,
+void PixelShader1(in float4 inPosition    : POSITION,
+                  in float3 inPosWorld    : TEXCOORD0,
+                  in float3 inNormalWorld : TEXCOORD1,
+                  in float2 inTexCood     : TEXCOORD2,
 
-                  out float4 outColor  : COLOR)
+                  out float4 outColor     : COLOR)
 {
     // 正規化はピクセルシェーダーでやらないといけない
-    float3 normal = normalize(inNormal);
+    float3 normal = normalize(inNormalWorld);
     float3 lightDir = normalize(g_lightNormal);
-    float3 cameraDir = normalize(g_cameraPos.xyz - inPosLocal);
+    float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float3 halfVector = normalize(lightDir + cameraDir);
 
     float NdotL = saturate(dot(normal, lightDir));
@@ -73,11 +87,72 @@ void PixelShader1(in float4 inPosition : POSITION,
     outColor = saturate(float4(finalColor, 1.f));
 }
 
+// 霧の減衰関数（やわらか）
+float FogAmountExp(float distance, float density)
+{
+    return 1 - exp(-density * distance);
+}
+
+// 霧の減衰関数（リアル）
+float FogAmountExp2(float distance, float density)
+{
+    float x = density * distance;
+    return 1 - exp(-x * x);
+}
+
+void PixelShaderFog(in float4 inPosition     : POSITION,
+                    in float3 inPosWorld     : TEXCOORD0,
+                    in float3 inNormalWorld  : TEXCOORD1,
+                    in float2 inTexCood      : TEXCOORD2,
+
+                    out float4 outColor      : COLOR)
+{
+    outColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
+    //--------------------------------------------------------
+    // 距離フォグ
+    //--------------------------------------------------------
+    float cameraDistance = distance(g_cameraPos.xyz, inPosWorld);
+    float fogDensity = FogAmountExp(cameraDistance, g_fogDistanceDensity);
+
+    outColor += float4(g_fogDistanceColor.rgb, fogDensity);
+
+    //--------------------------------------------------------
+    // 高さフォグ
+    //--------------------------------------------------------
+    // 高さフォグは高さだけでなく距離も影響する必要がある。
+    // まず距離を見て、そのあと、高さによって薄くする
+    float fogDensityHeight = FogAmountExp(cameraDistance, g_fogDistanceDensity);
+    
+    // 高度が高くなるほど低くなる数値
+    float fogHeightR = 1 / (inPosWorld.y * 0.01f);
+
+    if (fogHeightR >= 1.0f)
+    {
+        fogHeightR = 1.0f;
+    }
+
+    fogDensityHeight *= fogHeightR;
+
+    outColor += float4(g_fogHeightColor.rgb, fogDensityHeight);
+
+}
+
 technique Technique1
 {
     pass Pass1
     {
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShader1();
+    }
+
+    pass PassFog
+    {
+        AlphaBlendEnable = TRUE;
+        SrcBlend = SRCALPHA;
+        DestBlend = INVSRCALPHA;
+
+        VertexShader = compile vs_3_0 VertexShader1();
+        PixelShader = compile ps_3_0 PixelShaderFog();
     }
 }

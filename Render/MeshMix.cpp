@@ -249,6 +249,21 @@ void MeshMix::Render()
     hResult = m_D3DEffect->EndPass();
     assert(hResult == S_OK);
 
+    //--------------------------------------------------------
+    // Pass2
+    //--------------------------------------------------------
+    hResult = m_D3DEffect->BeginPass(1);
+    assert(hResult == S_OK);
+
+    for (DWORD i = 0; i < m_materialCount; ++i)
+    {
+        hResult = m_D3DMesh->DrawSubset(i);
+        assert(hResult == S_OK);
+    }
+
+    hResult = m_D3DEffect->EndPass();
+    assert(hResult == S_OK);
+
     hResult = m_D3DEffect->End();
     assert(hResult == S_OK);
 }
