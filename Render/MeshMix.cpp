@@ -134,13 +134,10 @@ void MeshMix::Initialize()
         //--------------------------------------------------------
         D3DXVECTOR4 diffuce(1.0f, 1.0f, 1.0f, 1.0f);
 
-        if (true)
-        {
-            diffuce.x = materialList[i].MatD3D.Diffuse.r;
-            diffuce.y = materialList[i].MatD3D.Diffuse.g;
-            diffuce.z = materialList[i].MatD3D.Diffuse.b;
-            diffuce.w = materialList[i].MatD3D.Diffuse.a;
-        }
+        diffuce.x = materialList[i].MatD3D.Diffuse.r;
+        diffuce.y = materialList[i].MatD3D.Diffuse.g;
+        diffuce.z = materialList[i].MatD3D.Diffuse.b;
+        diffuce.w = materialList[i].MatD3D.Diffuse.a;
 
         m_vecDiffuse.push_back(diffuce);
 
@@ -215,110 +212,6 @@ void MeshMix::Render()
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // ポイントライトの位置を設定
-    //--------------------------------------------------------
-
-    /*
-    bool isLit = NSModel::WeaponManager::GetObj()->IsTorchLit();
-
-    // 松明の点灯状態が変わったらシェーダーにポイントライトのON/OFFを設定する
-    if (isLit != m_bPointLightEnablePrevious)
-    {
-        if (isLit)
-        {
-            hResult = m_D3DEffect->SetBool("g_bPointLightEnable", TRUE);
-            assert(hResult == S_OK);
-        }
-        else
-        {
-            hResult = m_D3DEffect->SetBool("g_bPointLightEnable", FALSE);
-            assert(hResult == S_OK);
-        }
-    }
-
-    m_bPointLightEnablePrevious = isLit;
-
-    if (isLit)
-    {
-        D3DXVECTOR3 ppos = SharedObj::GetPlayer()->GetPos();
-        D3DXVECTOR4 ppos2;
-        ppos2.x = ppos.x;
-        ppos2.y = ppos.y;
-        ppos2.z = ppos.z;
-        ppos2.w = 0;
-
-        hResult = m_D3DEffect->SetVector("g_vecPointLightPos", &ppos2);
-        assert(hResult == S_OK);
-    }
-    */
-
-    //--------------------------------------------------------
-    // 光源の明るさを設定
-    //--------------------------------------------------------
-    //hResult = m_D3DEffect->SetFloat("g_fLightBrigntness", Light::GetBrightness());
-    //assert(hResult == S_OK);
-
-    //--------------------------------------------------------
-    // 洞窟
-    //--------------------------------------------------------
-    /*
-    if (SHADER_FILENAME == _T("res\\shader\\MeshShader.fx"))
-    {
-        if (SharedObj::GetMap()->IsFinishCaveInFade())
-        {
-            hResult = m_D3DEffect->SetBool("g_bCaveFadeFinish", SharedObj::GetPlayer()->IsInCave());
-            assert(hResult == S_OK);
-        }
-    }
-    */
-
-    //--------------------------------------------------------
-    // 雨だったら霧を濃くする
-    //--------------------------------------------------------
-    /*
-    D3DXVECTOR4 g_vecFogColor;
-
-    if (!Rain::Get()->IsRain())
-    {
-        g_vecFogColor.x = 0.5f;
-        g_vecFogColor.y = 0.3f;
-        g_vecFogColor.z = 0.2f;
-        g_vecFogColor.w = 1.0f;
-
-        // 霧をサポートしないシェーダーがセットされている可能性があるので
-        // MeshShader.fxの時だけ適用する
-        if (SHADER_FILENAME == _T("res\\shader\\MeshShader.fx") ||
-            SHADER_FILENAME == _T("res\\shader\\MeshShader2Texture.fx") ||
-            SHADER_FILENAME == _T("res\\shader\\MeshShaderCullNone.fx"))
-        {
-            hResult = m_D3DEffect->SetFloat("g_fFogDensity", 1.0f);
-            assert(hResult == S_OK);
-        }
-    }
-    else
-    {
-        g_vecFogColor.x = 0.381f;
-        g_vecFogColor.y = 0.401f;
-        g_vecFogColor.z = 0.586f;
-        g_vecFogColor.w = 1.0f;
-
-        // 雨だったら霧を3倍強くする。
-        // 霧をサポートしないシェーダーがセットされている可能性があるので
-        // MeshShader.fxの時だけ適用する
-        if (SHADER_FILENAME == _T("res\\shader\\MeshShader.fx") ||
-            SHADER_FILENAME == _T("res\\shader\\MeshShader2Texture.fx") ||
-            SHADER_FILENAME == _T("res\\shader\\MeshShaderCullNone.fx"))
-        {
-            hResult = m_D3DEffect->SetFloat("g_fFogDensity", 10.0f);
-            assert(hResult == S_OK);
-        }
-    }
-
-    hResult = m_D3DEffect->SetVector("g_vecFogColor", &g_vecFogColor);
-    assert(hResult == S_OK);
-    */
-
-    //--------------------------------------------------------
     // ワールド変換行列を設定
     //--------------------------------------------------------
     D3DXMATRIX worldViewProjMatrix { };
@@ -326,45 +219,17 @@ void MeshMix::Render()
 
     {
         D3DXMATRIX mat;
+        D3DXMatrixIdentity(&mat);
 
-        // 武器か否か
-//        if (m_bWeapon)
-//        {
-//            D3DXMatrixScaling(&mat, m_scale, m_scale, m_scale);
-//            worldViewProjMatrix *= mat;
-//
-//            D3DXMatrixRotationYawPitchRoll(&mat, m_rotate.y, m_rotate.x, m_rotate.z);
-//            worldViewProjMatrix *= mat;
-//
-//            worldViewProjMatrix *= SharedObj::GetRightHandMat();
-//        }
-//        else
-        {
-            D3DXMatrixScaling(&mat, m_scale, m_scale, m_scale);
-            worldViewProjMatrix *= mat;
+        D3DXMatrixScaling(&mat, m_scale, m_scale, m_scale);
+        worldViewProjMatrix *= mat;
 
-            D3DXMatrixRotationYawPitchRoll(&mat, m_rotate.y, m_rotate.x, m_rotate.z);
-            worldViewProjMatrix *= mat;
+        D3DXMatrixRotationYawPitchRoll(&mat, m_rotate.y, m_rotate.x, m_rotate.z);
+        worldViewProjMatrix *= mat;
 
-            D3DXMatrixTranslation(&mat, m_pos.x, m_pos.y, m_pos.z);
-            worldViewProjMatrix *= mat;
-        }
+        D3DXMatrixTranslation(&mat, m_pos.x, m_pos.y, m_pos.z);
+        worldViewProjMatrix *= mat;
     }
-
-    //    hResult = m_D3DEffect->SetMatrix("g_matWorld", &worldViewProjMatrix);
-    //    assert(hResult == S_OK);
-
-    //--------------------------------------------------------
-    // カメラの位置を設定
-    //--------------------------------------------------------
-    D3DXVECTOR4 cameraPos { };
-    cameraPos.x = Camera::GetEyePos().x;
-    cameraPos.y = Camera::GetEyePos().y;
-    cameraPos.z = Camera::GetEyePos().z;
-    cameraPos.w = 0.f;
-
-    //    hResult = m_D3DEffect->SetVector("g_vecCameraPos", &cameraPos);
-    //    assert(hResult == S_OK);
 
     //--------------------------------------------------------
     // ワールドビュー射影変換行列を設定
@@ -378,16 +243,8 @@ void MeshMix::Render()
     //--------------------------------------------------------
     // 描画開始
     //--------------------------------------------------------
-    if (SHADER_FILENAME == _T("res\\shader\\MeshShaderCullNone.fx"))
-    {
-        hResult = m_D3DEffect->SetTechnique("TechniqueCullNone");
-        assert(hResult == S_OK);
-    }
-    else
-    {
-        hResult = m_D3DEffect->SetTechnique("Technique1");
-        assert(hResult == S_OK);
-    }
+    hResult = m_D3DEffect->SetTechnique("Technique1");
+    assert(hResult == S_OK);
 
     hResult = m_D3DEffect->Begin(nullptr, 0);
     assert(hResult == S_OK);
@@ -400,19 +257,12 @@ void MeshMix::Render()
     //--------------------------------------------------------
     for (DWORD i = 0; i < m_materialCount; ++i)
     {
-        //        hResult = m_D3DEffect->SetVector("g_vecDiffuse", &m_vecDiffuse.at(i));
-        //        assert(hResult == S_OK);
+        hResult = m_D3DEffect->SetVector("g_diffuse", &m_vecDiffuse.at(i));
+        assert(hResult == S_OK);
 
         if (i < m_vecTexture.size())
         {
             hResult = m_D3DEffect->SetTexture("g_texture", m_vecTexture.at(i));
-            assert(hResult == S_OK);
-        }
-
-        // prolitan.xの場合に限り、もう一枚テクスチャを使う
-        if (m_meshName == L"res\\model\\prolitan.x")
-        {
-            hResult = m_D3DEffect->SetTexture("g_texture2", m_vecTexture.at(1));
             assert(hResult == S_OK);
         }
 
