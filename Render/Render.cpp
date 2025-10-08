@@ -494,6 +494,11 @@ void Render::DrawPass1()
         elem.second->Draw();
     }
 
+    for (auto& elem : m_meshMixList)
+    {
+        elem.Render();
+    }
+
     hResult = Common::D3DDevice()->EndScene();
     assert(hResult == S_OK);
 
