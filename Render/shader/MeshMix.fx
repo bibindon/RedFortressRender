@@ -8,7 +8,7 @@ float4 g_lightPos = { -10.f, 10.f, -10.f, 0.0f };
 
 float4 g_cameraPos = { 10.f, 5.f, 10.f, 0.0f };
 
-float4 g_ambient = { 0.1f, 0.1f, 0.1f, 1.0f };
+float4 g_ambient = { 0.2f, 0.2f, 0.2f, 1.0f };
 float4 g_diffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 float4 g_specularColor = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -64,10 +64,11 @@ void PixelShader1(in float4 inPosition : POSITION,
     float3 albedo = tex2D(g_textureSampler, inTexCood).rgb * g_diffuse.rgb;
 
     float3 lambert = albedo * NdotL;
+    float3 ambient = albedo * g_ambient.rgb;
 
     float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_specularColor;
 
-    float3 finalColor = g_ambient.rgb + lambert + specular;
+    float3 finalColor = ambient.rgb + lambert + specular;
 
     outColor = saturate(float4(finalColor, 1.f));
 }
