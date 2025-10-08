@@ -56,8 +56,9 @@ void MeshMix::Initialize()
     assert(hResult == S_OK);
 
     // なめらかなライティングのために法線情報を計算しなおす
-    // 角が丸みを帯びているようになる。
-    // ダイヤモンドの宝石でこれをやるとキノコのようになってしまう。
+    // 例えば半球の法線を再計算するとキノコのようになり、
+    // 再計算しないとダイヤモンドのような見た目になる。
+    if (m_param.smooth)
     {
 
         DWORD fvf = m_D3DMesh->GetFVF();
@@ -79,7 +80,6 @@ void MeshMix::Initialize()
 
         HRESULT hr = D3DXComputeNormals(m_D3DMesh, adj.data());
     }
-
 
     DWORD* adjacencyList = (DWORD*)adjacencyBuffer->GetBufferPointer();
 
@@ -291,9 +291,12 @@ void MeshMix::OnDeviceReset()
     assert(hr == S_OK);
 }
 
-stMeshParam GetMeshParamPreset()
+stMeshParam GetMeshParamPreset(const eMeshParamPreset preset)
 {
     stMeshParam param;
+
+    // TODO 引数をもとにパラメータにプリセットをセットする
+
     return param;
 }
 

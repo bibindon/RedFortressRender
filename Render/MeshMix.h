@@ -5,8 +5,29 @@
 namespace NSRender
 {
 
+// TODO 一つのモデルの中に、鏡のように表示したい物体と、岩のように表示したい物体があったら？
+// stMeshParamは複数の持つ必要がある？
+
+// TODO 雨に濡れたらスペキュラ光を変化させる必要がある
+// スペキュラ光は可変である、ということだ
+
 struct stMeshParam
 {
+    // 環境光あり
+    bool ambient = true;
+
+    // 環境光の色
+    DWORD ambientColor = 0x101010ff;
+
+    // スペキュラ光の色
+    DWORD specularColor = 0xffffffff;
+
+    // スペキュラ光の強さ
+    float specularIntensity = 0.4f;
+
+    // スペキュラ光の鋭さ
+    float specularEdge = 0.8f;
+
     // 角の法線を再計算するか。
     // 例えば半球の法線を再計算するとキノコのようになり、
     // 再計算しないとダイヤモンドのような見た目になる。
@@ -53,10 +74,23 @@ struct stMeshParam
     bool glass = false;
 
     // 波
-    bool wave = true;
+    //
+    // 海面のような波
+    bool wave = false;
 
     // 波の強さ
+    // TODO 大きさと速さは分けるべき？
     float waveIntensity = 0.1f;
+
+    // 揺らすか
+    //
+    // 草を風でそよがせたい時に使う
+    // 波はモデルをぐちゃぐちゃに変形させるが、こちらは少し、しならせるだけ。
+    bool sway = false;
+
+    // そよぐ強さ
+    // TODO 大きさと速さは分けるべき？
+    float swayIntensity = 0.1f;
 
     // ポイントライトで照らされるか
     // 
@@ -74,8 +108,43 @@ struct stMeshParam
     float collisionRadius = 2.0;
 };
 
-// TODO 何種類かのプリセットを用意して受け取れるようにする
-stMeshParam GetMeshParamPreset();
+enum class eMeshParamPreset
+{
+    // 木
+    TREE,
+
+    // 草
+    GRASS,
+
+    // 石
+    STONE,
+
+    // 鏡
+    MIRROR,
+
+    // ガラス
+    GLASS,
+
+    // 人の肌
+    SKIN,
+
+    // 髪
+    HAIR,
+
+    // 静かな海面
+    WAVE,
+
+    // 布
+    CLOTH,
+
+    // 金属
+    METAL,
+
+    // ゴム
+    RUBBER
+};
+
+stMeshParam GetMeshParamPreset(const eMeshParamPreset preset);
 
 // ポイントライト、スムーズ、SSS風、視差マッピング、SSAO、深度バッファシャドウ
 // マルチレンダーターゲット、環境マッピングが有効なメッシュクラス
@@ -140,37 +209,7 @@ private:
 
     bool m_bLoaded = false;
 
-    //---------------------------------------------------------
-    // TODO
-    //---------------------------------------------------------
-
     stMeshParam m_param;
-
-    // 環境マッピングをどれくらい効かせるか
-
-    // アンビエント光のあり・なし
-    // 環境マッピングがあるなら要らないはず
-
-    // SSS風効果をどれくらい効かせるか
-
-    // スペキュラ光をどれくらい鋭くするか
-    // スペキュラ光をどれだけ明るくするか
-
-    // 視差マッピングのON/OFF
-
-    // 法線マッピングのON/OFF
-
-    // SSAOのON/OFF
-
-    // 深度バッファシャドウの対象に含めるか
-
-    // ポイントライトを登録
-
-    // 頂点シェーダーでユラユラと揺らすか
-
-    // ガラスか
-
-    // 波か
 };
 }
 

@@ -229,7 +229,7 @@ void Render::AddMeshMix(const std::wstring& filePath,
                         const float scale,
                         const float radius)
 {
-    auto param = GetMeshParamPreset();
+    auto param = GetMeshParamPreset(eMeshParamPreset::GRASS);
     auto mesh = MeshMix(filePath, pos, rot, scale, param);
     m_meshMixList.push_back(mesh);
     m_meshMixList.rbegin()->Initialize();
