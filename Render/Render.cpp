@@ -229,7 +229,8 @@ void Render::AddMeshMix(const std::wstring& filePath,
                         const float scale,
                         const float radius)
 {
-    auto mesh = MeshMix(filePath, pos, rot, scale, radius);
+    auto param = GetMeshParamPreset();
+    auto mesh = MeshMix(filePath, pos, rot, scale, param);
     m_meshMixList.push_back(mesh);
     m_meshMixList.rbegin()->Initialize();
 }

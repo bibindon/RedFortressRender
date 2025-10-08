@@ -11,12 +11,12 @@ MeshMix::MeshMix(const std::wstring& xFilename,
                  const D3DXVECTOR3& position,
                  const D3DXVECTOR3& rotation,
                  const float scale,
-                 const float radius)
+                 const stMeshParam& param)
     : m_meshName(xFilename)
     , m_pos(position)
     , m_rotate(rotation)
     , m_scale(scale)
-    , m_radius(radius)
+    , m_param(param)
 {
 }
 
@@ -55,47 +55,31 @@ void MeshMix::Initialize()
 
     assert(hResult == S_OK);
 
-    //--------------------------------------------------------
-    // 法線情報をもつメッシュファイルに変換
-    //--------------------------------------------------------
-    D3DVERTEXELEMENT9 decl[4] { };
-
+    // なめらかなライティングのために法線情報を計算しなおす
+    // 角が丸みを帯びているようになる。
+    // ダイヤモンドの宝石でこれをやるとキノコのようになってしまう。
     {
-        decl[0].Stream = 0;
-        decl[0].Offset = 0;
-        decl[0].Type = D3DDECLTYPE_FLOAT3;
-        decl[0].Method = D3DDECLMETHOD_DEFAULT;
-        decl[0].Usage = D3DDECLUSAGE_POSITION;
-        decl[0].UsageIndex = 0;
 
-        decl[1].Stream = 0;
-        decl[1].Offset = 12;
-        decl[1].Type = D3DDECLTYPE_FLOAT3;
-        decl[1].Method = D3DDECLMETHOD_DEFAULT;
-        decl[1].Usage = D3DDECLUSAGE_NORMAL;
-        decl[1].UsageIndex = 0;
+        DWORD fvf = m_D3DMesh->GetFVF();
+        if ((fvf & D3DFVF_NORMAL) == 0)
+        {
+            LPD3DXMESH meshWithN;
+            m_D3DMesh->CloneMeshFVF(m_D3DMesh->GetOptions(), fvf | D3DFVF_NORMAL,
+                                    Common::D3DDevice(),
+                                    &meshWithN);
 
-        decl[2].Stream = 0;
-        decl[2].Offset = 24;
-        decl[2].Type = D3DDECLTYPE_FLOAT2;
-        decl[2].Method = D3DDECLMETHOD_DEFAULT;
-        decl[2].Usage = D3DDECLUSAGE_TEXCOORD;
-        decl[2].UsageIndex = 0;
+            m_D3DMesh->Release();
+            m_D3DMesh = meshWithN;
+        }
 
-        decl[3] = D3DDECL_END();
+        std::vector<DWORD> adj(m_D3DMesh->GetNumFaces() * 3);
+
+        // しきい値はモデルに合わせて
+        m_D3DMesh->GenerateAdjacency(1e-6f, adj.data());
+
+        HRESULT hr = D3DXComputeNormals(m_D3DMesh, adj.data());
     }
 
-
-    LPD3DXMESH tempMesh = nullptr;
-    hResult = m_D3DMesh->CloneMesh(D3DXMESH_MANAGED | D3DXMESH_32BIT,
-                                   decl,
-                                   Common::D3DDevice(),
-                                   &tempMesh);
-
-    assert(hResult == S_OK);
-
-    m_D3DMesh->Release();
-    m_D3DMesh = tempMesh;
 
     DWORD* adjacencyList = (DWORD*)adjacencyBuffer->GetBufferPointer();
 
@@ -287,7 +271,7 @@ LPD3DXMESH MeshMix::GetD3DMesh() const
 
 float MeshMix::GetRadius() const
 {
-    return m_radius;
+    return m_param.collisionRadius;
 }
 
 std::wstring MeshMix::GetMeshName()
@@ -305,6 +289,12 @@ void MeshMix::OnDeviceReset()
 {
     HRESULT hr = m_D3DEffect->OnResetDevice();
     assert(hr == S_OK);
+}
+
+stMeshParam GetMeshParamPreset()
+{
+    stMeshParam param;
+    return param;
 }
 
 }
