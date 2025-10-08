@@ -9,8 +9,9 @@ sampler textureSampler = sampler_state
 {
     Texture = (g_texture);
     MipFilter = LINEAR;
-    MinFilter = LINEAR;
-    MagFilter = LINEAR;
+    MinFilter = ANISOTROPIC;
+    MagFilter = ANISOTROPIC;
+    MaxAnisotropy = 8;
 };
 
 void VertexShader1(in  float4 inPosition  : POSITION,
