@@ -47,6 +47,7 @@ void VertexShader1(in  float4 inPosition  : POSITION,
     outTexCood = inTexCood;
 }
 
+// TODO ‚È‚º‚©–¾‚é‚·‚¬‚é
 void PixelShader1(in float4 inPosition : POSITION,
                   in float3 inPosLocal : TEXCOORD0,
                   in float3 inNormal   : TEXCOORD1,
@@ -69,9 +70,10 @@ void PixelShader1(in float4 inPosition : POSITION,
 
     float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_specularColor;
 
-    float3 finalColor = g_ambient.rgb + lambert + specular;
+    //float3 finalColor = g_ambient.rgb + lambert + specular;
+    float3 finalColor = lambert + specular;
 
-    outColor = float4(finalColor, 1.f);
+    outColor = saturate(float4(finalColor, 1.f));
 }
 
 technique Technique1

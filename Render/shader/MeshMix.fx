@@ -9,7 +9,7 @@ float4 g_lightPos = { -10.f, 10.f, -10.f, 0.0f };
 
 float4 g_cameraPos = { 10.f, 5.f, 10.f, 0.0f };
 
-float4 g_ambient = { 0.2f, 0.2f, 0.2f, 1.0f };
+float4 g_ambient = { 0.1f, 0.1f, 0.1f, 1.0f };
 float4 g_diffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 float4 g_specularColor = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -71,7 +71,7 @@ void PixelShader1(in float4 inPosition : POSITION,
 
     float3 finalColor = g_ambient.rgb + lambert + specular;
 
-    outColor = float4(finalColor, 1.f);
+    outColor = saturate(float4(finalColor, 1.f));
 }
 
 technique Technique1

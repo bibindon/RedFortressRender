@@ -225,6 +225,14 @@ void MeshMix::Render()
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
+    // ƒJƒƒ‰
+    //--------------------------------------------------------
+    D3DXVECTOR4 cameraPos = D3DXVECTOR4(Camera::GetEyePos(), 1.f);
+
+    hResult = m_D3DEffect->SetVector("g_cameraPos", &cameraPos);
+    assert(hResult == S_OK);
+
+    //--------------------------------------------------------
     // •`‰æŠJŽn
     //--------------------------------------------------------
     hResult = m_D3DEffect->SetTechnique("Technique1");
