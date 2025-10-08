@@ -27,8 +27,6 @@
 #include "Font.h"
 #include <chrono>
 
-#define SAFE_RELEASE(p) { if (p) { (p)->Release(); (p) = NULL; } }
-
 namespace NSRender
 {
 
@@ -105,18 +103,9 @@ void Render::Initialize(HWND hWnd)
                                     &g_pRenderTarget2);
         assert(hResult == S_OK);
 
-        // フルスクリーンクアッドの頂宣言
-        D3DVERTEXELEMENT9 elems[] =
-        {
-            { 0,  0, D3DDECLTYPE_FLOAT4, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0 },
-            { 0, 16, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0 },
-            D3DDECL_END()
-        };
-        hResult = Common::D3DDevice()->CreateVertexDeclaration(elems, &g_pQuadDecl);
-        assert(hResult == S_OK);
-
     }
 
+    // 彩度フィルター
     m_postEffectSaturate.Initialize();
 
     // ガウスフィルター
@@ -130,8 +119,6 @@ void Render::Initialize(HWND hWnd)
 
     // 最終処理用ポストエフェクト
     m_postEffectEnd.Initialize();
-
-//    AddMesh(L"cube.x", D3DXVECTOR3(0, 0, 0), D3DXVECTOR3(0, 0, 0), 1.f, 1.f);
 }
 
 void Render::Finalize()
@@ -169,6 +156,7 @@ void Render::Draw()
     // g_pRenderTargetの内容を画面に転送
     m_postEffectEnd.Draw(m_pRenderTarget1);
 
+    // 文字と画像は彩度フィルタの影響を受けないようにする
     Draw2D();
 
     hResult = Common::D3DDevice()->Present(NULL, NULL, NULL, NULL);
@@ -429,15 +417,21 @@ void Render::RotateCamera(const D3DXVECTOR3& rot)
     float r = D3DXVec3Length(&rel);
 
     // 現在の角度を求める（spherical座標）
-    float yaw = atan2f(rel.x, rel.z);             // 水平方向
-    float pitch = asinf(rel.y / r);                 // 上下方向
+
+    // 水平方向
+    float yaw = atan2f(rel.x, rel.z);
+
+    // 上下方向
+    float pitch = asinf(rel.y / r);
 
     // 回転を加える
     yaw += rot.y;
     pitch += rot.x;
 
     // --- ピッチ角を制限する ---
-    const float limit = D3DXToRadian(89.0f);        // 真上/真下を少し手前で止める
+
+    // 真上/真下を少し手前で止める
+    const float limit = D3DXToRadian(89.0f);        
     if (pitch > limit) pitch = limit;
     if (pitch < -limit) pitch = -limit;
 
@@ -794,7 +788,6 @@ void Render::ShowFPS(const float arg)
 
 void Render::Draw2D()
 {
-    // 文字と画像は彩度フィルタの影響を受けないようにする
     for (auto& elem : m_fontList)
     {
         elem.Draw();

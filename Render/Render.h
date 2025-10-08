@@ -210,15 +210,6 @@ private:
     LPDIRECT3DTEXTURE9 m_pRenderTarget1 = NULL;
     LPDIRECT3DTEXTURE9 g_pRenderTarget2 = NULL;
 
-    // フルスクリーンクアッド用
-    LPDIRECT3DVERTEXDECLARATION9 g_pQuadDecl = NULL;
-
-    struct ScreenVertex
-    {
-        float x, y, z, rhw;
-        float u, v;
-    };
-
     //-----------------------------------------------------------------
     // FPS表示
     //-----------------------------------------------------------------
