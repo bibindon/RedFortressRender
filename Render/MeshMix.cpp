@@ -122,6 +122,11 @@ void MeshMix::Initialize()
 
     SAFE_RELEASE(materialBuffer);
 
+    hResult = D3DXCreateCubeTextureFromFile(Common::D3DDevice(),
+                                            L"Texture1.dds",
+                                            &g_pEnvCube);
+
+
     m_bLoaded = true;
 }
 
@@ -212,6 +217,9 @@ void MeshMix::Render()
 
     hResult = m_D3DEffect->SetVector("g_cameraPos", &cameraPos);
     assert(hResult == S_OK);
+
+
+    m_D3DEffect->SetTexture("g_texCubeMap", g_pEnvCube);
 
     //--------------------------------------------------------
     // •`‰æŠJn

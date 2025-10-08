@@ -41,6 +41,23 @@ sampler g_textureSampler = sampler_state
     MaxAnisotropy = 8;
 };
 
+// 環境マップ
+textureCUBE g_texCubeMap;
+
+samplerCUBE g_texCubeMapSampler = sampler_state
+{
+    Texture = <g_texCubeMap>;
+    MipFilter = LINEAR;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+
+    // どれくらいぼかすか
+    // 数字が大きいほどぼかされる
+//    MaxMipLevel = 7;
+};
+
 // 視差マッピングは「1パス目では実施せず、2パス目で実装する」というようなことはできない
 //
 void VertexShader1(in  float4 inPosition     : POSITION,
@@ -56,7 +73,7 @@ void VertexShader1(in  float4 inPosition     : POSITION,
 
     outPosWorld = mul(inPosition, g_matWorld).xyz;
     outNormalWorld = mul(inNormal, g_matWorld).xyz;
-    outTexCood = inTexCood;
+    outTexCood = inTexCood.xy;
 }
 
 void PixelShader1(in float4 inPosition    : POSITION,
@@ -68,7 +85,7 @@ void PixelShader1(in float4 inPosition    : POSITION,
 {
     // 正規化はピクセルシェーダーでやらないといけない
     float3 normal = normalize(inNormalWorld);
-    float3 lightDir = normalize(g_lightNormal);
+    float3 lightDir = normalize(g_lightNormal.xyz);
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float3 halfVector = normalize(lightDir + cameraDir);
 
@@ -80,7 +97,7 @@ void PixelShader1(in float4 inPosition    : POSITION,
     float3 lambert = albedo * NdotL;
     float3 ambient = albedo * g_ambient.rgb;
 
-    float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_specularColor;
+    float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_specularColor.xyz;
 
     float3 finalColor = ambient.rgb + lambert + specular;
 
@@ -98,6 +115,19 @@ float FogAmountExp2(float distance, float density)
 {
     float x = density * distance;
     return 1 - exp(-x * x);
+}
+
+void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
+                            in float3 inPosWorld     : TEXCOORD0,
+                            in float3 inNormalWorld  : TEXCOORD1,
+                            in float2 inTexCood      : TEXCOORD2,
+
+                            out float4 outColor      : COLOR)
+{
+    float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
+    float3 reflectWorld = reflect(-cameraDir, normalize(inNormalWorld));
+
+    outColor = float4(texCUBE(g_texCubeMapSampler, reflectWorld).rgb, 0.2);
 }
 
 void PixelShaderFog(in float4 inPosition     : POSITION,
@@ -125,7 +155,7 @@ void PixelShaderFog(in float4 inPosition     : POSITION,
     float fogDensityHeight = FogAmountExp(cameraDistance, g_fogDistanceDensity);
     
     // 高度が高くなるほど低くなる数値
-    float fogHeightR = 1 / (inPosWorld.y * 0.01f);
+    float fogHeightR = 1 / (inPosWorld.y * 0.0001f);
 
     if (fogHeightR >= 1.0f)
     {
@@ -144,6 +174,16 @@ technique Technique1
     {
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShader1();
+    }
+
+    pass PassCubeMapping
+    {
+        AlphaBlendEnable = TRUE;
+        SrcBlend = SRCALPHA;
+        DestBlend = INVSRCALPHA;
+
+        VertexShader = compile vs_3_0 VertexShader1();
+        PixelShader = compile ps_3_0 PixelShaderCubeMapping();
     }
 
     pass PassFog

@@ -239,6 +239,8 @@ private:
     bool m_bLoaded = false;
 
     stMeshParam m_param;
+
+    LPDIRECT3DCUBETEXTURE9  g_pEnvCube = NULL;
 };
 }
 
