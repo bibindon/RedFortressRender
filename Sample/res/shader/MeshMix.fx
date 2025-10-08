@@ -52,6 +52,9 @@ samplerCUBE g_texCubeMapSampler = sampler_state
     MagFilter = LINEAR;
     AddressU = CLAMP;
     AddressV = CLAMP;
+
+    // ‚Ç‚ê‚­‚ç‚¢‚Ú‚©‚·‚©
+    // ”š‚ª‘å‚«‚¢‚Ù‚Ç‚Ú‚©‚³‚ê‚é
 //    MaxMipLevel = 7;
 };
 

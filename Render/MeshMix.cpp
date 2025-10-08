@@ -258,7 +258,8 @@ void MeshMix::Render()
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // Pass2
+    // パス2
+    // 環境マッピング
     //--------------------------------------------------------
     hResult = m_D3DEffect->BeginPass(1);
     assert(hResult == S_OK);
@@ -272,6 +273,21 @@ void MeshMix::Render()
     hResult = m_D3DEffect->EndPass();
     assert(hResult == S_OK);
 
+    //--------------------------------------------------------
+    // パス3（最後である必要がある）
+    // 霧
+    //--------------------------------------------------------
+    hResult = m_D3DEffect->BeginPass(2);
+    assert(hResult == S_OK);
+
+    for (DWORD i = 0; i < m_materialCount; ++i)
+    {
+        hResult = m_D3DMesh->DrawSubset(i);
+        assert(hResult == S_OK);
+    }
+
+    hResult = m_D3DEffect->EndPass();
+    assert(hResult == S_OK);
     hResult = m_D3DEffect->End();
     assert(hResult == S_OK);
 }
