@@ -26,6 +26,8 @@
 
 #include "Font.h"
 #include <chrono>
+#include <set>
+#include <algorithm>
 
 namespace NSRender
 {
@@ -403,6 +405,20 @@ void Render::SetPostEffectStarBurst(const bool arg)
 void Render::SetShowFPS(const bool arg)
 {
     m_bShowFPS = arg;
+}
+
+std::vector<std::pair<int, int>> Render::GetResolutionList()
+{
+    std::vector<DisplayModeInfo> modes = EnumerateFullscreenModes(m_pD3D, D3DADAPTER_DEFAULT);
+
+    std::vector<std::pair<int, int>> resolutionList;
+
+    for (auto& mode : modes)
+    {
+        resolutionList.push_back({ mode.width, mode.height });
+    }
+
+    return resolutionList;
 }
 
 void Render::RotateCamera(const D3DXVECTOR3& rot)
@@ -795,6 +811,88 @@ void Render::Draw2D()
 
     m_sprite.Draw();
 
+}
+
+
+std::vector<D3DFORMAT> Render::GetCandidateFormats()
+{
+    std::vector<D3DFORMAT> formats;
+
+    formats.push_back(D3DFMT_A8R8G8B8);
+    formats.push_back(D3DFMT_X8R8G8B8);
+    formats.push_back(D3DFMT_R5G6B5);
+
+    return formats;
+}
+
+std::vector<DisplayModeInfo> Render::EnumerateFullscreenModes(LPDIRECT3D9 d3d, UINT adapterIndex)
+{
+    std::vector<DisplayModeInfo> result;
+    std::set<std::tuple<UINT, UINT, UINT, int> > seen;
+
+    if (d3d == NULL)
+    {
+        return result;
+    }
+
+    std::vector<D3DFORMAT> candidateFormats = GetCandidateFormats();
+
+    for (size_t formatIndex = 0; formatIndex < candidateFormats.size(); ++formatIndex)
+    {
+        D3DFORMAT format = candidateFormats[formatIndex];
+
+        UINT modeCount = d3d->GetAdapterModeCount(adapterIndex, format);
+
+        for (UINT i = 0; i < modeCount; ++i)
+        {
+            D3DDISPLAYMODE mode {};
+            HRESULT hr = d3d->EnumAdapterModes(adapterIndex, format, i, &mode);
+
+            if (FAILED(hr))
+            {
+                continue;
+            }
+
+            std::tuple<UINT, UINT, UINT, int> key =
+                std::make_tuple(mode.Width, mode.Height, mode.RefreshRate, static_cast<int>(mode.Format));
+
+            if (seen.find(key) == seen.end())
+            {
+                seen.insert(key);
+
+                DisplayModeInfo info {};
+                info.width = mode.Width;
+                info.height = mode.Height;
+                info.refreshRate = mode.RefreshRate;
+                info.format = mode.Format;
+
+                result.push_back(info);
+            }
+        }
+    }
+
+    std::sort(result.begin(), result.end(),
+              [](const DisplayModeInfo& a, const DisplayModeInfo& b)
+              {
+                  if (a.width != b.width)
+                  {
+                      return a.width < b.width;
+                  }
+
+                  if (a.height != b.height)
+                  {
+                      return a.height < b.height;
+                  }
+
+                  if (a.refreshRate != b.refreshRate)
+                  {
+                      return a.refreshRate < b.refreshRate;
+                  }
+
+                  return static_cast<int>(a.format) < static_cast<int>(b.format);
+              });
+
+    return result;
 }
 
 }

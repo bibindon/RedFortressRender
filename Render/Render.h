@@ -41,6 +41,14 @@ enum class eWindowMode
     NONE,
 };
 
+struct DisplayModeInfo
+{
+    UINT width;
+    UINT height;
+    UINT refreshRate;
+    D3DFORMAT format;
+};
+
 class Render
 {
 public:
@@ -157,6 +165,8 @@ public:
 
     void SetShowFPS(const bool arg);
 
+    std::vector<std::pair<int, int>> GetResolutionList();
+
 private:
 
     HWND m_hWnd = NULL;
@@ -206,6 +216,10 @@ private:
     PostEffectEnd m_postEffectEnd;
 
     void Draw2D();
+
+    std::vector<D3DFORMAT> GetCandidateFormats();
+
+    std::vector<DisplayModeInfo> EnumerateFullscreenModes(LPDIRECT3D9 d3d, UINT adapterIndex);
 
     LPDIRECT3DTEXTURE9 m_pRenderTarget1 = NULL;
     LPDIRECT3DTEXTURE9 g_pRenderTarget2 = NULL;

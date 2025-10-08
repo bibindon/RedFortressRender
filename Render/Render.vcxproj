@@ -52,6 +52,7 @@
     <ClCompile Include="Sprite.cpp" />
     <ClCompile Include="Font.cpp" />
     <ClCompile Include="Util.cpp" />
+    <ClCompile Include="WindowManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AnimController.h" />
@@ -79,6 +80,7 @@
     <ClInclude Include="Sprite.h" />
     <ClInclude Include="Font.h" />
     <ClInclude Include="Util.h" />
+    <ClInclude Include="WindowManager.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shader\AnimMeshShader.fx">

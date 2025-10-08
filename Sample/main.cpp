@@ -513,6 +513,24 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
         }
 
+        // 解像度を取得
+        {
+            if (wParam == 'R')
+            {
+                auto resoList = g_Render.GetResolutionList();
+                std::wstring work;
+                for (auto& reso : resoList)
+                {
+                    work += L" Resolution : ";
+                    work += std::to_wstring(reso.first);
+                    work += L" x ";
+                    work += std::to_wstring(reso.second);
+                    work += L"\n";
+                    OutputDebugString(work.c_str());
+                }
+            }
+        }
+
     }
     }
 
