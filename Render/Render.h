@@ -48,11 +48,11 @@ public:
 
     void ChangeWindowMode(const eWindowMode eWindowMode_);
 
-    void AddMesh(const std::wstring& filePath,
-                 const D3DXVECTOR3& pos,
-                 const D3DXVECTOR3& rot,
-                 const float scale,
-                 const float radius = -1.f);
+    int AddMesh(const std::wstring& filePath,
+                const D3DXVECTOR3& pos,
+                const D3DXVECTOR3& rot,
+                const float scale,
+                const float radius = -1.f);
 
     void AddMeshSmooth(const std::wstring& filePath,
                        const D3DXVECTOR3& pos,
@@ -97,11 +97,13 @@ public:
                            const D3DXVECTOR3& rot,
                            const float scale);
 
-    void AddMeshMix(const std::wstring& filePath,
-                    const D3DXVECTOR3& pos,
-                    const D3DXVECTOR3& rot,
-                    const float scale,
-                    const float radius = -1.f);
+    int AddMeshMix(const std::wstring& filePath,
+                   const D3DXVECTOR3& pos,
+                   const D3DXVECTOR3& rot,
+                   const float scale,
+                   const float radius = -1.f);
+
+    void SetMeshMixPos(const int id, const D3DXVECTOR3& pos);
 
     void SetCamera(const D3DXVECTOR3& pos, const D3DXVECTOR3& lookAt);
     void MoveCamera(const D3DXVECTOR3& pos);

@@ -17,6 +17,8 @@ bool g_bClose = false;
 NSRender::Render g_Render;
 int g_fontId = 0;
 
+int g_sunId = 0;
+
 struct ImageInfo
 {
     std::wstring m_imageName;
@@ -85,6 +87,9 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
 
     g_Render.Initialize(hWnd);
     g_fontId = g_Render.SetUpFont(L"BIZ UDゴシック", 20, D3DCOLOR_RGBA(255, 255, 255, 255));
+
+    // 光源の方角がわかりやすくなるように、光源の方角に球を表示
+    g_sunId = g_Render.AddMeshMix(L"sphere.x", D3DXVECTOR3(10, 0, 0), D3DXVECTOR3(0, 0, 0), 1.f, 1.f);
 
     ShowWindow(hWnd, SW_SHOWDEFAULT);
     UpdateWindow(hWnd);
@@ -159,7 +164,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
             // 平行光源の方角を変える
             {
                 static float work_f = 0.0f;
-                work_f += 0.05f;
+                work_f += 0.02f;
 
                 D3DXVECTOR3 lightDir(0.0f, 0.0f, 0.0f);
 
@@ -168,6 +173,10 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                 lightDir.y = sinf(work_f);
 
                 g_Render.SetLightDir(lightDir);
+
+                // 動作確認のため、光源の方角に球を表示する
+                lightDir *= 100;
+                g_Render.SetMeshMixPos(g_sunId, lightDir);
             }
 
             g_Render.Draw();

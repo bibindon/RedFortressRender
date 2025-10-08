@@ -131,14 +131,16 @@ void Render::ChangeWindowMode(const eWindowMode eWindowMode_)
     m_windowManager.RequestWindowMode(eWindowMode_);
 }
 
-void Render::AddMesh(const std::wstring& filePath,
-                               const D3DXVECTOR3& pos,
-                               const D3DXVECTOR3& rot,
-                               const float scale,
-                               const float radius)
+int Render::AddMesh(const std::wstring& filePath,
+                    const D3DXVECTOR3& pos,
+                    const D3DXVECTOR3& rot,
+                    const float scale,
+                    const float radius)
 {
     m_meshList.push_back(Mesh(filePath, pos, rot, scale, radius));
     m_meshList.rbegin()->Initialize();
+
+    return m_meshList.size() - 1;
 }
 
 void Render::AddMeshSmooth(const std::wstring& filePath,
@@ -211,7 +213,6 @@ void Render::AddMeshInstansing(const std::wstring& filePath,
                                          const D3DXVECTOR3& rot,
                                          const float scale)
 {
-
     if (m_meshInstancingMap.find(filePath) == m_meshInstancingMap.end())
     {
         MeshInstancing* mesh = NEW MeshInstancing();
@@ -223,17 +224,24 @@ void Render::AddMeshInstansing(const std::wstring& filePath,
     m_meshInstancingMap[filePath]->AddInstance(pos);
 }
 
-void Render::AddMeshMix(const std::wstring& filePath,
-                        const D3DXVECTOR3& pos,
-                        const D3DXVECTOR3& rot,
-                        const float scale,
-                        const float radius)
+int Render::AddMeshMix(const std::wstring& filePath,
+                       const D3DXVECTOR3& pos,
+                       const D3DXVECTOR3& rot,
+                       const float scale,
+                       const float radius)
 {
     auto param = GetMeshParamPreset(eMeshParamPreset::GRASS);
     param.smooth = false;
     auto mesh = MeshMix(filePath, pos, rot, scale, param);
     m_meshMixList.push_back(mesh);
     m_meshMixList.rbegin()->Initialize();
+
+    return m_meshMixList.size() - 1;
+}
+
+void Render::SetMeshMixPos(const int id, const D3DXVECTOR3& pos)
+{
+    m_meshMixList.at(id).SetPos(pos);
 }
 
 void Render::SetCamera(const D3DXVECTOR3& pos, const D3DXVECTOR3& lookAt)
