@@ -1,8 +1,7 @@
 
-float4x4 g_matWorldViewProj;
-
 float4x4 g_matWorld;
 float4x4 g_matViewProj;
+float4x4 g_matWorldViewProj;
 
 float4 g_lightNormal = { 0.3f, 1.0f, 0.5f, 0.0f };
 float4 g_lightPos = { -10.f, 10.f, -10.f, 0.0f };
@@ -41,9 +40,8 @@ void VertexShader1(in  float4 inPosition  : POSITION,
 {
     outPosition = mul(inPosition, g_matWorldViewProj);
 
-    // TODO matWorldのような行列を作ってかけないとワールド座標にならない。
-    outPosLocal = inPosition.xyz;
-    outNormal = inNormal.xyz;
+    outPosLocal = mul(inPosition, g_matWorld).xyz;
+    outNormal = mul(inNormal, g_matWorld).xyz;
     outTexCood = inTexCood;
 }
 

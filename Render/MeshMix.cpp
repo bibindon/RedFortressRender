@@ -169,28 +169,38 @@ void MeshMix::Render()
     //--------------------------------------------------------
     // ワールド変換行列を設定
     //--------------------------------------------------------
-    D3DXMATRIX worldViewProjMatrix { };
-    D3DXMatrixIdentity(&worldViewProjMatrix);
+    D3DXMATRIX matWorld{ };
+    D3DXMatrixIdentity(&matWorld);
 
-    {
-        D3DXMATRIX mat;
-        D3DXMatrixIdentity(&mat);
+    D3DXMATRIX matWork;
+    D3DXMatrixIdentity(&matWork);
 
-        D3DXMatrixScaling(&mat, m_scale, m_scale, m_scale);
-        worldViewProjMatrix *= mat;
+    D3DXMatrixScaling(&matWork, m_scale, m_scale, m_scale);
+    matWorld *= matWork;
 
-        D3DXMatrixRotationYawPitchRoll(&mat, m_rotate.y, m_rotate.x, m_rotate.z);
-        worldViewProjMatrix *= mat;
+    D3DXMatrixRotationYawPitchRoll(&matWork, m_rotate.y, m_rotate.x, m_rotate.z);
+    matWorld *= matWork;
 
-        D3DXMatrixTranslation(&mat, m_pos.x, m_pos.y, m_pos.z);
-        worldViewProjMatrix *= mat;
-    }
+    D3DXMatrixTranslation(&matWork, m_pos.x, m_pos.y, m_pos.z);
+    matWorld *= matWork;
+
+    hResult = m_D3DEffect->SetMatrix("g_matWorld", &matWorld);
 
     //--------------------------------------------------------
     // ワールドビュー射影変換行列を設定
     //--------------------------------------------------------
-    worldViewProjMatrix *= Camera::GetViewMatrix();
-    worldViewProjMatrix *= Camera::GetProjMatrix();
+    D3DXMATRIX matViewProj{ };
+    D3DXMatrixIdentity(&matViewProj);
+
+    matViewProj *= Camera::GetViewMatrix();
+    matViewProj *= Camera::GetProjMatrix();
+
+    hResult = m_D3DEffect->SetMatrix("g_matViewProj", &matViewProj);
+
+    D3DXMATRIX worldViewProjMatrix { };
+    D3DXMatrixIdentity(&worldViewProjMatrix);
+
+    worldViewProjMatrix = matWorld * matViewProj;
 
     hResult = m_D3DEffect->SetMatrix("g_matWorldViewProj", &worldViewProjMatrix);
     assert(hResult == S_OK);
