@@ -35,13 +35,23 @@ void PostEffectSaturate::Finalize()
 
 LPDIRECT3DTEXTURE9 PostEffectSaturate::Draw(LPDIRECT3DTEXTURE9 renderTarget)
 {
+    if (!m_bEnable)
+    {
+        return renderTarget;
+    }
+
     m_d3dEffect->SetFloat("g_level", m_saturateLevel);
 
     m_d3dEffect->SetTexture("texture1", renderTarget);
 
-    DrawFullscreenQuad(renderTarget, m_texWork, "Technique1");
+    DrawFullscreenQuad(m_texWork, "Technique1");
 
     return m_texWork;
+}
+
+void PostEffectSaturate::SetEnable(const bool arg)
+{
+    m_bEnable = arg;
 }
 
 void PostEffectSaturate::SetPostEffectSaturate(const float level)
@@ -54,9 +64,8 @@ float PostEffectSaturate::GetPostEffectSaturate() const
     return m_saturateLevel;
 }
 
-void PostEffectSaturate::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
-                                         LPDIRECT3DTEXTURE9 texTarget,
-                                         const std::string& technique)
+void PostEffectSaturate::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
+                                            const std::string& technique)
 {
     LPDIRECT3DSURFACE9 pSceneRT = NULL;
     texTarget->GetSurfaceLevel(0, &pSceneRT);

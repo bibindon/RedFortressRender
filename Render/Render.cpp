@@ -100,13 +100,13 @@ void Render::Draw()
     m_pRenderTarget1 = m_postEffectSaturate.Draw(m_pRenderTarget1);
 
     // ブルーム
-    // m_pRenderTarget1 = m_PostEffectBloom.Draw(m_pRenderTarget1);
+    m_pRenderTarget1 = m_PostEffectBloom.Draw(m_pRenderTarget1);
 
     // スターバースト
-    m_pRenderTarget1 = m_postEffectStarBurst.Draw(m_pRenderTarget1);
-
-    // ガウス
-    m_pRenderTarget1 = m_postEffectGauss.Draw(m_pRenderTarget1);
+//    m_pRenderTarget1 = m_postEffectStarBurst.Draw(m_pRenderTarget1);
+//
+//    // ガウス
+//    m_pRenderTarget1 = m_postEffectGauss.Draw(m_pRenderTarget1);
 
     // g_pRenderTargetの内容を画面に転送
     m_postEffectEnd.Draw(m_pRenderTarget1);
@@ -140,7 +140,7 @@ int Render::AddMesh(const std::wstring& filePath,
     m_meshList.push_back(Mesh(filePath, pos, rot, scale, radius));
     m_meshList.rbegin()->Initialize();
 
-    return m_meshList.size() - 1;
+    return (int)m_meshList.size() - 1;
 }
 
 void Render::AddMeshSmooth(const std::wstring& filePath,
@@ -236,7 +236,7 @@ int Render::AddMeshMix(const std::wstring& filePath,
     m_meshMixList.push_back(mesh);
     m_meshMixList.rbegin()->Initialize();
 
-    return m_meshMixList.size() - 1;
+    return (int)m_meshMixList.size() - 1;
 }
 
 void Render::SetMeshMixPos(const int id, const D3DXVECTOR3& pos)
@@ -459,7 +459,7 @@ void Render::DrawPass1()
     hResult = Common::D3DDevice()->Clear(0,
                                          NULL,
                                          D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
-                                         D3DCOLOR_XRGB(100, 100, 100),
+                                         D3DCOLOR_RGBA(100, 100, 100, 100),
                                          1.0f,
                                          0);
 

@@ -18,6 +18,8 @@ public:
     void SetPostEffectSaturate(const float arg);
     float GetPostEffectSaturate() const;
 
+    void SetEnable(const bool arg);
+
     void OnDeviceLost();
     void OnDeviceReset();
 
@@ -27,8 +29,7 @@ private:
 
     LPDIRECT3DTEXTURE9 m_texWork = NULL;
 
-    void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
-                            LPDIRECT3DTEXTURE9 texTarget,
+    void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
                             const std::string& technique);
 
     struct ScreenVertex
@@ -44,6 +45,7 @@ private:
 
     float m_saturateLevel = 1.0f;
 
+    bool m_bEnable = true;
 };
 
 }
