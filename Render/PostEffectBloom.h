@@ -58,7 +58,7 @@ private:
     // 0.0 ~ 1.0
     float m_size = 1.0f;
 
-    bool m_bEnable = true;
+    bool m_bEnable = false;
 };
 
 }

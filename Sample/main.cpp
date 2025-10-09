@@ -170,12 +170,12 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
 
                 lightDir.x = sinf(work_f);
                 lightDir.z = cosf(work_f);
-                lightDir.y = sinf(work_f);
+                lightDir.y = sinf(work_f * 2);
 
                 g_Render.SetLightDir(lightDir);
 
                 // 動作確認のため、光源の方角に球を表示する
-                lightDir *= 100;
+                lightDir *= 4;
                 g_Render.SetMeshMixPos(g_sunId, lightDir);
             }
 

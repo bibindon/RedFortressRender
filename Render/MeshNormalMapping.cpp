@@ -1,6 +1,7 @@
 #include "MeshNormalMapping.h"
 
 #include "Camera.h"
+#include "Light.h"
 
 namespace NSRender
 {
@@ -202,7 +203,7 @@ void MeshNormalMapping::Draw()
     static float t2 = 0.0f;
     t2 += 0.02f;
 
-    D3DXVECTOR4 lightDir(sinf(t2), sinf(t2), cosf(t2), 0.0f);
+    D3DXVECTOR4 lightDir(Light::GetLightNormal());
     D3DXVec4Normalize(&lightDir, &lightDir);
     m_D3DEffect->SetVector("g_lightDirectionWS", &lightDir);
 
