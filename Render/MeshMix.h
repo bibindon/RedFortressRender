@@ -242,6 +242,9 @@ private:
     LPD3DXEFFECT m_D3DEffect = nullptr;
     LPD3DXMESH m_D3DMesh = nullptr;
 
+    // マテリアル名によって判別を行う
+    // Normal・・・法線マップ
+    // Cube・・・環境マップ
     DWORD m_materialCount = 0;
     std::vector<D3DXVECTOR4> m_vecDiffuse;
     std::vector<LPDIRECT3DTEXTURE9> m_vecTexture;
