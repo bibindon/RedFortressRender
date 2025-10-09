@@ -65,10 +65,16 @@ struct stMeshParam
     // 影が表示されるようにするかどうか。
     bool shadow = true;
 
-    // SSS風の表示を行うか。
+    // 彩度影の表示を行うか。
     //
-    // 陰を表示するときに、輝度を少しだけ下げて、彩度を上げ、色相を少し変える
-    bool fakeSSS = false;
+    // 陰を表示するとき、単純に輝度を下げる、というのは昔のゲーム画面風の
+    // 見た目になる。綺麗ではない。
+    // 陰を表示するときに、輝度を少しだけ下げて、彩度を上げ、色相を少し変えると
+    // 良い感じになる。
+    bool saturateShadow = false;
+
+    // 彩度影をどれくらい強く効かせるか
+    float saturateShadowIntensity = 0.2f;
 
     // 環境マッピングを行うか
     //
@@ -175,7 +181,7 @@ enum class eMeshParamPreset
 
 stMeshParam GetMeshParamPreset(const eMeshParamPreset preset);
 
-// ポイントライト、スムーズ、SSS風、視差マッピング、SSAO、深度バッファシャドウ
+// ポイントライト、スムーズ、彩度影、視差マッピング、SSAO、深度バッファシャドウ
 // マルチレンダーターゲット、環境マッピングが有効なメッシュクラス
 class MeshMix
 {

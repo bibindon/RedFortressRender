@@ -32,7 +32,7 @@ sampler BlurSampler = sampler_state
 };
 
 // === パラメータ ===
-float g_Threshold = 0.8f; // 輝度しきい値
+float g_Threshold = 0.5f; // 輝度しきい値
 float2 g_TexelSize; // (1/width, 1/height) : ブラー用
 
 // === BrightPass ===
@@ -80,7 +80,7 @@ float4 CombinePS(float2 texCoord : TEXCOORD0) : COLOR
     float4 bloom = tex2D(BlurSampler, texCoord);
 
     // ブルームの濃さ
-    return scene + bloom * 1.0f;
+    return scene + bloom * 4.0f;
 }
 
 // === Techniques ===
