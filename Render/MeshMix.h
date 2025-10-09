@@ -71,6 +71,8 @@ struct stMeshParam
     // 見た目になる。綺麗ではない。
     // 陰を表示するときに、輝度を少しだけ下げて、彩度を上げ、色相を少し変えると
     // 良い感じになる。
+    //
+    // しかし、環境マッピングがあればそもそも要らないはず。
     bool saturateShadow = false;
 
     // 彩度影をどれくらい強く効かせるか
@@ -140,7 +142,20 @@ struct stMeshParam
     //
     // 衝突判定はとてつもなく重い。この半径以内に入るまで衝突判定をしない、という距離
     // 高速化のため、球ではなく立方体で見る
-    float collisionRadius = 2.0;
+    float collisionRadius = 2.0f;
+
+    // サブサーフェイススキャッタリングを有効にする
+    // もやし、大理石、ロウソク、すりガラスなどの
+    // 光がちょっと透ける物体用。
+    bool sss = false;
+
+    float sssIntensity = 0.0f;
+
+    // SSSで表示される色を自ら指定？
+    // 自動化できないのだろうか
+    // 緑の物体でSSSをやる場合、透けた色を黄色で表示すると綺麗な見た目になる
+    // なぜかはよくわからない。
+    DWORD sssColor = 0xffff80;
 };
 
 enum class eMeshParamPreset
