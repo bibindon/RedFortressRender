@@ -70,7 +70,6 @@ float4 PS(float3 wsNorm : TEXCOORD0,
     // アルベド
     float3 albedo = tex2D(sColor, uv).rgb;
 
-    // ノーマルマップ（RGB→[-1,1]）として解釈し、正規化
     float3 normalInTangent = float3(0, 0, 0);
     normalInTangent.x = tex2D(sNormal, uv).r * 2.0 - 1.0;
     normalInTangent.y = tex2D(sNormal, uv).g * 2.0 - 1.0;
@@ -85,7 +84,6 @@ float4 PS(float3 wsNorm : TEXCOORD0,
     // Lambert 拡散（-光線方向）
     float3 L = normalize(g_lightDirectionWS.xyz);
     float ndotl = dot(normalInWorld, L);
-    //float ndotl = dot(normalInWorld, -L);
     if (ndotl < 0.0)
     {
         ndotl = 0.0;
