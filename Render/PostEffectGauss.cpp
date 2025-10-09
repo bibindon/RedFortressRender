@@ -1,4 +1,4 @@
-#include "PostEffectGauss.h"
+﻿#include "PostEffectGauss.h"
 #include "PostEffectBloom.h"
 
 namespace NSRender

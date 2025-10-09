@@ -11,8 +11,9 @@ class PostEffectSaturate
 public:
 
     void Initialize();
-    LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget);
     void Finalize();
+
+    LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget);
 
     void SetPostEffectSaturate(const float arg);
     float GetPostEffectSaturate() const;

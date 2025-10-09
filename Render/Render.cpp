@@ -100,7 +100,7 @@ void Render::Draw()
     m_pRenderTarget1 = m_postEffectSaturate.Draw(m_pRenderTarget1);
 
     // ブルーム
-    m_pRenderTarget1 = m_PostEffectBloom.Draw(m_pRenderTarget1);
+    // m_pRenderTarget1 = m_PostEffectBloom.Draw(m_pRenderTarget1);
 
     // スターバースト
     m_pRenderTarget1 = m_postEffectStarBurst.Draw(m_pRenderTarget1);

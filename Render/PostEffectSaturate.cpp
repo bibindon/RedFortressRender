@@ -27,6 +27,12 @@ void PostEffectSaturate::Initialize()
                       &m_texWork);
 }
 
+void PostEffectSaturate::Finalize()
+{
+    SAFE_RELEASE(m_texWork);
+    SAFE_RELEASE(m_d3dEffect);
+}
+
 LPDIRECT3DTEXTURE9 PostEffectSaturate::Draw(LPDIRECT3DTEXTURE9 renderTarget)
 {
     m_d3dEffect->SetFloat("g_level", m_saturateLevel);
@@ -36,12 +42,6 @@ LPDIRECT3DTEXTURE9 PostEffectSaturate::Draw(LPDIRECT3DTEXTURE9 renderTarget)
     DrawFullscreenQuad(renderTarget, m_texWork, "Technique1");
 
     return m_texWork;
-}
-
-void PostEffectSaturate::Finalize()
-{
-    SAFE_RELEASE(m_texWork);
-    SAFE_RELEASE(m_d3dEffect);
 }
 
 void PostEffectSaturate::SetPostEffectSaturate(const float level)

@@ -16,7 +16,7 @@ float g_diffuseGain = 2.0;
 texture g_colorMap;
 texture g_normalMap;
 
-sampler2D sColor = sampler_state
+sampler sColor = sampler_state
 {
     Texture = <g_colorMap>;
     MinFilter = LINEAR;
@@ -25,7 +25,7 @@ sampler2D sColor = sampler_state
     AddressU = WRAP;
     AddressV = WRAP;
 };
-sampler2D sNormal = sampler_state
+sampler sNormal = sampler_state
 {
     Texture = <g_normalMap>;
     MinFilter = LINEAR;

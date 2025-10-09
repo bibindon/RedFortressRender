@@ -1,4 +1,4 @@
-#include "PostEffectBloom.h"
+ï»¿#include "PostEffectBloom.h"
 
 namespace NSRender
 {
@@ -62,7 +62,7 @@ LPDIRECT3DTEXTURE9 PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource)
     }
 
     // ------------------------------------------------------------
-    // (1) BrightPass : “ü—Í = renderSource, o—Í = m_texWork
+    // (1) BrightPass : å…¥åŠ› = renderSource, å‡ºåŠ› = m_texWork
     // ------------------------------------------------------------
     {
         m_d3dEffect->SetTexture("g_SrcTex", renderSource);
@@ -74,12 +74,12 @@ LPDIRECT3DTEXTURE9 PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource)
     }
 
     // ------------------------------------------------------------
-    // (2) Horizontal Blur : “ü—Í = m_texBright, o—Í = m_texBlurH
+    // (2) Horizontal Blur : å…¥åŠ› = m_texBright, å‡ºåŠ› = m_texBlurH
     // ------------------------------------------------------------
     {
         m_d3dEffect->SetTexture("g_SrcTex", m_texBright);
 
-        // ‰¡•ûŒü
+        // æ¨ªæ–¹å‘
         float dir[4] = { 1, 0, 0, 0 };
         m_d3dEffect->SetFloatArray("g_Direction", dir, 4);
 
@@ -87,12 +87,12 @@ LPDIRECT3DTEXTURE9 PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource)
     }
 
     // ------------------------------------------------------------
-    // (3) Vertical Blur : “ü—Í = m_texBlurH, o—Í = m_texBlurV
+    // (3) Vertical Blur : å…¥åŠ› = m_texBlurH, å‡ºåŠ› = m_texBlurV
     // ------------------------------------------------------------
     {
         m_d3dEffect->SetTexture("g_SrcTex", m_texBlurH);
 
-        // c•ûŒü
+        // ç¸¦æ–¹å‘
         float dir[4] = { 0, 1, 0, 0 };
         m_d3dEffect->SetFloatArray("g_Direction", dir, 4);
 
@@ -100,7 +100,7 @@ LPDIRECT3DTEXTURE9 PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource)
     }
 
     // ------------------------------------------------------------
-    // (4) Combine : (renderSource + m_texBlurV) ¨ m_renderTarget
+    // (4) Combine : (renderSource + m_texBlurV) â†’ m_renderTarget
     // ------------------------------------------------------------
     {
         m_d3dEffect->SetTexture("g_SceneTex", renderSource);
