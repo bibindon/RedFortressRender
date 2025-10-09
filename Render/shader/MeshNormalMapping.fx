@@ -1,6 +1,3 @@
-// simple.fx — Normal Mapping（頂点 TANGENT/BINORMAL 使用／構造体なしI/O／三項演算子なし）
-// 前提：RGBノーマルマップ（rgb*2-1）。sRGB補正はかけないでサンプリング。
-// 定数名は main.cpp と一致（g_colorMap / g_normalMap / g_lightDirectionWS）。
 
 float4x4 g_matWorldViewProj;
 float4x4 g_matWorld;
@@ -25,6 +22,7 @@ sampler sColor = sampler_state
     AddressU = WRAP;
     AddressV = WRAP;
 };
+
 sampler sNormal = sampler_state
 {
     Texture = <g_normalMap>;
