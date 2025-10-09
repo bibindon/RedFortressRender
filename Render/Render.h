@@ -215,8 +215,6 @@ private:
     LPDIRECT3DTEXTURE9 m_pRenderTarget1 = NULL;
     LPDIRECT3DTEXTURE9 m_pRenderTarget2 = NULL;
 
-    LPDIRECT3DTEXTURE9 m_pWorkPointer = NULL;
-
     //-----------------------------------------------------------------
     // FPS表示
     //-----------------------------------------------------------------

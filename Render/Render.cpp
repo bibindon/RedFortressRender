@@ -96,22 +96,28 @@ void Render::Draw()
 
     DrawPass1();
 
-    m_pWorkPointer = m_pRenderTarget1;
+    //---------------------------------------------------------------
+    // m_pRenderTarget1やm_pRenderTarget2に代入しないこと
+    //---------------------------------------------------------------
+
+    LPDIRECT3DTEXTURE9 pTempTexture = NULL;
+
+    pTempTexture = m_pRenderTarget1;
 
     // 彩度変更
-    m_pWorkPointer = m_postEffectSaturate.Draw(m_pWorkPointer);
+    pTempTexture = m_postEffectSaturate.Draw(pTempTexture);
 
     // ブルーム
-    m_pWorkPointer = m_PostEffectBloom.Draw(m_pWorkPointer);
+    pTempTexture = m_PostEffectBloom.Draw(pTempTexture);
 
     // スターバースト
-    m_pWorkPointer = m_postEffectStarBurst.Draw(m_pWorkPointer);
+    pTempTexture = m_postEffectStarBurst.Draw(pTempTexture);
 
     // ガウス
-    m_pWorkPointer = m_postEffectGauss.Draw(m_pWorkPointer);
+    pTempTexture = m_postEffectGauss.Draw(pTempTexture);
 
     // g_pRenderTargetの内容を画面に転送
-    m_postEffectEnd.Draw(m_pWorkPointer);
+    m_postEffectEnd.Draw(pTempTexture);
 
     // 文字と画像は彩度フィルタの影響を受けないようにする
     Draw2D();

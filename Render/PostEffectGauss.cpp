@@ -30,6 +30,11 @@ void PostEffectGauss::Initialize()
 
 LPDIRECT3DTEXTURE9 PostEffectGauss::Draw(LPDIRECT3DTEXTURE9 renderTarget)
 {
+    if (!m_bEnable)
+    {
+        return renderTarget;
+    }
+
     m_d3dEffect->SetBool("g_bFilterON", m_bEnable);
 
     DrawFullscreenQuad(renderTarget, m_texWork, "GaussianH");
