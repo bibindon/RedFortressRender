@@ -35,7 +35,6 @@ sampler sNormal = sampler_state
     AddressV = WRAP;
 };
 
-// ===== Vertex Shader =====
 void VS(float4 inPos : POSITION,
         float3 inNormOS : NORMAL0,
         float3 inTangentOS : TANGENT0,
@@ -48,20 +47,16 @@ void VS(float4 inPos : POSITION,
         out float3 wsBinorm : TEXCOORD2,
         out float2 outUV : TEXCOORD3)
 {
-    float3x3 world3x3 = (float3x3) g_matWorld; // 等方スケール前提
+    float3x3 world3x3 = (float3x3) g_matWorld;
 
     outPos = mul(inPos, g_matWorldViewProj);
     wsNorm = normalize(mul(inNormOS, world3x3));
     wsTangent = normalize(mul(inTangentOS, world3x3));
     wsBinorm = normalize(mul(inBinormalOS, world3x3));
 
-    // 直交性の調整（T を N に直交化）
-    wsTangent = normalize(wsTangent - wsNorm * dot(wsNorm, wsTangent));
-
     outUV = inUV;
 }
 
-// ===== Pixel Shader =====
 float4 PS(float3 wsNorm : TEXCOORD0,
           float3 wsTangent : TEXCOORD1,
           float3 wsBinorm : TEXCOORD2,
@@ -81,7 +76,7 @@ float4 PS(float3 wsNorm : TEXCOORD0,
     float3x3 tangentToWorld = float3x3(-wsTangent, -wsBinorm, wsNorm);
     float3 normalInWorld = normalize(mul(normalInTangent, tangentToWorld));
 
-    // Lambert 拡散（-光線方向）
+    // Lambert 拡散（光線方向）
     float3 L = normalize(g_lightDirectionWS.xyz);
     float ndotl = dot(normalInWorld, L);
     if (ndotl < 0.0)
