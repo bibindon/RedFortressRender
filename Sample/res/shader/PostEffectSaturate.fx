@@ -41,8 +41,6 @@ void PixelShader1(in float4 inPosition    : POSITION,
     workColor = saturate(workColor);
 
     outColor = workColor;
-    outColor.a = 0.f;
-    
 }
 
 technique Technique1

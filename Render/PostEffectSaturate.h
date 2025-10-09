@@ -45,7 +45,7 @@ private:
 
     float m_saturateLevel = 1.0f;
 
-    bool m_bEnable = true;
+    bool m_bEnable = false;
 };
 
 }

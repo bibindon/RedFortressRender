@@ -59,7 +59,7 @@ void Render::Initialize(HWND hWnd)
                                 D3DUSAGE_RENDERTARGET,
                                 D3DFMT_A8R8G8B8,
                                 D3DPOOL_DEFAULT,
-                                &g_pRenderTarget2);
+                                &m_pRenderTarget2);
     assert(hResult == S_OK);
 
     // 彩度フィルター
@@ -96,20 +96,22 @@ void Render::Draw()
 
     DrawPass1();
 
+    m_pWorkPointer = m_pRenderTarget1;
+
     // 彩度変更
-    m_pRenderTarget1 = m_postEffectSaturate.Draw(m_pRenderTarget1);
+    m_pWorkPointer = m_postEffectSaturate.Draw(m_pWorkPointer);
 
     // ブルーム
-    m_pRenderTarget1 = m_PostEffectBloom.Draw(m_pRenderTarget1);
+    m_pWorkPointer = m_PostEffectBloom.Draw(m_pWorkPointer);
 
     // スターバースト
-//    m_pRenderTarget1 = m_postEffectStarBurst.Draw(m_pRenderTarget1);
-//
-//    // ガウス
-//    m_pRenderTarget1 = m_postEffectGauss.Draw(m_pRenderTarget1);
+    m_pWorkPointer = m_postEffectStarBurst.Draw(m_pWorkPointer);
+
+    // ガウス
+    m_pWorkPointer = m_postEffectGauss.Draw(m_pWorkPointer);
 
     // g_pRenderTargetの内容を画面に転送
-    m_postEffectEnd.Draw(m_pRenderTarget1);
+    m_postEffectEnd.Draw(m_pWorkPointer);
 
     // 文字と画像は彩度フィルタの影響を受けないようにする
     Draw2D();
@@ -447,7 +449,7 @@ void Render::DrawPass1()
     hResult = m_pRenderTarget1->GetSurfaceLevel(0, &pRT0);
     assert(hResult == S_OK);
 
-    hResult = g_pRenderTarget2->GetSurfaceLevel(0, &pRT1);
+    hResult = m_pRenderTarget2->GetSurfaceLevel(0, &pRT1);
     assert(hResult == S_OK);
 
     hResult = Common::D3DDevice()->SetRenderTarget(0, pRT0);
