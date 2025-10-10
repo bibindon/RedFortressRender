@@ -67,6 +67,16 @@ sampler g_texNormalMapSampler = sampler_state
     MagFilter = LINEAR;
 };
 
+float g_time = 0.0f;
+
+//---------------------------------------------------------
+// 揺らしエフェクト用パラメータ
+//---------------------------------------------------------
+bool  g_swayEnable = false;
+float g_swayAmount = 0.5f;
+float g_swaySpeed  = 2.0f;
+float g_swayHeight = 3.0f;
+
 // 視差マッピングは「1パス目では実施せず、2パス目で実装する」というようなことはできない
 //
 void VertexShader1(in  float4 inPosition     : POSITION,
@@ -83,6 +93,32 @@ void VertexShader1(in  float4 inPosition     : POSITION,
                    out float3 outBinorm      : TEXCOORD4
 )
 {
+    // ゆらぎ効果（草とか）
+    if (g_swayEnable)
+    {
+        float4 pos = inPosition;
+    
+        // 揺らしエフェクトを適用
+        // Y座標の高さに基づいて揺らしの強度を変える（上にいくほど大きく揺れる）
+        float heightFactor = (pos.y + 1.0) / 3.0; // 円柱の高さに合わせて調整
+        heightFactor = pow(heightFactor, 2.0);
+        heightFactor = clamp(heightFactor, 0.0, 1.0);
+    
+        // 複数の波を組み合わせて自然な揺らしを作成
+        float wave1 = sin(g_time * g_swaySpeed) * g_swayAmount;
+        float wave2 = sin(g_time * g_swaySpeed * 0.7 + 1.5) * g_swayAmount * 0.5;
+        float wave3 = cos(g_time * g_swaySpeed * 1.3 + 2.0) * g_swayAmount * 0.3;
+    
+        // X軸とZ軸の両方向に揺らしを適用
+        float swayX = (wave1 + wave2 + wave3) * heightFactor;
+        float swayZ = (sin(g_time * g_swaySpeed * 0.8 + 0.5) * g_swayAmount * 0.7 +
+                   cos(g_time * g_swaySpeed * 1.1 + 1.0) * g_swayAmount * 0.4) * heightFactor;
+    
+        pos.x += swayX;
+        pos.z += swayZ;
+        inPosition = pos;
+    }
+    
     outPosition = mul(inPosition, g_matWorldViewProj);
 
     outPosWorld = mul(inPosition, g_matWorld).xyz;

@@ -346,6 +346,28 @@ void MeshMix::Render()
     hResult = m_D3DEffect->SetTexture("g_texNormalMap", m_vecTexture.at(2));
     assert(hResult == S_OK);
 
+    //--------------------------------------------------------
+    // —h‚ç‚µŒø‰Ê
+    //--------------------------------------------------------
+    if (m_param.sway)
+    {
+        hResult = m_D3DEffect->SetBool("g_swayEnable", TRUE);
+
+        // ŽžŠÔƒpƒ‰ƒ[ƒ^‚ðÝ’èi—h‚ç‚µŒø‰Ê—pj
+        static float f = 0.f;
+        f += 0.01f;
+        hResult = m_D3DEffect->SetFloat("g_time", f);
+        assert(hResult == S_OK);
+
+        // —h‚ç‚µ‚Ì‹­“x‚ðÝ’è
+        hResult = m_D3DEffect->SetFloat("g_swayAmount", 2.5f);
+        assert(hResult == S_OK);
+
+        // —h‚ç‚µ‚Ì‘¬“x‚ðÝ’è
+        hResult = m_D3DEffect->SetFloat("g_swaySpeed", 1.0f);
+        assert(hResult == S_OK);
+    }
+
     hResult = m_D3DEffect->CommitChanges();
     assert(hResult == S_OK);
 
