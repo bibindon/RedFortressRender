@@ -135,8 +135,7 @@ void PixelShader1(in float4 inPosition    : POSITION,
     float3 albedo = tex2D(g_textureSampler, inTexCood).rgb * g_diffuse.rgb;
 
     float3 lambert = albedo * NdotL;
-//    float3 ambient = albedo * g_ambient.rgb;
-    float3 ambient = float3(0.0f, 0.0f, 0.0f);
+    float3 ambient = albedo * g_ambient.rgb;
 
     float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_specularColor.xyz;
 
@@ -221,7 +220,7 @@ technique Technique1
     {
         AlphaBlendEnable = TRUE;
         SrcBlend = SRCALPHA;
-        DestBlend = INVSRCALPHA;
+        DestBlend = ONE;
 
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShaderCubeMapping();

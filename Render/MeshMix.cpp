@@ -204,9 +204,13 @@ void MeshMix::ModifyMeshForNormalMapping(LPD3DXMESH& pMesh)
     assert(SUCCEEDED(hr));
 
     // オプション（必要に応じて調整）
-    DWORD options = D3DXTANGENT_CALCULATE_NORMALS |
-                    D3DXTANGENT_WEIGHT_BY_AREA |
+    DWORD options = D3DXTANGENT_WEIGHT_BY_AREA |
                     D3DXTANGENT_GENERATE_IN_PLACE;  // 入力メッシュを書き換える
+
+    if (m_param.smooth)
+    {
+        options += D3DXTANGENT_CALCULATE_NORMALS;
+    }
 
     // 正しいシグネチャ順で 16 引数を渡す
     hr = D3DXComputeTangentFrameEx(pCloned,                   // pMesh

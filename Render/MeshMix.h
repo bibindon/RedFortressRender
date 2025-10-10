@@ -60,7 +60,7 @@ struct stMeshParam
     //
     // 例えば半球を表示する場合、法線を再計算するとキノコのようになり、
     // 再計算しないとダイヤモンドのような見た目になる。
-    bool smooth = true;
+    bool smooth = false;
 
     // 影が表示されるようにするかどうか。
     bool shadow = true;
