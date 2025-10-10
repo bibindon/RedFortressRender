@@ -40,6 +40,9 @@ sampler g_textureSampler = sampler_state
     MagFilter = ANISOTROPIC;
     MaxAnisotropy = 8;
 
+    AddressU = Wrap;
+    AddressV = Wrap;
+
     MaxMipLevel = 1;
 };
 
@@ -57,9 +60,11 @@ samplerCUBE g_texCubeMapSampler = sampler_state
 
     // どれくらいぼかすか
     // 数字が大きいほどぼかされる
-    MaxMipLevel = 7;
+    //MaxMipLevel = 7;
+    MaxMipLevel = 1;
 };
 
+// 法線マップ
 texture g_texNormalMap;
 sampler g_texNormalMapSampler = sampler_state
 {
@@ -67,6 +72,9 @@ sampler g_texNormalMapSampler = sampler_state
     MipFilter = LINEAR;
     MinFilter = LINEAR;
     MagFilter = LINEAR;
+
+    AddressU = Wrap;
+    AddressV = Wrap;
 
     MaxMipLevel = 1;
 };
@@ -131,11 +139,16 @@ void VertexShader1(in  float4 inPosition     : POSITION,
         pos.z += swayZ;
         inPosition = pos;
     }
-    
+
     outPosition = mul(inPosition, g_matWorldViewProj);
 
+    // outPosWorldでは4x4を使いoutNormalWorldでは3x3の変換行列を使っている
+    // こうしないと環境マップがおかしくなる
     outPosWorld = mul(inPosition, g_matWorld).xyz;
-    outNormalWorld = mul(inNormal, g_matWorld).xyz;
+
+    float3x3 world3x3 = (float3x3) g_matWorld;
+    outNormalWorld = mul(inNormal.xyz, world3x3);
+
     outTexCood = inTexCood.xy;
 
     outTangent = normalize(mul(inTangent, g_matWorld)).xyz;
@@ -205,7 +218,7 @@ void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float3 reflectWorld = reflect(-cameraDir, normalize(inNormalWorld));
 
-    outColor = float4(texCUBE(g_texCubeMapSampler, reflectWorld).rgb, 0.2);
+    outColor = float4(texCUBE(g_texCubeMapSampler, reflectWorld).rgb, 0.9);
 }
 
 //-------------------------------------------------------------
@@ -255,6 +268,11 @@ void PixelShaderPointLight(in float4 inPosition     : POSITION,
 
     for (int i = 0; i < 16; ++i)
     {
+        if (g_pointLightBrightness[i] == 0.0f)
+        {
+            continue;
+        }
+
         float3 lightDir = normalize(g_pointLightPos[i] - inPosWorld);
         float NdotL = saturate(dot(normalInWorld, lightDir));
 
@@ -275,29 +293,6 @@ void PixelShaderPointLight(in float4 inPosition     : POSITION,
         float4 work = outColor;
         work += float4(g_pointLightColor[i], brightness);
         work += float4(g_pointLightColor[i], specularBrightness);
-
-        if (work.r > g_pointLightColor[i].r)
-        {
-            work.r = g_pointLightColor[i].r;
-//            work.r = outColor.r;
-        }
-
-        if (work.g > g_pointLightColor[i].g)
-        {
-            work.g = g_pointLightColor[i].g;
-//            work.g = outColor.g;
-        }
-
-        if (work.b > g_pointLightColor[i].b)
-        {
-            work.b = g_pointLightColor[i].b;
-//            work.b = outColor.b;
-        }
-
-        if (work.a > 1.0f)
-        {
-            work.a = 1.0f;
-        }
 
         outColor = work;
         break;
