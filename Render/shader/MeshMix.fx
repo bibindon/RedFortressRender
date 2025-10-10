@@ -58,6 +58,15 @@ samplerCUBE g_texCubeMapSampler = sampler_state
 //    MaxMipLevel = 7;
 };
 
+texture g_texNormalMap;
+sampler g_texNormalMapSampler = sampler_state
+{
+    Texture = (g_texture);
+    MipFilter = LINEAR;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+};
+
 // 視差マッピングは「1パス目では実施せず、2パス目で実装する」というようなことはできない
 //
 void VertexShader1(in  float4 inPosition     : POSITION,

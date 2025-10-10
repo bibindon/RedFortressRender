@@ -242,12 +242,14 @@ private:
     LPD3DXEFFECT m_D3DEffect = nullptr;
     LPD3DXMESH m_D3DMesh = nullptr;
 
-    // マテリアル名によって判別を行う
-    // Normal・・・法線マップ
-    // Cube・・・環境マップ
+    // 1番目のマテリアルは通常のマテリアル
+    // 2番目のマテリアルは環境マップ
+    // 3番目のマテリアルは法線マップ
+    // その通りになっていなければ動作しない。
+    // 当面は、1x1の黒画像を設定するなどして対応
     DWORD m_materialCount = 0;
     std::vector<D3DXVECTOR4> m_vecDiffuse;
-    std::vector<LPDIRECT3DTEXTURE9> m_vecTexture;
+    std::vector<LPDIRECT3DBASETEXTURE9> m_vecTexture;
 
     D3DXVECTOR3 m_pos = D3DXVECTOR3(0.f, 0.f, 0.f);
     D3DXVECTOR3 m_rotate = D3DXVECTOR3(0.f, 0.f, 0.f);
@@ -263,8 +265,6 @@ private:
     bool m_bLoaded = false;
 
     stMeshParam m_param;
-
-    LPDIRECT3DCUBETEXTURE9  g_pEnvCube = NULL;
 };
 }
 

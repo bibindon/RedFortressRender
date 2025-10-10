@@ -89,43 +89,84 @@ void MeshMix::Initialize()
 
     for (DWORD i = 0; i < m_materialCount; ++i)
     {
-        //--------------------------------------------------------
-        // 拡散反射色の読み込み
-        //--------------------------------------------------------
-        D3DXVECTOR4 diffuce(1.0f, 1.0f, 1.0f, 1.0f);
-
-        diffuce.x = materialList[i].MatD3D.Diffuse.r;
-        diffuce.y = materialList[i].MatD3D.Diffuse.g;
-        diffuce.z = materialList[i].MatD3D.Diffuse.b;
-        diffuce.w = materialList[i].MatD3D.Diffuse.a;
-
-        m_vecDiffuse.push_back(diffuce);
-
-        //--------------------------------------------------------
-        // テクスチャの読み込み
-        //--------------------------------------------------------
-        if (materialList[i].pTextureFilename != nullptr &&
-            strlen(materialList[i].pTextureFilename) != 0)
+        if (i == 0)
         {
-            std::wstring texturePath = xFileDir;
-            texturePath += Util::Utf8ToWstring(materialList[i].pTextureFilename);
-            LPDIRECT3DTEXTURE9 tempTexture = nullptr;
-            hResult = D3DXCreateTextureFromFile(Common::D3DDevice(),
-                                                texturePath.c_str(),
-                                                &tempTexture);
+            //--------------------------------------------------------
+            // 拡散反射色の読み込み
+            //--------------------------------------------------------
+            D3DXVECTOR4 diffuce(1.0f, 1.0f, 1.0f, 1.0f);
 
-            assert(hResult == S_OK);
+            diffuce.x = materialList[i].MatD3D.Diffuse.r;
+            diffuce.y = materialList[i].MatD3D.Diffuse.g;
+            diffuce.z = materialList[i].MatD3D.Diffuse.b;
+            diffuce.w = materialList[i].MatD3D.Diffuse.a;
 
-            m_vecTexture.push_back(tempTexture);
+            m_vecDiffuse.push_back(diffuce);
+
+            //--------------------------------------------------------
+            // テクスチャの読み込み
+            //--------------------------------------------------------
+            if (materialList[i].pTextureFilename != nullptr &&
+                strlen(materialList[i].pTextureFilename) != 0)
+            {
+                LPDIRECT3DTEXTURE9 tempTexture = NULL;
+
+                std::wstring texturePath = xFileDir;
+                texturePath += Util::Utf8ToWstring(materialList[i].pTextureFilename);
+                hResult = D3DXCreateTextureFromFile(Common::D3DDevice(),
+                                                    texturePath.c_str(),
+                                                    &tempTexture);
+
+                assert(hResult == S_OK);
+
+                m_vecTexture.push_back(tempTexture);
+            }
+        }
+        else if (i == 1)
+        {
+            //--------------------------------------------------------
+            // テクスチャの読み込み
+            //--------------------------------------------------------
+            if (materialList[i].pTextureFilename != nullptr &&
+                strlen(materialList[i].pTextureFilename) != 0)
+            {
+                LPDIRECT3DCUBETEXTURE9 tempTexture = NULL;
+
+                std::wstring texturePath = xFileDir;
+                texturePath += Util::Utf8ToWstring(materialList[i].pTextureFilename);
+                hResult = D3DXCreateCubeTextureFromFile(Common::D3DDevice(),
+                                                        texturePath.c_str(),
+                                                        &tempTexture);
+
+                assert(hResult == S_OK);
+
+                m_vecTexture.push_back(tempTexture);
+            }
+        }
+        else if (i == 2)
+        {
+            //--------------------------------------------------------
+            // テクスチャの読み込み
+            //--------------------------------------------------------
+            if (materialList[i].pTextureFilename != nullptr &&
+                strlen(materialList[i].pTextureFilename) != 0)
+            {
+                LPDIRECT3DTEXTURE9 tempTexture = NULL;
+
+                std::wstring texturePath = xFileDir;
+                texturePath += Util::Utf8ToWstring(materialList[i].pTextureFilename);
+                hResult = D3DXCreateTextureFromFile(Common::D3DDevice(),
+                                                    texturePath.c_str(),
+                                                    &tempTexture);
+
+                assert(hResult == S_OK);
+
+                m_vecTexture.push_back(tempTexture);
+            }
         }
     }
 
     SAFE_RELEASE(materialBuffer);
-
-    hResult = D3DXCreateCubeTextureFromFile(Common::D3DDevice(),
-                                            L"Texture1.dds",
-                                            &g_pEnvCube);
-
 
     m_bLoaded = true;
 }
@@ -218,9 +259,6 @@ void MeshMix::Render()
     hResult = m_D3DEffect->SetVector("g_cameraPos", &cameraPos);
     assert(hResult == S_OK);
 
-
-    m_D3DEffect->SetTexture("g_texCubeMap", g_pEnvCube);
-
     //--------------------------------------------------------
     // 描画開始
     //--------------------------------------------------------
@@ -230,29 +268,34 @@ void MeshMix::Render()
     hResult = m_D3DEffect->Begin(nullptr, 0);
     assert(hResult == S_OK);
 
-    hResult = m_D3DEffect->BeginPass(0);
-    assert(hResult == S_OK);
-
     //--------------------------------------------------------
     // マテリアルの数だけ色とテクスチャを設定して描画
     //--------------------------------------------------------
-    for (DWORD i = 0; i < m_materialCount; ++i)
-    {
-        hResult = m_D3DEffect->SetVector("g_diffuse", &m_vecDiffuse.at(i));
-        assert(hResult == S_OK);
+    hResult = m_D3DEffect->SetVector("g_diffuse", &m_vecDiffuse.at(0));
+    assert(hResult == S_OK);
 
-        if (i < m_vecTexture.size())
-        {
-            hResult = m_D3DEffect->SetTexture("g_texture", m_vecTexture.at(i));
-            assert(hResult == S_OK);
-        }
+    hResult = m_D3DEffect->SetTexture("g_texture", m_vecTexture.at(0));
+    assert(hResult == S_OK);
 
-        hResult = m_D3DEffect->CommitChanges();
-        assert(hResult == S_OK);
+    hResult = m_D3DEffect->SetTexture("g_texCubeMap", m_vecTexture.at(1));
+    assert(hResult == S_OK);
 
-        hResult = m_D3DMesh->DrawSubset(i);
-        assert(hResult == S_OK);
-    }
+    hResult = m_D3DEffect->SetTexture("g_texNormalMap", m_vecTexture.at(2));
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->CommitChanges();
+    assert(hResult == S_OK);
+
+    //--------------------------------------------------------
+    // パス1
+    // 通常の描画
+    // 法線マッピングを含む
+    //--------------------------------------------------------
+    hResult = m_D3DEffect->BeginPass(0);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DMesh->DrawSubset(0);
+    assert(hResult == S_OK);
 
     hResult = m_D3DEffect->EndPass();
     assert(hResult == S_OK);
@@ -264,11 +307,8 @@ void MeshMix::Render()
     hResult = m_D3DEffect->BeginPass(1);
     assert(hResult == S_OK);
 
-    for (DWORD i = 0; i < m_materialCount; ++i)
-    {
-        hResult = m_D3DMesh->DrawSubset(i);
-        assert(hResult == S_OK);
-    }
+    hResult = m_D3DMesh->DrawSubset(0);
+    assert(hResult == S_OK);
 
     hResult = m_D3DEffect->EndPass();
     assert(hResult == S_OK);
@@ -280,14 +320,12 @@ void MeshMix::Render()
     hResult = m_D3DEffect->BeginPass(2);
     assert(hResult == S_OK);
 
-    for (DWORD i = 0; i < m_materialCount; ++i)
-    {
-        hResult = m_D3DMesh->DrawSubset(i);
-        assert(hResult == S_OK);
-    }
+    hResult = m_D3DMesh->DrawSubset(0);
+    assert(hResult == S_OK);
 
     hResult = m_D3DEffect->EndPass();
     assert(hResult == S_OK);
+
     hResult = m_D3DEffect->End();
     assert(hResult == S_OK);
 }
