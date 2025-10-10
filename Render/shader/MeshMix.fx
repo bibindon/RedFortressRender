@@ -218,7 +218,7 @@ void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float3 reflectWorld = reflect(-cameraDir, normalize(inNormalWorld));
 
-    outColor = float4(texCUBE(g_texCubeMapSampler, reflectWorld).rgb, 0.9);
+    outColor = float4(texCUBE(g_texCubeMapSampler, reflectWorld).rgb, 0.2);
 }
 
 //-------------------------------------------------------------
@@ -294,8 +294,22 @@ void PixelShaderPointLight(in float4 inPosition     : POSITION,
         work += float4(g_pointLightColor[i], brightness);
         work += float4(g_pointLightColor[i], specularBrightness);
 
+        if (work.r > g_pointLightColor[i].r)
+        {
+            work.r = g_pointLightColor[i].r;
+        }
+
+        if (work.g > g_pointLightColor[i].g)
+        {
+            work.g = g_pointLightColor[i].g;
+        }
+
+        if (work.b > g_pointLightColor[i].b)
+        {
+            work.b = g_pointLightColor[i].b;
+        }
+
         outColor = work;
-        break;
     }
 
     outColor = saturate(outColor);
