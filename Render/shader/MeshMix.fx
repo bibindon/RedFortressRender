@@ -85,6 +85,9 @@ void VertexShader1(in  float4 inPosition     : POSITION,
     outTexCood = inTexCood.xy;
 }
 
+//-------------------------------------------------------------
+// Pass 0
+//-------------------------------------------------------------
 void PixelShader1(in float4 inPosition    : POSITION,
                   in float3 inPosWorld    : TEXCOORD0,
                   in float3 inNormalWorld : TEXCOORD1,
@@ -113,19 +116,9 @@ void PixelShader1(in float4 inPosition    : POSITION,
     outColor = saturate(float4(finalColor, 1.f));
 }
 
-// 霧の減衰関数（やわらか）
-float FogAmountExp(float distance, float density)
-{
-    return 1 - exp(-density * distance);
-}
-
-// 霧の減衰関数（リアル）
-float FogAmountExp2(float distance, float density)
-{
-    float x = density * distance;
-    return 1 - exp(-x * x);
-}
-
+//-------------------------------------------------------------
+// Pass 1
+//-------------------------------------------------------------
 void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
                             in float3 inPosWorld     : TEXCOORD0,
                             in float3 inNormalWorld  : TEXCOORD1,
@@ -137,6 +130,22 @@ void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
     float3 reflectWorld = reflect(-cameraDir, normalize(inNormalWorld));
 
     outColor = float4(texCUBE(g_texCubeMapSampler, reflectWorld).rgb, 0.2);
+}
+
+//-------------------------------------------------------------
+// Pass 2
+//-------------------------------------------------------------
+// 霧の減衰関数（やわらか）
+float FogAmountExp(float distance, float density)
+{
+    return 1 - exp(-density * distance);
+}
+
+// 霧の減衰関数（リアル）
+float FogAmountExp2(float distance, float density)
+{
+    float x = density * distance;
+    return 1 - exp(-x * x);
 }
 
 void PixelShaderFog(in float4 inPosition     : POSITION,
