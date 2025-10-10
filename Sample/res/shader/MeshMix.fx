@@ -39,6 +39,8 @@ sampler g_textureSampler = sampler_state
     MinFilter = ANISOTROPIC;
     MagFilter = ANISOTROPIC;
     MaxAnisotropy = 8;
+
+    MaxMipLevel = 1;
 };
 
 // 環境マップ
@@ -65,6 +67,8 @@ sampler g_texNormalMapSampler = sampler_state
     MipFilter = LINEAR;
     MinFilter = LINEAR;
     MagFilter = LINEAR;
+
+    MaxMipLevel = 1;
 };
 
 float g_time = 0.0f;
@@ -168,11 +172,10 @@ void PixelShader1(in float4 inPosition    : POSITION,
         normalInTangent = normalize(normalInTangent);
 
         // TBN（Tangent, Binormal, Normal）でワールドへ
-        float3x3 tangentToWorld = float3x3(-inTangent, -inBinorm, inNormalWorld);
+        float3x3 tangentToWorld = float3x3(-inTangent, -inBinorm, normal);
         float3 normalInWorld = normalize(mul(normalInTangent, tangentToWorld));
 
         // Lambert 拡散（光線方向）
-        lightDir = normalize(g_lightNormal.xyz);
         NdotL = saturate(dot(normalInWorld, lightDir));
         NdotH = saturate(dot(normalInWorld, halfVector));
     }
@@ -225,17 +228,41 @@ void PixelShaderPointLight(in float4 inPosition     : POSITION,
                            in float3 inPosWorld     : TEXCOORD0,
                            in float3 inNormalWorld  : TEXCOORD1,
                            in float2 inTexCood      : TEXCOORD2,
+                           in float3 inTangent     : TEXCOORD3,
+                           in float3 inBinorm      : TEXCOORD4,
        
                            out float4 outColor      : COLOR)
 {
     outColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
+    float3 normal = normalize(inNormalWorld);
+    float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
+
+    // 法線マッピングでNdotLを調節
+    float NdotL = 0.f;
+    float NdotH = 0.f;
+
+    float3 normalInTangent = float3(0, 0, 0);
+    normalInTangent.x = tex2D(g_texNormalMapSampler, inTexCood).r * 2.0 - 1.0;
+    normalInTangent.y = tex2D(g_texNormalMapSampler, inTexCood).g * 2.0 - 1.0;
+    normalInTangent.z = tex2D(g_texNormalMapSampler, inTexCood).b * 2.0 - 1.0;
+    normalInTangent.x *= -1;
+    normalInTangent = normalize(normalInTangent);
+
+    // TBN（Tangent, Binormal, Normal）でワールドへ
+    float3x3 tangentToWorld = float3x3(-inTangent, -inBinorm, normal);
+    float3 normalInWorld = normalize(mul(normalInTangent, tangentToWorld));
+
     for (int i = 0; i < 16; ++i)
     {
         float3 lightDir = normalize(g_pointLightPos[i] - inPosWorld);
-        float NdotL = saturate(dot(inNormalWorld, lightDir));
+        float NdotL = saturate(dot(normalInWorld, lightDir));
+
+        float3 halfVector = normalize(lightDir + cameraDir);
+        float NdotH = saturate(dot(normalInWorld, halfVector));
 
         float distance_ = distance(g_pointLightPos[i], inPosWorld);
+        float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_pointLightColor[i];
 
         float distanceInverse = 1 / distance_;
         distanceInverse = saturate(distanceInverse);
@@ -246,26 +273,28 @@ void PixelShaderPointLight(in float4 inPosition     : POSITION,
         // もし明るくした結果が、ライトの色より明るくなってしまうなら元に戻す。
         float4 work = outColor;
         work += float4(g_pointLightColor[i], brightness);
+        work += float4(specular, 0.2f);
+
         if (work.r > g_pointLightColor[i].r)
         {
-            work.r = outColor.r;
+            work.r = g_pointLightColor[i].r;
         }
 
         if (work.g > g_pointLightColor[i].g)
         {
-            work.g = outColor.g;
+            work.g = g_pointLightColor[i].g;
         }
 
         if (work.b > g_pointLightColor[i].b)
         {
-            work.b = outColor.b;
+            work.b = g_pointLightColor[i].b;
         }
 
         outColor = work;
+        break;
     }
 
     outColor = saturate(outColor);
-
 }
 
 void PixelShaderFog(in float4 inPosition     : POSITION,
