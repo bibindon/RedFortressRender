@@ -55,7 +55,7 @@ samplerCUBE g_texCubeMapSampler = sampler_state
 
     // ‚Ç‚ê‚­‚ç‚¢‚Ú‚©‚·‚©
     // ”š‚ª‘å‚«‚¢‚Ù‚Ç‚Ú‚©‚³‚ê‚é
-//    MaxMipLevel = 7;
+    MaxMipLevel = 7;
 };
 
 texture g_texNormalMap;
@@ -135,7 +135,8 @@ void PixelShader1(in float4 inPosition    : POSITION,
     float3 albedo = tex2D(g_textureSampler, inTexCood).rgb * g_diffuse.rgb;
 
     float3 lambert = albedo * NdotL;
-    float3 ambient = albedo * g_ambient.rgb;
+//    float3 ambient = albedo * g_ambient.rgb;
+    float3 ambient = float3(0.0f, 0.0f, 0.0f);
 
     float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_specularColor.xyz;
 
