@@ -441,24 +441,32 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         if (wParam == 'P')
         {
-            if (shift)
+            if (control)
             {
-                g_imageInfoList.clear();
+                auto pos = g_Render.GetLookAtPos();
+                g_Render.AddPointLight(pos, 1.f, D3DXCOLOR(1.0f, 0.5f, 0.25f, 1.0f));
             }
             else
             {
-                ImageInfo imageInfo;
-                imageInfo.m_imageName = L"cursor.png";
+                if (shift)
+                {
+                    g_imageInfoList.clear();
+                }
+                else
+                {
+                    ImageInfo imageInfo;
+                    imageInfo.m_imageName = L"cursor.png";
 
-                int randX = std::abs(rand());
-                randX %= 1300;
-                int randY = std::abs(rand());
-                randY %= 700;
+                    int randX = std::abs(rand());
+                    randX %= 1300;
+                    int randY = std::abs(rand());
+                    randY %= 700;
 
-                imageInfo.m_rect.left = randX;
-                imageInfo.m_rect.top = randY;
+                    imageInfo.m_rect.left = randX;
+                    imageInfo.m_rect.top = randY;
 
-                g_imageInfoList.push_back(imageInfo);
+                    g_imageInfoList.push_back(imageInfo);
+                }
             }
         }
 

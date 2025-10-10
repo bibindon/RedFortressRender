@@ -396,6 +396,11 @@ void Render::SetLightDir(const D3DXVECTOR3& dir)
     Light::SetLightNormal(normal);
 }
 
+void Render::AddPointLight(const D3DXVECTOR3& pos, const float brightness, const D3DXCOLOR color)
+{
+    Light::AddPointLight(pos, color, brightness);
+}
+
 void Render::RotateCamera(const D3DXVECTOR3& rot)
 {
     D3DXVECTOR3 lookAt = Camera::GetLookAtPos();

@@ -77,8 +77,17 @@ float g_swayAmount = 0.5f;
 float g_swaySpeed  = 2.0f;
 float g_swayHeight = 3.0f;
 
+//---------------------------------------------------------
+// ポイントライト
+//---------------------------------------------------------
+float3 g_pointLightPos[16];
+float  g_pointLightBrightness[16];
+float3 g_pointLightColor[16];
+
+//---------------------------------------------------------
+// 頂点シェーダー
 // 視差マッピングは「1パス目では実施せず、2パス目で実装する」というようなことはできない
-//
+//---------------------------------------------------------
 void VertexShader1(in  float4 inPosition     : POSITION,
                    in  float4 inNormal       : NORMAL0,
                    in  float4 inTangent      : TANGENT0,
@@ -212,6 +221,53 @@ float FogAmountExp2(float distance, float density)
     return 1 - exp(-x * x);
 }
 
+void PixelShaderPointLight(in float4 inPosition     : POSITION,
+                           in float3 inPosWorld     : TEXCOORD0,
+                           in float3 inNormalWorld  : TEXCOORD1,
+                           in float2 inTexCood      : TEXCOORD2,
+       
+                           out float4 outColor      : COLOR)
+{
+    outColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
+    for (int i = 0; i < 16; ++i)
+    {
+        float3 lightDir = normalize(g_pointLightPos[i] - inPosWorld);
+        float NdotL = saturate(dot(inNormalWorld, lightDir));
+
+        float distance_ = distance(g_pointLightPos[i], inPosWorld);
+
+        float distanceInverse = 1 / distance_;
+        distanceInverse = saturate(distanceInverse);
+        float brightness = distanceInverse;
+        brightness *= g_pointLightBrightness[i];
+        brightness *= NdotL;
+
+        // もし明るくした結果が、ライトの色より明るくなってしまうなら元に戻す。
+        float4 work = outColor;
+        work += float4(g_pointLightColor[i], brightness);
+        if (work.r > g_pointLightColor[i].r)
+        {
+            work.r = outColor.r;
+        }
+
+        if (work.g > g_pointLightColor[i].g)
+        {
+            work.g = outColor.g;
+        }
+
+        if (work.b > g_pointLightColor[i].b)
+        {
+            work.b = outColor.b;
+        }
+
+        outColor = work;
+    }
+
+    outColor = saturate(outColor);
+
+}
+
 void PixelShaderFog(in float4 inPosition     : POSITION,
                     in float3 inPosWorld     : TEXCOORD0,
                     in float3 inNormalWorld  : TEXCOORD1,
@@ -256,10 +312,20 @@ technique Technique1
     {
         AlphaBlendEnable = TRUE;
         SrcBlend = SRCALPHA;
-        DestBlend = ONE;
+        DestBlend = INVSRCALPHA;
 
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShaderCubeMapping();
+    }
+
+    pass PassPointLight
+    {
+        AlphaBlendEnable = TRUE;
+        SrcBlend = SRCALPHA;
+        DestBlend = INVSRCALPHA;
+
+        VertexShader = compile vs_3_0 VertexShader1();
+        PixelShader = compile ps_3_0 PixelShaderPointLight();
     }
 
     pass PassFog

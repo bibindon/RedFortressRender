@@ -368,6 +368,45 @@ void MeshMix::Render()
         assert(hResult == S_OK);
     }
 
+    //--------------------------------------------------------
+    // ポイントライト
+    //--------------------------------------------------------
+    if (m_param.pointLight)
+    {
+        auto pointLightList = Light::GetPointLightList();
+
+        D3DXVECTOR4 pos[16];
+        float brightness[16] { };
+        D3DXVECTOR4 color[16];
+
+        ZeroMemory(pos, sizeof(pos));
+        ZeroMemory(color, sizeof(color));
+
+        for (int i = 0; i < 16; ++i)
+        {
+            if (i < pointLightList.size())
+            {
+                pos[i].x = pointLightList.at(i).m_pos.x;
+                pos[i].y = pointLightList.at(i).m_pos.y;
+                pos[i].z = pointLightList.at(i).m_pos.z;
+                brightness[i] = pointLightList.at(i).m_brightness;
+                color[i].x = pointLightList.at(i).m_color.r;
+                color[i].y = pointLightList.at(i).m_color.g;
+                color[i].z = pointLightList.at(i).m_color.b;
+            }
+        }
+        
+        hResult = m_D3DEffect->SetVectorArray("g_pointLightPos", pos, 16);
+        assert(hResult == S_OK);
+
+        hResult = m_D3DEffect->SetFloatArray("g_pointLightBrightness", brightness, 16);
+        assert(hResult == S_OK);
+
+        hResult = m_D3DEffect->SetVectorArray("g_pointLightColor", color, 16);
+        assert(hResult == S_OK);
+
+    }
+
     hResult = m_D3DEffect->CommitChanges();
     assert(hResult == S_OK);
 
@@ -399,10 +438,23 @@ void MeshMix::Render()
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
+    // パス3
+    // ポイントライト
+    //--------------------------------------------------------
+    hResult = m_D3DEffect->BeginPass(2);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DMesh->DrawSubset(0);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->EndPass();
+    assert(hResult == S_OK);
+
+    //--------------------------------------------------------
     // パス3（最後である必要がある）
     // 霧
     //--------------------------------------------------------
-    hResult = m_D3DEffect->BeginPass(2);
+    hResult = m_D3DEffect->BeginPass(3);
     assert(hResult == S_OK);
 
     hResult = m_D3DMesh->DrawSubset(0);
