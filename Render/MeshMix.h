@@ -265,6 +265,8 @@ private:
     bool m_bLoaded = false;
 
     stMeshParam m_param;
+
+    void ModifyMeshForNormalMapping(LPD3DXMESH& pMesh);
 };
 }
 

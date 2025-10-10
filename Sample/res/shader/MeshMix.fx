@@ -61,7 +61,7 @@ samplerCUBE g_texCubeMapSampler = sampler_state
 texture g_texNormalMap;
 sampler g_texNormalMapSampler = sampler_state
 {
-    Texture = (g_texture);
+    Texture = (g_texNormalMap);
     MipFilter = LINEAR;
     MinFilter = LINEAR;
     MagFilter = LINEAR;
@@ -71,24 +71,37 @@ sampler g_texNormalMapSampler = sampler_state
 //
 void VertexShader1(in  float4 inPosition     : POSITION,
                    in  float4 inNormal       : NORMAL0,
+                   in  float4 inTangent      : TANGENT0,
+                   in  float4 inBinormal     : BINORMAL0,
                    in  float4 inTexCood      : TEXCOORD0,
 
                    out float4 outPosition    : POSITION,
                    out float3 outPosWorld    : TEXCOORD0,
                    out float3 outNormalWorld : TEXCOORD1,
-                   out float2 outTexCood     : TEXCOORD2)
+                   out float2 outTexCood     : TEXCOORD2,
+                   out float3 outTangent     : TEXCOORD3,
+                   out float3 outBinorm      : TEXCOORD4
+)
 {
     outPosition = mul(inPosition, g_matWorldViewProj);
 
     outPosWorld = mul(inPosition, g_matWorld).xyz;
     outNormalWorld = mul(inNormal, g_matWorld).xyz;
     outTexCood = inTexCood.xy;
+
+    outTangent = normalize(mul(inTangent, g_matWorld)).xyz;
+    outBinorm = normalize(mul(inBinormal, g_matWorld)).xyz;
 }
 
+//-------------------------------------------------------------
+// Pass 0
+//-------------------------------------------------------------
 void PixelShader1(in float4 inPosition    : POSITION,
                   in float3 inPosWorld    : TEXCOORD0,
                   in float3 inNormalWorld : TEXCOORD1,
                   in float2 inTexCood     : TEXCOORD2,
+                  in float3 inTangent     : TEXCOORD3,
+                  in float3 inBinorm      : TEXCOORD4,
 
                   out float4 outColor     : COLOR)
 {
@@ -98,8 +111,26 @@ void PixelShader1(in float4 inPosition    : POSITION,
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float3 halfVector = normalize(lightDir + cameraDir);
 
-    float NdotL = saturate(dot(normal, lightDir));
-    float NdotH = saturate(dot(normal, halfVector));
+    // 法線マッピングでNdotLを調節
+    float NdotL = 0.f;
+    float NdotH = 0.f;
+    {
+        float3 normalInTangent = float3(0, 0, 0);
+        normalInTangent.x = tex2D(g_texNormalMapSampler, inTexCood).r * 2.0 - 1.0;
+        normalInTangent.y = tex2D(g_texNormalMapSampler, inTexCood).g * 2.0 - 1.0;
+        normalInTangent.z = tex2D(g_texNormalMapSampler, inTexCood).b * 2.0 - 1.0;
+        normalInTangent.x *= -1;
+        normalInTangent = normalize(normalInTangent);
+
+        // TBN（Tangent, Binormal, Normal）でワールドへ
+        float3x3 tangentToWorld = float3x3(-inTangent, -inBinorm, inNormalWorld);
+        float3 normalInWorld = normalize(mul(normalInTangent, tangentToWorld));
+
+        // Lambert 拡散（光線方向）
+        lightDir = normalize(g_lightNormal.xyz);
+        NdotL = saturate(dot(normalInWorld, lightDir));
+        NdotH = saturate(dot(normalInWorld, halfVector));
+    }
     
     float3 albedo = tex2D(g_textureSampler, inTexCood).rgb * g_diffuse.rgb;
 
@@ -113,19 +144,9 @@ void PixelShader1(in float4 inPosition    : POSITION,
     outColor = saturate(float4(finalColor, 1.f));
 }
 
-// 霧の減衰関数（やわらか）
-float FogAmountExp(float distance, float density)
-{
-    return 1 - exp(-density * distance);
-}
-
-// 霧の減衰関数（リアル）
-float FogAmountExp2(float distance, float density)
-{
-    float x = density * distance;
-    return 1 - exp(-x * x);
-}
-
+//-------------------------------------------------------------
+// Pass 1
+//-------------------------------------------------------------
 void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
                             in float3 inPosWorld     : TEXCOORD0,
                             in float3 inNormalWorld  : TEXCOORD1,
@@ -137,6 +158,22 @@ void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
     float3 reflectWorld = reflect(-cameraDir, normalize(inNormalWorld));
 
     outColor = float4(texCUBE(g_texCubeMapSampler, reflectWorld).rgb, 0.2);
+}
+
+//-------------------------------------------------------------
+// Pass 2
+//-------------------------------------------------------------
+// 霧の減衰関数（やわらか）
+float FogAmountExp(float distance, float density)
+{
+    return 1 - exp(-density * distance);
+}
+
+// 霧の減衰関数（リアル）
+float FogAmountExp2(float distance, float density)
+{
+    float x = density * distance;
+    return 1 - exp(-x * x);
 }
 
 void PixelShaderFog(in float4 inPosition     : POSITION,
@@ -164,14 +201,15 @@ void PixelShaderFog(in float4 inPosition     : POSITION,
     float fogDensityHeight = FogAmountExp(cameraDistance, g_fogDistanceDensity);
     
     // 高度が高くなるほど低くなる数値
-    float fogHeightR = 1 / (inPosWorld.y * 0.0001f);
+    float fogHeightDensity = FogAmountExp(-inPosWorld.y, g_fogHeightDensity);
+//    float fogHeightR = 1.0f / (inPosWorld.y * 0.0001f);
+//
+//    if (fogHeightR >= 1.0f)
+//    {
+//        fogHeightR = 1.0f;
+//    }
 
-    if (fogHeightR >= 1.0f)
-    {
-        fogHeightR = 1.0f;
-    }
-
-    fogDensityHeight *= fogHeightR;
+    fogDensityHeight *= fogHeightDensity;
 
     outColor += float4(g_fogHeightColor.rgb, fogDensityHeight);
 

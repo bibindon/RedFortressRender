@@ -45,7 +45,7 @@ void MeshMix::Initialize()
     LPD3DXBUFFER materialBuffer = nullptr;
 
     hResult = D3DXLoadMeshFromX(m_meshName.c_str(),
-                                D3DXMESH_SYSTEMMEM,
+                                D3DXMESH_MANAGED,
                                 Common::D3DDevice(),
                                 &adjacencyBuffer,
                                 &materialBuffer,
@@ -64,6 +64,11 @@ void MeshMix::Initialize()
     {
         HRESULT hr = D3DXComputeNormals(m_D3DMesh, adjacencyList);
     }
+
+    //--------------------------------------------------------
+    // UV情報を生成
+    //--------------------------------------------------------
+    ModifyMeshForNormalMapping(m_D3DMesh);
 
     //--------------------------------------------------------
     // 面と頂点を並べ替えてメッシュを生成し、描画パフォーマンスを最適化
@@ -169,6 +174,60 @@ void MeshMix::Initialize()
     SAFE_RELEASE(materialBuffer);
 
     m_bLoaded = true;
+}
+
+void MeshMix::ModifyMeshForNormalMapping(LPD3DXMESH& pMesh)
+{
+    // 目標の頂点宣言（POSITION, NORMAL, TEXCOORD0, TANGENT0, BINORMAL0）
+    D3DVERTEXELEMENT9 declTB[] =
+    {
+        {0,  0,  D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION,  0},
+        {0, 12,  D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_NORMAL,    0},
+        {0, 24,  D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD,  0},
+        {0, 32,  D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TANGENT,   0},
+        {0, 44,  D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_BINORMAL,  0},
+        D3DDECL_END()
+    };
+
+    LPD3DXMESH pCloned = NULL;
+    HRESULT hr = pMesh->CloneMesh(D3DXMESH_MANAGED,
+                                  declTB,
+                                  Common::D3DDevice(),
+                                  &pCloned);
+
+    assert(SUCCEEDED(hr));
+
+    // 隣接情報
+    std::vector<DWORD> adj(pCloned->GetNumFaces() * 3);
+    hr = pCloned->GenerateAdjacency(1e-6f, adj.data());
+
+    assert(SUCCEEDED(hr));
+
+    // オプション（必要に応じて調整）
+    DWORD options = D3DXTANGENT_CALCULATE_NORMALS |
+                    D3DXTANGENT_WEIGHT_BY_AREA |
+                    D3DXTANGENT_GENERATE_IN_PLACE;  // 入力メッシュを書き換える
+
+    // 正しいシグネチャ順で 16 引数を渡す
+    hr = D3DXComputeTangentFrameEx(pCloned,                   // pMesh
+                                   D3DDECLUSAGE_TEXCOORD, 0,  // どのUVを使うか（ここでは TEXCOORD0）
+                                   D3DDECLUSAGE_TANGENT,  0,  // U偏微分の出力先 → TANGENT0
+                                   D3DDECLUSAGE_BINORMAL, 0,  // V偏微分の出力先 → BINORMAL0
+                                   D3DDECLUSAGE_NORMAL,   0,  // 法線の出力先   → NORMAL0（再計算）
+                                   options,                   // dwOptions
+                                   adj.data(),                // 隣接
+                                   0.01f,                     // fPartialEdgeThreshold
+                                   0.25f,                     // fSingularPointThreshold
+                                   0.01f,                     // fNormalEdgeThreshold
+                                   NULL,                      // ppMeshOut（IN_PLACE 指定なので不要）
+                                   NULL                       // ppVertexMapping（不要なら NULL）
+    );
+
+    // UV情報がないメッシュファイルを読み込むと、ここでエラー
+    assert(SUCCEEDED(hr));
+
+    pMesh->Release();
+    pMesh = pCloned;
 }
 
 void MeshMix::SetPos(const D3DXVECTOR3& pos)
