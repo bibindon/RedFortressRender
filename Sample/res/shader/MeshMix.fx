@@ -261,9 +261,10 @@ void PixelShaderPointLight(in float4 inPosition     : POSITION,
         float3 halfVector = normalize(lightDir + cameraDir);
         float NdotH = saturate(dot(normalInWorld, halfVector));
 
-        float distance_ = distance(g_pointLightPos[i], inPosWorld);
-        float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_pointLightColor[i];
+        float specularBrightness = (pow(NdotH, g_specularPower) * g_specularIntensity);
+        specularBrightness *= g_pointLightBrightness[i];
 
+        float distance_ = distance(g_pointLightPos[i], inPosWorld);
         float distanceInverse = 1 / distance_;
         distanceInverse = saturate(distanceInverse);
         float brightness = distanceInverse;
@@ -273,21 +274,29 @@ void PixelShaderPointLight(in float4 inPosition     : POSITION,
         // もし明るくした結果が、ライトの色より明るくなってしまうなら元に戻す。
         float4 work = outColor;
         work += float4(g_pointLightColor[i], brightness);
-        work += float4(specular, 0.2f);
+        work += float4(g_pointLightColor[i], specularBrightness);
 
         if (work.r > g_pointLightColor[i].r)
         {
             work.r = g_pointLightColor[i].r;
+//            work.r = outColor.r;
         }
 
         if (work.g > g_pointLightColor[i].g)
         {
             work.g = g_pointLightColor[i].g;
+//            work.g = outColor.g;
         }
 
         if (work.b > g_pointLightColor[i].b)
         {
             work.b = g_pointLightColor[i].b;
+//            work.b = outColor.b;
+        }
+
+        if (work.a > 1.0f)
+        {
+            work.a = 1.0f;
         }
 
         outColor = work;
