@@ -388,11 +388,6 @@ void PixelShaderPointLight(in float4 inPosition     : POSITION,
             work.b = g_pointLightColor[i].b;
         }
 
-        if (work.a > outColor.a)
-        {
-            work.a = outColor.a;
-        }
-
         outColor = work;
     }
 
