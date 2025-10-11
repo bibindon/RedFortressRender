@@ -189,14 +189,44 @@ void PixelShader1(in float4 inPosition    : POSITION,
         float3 normalInWorld = normalize(mul(normalInTangent, tangentToWorld));
 
         // Lambert 拡散（光線方向）
-        NdotL = saturate(dot(normalInWorld, lightDir));
+        // saturate関数をここで実行するとマイナス成分が消える。
+        NdotL = dot(normalInWorld, lightDir);
         NdotH = saturate(dot(normalInWorld, halfVector));
     }
     
     float3 albedo = tex2D(g_textureSampler, inTexCood).rgb * g_diffuse.rgb;
 
-    float3 lambert = albedo * NdotL;
-    float3 ambient = albedo * g_ambient.rgb;
+    float3 lambert = 0.f;
+    
+    // ハーフランバート
+    if (false)
+    {
+        NdotL = (NdotL + 1.0f) * 0.5f;
+    }
+
+    lambert = albedo * NdotL;
+
+    float3 ambient = float3(0, 0, 0);
+
+    // 陰の彩度を上げる
+    if (true)
+    {
+        if (NdotL <= 0.7f)
+        {
+            float NdotL2 = NdotL - 0.7f;
+            // アルベドの彩度を強調した色をアンビエント色に設定する
+            // 陰の彩度を上げたいが、これだと全体的に彩度が高くなってしまう。
+            float3 workColor = albedo;
+
+            float average = (workColor.r + workColor.g + workColor.b) / 3;
+
+            // 彩度を上げ下げする
+            workColor.r = average + (workColor.r - average) * 8.0f;
+            workColor.g = average + (workColor.g - average) * 8.0f;
+            workColor.b = average + (workColor.b - average) * 8.0f;
+            lambert = workColor * 0.05f * -NdotL2;
+        }
+    }
 
     float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_specularColor.xyz;
 
@@ -215,10 +245,13 @@ void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
 
                             out float4 outColor      : COLOR)
 {
+    outColor = float4(0, 0, 0, 0);
+    return;
+    
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float3 reflectWorld = reflect(-cameraDir, normalize(inNormalWorld));
 
-    outColor = float4(texCUBE(g_texCubeMapSampler, reflectWorld).rgb, 0.2);
+    outColor = float4(texCUBE(g_texCubeMapSampler, reflectWorld).rgb, 0.2f);
 }
 
 //-------------------------------------------------------------
