@@ -60,8 +60,8 @@ samplerCUBE g_texCubeMapSampler = sampler_state
 
     // どれくらいぼかすか
     // 数字が大きいほどぼかされる
-    //MaxMipLevel = 7;
-    MaxMipLevel = 1;
+    MaxMipLevel = 7;
+    //MaxMipLevel = 1;
 };
 
 // 法線マップ
@@ -211,9 +211,8 @@ void PixelShader1(in float4 inPosition    : POSITION,
     // 陰の彩度を上げる
     if (true)
     {
-        if (NdotL <= 0.7f)
+        if (NdotL <= 0.0f)
         {
-            float NdotL2 = NdotL - 0.7f;
             // アルベドの彩度を強調した色をアンビエント色に設定する
             // 陰の彩度を上げたいが、これだと全体的に彩度が高くなってしまう。
             float3 workColor = albedo;
@@ -224,7 +223,7 @@ void PixelShader1(in float4 inPosition    : POSITION,
             workColor.r = average + (workColor.r - average) * 8.0f;
             workColor.g = average + (workColor.g - average) * 8.0f;
             workColor.b = average + (workColor.b - average) * 8.0f;
-            lambert = workColor * 0.05f * -NdotL2;
+            lambert = workColor * 0.05f * -NdotL;
         }
     }
 
@@ -246,7 +245,6 @@ void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
                             out float4 outColor      : COLOR)
 {
     outColor = float4(0, 0, 0, 0);
-    return;
     
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float3 reflectWorld = reflect(-cameraDir, normalize(inNormalWorld));

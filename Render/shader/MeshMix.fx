@@ -60,8 +60,8 @@ samplerCUBE g_texCubeMapSampler = sampler_state
 
     // どれくらいぼかすか
     // 数字が大きいほどぼかされる
-    //MaxMipLevel = 7;
-    MaxMipLevel = 1;
+    MaxMipLevel = 7;
+    //MaxMipLevel = 1;
 };
 
 // 法線マップ
@@ -245,7 +245,6 @@ void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
                             out float4 outColor      : COLOR)
 {
     outColor = float4(0, 0, 0, 0);
-    return;
     
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float3 reflectWorld = reflect(-cameraDir, normalize(inNormalWorld));
