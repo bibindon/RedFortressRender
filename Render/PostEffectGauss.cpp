@@ -36,9 +36,12 @@ LPDIRECT3DTEXTURE9 PostEffectGauss::Draw(LPDIRECT3DTEXTURE9 renderTarget)
     }
 
     m_d3dEffect->SetBool("g_bFilterON", m_bEnable);
+    m_d3dEffect->SetInt("g_sampleSize", 101);
 
-    DrawFullscreenQuad(renderTarget, m_texWork, "GaussianH");
-    DrawFullscreenQuad(m_texWork, renderTarget, "GaussianV");
+    DrawFullscreenQuad(renderTarget,    m_texWork,      "GaussianH");
+    DrawFullscreenQuad(m_texWork,       renderTarget,   "GaussianH");
+    DrawFullscreenQuad(renderTarget,    m_texWork,      "GaussianV");
+    DrawFullscreenQuad(m_texWork,       renderTarget,   "GaussianV");
 
     return renderTarget;
 }
