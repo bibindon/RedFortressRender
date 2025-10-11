@@ -60,8 +60,8 @@ samplerCUBE g_texCubeMapSampler = sampler_state
 
     // どれくらいぼかすか
     // 数字が大きいほどぼかされる
-    MaxMipLevel = 7;
-    //MaxMipLevel = 1;
+    //MaxMipLevel = 7;
+    MaxMipLevel = 1;
 };
 
 // 法線マップ
@@ -241,19 +241,66 @@ void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
                             in float3 inPosWorld     : TEXCOORD0,
                             in float3 inNormalWorld  : TEXCOORD1,
                             in float2 inTexCood      : TEXCOORD2,
+                            in float3 inTangent      : TEXCOORD3,
+                            in float3 inBinorm       : TEXCOORD4,
 
                             out float4 outColor      : COLOR)
 {
     outColor = float4(0, 0, 0, 0);
-    
-    float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
-    float3 reflectWorld = reflect(-cameraDir, normalize(inNormalWorld));
 
-    outColor = float4(texCUBE(g_texCubeMapSampler, reflectWorld).rgb, 0.2f);
+    float3 normal = normalize(inNormalWorld);
+    
+    float3 normalInTangent = float3(0, 0, 0);
+    normalInTangent.x = tex2D(g_texNormalMapSampler, inTexCood).r * 2.0 - 1.0;
+    normalInTangent.y = tex2D(g_texNormalMapSampler, inTexCood).g * 2.0 - 1.0;
+    normalInTangent.z = tex2D(g_texNormalMapSampler, inTexCood).b * 2.0 - 1.0;
+    normalInTangent.x *= -1;
+    normalInTangent = normalize(normalInTangent);
+
+    float3x3 tangentToWorld = float3x3(-inTangent, -inBinorm, normal);
+    float3 normalInWorld = normalize(mul(normalInTangent, tangentToWorld));
+
+    float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
+    float3 reflectWorld = reflect(-cameraDir, normalize(normalInWorld));
+
+    outColor = float4(texCUBE(g_texCubeMapSampler, reflectWorld).rgb, 0.1f);
 }
 
 //-------------------------------------------------------------
 // Pass 2
+//-------------------------------------------------------------
+void PixelShaderGlass(in float4 inPosition     : POSITION,
+                      in float3 inPosWorld     : TEXCOORD0,
+                      in float3 inNormalWorld  : TEXCOORD1,
+                      in float2 inTexCood      : TEXCOORD2,
+                      in float3 inTangent      : TEXCOORD3,
+                      in float3 inBinorm       : TEXCOORD4,
+
+                      out float4 outColor      : COLOR)
+{
+    outColor = float4(0, 0, 0, 0);
+
+    float3 normal = normalize(inNormalWorld);
+    
+    float3 normalInTangent = float3(0, 0, 0);
+    normalInTangent.x = tex2D(g_texNormalMapSampler, inTexCood).r * 2.0 - 1.0;
+    normalInTangent.y = tex2D(g_texNormalMapSampler, inTexCood).g * 2.0 - 1.0;
+    normalInTangent.z = tex2D(g_texNormalMapSampler, inTexCood).b * 2.0 - 1.0;
+    normalInTangent.x *= -1;
+    normalInTangent = normalize(normalInTangent);
+
+    // TBN（Tangent, Binormal, Normal）でワールドへ
+    float3x3 tangentToWorld = float3x3(-inTangent, -inBinorm, normal);
+    float3 normalInWorld = normalize(mul(normalInTangent, tangentToWorld));
+    
+    float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
+    float3 refractWorld = refract(-cameraDir, normalize(normalInWorld), 1.f / 1.5f);
+
+    outColor = float4(texCUBE(g_texCubeMapSampler, refractWorld).rgb, 0.8f);
+}
+
+//-------------------------------------------------------------
+// Pass 3
 //-------------------------------------------------------------
 // 霧の減衰関数（やわらか）
 float FogAmountExp(float distance, float density)
@@ -394,6 +441,16 @@ technique Technique1
 
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShaderCubeMapping();
+    }
+
+    pass PassGlass
+    {
+        AlphaBlendEnable = TRUE;
+        SrcBlend = SRCALPHA;
+        DestBlend = INVSRCALPHA;
+
+        VertexShader = compile vs_3_0 VertexShader1();
+        PixelShader = compile ps_3_0 PixelShaderGlass();
     }
 
     pass PassPointLight

@@ -411,7 +411,7 @@ void MeshMix::Render()
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // パス1
+    // パス0
     // 通常の描画
     // 法線マッピングを含む
     //--------------------------------------------------------
@@ -425,7 +425,7 @@ void MeshMix::Render()
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // パス2
+    // パス1
     // 環境マッピング
     //--------------------------------------------------------
     hResult = m_D3DEffect->BeginPass(1);
@@ -438,10 +438,26 @@ void MeshMix::Render()
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
+    // パス2
+    // ガラスエフェクト
+    //--------------------------------------------------------
+    if (m_param.glass)
+    {
+        hResult = m_D3DEffect->BeginPass(2);
+        assert(hResult == S_OK);
+
+        hResult = m_D3DMesh->DrawSubset(0);
+        assert(hResult == S_OK);
+
+        hResult = m_D3DEffect->EndPass();
+        assert(hResult == S_OK);
+    }
+
+    //--------------------------------------------------------
     // パス3
     // ポイントライト
     //--------------------------------------------------------
-    hResult = m_D3DEffect->BeginPass(2);
+    hResult = m_D3DEffect->BeginPass(3);
     assert(hResult == S_OK);
 
     hResult = m_D3DMesh->DrawSubset(0);
@@ -454,7 +470,7 @@ void MeshMix::Render()
     // パス3（最後である必要がある）
     // 霧
     //--------------------------------------------------------
-    hResult = m_D3DEffect->BeginPass(3);
+    hResult = m_D3DEffect->BeginPass(4);
     assert(hResult == S_OK);
 
     hResult = m_D3DMesh->DrawSubset(0);
