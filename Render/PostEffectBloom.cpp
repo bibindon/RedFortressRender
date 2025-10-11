@@ -51,7 +51,25 @@ void PostEffectBloom::Initialize()
                       D3DUSAGE_RENDERTARGET,
                       D3DFMT_A8R8G8B8,
                       D3DPOOL_DEFAULT,
+                      &m_texBlurH2);
+
+    D3DXCreateTexture(Common::D3DDevice(),
+                      Common::ScreenW(),
+                      Common::ScreenH(),
+                      1,
+                      D3DUSAGE_RENDERTARGET,
+                      D3DFMT_A8R8G8B8,
+                      D3DPOOL_DEFAULT,
                       &m_texBlurV);
+
+    D3DXCreateTexture(Common::D3DDevice(),
+                      Common::ScreenW(),
+                      Common::ScreenH(),
+                      1,
+                      D3DUSAGE_RENDERTARGET,
+                      D3DFMT_A8R8G8B8,
+                      D3DPOOL_DEFAULT,
+                      &m_texBlurV2);
 }
 
 LPDIRECT3DTEXTURE9 PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource)
@@ -60,6 +78,8 @@ LPDIRECT3DTEXTURE9 PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource)
     {
         return renderSource;
     }
+
+    m_d3dEffect->SetInt("g_sampleSize", 101);
 
     // ------------------------------------------------------------
     // (1) BrightPass : 入力 = renderSource, 出力 = m_texWork
@@ -77,26 +97,30 @@ LPDIRECT3DTEXTURE9 PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource)
     // (2) Horizontal Blur : 入力 = m_texBright, 出力 = m_texBlurH
     // ------------------------------------------------------------
     {
-        m_d3dEffect->SetTexture("g_SrcTex", m_texBright);
-
         // 横方向
         float dir[4] = { 1, 0, 0, 0 };
         m_d3dEffect->SetFloatArray("g_Direction", dir, 4);
 
+        m_d3dEffect->SetTexture("g_SrcTex", m_texBright);
         DrawFullscreenQuad(m_texBlurH, "Blur");
+
+        m_d3dEffect->SetTexture("g_SrcTex", m_texBlurH);
+        DrawFullscreenQuad(m_texBlurH2, "Blur");
     }
 
     // ------------------------------------------------------------
     // (3) Vertical Blur : 入力 = m_texBlurH, 出力 = m_texBlurV
     // ------------------------------------------------------------
     {
-        m_d3dEffect->SetTexture("g_SrcTex", m_texBlurH);
-
         // 縦方向
         float dir[4] = { 0, 1, 0, 0 };
         m_d3dEffect->SetFloatArray("g_Direction", dir, 4);
 
+        m_d3dEffect->SetTexture("g_SrcTex", m_texBlurH2);
         DrawFullscreenQuad(m_texBlurV, "Blur");
+
+        m_d3dEffect->SetTexture("g_SrcTex", m_texBlurV);
+        DrawFullscreenQuad(m_texBlurV2, "Blur");
     }
 
     // ------------------------------------------------------------
@@ -104,7 +128,7 @@ LPDIRECT3DTEXTURE9 PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource)
     // ------------------------------------------------------------
     {
         m_d3dEffect->SetTexture("g_SceneTex", renderSource);
-        m_d3dEffect->SetTexture("g_BlurTex", m_texBlurV);
+        m_d3dEffect->SetTexture("g_BlurTex", m_texBlurV2);
 
         DrawFullscreenQuad(m_renderTarget, "Combine");
     }

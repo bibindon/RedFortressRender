@@ -9,6 +9,9 @@ sampler SceneSampler = sampler_state
     MipFilter = LINEAR;
     MinFilter = LINEAR;
     MagFilter = LINEAR;
+
+    AddressU = CLAMP;
+    AddressV = CLAMP;
 };
 
 // 処理対象（BrightPassやBlurの入力として使う）
@@ -19,6 +22,9 @@ sampler SrcSampler = sampler_state
     MipFilter = LINEAR;
     MinFilter = LINEAR;
     MagFilter = LINEAR;
+
+    AddressU = CLAMP;
+    AddressV = CLAMP;
 };
 
 // ブラー済みテクスチャ（Combineで使用）
@@ -29,6 +35,9 @@ sampler BlurSampler = sampler_state
     MipFilter = LINEAR;
     MinFilter = LINEAR;
     MagFilter = LINEAR;
+
+    AddressU = CLAMP;
+    AddressV = CLAMP;
 };
 
 // === パラメータ ===
@@ -41,9 +50,14 @@ float4 BrightPassPS(float2 texCoord : TEXCOORD0) : COLOR
     float4 c = tex2D(SrcSampler, texCoord);
     float lum = dot(c.rgb, float3(0.299, 0.587, 0.114));
     if (lum > g_Threshold)
+    {
         return c;
+    }
     return float4(0, 0, 0, 1);
 }
+
+#define SAMPLE_SIZE_MAX 101
+int g_sampleSize = 25;
 
 float4 g_Direction;
 
@@ -54,22 +68,23 @@ float4 BlurPS(float2 texCoord : TEXCOORD0) : COLOR
     float2 step = g_TexelSize * g_Direction.xy;
 
     float4 sum = 0;
-    float weightSum = 0;
 
     // 半径固定（7 → 15tap）
-    static const int RADIUS = 71; // 奇数
-    static const float SIGMA = 160.0f;
-    static const float STRETCH = 10.0f;
+    static const int RADIUS = SAMPLE_SIZE_MAX / 2; // 奇数
 
     [unroll]
-    for (int i = -RADIUS; i <= RADIUS; i++)
+    for (int i = 1; i <= RADIUS; i++)
     {
-        float t = i * STRETCH;
-        float w = exp(-(t * t) / (2.0 * SIGMA * SIGMA));
-        sum += tex2D(SrcSampler, texCoord + step * t) * w;
-        weightSum += w;
+        if ((g_sampleSize / 2) < i)
+        {
+            break;
+        }
+
+        sum += tex2D(SrcSampler, texCoord + step * i) / g_sampleSize;
+        sum += tex2D(SrcSampler, texCoord - step * i) / g_sampleSize;
     }
-    return sum / weightSum;
+
+    return sum;
 }
 
 // === Combine ===
@@ -80,7 +95,7 @@ float4 CombinePS(float2 texCoord : TEXCOORD0) : COLOR
     float4 bloom = tex2D(BlurSampler, texCoord);
 
     // ブルームの濃さ
-    float4 outColor = scene + bloom * 4.0f;
+    float4 outColor = scene + bloom * 0.5f;
     outColor.a = 1.f;
     return outColor;
 }

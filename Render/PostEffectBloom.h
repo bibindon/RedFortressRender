@@ -29,7 +29,9 @@ private:
 
     LPDIRECT3DTEXTURE9 m_texBright = NULL;
     LPDIRECT3DTEXTURE9 m_texBlurH = NULL;
+    LPDIRECT3DTEXTURE9 m_texBlurH2 = NULL;
     LPDIRECT3DTEXTURE9 m_texBlurV = NULL;
+    LPDIRECT3DTEXTURE9 m_texBlurV2 = NULL;
     LPDIRECT3DTEXTURE9 m_renderTarget = NULL;
 
     void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
