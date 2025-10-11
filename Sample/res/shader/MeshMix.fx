@@ -368,23 +368,29 @@ void PixelShaderPointLight(in float4 inPosition     : POSITION,
         brightness *= NdotL;
 
         // もし明るくした結果が、ライトの色より明るくなってしまうなら元に戻す。
+        // TODO このやり方だと、異なる色、異なる明るさのポイントライトが複数あった時に、どちらかしか採用されない気がする。
         float4 work = outColor;
         work += float4(g_pointLightColor[i], brightness);
         work += float4(g_pointLightColor[i], specularBrightness);
 
         if (work.r > g_pointLightColor[i].r)
         {
-            work.r = outColor.r;
+            work.r = g_pointLightColor[i].r;
         }
 
         if (work.g > g_pointLightColor[i].g)
         {
-            work.g = outColor.g;
+            work.g = g_pointLightColor[i].g;
         }
 
         if (work.b > g_pointLightColor[i].b)
         {
-            work.b = outColor.b;
+            work.b = g_pointLightColor[i].b;
+        }
+
+        if (work.a > outColor.a)
+        {
+            work.a = outColor.a;
         }
 
         outColor = work;
