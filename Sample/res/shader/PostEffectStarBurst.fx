@@ -63,14 +63,9 @@ sampler BlurSampler60 = sampler_state
 
 // ========= パラメータ =========
 
-float g_Threshold = 0.6f; // 明部抽出のしきい値（高め＝コアだけ伸びる）
+float g_Threshold = 0.8f; // 明部抽出のしきい値（高め＝コアだけ伸びる）
 float2 g_TexelSize; // (1/width, 1/height)
 float4 g_Direction; // (cosθ, sinθ, 0, 0)
-
-// 長さのチューニング用（必要ならここを調整）
-static const int RADIUS = 40; // ±40 → 81tap（3軸で243tap）
-static const float STRETCH = 5.0f; // サンプル間隔（大きいほど長く）
-static const float LAMBDA = 50.0f; // 指数減衰のスケール（大きいほど尾が残る）
 
 // ========= シェーダ =========
 
@@ -79,8 +74,17 @@ float4 BrightPassPS(float2 uv : TEXCOORD0) : COLOR
 {
     float4 c = tex2D(SrcSampler, uv);
     float lum = dot(c.rgb, float3(0.299, 0.587, 0.114));
-    return (lum > g_Threshold) ? c : float4(0, 0, 0, 1);
+
+    if (lum <= g_Threshold)
+    {
+        c = float4(0, 0, 0, 1);
+    }
+
+    return c;
 }
+
+#define SAMPLE_SIZE_MAX 101
+int g_sampleSize = 101;
 
 // 方向性 1D ブラー（指数減衰プロファイル）
 // ガウシアンより遠距離の寄与が残るため、長い“筋”が出やすい。
@@ -89,17 +93,22 @@ float4 BlurPS(float2 uv : TEXCOORD0) : COLOR
     float2 step = g_TexelSize * g_Direction.xy; // 1px相当のUVステップ
 
     float4 sum = 0;
-    float weightSum = 0;
+
+    static const int RADIUS = SAMPLE_SIZE_MAX / 2;
 
     [unroll]
-    for (int i = -RADIUS; i <= RADIUS; i++)
+    for (int i = 1; i <= RADIUS; i++)
     {
-        float t = i * STRETCH; // t ピクセル分
-        float w = exp(-abs(t) / LAMBDA); // 指数減衰（尾が長い）
-        sum += tex2D(SrcSampler, uv + step * t) * w;
-        weightSum += w;
+        if ((g_sampleSize / 2) < i)
+        {
+            break;
+        }
+
+        sum += tex2D(SrcSampler, uv + step * i) / g_sampleSize;
+        sum += tex2D(SrcSampler, uv - step * i) / g_sampleSize;
     }
-    return sum / max(weightSum, 1e-6);
+
+    return sum;
 }
 
 // 合成：Scene + 3軸ブラー（=6方向）
@@ -110,7 +119,7 @@ float4 CombinePS(float2 uv : TEXCOORD0) : COLOR
     float4 b1 = tex2D(BlurSamplerV, uv); // 60°
     float4 b2 = tex2D(BlurSampler60, uv); // 120°
 
-    const float gain = 2.2f; // 強すぎる場合は下げる(1.2〜2.0目安)
+    const float gain = 1.2f; // 強すぎる場合は下げる(1.2〜2.0目安)
     return scene + (b0 + b1 + b2) * gain;
 }
 

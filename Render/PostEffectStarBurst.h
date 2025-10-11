@@ -32,6 +32,9 @@ private:
     LPDIRECT3DTEXTURE9 m_texBlurH = NULL;
     LPDIRECT3DTEXTURE9 m_texBlurV = NULL;
     LPDIRECT3DTEXTURE9 m_texBlurD = NULL; // 120ÅãÅiÅöí«â¡Åj
+    LPDIRECT3DTEXTURE9 m_texBlurH2 = NULL;
+    LPDIRECT3DTEXTURE9 m_texBlurV2 = NULL;
+    LPDIRECT3DTEXTURE9 m_texBlurD2 = NULL;
 
     void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
                             const std::string& technique);

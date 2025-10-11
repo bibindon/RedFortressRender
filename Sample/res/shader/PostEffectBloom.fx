@@ -56,6 +56,7 @@ float4 BrightPassPS(float2 texCoord : TEXCOORD0) : COLOR
     return float4(0, 0, 0, 1);
 }
 
+// 奇数
 #define SAMPLE_SIZE_MAX 101
 int g_sampleSize = 25;
 
@@ -69,8 +70,7 @@ float4 BlurPS(float2 texCoord : TEXCOORD0) : COLOR
 
     float4 sum = 0;
 
-    // 半径固定（7 → 15tap）
-    static const int RADIUS = SAMPLE_SIZE_MAX / 2; // 奇数
+    static const int RADIUS = SAMPLE_SIZE_MAX / 2;
 
     [unroll]
     for (int i = 1; i <= RADIUS; i++)

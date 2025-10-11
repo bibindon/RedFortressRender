@@ -45,6 +45,15 @@ void PostEffectStarBurst::Initialize()
                       D3DPOOL_DEFAULT,
                       &m_texBlurH);
 
+    D3DXCreateTexture(Common::D3DDevice(),
+                      1600,
+                      900,
+                      1,
+                      D3DUSAGE_RENDERTARGET,
+                      D3DFMT_A8R8G8B8,
+                      D3DPOOL_DEFAULT,
+                      &m_texBlurH2);
+
     // 60°
     D3DXCreateTexture(Common::D3DDevice(),
                       1600,
@@ -55,6 +64,15 @@ void PostEffectStarBurst::Initialize()
                       D3DPOOL_DEFAULT,
                       &m_texBlurV);
 
+    D3DXCreateTexture(Common::D3DDevice(),
+                      1600,
+                      900,
+                      1,
+                      D3DUSAGE_RENDERTARGET,
+                      D3DFMT_A8R8G8B8,
+                      D3DPOOL_DEFAULT,
+                      &m_texBlurV2);
+
     // 120°（★追加）
     D3DXCreateTexture(Common::D3DDevice(),
                       1600,
@@ -64,6 +82,15 @@ void PostEffectStarBurst::Initialize()
                       D3DFMT_A8R8G8B8,
                       D3DPOOL_DEFAULT,
                       &m_texBlurD);
+
+    D3DXCreateTexture(Common::D3DDevice(),
+                      1600,
+                      900,
+                      1,
+                      D3DUSAGE_RENDERTARGET,
+                      D3DFMT_A8R8G8B8,
+                      D3DPOOL_DEFAULT,
+                      &m_texBlurD2);
 }
 
 LPDIRECT3DTEXTURE9 PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource)
@@ -95,6 +122,9 @@ LPDIRECT3DTEXTURE9 PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource)
 
     DrawFullscreenQuad(m_texBright, "Blur");
 
+    SetRTFromTex(m_texBlurH2);
+    DrawFullscreenQuad(m_texBlurH, "Blur");
+
     // (3b) 60° ブラー : 入力=m_texBright, 出力=g_pBlurTexV2
     SetRTFromTex(m_texBlurV);
     {
@@ -103,6 +133,9 @@ LPDIRECT3DTEXTURE9 PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource)
     }
 
     DrawFullscreenQuad(m_texBright, "Blur");
+
+    SetRTFromTex(m_texBlurV2);
+    DrawFullscreenQuad(m_texBlurV, "Blur");
 
     // (3c) 120° ブラー : 入力=m_texBright, 出力=g_pBlurTexD
     SetRTFromTex(m_texBlurD);
@@ -113,12 +146,15 @@ LPDIRECT3DTEXTURE9 PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource)
 
     DrawFullscreenQuad(m_texBright, "Blur");
 
+    SetRTFromTex(m_texBlurD2);
+    DrawFullscreenQuad(m_texBlurD, "Blur");
+
     // (4) 合成 : (SceneTex2 + 0° + 60° + 120°) → g_pSceneTex3
     SetRTFromTex(m_texPostEffectBack1);
     m_d3dEffect->SetTexture("g_SceneTex", renderSource);
-    m_d3dEffect->SetTexture("g_BlurTexH", m_texBlurH);
-    m_d3dEffect->SetTexture("g_BlurTexV", m_texBlurV);
-    m_d3dEffect->SetTexture("g_BlurTex60", m_texBlurD); // Combine は3軸を加算
+    m_d3dEffect->SetTexture("g_BlurTexH", m_texBlurH2);
+    m_d3dEffect->SetTexture("g_BlurTexV", m_texBlurV2);
+    m_d3dEffect->SetTexture("g_BlurTex60", m_texBlurD2); // Combine は3軸を加算
     DrawFullscreenQuad(NULL, "Combine");
 
     return m_texPostEffectBack1;
