@@ -279,117 +279,6 @@ float MeshSSS::GetScale() const
     return m_scale;
 }
 
-/*
-void MeshSSS::Render()
-{
-    HRESULT hResult = E_FAIL;
-
-    //--------------------------------------------------------
-    // 初期化が終わっていないなら描画しない
-    // （別スレッドで初期化を行う場合を考慮）
-    //--------------------------------------------------------
-    if (m_bLoaded == false)
-    {
-        return;
-    }
-
-    //--------------------------------------------------------
-    // 光源の方向を設定
-    //--------------------------------------------------------
-    D3DXVECTOR4 normal = Light::GetLightNormal();
-
-    float work = m_rotate.y * -1.f;
-    normal.x = std::sin(work + D3DX_PI);
-    normal.z = std::cos(work + D3DX_PI);
-    D3DXVec4Normalize(&normal, &normal);
-
-    hResult = m_D3DEffect->SetVector("g_lightNormal", &normal);
-    assert(hResult == S_OK);
-
-    //--------------------------------------------------------
-    // ワールド変換行列を設定
-    //--------------------------------------------------------
-    D3DXMATRIX worldViewProjMatrix { };
-    D3DXMatrixIdentity(&worldViewProjMatrix);
-
-    {
-        D3DXMATRIX mat;
-
-        D3DXMatrixScaling(&mat, m_scale, m_scale, m_scale);
-        worldViewProjMatrix *= mat;
-
-        D3DXMatrixRotationYawPitchRoll(&mat, m_rotate.y, m_rotate.x, m_rotate.z);
-        worldViewProjMatrix *= mat;
-
-        D3DXMatrixTranslation(&mat, m_pos.x, m_pos.y, m_pos.z);
-        worldViewProjMatrix *= mat;
-    }
-
-    //    hResult = m_D3DEffect->SetMatrix("g_matWorld", &worldViewProjMatrix);
-    //    assert(hResult == S_OK);
-
-    //--------------------------------------------------------
-    // カメラの位置を設定
-    //--------------------------------------------------------
-    D3DXVECTOR4 cameraPos { };
-    cameraPos.x = Camera::GetEyePos().x;
-    cameraPos.y = Camera::GetEyePos().y;
-    cameraPos.z = Camera::GetEyePos().z;
-    cameraPos.w = 0.f;
-
-    //    hResult = m_D3DEffect->SetVector("g_vecCameraPos", &cameraPos);
-    //    assert(hResult == S_OK);
-
-    //--------------------------------------------------------
-    // ワールドビュー射影変換行列を設定
-    //--------------------------------------------------------
-    worldViewProjMatrix *= Camera::GetViewMatrix();
-    worldViewProjMatrix *= Camera::GetProjMatrix();
-
-    hResult = m_D3DEffect->SetMatrix("g_matWorldViewProj", &worldViewProjMatrix);
-    assert(hResult == S_OK);
-
-    //--------------------------------------------------------
-    // 描画開始
-    //--------------------------------------------------------
-    hResult = m_D3DEffect->SetTechnique("Technique1");
-    assert(hResult == S_OK);
-
-    hResult = m_D3DEffect->Begin(nullptr, 0);
-    assert(hResult == S_OK);
-
-    hResult = m_D3DEffect->BeginPass(0);
-    assert(hResult == S_OK);
-
-    //--------------------------------------------------------
-    // マテリアルの数だけ色とテクスチャを設定して描画
-    //--------------------------------------------------------
-    for (DWORD i = 0; i < m_materialCount; ++i)
-    {
-        //        hResult = m_D3DEffect->SetVector("g_vecDiffuse", &m_vecDiffuse.at(i));
-        //        assert(hResult == S_OK);
-
-        if (i < m_vecTexture.size())
-        {
-            hResult = m_D3DEffect->SetTexture("g_texture", m_vecTexture.at(i));
-            assert(hResult == S_OK);
-        }
-
-        hResult = m_D3DEffect->CommitChanges();
-        assert(hResult == S_OK);
-
-        hResult = m_D3DMesh->DrawSubset(i);
-        assert(hResult == S_OK);
-    }
-
-    hResult = m_D3DEffect->EndPass();
-    assert(hResult == S_OK);
-
-    hResult = m_D3DEffect->End();
-    assert(hResult == S_OK);
-}
-*/
-
 void MeshSSS::Render()
 {
     static float timeSeconds = 0.0f;
@@ -456,7 +345,7 @@ void MeshSSS::Render()
     m_D3DEffect->SetMatrix("gWorld", &worldOpaque);
     m_D3DEffect->CommitChanges();
 
-    m_D3DEffect->SetTexture("g_texCube", m_vecTexture.at(0));
+    m_D3DEffect->SetTexture("gFogTex", m_vecTexture.at(0));
     m_D3DEffect->SetMatrix("gWorld", &worldFog);
     m_D3DEffect->CommitChanges();
     m_D3DMesh->DrawSubset(0);

@@ -483,7 +483,7 @@ void Render::DrawPass1()
     hResult = Common::D3DDevice()->Clear(0,
                                          NULL,
                                          D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
-                                         D3DCOLOR_RGBA(10, 10, 10, 100),
+                                         D3DCOLOR_RGBA(100, 100, 100, 255),
                                          1.0f,
                                          0);
 

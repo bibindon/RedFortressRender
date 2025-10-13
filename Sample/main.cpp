@@ -280,8 +280,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             float yaw = atan2f(forward.x, forward.z);
 
             // AddMeshの第3引数が「回転角 (ラジアン)」だと仮定
-            // TODO monkey
-            g_Render.AddMeshSSS(L"cube.x", pos, D3DXVECTOR3(0, yaw, 0.0f), 1.f, 1.f);
+            g_Render.AddMeshSSS(L"monkey.blend.x", pos, D3DXVECTOR3(0, yaw, 0.0f), 1.f, 1.f);
         }
 
         if (wParam == 'N' && shift && !control)
