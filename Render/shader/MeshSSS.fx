@@ -1,8 +1,3 @@
-// ============================================================
-// Volumetric Fog + SSS-like thin-bright look (DX9 / SM3.0)
-// - Opaque objects are Lambert shaded
-// - Fog is drawn on top: thinner parts appear whiter
-// ============================================================
 
 float4x4 gWorld;
 float4x4 gView;
@@ -10,24 +5,17 @@ float4x4 gProj;
 
 float2 gInvTexSize = float2(1.0 / 1600.0, 1.0 / 900.0);
 
-// ------------------------------------------------------------
-// Light for opaque pass
-// ------------------------------------------------------------
 float3 gLightDirW = normalize(float3(0.6, 0.7, 0.2));
 float3 gLightColor = float3(1.0, 1.0, 1.0);
 float3 gAmbient = float3(0.25, 0.25, 0.25);
 
-// ------------------------------------------------------------
-// Textures
-// ------------------------------------------------------------
-texture gDiffuse;
-texture gFrontDepthTex;
-texture gBackDepthTex;
-texture gFogTex;
+texture g_texture;
+texture g_texZFront;
+texture g_texZBack;
 
-sampler2D SDiffuse = sampler_state
+sampler2D g_texSampler = sampler_state
 {
-    Texture = <gDiffuse>;
+    Texture = <g_texture>;
     MinFilter = ANISOTROPIC;
     MagFilter = ANISOTROPIC;
     MipFilter = LINEAR;
@@ -36,9 +24,9 @@ sampler2D SDiffuse = sampler_state
     AddressV = Wrap;
 };
 
-sampler2D SFront = sampler_state
+sampler2D g_texSamplerFront = sampler_state
 {
-    Texture = <gFrontDepthTex>;
+    Texture = <g_texZFront>;
     MinFilter = POINT;
     MagFilter = POINT;
     MipFilter = NONE;
@@ -46,9 +34,9 @@ sampler2D SFront = sampler_state
     AddressV = Clamp;
 };
 
-sampler2D SBack = sampler_state
+sampler2D g_texSamplerBack = sampler_state
 {
-    Texture = <gBackDepthTex>;
+    Texture = <g_texZBack>;
     MinFilter = POINT;
     MagFilter = POINT;
     MipFilter = NONE;
@@ -56,84 +44,46 @@ sampler2D SBack = sampler_state
     AddressV = Clamp;
 };
 
-sampler2D SFog = sampler_state
-{
-    Texture = <gFogTex>;
-    MinFilter = LINEAR;
-    MagFilter = LINEAR;
-    MipFilter = LINEAR;
-    AddressU = Wrap;
-    AddressV = Wrap;
-};
+void VertexShader1(float3 inPos                 : POSITION0,
+                   float3 inNormal              : NORMAL0,
+                   float2 inUV                  : TEXCOORD0,
 
-// ============================================================
-// OPAQUE (Lambert)
-// ============================================================
-float4 VS_Opaque
-(
-    float3 inPos : POSITION0,
-    float3 inNrm : NORMAL0,
-    float2 inUV : TEXCOORD0,
-
-    out float2 outUV : TEXCOORD0,
-    out float3 outNrmW : TEXCOORD1
-) : POSITION0
+                   out float4 outPos            : POSITION0,
+                   out float2 outUV             : TEXCOORD0,
+                   out float3 outNormalWorld    : TEXCOORD1)
 {
-    float4 posW = mul(float4(inPos, 1.0), gWorld);
-    float4 posV = mul(posW, gView);
-    float4 posH = mul(posV, gProj);
+    float4 posWorld = mul(float4(inPos, 1.0f), gWorld);
+    float4 posView = mul(posWorld, gView);
+    float4 posProj = mul(posView, gProj);
+    outPos = posProj;
 
     outUV = inUV;
-    outNrmW = normalize(mul(inNrm, (float3x3) gWorld));
-    return posH;
+    outNormalWorld = normalize(mul(inNormal, (float3x3) gWorld));
 }
 
-float4 PS_Opaque
-(
-    float2 uv : TEXCOORD0,
-    float3 nrmW : TEXCOORD1
-) : COLOR0
-{
-    float3 albedo = tex2D(SDiffuse, uv).rgb;
+void PixelShader1(float2 inUV         : TEXCOORD0,
+                  float3 normalWorld  : TEXCOORD1,
 
-    float3 normalW = normalize(nrmW);
+                  out float4 outColor : COLOR0)
+{
+    float3 albedo = tex2D(g_texSampler, inUV).rgb;
+
+    float3 normalizedNormalWorld = normalize(normalWorld);
     float3 lightDirW = normalize(gLightDirW);
 
-    float ndotl = saturate(dot(normalW, lightDirW));
-    float3 lit = albedo * (gAmbient + gLightColor * ndotl);
+    float NdotL = saturate(dot(normalizedNormalWorld, lightDirW));
+    float3 lit = albedo * (gAmbient + gLightColor * NdotL);
 
-    return float4(lit, 1.0);
+    outColor = float4(lit, 1.0f);
 }
 
-technique Technique_Opaque
-{
-    pass P0
-    {
-        CullMode = CCW;
-        ZEnable = TRUE;
-        ZWriteEnable = TRUE;
-        ZFunc = LESSEQUAL;
-        AlphaBlendEnable = FALSE;
+void VertexShaderScreenUV(float3 inPos : POSITION0,
+                          float2 inUV : TEXCOORD0,
 
-        VertexShader = compile vs_3_0 VS_Opaque();
-        PixelShader = compile ps_3_0 PS_Opaque();
-    }
-}
-
-// ============================================================
-// Shared VS for fog passes
-// - outputs screen UV and object UV
-// - eye-space Z is used as linear depth
-// ============================================================
-float4 VS_ScreenUV
-(
-    float3 inPos : POSITION0,
-    float2 inUV : TEXCOORD0,
-
-    out float2 outUV : TEXCOORD0,
-    out float outEyeZ : TEXCOORD1,
-    out float2 outFogUV : TEXCOORD2
-) : POSITION0
+                          out float4 outPos : POSITION0,
+                          out float2 outUV : TEXCOORD0,
+                          out float outEyeZ : TEXCOORD1,
+                          out float2 outFogUV : TEXCOORD2)
 {
     float4 posW = mul(float4(inPos, 1.0), gWorld);
     float4 posV = mul(posW, gView);
@@ -148,53 +98,29 @@ float4 VS_ScreenUV
 
     outFogUV = inUV;
 
-    return posH;
+    outPos = posH;
 }
 
 // ------------------------------------------------------------
 // Pass 2: write front depth
 // ------------------------------------------------------------
-float4 PS_WriteFrontZ(float2 uv : TEXCOORD0, float eyeZ : TEXCOORD1) : COLOR0
-{
-    return float4(eyeZ, 0, 0, 1);
-}
+void PS_WriteFrontZ(float2 uv : TEXCOORD0,
+                    float eyeZ : TEXCOORD1,
 
-technique Technique_FrontDepth
+                    out float4 outColor : COLOR0)
 {
-    pass P0
-    {
-        CullMode = CCW;
-        ZEnable = TRUE;
-        ZWriteEnable = TRUE;
-        ZFunc = LESSEQUAL;
-        AlphaBlendEnable = FALSE;
-
-        VertexShader = compile vs_3_0 VS_ScreenUV();
-        PixelShader = compile ps_3_0 PS_WriteFrontZ();
-    }
+    outColor = float4(eyeZ, 0, 0, 1);
 }
 
 // ------------------------------------------------------------
 // Pass 3: write back depth
 // ------------------------------------------------------------
-float4 PS_WriteBackZ(float2 uv : TEXCOORD0, float eyeZ : TEXCOORD1) : COLOR0
-{
-    return float4(eyeZ, 0, 0, 1);
-}
+void PS_WriteBackZ(float2 uv : TEXCOORD0,
+                   float eyeZ : TEXCOORD1,
 
-technique Technique_BackDepth
+                    out float4 outColor : COLOR0)
 {
-    pass P0
-    {
-        CullMode = CW;
-        ZEnable = TRUE;
-        ZWriteEnable = TRUE;
-        ZFunc = GREATER;
-        AlphaBlendEnable = FALSE;
-
-        VertexShader = compile vs_3_0 VS_ScreenUV();
-        PixelShader = compile ps_3_0 PS_WriteBackZ();
-    }
+    outColor = float4(eyeZ, 0, 0, 1);
 }
 
 // ============================================================
@@ -214,8 +140,8 @@ float4 PS_FogComposite
     float2 fogUV : TEXCOORD2
 ) : COLOR0
 {
-    float frontZ = tex2D(SFront, uv).r;
-    float backZ = tex2D(SBack, uv).r;
+    float frontZ = tex2D(g_texSamplerFront, uv).r;
+    float backZ = tex2D(g_texSamplerBack, uv).r;
 
     if (frontZ <= 0.0 || backZ <= 0.0)
     {
@@ -233,12 +159,56 @@ float4 PS_FogComposite
     alphaSSS = pow(alphaSSS, gSSSPow);
     //alphaSSS *= 1.5f;
 
-    float3 fogTex = tex2D(SFog, fogUV).rgb;
-    float3 tint = lerp(float3(1.0, 1.0, 1.0), fogTex, saturate(gTexStrength));
+    float3 tint = 1.f - gTexStrength;
 
     float3 color = gFogColor * tint * alphaSSS;
 
     return float4(color, alphaSSS);
+}
+
+technique TechniquePass0
+{
+    pass P0
+    {
+        CullMode = CCW;
+        ZEnable = TRUE;
+        ZWriteEnable = TRUE;
+        ZFunc = LESSEQUAL;
+        AlphaBlendEnable = FALSE;
+
+        VertexShader = compile vs_3_0 VertexShader1();
+        PixelShader = compile ps_3_0 PixelShader1();
+    }
+}
+
+technique Technique_FrontDepth
+{
+    pass P0
+    {
+        CullMode = CCW;
+        ZEnable = TRUE;
+        ZWriteEnable = TRUE;
+        ZFunc = LESSEQUAL;
+        AlphaBlendEnable = FALSE;
+
+        VertexShader = compile vs_3_0 VertexShaderScreenUV();
+        PixelShader = compile ps_3_0 PS_WriteFrontZ();
+    }
+}
+
+technique Technique_BackDepth
+{
+    pass P0
+    {
+        CullMode = CW;
+        ZEnable = TRUE;
+        ZWriteEnable = TRUE;
+        ZFunc = GREATER;
+        AlphaBlendEnable = FALSE;
+
+        VertexShader = compile vs_3_0 VertexShaderScreenUV();
+        PixelShader = compile ps_3_0 PS_WriteBackZ();
+    }
 }
 
 technique Technique_FogComposite
@@ -254,7 +224,7 @@ technique Technique_FogComposite
         SrcBlend = ONE;
         DestBlend = INVSRCALPHA;
 
-        VertexShader = compile vs_3_0 VS_ScreenUV();
+        VertexShader = compile vs_3_0 VertexShaderScreenUV();
         PixelShader = compile ps_3_0 PS_FogComposite();
     }
 }

@@ -301,8 +301,8 @@ void MeshSSS::Render()
     D3DXMATRIX worldOpaque;
     D3DXMatrixTranslation(&worldOpaque, 0.0f, -2.0f, 0.0f);
 
-    D3DXMATRIX worldFog;
-    D3DXMatrixTranslation(&worldFog, 0.0f, 0.0f, 0.0f);
+    D3DXMATRIX matWorld;
+    D3DXMatrixTranslation(&matWorld, 0.0f, 0.0f, 0.0f);
 
     D3DXVECTOR2 invSize(1.0f / 1600, 1.0f / 900);
 
@@ -310,15 +310,6 @@ void MeshSSS::Render()
     LPDIRECT3DSURFACE9 depthSurfaceScene = NULL;
     Common::D3DDevice()->GetRenderTarget(0, &backBuffer);
     Common::D3DDevice()->GetDepthStencilSurface(&depthSurfaceScene);
-
-    D3DVIEWPORT9 viewport;
-    viewport.X = 0;
-    viewport.Y = 0;
-    viewport.Width = static_cast<DWORD>(1600);
-    viewport.Height = static_cast<DWORD>(900);
-    viewport.MinZ = 0.0f;
-    viewport.MaxZ = 1.0f;
-    Common::D3DDevice()->SetViewport(&viewport);
 
     // --------------------------------------------------------
     // Pass 1 : Opaque (Lambert)
@@ -345,8 +336,8 @@ void MeshSSS::Render()
     m_D3DEffect->SetMatrix("gWorld", &worldOpaque);
     m_D3DEffect->CommitChanges();
 
-    m_D3DEffect->SetTexture("gFogTex", m_vecTexture.at(0));
-    m_D3DEffect->SetMatrix("gWorld", &worldFog);
+    m_D3DEffect->SetTexture("g_texture", m_vecTexture.at(0));
+    m_D3DEffect->SetMatrix("gWorld", &matWorld);
     m_D3DEffect->CommitChanges();
     m_D3DMesh->DrawSubset(0);
 
@@ -372,7 +363,7 @@ void MeshSSS::Render()
     Common::D3DDevice()->BeginScene();
 
     m_D3DEffect->SetTechnique("Technique_FrontDepth");
-    m_D3DEffect->SetMatrix("gWorld", &worldFog);
+    m_D3DEffect->SetMatrix("gWorld", &matWorld);
     m_D3DEffect->SetMatrix("gView", &viewMatrix);
     m_D3DEffect->SetMatrix("gProj", &projMatrix);
     m_D3DEffect->SetVector("gInvTexSize", reinterpret_cast<D3DXVECTOR4*>(&invSize));
@@ -400,7 +391,7 @@ void MeshSSS::Render()
     Common::D3DDevice()->BeginScene();
 
     m_D3DEffect->SetTechnique("Technique_BackDepth");
-    m_D3DEffect->SetMatrix("gWorld", &worldFog);
+    m_D3DEffect->SetMatrix("gWorld", &matWorld);
     m_D3DEffect->SetMatrix("gView", &viewMatrix);
     m_D3DEffect->SetMatrix("gProj", &projMatrix);
     m_D3DEffect->SetVector("gInvTexSize", reinterpret_cast<D3DXVECTOR4*>(&invSize));
@@ -425,13 +416,13 @@ void MeshSSS::Render()
     Common::D3DDevice()->BeginScene();
 
     m_D3DEffect->SetTechnique("Technique_FogComposite");
-    m_D3DEffect->SetMatrix("gWorld", &worldFog);
+    m_D3DEffect->SetMatrix("gWorld", &matWorld);
     m_D3DEffect->SetMatrix("gView", &viewMatrix);
     m_D3DEffect->SetMatrix("gProj", &projMatrix);
     m_D3DEffect->SetVector("gInvTexSize", reinterpret_cast<D3DXVECTOR4*>(&invSize));
 
-    m_D3DEffect->SetTexture("gFrontDepthTex", g_rtFrontDepth);
-    m_D3DEffect->SetTexture("gBackDepthTex", g_rtBackDepth);
+    m_D3DEffect->SetTexture("g_texZFront", g_rtFrontDepth);
+    m_D3DEffect->SetTexture("g_texZBack", g_rtBackDepth);
     m_D3DEffect->SetTexture("g_texMonkey", m_vecTexture.at(0));
 
     m_D3DEffect->SetFloat("gSigmaT", 1.0f);
