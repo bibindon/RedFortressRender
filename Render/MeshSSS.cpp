@@ -45,6 +45,49 @@ MeshSSS::~MeshSSS()
 {
 }
 
+static LPDIRECT3DSURFACE9& OffscreenDepthStorage()
+{
+    static LPDIRECT3DSURFACE9 s_depth = NULL;
+    return s_depth;
+}
+
+LPDIRECT3DSURFACE9 MeshSSS::AcquireOffscreenDepth(int width, int height)
+{
+    LPDIRECT3DSURFACE9& depthSurf = OffscreenDepthStorage();
+
+    if (depthSurf != NULL)
+    {
+        D3DSURFACE_DESC desc;
+        depthSurf->GetDesc(&desc);
+
+        if (static_cast<int>(desc.Width) != width || static_cast<int>(desc.Height) != height)
+        {
+            SAFE_RELEASE(depthSurf);
+        }
+    }
+
+    if (depthSurf == NULL)
+    {
+        HRESULT hr = Common::D3DDevice()->CreateDepthStencilSurface(width,
+                                                                    height,
+                                                                    D3DFMT_D24S8,
+                                                                    D3DMULTISAMPLE_NONE,
+                                                                    0,
+                                                                    TRUE,
+                                                                    &depthSurf,
+                                                                    NULL);
+        assert(SUCCEEDED(hr));
+    }
+
+    return depthSurf;
+}
+
+void MeshSSS::ReleaseOffscreenDepth()
+{
+    LPDIRECT3DSURFACE9& depthSurf = OffscreenDepthStorage();
+    SAFE_RELEASE(depthSurf);
+}
+
 void MeshSSS::Initialize()
 {
     HRESULT hResult = E_FAIL;
@@ -190,6 +233,29 @@ void MeshSSS::Initialize()
 
     SAFE_RELEASE(materialBuffer);
 
+    HRESULT hr = D3DXCreateTexture(Common::D3DDevice(),
+                                   1600,
+                                   900,
+                                   1,
+                                   D3DUSAGE_RENDERTARGET,
+                                   D3DFMT_R32F,
+                                   D3DPOOL_DEFAULT,
+                                   &g_rtFrontDepth);
+
+    assert(SUCCEEDED(hr));
+
+    hr = D3DXCreateTexture(Common::D3DDevice(),
+                           1600,
+                           900,
+                           1,
+                           D3DUSAGE_RENDERTARGET,
+                           D3DFMT_R32F,
+                           D3DPOOL_DEFAULT,
+                           &g_rtBackDepth);
+
+    assert(SUCCEEDED(hr));
+
+
     m_bLoaded = true;
 }
 
@@ -213,6 +279,7 @@ float MeshSSS::GetScale() const
     return m_scale;
 }
 
+/*
 void MeshSSS::Render()
 {
     HRESULT hResult = E_FAIL;
@@ -240,110 +307,6 @@ void MeshSSS::Render()
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // ポイントライトの位置を設定
-    //--------------------------------------------------------
-
-    /*
-    bool isLit = NSModel::WeaponManager::GetObj()->IsTorchLit();
-
-    // 松明の点灯状態が変わったらシェーダーにポイントライトのON/OFFを設定する
-    if (isLit != m_bPointLightEnablePrevious)
-    {
-        if (isLit)
-        {
-            hResult = m_D3DEffect->SetBool("g_bPointLightEnable", TRUE);
-            assert(hResult == S_OK);
-        }
-        else
-        {
-            hResult = m_D3DEffect->SetBool("g_bPointLightEnable", FALSE);
-            assert(hResult == S_OK);
-        }
-    }
-
-    m_bPointLightEnablePrevious = isLit;
-
-    if (isLit)
-    {
-        D3DXVECTOR3 ppos = SharedObj::GetPlayer()->GetPos();
-        D3DXVECTOR4 ppos2;
-        ppos2.x = ppos.x;
-        ppos2.y = ppos.y;
-        ppos2.z = ppos.z;
-        ppos2.w = 0;
-
-        hResult = m_D3DEffect->SetVector("g_vecPointLightPos", &ppos2);
-        assert(hResult == S_OK);
-    }
-    */
-
-    //--------------------------------------------------------
-    // 光源の明るさを設定
-    //--------------------------------------------------------
-    //hResult = m_D3DEffect->SetFloat("g_fLightBrigntness", Light::GetBrightness());
-    //assert(hResult == S_OK);
-
-    //--------------------------------------------------------
-    // 洞窟
-    //--------------------------------------------------------
-    /*
-    if (SHADER_FILENAME == _T("res\\shader\\MeshShader.fx"))
-    {
-        if (SharedObj::GetMap()->IsFinishCaveInFade())
-        {
-            hResult = m_D3DEffect->SetBool("g_bCaveFadeFinish", SharedObj::GetPlayer()->IsInCave());
-            assert(hResult == S_OK);
-        }
-    }
-    */
-
-    //--------------------------------------------------------
-    // 雨だったら霧を濃くする
-    //--------------------------------------------------------
-    /*
-    D3DXVECTOR4 g_vecFogColor;
-
-    if (!Rain::Get()->IsRain())
-    {
-        g_vecFogColor.x = 0.5f;
-        g_vecFogColor.y = 0.3f;
-        g_vecFogColor.z = 0.2f;
-        g_vecFogColor.w = 1.0f;
-
-        // 霧をサポートしないシェーダーがセットされている可能性があるので
-        // MeshShader.fxの時だけ適用する
-        if (SHADER_FILENAME == _T("res\\shader\\MeshShader.fx") ||
-            SHADER_FILENAME == _T("res\\shader\\MeshShader2Texture.fx") ||
-            SHADER_FILENAME == _T("res\\shader\\MeshShaderCullNone.fx"))
-        {
-            hResult = m_D3DEffect->SetFloat("g_fFogDensity", 1.0f);
-            assert(hResult == S_OK);
-        }
-    }
-    else
-    {
-        g_vecFogColor.x = 0.381f;
-        g_vecFogColor.y = 0.401f;
-        g_vecFogColor.z = 0.586f;
-        g_vecFogColor.w = 1.0f;
-
-        // 雨だったら霧を3倍強くする。
-        // 霧をサポートしないシェーダーがセットされている可能性があるので
-        // MeshShader.fxの時だけ適用する
-        if (SHADER_FILENAME == _T("res\\shader\\MeshShader.fx") ||
-            SHADER_FILENAME == _T("res\\shader\\MeshShader2Texture.fx") ||
-            SHADER_FILENAME == _T("res\\shader\\MeshShaderCullNone.fx"))
-        {
-            hResult = m_D3DEffect->SetFloat("g_fFogDensity", 10.0f);
-            assert(hResult == S_OK);
-        }
-    }
-
-    hResult = m_D3DEffect->SetVector("g_vecFogColor", &g_vecFogColor);
-    assert(hResult == S_OK);
-    */
-
-    //--------------------------------------------------------
     // ワールド変換行列を設定
     //--------------------------------------------------------
     D3DXMATRIX worldViewProjMatrix { };
@@ -352,28 +315,14 @@ void MeshSSS::Render()
     {
         D3DXMATRIX mat;
 
-        // 武器か否か
-//        if (m_bWeapon)
-//        {
-//            D3DXMatrixScaling(&mat, m_scale, m_scale, m_scale);
-//            worldViewProjMatrix *= mat;
-//
-//            D3DXMatrixRotationYawPitchRoll(&mat, m_rotate.y, m_rotate.x, m_rotate.z);
-//            worldViewProjMatrix *= mat;
-//
-//            worldViewProjMatrix *= SharedObj::GetRightHandMat();
-//        }
-//        else
-        {
-            D3DXMatrixScaling(&mat, m_scale, m_scale, m_scale);
-            worldViewProjMatrix *= mat;
+        D3DXMatrixScaling(&mat, m_scale, m_scale, m_scale);
+        worldViewProjMatrix *= mat;
 
-            D3DXMatrixRotationYawPitchRoll(&mat, m_rotate.y, m_rotate.x, m_rotate.z);
-            worldViewProjMatrix *= mat;
+        D3DXMatrixRotationYawPitchRoll(&mat, m_rotate.y, m_rotate.x, m_rotate.z);
+        worldViewProjMatrix *= mat;
 
-            D3DXMatrixTranslation(&mat, m_pos.x, m_pos.y, m_pos.z);
-            worldViewProjMatrix *= mat;
-        }
+        D3DXMatrixTranslation(&mat, m_pos.x, m_pos.y, m_pos.z);
+        worldViewProjMatrix *= mat;
     }
 
     //    hResult = m_D3DEffect->SetMatrix("g_matWorld", &worldViewProjMatrix);
@@ -403,16 +352,8 @@ void MeshSSS::Render()
     //--------------------------------------------------------
     // 描画開始
     //--------------------------------------------------------
-    if (SHADER_FILENAME == _T("res\\shader\\MeshShaderCullNone.fx"))
-    {
-        hResult = m_D3DEffect->SetTechnique("TechniqueCullNone");
-        assert(hResult == S_OK);
-    }
-    else
-    {
-        hResult = m_D3DEffect->SetTechnique("Technique1");
-        assert(hResult == S_OK);
-    }
+    hResult = m_D3DEffect->SetTechnique("Technique1");
+    assert(hResult == S_OK);
 
     hResult = m_D3DEffect->Begin(nullptr, 0);
     assert(hResult == S_OK);
@@ -434,13 +375,6 @@ void MeshSSS::Render()
             assert(hResult == S_OK);
         }
 
-        // prolitan.xの場合に限り、もう一枚テクスチャを使う
-        if (m_meshName == L"res\\model\\prolitan.x")
-        {
-            hResult = m_D3DEffect->SetTexture("g_texture2", m_vecTexture.at(1));
-            assert(hResult == S_OK);
-        }
-
         hResult = m_D3DEffect->CommitChanges();
         assert(hResult == S_OK);
 
@@ -454,15 +388,191 @@ void MeshSSS::Render()
     hResult = m_D3DEffect->End();
     assert(hResult == S_OK);
 }
+*/
+
+void MeshSSS::Render()
+{
+    static float timeSeconds = 0.0f;
+    timeSeconds += 0.01f;
+
+    D3DXVECTOR3 eyePosition(8.0f * sinf(timeSeconds), 5.0f, -8.0f * cosf(timeSeconds));
+    D3DXVECTOR3 targetPosition(0.0f, 0.0f, 0.0f);
+    D3DXVECTOR3 upVector(0.0f, 1.0f, 0.0f);
+
+    D3DXMATRIX viewMatrix;
+    D3DXMatrixLookAtLH(&viewMatrix, &eyePosition, &targetPosition, &upVector);
+
+    D3DXMATRIX projMatrix;
+    D3DXMatrixPerspectiveFovLH(&projMatrix,
+                               D3DXToRadian(45.0f),
+                               (float)1600 / 900,
+                               0.5f,
+                               1000.0f);
+
+    D3DXMATRIX worldOpaque;
+    D3DXMatrixTranslation(&worldOpaque, 0.0f, -2.0f, 0.0f);
+
+    D3DXMATRIX worldFog;
+    D3DXMatrixTranslation(&worldFog, 0.0f, 0.0f, 0.0f);
+
+    D3DXVECTOR2 invSize(1.0f / 1600, 1.0f / 900);
+
+    LPDIRECT3DSURFACE9 backBuffer = NULL;
+    LPDIRECT3DSURFACE9 depthSurfaceScene = NULL;
+    Common::D3DDevice()->GetRenderTarget(0, &backBuffer);
+    Common::D3DDevice()->GetDepthStencilSurface(&depthSurfaceScene);
+
+    D3DVIEWPORT9 viewport;
+    viewport.X = 0;
+    viewport.Y = 0;
+    viewport.Width = static_cast<DWORD>(1600);
+    viewport.Height = static_cast<DWORD>(900);
+    viewport.MinZ = 0.0f;
+    viewport.MaxZ = 1.0f;
+    Common::D3DDevice()->SetViewport(&viewport);
+
+    // --------------------------------------------------------
+    // Pass 1 : Opaque (Lambert)
+    // --------------------------------------------------------
+    Common::D3DDevice()->SetRenderTarget(0, backBuffer);
+    Common::D3DDevice()->SetDepthStencilSurface(depthSurfaceScene);
+    Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0xFF808080, 1.0f, 0);
+
+    Common::D3DDevice()->BeginScene();
+
+    m_D3DEffect->SetTechnique("TechniquePass0");
+    m_D3DEffect->SetMatrix("gView", &viewMatrix);
+    m_D3DEffect->SetMatrix("gProj", &projMatrix);
+
+    D3DXVECTOR4 lightDir(cosf(timeSeconds) * 0.6f, 0.7f, sinf(timeSeconds) * 0.6f, 0.0f);
+    D3DXVECTOR4 lightColor(1.0f, 1.0f, 1.0f, 1.0f);
+    D3DXVECTOR4 ambient(0.25f, 0.25f, 0.25f, 1.0f);
+
+    m_D3DEffect->SetVector("gLightDirW", &lightDir);
+    m_D3DEffect->SetVector("gLightColor", &lightColor);
+    m_D3DEffect->SetVector("gAmbient", &ambient);
+
+    UINT passCount = 0;
+    m_D3DEffect->Begin(&passCount, 0);
+    m_D3DEffect->BeginPass(0);
+
+    m_D3DEffect->SetMatrix("gWorld", &worldOpaque);
+    m_D3DEffect->CommitChanges();
+
+    m_D3DEffect->SetTexture("g_texCube", m_vecTexture.at(0));
+    m_D3DEffect->SetMatrix("gWorld", &worldFog);
+    m_D3DEffect->CommitChanges();
+    m_D3DMesh->DrawSubset(0);
+
+    m_D3DEffect->EndPass();
+    m_D3DEffect->End();
+
+    Common::D3DDevice()->EndScene();
+
+    // 共有のオフスクリーン用深度ステンシルを取得
+    LPDIRECT3DSURFACE9 dsOffscreen = AcquireOffscreenDepth(1600, 900);
+
+    // --------------------------------------------------------
+    // Pass 2 : Fog Front Depth
+    //   Surface は都度取得してローカルで保持・解放
+    // --------------------------------------------------------
+    LPDIRECT3DSURFACE9 surfFrontRT = NULL;
+    g_rtFrontDepth->GetSurfaceLevel(0, &surfFrontRT);
+
+    Common::D3DDevice()->SetRenderTarget(0, surfFrontRT);
+    Common::D3DDevice()->SetDepthStencilSurface(dsOffscreen);
+    Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00000000, 1.0f, 0);
+
+    Common::D3DDevice()->BeginScene();
+
+    m_D3DEffect->SetTechnique("Technique_FrontDepth");
+    m_D3DEffect->SetMatrix("gWorld", &worldFog);
+    m_D3DEffect->SetMatrix("gView", &viewMatrix);
+    m_D3DEffect->SetMatrix("gProj", &projMatrix);
+    m_D3DEffect->SetVector("gInvTexSize", reinterpret_cast<D3DXVECTOR4*>(&invSize));
+
+    m_D3DEffect->Begin(&passCount, 0);
+    m_D3DEffect->BeginPass(0);
+    m_D3DMesh->DrawSubset(0);
+    m_D3DEffect->EndPass();
+    m_D3DEffect->End();
+
+    Common::D3DDevice()->EndScene();
+
+    SAFE_RELEASE(surfFrontRT);
+
+    // --------------------------------------------------------
+    // Pass 3 : Fog Back Depth
+    // --------------------------------------------------------
+    LPDIRECT3DSURFACE9 surfBackRT = NULL;
+    g_rtBackDepth->GetSurfaceLevel(0, &surfBackRT);
+
+    Common::D3DDevice()->SetRenderTarget(0, surfBackRT);
+    Common::D3DDevice()->SetDepthStencilSurface(dsOffscreen);
+    Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00000000, 0.0f, 0);
+
+    Common::D3DDevice()->BeginScene();
+
+    m_D3DEffect->SetTechnique("Technique_BackDepth");
+    m_D3DEffect->SetMatrix("gWorld", &worldFog);
+    m_D3DEffect->SetMatrix("gView", &viewMatrix);
+    m_D3DEffect->SetMatrix("gProj", &projMatrix);
+    m_D3DEffect->SetVector("gInvTexSize", reinterpret_cast<D3DXVECTOR4*>(&invSize));
+
+    m_D3DEffect->Begin(&passCount, 0);
+    m_D3DEffect->BeginPass(0);
+    m_D3DMesh->DrawSubset(0);
+    m_D3DEffect->EndPass();
+    m_D3DEffect->End();
+
+    Common::D3DDevice()->EndScene();
+
+    SAFE_RELEASE(surfBackRT);
+
+    // --------------------------------------------------------
+    // Pass 4 : Fog Composite
+    //   シーンの深度を使用するため、元の depthSurfaceScene に戻す
+    // --------------------------------------------------------
+    Common::D3DDevice()->SetRenderTarget(0, backBuffer);
+    Common::D3DDevice()->SetDepthStencilSurface(depthSurfaceScene);
+
+    Common::D3DDevice()->BeginScene();
+
+    m_D3DEffect->SetTechnique("Technique_FogComposite");
+    m_D3DEffect->SetMatrix("gWorld", &worldFog);
+    m_D3DEffect->SetMatrix("gView", &viewMatrix);
+    m_D3DEffect->SetMatrix("gProj", &projMatrix);
+    m_D3DEffect->SetVector("gInvTexSize", reinterpret_cast<D3DXVECTOR4*>(&invSize));
+
+    m_D3DEffect->SetTexture("gFrontDepthTex", g_rtFrontDepth);
+    m_D3DEffect->SetTexture("gBackDepthTex", g_rtBackDepth);
+    m_D3DEffect->SetTexture("g_texMonkey", m_vecTexture.at(0));
+
+    m_D3DEffect->SetFloat("gSigmaT", 1.0f);
+    m_D3DEffect->SetFloat("gSSSPow", 1.1f);
+    m_D3DEffect->SetFloat("gTexStrength", 0.3f);
+
+    D3DXVECTOR4 fogColor(0.8f, 1.0f, 0.2f, 1.0f);
+    m_D3DEffect->SetVector("gFogColor", &fogColor);
+
+    m_D3DEffect->Begin(&passCount, 0);
+    m_D3DEffect->BeginPass(0);
+    m_D3DMesh->DrawSubset(0);
+    m_D3DEffect->EndPass();
+    m_D3DEffect->End();
+
+    Common::D3DDevice()->EndScene();
+
+    Common::D3DDevice()->Present(NULL, NULL, NULL, NULL);
+
+    SAFE_RELEASE(backBuffer);
+    SAFE_RELEASE(depthSurfaceScene);
+}
+
 
 LPD3DXMESH MeshSSS::GetD3DMesh() const
 {
     return m_D3DMesh;
-}
-
-void MeshSSS::SetWeapon(const bool arg)
-{
-    m_bWeapon = arg;
 }
 
 float MeshSSS::GetRadius() const

@@ -49,6 +49,10 @@ public:
     void OnDeviceReset();
 
 private:
+
+    LPDIRECT3DSURFACE9 AcquireOffscreenDepth(int width, int height);
+    void ReleaseOffscreenDepth();
+
     const std::wstring SHADER_FILENAME = _T("res\\shader\\MeshSSS.fx");
     std::wstring m_meshName;
 
@@ -62,6 +66,10 @@ private:
     D3DXVECTOR3 m_pos = D3DXVECTOR3(0.f, 0.f, 0.f);
     D3DXVECTOR3 m_rotate = D3DXVECTOR3(0.f, 0.f, 0.f);
 
+    // 深度の前面・背面を格納するレンダーターゲット
+    LPDIRECT3DTEXTURE9    g_rtFrontDepth = NULL;
+    LPDIRECT3DTEXTURE9    g_rtBackDepth = NULL;
+
     //-------------------------------------------------
     // この物体の半径
     // プレイヤーがこの半径以内に近づいたらこの物体は衝突判定の対象となる
@@ -71,8 +79,6 @@ private:
 
     float m_scale = 0.0f;
     bool m_bLoaded = false;
-
-    bool m_bWeapon = false;
 
     bool m_bPointLightEnablePrevious = false;
 };
