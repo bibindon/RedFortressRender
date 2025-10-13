@@ -436,9 +436,6 @@ void MeshSSS::Render()
     // --------------------------------------------------------
     Common::D3DDevice()->SetRenderTarget(0, backBuffer);
     Common::D3DDevice()->SetDepthStencilSurface(depthSurfaceScene);
-    Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0xFF808080, 1.0f, 0);
-
-    Common::D3DDevice()->BeginScene();
 
     m_D3DEffect->SetTechnique("TechniquePass0");
     m_D3DEffect->SetMatrix("gView", &viewMatrix);
@@ -560,10 +557,6 @@ void MeshSSS::Render()
     m_D3DMesh->DrawSubset(0);
     m_D3DEffect->EndPass();
     m_D3DEffect->End();
-
-    Common::D3DDevice()->EndScene();
-
-    Common::D3DDevice()->Present(NULL, NULL, NULL, NULL);
 
     SAFE_RELEASE(backBuffer);
     SAFE_RELEASE(depthSurfaceScene);
