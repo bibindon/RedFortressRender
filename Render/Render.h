@@ -31,6 +31,7 @@
 #include "PostEffectEnd.h"
 #include "WindowManager.h"
 #include "MeshMix.h"
+#include "MeshSSS.h"
 
 namespace NSRender
 {
@@ -65,6 +66,12 @@ public:
                         const D3DXVECTOR3& rot,
                         const float scale,
                         const float radius = -1.f);
+
+    void AddMeshSSS(const std::wstring& filePath,
+                    const D3DXVECTOR3& pos,
+                    const D3DXVECTOR3& rot,
+                    const float scale,
+                    const float radius = -1.f);
 
     void AddMeshPointLight(const std::wstring& filePath,
                         const D3DXVECTOR3& pos,
@@ -181,6 +188,7 @@ private:
     std::vector<SkinAnimMesh*> m_skinAnimMeshList;
     std::vector<MeshSmooth> m_meshSmoothList;
     std::vector<MeshSSSLike> m_meshSSSLikeList;
+    std::vector<MeshSSS> m_meshSSSList;
     std::vector<MeshPointLight> m_meshPointLightList;
     std::vector<MeshNormalMapping> m_meshNormalMapList;
 

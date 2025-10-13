@@ -124,7 +124,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                 text += L"\n";
                 text += L"m : メッシュ追加\n";
                 text += L"Shift + m : スムーズなメッシュ追加\n";
-                text += L"Ctrl + m : SSS風メッシュ追加\n";
+                text += L"Ctrl + m : SSSメッシュ追加\n";
                 text += L"\n";
                 text += L"n : アニメーションメッシュ追加\n";
                 text += L"k : スキンアニメーションメッシュ追加\n";
@@ -280,7 +280,8 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             float yaw = atan2f(forward.x, forward.z);
 
             // AddMeshの第3引数が「回転角 (ラジアン)」だと仮定
-            g_Render.AddMeshSSSLike(L"cube.x", pos, D3DXVECTOR3(0, yaw, 0.0f), 1.f, 1.f);
+            // TODO monkey
+            g_Render.AddMeshSSS(L"cube.x", pos, D3DXVECTOR3(0, yaw, 0.0f), 1.f, 1.f);
         }
 
         if (wParam == 'N' && shift && !control)

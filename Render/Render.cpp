@@ -173,6 +173,17 @@ void Render::AddMeshSSSLike(const std::wstring& filePath,
     m_meshSSSLikeList.rbegin()->Initialize(filePath, pos, rot, scale, radius);
 }
 
+void Render::AddMeshSSS(const std::wstring& filePath,
+                        const D3DXVECTOR3& pos,
+                        const D3DXVECTOR3& rot,
+                        const float scale,
+                        const float radius)
+{
+    auto mesh = MeshSSS(filePath, pos, rot, scale, radius);
+    m_meshSSSList.push_back(mesh);
+    m_meshSSSList.rbegin()->Initialize();
+}
+
 void Render::AddMeshPointLight(const std::wstring& filePath,
                                const D3DXVECTOR3& pos,
                                const D3DXVECTOR3& rot,
@@ -494,6 +505,11 @@ void Render::DrawPass1()
     for (auto& elem : m_meshSSSLikeList)
     {
         elem.Draw();
+    }
+
+    for (auto& elem : m_meshSSSList)
+    {
+        elem.Render();
     }
 
     for (auto& elem : m_meshPointLightList)

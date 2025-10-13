@@ -71,5 +71,8 @@
     <FxCompile Include="..\Render\shader\MeshInstancing.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
+    <FxCompile Include="..\Render\shader\MeshSSS.fx">
+      <Filter>リソース ファイル</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
