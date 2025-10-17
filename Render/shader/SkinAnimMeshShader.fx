@@ -98,9 +98,12 @@ technique Technique1
 {
     pass Pass0
     {
-    ZEnable      = FALSE;
-    ZWriteEnable = FALSE;
-    ZFunc        = Always;
+        // タテガミがうまく表示できないが、このコメントアウトを外すと
+        // 逆にタテガミだけ正しく表示できるようになる。
+        // ZEnable = FALSE;
+        // ZWriteEnable = FALSE;
+        // ZFunc        = Always;
+
         AlphaBlendEnable = TRUE;
         SrcBlend = SRCALPHA;
         DestBlend = INVSRCALPHA;
