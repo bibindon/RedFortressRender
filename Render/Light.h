@@ -22,6 +22,10 @@ public:
 
     static D3DXVECTOR4 GetLightNormal();
     static void SetLightNormal(const D3DXVECTOR4& normal);
+
+    static D3DXCOLOR GetLightColor();
+    static void SetLightColor(const D3DXCOLOR& color);
+
     static float GetBrightness();
     static void SetBrightness(const float brightness);
     
@@ -36,6 +40,7 @@ private:
 
     static D3DXVECTOR4 m_lightNormal;
     static float m_Brightness;
+    static D3DXCOLOR m_color;
 
     static std::vector<PointLightInfo> m_pointLightList;
 };

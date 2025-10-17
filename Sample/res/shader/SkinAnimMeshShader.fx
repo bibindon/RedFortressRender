@@ -98,6 +98,9 @@ technique Technique1
 {
     pass Pass0
     {
+    ZEnable      = FALSE;
+    ZWriteEnable = FALSE;
+    ZFunc        = Always;
         AlphaBlendEnable = TRUE;
         SrcBlend = SRCALPHA;
         DestBlend = INVSRCALPHA;

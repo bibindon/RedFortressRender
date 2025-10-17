@@ -8,10 +8,21 @@ D3DXVECTOR4 Light::m_lightNormal { 1.0f, 1.0f, 0.0f, 0.0f };
 float Light::m_Brightness = 1.0f;
 
 std::vector<PointLightInfo> Light::m_pointLightList;
+D3DXCOLOR Light::m_color = D3DXCOLOR(1.f, 1.f, 1.f, 1.f);
 
 D3DXVECTOR4 Light::GetLightNormal()
 {
     return m_lightNormal;
+}
+
+D3DXCOLOR Light::GetLightColor()
+{
+    return m_color;
+}
+
+void Light::SetLightColor(const D3DXCOLOR& color)
+{
+    m_color = color;
 }
 
 void Light::SetLightNormal(const D3DXVECTOR4& normal)

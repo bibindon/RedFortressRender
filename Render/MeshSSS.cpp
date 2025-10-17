@@ -281,23 +281,6 @@ float MeshSSS::GetScale() const
 
 void MeshSSS::Render()
 {
-    static float timeSeconds = 0.0f;
-    timeSeconds += 0.01f;
-
-    D3DXVECTOR3 eyePosition(8.0f * sinf(timeSeconds), 5.0f, -8.0f * cosf(timeSeconds));
-    D3DXVECTOR3 targetPosition(0.0f, 0.0f, 0.0f);
-    D3DXVECTOR3 upVector(0.0f, 1.0f, 0.0f);
-
-    D3DXMATRIX viewMatrix;
-    D3DXMatrixLookAtLH(&viewMatrix, &eyePosition, &targetPosition, &upVector);
-
-    D3DXMATRIX projMatrix;
-    D3DXMatrixPerspectiveFovLH(&projMatrix,
-                               D3DXToRadian(45.0f),
-                               (float)1600 / 900,
-                               0.5f,
-                               1000.0f);
-
     D3DXMATRIX worldOpaque;
     D3DXMatrixTranslation(&worldOpaque, 0.0f, -2.0f, 0.0f);
 
@@ -318,14 +301,18 @@ void MeshSSS::Render()
     Common::D3DDevice()->SetDepthStencilSurface(depthSurfaceScene);
 
     m_D3DEffect->SetTechnique("TechniquePass0");
-    m_D3DEffect->SetMatrix("gView", &viewMatrix);
-    m_D3DEffect->SetMatrix("gProj", &projMatrix);
 
-    D3DXVECTOR4 lightDir(cosf(timeSeconds) * 0.6f, 0.7f, sinf(timeSeconds) * 0.6f, 0.0f);
+    auto mView = Camera::GetViewMatrix();
+    auto mProj = Camera::GetProjMatrix();
+
+    m_D3DEffect->SetMatrix("gView", &mView);
+    m_D3DEffect->SetMatrix("gProj", &mProj);
+
+    auto vNorm = Light::GetLightNormal();
     D3DXVECTOR4 lightColor(1.0f, 1.0f, 1.0f, 1.0f);
     D3DXVECTOR4 ambient(0.25f, 0.25f, 0.25f, 1.0f);
 
-    m_D3DEffect->SetVector("gLightDirW", &lightDir);
+    m_D3DEffect->SetVector("gLightDirW", &vNorm);
     m_D3DEffect->SetVector("gLightColor", &lightColor);
     m_D3DEffect->SetVector("gAmbient", &ambient);
 
@@ -364,8 +351,8 @@ void MeshSSS::Render()
 
     m_D3DEffect->SetTechnique("Technique_FrontDepth");
     m_D3DEffect->SetMatrix("gWorld", &matWorld);
-    m_D3DEffect->SetMatrix("gView", &viewMatrix);
-    m_D3DEffect->SetMatrix("gProj", &projMatrix);
+    m_D3DEffect->SetMatrix("gView", &mView);
+    m_D3DEffect->SetMatrix("gProj", &mProj);
     m_D3DEffect->SetVector("gInvTexSize", reinterpret_cast<D3DXVECTOR4*>(&invSize));
 
     m_D3DEffect->Begin(&passCount, 0);
@@ -392,8 +379,8 @@ void MeshSSS::Render()
 
     m_D3DEffect->SetTechnique("Technique_BackDepth");
     m_D3DEffect->SetMatrix("gWorld", &matWorld);
-    m_D3DEffect->SetMatrix("gView", &viewMatrix);
-    m_D3DEffect->SetMatrix("gProj", &projMatrix);
+    m_D3DEffect->SetMatrix("gView", &mView);
+    m_D3DEffect->SetMatrix("gProj", &mProj);
     m_D3DEffect->SetVector("gInvTexSize", reinterpret_cast<D3DXVECTOR4*>(&invSize));
 
     m_D3DEffect->Begin(&passCount, 0);
@@ -417,8 +404,8 @@ void MeshSSS::Render()
 
     m_D3DEffect->SetTechnique("Technique_FogComposite");
     m_D3DEffect->SetMatrix("gWorld", &matWorld);
-    m_D3DEffect->SetMatrix("gView", &viewMatrix);
-    m_D3DEffect->SetMatrix("gProj", &projMatrix);
+    m_D3DEffect->SetMatrix("gView", &mView);
+    m_D3DEffect->SetMatrix("gProj", &mProj);
     m_D3DEffect->SetVector("gInvTexSize", reinterpret_cast<D3DXVECTOR4*>(&invSize));
 
     m_D3DEffect->SetTexture("g_texZFront", g_rtFrontDepth);
