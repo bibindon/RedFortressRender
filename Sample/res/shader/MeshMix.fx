@@ -186,8 +186,8 @@ void VertexShader1(in  float4 inPosition     : POSITION,
 
     outTexCood = inTexCoord.xy;
 
-    outTangent = normalize(mul(inTangent, g_matWorld)).xyz;
-    outBinorm = normalize(mul(inBinormal, g_matWorld)).xyz;
+    outTangent = normalize(mul(inTangent.xyz, world3x3));
+    outBinorm = normalize(mul(inBinormal.xyz, world3x3));
 
     float3 vViewWS = g_cameraPos.xyz - outPosWorld.xyz;
     outvViewWS = vViewWS;
