@@ -32,6 +32,7 @@
 #include "WindowManager.h"
 #include "MeshMix.h"
 #include "MeshSSS.h"
+#include "MeshPOM.h"
 
 namespace NSRender
 {
@@ -85,6 +86,12 @@ public:
                               const D3DXVECTOR3& rot,
                               const float scale,
                               const float radius = -1.f);
+
+    void AddMeshPOM(const std::wstring& filePath,
+                    const D3DXVECTOR3& pos,
+                    const D3DXVECTOR3& rot,
+                    const float scale,
+                    const float radius);
 
     void AddAnimMesh(const std::wstring& filePath,
                      const D3DXVECTOR3& pos,
@@ -191,6 +198,7 @@ private:
     std::vector<MeshSSS> m_meshSSSList;
     std::vector<MeshPointLight> m_meshPointLightList;
     std::vector<MeshNormalMapping> m_meshNormalMapList;
+    std::vector<MeshPOM> m_meshPOMList;
 
     std::vector<MeshMix> m_meshMixList;
 

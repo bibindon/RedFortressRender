@@ -266,8 +266,8 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             // Yaw, Pitch を計算
             float yaw = atan2f(forward.x, forward.z);
 
-            // AddMeshの第3引数が「回転角 (ラジアン)」だと仮定
-            g_Render.AddMeshSmooth(L"cube.x", pos, D3DXVECTOR3(0, yaw, 0.0f), 1.f, 1.f);
+//            g_Render.AddMeshSmooth(L"cube.x", pos, D3DXVECTOR3(0, yaw, 0.0f), 1.f, 1.f);
+            g_Render.AddMeshPOM(L"cubePOM.blend.x", pos, D3DXVECTOR3(0, yaw, 0.0f), 1.f, 1.f);
         }
 
         if (wParam == 'M' && !shift && control)

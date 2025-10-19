@@ -4,15 +4,15 @@
 namespace NSRender
 {
 
-D3DXVECTOR4 Light::m_lightNormal { 1.0f, 1.0f, 0.0f, 0.0f };
+D3DXVECTOR4 Light::m_lightDir { 1.0f, 1.0f, 0.0f, 0.0f };
 float Light::m_Brightness = 1.0f;
 
 std::vector<PointLightInfo> Light::m_pointLightList;
 D3DXCOLOR Light::m_color = D3DXCOLOR(1.f, 1.f, 1.f, 1.f);
 
-D3DXVECTOR4 Light::GetLightNormal()
+D3DXVECTOR4 Light::GetLightDir()
 {
-    return m_lightNormal;
+    return m_lightDir;
 }
 
 D3DXCOLOR Light::GetLightColor()
@@ -25,9 +25,9 @@ void Light::SetLightColor(const D3DXCOLOR& color)
     m_color = color;
 }
 
-void Light::SetLightNormal(const D3DXVECTOR4& normal)
+void Light::SetLightDir(const D3DXVECTOR4& normal)
 {
-    m_lightNormal = normal;
+    m_lightDir = normal;
 }
 
 float Light::GetBrightness()

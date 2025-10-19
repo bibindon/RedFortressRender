@@ -20,10 +20,12 @@ class Light
 {
 public:
 
-    static D3DXVECTOR4 GetLightNormal();
-    static void SetLightNormal(const D3DXVECTOR4& normal);
+    // 平行光源がある方向
+    static D3DXVECTOR4 GetLightDir();
+    static void SetLightDir(const D3DXVECTOR4& normal);
 
     static D3DXCOLOR GetLightColor();
+
     static void SetLightColor(const D3DXCOLOR& color);
 
     static float GetBrightness();
@@ -38,7 +40,8 @@ public:
 
 private:
 
-    static D3DXVECTOR4 m_lightNormal;
+    // 平行光源のある方向
+    static D3DXVECTOR4 m_lightDir;
     static float m_Brightness;
     static D3DXCOLOR m_color;
 

@@ -269,9 +269,11 @@ void MeshMix::Render()
 
     //--------------------------------------------------------
     // ŒõŒ¹‚Ì•ûŒü‚ðÝ’è
+    // TODO LightNormal‚ÆLightDir‚Å‚Í•ûŒü‚ª‹t‚É‚È‚éBŠÔˆá‚Á‚Ä‚¢‚é
     //--------------------------------------------------------
-    D3DXVECTOR4 normal = Light::GetLightNormal();
+    D3DXVECTOR4 normal = Light::GetLightDir();
 
+    // •¶Žš—ñ‚ÅŽw’è‚·‚é‚Æ’x‚­‚È‚é‚ç‚µ‚¢
     hResult = m_D3DEffect->SetVector("g_lightNormal", &normal);
     assert(hResult == S_OK);
 

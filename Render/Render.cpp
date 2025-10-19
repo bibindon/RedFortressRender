@@ -207,6 +207,17 @@ void Render::AddMeshNormalMapping(const std::wstring& filePath,
     m_meshNormalMapList.rbegin()->Initialize(filePath, normalMap, pos, rot, scale, radius);
 }
 
+void Render::AddMeshPOM(const std::wstring& filePath,
+                        const D3DXVECTOR3& pos,
+                        const D3DXVECTOR3& rot,
+                        const float scale,
+                        const float radius)
+{
+    MeshPOM mesh;
+    m_meshPOMList.push_back(mesh);
+    m_meshPOMList.rbegin()->Initialize(filePath, pos, rot, scale, radius);
+}
+
 void Render::AddAnimMesh(const std::wstring& filePath,
                                    const D3DXVECTOR3& pos,
                                    const D3DXVECTOR3& rot,
@@ -404,7 +415,7 @@ void Render::SetLightDir(const D3DXVECTOR3& dir)
 {
     D3DXVECTOR4 normal(dir, 0.f);
     D3DXVec4Normalize(&normal, &normal);
-    Light::SetLightNormal(normal);
+    Light::SetLightDir(normal);
 }
 
 void Render::AddPointLight(const D3DXVECTOR3& pos, const float brightness, const D3DXCOLOR color)
@@ -522,6 +533,11 @@ void Render::DrawPass1()
         elem.Draw();
     }
 
+    for (auto& elem : m_meshPOMList)
+    {
+        elem.Draw();
+    }
+
     for (auto& elem : m_animMeshList)
     {
         elem->Render();
@@ -531,7 +547,7 @@ void Render::DrawPass1()
     {
         elem->Render(Camera::GetViewMatrix(),
                      Camera::GetProjMatrix(),
-                     Light::GetLightNormal(),
+                     Light::GetLightDir(),
                      Light::GetBrightness());
     }
 

@@ -203,7 +203,7 @@ void MeshNormalMapping::Draw()
     static float t2 = 0.0f;
     t2 += 0.02f;
 
-    D3DXVECTOR4 lightDir(Light::GetLightNormal());
+    D3DXVECTOR4 lightDir(Light::GetLightDir());
     D3DXVec4Normalize(&lightDir, &lightDir);
     m_D3DEffect->SetVector("g_lightDirectionWS", &lightDir);
 

@@ -228,7 +228,7 @@ void Mesh::Render()
     //--------------------------------------------------------
     // ŒõŒ¹‚Ì•ûŒü‚ğİ’è
     //--------------------------------------------------------
-    D3DXVECTOR4 normal = Light::GetLightNormal();
+    D3DXVECTOR4 normal = Light::GetLightDir();
 
     float work = m_rotate.y * -1.f;
     normal.x = std::sin(work + D3DX_PI);

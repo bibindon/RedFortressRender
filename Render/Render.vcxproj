@@ -39,6 +39,7 @@
     <ClCompile Include="MeshMix.cpp" />
     <ClCompile Include="MeshNormalMapping.cpp" />
     <ClCompile Include="MeshPointLight.cpp" />
+    <ClCompile Include="MeshPOM.cpp" />
     <ClCompile Include="MeshSmooth.cpp" />
     <ClCompile Include="MeshSSS.cpp" />
     <ClCompile Include="MeshSSSLike.cpp" />
@@ -69,6 +70,7 @@
     <ClInclude Include="MeshMix.h" />
     <ClInclude Include="MeshNormalMapping.h" />
     <ClInclude Include="MeshPointLight.h" />
+    <ClInclude Include="MeshPOM.h" />
     <ClInclude Include="MeshSmooth.h" />
     <ClInclude Include="MeshSSS.h" />
     <ClInclude Include="MeshSSSLike.h" />
@@ -106,6 +108,7 @@
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
     </FxCompile>
     <FxCompile Include="shader\MeshNormalMapping.fx" />
+    <FxCompile Include="shader\MeshPOM.fx" />
     <FxCompile Include="shader\MeshSSS.fx" />
     <FxCompile Include="shader\MeshSSSLike.fx" />
     <FxCompile Include="shader\PostEffectBloom.fx" />

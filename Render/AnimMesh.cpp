@@ -60,7 +60,7 @@ NSRender::AnimMesh::~AnimMesh()
 
 void NSRender::AnimMesh::Render()
 {
-    D3DXVECTOR4 lightNormal = Light::GetLightNormal();
+    D3DXVECTOR4 lightNormal = Light::GetLightDir();
 
     // モデルが太陽のほうを向いているか
     D3DXVECTOR4 dirToLight(0.f,0.f,0.f,0.f);

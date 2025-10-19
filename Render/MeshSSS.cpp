@@ -308,7 +308,7 @@ void MeshSSS::Render()
     m_D3DEffect->SetMatrix("gView", &mView);
     m_D3DEffect->SetMatrix("gProj", &mProj);
 
-    auto vNorm = Light::GetLightNormal();
+    auto vNorm = Light::GetLightDir();
     D3DXVECTOR4 lightColor(1.0f, 1.0f, 1.0f, 1.0f);
     D3DXVECTOR4 ambient(0.25f, 0.25f, 0.25f, 1.0f);
 
