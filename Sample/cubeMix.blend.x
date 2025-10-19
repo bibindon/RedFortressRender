@@ -5377,7 +5377,7 @@ Frame Root {
          0.048094; 0.124938;;
       } // End of Cube UV coordinates
       MeshMaterialList { // Cube material list
-        3;
+        4;
         488;
         0,
         0,
@@ -5887,6 +5887,13 @@ Frame Root {
            0.500000; 0.500000; 0.500000;;
            0.000000; 0.000000; 0.000000;;
           TextureFilename {"normalMap.png";}
+        }
+        Material HeightMap {
+           0.640000; 0.640000; 0.640000; 1.000000;;
+           96.078431;
+           0.500000; 0.500000; 0.500000;;
+           0.000000; 0.000000; 0.000000;;
+          TextureFilename {"heightMap.png";}
         }
       } // End of Cube material list
     } // End of Cube mesh
