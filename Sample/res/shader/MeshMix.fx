@@ -88,7 +88,7 @@ sampler g_normalMapSampler = sampler_state
 bool g_bPOM = true;
 
 // 高さ 0.0 ~ 1.0
-float g_fHeightMapScale = 0.3f;
+float g_fHeightMapScale = 0.1f;
 
 // サンプリング数（最小）
 int g_nMinSamples = 50;
@@ -209,6 +209,12 @@ void VertexShader1(in  float4 inPosition     : POSITION,
     outvParallaxOffsetTS *= g_fHeightMapScale;
 }
 
+float2 CalcUVCoordWithPOM(float3 inNormalizedNormalWS,
+                          float2 inTexCoord,
+                          float3 invViewWS,
+                          float3 invViewTS,
+                          float2 invParallaxOffsetTS);
+
 //-------------------------------------------------------------
 // Pass 0
 //-------------------------------------------------------------
@@ -231,52 +237,20 @@ void PixelShader1(in float4 inPosition    : POSITION,
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float3 halfVector = normalize(lightDir + cameraDir);
 
+    // ?
+    // どこかで必要なはず
+    invLightTS = normalize(invLightTS);
+
     //----------------------------------------------------
     // 視差遮蔽マッピング
     //----------------------------------------------------
     if (g_bPOM)
     {
-        invViewWS = normalize(invViewWS);
-        invLightTS = normalize(invLightTS);
-        invViewTS= normalize(invViewTS);
-
-        // 視角に応じてサンプル数を変更。
-        // グレージング角であるほどステップを細かくして精度を上げる。
-        int nNumSteps = (int) lerp(g_nMaxSamples, g_nMinSamples, dot(invViewWS, normal));
-
-        float fStepSize = 1.0 / (float) nNumSteps;
-        int nStepIndex = 0;
-
-        float fCurrHeight = 0.0;
-
-        float2 vTexOffsetPerStep = fStepSize * invParallaxOffsetTS;
-        float2 vTexCurrentOffset = inTexCoord;
-
-        // 今どの深さの層（Layer）までレイを進めたか
-        float fCurrentLayer = 1.0;
-
-        while (nStepIndex < nNumSteps)
-        {
-            vTexCurrentOffset -= vTexOffsetPerStep;
-
-            // tex2Dgrad関数を使うとPIX For Windowsが落ちる
-            // fCurrHeight = tex2Dgrad(g_heightMapSampler, vTexCurrentOffset, dx, dy ).r;
-            fCurrHeight = tex2Dlod(g_heightMapSampler, float4(vTexCurrentOffset, 0.0f, 0.0f)).r;
-
-            fCurrentLayer -= fStepSize;
-
-            if (fCurrHeight > fCurrentLayer)
-            {
-                break;
-            }
-
-            nStepIndex++;
-        }
-
-        float2 vParallaxOffset = invParallaxOffsetTS * (1 - fCurrentLayer);
-
-        // 疑似的に押し出された表面上の最終テクスチャ座標
-        inTexCoord = inTexCoord - vParallaxOffset;
+        inTexCoord = CalcUVCoordWithPOM(normal,
+                                        inTexCoord,
+                                        invViewWS,
+                                        invViewTS,
+                                        invParallaxOffsetTS);
     }
     
     float3 albedo = tex2D(g_textureSampler, inTexCoord).rgb * g_diffuse.rgb;
@@ -288,7 +262,7 @@ void PixelShader1(in float4 inPosition    : POSITION,
     float NdotH = 0.f;
 
     // 法線マッピングを行うか
-    if (false)
+    if (true)
     {
         float3 normalInTangent = float3(0, 0, 0);
         normalInTangent.x = tex2D(g_normalMapSampler, inTexCoord).r * 2.0 - 1.0;
@@ -435,9 +409,12 @@ float FogAmountExp2(float distance, float density)
 void PixelShaderPointLight(in float4 inPosition     : POSITION,
                            in float3 inPosWorld     : TEXCOORD0,
                            in float3 inNormalWorld  : TEXCOORD1,
-                           in float2 inTexCoord      : TEXCOORD2,
+                           in float2 inTexCoord     : TEXCOORD2,
                            in float3 inTangent     : TEXCOORD3,
                            in float3 inBinorm      : TEXCOORD4,
+                           in float3 invViewWS     : TEXCOORD5,
+                           in float3 invViewTS     : TEXCOORD7,
+                           in float2 invParallaxOffsetTS  : TEXCOORD8,
        
                            out float4 outColor      : COLOR)
 {
@@ -449,6 +426,15 @@ void PixelShaderPointLight(in float4 inPosition     : POSITION,
     // 法線マッピングでNdotLを調節
     float NdotL = 0.f;
     float NdotH = 0.f;
+
+    if (g_bPOM)
+    {
+        inTexCoord = CalcUVCoordWithPOM(normal,
+                                        inTexCoord,
+                                        invViewWS,
+                                        invViewTS,
+                                        invParallaxOffsetTS);
+    }
 
     float3 normalInTangent = float3(0, 0, 0);
     normalInTangent.x = tex2D(g_normalMapSampler, inTexCoord).r * 2.0 - 1.0;
@@ -541,6 +527,55 @@ void PixelShaderFog(in float4 inPosition     : POSITION,
     fogDensityHeight *= fogHeightDensity;
 
     outColor += float4(g_fogHeightColor.rgb, fogDensityHeight);
+}
+
+float2 CalcUVCoordWithPOM(float3 inNormalizedNormalWS,
+                          float2 inTexCoord,
+                          float3 invViewWS,
+                          float3 invViewTS,
+                          float2 invParallaxOffsetTS)
+{
+    invViewWS = normalize(invViewWS);
+    invViewTS= normalize(invViewTS);
+
+    // 視角に応じてサンプル数を変更。
+    // グレージング角であるほどステップを細かくして精度を上げる。
+    int nNumSteps = (int) lerp(g_nMaxSamples, g_nMinSamples, dot(invViewWS, inNormalizedNormalWS));
+
+    float fStepSize = 1.0 / (float) nNumSteps;
+    int nStepIndex = 0;
+
+    float fCurrHeight = 0.0;
+
+    float2 vTexOffsetPerStep = fStepSize * invParallaxOffsetTS;
+    float2 vTexCurrentOffset = inTexCoord;
+
+    // 今どの深さの層（Layer）までレイを進めたか
+    float fCurrentLayer = 1.0;
+
+    while (nStepIndex < nNumSteps)
+    {
+        vTexCurrentOffset -= vTexOffsetPerStep;
+
+        // tex2Dgrad関数を使うとPIX For Windowsが落ちる
+        // fCurrHeight = tex2Dgrad(g_heightMapSampler, vTexCurrentOffset, dx, dy ).r;
+        fCurrHeight = tex2Dlod(g_heightMapSampler, float4(vTexCurrentOffset, 0.0f, 0.0f)).r;
+
+        fCurrentLayer -= fStepSize;
+
+        if (fCurrHeight > fCurrentLayer)
+        {
+            break;
+        }
+
+        nStepIndex++;
+    }
+
+    float2 vParallaxOffset = invParallaxOffsetTS * (1 - fCurrentLayer);
+
+    // 疑似的に押し出された表面上の最終テクスチャ座標
+    inTexCoord -= vParallaxOffset;
+    return inTexCoord;
 }
 
 technique Technique1
