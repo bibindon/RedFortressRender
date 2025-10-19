@@ -88,7 +88,7 @@ sampler g_normalMapSampler = sampler_state
 bool g_bPOM = true;
 
 // 高さ 0.0 ~ 1.0
-float g_fHeightMapScale = 0.3f;
+float g_fHeightMapScale = 0.1f;
 
 // サンプリング数（最小）
 int g_nMinSamples = 50;
