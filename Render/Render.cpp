@@ -691,7 +691,7 @@ void Render::DrawPassGBuffer()
             D3DXMatrixIdentity(&m);
             D3DXMatrixScaling(&m, mesh.GetScale(), mesh.GetScale(), mesh.GetScale());
             matWorld *= m;
-            D3DXMatrixRotationYawPitchRoll(&m, 0.0f, 0.0f, 0.0f);
+            D3DXMatrixRotationYawPitchRoll(&m, mesh.GetRot().y, mesh.GetRot().x, mesh.GetRot().z);
             matWorld *= m;
             D3DXVECTOR3 p = mesh.GetPos();
             D3DXMatrixTranslation(&m, p.x, p.y, p.z);
@@ -818,6 +818,13 @@ void NSRender::Render::DrawPassSSAO_AndComposite()
 
     m_fxSSAO->SetTexture("texZ",   m_rtZTex);
     m_fxSSAO->SetTexture("texPos", m_rtPosTex);
+
+    m_fxSSAO->SetFloat("g_aoStepWorld", 4.0f);   // 5 → 4（半径を少し縮める）
+    m_fxSSAO->SetFloat("g_originPush", 0.05f);  // 0.15 → 0.05（押し出し弱め）
+    m_fxSSAO->SetFloat("g_planeThickness", 0.006f); // 0.02 → 0.006（同一面厚みを薄く）
+    m_fxSSAO->SetFloat("g_edgeZ", 0.006f); // 0.01 → 0.006（縁の深度許容を広げる）
+    m_fxSSAO->SetFloat("g_aoStrength", 1.2f);   // 1.5 → 1.2（強すぎ抑制）
+    m_fxSSAO->SetFloat("g_aoBias", 0.0002f);// 0.0001 → 0.0002（微バイアス）
 
     m_fxSSAO->SetTechnique("TechniqueAO_Create"); // PS_AO を実行
     m_fxSSAO->Begin(NULL, 0);

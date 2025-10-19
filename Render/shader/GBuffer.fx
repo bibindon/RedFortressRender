@@ -39,7 +39,7 @@ VS_OUTPUT VS_GBuffer(VS_INPUT inputData)
     return outputData;
 }
 
-void PS_GBuffer2(VS_OUTPUT inputData,
+void PS_GBuffer(VS_OUTPUT inputData,
                  out float4 outRT0 : COLOR0,
                  out float4 outRT1 : COLOR1)
 {
@@ -67,6 +67,6 @@ technique TechniqueGBuffer
         AlphaBlendEnable = FALSE;
 
         VertexShader = compile vs_3_0 VS_GBuffer();
-        PixelShader  = compile ps_3_0 PS_GBuffer2();
+        PixelShader  = compile ps_3_0 PS_GBuffer();
     }
 }

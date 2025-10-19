@@ -227,6 +227,8 @@ public:
 
     void SetRotY(const float rotY);
 
+    D3DXVECTOR3 GetRot() const;
+
     float GetScale() const;
 
     LPD3DXMESH GetD3DMesh() const;

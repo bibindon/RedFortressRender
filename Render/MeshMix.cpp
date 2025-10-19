@@ -185,6 +185,12 @@ void MeshMix::ModifyMeshForNormalMapping(LPD3DXMESH& pMesh)
                                    NULL                       // ppVertexMapping（不要なら NULL）
     );
 
+    // 原因不明
+    if (FAILED(hr))
+    {
+        return;
+    }
+
     // UV情報がないメッシュファイルを読み込むと、ここでエラー
     assert(SUCCEEDED(hr));
 
@@ -200,6 +206,11 @@ void MeshMix::SetPos(const D3DXVECTOR3& pos)
 void MeshMix::SetRotY(const float rotY)
 {
     m_rotate.y = rotY;
+}
+
+D3DXVECTOR3 MeshMix::GetRot() const
+{
+    return m_rotate;
 }
 
 D3DXVECTOR3 MeshMix::GetPos() const
