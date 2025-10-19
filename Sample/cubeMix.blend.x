@@ -5872,7 +5872,7 @@ Frame Root {
            96.078431;
            0.500000; 0.500000; 0.500000;;
            0.000000; 0.000000; 0.000000;;
-          TextureFilename {"texture.png";}
+          TextureFilename {"rocks.png";}
         }
         Material CubeMap {
            0.640000; 0.640000; 0.640000; 1.000000;;
@@ -5886,14 +5886,14 @@ Frame Root {
            96.078431;
            0.500000; 0.500000; 0.500000;;
            0.000000; 0.000000; 0.000000;;
-          TextureFilename {"normalMap.png";}
+          TextureFilename {"rocksNormal.png";}
         }
         Material HeightMap {
            0.640000; 0.640000; 0.640000; 1.000000;;
            96.078431;
            0.500000; 0.500000; 0.500000;;
            0.000000; 0.000000; 0.000000;;
-          TextureFilename {"heightMap.png";}
+          TextureFilename {"rocksHeight.png";}
         }
       } // End of Cube material list
     } // End of Cube mesh

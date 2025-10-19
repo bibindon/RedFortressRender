@@ -62,7 +62,8 @@ void MeshMix::Initialize()
     DWORD* adjacencyList = (DWORD*)adjacencyBuffer->GetBufferPointer();
     if (m_param.smooth)
     {
-        HRESULT hr = D3DXComputeNormals(m_D3DMesh, adjacencyList);
+        // ModifyMeshForNormalMapping関数でやるから必要ないはず
+    //    HRESULT hr = D3DXComputeNormals(m_D3DMesh, adjacencyList);
     }
 
     //--------------------------------------------------------
@@ -107,67 +108,22 @@ void MeshMix::Initialize()
             diffuce.w = materialList[i].MatD3D.Diffuse.a;
 
             m_vecDiffuse.push_back(diffuce);
-
-            //--------------------------------------------------------
-            // テクスチャの読み込み
-            //--------------------------------------------------------
-            if (materialList[i].pTextureFilename != nullptr &&
-                strlen(materialList[i].pTextureFilename) != 0)
-            {
-                LPDIRECT3DTEXTURE9 tempTexture = NULL;
-
-                std::wstring texturePath = xFileDir;
-                texturePath += Util::Utf8ToWstring(materialList[i].pTextureFilename);
-                hResult = D3DXCreateTextureFromFile(Common::D3DDevice(),
-                                                    texturePath.c_str(),
-                                                    &tempTexture);
-
-                assert(hResult == S_OK);
-
-                m_vecTexture.push_back(tempTexture);
-            }
         }
-        else if (i == 1)
+
+        if (materialList[i].pTextureFilename != nullptr &&
+            strlen(materialList[i].pTextureFilename) != 0)
         {
-            //--------------------------------------------------------
-            // テクスチャの読み込み
-            //--------------------------------------------------------
-            if (materialList[i].pTextureFilename != nullptr &&
-                strlen(materialList[i].pTextureFilename) != 0)
-            {
-                LPDIRECT3DCUBETEXTURE9 tempTexture = NULL;
+            LPDIRECT3DTEXTURE9 tempTexture = NULL;
 
-                std::wstring texturePath = xFileDir;
-                texturePath += Util::Utf8ToWstring(materialList[i].pTextureFilename);
-                hResult = D3DXCreateCubeTextureFromFile(Common::D3DDevice(),
-                                                        texturePath.c_str(),
-                                                        &tempTexture);
+            std::wstring texturePath = xFileDir;
+            texturePath += Util::Utf8ToWstring(materialList[i].pTextureFilename);
+            hResult = D3DXCreateTextureFromFile(Common::D3DDevice(),
+                                                texturePath.c_str(),
+                                                &tempTexture);
 
-                assert(hResult == S_OK);
+            assert(hResult == S_OK);
 
-                m_vecTexture.push_back(tempTexture);
-            }
-        }
-        else if (i == 2)
-        {
-            //--------------------------------------------------------
-            // テクスチャの読み込み
-            //--------------------------------------------------------
-            if (materialList[i].pTextureFilename != nullptr &&
-                strlen(materialList[i].pTextureFilename) != 0)
-            {
-                LPDIRECT3DTEXTURE9 tempTexture = NULL;
-
-                std::wstring texturePath = xFileDir;
-                texturePath += Util::Utf8ToWstring(materialList[i].pTextureFilename);
-                hResult = D3DXCreateTextureFromFile(Common::D3DDevice(),
-                                                    texturePath.c_str(),
-                                                    &tempTexture);
-
-                assert(hResult == S_OK);
-
-                m_vecTexture.push_back(tempTexture);
-            }
+            m_vecTexture.push_back(tempTexture);
         }
     }
 
@@ -221,8 +177,10 @@ void MeshMix::ModifyMeshForNormalMapping(LPD3DXMESH& pMesh)
                                    options,                   // dwOptions
                                    adj.data(),                // 隣接
                                    0.01f,                     // fPartialEdgeThreshold
-                                   0.25f,                     // fSingularPointThreshold
-                                   0.01f,                     // fNormalEdgeThreshold
+                                   0.01f,                     // fSingularPointThreshold
+                                   // 角の平滑化を防止。平面に対してだけ平滑化を行うようにする
+                                   // これをしないと視差遮蔽マッピングで問題になる。
+                                   0.999f,                     // fNormalEdgeThreshold
                                    NULL,                      // ppMeshOut（IN_PLACE 指定なので不要）
                                    NULL                       // ppVertexMapping（不要なら NULL）
     );
@@ -274,7 +232,7 @@ void MeshMix::Render()
     D3DXVECTOR4 normal = Light::GetLightDir();
 
     // 文字列で指定すると遅くなるらしい
-    hResult = m_D3DEffect->SetVector("g_lightNormal", &normal);
+    hResult = m_D3DEffect->SetVector("g_lightDir", &normal);
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
@@ -348,18 +306,25 @@ void MeshMix::Render()
     hResult = m_D3DEffect->SetTexture("g_texNormalMap", m_vecTexture.at(2));
     assert(hResult == S_OK);
 
+    // 高さマップがないときはある。あっても問題ない
+    if (m_vecTexture.size() >= 4)
+    {
+        hResult = m_D3DEffect->SetTexture("g_texHeightMap", m_vecTexture.at(3));
+        assert(hResult == S_OK);
+    }
+
+    // 時間パラメータを設定
+    static float f = 0.f;
+    f += 0.001f;
+    hResult = m_D3DEffect->SetFloat("g_time", f);
+    assert(hResult == S_OK);
+
     //--------------------------------------------------------
     // 揺らし効果
     //--------------------------------------------------------
     if (m_param.sway)
     {
         hResult = m_D3DEffect->SetBool("g_swayEnable", TRUE);
-
-        // 時間パラメータを設定（揺らし効果用）
-        static float f = 0.f;
-        f += 0.01f;
-        hResult = m_D3DEffect->SetFloat("g_time", f);
-        assert(hResult == S_OK);
 
         // 揺らしの強度を設定
         hResult = m_D3DEffect->SetFloat("g_swayAmount", 2.5f);

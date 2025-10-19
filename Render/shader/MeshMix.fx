@@ -3,7 +3,7 @@ float4x4 g_matWorld;
 float4x4 g_matViewProj;
 float4x4 g_matWorldViewProj;
 
-float4 g_lightNormal = { 0.3f, 1.0f, 0.5f, 0.0f };
+float4 g_lightDir = { 0.3f, 1.0f, 0.5f, 0.0f };
 float4 g_lightPos = { -10.f, 10.f, -10.f, 0.0f };
 
 float4 g_cameraPos = { 10.f, 5.f, 10.f, 0.0f };
@@ -15,9 +15,11 @@ float4 g_specularColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 // スペキュラ光の鋭さ
 float g_specularPower = 128.0f;
+//float g_specularPower = 0.0f;
 
 // スペキュラ光の強さ
 float g_specularIntensity = 1.0f;
+//float g_specularIntensity = 0.0f;
 
 // 距離フォグの色
 float4 g_fogDistanceColor = { 0.5f, 0.5f, 1.0f, 1.0f };
@@ -49,7 +51,7 @@ sampler g_textureSampler = sampler_state
 // 環境マップ
 textureCUBE g_texCubeMap;
 
-samplerCUBE g_texCubeMapSampler = sampler_state
+samplerCUBE g_cubeMapSampler = sampler_state
 {
     Texture = <g_texCubeMap>;
     MipFilter = LINEAR;
@@ -66,7 +68,7 @@ samplerCUBE g_texCubeMapSampler = sampler_state
 
 // 法線マップ
 texture g_texNormalMap;
-sampler g_texNormalMapSampler = sampler_state
+sampler g_normalMapSampler = sampler_state
 {
     Texture = (g_texNormalMap);
     MipFilter = LINEAR;
@@ -78,6 +80,32 @@ sampler g_texNormalMapSampler = sampler_state
 
     MaxMipLevel = 1;
 };
+
+//------------------------------------------------------
+// 視差遮蔽マッピング関連
+//------------------------------------------------------
+
+bool g_bPOM = true;
+
+// 高さ 0.0 ~ 1.0
+float g_fHeightMapScale = 0.3f;
+
+// サンプリング数（最小）
+int g_nMinSamples = 50;
+
+// サンプリング数（最大）
+int g_nMaxSamples = 100;
+
+// 高さマップ
+texture g_texHeightMap;
+sampler g_heightMapSampler = sampler_state
+{
+    Texture = (g_texHeightMap);
+    MipFilter = LINEAR;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+};
+
 
 float g_time = 0.0f;
 
@@ -99,20 +127,27 @@ float3 g_pointLightColor[16];
 //---------------------------------------------------------
 // 頂点シェーダー
 // 視差マッピングは「1パス目では実施せず、2パス目で実装する」というようなことはできない
+//
+// WS ... WorldSpace
+// TS ... TangentSpace
+// OS ... ObjectSpace(Local coordinate)
 //---------------------------------------------------------
 void VertexShader1(in  float4 inPosition     : POSITION,
                    in  float4 inNormal       : NORMAL0,
                    in  float4 inTangent      : TANGENT0,
                    in  float4 inBinormal     : BINORMAL0,
-                   in  float4 inTexCood      : TEXCOORD0,
+                   in  float4 inTexCoord     : TEXCOORD0,
 
                    out float4 outPosition    : POSITION,
                    out float3 outPosWorld    : TEXCOORD0,
                    out float3 outNormalWorld : TEXCOORD1,
                    out float2 outTexCood     : TEXCOORD2,
                    out float3 outTangent     : TEXCOORD3,
-                   out float3 outBinorm      : TEXCOORD4
-)
+                   out float3 outBinorm      : TEXCOORD4,
+                   out float3 outvViewWS     : TEXCOORD5,
+                   out float3 outvLightTS    : TEXCOORD6,
+                   out float3 outvViewTS     : TEXCOORD7,
+                   out float2 outvParallaxOffsetTS    : TEXCOORD8)
 {
     // ゆらぎ効果（草とか）
     if (g_swayEnable)
@@ -149,10 +184,29 @@ void VertexShader1(in  float4 inPosition     : POSITION,
     float3x3 world3x3 = (float3x3) g_matWorld;
     outNormalWorld = mul(inNormal.xyz, world3x3);
 
-    outTexCood = inTexCood.xy;
+    outTexCood = inTexCoord.xy;
 
     outTangent = normalize(mul(inTangent, g_matWorld)).xyz;
     outBinorm = normalize(mul(inBinormal, g_matWorld)).xyz;
+
+    float3 vViewWS = g_cameraPos.xyz - outPosWorld.xyz;
+    outvViewWS = vViewWS;
+
+    // 光源ベクトル（正規化しない）
+    float3 vLightWS = g_lightDir.xyz;
+
+    // 光源ベクトル・カメラ方向ベクトルを接空間へ変換
+    float3x3 mWorldToTangent = float3x3(outTangent, outBinorm, outNormalWorld);
+
+    outvLightTS = mul(mWorldToTangent, vLightWS);
+    outvViewTS = mul(mWorldToTangent, vViewWS);
+
+    // ズレ量
+    // グレージング角なら沢山ズレるし、正面を向いてるならズレない。
+    // それを表す数値
+    outvParallaxOffsetTS = outvViewTS.xy / outvViewTS.z;
+
+    outvParallaxOffsetTS *= g_fHeightMapScale;
 }
 
 //-------------------------------------------------------------
@@ -161,26 +215,85 @@ void VertexShader1(in  float4 inPosition     : POSITION,
 void PixelShader1(in float4 inPosition    : POSITION,
                   in float3 inPosWorld    : TEXCOORD0,
                   in float3 inNormalWorld : TEXCOORD1,
-                  in float2 inTexCood     : TEXCOORD2,
+                  in float2 inTexCoord    : TEXCOORD2,
                   in float3 inTangent     : TEXCOORD3,
                   in float3 inBinorm      : TEXCOORD4,
+                  in float3 invViewWS     : TEXCOORD5,
+                  in float3 invLightTS    : TEXCOORD6,
+                  in float3 invViewTS     : TEXCOORD7,
+                  in float2 invParallaxOffsetTS  : TEXCOORD8,
 
                   out float4 outColor     : COLOR)
 {
     // 正規化はピクセルシェーダーでやらないといけない
     float3 normal = normalize(inNormalWorld);
-    float3 lightDir = normalize(g_lightNormal.xyz);
+    float3 lightDir = normalize(g_lightDir.xyz);
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float3 halfVector = normalize(lightDir + cameraDir);
 
+    //----------------------------------------------------
+    // 視差遮蔽マッピング
+    //----------------------------------------------------
+    if (g_bPOM)
+    {
+        invViewWS = normalize(invViewWS);
+        invLightTS = normalize(invLightTS);
+        invViewTS= normalize(invViewTS);
+
+        // 視角に応じてサンプル数を変更。
+        // グレージング角であるほどステップを細かくして精度を上げる。
+        int nNumSteps = (int) lerp(g_nMaxSamples, g_nMinSamples, dot(invViewWS, normal));
+
+        float fStepSize = 1.0 / (float) nNumSteps;
+        int nStepIndex = 0;
+
+        float fCurrHeight = 0.0;
+
+        float2 vTexOffsetPerStep = fStepSize * invParallaxOffsetTS;
+        float2 vTexCurrentOffset = inTexCoord;
+
+        // 今どの深さの層（Layer）までレイを進めたか
+        float fCurrentLayer = 1.0;
+
+        while (nStepIndex < nNumSteps)
+        {
+            vTexCurrentOffset -= vTexOffsetPerStep;
+
+            // tex2Dgrad関数を使うとPIX For Windowsが落ちる
+            // fCurrHeight = tex2Dgrad(g_heightMapSampler, vTexCurrentOffset, dx, dy ).r;
+            fCurrHeight = tex2Dlod(g_heightMapSampler, float4(vTexCurrentOffset, 0.0f, 0.0f)).r;
+
+            fCurrentLayer -= fStepSize;
+
+            if (fCurrHeight > fCurrentLayer)
+            {
+                break;
+            }
+
+            nStepIndex++;
+        }
+
+        float2 vParallaxOffset = invParallaxOffsetTS * (1 - fCurrentLayer);
+
+        // 疑似的に押し出された表面上の最終テクスチャ座標
+        inTexCoord = inTexCoord - vParallaxOffset;
+    }
+    
+    float3 albedo = tex2D(g_textureSampler, inTexCoord).rgb * g_diffuse.rgb;
+
+    //-----------------------------------------------------------------------
     // 法線マッピングでNdotLを調節
+    //-----------------------------------------------------------------------
     float NdotL = 0.f;
     float NdotH = 0.f;
+
+    // 法線マッピングを行うか
+    if (false)
     {
         float3 normalInTangent = float3(0, 0, 0);
-        normalInTangent.x = tex2D(g_texNormalMapSampler, inTexCood).r * 2.0 - 1.0;
-        normalInTangent.y = tex2D(g_texNormalMapSampler, inTexCood).g * 2.0 - 1.0;
-        normalInTangent.z = tex2D(g_texNormalMapSampler, inTexCood).b * 2.0 - 1.0;
+        normalInTangent.x = tex2D(g_normalMapSampler, inTexCoord).r * 2.0 - 1.0;
+        normalInTangent.y = tex2D(g_normalMapSampler, inTexCoord).g * 2.0 - 1.0;
+        normalInTangent.z = tex2D(g_normalMapSampler, inTexCoord).b * 2.0 - 1.0;
         normalInTangent.x *= -1;
         normalInTangent = normalize(normalInTangent);
 
@@ -193,8 +306,12 @@ void PixelShader1(in float4 inPosition    : POSITION,
         NdotL = dot(normalInWorld, lightDir);
         NdotH = saturate(dot(normalInWorld, halfVector));
     }
-    
-    float3 albedo = tex2D(g_textureSampler, inTexCood).rgb * g_diffuse.rgb;
+    else
+    {
+        NdotL = dot(normal, lightDir);
+        NdotH = saturate(dot(normal, halfVector));
+    }
+
 
     float3 lambert = 0.f;
     
@@ -206,7 +323,7 @@ void PixelShader1(in float4 inPosition    : POSITION,
 
     lambert = albedo * NdotL;
 
-    float3 ambient = float3(0, 0, 0);
+    float3 ambient = float3(0.2, 0.2, 0.2) * albedo;
 
     // 陰の彩度を上げる
     if (true)
@@ -240,7 +357,7 @@ void PixelShader1(in float4 inPosition    : POSITION,
 void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
                             in float3 inPosWorld     : TEXCOORD0,
                             in float3 inNormalWorld  : TEXCOORD1,
-                            in float2 inTexCood      : TEXCOORD2,
+                            in float2 inTexCoord      : TEXCOORD2,
                             in float3 inTangent      : TEXCOORD3,
                             in float3 inBinorm       : TEXCOORD4,
 
@@ -251,9 +368,9 @@ void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
     float3 normal = normalize(inNormalWorld);
     
     float3 normalInTangent = float3(0, 0, 0);
-    normalInTangent.x = tex2D(g_texNormalMapSampler, inTexCood).r * 2.0 - 1.0;
-    normalInTangent.y = tex2D(g_texNormalMapSampler, inTexCood).g * 2.0 - 1.0;
-    normalInTangent.z = tex2D(g_texNormalMapSampler, inTexCood).b * 2.0 - 1.0;
+    normalInTangent.x = tex2D(g_normalMapSampler, inTexCoord).r * 2.0 - 1.0;
+    normalInTangent.y = tex2D(g_normalMapSampler, inTexCoord).g * 2.0 - 1.0;
+    normalInTangent.z = tex2D(g_normalMapSampler, inTexCoord).b * 2.0 - 1.0;
     normalInTangent.x *= -1;
     normalInTangent = normalize(normalInTangent);
 
@@ -263,7 +380,7 @@ void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float3 reflectWorld = reflect(-cameraDir, normalize(normalInWorld));
 
-    outColor = float4(texCUBE(g_texCubeMapSampler, reflectWorld).rgb, 0.1f);
+    outColor = float4(texCUBE(g_cubeMapSampler, reflectWorld).rgb, 0.1f);
 }
 
 //-------------------------------------------------------------
@@ -272,7 +389,7 @@ void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
 void PixelShaderGlass(in float4 inPosition     : POSITION,
                       in float3 inPosWorld     : TEXCOORD0,
                       in float3 inNormalWorld  : TEXCOORD1,
-                      in float2 inTexCood      : TEXCOORD2,
+                      in float2 inTexCoord      : TEXCOORD2,
                       in float3 inTangent      : TEXCOORD3,
                       in float3 inBinorm       : TEXCOORD4,
 
@@ -283,9 +400,9 @@ void PixelShaderGlass(in float4 inPosition     : POSITION,
     float3 normal = normalize(inNormalWorld);
     
     float3 normalInTangent = float3(0, 0, 0);
-    normalInTangent.x = tex2D(g_texNormalMapSampler, inTexCood).r * 2.0 - 1.0;
-    normalInTangent.y = tex2D(g_texNormalMapSampler, inTexCood).g * 2.0 - 1.0;
-    normalInTangent.z = tex2D(g_texNormalMapSampler, inTexCood).b * 2.0 - 1.0;
+    normalInTangent.x = tex2D(g_normalMapSampler, inTexCoord).r * 2.0 - 1.0;
+    normalInTangent.y = tex2D(g_normalMapSampler, inTexCoord).g * 2.0 - 1.0;
+    normalInTangent.z = tex2D(g_normalMapSampler, inTexCoord).b * 2.0 - 1.0;
     normalInTangent.x *= -1;
     normalInTangent = normalize(normalInTangent);
 
@@ -296,7 +413,7 @@ void PixelShaderGlass(in float4 inPosition     : POSITION,
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float3 refractWorld = refract(-cameraDir, normalize(normalInWorld), 1.f / 1.5f);
 
-    outColor = float4(texCUBE(g_texCubeMapSampler, refractWorld).rgb, 0.8f);
+    outColor = float4(texCUBE(g_cubeMapSampler, refractWorld).rgb, 0.8f);
 }
 
 //-------------------------------------------------------------
@@ -318,7 +435,7 @@ float FogAmountExp2(float distance, float density)
 void PixelShaderPointLight(in float4 inPosition     : POSITION,
                            in float3 inPosWorld     : TEXCOORD0,
                            in float3 inNormalWorld  : TEXCOORD1,
-                           in float2 inTexCood      : TEXCOORD2,
+                           in float2 inTexCoord      : TEXCOORD2,
                            in float3 inTangent     : TEXCOORD3,
                            in float3 inBinorm      : TEXCOORD4,
        
@@ -334,9 +451,9 @@ void PixelShaderPointLight(in float4 inPosition     : POSITION,
     float NdotH = 0.f;
 
     float3 normalInTangent = float3(0, 0, 0);
-    normalInTangent.x = tex2D(g_texNormalMapSampler, inTexCood).r * 2.0 - 1.0;
-    normalInTangent.y = tex2D(g_texNormalMapSampler, inTexCood).g * 2.0 - 1.0;
-    normalInTangent.z = tex2D(g_texNormalMapSampler, inTexCood).b * 2.0 - 1.0;
+    normalInTangent.x = tex2D(g_normalMapSampler, inTexCoord).r * 2.0 - 1.0;
+    normalInTangent.y = tex2D(g_normalMapSampler, inTexCoord).g * 2.0 - 1.0;
+    normalInTangent.z = tex2D(g_normalMapSampler, inTexCoord).b * 2.0 - 1.0;
     normalInTangent.x *= -1;
     normalInTangent = normalize(normalInTangent);
 
@@ -397,7 +514,7 @@ void PixelShaderPointLight(in float4 inPosition     : POSITION,
 void PixelShaderFog(in float4 inPosition     : POSITION,
                     in float3 inPosWorld     : TEXCOORD0,
                     in float3 inNormalWorld  : TEXCOORD1,
-                    in float2 inTexCood      : TEXCOORD2,
+                    in float2 inTexCoord      : TEXCOORD2,
 
                     out float4 outColor      : COLOR)
 {

@@ -23,10 +23,12 @@ struct stMeshParam
     DWORD specularColor = 0xffffffff;
 
     // スペキュラ光の強さ
-    float specularIntensity = 0.4f;
+    //float specularIntensity = 0.4f;
+    float specularIntensity = 0.0f;
 
     // スペキュラ光の鋭さ
-    float specularEdge = 0.8f;
+    //float specularEdge = 0.8f;
+    float specularEdge = 0.0f;
 
     //--------------------------------------------------------
     // 距離フォグ
@@ -60,10 +62,12 @@ struct stMeshParam
     //
     // 例えば半球を表示する場合、法線を再計算するとキノコのようになり、
     // 再計算しないとダイヤモンドのような見た目になる。
+    // 視差遮蔽マッピングを行う場合、スムーズ化を行うと角ばっている部分で表示がおかしくなる。
+    // 視差遮蔽マッピングを行う場合、スムーズ化はオフにした方がいいけど、できないわけではない。
     bool smooth = false;
 
     // 影が表示されるようにするかどうか。
-    bool shadow = true;
+    bool shadow = false;
 
     // 彩度影の表示を行うか。
     //
@@ -96,13 +100,14 @@ struct stMeshParam
     // 0.0 ~ 1.0
     float cubeMappingGauss = 0.9f;
 
-    // 視差マッピングを行うか
+    // 視差遮蔽マッピングを行うか
     // デコボコが本当にあるように見せる
-    bool parallaxMapping = false;
+    // 視差遮蔽マッピングを行うが、法線マッピングを行わない、ということは理論上可能。
+    bool parallaxOcclusionMapping = false;
 
     // 法線マッピングを行うか
     // デコボコがあるように見せる。近くで見ると平面だとすぐにわかってしまう。
-    bool normalMapping = true;
+    bool normalMapping = false;
 
     // ガラスか
     bool glass = false;
@@ -196,7 +201,7 @@ enum class eMeshParamPreset
 
 stMeshParam GetMeshParamPreset(const eMeshParamPreset preset);
 
-// ポイントライト、スムーズ、彩度影、視差マッピング、SSAO、深度バッファシャドウ
+// ポイントライト、スムーズ、彩度影、法線マッピング、視差遮蔽マッピング、SSAO、深度バッファシャドウ
 // マルチレンダーターゲット、環境マッピングが有効なメッシュクラス
 class MeshMix
 {

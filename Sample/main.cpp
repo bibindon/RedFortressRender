@@ -121,6 +121,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                 text += L"Shift + c : 文字を削除\n";
                 text += L"p : 画像を追加\n";
                 text += L"Shift + p : 画像を削除\n";
+                text += L"Control + p : ポイントライトを追加\n";
                 text += L"\n";
                 text += L"m : メッシュ追加\n";
                 text += L"Shift + m : スムーズなメッシュ追加\n";
