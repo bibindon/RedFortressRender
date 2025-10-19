@@ -840,6 +840,8 @@ void NSRender::Render::DrawPassSSAO_AndComposite()
     m_fxSSAO->SetTexture("texAO",  m_rtAoTex);
     m_fxSSAO->SetTexture("texZ",   m_rtZTex);
     m_fxSSAO->SetFloatArray("g_invSize", (FLOAT*)&invSize, 2);
+    m_fxSSAO->SetFloat("g_sigmaPx", 8.0f);
+    m_fxSSAO->SetFloat("g_depthReject", 0.0001f);
 
     m_fxSSAO->SetTechnique("TechniqueAO_BlurH");
     m_fxSSAO->Begin(NULL, 0);
