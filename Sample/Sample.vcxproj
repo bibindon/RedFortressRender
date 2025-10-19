@@ -257,6 +257,7 @@ exit /B %ERRORLEVEL%</Command>
     <FxCompile Include="..\Render\shader\Common.fx">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>
+    <FxCompile Include="..\Render\shader\GBuffer.fx" />
     <FxCompile Include="..\Render\shader\MeshInstancing.fx" />
     <FxCompile Include="..\Render\shader\MeshMix.fx" />
     <FxCompile Include="..\Render\shader\MeshNormalMapping.fx" />
