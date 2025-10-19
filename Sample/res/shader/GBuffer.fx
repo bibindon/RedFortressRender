@@ -52,7 +52,7 @@ void PS_GBuffer(VS_OUTPUT inputData,
 
     float3 normalized = inputData.positionWorld / g_posRange;
     float3 world01 = normalized * 0.5f + 0.5f;
-//    world01 = saturate(world01);
+    world01 = saturate(world01);
     
     outRT1 = float4(world01, 1.0f);
 }
