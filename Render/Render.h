@@ -237,9 +237,16 @@ private:
     LPDIRECT3DTEXTURE9 m_pRenderTarget1 = NULL;
     LPDIRECT3DTEXTURE9 m_pRenderTarget2 = NULL;
 
+    // G-Buffer用
     LPDIRECT3DTEXTURE9 m_rtZTex = NULL;
     LPDIRECT3DTEXTURE9  m_rtPosTex = NULL;
     LPD3DXEFFECT m_fxGBuffer;
+
+    // SSAO用
+    LPD3DXEFFECT m_fxSSAO = NULL;
+
+    LPDIRECT3DTEXTURE9 m_rtAoTex = NULL;
+    LPDIRECT3DTEXTURE9 m_rtAoTempTex = NULL;
 
     //-----------------------------------------------------------------
     // FPS表示

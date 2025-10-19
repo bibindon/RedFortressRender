@@ -134,6 +134,7 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">2.0</ShaderModel>
     </FxCompile>
     <FxCompile Include="shader\MeshSmooth.fx" />
+    <FxCompile Include="shader\PostEffectSSAO.fx" />
     <FxCompile Include="shader\PostEffectStarBurst.fx" />
     <FxCompile Include="shader\simple.fx">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Effect</ShaderType>
