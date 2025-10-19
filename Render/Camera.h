@@ -37,6 +37,10 @@ public:
 
     static int MOVE_COUNT_MAX;
     static void SetHouseMode(const bool arg);
+
+    static float GetNear();
+    static float GetFar();
+
 private:
 
     const static D3DXVECTOR3 UPWARD;

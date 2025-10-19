@@ -213,6 +213,10 @@ private:
 
     void DrawPass1();
 
+    void DrawPassGBuffer();
+
+    void DrawPassSSAO_AndComposite();
+
     // 彩度フィルター
     PostEffectSaturate m_postEffectSaturate;
 
@@ -232,6 +236,10 @@ private:
 
     LPDIRECT3DTEXTURE9 m_pRenderTarget1 = NULL;
     LPDIRECT3DTEXTURE9 m_pRenderTarget2 = NULL;
+
+    LPDIRECT3DTEXTURE9 m_rtZTex = NULL;
+    LPDIRECT3DTEXTURE9  m_rtPosTex = NULL;
+    LPD3DXEFFECT m_fxGBuffer;
 
     //-----------------------------------------------------------------
     // FPS表示

@@ -62,6 +62,40 @@ void Render::Initialize(HWND hWnd)
                                 &m_pRenderTarget2);
     assert(hResult == S_OK);
 
+    HRESULT hr = E_FAIL;
+
+    // Z画像（A8R8G8B8: Aに線形Z、RGBは可視化用に使える）
+    hr = D3DXCreateTexture(Common::D3DDevice(),
+                           1600,
+                           900,
+                           1,
+                           D3DUSAGE_RENDERTARGET,
+                           D3DFMT_A8R8G8B8,
+                           D3DPOOL_DEFAULT,
+                           &m_rtZTex);
+    assert(hr == S_OK);
+
+    // World座標（高精度推奨）
+    hr = D3DXCreateTexture(Common::D3DDevice(),
+                           1600,
+                           900,
+                           1,
+                           D3DUSAGE_RENDERTARGET,
+                           D3DFMT_A16B16G16R16F,
+                           D3DPOOL_DEFAULT,
+                           &m_rtPosTex);
+    assert(hr == S_OK);
+
+    hr = D3DXCreateEffectFromFile(Common::D3DDevice(),
+                                  L"res\\shader\\GBuffer.fx",
+                                  NULL,
+                                  NULL,
+                                  D3DXSHADER_DEBUG,
+                                  NULL,
+                                  &m_fxGBuffer,
+                                  NULL);
+    assert(SUCCEEDED(hResult));
+
     // 彩度フィルター
     m_postEffectSaturate.Initialize();
 
@@ -95,6 +129,9 @@ void Render::Draw()
     }
 
     DrawPass1();
+
+    DrawPassGBuffer();
+    DrawPassSSAO_AndComposite();
 
     //---------------------------------------------------------------
     // m_pRenderTarget1やm_pRenderTarget2に代入しないこと
@@ -573,6 +610,90 @@ void Render::DrawPass1()
     SAFE_RELEASE(pRT0);
     SAFE_RELEASE(pRT1);
     SAFE_RELEASE(pOldRT0);
+}
+
+void Render::DrawPassGBuffer()
+{
+    HRESULT hr = E_FAIL;
+
+    // 既存の RT0 を退避
+    LPDIRECT3DSURFACE9 oldRt0 = NULL;
+    hr = Common::D3DDevice()->GetRenderTarget(0, &oldRt0);
+
+    // Z と POS のサーフェスを取得
+    LPDIRECT3DSURFACE9 rtZ = NULL;
+    LPDIRECT3DSURFACE9 rtPos = NULL;
+    hr = m_rtZTex->GetSurfaceLevel(0, &rtZ);
+    hr = m_rtPosTex->GetSurfaceLevel(0, &rtPos);
+
+    // MRT×2 をセット
+    hr = Common::D3DDevice()->SetRenderTarget(0, rtZ);
+    hr = Common::D3DDevice()->SetRenderTarget(1, rtPos);
+
+    // クリア。Zバッファも一緒に初期化して素直に全描画
+    hr = Common::D3DDevice()->Clear(0,
+                                    NULL,
+                                    D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
+                                    D3DCOLOR_RGBA(0, 0, 0, 0),
+                                    1.0f,
+                                    0);
+
+    hr = Common::D3DDevice()->BeginScene();
+
+    // ここで「不透明物体のみ」を GBuffer.fx で描く
+    for (auto& mesh : m_meshMixList)
+    {
+        // 必要な定数の投入
+        D3DXMATRIX matWorld;
+        D3DXMatrixIdentity(&matWorld);
+        {
+            D3DXMATRIX m;
+            D3DXMatrixIdentity(&m);
+            D3DXMatrixScaling(&m, mesh.GetScale(), mesh.GetScale(), mesh.GetScale());
+            matWorld *= m;
+            D3DXMatrixRotationYawPitchRoll(&m, 0.0f, 0.0f, 0.0f);
+            matWorld *= m;
+            D3DXVECTOR3 p = mesh.GetPos();
+            D3DXMatrixTranslation(&m, p.x, p.y, p.z);
+            matWorld *= m;
+        }
+
+        m_fxGBuffer->SetMatrix("g_matWorld", &matWorld);
+        auto mView = Camera::GetViewMatrix();
+        auto mProj = Camera::GetProjMatrix();
+        m_fxGBuffer->SetMatrix("g_matView",  &mView);
+        m_fxGBuffer->SetMatrix("g_matProj",  &mProj);
+
+        // 近遠と posRange は SSAO 側と必ず一致させる
+        m_fxGBuffer->SetFloat("g_fNear", Camera::GetNear());
+        m_fxGBuffer->SetFloat("g_fFar",  Camera::GetFar());
+        m_fxGBuffer->SetFloat("g_posRange", 50.0f);
+
+        m_fxGBuffer->SetTechnique("TechniqueGBuffer");
+        m_fxGBuffer->Begin(NULL, 0);
+        m_fxGBuffer->BeginPass(0);
+
+        // メッシュ本体を描画
+        LPD3DXMESH d3dMesh = mesh.GetD3DMesh();
+        d3dMesh->DrawSubset(0);
+
+        m_fxGBuffer->EndPass();
+        m_fxGBuffer->End();
+    }
+
+    hr = Common::D3DDevice()->EndScene();
+
+    // MRT を外し、RT0 を元に戻す
+    Common::D3DDevice()->SetRenderTarget(1, NULL);
+    Common::D3DDevice()->SetRenderTarget(0, oldRt0);
+
+    SAFE_RELEASE(rtZ);
+    SAFE_RELEASE(rtPos);
+    SAFE_RELEASE(oldRt0);
+}
+
+void Render::DrawPassSSAO_AndComposite()
+{
 }
 
 float Render::CalcFPS()
