@@ -92,6 +92,7 @@ void Render::Initialize(HWND hWnd)
                                   NULL,
                                   NULL,
                                   D3DXSHADER_DEBUG,
+//                                  D3DXSHADER_OPTIMIZATION_LEVEL3,
                                   NULL,
                                   &m_fxGBuffer,
                                   NULL);
@@ -136,8 +137,8 @@ void Render::Initialize(HWND hWnd)
                                   L"../x64/Debug/PostEffectSSAO.cso",
                                   NULL,
                                   NULL,
-                                  D3DXSHADER_OPTIMIZATION_LEVEL3,
-//                                  0,
+//                                  D3DXSHADER_OPTIMIZATION_LEVEL3,
+                                  D3DXSHADER_DEBUG,
                                   NULL,
                                   &m_fxSSAO,
                                   &errorinfo);
