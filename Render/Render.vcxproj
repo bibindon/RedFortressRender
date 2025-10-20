@@ -47,6 +47,7 @@
     <ClCompile Include="PostEffectEnd.cpp" />
     <ClCompile Include="PostEffectGauss.cpp" />
     <ClCompile Include="PostEffectSaturate.cpp" />
+    <ClCompile Include="PostEffectSSAO.cpp" />
     <ClCompile Include="PostEffectStarBurst.cpp" />
     <ClCompile Include="PtrManager.cpp" />
     <ClCompile Include="Render.cpp" />
@@ -78,6 +79,7 @@
     <ClInclude Include="PostEffectEnd.h" />
     <ClInclude Include="PostEffectGauss.h" />
     <ClInclude Include="PostEffectSaturate.h" />
+    <ClInclude Include="PostEffectSSAO.h" />
     <ClInclude Include="PostEffectStarBurst.h" />
     <ClInclude Include="PtrManager.h" />
     <ClInclude Include="Render.h" />

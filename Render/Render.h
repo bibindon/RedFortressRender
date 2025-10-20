@@ -11,28 +11,31 @@
 #include <vector>
 #include <chrono>
 
+#include "Font.h"
+#include "Sprite.h"
+
 #include "Mesh.h"
 #include "MeshSmooth.h"
 #include "MeshSSSLike.h"
 #include "MeshPointLight.h"
 #include "MeshNormalMapping.h"
+#include "MeshMix.h"
+#include "MeshSSS.h"
+#include "MeshPOM.h"
 
 #include "AnimMesh.h"
 #include "SkinAnimMesh.h"
 
 #include "MeshInstancing.h"
 
-#include "Font.h"
-#include "Sprite.h"
 #include "PostEffectGauss.h"
 #include "PostEffectSaturate.h"
 #include "PostEffectBloom.h"
 #include "PostEffectStarBurst.h"
 #include "PostEffectEnd.h"
+#include "PostEffectSSAO.h"
+
 #include "WindowManager.h"
-#include "MeshMix.h"
-#include "MeshSSS.h"
-#include "MeshPOM.h"
 
 namespace NSRender
 {
@@ -215,7 +218,8 @@ private:
 
     void DrawPassGBuffer();
 
-    void DrawPassSSAO_AndComposite();
+    // SSAO用
+    PostEffectSSAO m_postEffectSSAO;
 
     // 彩度フィルター
     PostEffectSaturate m_postEffectSaturate;
@@ -241,12 +245,6 @@ private:
     LPDIRECT3DTEXTURE9 m_rtZTex = NULL;
     LPDIRECT3DTEXTURE9  m_rtPosTex = NULL;
     LPD3DXEFFECT m_fxGBuffer;
-
-    // SSAO用
-    LPD3DXEFFECT m_fxSSAO = NULL;
-
-    LPDIRECT3DTEXTURE9 m_rtAoTex = NULL;
-    LPDIRECT3DTEXTURE9 m_rtAoTempTex = NULL;
 
     //-----------------------------------------------------------------
     // FPS表示

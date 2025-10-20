@@ -92,7 +92,6 @@ void Render::Initialize(HWND hWnd)
                                   NULL,
                                   NULL,
                                   D3DXSHADER_DEBUG,
-//                                  D3DXSHADER_OPTIMIZATION_LEVEL3,
                                   NULL,
                                   &m_fxGBuffer,
                                   NULL);
@@ -110,46 +109,8 @@ void Render::Initialize(HWND hWnd)
     // スターバースト
     m_postEffectStarBurst.Initialize();
 
-    hr = D3DXCreateTexture(Common::D3DDevice(),
-                       1600,
-                       900,
-                       1,
-                       D3DUSAGE_RENDERTARGET,
-                       D3DFMT_A8R8G8B8,
-                       D3DPOOL_DEFAULT,
-                       &m_rtAoTex);
-    assert(hr == S_OK);
-
-    hr = D3DXCreateTexture(Common::D3DDevice(),
-                           1600,
-                           900,
-                           1,
-                           D3DUSAGE_RENDERTARGET,
-                           D3DFMT_A8R8G8B8,
-                           D3DPOOL_DEFAULT,
-                           &m_rtAoTempTex);
-    assert(hr == S_OK);
-
-    // SSAO エフェクト
-    LPD3DXBUFFER errorinfo;
-    hr = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                  //L"res\\shader\\PostEffectSSAO.fx",
-                                  L"../x64/Debug/PostEffectSSAO.cso",
-                                  NULL,
-                                  NULL,
-//                                  D3DXSHADER_OPTIMIZATION_LEVEL3,
-                                  D3DXSHADER_DEBUG,
-                                  NULL,
-                                  &m_fxSSAO,
-                                  &errorinfo);
-
-    if (false)
-    {
-        const char* msg = static_cast<const char*>(errorinfo->GetBufferPointer());
-        OutputDebugStringA(msg);
-    }
-
-    assert(SUCCEEDED(hr));
+    // SSAO
+    m_postEffectSSAO.Initialize();
 
     // 最終処理用ポストエフェクト
     m_postEffectEnd.Initialize();
@@ -174,7 +135,6 @@ void Render::Draw()
     DrawPass1();
 
     DrawPassGBuffer();
-    DrawPassSSAO_AndComposite();
 
     //---------------------------------------------------------------
     // m_pRenderTarget1やm_pRenderTarget2に代入しないこと
@@ -183,6 +143,9 @@ void Render::Draw()
     LPDIRECT3DTEXTURE9 pTempTexture = NULL;
 
     pTempTexture = m_pRenderTarget1;
+
+    // SSAO
+    pTempTexture = m_postEffectSSAO.Draw(pTempTexture, m_rtZTex, m_rtPosTex);
 
     // 彩度変更
     pTempTexture = m_postEffectSaturate.Draw(pTempTexture);
@@ -772,129 +735,6 @@ namespace
 
         SAFE_RELEASE(vertexDecl);
     }
-}
-
-
-void NSRender::Render::DrawPassSSAO_AndComposite()
-{
-    HRESULT hr = E_FAIL;
-
-    // 画面サイズから invSize を計算
-    D3DSURFACE_DESC descZ = {};
-    m_rtZTex->GetLevelDesc(0, &descZ);
-    D3DXVECTOR2 invSize(1.0f / descZ.Width, 1.0f / descZ.Height);
-
-    // ビュー・プロジェクション行列
-    D3DXMATRIX matrixView = Camera::GetViewMatrix();
-    D3DXMATRIX matrixProj = Camera::GetProjMatrix();
-
-    // 旧RT退避
-    LPDIRECT3DSURFACE9 oldRt0 = NULL;
-    hr = Common::D3DDevice()->GetRenderTarget(0, &oldRt0);
-
-    // サーフェス取得
-    LPDIRECT3DSURFACE9 surfAO = NULL;
-    LPDIRECT3DSURFACE9 surfAOTemp = NULL;
-    LPDIRECT3DSURFACE9 surfRT1 = NULL;
-    LPDIRECT3DSURFACE9 surfRT2 = NULL;
-
-    m_rtAoTex->GetSurfaceLevel(0, &surfAO);
-    m_rtAoTempTex->GetSurfaceLevel(0, &surfAOTemp);
-    m_pRenderTarget1->GetSurfaceLevel(0, &surfRT1);
-    m_pRenderTarget2->GetSurfaceLevel(0, &surfRT2);
-
-    // ========= AO 生成 =========
-    hr = Common::D3DDevice()->SetRenderTarget(0, surfAO);
-    Common::D3DDevice()->SetRenderTarget(1, NULL);
-
-    Common::D3DDevice()->Clear(0, NULL,
-                               D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
-                               D3DCOLOR_RGBA(255, 255, 255, 255),
-                               1.0f, 0);
-
-    m_fxSSAO->SetMatrix("g_matView",  &matrixView);
-    m_fxSSAO->SetMatrix("g_matProj",  &matrixProj);
-    m_fxSSAO->SetFloat("g_fNear", Camera::GetNear());
-    m_fxSSAO->SetFloat("g_fFar",  Camera::GetFar());
-    m_fxSSAO->SetFloat("g_posRange", 50.0f);
-    m_fxSSAO->SetFloatArray("g_invSize", (FLOAT*)&invSize, 2);
-
-    m_fxSSAO->SetTexture("texZ",   m_rtZTex);
-    m_fxSSAO->SetTexture("texPos", m_rtPosTex);
-
-    m_fxSSAO->SetFloat("g_aoStepWorld", 4.0f);   // 5 → 4（半径を少し縮める）
-    m_fxSSAO->SetFloat("g_originPush", 0.05f);  // 0.15 → 0.05（押し出し弱め）
-    m_fxSSAO->SetFloat("g_planeThickness", 0.006f); // 0.02 → 0.006（同一面厚みを薄く）
-    m_fxSSAO->SetFloat("g_edgeZ", 0.006f); // 0.01 → 0.006（縁の深度許容を広げる）
-    m_fxSSAO->SetFloat("g_aoStrength", 1.2f);   // 1.5 → 1.2（強すぎ抑制）
-    m_fxSSAO->SetFloat("g_aoBias", 0.0002f);// 0.0001 → 0.0002（微バイアス）
-
-    m_fxSSAO->SetTechnique("TechniqueAO_Create"); // PS_AO を実行
-    m_fxSSAO->Begin(NULL, 0);
-    m_fxSSAO->BeginPass(0);
-    DrawFullscreenQuad();
-    m_fxSSAO->EndPass();
-    m_fxSSAO->End();
-
-    // ========= Blur H =========
-    hr = Common::D3DDevice()->SetRenderTarget(0, surfAOTemp);
-    Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(255,255,255,255), 1.0f, 0);
-
-    m_fxSSAO->SetTexture("texAO",  m_rtAoTex);
-    m_fxSSAO->SetTexture("texZ",   m_rtZTex);
-    m_fxSSAO->SetFloatArray("g_invSize", (FLOAT*)&invSize, 2);
-    m_fxSSAO->SetFloat("g_sigmaPx", 8.0f);
-    m_fxSSAO->SetFloat("g_depthReject", 0.0001f);
-
-    m_fxSSAO->SetTechnique("TechniqueAO_BlurH");
-    m_fxSSAO->Begin(NULL, 0);
-    m_fxSSAO->BeginPass(0);
-    DrawFullscreenQuad();
-    m_fxSSAO->EndPass();
-    m_fxSSAO->End();
-
-    // ========= Blur V =========
-    hr = Common::D3DDevice()->SetRenderTarget(0, surfAO);
-    Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(255,255,255,255), 1.0f, 0);
-
-    m_fxSSAO->SetTexture("texAO",  m_rtAoTempTex);
-    m_fxSSAO->SetTexture("texZ",   m_rtZTex);
-    m_fxSSAO->SetFloatArray("g_invSize", (FLOAT*)&invSize, 2);
-
-    m_fxSSAO->SetTechnique("TechniqueAO_BlurV");
-    m_fxSSAO->Begin(NULL, 0);
-    m_fxSSAO->BeginPass(0);
-    DrawFullscreenQuad();
-    m_fxSSAO->EndPass();
-    m_fxSSAO->End();
-
-    // ========= Composite: Color × AO =========
-    // 入力: m_pRenderTarget1（カラー）, m_rtAoTex（AO）
-    // 出力: m_pRenderTarget2（一旦ここに書き、最後に RT2→RT1 へコピー）
-    hr = Common::D3DDevice()->SetRenderTarget(0, surfRT2);
-    Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0,0,0,255), 1.0f, 0);
-
-    m_fxSSAO->SetTexture("texColor", m_pRenderTarget1);
-    m_fxSSAO->SetTexture("texAO",    m_rtAoTex);
-
-    m_fxSSAO->SetTechnique("TechniqueAO_Composite");
-    m_fxSSAO->Begin(NULL, 0);
-    m_fxSSAO->BeginPass(0);
-    DrawFullscreenQuad();
-    m_fxSSAO->EndPass();
-    m_fxSSAO->End();
-
-    // ========= RT2 → RT1 へコピー（読み書き競合を避ける）=========
-    Common::D3DDevice()->StretchRect(surfRT2, NULL, surfRT1, NULL, D3DTEXF_NONE);
-
-    // 後始末
-    Common::D3DDevice()->SetRenderTarget(0, oldRt0);
-
-    SAFE_RELEASE(surfAO);
-    SAFE_RELEASE(surfAOTemp);
-    SAFE_RELEASE(surfRT1);
-    SAFE_RELEASE(surfRT2);
-    SAFE_RELEASE(oldRt0);
 }
 
 float Render::CalcFPS()
