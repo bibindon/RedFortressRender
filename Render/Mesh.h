@@ -48,7 +48,8 @@ public:
     void OnDeviceReset();
 
 private:
-    const std::wstring SHADER_FILENAME = _T("res\\shader\\simple.fx");
+    //const std::wstring SHADER_FILENAME = _T("res\\shader\\simple.fx");
+    const std::wstring SHADER_FILENAME = _T("../x64/Debug/simple.cso");
     std::wstring m_meshName;
 
     LPD3DXEFFECT m_D3DEffect = nullptr;

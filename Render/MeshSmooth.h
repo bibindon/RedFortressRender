@@ -29,7 +29,8 @@ public:
 
 private:
 
-    const std::wstring SHADER_FILENAME = L"res\\shader\\MeshSmooth.fx";
+    //const std::wstring SHADER_FILENAME = L"res\\shader\\MeshSmooth.fx";
+    const std::wstring SHADER_FILENAME = L"../x64/Debug/MeshSmooth.cso";
 
     LPD3DXEFFECT m_D3DEffect = NULL;
 

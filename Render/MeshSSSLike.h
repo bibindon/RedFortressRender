@@ -30,7 +30,8 @@ public:
 
 private:
 
-    const std::wstring SHADER_FILENAME = L"res\\shader\\MeshSSSLike.fx";
+    //const std::wstring SHADER_FILENAME = L"res\\shader\\MeshSSSLike.fx";
+    const std::wstring SHADER_FILENAME = L"../x64/Debug/MeshSSSLike.cso";
 
     LPD3DXEFFECT m_D3DEffect = NULL;
 

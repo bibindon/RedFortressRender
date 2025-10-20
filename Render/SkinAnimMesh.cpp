@@ -10,7 +10,8 @@
 namespace NSRender
 {
 
-const std::wstring SkinAnimMesh::SHADER_FILENAME = L"res\\shader\\SkinAnimMeshShader.fx";
+//const std::wstring SkinAnimMesh::SHADER_FILENAME = L"res\\shader\\SkinAnimMeshShader.fx";
+const std::wstring SkinAnimMesh::SHADER_FILENAME = L"../x64/Debug/SkinAnimMeshShader.cso";
 
 SkinAnimMesh::SkinAnimMesh(const std::wstring &x_filename,
                            const D3DXVECTOR3 &position,

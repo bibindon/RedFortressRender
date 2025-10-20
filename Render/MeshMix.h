@@ -243,7 +243,8 @@ public:
 
 private:
 
-    const std::wstring SHADER_FILENAME = L"res\\shader\\MeshMix.fx";
+    //const std::wstring SHADER_FILENAME = L"res\\shader\\MeshMix.fx";
+    const std::wstring SHADER_FILENAME = L"../x64/Debug/MeshMix.cso";
     std::wstring m_meshName;
 
     LPD3DXEFFECT m_D3DEffect = nullptr;

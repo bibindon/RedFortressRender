@@ -29,7 +29,8 @@ private:
 
     void AddTangentBinormalToMesh();
 
-    const std::wstring SHADER_FILENAME = L"res\\shader\\MeshPOM.fx";
+    //const std::wstring SHADER_FILENAME = L"res\\shader\\MeshPOM.fx";
+    const std::wstring SHADER_FILENAME = L"../x64/Debug/MeshPOM.cso";
 
     LPD3DXEFFECT m_D3DEffect = NULL;
 

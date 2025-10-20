@@ -8,7 +8,8 @@ void PostEffectSaturate::Initialize()
     HRESULT hResult = E_FAIL;
 
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                       L"res\\shader\\PostEffectSaturate.fx",
+                                       //L"res\\shader\\PostEffectSaturate.fx",
+                                       L"../x64/Debug/PostEffectSaturate.cso",
                                        NULL,
                                        NULL,
                                        D3DXSHADER_DEBUG,

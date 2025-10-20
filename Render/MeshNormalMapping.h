@@ -34,7 +34,8 @@ public:
 
 private:
 
-    const std::wstring SHADER_FILENAME = L"res\\shader\\MeshNormalMapping.fx";
+    //const std::wstring SHADER_FILENAME = L"res\\shader\\MeshNormalMapping.fx";
+    const std::wstring SHADER_FILENAME = L"../x64/Debug/MeshNormalMapping.cso";
 
     LPD3DXEFFECT m_D3DEffect = NULL;
 

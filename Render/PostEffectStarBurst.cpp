@@ -8,7 +8,8 @@ void PostEffectStarBurst::Initialize()
     HRESULT hResult = E_FAIL;
 
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                       L"res\\shader\\PostEffectStarBurst.fx",
+                                       //L"res\\shader\\PostEffectStarBurst.fx",
+                                       L"../x64/Debug/PostEffectStarBurst.cso",
                                        NULL,
                                        NULL,
                                        D3DXSHADER_DEBUG,

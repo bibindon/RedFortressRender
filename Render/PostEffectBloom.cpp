@@ -8,7 +8,8 @@ void PostEffectBloom::Initialize()
     HRESULT hResult = E_FAIL;
 
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                       L"res\\shader\\PostEffectBloom.fx",
+                                       //L"res\\shader\\PostEffectBloom.fx",
+                                       L"../x64/Debug/PostEffectBloom.cso",
                                        NULL,
                                        NULL,
                                        D3DXSHADER_DEBUG,

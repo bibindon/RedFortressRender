@@ -8,7 +8,8 @@ void PostEffectEnd::Initialize()
     HRESULT hResult = E_FAIL;
 
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                       L"res\\shader\\PostEffectEnd.fx",
+                                       //L"res\\shader\\PostEffectEnd.fx",
+                                       L"../x64/Debug/PostEffectEnd.cso",
                                        NULL,
                                        NULL,
                                        D3DXSHADER_DEBUG,

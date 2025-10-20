@@ -65,7 +65,8 @@ void MeshInstancing::Initialize()
     assert(hResult == S_OK);
 
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                       L"res\\shader\\MeshInstancing.fx",
+                                       //L"res\\shader\\MeshInstancing.fx",
+                                       L"../x64/Debug/MeshInstancing.cso",
                                        NULL,
                                        NULL,
                                        D3DXSHADER_DEBUG,

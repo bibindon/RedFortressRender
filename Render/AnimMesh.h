@@ -49,7 +49,8 @@ private:
     void RenderFrame(const LPD3DXFRAME);
     void RenderMeshContainer(const LPD3DXMESHCONTAINER, const LPD3DXFRAME);
 
-    const std::wstring SHADER_FILENAME = L"res\\shader\\AnimationMeshShader.fx";
+    //const std::wstring SHADER_FILENAME = L"res\\shader\\AnimationMeshShader.fx";
+    const std::wstring SHADER_FILENAME = L"../x64/Debug/AnimationMeshShader.cso";
 
     LPD3DXEFFECT m_D3DEffect = NULL;
 

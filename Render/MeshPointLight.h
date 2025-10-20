@@ -29,7 +29,8 @@ public:
 
 private:
 
-    const std::wstring SHADER_FILENAME = L"res\\shader\\MeshPointLight.fx";
+    //const std::wstring SHADER_FILENAME = L"res\\shader\\MeshPointLight.fx";
+    const std::wstring SHADER_FILENAME = L"../x64/Debug/MeshPointLight.cso";
 
     LPD3DXEFFECT m_D3DEffect = NULL;
 

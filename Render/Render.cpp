@@ -87,7 +87,8 @@ void Render::Initialize(HWND hWnd)
     assert(hr == S_OK);
 
     hr = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                  L"res\\shader\\GBuffer.fx",
+                                  //L"res\\shader\\GBuffer.fx",
+                                  L"../x64/Debug/GBuffer.cso",
                                   NULL,
                                   NULL,
                                   D3DXSHADER_DEBUG,
@@ -131,11 +132,12 @@ void Render::Initialize(HWND hWnd)
     // SSAO エフェクト
     LPD3DXBUFFER errorinfo;
     hr = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                  L"res\\shader\\PostEffectSSAO.fx",
+                                  //L"res\\shader\\PostEffectSSAO.fx",
+                                  L"../x64/Debug/PostEffectSSAO.cso",
                                   NULL,
                                   NULL,
-//                                  D3DXSHADER_DEBUG,
-                                  0,
+                                  D3DXSHADER_OPTIMIZATION_LEVEL3,
+//                                  0,
                                   NULL,
                                   &m_fxSSAO,
                                   &errorinfo);

@@ -9,7 +9,8 @@ void PostEffectGauss::Initialize()
     HRESULT hResult = E_FAIL;
 
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                       L"res\\shader\\PostEffectGaussian.fx",
+                                       //L"res\\shader\\PostEffectGaussian.fx",
+                                       L"../x64/Debug/PostEffectGaussian.cso",
                                        NULL,
                                        NULL,
                                        D3DXSHADER_DEBUG,

@@ -53,7 +53,8 @@ private:
     LPDIRECT3DSURFACE9 AcquireOffscreenDepth(int width, int height);
     void ReleaseOffscreenDepth();
 
-    const std::wstring SHADER_FILENAME = _T("res\\shader\\MeshSSS.fx");
+    //const std::wstring SHADER_FILENAME = _T("res\\shader\\MeshSSS.fx");
+    const std::wstring SHADER_FILENAME = _T("../x64/Debug/MeshSSS.cso");
     std::wstring m_meshName;
 
     LPD3DXEFFECT m_D3DEffect = nullptr;
