@@ -112,6 +112,9 @@ void Render::Initialize(HWND hWnd)
     // SSAO
     m_postEffectSSAO.Initialize();
 
+    // 深度バッファシャドウ
+    m_postEffectZShadow.Initialize();
+
     // 最終処理用ポストエフェクト
     m_postEffectEnd.Initialize();
 }
@@ -143,6 +146,9 @@ void Render::Draw()
     LPDIRECT3DTEXTURE9 pTempTexture = NULL;
 
     pTempTexture = m_pRenderTarget1;
+
+    // 深度バッファシャドウ
+    pTempTexture = m_postEffectZShadow.Draw(pTempTexture, m_meshMixList);
 
     // SSAO
     pTempTexture = m_postEffectSSAO.Draw(pTempTexture, m_rtZTex, m_rtPosTex);

@@ -36,6 +36,7 @@
 #include "PostEffectSSAO.h"
 
 #include "WindowManager.h"
+#include "PostEffectZShadow.h"
 
 namespace NSRender
 {
@@ -217,6 +218,9 @@ private:
     void DrawPass1();
 
     void DrawPassGBuffer();
+
+    // 深度バッファシャドウ
+    PostEffectZShadow m_postEffectZShadow;
 
     // SSAO用
     PostEffectSSAO m_postEffectSSAO;

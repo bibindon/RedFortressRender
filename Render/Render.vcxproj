@@ -44,6 +44,7 @@
     <ClCompile Include="MeshSSS.cpp" />
     <ClCompile Include="MeshSSSLike.cpp" />
     <ClCompile Include="PostEffectBloom.cpp" />
+    <ClCompile Include="PostEffectZShadow.cpp" />
     <ClCompile Include="PostEffectEnd.cpp" />
     <ClCompile Include="PostEffectGauss.cpp" />
     <ClCompile Include="PostEffectSaturate.cpp" />
@@ -76,6 +77,7 @@
     <ClInclude Include="MeshSSS.h" />
     <ClInclude Include="MeshSSSLike.h" />
     <ClInclude Include="PostEffectBloom.h" />
+    <ClInclude Include="PostEffectZShadow.h" />
     <ClInclude Include="PostEffectEnd.h" />
     <ClInclude Include="PostEffectGauss.h" />
     <ClInclude Include="PostEffectSaturate.h" />
@@ -135,6 +137,7 @@
       <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableOptimizations>
       <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</EnableDebuggingInformation>
     </FxCompile>
+    <FxCompile Include="shader\PostEffectZShadow.fx" />
     <FxCompile Include="shader\PostEffectEnd.fx">
       <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableOptimizations>
       <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</EnableDebuggingInformation>

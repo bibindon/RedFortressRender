@@ -273,6 +273,7 @@ exit /B %ERRORLEVEL%</Command>
     <FxCompile Include="..\Render\shader\PostEffectSaturate.fx" />
     <FxCompile Include="..\Render\shader\PostEffectSSAO.fx" />
     <FxCompile Include="..\Render\shader\PostEffectStarBurst.fx" />
+    <FxCompile Include="..\Render\shader\PostEffectZShadow.fx" />
     <FxCompile Include="..\Render\shader\simple.fx" />
     <FxCompile Include="..\Render\shader\SkinAnimMeshShader.fx" />
   </ItemGroup>
