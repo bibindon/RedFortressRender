@@ -356,8 +356,8 @@ int Render::SetUpFont(const std::wstring& fontName,
                                 const int fontSize,
                                 const UINT fontColor)
 {
-    Font font;
-    font.Initialize(fontName, fontSize, fontColor);
+    Font* font = NEW Font();
+    font->Initialize(fontName, fontSize, fontColor);
     m_fontList.push_back(font);
 
     return (int)(m_fontList.size() - 1);
@@ -373,7 +373,7 @@ void Render::DrawText_(const int fontId,
         throw std::exception("Illegal fontId");
     }
 
-    m_fontList.at(fontId).AddText(text, X, Y);
+    m_fontList.at(fontId)->AddText(text, X, Y);
 }
 
 void Render::DrawText_(const int fontId,
@@ -387,7 +387,7 @@ void Render::DrawText_(const int fontId,
         throw std::exception("Illegal fontId");
     }
 
-    m_fontList.at(fontId).AddText(text, X, Y, color);
+    m_fontList.at(fontId)->AddText(text, X, Y, color);
 }
 
 void Render::DrawTextCenter(const int fontId,
@@ -402,7 +402,7 @@ void Render::DrawTextCenter(const int fontId,
         throw std::exception("Illegal fontId");
     }
 
-    m_fontList.at(fontId).AddTextCenter(text, X, Y, Width, Height);
+    m_fontList.at(fontId)->AddTextCenter(text, X, Y, Width, Height);
 }
 
 void Render::DrawTextCenter(const int fontId,
@@ -418,7 +418,7 @@ void Render::DrawTextCenter(const int fontId,
         throw std::exception("Illegal fontId");
     }
 
-    m_fontList.at(fontId).AddTextCenter(text, X, Y, Width, Height, color);
+    m_fontList.at(fontId)->AddTextCenter(text, X, Y, Width, Height, color);
 }
 
 void Render::DrawImage(const std::wstring& text,
@@ -808,7 +808,7 @@ void Render::Draw2D()
 {
     for (auto& elem : m_fontList)
     {
-        elem.Draw();
+        elem->Draw();
     }
 
     m_sprite.Draw();

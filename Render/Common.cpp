@@ -12,6 +12,7 @@ std::vector<Sprite*> Common::m_spriteList;
 std::vector<Mesh*> Common::m_meshList;
 std::vector<AnimMesh*> Common::m_animMeshList;
 std::vector<SkinAnimMesh*> Common::m_skinAnimMeshList;
+std::vector<MeshMix*> Common::m_meshMixList;
 int Common::m_screenW = 1600;
 int Common::m_screenH = 900;
 
@@ -27,6 +28,7 @@ void Common::Finalize()
     m_meshList.clear();
     m_animMeshList.clear();
     m_skinAnimMeshList.clear();
+    m_meshMixList.clear();
 }
 
 LPDIRECT3DDEVICE9 Common::D3DDevice()
@@ -65,6 +67,11 @@ void Common::OnDeviceLostAll()
     {
         elem->OnDeviceLost();
     }
+
+    for (auto& elem : m_meshMixList)
+    {
+        elem->OnDeviceLost();
+    }
 }
 
 void Common::OnDeviceResetAll()
@@ -90,6 +97,11 @@ void Common::OnDeviceResetAll()
     }
 
     for (auto& elem : m_skinAnimMeshList)
+    {
+        elem->OnDeviceReset();
+    }
+
+    for (auto& elem : m_meshMixList)
     {
         elem->OnDeviceReset();
     }
@@ -120,6 +132,11 @@ void Common::AddDeviceLostResource(SkinAnimMesh* res)
     m_skinAnimMeshList.push_back(res);
 }
 
+void Common::AddDeviceLostResource(MeshMix* res)
+{
+    m_meshMixList.push_back(res);
+}
+
 void Common::RemoveDeviceLostResource(const Font* res)
 {
     Util::Remove(m_fontList, res);
@@ -143,6 +160,11 @@ void Common::RemoveDeviceLostResource(const AnimMesh* res)
 void Common::RemoveDeviceLostResource(const SkinAnimMesh* res)
 {
     Util::Remove(m_skinAnimMeshList, res);
+}
+
+void Common::RemoveDeviceLostResource(const MeshMix* res)
+{
+    Util::Remove(m_meshMixList, res);
 }
 
 int Common::ScreenW()

@@ -208,7 +208,8 @@ private:
 
     std::unordered_map<std::wstring, MeshInstancing*> m_meshInstancingMap;
 
-    std::vector<Font> m_fontList;
+    // ポインターにしないとデバイスロストを扱う機能が機能しなくなる
+    std::vector<Font*> m_fontList;
     Sprite m_sprite;
 
     //---------------------------------------------------------------
