@@ -1,0 +1,154 @@
+Date : 2025-10-23 22:52:23
+Directory : c:\Users\bibindon\source\repos\bibindon\RedfortressRender
+Total : 117 files,  13091 codes, 1610 comments, 3839 blanks, all 18540 lines
+
+Languages
++----------+------------+------------+------------+------------+------------+
+| language | files      | code       | comment    | blank      | total      |
++----------+------------+------------+------------+------------+------------+
+| C++      |         66 |      7,167 |        787 |      2,435 |     10,389 |
+| HLSL     |         46 |      4,896 |        823 |      1,397 |      7,116 |
+| XML      |          4 |      1,007 |          0 |          6 |      1,013 |
+| Markdown |          1 |         21 |          0 |          1 |         22 |
++----------+------------+------------+------------+------------+------------+
+
+Directories
++------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                       | files      | code       | comment    | blank      | total      |
++------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                          |        117 |     13,091 |      1,610 |      3,839 |     18,540 |
+| . (Files)                                                                                                  |          1 |         21 |          0 |          1 |         22 |
+| GrassLandSample                                                                                            |          1 |        129 |          0 |          6 |        135 |
+| Render                                                                                                     |         84 |      9,395 |      1,119 |      2,973 |     13,487 |
+| Render (Files)                                                                                             |         63 |      7,109 |        744 |      2,330 |     10,183 |
+| Render\shader                                                                                              |         21 |      2,286 |        375 |        643 |      3,304 |
+| Sample                                                                                                     |         27 |      3,356 |        483 |        848 |      4,687 |
+| Sample (Files)                                                                                             |          3 |        784 |         35 |        103 |        922 |
+| Sample\res                                                                                                 |         24 |      2,572 |        448 |        745 |      3,765 |
+| Sample\res\shader                                                                                          |         24 |      2,572 |        448 |        745 |      3,765 |
+| UnitTest1                                                                                                  |          4 |        190 |          8 |         11 |        209 |
++------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++------------------------------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| filename                                                                                                   | language | code       | comment    | blank      | total      |
++------------------------------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\GrassLandSample\GrassLandSample.vcxproj          | XML      |        129 |          0 |          6 |        135 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\README.md                                        | Markdown |         21 |          0 |          1 |         22 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\AnimController.cpp                        | C++      |         76 |         14 |         13 |        103 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\AnimController.h                          | C++      |         33 |          1 |          9 |         43 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\AnimMesh.cpp                              | C++      |        219 |         12 |         68 |        299 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\AnimMesh.h                                | C++      |         53 |          2 |         23 |         78 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\AnimMeshAlloc.cpp                         | C++      |        131 |          1 |         35 |        167 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\AnimMeshAlloc.h                           | C++      |         35 |          0 |         14 |         49 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\Camera.cpp                                | C++      |        111 |          3 |         23 |        137 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\Camera.h                                  | C++      |         43 |          0 |         19 |         62 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\Common.cpp                                | C++      |        135 |          0 |         36 |        171 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\Common.h                                  | C++      |        107 |          0 |         31 |        138 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\Font.cpp                                  | C++      |        129 |          8 |         44 |        181 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\Font.h                                    | C++      |         45 |         14 |         17 |         76 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\Light.cpp                                 | C++      |         51 |          0 |         17 |         68 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\Light.h                                   | C++      |         32 |          3 |         17 |         52 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\Mesh.cpp                                  | C++      |        247 |        166 |         78 |        491 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\Mesh.h                                    | C++      |         54 |          8 |         20 |         82 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\MeshHierarchy.cpp                         | C++      |          1 |          0 |          1 |          2 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\MeshHierarchy.h                           | C++      |          7 |          5 |          5 |         17 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\MeshInstancing.cpp                        | C++      |        170 |         17 |         65 |        252 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\MeshInstancing.h                          | C++      |         36 |          4 |         28 |         68 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\MeshMix.cpp                               | C++      |        308 |         88 |        105 |        501 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\MeshMix.h                                 | C++      |         91 |        115 |         76 |        282 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\MeshNormalMapping.cpp                     | C++      |        178 |         13 |         55 |        246 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\MeshNormalMapping.h                       | C++      |         33 |          4 |         26 |         63 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\MeshPOM.cpp                               | C++      |        149 |          3 |         44 |        196 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\MeshPOM.h                                 | C++      |         32 |          5 |         24 |         61 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\MeshPointLight.cpp                        | C++      |        155 |          7 |         53 |        215 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\MeshPointLight.h                          | C++      |         37 |          3 |         28 |         68 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\MeshSSS.cpp                               | C++      |        323 |         41 |         98 |        462 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\MeshSSS.h                                 | C++      |         57 |          9 |         23 |         89 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\MeshSSSLike.cpp                           | C++      |        137 |          2 |         49 |        188 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\MeshSSSLike.h                             | C++      |         30 |          4 |         22 |         56 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\MeshSmooth.cpp                            | C++      |        137 |          2 |         49 |        188 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\MeshSmooth.h                              | C++      |         30 |          3 |         23 |         56 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\PostEffectBloom.cpp                       | C++      |        176 |         15 |         46 |        237 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\PostEffectBloom.h                         | C++      |         41 |          7 |         20 |         68 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\PostEffectEnd.cpp                         | C++      |         74 |          4 |         22 |        100 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\PostEffectEnd.h                           | C++      |         27 |          0 |         16 |         43 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\PostEffectGauss.cpp                       | C++      |        115 |          1 |         31 |        147 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\PostEffectGauss.h                         | C++      |         30 |          2 |         19 |         51 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\PostEffectSSAO.cpp                        | C++      |        157 |         13 |         48 |        218 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\PostEffectSSAO.h                          | C++      |         32 |          0 |         19 |         51 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\PostEffectSaturate.cpp                    | C++      |        107 |          1 |         31 |        139 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\PostEffectSaturate.h                      | C++      |         33 |          0 |         20 |         53 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\PostEffectStarBurst.cpp                   | C++      |        209 |         10 |         49 |        268 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\PostEffectStarBurst.h                     | C++      |         44 |          7 |         21 |         72 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\PostEffectZShadow.cpp                     | C++      |        335 |         10 |        122 |        467 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\PostEffectZShadow.h                       | C++      |         42 |          2 |         30 |         74 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\PtrManager.cpp                            | C++      |         94 |          0 |         25 |        119 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\PtrManager.h                              | C++      |         57 |          5 |         33 |         95 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\Render.cpp                                | C++      |        605 |         50 |        164 |        819 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\Render.h                                  | C++      |        174 |         24 |         70 |        268 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\Render.vcxproj                            | XML      |        415 |          0 |          0 |        415 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\SkinAnimMesh.cpp                          | C++      |        249 |          2 |         66 |        317 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\SkinAnimMesh.h                            | C++      |         46 |          0 |         21 |         67 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\SkinAnimMeshAlloc.cpp                     | C++      |        163 |          6 |         52 |        221 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\SkinAnimMeshAlloc.h                       | C++      |         48 |          0 |         18 |         66 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\Sprite.cpp                                | C++      |         72 |          8 |         25 |        105 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\Sprite.h                                  | C++      |         30 |          9 |         16 |         55 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\Util.cpp                                  | C++      |         36 |          0 |         13 |         49 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\Util.h                                    | C++      |         21 |          3 |         11 |         35 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\WindowManager.cpp                         | C++      |        229 |          8 |         63 |        300 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\WindowManager.h                           | C++      |         36 |          0 |         21 |         57 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\shader\AnimMeshShader.fx                  | HLSL     |         53 |         21 |         20 |         94 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\shader\Common.fx                          | HLSL     |          5 |          0 |          2 |          7 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\shader\GBuffer.fx                         | HLSL     |         51 |          5 |         17 |         73 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\shader\MeshInstancing.fx                  | HLSL     |         42 |          0 |          9 |         51 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\shader\MeshMix.fx                         | HLSL     |        398 |         98 |        134 |        630 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\shader\MeshNormalMapping.fx               | HLSL     |         76 |          5 |         18 |         99 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\shader\MeshPOM.fx                         | HLSL     |        156 |         37 |         52 |        245 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\shader\MeshPointLight.fx                  | HLSL     |         77 |          7 |         19 |        103 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\shader\MeshSSS.fx                         | HLSL     |        175 |         12 |         44 |        231 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\shader\MeshSSSLike.fx                     | HLSL     |         86 |          8 |         19 |        113 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\shader\MeshShader.fx                      | HLSL     |        105 |         59 |         42 |        206 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\shader\MeshSmooth.fx                      | HLSL     |         61 |          6 |         15 |         82 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\shader\PostEffectBloom.fx                 | HLSL     |         91 |         14 |         23 |        128 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\shader\PostEffectEnd.fx                   | HLSL     |         39 |          2 |          5 |         46 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\shader\PostEffectGaussian.fx              | HLSL     |         71 |         12 |         20 |        103 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\shader\PostEffectSSAO.fx                  | HLSL     |        332 |         19 |         62 |        413 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\shader\PostEffectSaturate.fx              | HLSL     |         38 |          5 |         13 |         56 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\shader\PostEffectStarBurst.fx             | HLSL     |        112 |         13 |         26 |        151 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\shader\PostEffectZShadow.fx               | HLSL     |        195 |         47 |         68 |        310 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\shader\SkinAnimMeshShader.fx              | HLSL     |         84 |          5 |         26 |        115 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Render\shader\simple.fx                          | HLSL     |         39 |          0 |          9 |         48 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\Sample.vcxproj                            | XML      |        290 |          0 |          0 |        290 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\main.cpp                                  | C++      |        456 |         35 |         94 |        585 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\AnimMeshShader.fx              | HLSL     |         53 |         21 |         20 |         94 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\AnimationMeshShader.fx         | HLSL     |         53 |         21 |         20 |         94 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\Common.fx                      | HLSL     |          5 |          0 |          2 |          7 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\FilterSaturate.fx              | HLSL     |         38 |          5 |         14 |         57 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\GBuffer.fx                     | HLSL     |         51 |          5 |         17 |         73 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\MeshInstancing.fx              | HLSL     |         42 |          0 |          9 |         51 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\MeshMix.fx                     | HLSL     |        398 |         98 |        134 |        630 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\MeshNormalMapping.fx           | HLSL     |         76 |          5 |         18 |         99 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\MeshPOM.fx                     | HLSL     |        156 |         37 |         52 |        245 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\MeshPointLight.fx              | HLSL     |         77 |          7 |         19 |        103 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\MeshSSS.fx                     | HLSL     |        175 |         12 |         44 |        231 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\MeshSSSLike.fx                 | HLSL     |         86 |          8 |         19 |        113 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\MeshShader.fx                  | HLSL     |        105 |         59 |         42 |        206 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\MeshSmooth.fx                  | HLSL     |         61 |          6 |         15 |         82 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\PostEffectBloom.fx             | HLSL     |         91 |         14 |         23 |        128 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\PostEffectDepthBufferShadow.fx | HLSL     |        195 |         47 |         68 |        310 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\PostEffectEnd.fx               | HLSL     |         39 |          2 |          5 |         46 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\PostEffectGaussian.fx          | HLSL     |         71 |         12 |         20 |        103 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\PostEffectSSAO.fx              | HLSL     |        332 |         19 |         62 |        413 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\PostEffectSaturate.fx          | HLSL     |         38 |          5 |         13 |         56 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\PostEffectStarBurst.fx         | HLSL     |        112 |         13 |         26 |        151 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\PostEffectZShadow.fx           | HLSL     |        195 |         47 |         68 |        310 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\SkinAnimMeshShader.fx          | HLSL     |         84 |          5 |         26 |        115 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\res\shader\simple.fx                      | HLSL     |         39 |          0 |          9 |         48 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\Sample\simple.fx                                 | HLSL     |         38 |          0 |          9 |         47 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\UnitTest1\UnitTest1.cpp                          | C++      |         13 |          0 |          4 |         17 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\UnitTest1\UnitTest1.vcxproj                      | XML      |        173 |          0 |          0 |        173 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\UnitTest1\pch.cpp                                | C++      |          1 |          2 |          3 |          6 |
+| c:\Users\bibindon\source\repos\bibindon\RedfortressRender\UnitTest1\pch.h                                  | C++      |          3 |          6 |          4 |         13 |
+| Total                                                                                                      |          |     13,091 |      1,610 |      3,839 |     18,540 |
++------------------------------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
