@@ -107,8 +107,8 @@ void WindowManager::ChangeWindowMode()
         d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
         d3dpp.BackBufferFormat = D3DFMT_A8R8G8B8;
         d3dpp.BackBufferCount = 1;
-        d3dpp.BackBufferWidth = 1600;
-        d3dpp.BackBufferHeight = 900;
+        d3dpp.BackBufferWidth = Common::ScreenW();
+        d3dpp.BackBufferHeight = Common::ScreenH();
         d3dpp.MultiSampleType = D3DMULTISAMPLE_4_SAMPLES;
 
         // TODO 要確認
@@ -131,8 +131,8 @@ void WindowManager::ChangeWindowMode()
         // 物理座標（タスクバー含む全面）
         RECT r = mi.rcMonitor;
 
-        const int x_ = (r.right / 2) - (1600 / 2);
-        const int y_ = (r.bottom / 2) - (900 / 2);
+        const int x_ = (r.right / 2) - (Common::ScreenW() / 2);
+        const int y_ = (r.bottom / 2) - (Common::ScreenH() / 2);
 
         SetWindowLongPtr(m_hWnd, GWL_STYLE, WS_POPUP);
         SetWindowPos(m_hWnd,
@@ -152,8 +152,8 @@ void WindowManager::ChangeWindowMode()
         d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
         d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
         d3dpp.BackBufferCount = 1;
-        d3dpp.BackBufferWidth = 1600;
-        d3dpp.BackBufferHeight = 900;
+        d3dpp.BackBufferWidth = Common::ScreenW();
+        d3dpp.BackBufferHeight = Common::ScreenH();
         d3dpp.MultiSampleType = D3DMULTISAMPLE_4_SAMPLES;
 
         // TODO 要確認
@@ -189,8 +189,8 @@ void WindowManager::ChangeWindowMode()
         d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
         d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
         d3dpp.BackBufferCount = 1;
-        d3dpp.BackBufferWidth = 1600;
-        d3dpp.BackBufferHeight = 900;
+        d3dpp.BackBufferWidth = Common::ScreenW();
+        d3dpp.BackBufferHeight = Common::ScreenH();
         d3dpp.MultiSampleType = D3DMULTISAMPLE_4_SAMPLES;
 
         // TODO 要確認

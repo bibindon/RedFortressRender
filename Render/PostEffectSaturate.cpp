@@ -19,8 +19,8 @@ void PostEffectSaturate::Initialize()
     assert(SUCCEEDED(hResult));
 
     D3DXCreateTexture(Common::D3DDevice(),
-                      1600,
-                      900,
+                      Common::ScreenW(),
+                      Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
                       D3DFMT_A8R8G8B8,

@@ -106,7 +106,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
         {
             // Sleep入れなくてよい。
             // ここでSleepをいれているのは速すぎて疲れるから。
-            Sleep(16);
+            //Sleep(16);
 
             {
                 std::wstring text;

@@ -4,6 +4,8 @@
 #include <cmath>
 #include <string>
 
+#include "Common.h"
+
 const D3DXVECTOR3 NSRender::Camera::UPWARD (0.0f, 1.0f, 0.0f);
 // m_eyePosに何をセットしても視点は変わらない。視点はm_radianによって決まる。
 D3DXVECTOR3 NSRender::Camera::m_eyePos(0.f, 4.f, -6.f);
@@ -91,10 +93,10 @@ POINT NSRender::Camera::GetScreenPos(const D3DXVECTOR3& world)
     const D3DXMATRIX view_matrix { GetViewMatrix() };
     const D3DXMATRIX projection_matrix { GetProjMatrix() };
     static const D3DXMATRIX viewport_matrix {
-        1600 / 2.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, -900 / 2.0f, 0.0f, 0.0f,
+        Common::ScreenW() / 2.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, -Common::ScreenH() / 2.0f, 0.0f, 0.0f,
         0.0f, 0.0f, 1.0f, 0.0f,
-        1600 / 2.0f, 900 / 2.0f, 0.0f, 1.0f };
+        Common::ScreenW() / 2.0f, Common::ScreenH() / 2.0f, 0.0f, 1.0f };
     D3DXMATRIX matrix { };
     D3DXMatrixTranslation(&matrix, world.x, world.y, world.z);
     matrix = matrix * view_matrix * projection_matrix * viewport_matrix;

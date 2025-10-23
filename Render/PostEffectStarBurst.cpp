@@ -19,8 +19,8 @@ void PostEffectStarBurst::Initialize()
     assert(SUCCEEDED(hResult));
 
     D3DXCreateTexture(Common::D3DDevice(),
-                      1600,
-                      900,
+                      Common::ScreenW(),
+                      Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
                       D3DFMT_A8R8G8B8,
@@ -28,8 +28,8 @@ void PostEffectStarBurst::Initialize()
                       &m_texPostEffectBack1);
 
     D3DXCreateTexture(Common::D3DDevice(),
-                      1600,
-                      900,
+                      Common::ScreenW(),
+                      Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
                       D3DFMT_A8R8G8B8,
@@ -38,8 +38,8 @@ void PostEffectStarBurst::Initialize()
 
     // 0°（水平）
     D3DXCreateTexture(Common::D3DDevice(),
-                      1600,
-                      900,
+                      Common::ScreenW(),
+                      Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
                       D3DFMT_A8R8G8B8,
@@ -47,8 +47,8 @@ void PostEffectStarBurst::Initialize()
                       &m_texBlurH);
 
     D3DXCreateTexture(Common::D3DDevice(),
-                      1600,
-                      900,
+                      Common::ScreenW(),
+                      Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
                       D3DFMT_A8R8G8B8,
@@ -57,8 +57,8 @@ void PostEffectStarBurst::Initialize()
 
     // 60°
     D3DXCreateTexture(Common::D3DDevice(),
-                      1600,
-                      900,
+                      Common::ScreenW(),
+                      Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
                       D3DFMT_A8R8G8B8,
@@ -66,8 +66,8 @@ void PostEffectStarBurst::Initialize()
                       &m_texBlurV);
 
     D3DXCreateTexture(Common::D3DDevice(),
-                      1600,
-                      900,
+                      Common::ScreenW(),
+                      Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
                       D3DFMT_A8R8G8B8,
@@ -76,8 +76,8 @@ void PostEffectStarBurst::Initialize()
 
     // 120°（★追加）
     D3DXCreateTexture(Common::D3DDevice(),
-                      1600,
-                      900,
+                      Common::ScreenW(),
+                      Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
                       D3DFMT_A8R8G8B8,
@@ -85,8 +85,8 @@ void PostEffectStarBurst::Initialize()
                       &m_texBlurD);
 
     D3DXCreateTexture(Common::D3DDevice(),
-                      1600,
-                      900,
+                      Common::ScreenW(),
+                      Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
                       D3DFMT_A8R8G8B8,

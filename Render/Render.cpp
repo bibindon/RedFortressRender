@@ -43,8 +43,8 @@ void Render::Initialize(HWND hWnd)
     m_sprite.Initialize();
 
     hResult = D3DXCreateTexture(Common::D3DDevice(),
-                                1600,
-                                900,
+                                Common::ScreenW(),
+                                Common::ScreenH(),
                                 1,
                                 D3DUSAGE_RENDERTARGET,
                                 D3DFMT_A8R8G8B8,
@@ -53,8 +53,8 @@ void Render::Initialize(HWND hWnd)
     assert(hResult == S_OK);
 
     hResult = D3DXCreateTexture(Common::D3DDevice(),
-                                1600,
-                                900,
+                                Common::ScreenW(),
+                                Common::ScreenH(),
                                 1,
                                 D3DUSAGE_RENDERTARGET,
                                 D3DFMT_A8R8G8B8,
@@ -66,8 +66,8 @@ void Render::Initialize(HWND hWnd)
 
     // Z画像（A8R8G8B8: Aに線形Z、RGBは可視化用に使える）
     hr = D3DXCreateTexture(Common::D3DDevice(),
-                           1600,
-                           900,
+                           Common::ScreenW(),
+                           Common::ScreenH(),
                            1,
                            D3DUSAGE_RENDERTARGET,
                            D3DFMT_A16B16G16R16F,
@@ -77,8 +77,8 @@ void Render::Initialize(HWND hWnd)
 
     // World座標（高精度推奨）
     hr = D3DXCreateTexture(Common::D3DDevice(),
-                           1600,
-                           900,
+                           Common::ScreenW(),
+                           Common::ScreenH(),
                            1,
                            D3DUSAGE_RENDERTARGET,
                            D3DFMT_A16B16G16R16F,

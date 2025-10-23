@@ -234,8 +234,8 @@ void MeshSSS::Initialize()
     SAFE_RELEASE(materialBuffer);
 
     HRESULT hr = D3DXCreateTexture(Common::D3DDevice(),
-                                   1600,
-                                   900,
+                                   Common::ScreenW(),
+                                   Common::ScreenH(),
                                    1,
                                    D3DUSAGE_RENDERTARGET,
                                    D3DFMT_R32F,
@@ -245,8 +245,8 @@ void MeshSSS::Initialize()
     assert(SUCCEEDED(hr));
 
     hr = D3DXCreateTexture(Common::D3DDevice(),
-                           1600,
-                           900,
+                           Common::ScreenW(),
+                           Common::ScreenH(),
                            1,
                            D3DUSAGE_RENDERTARGET,
                            D3DFMT_R32F,
@@ -287,7 +287,7 @@ void MeshSSS::Render()
     D3DXMATRIX matWorld;
     D3DXMatrixTranslation(&matWorld, 0.0f, 0.0f, 0.0f);
 
-    D3DXVECTOR2 invSize(1.0f / 1600, 1.0f / 900);
+    D3DXVECTOR2 invSize(1.0f / Common::ScreenW(), 1.0f / Common::ScreenH());
 
     LPDIRECT3DSURFACE9 backBuffer = NULL;
     LPDIRECT3DSURFACE9 depthSurfaceScene = NULL;
@@ -334,7 +334,7 @@ void MeshSSS::Render()
     Common::D3DDevice()->EndScene();
 
     // 共有のオフスクリーン用深度ステンシルを取得
-    LPDIRECT3DSURFACE9 dsOffscreen = AcquireOffscreenDepth(1600, 900);
+    LPDIRECT3DSURFACE9 dsOffscreen = AcquireOffscreenDepth(Common::ScreenW(), Common::ScreenH());
 
     // --------------------------------------------------------
     // Pass 2 : Fog Front Depth
