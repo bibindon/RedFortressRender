@@ -1,5 +1,6 @@
 ﻿#include "Light.h"
 #include "Util.h"
+#include <deque>
 
 namespace NSRender
 {
@@ -7,7 +8,7 @@ namespace NSRender
 D3DXVECTOR4 Light::m_lightDir { 1.0f, 1.0f, 0.0f, 0.0f };
 float Light::m_Brightness = 1.0f;
 
-std::vector<PointLightInfo> Light::m_pointLightList;
+std::deque<PointLightInfo> Light::m_pointLightList;
 D3DXCOLOR Light::m_color = D3DXCOLOR(1.f, 1.f, 1.f, 1.f);
 
 D3DXVECTOR4 Light::GetLightDir()
@@ -54,11 +55,11 @@ void Light::AddPointLight(const D3DXVECTOR3& pos,
 
     if (m_pointLightList.size() > 10)
     {
-        m_pointLightList.erase(m_pointLightList.end());
+        m_pointLightList.pop_front();
     }
 }
 
-std::vector<PointLightInfo> Light::GetPointLightList()
+std::deque<PointLightInfo> Light::GetPointLightList()
 {
     return m_pointLightList;
 }
