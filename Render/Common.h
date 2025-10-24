@@ -54,6 +54,9 @@ public:
     static POINT ScaledPoint(const POINT& pt);
     static POINT ScaledPoint(const int x, const int y);
 
+    // ‰ğ‘œ“x‚ª1920x900‚Ì‚Æ‚«‚ÉA1.2, 1.0‚ª•Ô‚Á‚Ä‚­‚éA‚»‚ñ‚ÈŠÖ”
+    static D3DXVECTOR2 ScaledSize();
+
 private:
 
     static LPDIRECT3D9 m_pD3D;

@@ -104,6 +104,13 @@ POINT Common::ScaledPoint(const int x, const int y)
     return pt2;
 }
 
+D3DXVECTOR2 Common::ScaledSize()
+{
+    float scaleW = (float)m_screenW / BASE_W;
+    float scaleH = (float)m_screenH / BASE_H;
+    return D3DXVECTOR2(scaleW, scaleH);
+}
+
 }
 
 

@@ -62,7 +62,19 @@ void Sprite::RemoveImage(const std::wstring& filename)
 
 void Sprite::Draw()
 {
+    D3DXMATRIX mScale;
+    D3DXMatrixScaling(&mScale, Common::ScaledSize().x, Common::ScaledSize().y, 1.0f);
+    m_pSprite->SetTransform(&mScale);
+
     m_pSprite->Begin(D3DXSPRITE_ALPHABLEND);
+
+    // Beginの後に実行すること
+    Common::D3DDevice()->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+    Common::D3DDevice()->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+
+//    Common::D3DDevice()->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR); // ミップ有りのとき
+    Common::D3DDevice()->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
+
 
     for (auto& elem : m_spriteInfoList)
     {
