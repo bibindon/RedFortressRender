@@ -414,79 +414,83 @@ float FogAmountExp2(float distance, float density)
     return 1 - exp(-x * x);
 }
 
-void PixelShaderPointLight(in float4 inPosition     : POSITION,
-                           in float3 inPosWorld     : TEXCOORD0,
-                           in float3 inNormalWorld  : TEXCOORD1,
-                           in float2 inTexCoord     : TEXCOORD2,
-                           in float3 inTangent     : TEXCOORD3,
-                           in float3 inBinorm      : TEXCOORD4,
-                           in float3 invViewWS     : TEXCOORD5,
-                           in float3 invViewTS     : TEXCOORD7,
-                           in float2 invParallaxOffsetTS  : TEXCOORD8,
-       
-                           out float4 outColor      : COLOR)
+void PixelShaderPointLight(in  float4 inPosition            : POSITION,
+                           in  float3 inPosWorld            : TEXCOORD0,
+                           in  float3 inNormalWorld         : TEXCOORD1,
+                           in  float2 inTexCoord            : TEXCOORD2,
+                           in  float3 inTangent             : TEXCOORD3,
+                           in  float3 inBinorm              : TEXCOORD4,
+                           in  float3 invViewWS             : TEXCOORD5,
+                           in  float3 invViewTS             : TEXCOORD7,
+                           in  float2 invParallaxOffsetTS   : TEXCOORD8,
+                           out float4 outColor              : COLOR)
 {
-    outColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float3 normalWS = normalize(inNormalWorld);
+    float3 cameraDirWS = normalize(g_cameraPos.xyz - inPosWorld);
 
-    float3 normal = normalize(inNormalWorld);
-    float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
-
-    // 法線マッピングでNdotLを調節
-    float NdotL = 0.f;
-    float NdotH = 0.f;
-
+    // POMでUV更新（必要なときだけ）
+    float2 uv = inTexCoord;
     if (g_bPOM)
     {
-        inTexCoord = CalcUVCoordWithPOM(normal,
-                                        inTexCoord,
-                                        invViewWS,
-                                        invViewTS,
-                                        invParallaxOffsetTS);
+        uv = CalcUVCoordWithPOM(normalWS,
+                                inTexCoord,
+                                invViewWS,
+                                invViewTS,
+                                invParallaxOffsetTS );
     }
 
-    float3 normalInTangent = float3(0, 0, 0);
-    normalInTangent.x = tex2D(g_normalMapSampler, inTexCoord).r * 2.0 - 1.0;
-    normalInTangent.y = tex2D(g_normalMapSampler, inTexCoord).g * 2.0 - 1.0;
-    normalInTangent.z = tex2D(g_normalMapSampler, inTexCoord).b * 2.0 - 1.0;
-    normalInTangent.x *= -1;
-    normalInTangent = normalize(normalInTangent);
+    // 法線マップ → 接空間 → ワールド
+    float3 normalTS;
+    float4 nTex = tex2D(g_normalMapSampler, uv);
+    normalTS.x = nTex.r * 2.0 - 1.0;
+    normalTS.y = nTex.g * 2.0 - 1.0;
+    normalTS.z = nTex.b * 2.0 - 1.0;
+    normalTS.x *= -1.0;
+    normalTS = normalize(normalTS);
 
-    // TBN（Tangent, Binormal, Normal）でワールドへ
-    float3x3 tangentToWorld = float3x3(-inTangent, -inBinorm, normal);
-    float3 normalInWorld = normalize(mul(normalInTangent, tangentToWorld));
+    float3x3 tbn = float3x3(-inTangent, -inBinorm, normalWS);
+    float3 N = normalize(mul(normalTS, tbn));
 
-    // TODO ポイントライトを追加すると明るさがありえないほど加算されていく
+    float3 accum = 0.0;
+
+    float diffSum = 0.f;
+
     for (int i = 0; i < 16; ++i)
     {
-        if (g_pointLightBrightness[i] == 0.0f)
+        if (g_pointLightBrightness[i] <= 0.0f)
         {
             continue;
         }
 
-        float3 lightDir = normalize(g_pointLightPos[i] - inPosWorld);
-        float NdotL = saturate(dot(normalInWorld, lightDir));
+        float3 Lvec   = g_pointLightPos[i] - inPosWorld;
+        float  dist   = length(Lvec);
+        float3 L      = Lvec / max(dist, 1e-6);
 
-        float3 halfVector = normalize(lightDir + cameraDir);
-        float NdotH = saturate(dot(normalInWorld, halfVector));
+        float  NdotL  = saturate(dot(N, L));
+        float3 H      = normalize(L + cameraDirWS);
+        float  NdotH  = saturate(dot(N, H));
 
-        float specularBrightness = (pow(NdotH, g_specularPower) * g_specularIntensity);
-        specularBrightness *= g_pointLightBrightness[i];
+        // 減衰：簡易 1/dist （元の式を尊重）
+        float  atten  = saturate(1.0 / max(dist, 1e-6));
 
-        float distance_ = distance(g_pointLightPos[i], inPosWorld);
-        float distanceInverse = 1 / distance_;
-        distanceInverse = saturate(distanceInverse);
-        float brightness = distanceInverse;
-        brightness *= g_pointLightBrightness[i];
-        brightness *= NdotL;
+        float  diff   = g_pointLightBrightness[i] * atten * NdotL;
 
-        // もし明るくした結果が、ライトの色より明るくなってしまうなら元に戻す。
-        // TODO このやり方だと、異なる色、異なる明るさのポイントライトが複数あった時に、どちらかしか採用されない気がする。
-        float4 work = outColor;
-        work += float4(g_pointLightColor[i], brightness);
-        work += float4(g_pointLightColor[i], specularBrightness);
+        float  spec   = 0.0f;
+        if (g_specularIntensity > 0.0f)
+        {
+            spec = pow(NdotH, g_specularPower) * g_specularIntensity
+                 * g_pointLightBrightness[i] * atten;
+        }
 
-        outColor = work;
+        // ★ RGB に「色 × 強度」を加算
+        accum += g_pointLightColor[i] * diff;
+        accum += g_pointLightColor[i] * spec;
+
+        diffSum += diff;
     }
+
+    // HDR蓄積：ここでクランプしない
+    outColor = float4(accum, saturate(diffSum));
 }
 
 float2 CalcUVCoordWithPOM(float3 inNormalizedNormalWS,

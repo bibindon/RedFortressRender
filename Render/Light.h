@@ -4,6 +4,7 @@
 #include <d3dx9.h>
 
 #include <vector>
+#include <deque>
 
 namespace NSRender
 {
@@ -37,7 +38,7 @@ public:
                               const D3DXCOLOR& color,
                               const float brightness);
 
-    static std::vector<PointLightInfo> GetPointLightList();
+    static std::deque<PointLightInfo> GetPointLightList();
 
 private:
 
@@ -46,7 +47,7 @@ private:
     static float m_Brightness;
     static D3DXCOLOR m_color;
 
-    static std::vector<PointLightInfo> m_pointLightList;
+    static std::deque<PointLightInfo> m_pointLightList;
 };
 }
 
