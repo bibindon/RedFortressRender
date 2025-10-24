@@ -41,6 +41,7 @@
 #include "WindowManager.h"
 #include "PostEffectZShadow.h"
 #include "GBuffer.h"
+#include "PostEffectFog.h"
 
 namespace NSRender
 {
@@ -230,6 +231,9 @@ private:
 
     // SSAO用
     PostEffectSSAO m_postEffectSSAO;
+
+    // 霧
+    PostEffectFog m_postEffectFog;
 
     // 彩度フィルター
     PostEffectSaturate m_postEffectSaturate;

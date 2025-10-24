@@ -146,9 +146,9 @@ void GBuffer::Finalize()
 
 void GBuffer::OnDeviceLost()
 {
+    m_fxGBuffer->OnLostDevice();
     SAFE_RELEASE(m_texRenderTargetZ);
     SAFE_RELEASE(m_texRenderTargetPos);
-    m_fxGBuffer->OnLostDevice();
 }
 
 void GBuffer::OnDeviceReset()

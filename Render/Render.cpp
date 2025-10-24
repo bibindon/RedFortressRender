@@ -52,6 +52,9 @@ void Render::Initialize(HWND hWnd)
     // SSAO
     m_postEffectSSAO.Initialize();
 
+    // 霧
+    m_postEffectFog.Initialize();
+
     // 彩度フィルター
     m_postEffectSaturate.Initialize();
 
@@ -109,6 +112,9 @@ void Render::Draw()
 
     // SSAO
     pTempTexture = m_postEffectSSAO.Draw(pTempTexture, pTexTempZ, pTexTempPos);
+
+    // 霧
+    pTempTexture = m_postEffectFog.Draw(pTempTexture, pTexTempZ, pTexTempPos);
 
     // 彩度変更
     pTempTexture = m_postEffectSaturate.Draw(pTempTexture);
