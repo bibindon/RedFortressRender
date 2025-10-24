@@ -40,6 +40,7 @@
 
 #include "WindowManager.h"
 #include "PostEffectZShadow.h"
+#include "GBuffer.h"
 
 namespace NSRender
 {
@@ -221,7 +222,8 @@ private:
 
     void DrawPass1();
 
-    void DrawPassGBuffer();
+    // 各ピクセルの深度とワールド座標を表した画像を生成
+    GBuffer m_GBuffer;
 
     // 深度バッファシャドウ
     PostEffectZShadow m_postEffectZShadow;
@@ -249,10 +251,10 @@ private:
     LPDIRECT3DTEXTURE9 m_pRenderTarget1 = NULL;
     LPDIRECT3DTEXTURE9 m_pRenderTarget2 = NULL;
 
-    // G-Buffer用
-    LPDIRECT3DTEXTURE9 m_texRenderTargetZ = NULL;
-    LPDIRECT3DTEXTURE9  m_texRenderTargetPos = NULL;
-    LPD3DXEFFECT m_fxGBuffer;
+//    // G-Buffer用
+//    LPDIRECT3DTEXTURE9 m_texRenderTargetZ = NULL;
+//    LPDIRECT3DTEXTURE9  m_texRenderTargetPos = NULL;
+//    LPD3DXEFFECT m_fxGBuffer;
 
     //-----------------------------------------------------------------
     // FPS表示
