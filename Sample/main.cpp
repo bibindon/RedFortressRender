@@ -446,7 +446,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             if (control)
             {
                 auto pos = g_Render.GetLookAtPos();
-                g_Render.AddPointLight(pos, 1.f, D3DXCOLOR(1.0f, 0.85f, 0.4f, 1.0f));
+                g_Render.AddPointLight(pos, 1.f, D3DXCOLOR(1.0f, 0.35f, 0.1f, 1.0f));
             }
             else
             {

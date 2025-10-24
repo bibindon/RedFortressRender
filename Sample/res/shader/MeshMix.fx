@@ -484,60 +484,11 @@ void PixelShaderPointLight(in float4 inPosition     : POSITION,
         work += float4(g_pointLightColor[i], brightness);
         work += float4(g_pointLightColor[i], specularBrightness);
 
-        if (work.r > g_pointLightColor[i].r)
-        {
-            work.r = g_pointLightColor[i].r;
-        }
-
-        if (work.g > g_pointLightColor[i].g)
-        {
-            work.g = g_pointLightColor[i].g;
-        }
-
-        if (work.b > g_pointLightColor[i].b)
-        {
-            work.b = g_pointLightColor[i].b;
-        }
-
         outColor = work;
     }
 
-    outColor = saturate(outColor);
+    outColor = (outColor);
 }
-
-/*
-void PixelShaderFog(in float4 inPosition     : POSITION,
-                    in float3 inPosWorld     : TEXCOORD0,
-                    in float3 inNormalWorld  : TEXCOORD1,
-                    in float2 inTexCoord      : TEXCOORD2,
-
-                    out float4 outColor      : COLOR)
-{
-    outColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
-
-    //--------------------------------------------------------
-    // 距離フォグ
-    //--------------------------------------------------------
-    float cameraDistance = distance(g_cameraPos.xyz, inPosWorld);
-    float fogDensity = FogAmountExp(cameraDistance, g_fogDistanceDensity);
-
-    outColor += float4(g_fogDistanceColor.rgb, fogDensity);
-
-    //--------------------------------------------------------
-    // 高さフォグ
-    //--------------------------------------------------------
-    // 高さフォグは高さだけでなく距離も影響する必要がある。
-    // まず距離を見て、そのあと、高さによって薄くする
-    float fogDensityHeight = FogAmountExp(cameraDistance, g_fogDistanceDensity);
-    
-    // 高度が高くなるほど低くなる数値
-    float fogHeightDensity = FogAmountExp(-inPosWorld.y, g_fogHeightDensity);
-
-    fogDensityHeight *= fogHeightDensity;
-
-    outColor += float4(g_fogHeightColor.rgb, fogDensityHeight);
-}
-*/
 
 float2 CalcUVCoordWithPOM(float3 inNormalizedNormalWS,
                           float2 inTexCoord,
@@ -626,16 +577,5 @@ technique Technique1
         PixelShader = compile ps_3_0 PixelShaderPointLight();
     }
 
-/*
-    pass PassFog
-    {
-        AlphaBlendEnable = TRUE;
-        SrcBlend = SRCALPHA;
-        DestBlend = INVSRCALPHA;
-
-        VertexShader = compile vs_3_0 VertexShader1();
-        PixelShader = compile ps_3_0 PixelShaderFog();
-    }
-*/
 }
 

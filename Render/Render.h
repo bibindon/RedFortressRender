@@ -255,11 +255,6 @@ private:
     LPDIRECT3DTEXTURE9 m_pRenderTarget1 = NULL;
     LPDIRECT3DTEXTURE9 m_pRenderTarget2 = NULL;
 
-//    // G-Buffer用
-//    LPDIRECT3DTEXTURE9 m_texRenderTargetZ = NULL;
-//    LPDIRECT3DTEXTURE9  m_texRenderTargetPos = NULL;
-//    LPD3DXEFFECT m_fxGBuffer;
-
     //-----------------------------------------------------------------
     // FPS表示
     //-----------------------------------------------------------------

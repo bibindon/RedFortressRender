@@ -67,7 +67,7 @@ void Render::Initialize(HWND hWnd)
     // スターバースト
     m_postEffectStarBurst.Initialize();
 
-    // 最終処理用ポストエフェクト
+    // 画面転送
     m_postEffectEnd.Initialize();
 
     Common::AddDeviceLostResource(this);
@@ -690,7 +690,8 @@ void Render::CreateTexture()
                            Common::ScreenH(),
                            1,
                            D3DUSAGE_RENDERTARGET,
-                           D3DFMT_A8R8G8B8,
+                           D3DFMT_A16B16G16R16F,
+                           //D3DFMT_A8R8G8B8,
                            D3DPOOL_DEFAULT,
                            &m_pRenderTarget1);
     assert(hr == S_OK);

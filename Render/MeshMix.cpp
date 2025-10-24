@@ -447,21 +447,6 @@ void MeshMix::Render()
     hResult = m_D3DEffect->EndPass();
     assert(hResult == S_OK);
 
-    /*
-    //--------------------------------------------------------
-    // パス3（最後である必要がある）
-    // 霧
-    //--------------------------------------------------------
-    hResult = m_D3DEffect->BeginPass(4);
-    assert(hResult == S_OK);
-
-    hResult = m_D3DMesh->DrawSubset(0);
-    assert(hResult == S_OK);
-
-    hResult = m_D3DEffect->EndPass();
-    assert(hResult == S_OK);
-    */
-
     hResult = m_D3DEffect->End();
     assert(hResult == S_OK);
 }

@@ -63,7 +63,7 @@ sampler BlurSampler60 = sampler_state
 
 // ========= パラメータ =========
 
-float g_Threshold = 0.8f; // 明部抽出のしきい値（高め＝コアだけ伸びる）
+float g_Threshold = 2.8f; // 明部抽出のしきい値（高め＝コアだけ伸びる）
 float2 g_TexelSize; // (1/width, 1/height)
 float4 g_Direction; // (cosθ, sinθ, 0, 0)
 

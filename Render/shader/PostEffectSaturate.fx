@@ -38,8 +38,6 @@ void PixelShader1(in float4 inPosition    : POSITION,
     workColor.g = average + (workColor.g - average) * g_level;
     workColor.b = average + (workColor.b - average) * g_level;
 
-    workColor = saturate(workColor);
-
     outColor = workColor;
 }
 

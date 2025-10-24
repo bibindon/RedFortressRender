@@ -41,7 +41,7 @@ sampler BlurSampler = sampler_state
 };
 
 // === パラメータ ===
-float g_Threshold = 0.5f; // 輝度しきい値
+float g_Threshold = 2.5f; // 輝度しきい値
 float2 g_TexelSize; // (1/width, 1/height) : ブラー用
 
 // === BrightPass ===
