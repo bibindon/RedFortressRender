@@ -1,4 +1,4 @@
-#include "Mesh.h"
+#include "MeshOld.h"
 
 #include <cassert>
 #include <cmath>
@@ -11,7 +11,7 @@
 namespace NSRender
 {
 
-Mesh::Mesh(const std::wstring& xFilename,
+MeshOld::MeshOld(const std::wstring& xFilename,
            const D3DXVECTOR3& position,
            const D3DXVECTOR3& rotation,
            const float scale,
@@ -25,7 +25,7 @@ Mesh::Mesh(const std::wstring& xFilename,
 }
 
 // シェーダーファイルを指定できるコンストラクタ
-Mesh::Mesh(const std::wstring& shaderName,
+MeshOld::MeshOld(const std::wstring& shaderName,
            const std::wstring& xFilename,
            const D3DXVECTOR3& position,
            const D3DXVECTOR3& rotation,
@@ -40,11 +40,11 @@ Mesh::Mesh(const std::wstring& shaderName,
 {
 }
 
-Mesh::~Mesh()
+MeshOld::~MeshOld()
 {
 }
 
-void Mesh::Initialize()
+void MeshOld::Initialize()
 {
     HRESULT hResult = E_FAIL;
 
@@ -194,27 +194,27 @@ void Mesh::Initialize()
     m_bLoaded = true;
 }
 
-void Mesh::SetPos(const D3DXVECTOR3& pos)
+void MeshOld::SetPos(const D3DXVECTOR3& pos)
 {
     m_pos = pos;
 }
 
-void Mesh::SetRotY(const float rotY)
+void MeshOld::SetRotY(const float rotY)
 {
     m_rotate.y = rotY;
 }
 
-D3DXVECTOR3 Mesh::GetPos() const
+D3DXVECTOR3 MeshOld::GetPos() const
 {
     return m_pos;
 }
 
-float Mesh::GetScale() const
+float MeshOld::GetScale() const
 {
     return m_scale;
 }
 
-void Mesh::Render()
+void MeshOld::Render()
 {
     HRESULT hResult = E_FAIL;
 
@@ -456,33 +456,33 @@ void Mesh::Render()
     assert(hResult == S_OK);
 }
 
-LPD3DXMESH Mesh::GetD3DMesh() const
+LPD3DXMESH MeshOld::GetD3DMesh() const
 {
     return m_D3DMesh;
 }
 
-void Mesh::SetWeapon(const bool arg)
+void MeshOld::SetWeapon(const bool arg)
 {
     m_bWeapon = arg;
 }
 
-float Mesh::GetRadius() const
+float MeshOld::GetRadius() const
 {
     return m_radius;
 }
 
-std::wstring Mesh::GetMeshName()
+std::wstring MeshOld::GetMeshName()
 {
     return m_meshName;
 }
 
-void Mesh::OnDeviceLost()
+void MeshOld::OnDeviceLost()
 {
     HRESULT hr = m_D3DEffect->OnLostDevice();
     assert(hr == S_OK);
 }
 
-void Mesh::OnDeviceReset()
+void MeshOld::OnDeviceReset()
 {
     HRESULT hr = m_D3DEffect->OnResetDevice();
     assert(hr == S_OK);

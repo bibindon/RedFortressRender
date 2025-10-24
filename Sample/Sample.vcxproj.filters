@@ -59,9 +59,6 @@
     <FxCompile Include="..\Render\shader\simple.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
-    <FxCompile Include="..\Render\shader\MeshShader.fx">
-      <Filter>リソース ファイル</Filter>
-    </FxCompile>
     <FxCompile Include="..\Render\shader\AnimMeshShader.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
@@ -84,6 +81,9 @@
       <Filter>リソース ファイル</Filter>
     </FxCompile>
     <FxCompile Include="..\Render\shader\PostEffectZShadow.fx">
+      <Filter>リソース ファイル</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Render\shader\MeshOld.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
   </ItemGroup>

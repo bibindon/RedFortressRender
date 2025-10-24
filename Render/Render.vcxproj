@@ -34,7 +34,7 @@
     <ClCompile Include="Common.cpp" />
     <ClCompile Include="GBuffer.cpp" />
     <ClCompile Include="Light.cpp" />
-    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="MeshOld.cpp" />
     <ClCompile Include="MeshHierarchy.cpp" />
     <ClCompile Include="MeshInstancing.cpp" />
     <ClCompile Include="MeshMix.cpp" />
@@ -69,7 +69,7 @@
     <ClInclude Include="Common.h" />
     <ClInclude Include="GBuffer.h" />
     <ClInclude Include="Light.h" />
-    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="MeshOld.h" />
     <ClInclude Include="MeshHierarchy.h" />
     <ClInclude Include="MeshInstancing.h" />
     <ClInclude Include="MeshMix.h" />
@@ -168,7 +168,7 @@
       <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableOptimizations>
       <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</EnableDebuggingInformation>
     </FxCompile>
-    <FxCompile Include="shader\MeshShader.fx">
+    <FxCompile Include="shader\MeshOld.fx">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Effect</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">2.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug_VisualStudio2019|x64'">Effect</ShaderType>

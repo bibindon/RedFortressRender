@@ -17,7 +17,7 @@
 #include "Font.h"
 #include "Sprite.h"
 
-#include "Mesh.h"
+#include "MeshOld.h"
 #include "MeshSmooth.h"
 #include "MeshSSSLike.h"
 #include "MeshPointLight.h"
@@ -198,7 +198,7 @@ private:
 
     void ChangeWindowMode();
 
-    std::vector<Mesh> m_meshList;
+    std::vector<MeshOld> m_meshList;
     std::vector<AnimMesh*> m_animMeshList;
     std::vector<SkinAnimMesh*> m_skinAnimMeshList;
     std::vector<MeshSmooth> m_meshSmoothList;

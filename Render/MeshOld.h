@@ -13,25 +13,25 @@
 namespace NSRender
 {
 
-class Mesh : public IDeviceResettable
+class MeshOld : public IDeviceResettable
 {
 public:
 
-    Mesh(const std::wstring&,
+    MeshOld(const std::wstring&,
          const D3DXVECTOR3&,
          const D3DXVECTOR3&,
          const float,
          const float = -1.f);
 
     // シェーダーファイルを指定できるコンストラクタ
-    Mesh(const std::wstring&,
+    MeshOld(const std::wstring&,
          const std::wstring&,
          const D3DXVECTOR3&,
          const D3DXVECTOR3&,
          const float,
          const float = -1.f);
 
-    virtual ~Mesh();
+    virtual ~MeshOld();
 
     void Initialize();
     void SetPos(const D3DXVECTOR3& pos);

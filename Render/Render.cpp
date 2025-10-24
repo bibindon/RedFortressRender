@@ -17,7 +17,7 @@
 
 #include "Common.h"
 
-#include "Mesh.h"
+#include "MeshOld.h"
 #include "AnimMesh.h"
 #include "SkinAnimMesh.h"
 
@@ -153,7 +153,7 @@ int Render::AddMesh(const std::wstring& filePath,
                     const float scale,
                     const float radius)
 {
-    m_meshList.push_back(Mesh(filePath, pos, rot, scale, radius));
+    m_meshList.push_back(MeshOld(filePath, pos, rot, scale, radius));
     m_meshList.rbegin()->Initialize();
 
     return (int)m_meshList.size() - 1;

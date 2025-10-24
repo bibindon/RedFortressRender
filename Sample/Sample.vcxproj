@@ -261,9 +261,9 @@ exit /B %ERRORLEVEL%</Command>
     <FxCompile Include="..\Render\shader\MeshInstancing.fx" />
     <FxCompile Include="..\Render\shader\MeshMix.fx" />
     <FxCompile Include="..\Render\shader\MeshNormalMapping.fx" />
+    <FxCompile Include="..\Render\shader\MeshOld.fx" />
     <FxCompile Include="..\Render\shader\MeshPointLight.fx" />
     <FxCompile Include="..\Render\shader\MeshPOM.fx" />
-    <FxCompile Include="..\Render\shader\MeshShader.fx" />
     <FxCompile Include="..\Render\shader\MeshSmooth.fx" />
     <FxCompile Include="..\Render\shader\MeshSSS.fx" />
     <FxCompile Include="..\Render\shader\MeshSSSLike.fx" />
