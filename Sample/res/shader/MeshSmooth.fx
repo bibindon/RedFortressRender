@@ -64,6 +64,9 @@ float4 PixelShader1(VSOut i) : COLOR0
     float3 ambient = albedo * g_ambient;
 
     // スペキュラ（Blinn-Phong）
+    // これは、光源が点や球の形状であるということになる。
+    // NdotHは点と点の距離であるため。（NdotLもそう）
+    // 線と点の距離、面と点の距離を図る方法もあるはずad898
     float3 spec = g_SpecColor * (pow(NdotH, g_SpecPower) * g_SpecIntensity);
 
     float3 color = ambient + diffuse + spec;

@@ -505,6 +505,7 @@ void PixelShaderPointLight(in float4 inPosition     : POSITION,
     outColor = saturate(outColor);
 }
 
+/*
 void PixelShaderFog(in float4 inPosition     : POSITION,
                     in float3 inPosWorld     : TEXCOORD0,
                     in float3 inNormalWorld  : TEXCOORD1,
@@ -536,6 +537,7 @@ void PixelShaderFog(in float4 inPosition     : POSITION,
 
     outColor += float4(g_fogHeightColor.rgb, fogDensityHeight);
 }
+*/
 
 float2 CalcUVCoordWithPOM(float3 inNormalizedNormalWS,
                           float2 inTexCoord,
@@ -624,6 +626,7 @@ technique Technique1
         PixelShader = compile ps_3_0 PixelShaderPointLight();
     }
 
+/*
     pass PassFog
     {
         AlphaBlendEnable = TRUE;
@@ -633,5 +636,6 @@ technique Technique1
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShaderFog();
     }
+*/
 }
 
