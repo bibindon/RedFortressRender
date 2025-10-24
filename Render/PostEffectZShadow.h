@@ -67,7 +67,7 @@ private:
 
     const std::vector<MeshMix>* m_pMeshList;
 
-    void CreateTexture();
+    void CreateRawResource();
 };
 
 }

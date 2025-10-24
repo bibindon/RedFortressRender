@@ -18,17 +18,7 @@ void PostEffectZShadow::Initialize()
                                        NULL);
     assert(hResult == S_OK);
 
-    CreateTexture();
-
-    D3DVERTEXELEMENT9 elems[] =
-    {
-        { 0,  0, D3DDECLTYPE_FLOAT4, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0 },
-        { 0, 16, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0 },
-        D3DDECL_END()
-    };
-
-    hResult = Common::D3DDevice()->CreateVertexDeclaration(elems, &g_pQuadDecl);
-    assert(hResult == S_OK);
+    CreateRawResource();
 
     Common::AddDeviceLostResource(this);
 }
@@ -415,17 +405,19 @@ void PostEffectZShadow::OnDeviceLost()
     g_fxDepthBufferShadow->OnLostDevice();
     SAFE_RELEASE(g_texTemp);
     SAFE_RELEASE(g_texRenderTargetLightZ);
+    SAFE_RELEASE(g_surfaceLightZStensil);
     SAFE_RELEASE(g_texRenderTargetShadow);
     SAFE_RELEASE(g_texComposite);
+    SAFE_RELEASE(g_pQuadDecl);
 }
 
 void PostEffectZShadow::OnDeviceReset()
 {
     g_fxDepthBufferShadow->OnResetDevice();
-    CreateTexture();
+    CreateRawResource();
 }
 
-void PostEffectZShadow::CreateTexture()
+void PostEffectZShadow::CreateRawResource()
 {
     HRESULT hResult = E_FAIL;
 
@@ -474,6 +466,15 @@ void PostEffectZShadow::CreateTexture()
                                         &g_texComposite);
     assert(hResult == S_OK);
 
+    D3DVERTEXELEMENT9 elems[] =
+    {
+        { 0,  0, D3DDECLTYPE_FLOAT4, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0 },
+        { 0, 16, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0 },
+        D3DDECL_END()
+    };
+
+    hResult = Common::D3DDevice()->CreateVertexDeclaration(elems, &g_pQuadDecl);
+    assert(hResult == S_OK);
 }
 
 }

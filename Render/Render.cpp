@@ -55,11 +55,12 @@ void Render::Initialize(HWND hWnd)
                                   NULL);
     assert(SUCCEEDED(hResult));
 
-//    // SSAO
-//    m_postEffectSSAO.Initialize();
-//
-//    // 深度バッファシャドウ
-//    m_postEffectZShadow.Initialize();
+
+    // 深度バッファシャドウ
+    m_postEffectZShadow.Initialize();
+
+    // SSAO
+    m_postEffectSSAO.Initialize();
 
     // 彩度フィルター
     m_postEffectSaturate.Initialize();
@@ -108,10 +109,10 @@ void Render::Draw()
     pTempTexture = m_pRenderTarget1;
 
 //    // 深度バッファシャドウ
-//    pTempTexture = m_postEffectZShadow.Draw(pTempTexture, m_meshMixList);
-//
-//    // SSAO
-//    pTempTexture = m_postEffectSSAO.Draw(pTempTexture, m_rtZTex, m_rtPosTex);
+    pTempTexture = m_postEffectZShadow.Draw(pTempTexture, m_meshMixList);
+
+    // SSAO
+    pTempTexture = m_postEffectSSAO.Draw(pTempTexture, m_rtZTex, m_rtPosTex);
 
     // 彩度変更
     pTempTexture = m_postEffectSaturate.Draw(pTempTexture);
