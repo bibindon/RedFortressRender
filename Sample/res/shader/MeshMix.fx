@@ -290,9 +290,16 @@ void PixelShader1(in float4 inPosition    : POSITION,
     float3 lambert = 0.f;
     
     // ハーフランバート
-    if (false)
+    // 深度バッファシャドウを実行すると、影が2重に表示されてしまう。
+    // ハーフランバートならマシになる
+    if (true)
     {
         NdotL = (NdotL + 1.0f) * 0.5f;
+
+        // 0.5が0.7になるような補正をかける
+        // 対数グラフのイメージ
+        NdotL = pow(NdotL, 0.5);
+
     }
 
     lambert = albedo * NdotL;
@@ -300,7 +307,8 @@ void PixelShader1(in float4 inPosition    : POSITION,
     float3 ambient = float3(0.2, 0.2, 0.2) * albedo;
 
     // 陰の彩度を上げる
-    if (true)
+    // 要らないかもしれない
+    if (false)
     {
         if (NdotL <= 0.0f)
         {
@@ -354,7 +362,7 @@ void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float3 reflectWorld = reflect(-cameraDir, normalize(normalInWorld));
 
-    outColor = float4(texCUBE(g_cubeMapSampler, reflectWorld).rgb, 0.1f);
+    outColor = float4(texCUBE(g_cubeMapSampler, reflectWorld).rgb, 0.3f);
 }
 
 //-------------------------------------------------------------
