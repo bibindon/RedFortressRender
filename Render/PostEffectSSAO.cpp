@@ -50,14 +50,14 @@ void PostEffectSSAO::Finalize()
 }
 
 LPDIRECT3DTEXTURE9 PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
-                                        LPDIRECT3DTEXTURE9 m_rtZTex,
-                                        LPDIRECT3DTEXTURE9 m_rtPosTex)
+                                        LPDIRECT3DTEXTURE9 m_texRenderTargetZ,
+                                        LPDIRECT3DTEXTURE9 m_texRenderTargetPos)
 {
     HRESULT hr = E_FAIL;
 
     // 画面サイズから invSize を計算
     D3DSURFACE_DESC descZ = {};
-    m_rtZTex->GetLevelDesc(0, &descZ);
+    m_texRenderTargetZ->GetLevelDesc(0, &descZ);
     D3DXVECTOR2 invSize(1.0f / descZ.Width, 1.0f / descZ.Height);
 
     // ビュー・プロジェクション行列
@@ -94,8 +94,8 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_fxSSAO->SetFloat("g_posRange", 50.0f);
     m_fxSSAO->SetFloatArray("g_invSize", (FLOAT*)&invSize, 2);
 
-    m_fxSSAO->SetTexture("texZ",   m_rtZTex);
-    m_fxSSAO->SetTexture("texPos", m_rtPosTex);
+    m_fxSSAO->SetTexture("texZ",   m_texRenderTargetZ);
+    m_fxSSAO->SetTexture("texPos", m_texRenderTargetPos);
 
     m_fxSSAO->SetFloat("g_aoStepWorld", 4.0f);   // 5 → 4（半径を少し縮める）
     m_fxSSAO->SetFloat("g_originPush", 0.05f);  // 0.15 → 0.05（押し出し弱め）
@@ -116,7 +116,7 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(255,255,255,255), 1.0f, 0);
 
     m_fxSSAO->SetTexture("texAO",  m_rtAoTex);
-    m_fxSSAO->SetTexture("texZ",   m_rtZTex);
+    m_fxSSAO->SetTexture("texZ",   m_texRenderTargetZ);
     m_fxSSAO->SetFloatArray("g_invSize", (FLOAT*)&invSize, 2);
     m_fxSSAO->SetFloat("g_sigmaPx", 8.0f);
     m_fxSSAO->SetFloat("g_depthReject", 0.0001f);
@@ -133,7 +133,7 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(255,255,255,255), 1.0f, 0);
 
     m_fxSSAO->SetTexture("texAO",  m_rtAoTempTex);
-    m_fxSSAO->SetTexture("texZ",   m_rtZTex);
+    m_fxSSAO->SetTexture("texZ",   m_texRenderTargetZ);
     m_fxSSAO->SetFloatArray("g_invSize", (FLOAT*)&invSize, 2);
 
     m_fxSSAO->SetTechnique("TechniqueAO_BlurV");

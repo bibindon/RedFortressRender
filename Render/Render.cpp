@@ -45,7 +45,7 @@ void Render::Initialize(HWND hWnd)
     CreateTexture();
 
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                  //L"res\\shader\\GBuffer.fx",
+                                  //L"res/shader/GBuffer.fx",
                                   L"../x64/Debug/GBuffer.cso",
                                   NULL,
                                   NULL,
@@ -112,10 +112,12 @@ void Render::Draw()
     pTempTexture = m_postEffectZShadow.Draw(pTempTexture, m_meshMixList);
 
     // SSAO
-    pTempTexture = m_postEffectSSAO.Draw(pTempTexture, m_rtZTex, m_rtPosTex);
+    pTempTexture = m_postEffectSSAO.Draw(pTempTexture, m_texRenderTargetZ, m_texRenderTargetPos);
 
     // 彩度変更
     pTempTexture = m_postEffectSaturate.Draw(pTempTexture);
+
+    // TODO 被写界深度
 
     // ブルーム
     pTempTexture = m_PostEffectBloom.Draw(pTempTexture);
@@ -482,23 +484,23 @@ void Render::DrawPass1()
 {
     HRESULT hResult = E_FAIL;
 
-    LPDIRECT3DSURFACE9 pOldRT0 = NULL;
-    hResult = Common::D3DDevice()->GetRenderTarget(0, &pOldRT0);
+    LPDIRECT3DSURFACE9 surfaceOld = NULL;
+    hResult = Common::D3DDevice()->GetRenderTarget(0, &surfaceOld);
     assert(hResult == S_OK);
 
-    LPDIRECT3DSURFACE9 pRT0 = NULL;
-    LPDIRECT3DSURFACE9 pRT1 = NULL;
+    LPDIRECT3DSURFACE9 surfaceRenderTarget0 = NULL;
+    LPDIRECT3DSURFACE9 surfaceRenderTarget1 = NULL;
 
-    hResult = m_pRenderTarget1->GetSurfaceLevel(0, &pRT0);
+    hResult = m_pRenderTarget1->GetSurfaceLevel(0, &surfaceRenderTarget0);
     assert(hResult == S_OK);
 
-    hResult = m_pRenderTarget2->GetSurfaceLevel(0, &pRT1);
+    hResult = m_pRenderTarget2->GetSurfaceLevel(0, &surfaceRenderTarget1);
     assert(hResult == S_OK);
 
-    hResult = Common::D3DDevice()->SetRenderTarget(0, pRT0);
+    hResult = Common::D3DDevice()->SetRenderTarget(0, surfaceRenderTarget0);
     assert(hResult == S_OK);
 
-    hResult = Common::D3DDevice()->SetRenderTarget(1, pRT1);
+    hResult = Common::D3DDevice()->SetRenderTarget(1, surfaceRenderTarget1);
     assert(hResult == S_OK);
 
     hResult = Common::D3DDevice()->Clear(0,
@@ -577,12 +579,12 @@ void Render::DrawPass1()
     hResult = Common::D3DDevice()->SetRenderTarget(1, NULL);
     assert(hResult == S_OK);
 
-    hResult = Common::D3DDevice()->SetRenderTarget(0, pOldRT0);
+    hResult = Common::D3DDevice()->SetRenderTarget(0, surfaceOld);
     assert(hResult == S_OK);
 
-    SAFE_RELEASE(pRT0);
-    SAFE_RELEASE(pRT1);
-    SAFE_RELEASE(pOldRT0);
+    SAFE_RELEASE(surfaceRenderTarget0);
+    SAFE_RELEASE(surfaceRenderTarget1);
+    SAFE_RELEASE(surfaceOld);
 }
 
 void Render::DrawPassGBuffer()
@@ -590,18 +592,18 @@ void Render::DrawPassGBuffer()
     HRESULT hr = E_FAIL;
 
     // 既存の RT0 を退避
-    LPDIRECT3DSURFACE9 oldRt0 = NULL;
-    hr = Common::D3DDevice()->GetRenderTarget(0, &oldRt0);
+    LPDIRECT3DSURFACE9 surfaceOld = NULL;
+    hr = Common::D3DDevice()->GetRenderTarget(0, &surfaceOld);
 
     // Z と POS のサーフェスを取得
-    LPDIRECT3DSURFACE9 rtZ = NULL;
-    LPDIRECT3DSURFACE9 rtPos = NULL;
-    hr = m_rtZTex->GetSurfaceLevel(0, &rtZ);
-    hr = m_rtPosTex->GetSurfaceLevel(0, &rtPos);
+    LPDIRECT3DSURFACE9 surfaceZ = NULL;
+    LPDIRECT3DSURFACE9 surfacePos = NULL;
+    hr = m_texRenderTargetZ->GetSurfaceLevel(0, &surfaceZ);
+    hr = m_texRenderTargetPos->GetSurfaceLevel(0, &surfacePos);
 
     // MRT×2 をセット
-    hr = Common::D3DDevice()->SetRenderTarget(0, rtZ);
-    hr = Common::D3DDevice()->SetRenderTarget(1, rtPos);
+    hr = Common::D3DDevice()->SetRenderTarget(0, surfaceZ);
+    hr = Common::D3DDevice()->SetRenderTarget(1, surfacePos);
 
     // クリア。Zバッファも一緒に初期化して素直に全描画
     hr = Common::D3DDevice()->Clear(0,
@@ -640,7 +642,7 @@ void Render::DrawPassGBuffer()
         // 近遠と posRange は SSAO 側と必ず一致させる
         m_fxGBuffer->SetFloat("g_fNear", Camera::GetNear());
         m_fxGBuffer->SetFloat("g_fFar",  Camera::GetFar());
-        m_fxGBuffer->SetFloat("g_posRange", 50.0f);
+        m_fxGBuffer->SetFloat("g_posRange", PostEffectSSAO::Z_RANGE);
 
         m_fxGBuffer->SetTechnique("TechniqueGBuffer");
         m_fxGBuffer->Begin(NULL, 0);
@@ -658,11 +660,11 @@ void Render::DrawPassGBuffer()
 
     // MRT を外し、RT0 を元に戻す
     Common::D3DDevice()->SetRenderTarget(1, NULL);
-    Common::D3DDevice()->SetRenderTarget(0, oldRt0);
+    Common::D3DDevice()->SetRenderTarget(0, surfaceOld);
 
-    SAFE_RELEASE(rtZ);
-    SAFE_RELEASE(rtPos);
-    SAFE_RELEASE(oldRt0);
+    SAFE_RELEASE(surfaceZ);
+    SAFE_RELEASE(surfacePos);
+    SAFE_RELEASE(surfaceOld);
 }
 
 namespace
@@ -686,7 +688,6 @@ namespace
         vertices[2] = {  1.f, -1.f, 0.f, 1.f, 1.f, 1.f };
         vertices[3] = {  1.f,  1.f, 0.f, 1.f, 1.f, 0.f };
 
-        // 位置(float4) + UV(float2) の頂宣言を毎回作るのが嫌なら、初期化時にキャッシュしてください
         D3DVERTEXELEMENT9 decl[] =
         {
             { 0, 0,  D3DDECLTYPE_FLOAT4, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0 },
@@ -780,8 +781,8 @@ void Render::OnDeviceLost()
 {
     SAFE_RELEASE(m_pRenderTarget1);
     SAFE_RELEASE(m_pRenderTarget2);
-    SAFE_RELEASE(m_rtZTex);
-    SAFE_RELEASE(m_rtPosTex);
+    SAFE_RELEASE(m_texRenderTargetZ);
+    SAFE_RELEASE(m_texRenderTargetPos);
     m_fxGBuffer->OnLostDevice();
     m_sprite.OnDeviceLost();
 }
@@ -825,7 +826,7 @@ void Render::CreateTexture()
                            D3DUSAGE_RENDERTARGET,
                            D3DFMT_A16B16G16R16F,
                            D3DPOOL_DEFAULT,
-                           &m_rtZTex);
+                           &m_texRenderTargetZ);
     assert(hr == S_OK);
 
     // World座標（高精度推奨）
@@ -836,7 +837,7 @@ void Render::CreateTexture()
                            D3DUSAGE_RENDERTARGET,
                            D3DFMT_A16B16G16R16F,
                            D3DPOOL_DEFAULT,
-                           &m_rtPosTex);
+                           &m_texRenderTargetPos);
     assert(hr == S_OK);
 
 }

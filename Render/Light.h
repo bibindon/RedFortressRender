@@ -21,6 +21,7 @@ class Light
 public:
 
     // 平行光源がある方向
+    // DirとNormalでは方向が逆なので誤用に注意
     static D3DXVECTOR4 GetLightDir();
     static void SetLightDir(const D3DXVECTOR4& normal);
 

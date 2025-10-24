@@ -61,7 +61,6 @@ STDMETHODIMP SkinAnimMeshAlloc::CreateMeshContainer(LPCSTR meshName,
         if (FAILED(result))
         {
             // ‚±‚ÌŠÖ”‚Ínothrow‚ªw’è‚³‚ê‚Ä‚¢‚³‚ê‚Ä‚¢‚é‚Ì‚ÅA—áŠO‚ğ•Ô‚µ‚Ä‚Í‚¢‚¯‚È‚¢
-            // throw std::exception("Failed 'CloneMeshFVF' function.");
             return E_FAIL;
         }
 

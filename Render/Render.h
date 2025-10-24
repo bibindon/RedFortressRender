@@ -250,8 +250,8 @@ private:
     LPDIRECT3DTEXTURE9 m_pRenderTarget2 = NULL;
 
     // G-Buffer用
-    LPDIRECT3DTEXTURE9 m_rtZTex = NULL;
-    LPDIRECT3DTEXTURE9  m_rtPosTex = NULL;
+    LPDIRECT3DTEXTURE9 m_texRenderTargetZ = NULL;
+    LPDIRECT3DTEXTURE9  m_texRenderTargetPos = NULL;
     LPD3DXEFFECT m_fxGBuffer;
 
     //-----------------------------------------------------------------

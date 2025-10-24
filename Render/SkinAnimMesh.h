@@ -40,6 +40,7 @@ private:
     void ReleaseMeshAllocator(const LPD3DXFRAME);
 
     const static std::wstring SHADER_FILENAME;
+
     SkinAnimMeshAlloc m_allocator;
 
     LPD3DXFRAME m_frameRoot = NULL;

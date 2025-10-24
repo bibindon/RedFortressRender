@@ -255,7 +255,6 @@ HRESULT SkinAnimMesh::AllocateAllBoneMatrix(LPD3DXFRAME frame)
 {
     if (frame->pMeshContainer != NULL)
     {
-        // TODO why frame->pMeshContainer->pNextMeshContainer is unnecessary?
         if (FAILED(AllocateBoneMatrix(frame->pMeshContainer)))
         {
             return E_FAIL;
@@ -277,6 +276,7 @@ HRESULT SkinAnimMesh::AllocateAllBoneMatrix(LPD3DXFRAME frame)
             return E_FAIL;
         }
     }
+
     return S_OK;
 }
 
