@@ -24,7 +24,7 @@ void PostEffectGauss::Initialize()
                       Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
+                      D3DFMT_A16B16G16R16F,
                       D3DPOOL_DEFAULT,
                       &m_texWork);
     Common::AddDeviceLostResource(this);
@@ -149,7 +149,7 @@ void PostEffectGauss::OnDeviceReset()
                       Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
+                      D3DFMT_A16B16G16R16F,
                       D3DPOOL_DEFAULT,
                       &m_texWork);
 }

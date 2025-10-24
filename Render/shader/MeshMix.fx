@@ -455,6 +455,7 @@ void PixelShaderPointLight(in float4 inPosition     : POSITION,
     float3x3 tangentToWorld = float3x3(-inTangent, -inBinorm, normal);
     float3 normalInWorld = normalize(mul(normalInTangent, tangentToWorld));
 
+    // TODO ポイントライトを追加すると明るさがありえないほど加算されていく
     for (int i = 0; i < 16; ++i)
     {
         if (g_pointLightBrightness[i] == 0.0f)
@@ -486,8 +487,6 @@ void PixelShaderPointLight(in float4 inPosition     : POSITION,
 
         outColor = work;
     }
-
-    outColor = (outColor);
 }
 
 float2 CalcUVCoordWithPOM(float3 inNormalizedNormalWS,

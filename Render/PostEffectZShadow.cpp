@@ -451,7 +451,7 @@ void PostEffectZShadow::CreateRawResource()
                                 Common::ScreenH(),
                                 1,
                                 D3DUSAGE_RENDERTARGET,
-                                D3DFMT_A8R8G8B8,
+                                D3DFMT_A16B16G16R16F,
                                 D3DPOOL_DEFAULT,
                                 &g_texRenderTargetShadow);
     assert(hResult == S_OK);
@@ -461,7 +461,7 @@ void PostEffectZShadow::CreateRawResource()
                                         Common::ScreenH(),
                                         1,
                                         D3DUSAGE_RENDERTARGET,
-                                        D3DFMT_A8R8G8B8,
+                                        D3DFMT_A16B16G16R16F,
                                         D3DPOOL_DEFAULT,
                                         &g_texComposite);
     assert(hResult == S_OK);

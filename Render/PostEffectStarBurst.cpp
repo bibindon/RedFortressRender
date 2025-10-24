@@ -210,7 +210,7 @@ void PostEffectStarBurst::CreateTexture()
                       Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
+                      D3DFMT_A16B16G16R16F,
                       D3DPOOL_DEFAULT,
                       &m_texPostEffectBack1);
 
@@ -219,7 +219,7 @@ void PostEffectStarBurst::CreateTexture()
                       Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
+                      D3DFMT_A16B16G16R16F,
                       D3DPOOL_DEFAULT,
                       &m_texBright);
 
@@ -229,7 +229,7 @@ void PostEffectStarBurst::CreateTexture()
                       Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
+                      D3DFMT_A16B16G16R16F,
                       D3DPOOL_DEFAULT,
                       &m_texBlurH);
 
@@ -238,7 +238,7 @@ void PostEffectStarBurst::CreateTexture()
                       Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
+                      D3DFMT_A16B16G16R16F,
                       D3DPOOL_DEFAULT,
                       &m_texBlurH2);
 
@@ -248,7 +248,7 @@ void PostEffectStarBurst::CreateTexture()
                       Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
+                      D3DFMT_A16B16G16R16F,
                       D3DPOOL_DEFAULT,
                       &m_texBlurV);
 
@@ -257,7 +257,7 @@ void PostEffectStarBurst::CreateTexture()
                       Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
+                      D3DFMT_A16B16G16R16F,
                       D3DPOOL_DEFAULT,
                       &m_texBlurV2);
 
@@ -267,7 +267,7 @@ void PostEffectStarBurst::CreateTexture()
                       Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
+                      D3DFMT_A16B16G16R16F,
                       D3DPOOL_DEFAULT,
                       &m_texBlurD);
 
@@ -276,7 +276,7 @@ void PostEffectStarBurst::CreateTexture()
                       Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
+                      D3DFMT_A16B16G16R16F,
                       D3DPOOL_DEFAULT,
                       &m_texBlurD2);
 }
