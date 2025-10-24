@@ -5,7 +5,7 @@
 namespace NSRender
 {
 
-class PostEffectSSAO
+class PostEffectSSAO : public IDeviceResettable
 {
 
 public:

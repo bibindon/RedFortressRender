@@ -8,13 +8,6 @@
 #include <cassert>
 #include <memory>
 
-#include "Font.h"
-#include "Sprite.h"
-#include "Mesh.h"
-#include "AnimMesh.h"
-#include "SkinAnimMesh.h"
-#include "MeshMix.h"
-
 #if defined(_DEBUG)
 #define NEW ::new(_NORMAL_BLOCK, __FILE__, __LINE__)
 #else
@@ -24,12 +17,7 @@
 namespace NSRender
 {
 
-class Font;
-class Sprite;
-class Mesh;
-class AnimMesh;
-class SkinAnimMesh;
-class MeshMix;
+class IDeviceResettable;
 
 class Common
 {
@@ -46,19 +34,9 @@ public:
     static void OnDeviceLostAll();
     static void OnDeviceResetAll();
 
-    static void AddDeviceLostResource(Font* res);
-    static void AddDeviceLostResource(Sprite* res);
-    static void AddDeviceLostResource(Mesh* res);
-    static void AddDeviceLostResource(AnimMesh* res);
-    static void AddDeviceLostResource(SkinAnimMesh* res);
-    static void AddDeviceLostResource(MeshMix* res);
+    static void AddDeviceLostResource(IDeviceResettable* res);
 
-    static void RemoveDeviceLostResource(const Font* res);
-    static void RemoveDeviceLostResource(const Sprite* res);
-    static void RemoveDeviceLostResource(const Mesh* res);
-    static void RemoveDeviceLostResource(const AnimMesh* res);
-    static void RemoveDeviceLostResource(const SkinAnimMesh* res);
-    static void RemoveDeviceLostResource(const MeshMix* res);
+    static void RemoveDeviceLostResource(const IDeviceResettable* res);
 
     static int ScreenW();
     static void SetScreenW(const int W);
@@ -71,12 +49,7 @@ private:
     static LPDIRECT3D9 m_pD3D;
     static LPDIRECT3DDEVICE9 m_pD3DDev;
 
-    static std::vector<Font*> m_fontList;
-    static std::vector<Sprite*> m_spriteList;
-    static std::vector<Mesh*> m_meshList;
-    static std::vector<AnimMesh*> m_animMeshList;
-    static std::vector<SkinAnimMesh*> m_skinAnimMeshList;
-    static std::vector<MeshMix*> m_meshMixList;
+    static std::vector<IDeviceResettable*> m_resourceList;
 
     static int m_screenW;
     static int m_screenH;
@@ -126,6 +99,17 @@ inline void SAFE_DELETE_ARRAY(T*& p)
     delete[] p;
     p = nullptr;
 }
+
+// デバイスリセット用インターフェース
+class IDeviceResettable
+{
+public :
+    virtual void OnDeviceLost() = 0;
+    virtual void OnDeviceReset() = 0;
+};
+
+
+// 要らない気がする
 
 template<typename T>
 using Ptr = std::shared_ptr<T>;

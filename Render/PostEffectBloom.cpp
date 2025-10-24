@@ -71,6 +71,7 @@ void PostEffectBloom::Initialize()
                       D3DFMT_A8R8G8B8,
                       D3DPOOL_DEFAULT,
                       &m_texBlurV2);
+    Common::AddDeviceLostResource(this);
 }
 
 LPDIRECT3DTEXTURE9 PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource)
@@ -226,6 +227,12 @@ void PostEffectBloom::SetSize(const float arg)
 void PostEffectBloom::OnDeviceLost()
 {
     m_d3dEffect->OnLostDevice();
+    SAFE_RELEASE(m_texBright);
+    SAFE_RELEASE(m_texBlurH);
+    SAFE_RELEASE(m_texBlurH2);
+    SAFE_RELEASE(m_texBlurV);
+    SAFE_RELEASE(m_texBlurV2);
+    SAFE_RELEASE(m_renderTarget);
 }
 
 void PostEffectBloom::OnDeviceReset()

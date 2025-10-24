@@ -6,7 +6,7 @@ namespace NSRender
 {
 
 // TODO ˆê“x¬‚³‚­•\¦‚µ‚Ä‚©‚çŠg‘å‚·‚éA‚Æ‚¢‚¤‚Ì‚ğ‚â‚Á‚½•û‚ª‚«‚ê‚¢‚ç‚µ‚¢
-class PostEffectStarBurst
+class PostEffectStarBurst : public IDeviceResettable
 {
 
 public:

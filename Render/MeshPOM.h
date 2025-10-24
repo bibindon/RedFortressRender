@@ -7,7 +7,7 @@ namespace NSRender
 {
 
 // 視差遮蔽マッピングを行うメッシュ
-class MeshPOM
+class MeshPOM : public IDeviceResettable
 {
 public:
 

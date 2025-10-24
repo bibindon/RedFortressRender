@@ -5,7 +5,7 @@
 namespace NSRender
 {
 
-class PostEffectSaturate
+class PostEffectSaturate : public IDeviceResettable
 {
 
 public:

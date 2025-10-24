@@ -8,7 +8,7 @@ namespace NSRender
 
 // ポイントライトが反映されるメッシュ
 // 逆に、これ以外のメッシュはポイントライトが反映されない
-class MeshPointLight
+class MeshPointLight : public IDeviceResettable
 {
 
 public:

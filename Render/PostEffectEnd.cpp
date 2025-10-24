@@ -17,6 +17,7 @@ void PostEffectEnd::Initialize()
                                        &m_d3dEffect,
                                        NULL);
     assert(SUCCEEDED(hResult));
+    Common::AddDeviceLostResource(this);
 
 }
 

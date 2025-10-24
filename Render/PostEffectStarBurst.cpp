@@ -92,6 +92,7 @@ void PostEffectStarBurst::Initialize()
                       D3DFMT_A8R8G8B8,
                       D3DPOOL_DEFAULT,
                       &m_texBlurD2);
+    Common::AddDeviceLostResource(this);
 }
 
 LPDIRECT3DTEXTURE9 PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource)
@@ -257,6 +258,14 @@ void PostEffectStarBurst::SetSize(const float arg)
 void PostEffectStarBurst::OnDeviceLost()
 {
     m_d3dEffect->OnLostDevice();
+    SAFE_RELEASE(m_texPostEffectBack1);
+    SAFE_RELEASE(m_texBright);
+    SAFE_RELEASE(m_texBlurH);
+    SAFE_RELEASE(m_texBlurV);
+    SAFE_RELEASE(m_texBlurD);
+    SAFE_RELEASE(m_texBlurH2);
+    SAFE_RELEASE(m_texBlurV2);
+    SAFE_RELEASE(m_texBlurD2);
 }
 
 void PostEffectStarBurst::OnDeviceReset()

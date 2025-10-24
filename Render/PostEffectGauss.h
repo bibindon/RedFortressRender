@@ -5,7 +5,7 @@
 namespace NSRender
 {
 
-class PostEffectGauss
+class PostEffectGauss : public IDeviceResettable
 {
 
 public:

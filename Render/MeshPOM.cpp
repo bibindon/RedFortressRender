@@ -77,6 +77,9 @@ void MeshPOM::Initialize(const std::wstring& filename,
     assert(hResult == S_OK);
 
     AddTangentBinormalToMesh();
+
+    Common::AddDeviceLostResource(this);
+
 }
 
 void MeshPOM::AddTangentBinormalToMesh()

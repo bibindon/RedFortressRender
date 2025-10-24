@@ -9,7 +9,7 @@ namespace NSRender
 // SSS風メッシュ
 // 陰の色を描画するときに、単純に輝度を下げるのではなく、
 // 色相をずらして、彩度を上げる
-class MeshSSSLike
+class MeshSSSLike : public IDeviceResettable
 {
 
 public:

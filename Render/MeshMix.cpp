@@ -129,6 +129,8 @@ void MeshMix::Initialize()
 
     SAFE_RELEASE(materialBuffer);
 
+    Common::AddDeviceLostResource(this);
+
     m_bLoaded = true;
 }
 

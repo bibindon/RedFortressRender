@@ -10,7 +10,7 @@ namespace NSRender
 // 法線マッピングができるメッシュ
 //------------------------------------------------
 
-class MeshNormalMapping
+class MeshNormalMapping : public IDeviceResettable
 {
 
 public:

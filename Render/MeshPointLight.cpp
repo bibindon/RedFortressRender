@@ -95,6 +95,8 @@ void MeshPointLight::Initialize(const std::wstring& filename,
     hResult = pD3DXMtrlBuffer->Release();
     assert(hResult == S_OK);
 
+    Common::AddDeviceLostResource(this);
+
 }
 
 void MeshPointLight::Finalize()

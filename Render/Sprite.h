@@ -13,7 +13,7 @@ namespace NSRender
 // 
 // TODO 解像度によって適切な解像度の画像が表示されるようにしたい
 //-------------------------------------------------------------------
-class Sprite
+class Sprite : public IDeviceResettable
 {
 public:
     void Initialize();

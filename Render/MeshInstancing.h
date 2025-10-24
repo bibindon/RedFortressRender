@@ -7,7 +7,7 @@ namespace NSRender
 
 // インスタンシング可能なメッシュ
 // 大量に描画しても軽い
-class MeshInstancing
+class MeshInstancing : public IDeviceResettable
 {
 
 public:

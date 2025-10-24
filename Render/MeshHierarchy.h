@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Common.h"
+
 namespace NSRender
 {
 
@@ -8,7 +10,7 @@ namespace NSRender
 // 木の枝と木の葉っぱは異なる質感で描画されるべき。
 // かといって別々のXファイルで扱うのは管理が難しい。
 // これに対応するためのメッシュクラス
-class MeshHierarchy
+class MeshHierarchy : public IDeviceResettable
 {
 };
 

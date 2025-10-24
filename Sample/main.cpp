@@ -89,7 +89,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
     g_fontId = g_Render.SetUpFont(L"BIZ UDゴシック", 20, D3DCOLOR_RGBA(255, 255, 255, 255));
 
     // 光源の方角がわかりやすくなるように、光源の方角に球を表示
-    g_sunId = g_Render.AddMeshMix(L"cubeMixSun.blend.x", D3DXVECTOR3(10, 0, 0), D3DXVECTOR3(0, 0, 0), 1.f, 1.f);
+//    g_sunId = g_Render.AddMeshMix(L"cubeMixSun.blend.x", D3DXVECTOR3(10, 0, 0), D3DXVECTOR3(0, 0, 0), 1.f, 1.f);
 
     ShowWindow(hWnd, SW_SHOWDEFAULT);
     UpdateWindow(hWnd);
@@ -177,7 +177,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
 
                 // 動作確認のため、光源の方角に球を表示する
                 lightDir *= 4;
-                g_Render.SetMeshMixPos(g_sunId, lightDir);
+//                g_Render.SetMeshMixPos(g_sunId, lightDir);
             }
 
             g_Render.Draw();

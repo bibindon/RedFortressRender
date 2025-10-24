@@ -263,6 +263,14 @@ private:
     int m_fontID = -1;
     std::vector<std::chrono::steady_clock::time_point> m_vecTime;
 
+    //-----------------------------------------------------------------
+    // デバイスロスト関連処理
+    //-----------------------------------------------------------------
+
+    void OnDeviceLost();
+
+    void OnDeviceReset();
+
 };
 }
 

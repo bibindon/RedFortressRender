@@ -203,7 +203,7 @@ stMeshParam GetMeshParamPreset(const eMeshParamPreset preset);
 
 // ポイントライト、スムーズ、彩度影、法線マッピング、視差遮蔽マッピング、SSAO、深度バッファシャドウ
 // マルチレンダーターゲット、環境マッピングが有効なメッシュクラス
-class MeshMix
+class MeshMix : public IDeviceResettable
 {
 
 public:

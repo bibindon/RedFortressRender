@@ -6,7 +6,7 @@
 namespace NSRender
 {
 
-class PostEffectZShadow
+class PostEffectZShadow : public IDeviceResettable
 {
 
 public:

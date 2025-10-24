@@ -5,7 +5,7 @@
 namespace NSRender
 {
 
-class PostEffectEnd
+class PostEffectEnd : public IDeviceResettable
 {
 
 public:
@@ -15,8 +15,8 @@ public:
 
     void Draw(LPDIRECT3DTEXTURE9 renderTarget);
 
-    void OnDeviceLost();
-    void OnDeviceReset();
+    void OnDeviceLost() override;
+    void OnDeviceReset() override;
 
 private:
 

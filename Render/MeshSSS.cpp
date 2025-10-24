@@ -255,6 +255,7 @@ void MeshSSS::Initialize()
 
     assert(SUCCEEDED(hr));
 
+    Common::AddDeviceLostResource(this);
 
     m_bLoaded = true;
 }
@@ -449,6 +450,9 @@ void MeshSSS::OnDeviceLost()
 {
     HRESULT hr = m_D3DEffect->OnLostDevice();
     assert(hr == S_OK);
+
+    SAFE_RELEASE(g_rtFrontDepth);
+    SAFE_RELEASE(g_rtBackDepth);
 }
 
 void MeshSSS::OnDeviceReset()

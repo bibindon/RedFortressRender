@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 #include <memory>
+
+#include "Common.h"
 #include "AnimController.h"
 #include "SkinAnimMeshAlloc.h"
 
@@ -12,7 +14,7 @@ namespace NSRender
 
 {
 
-class SkinAnimMesh
+class SkinAnimMesh : public IDeviceResettable
 {
 public:
     SkinAnimMesh(const std::wstring &,

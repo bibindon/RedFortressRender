@@ -815,4 +815,18 @@ void Render::Draw2D()
 
 }
 
+void Render::OnDeviceLost()
+{
+    SAFE_RELEASE(m_pRenderTarget1);
+    SAFE_RELEASE(m_pRenderTarget2);
+    SAFE_RELEASE(m_rtZTex);
+    SAFE_RELEASE(m_rtPosTex);
+    m_fxGBuffer->OnLostDevice();
+}
+
+void Render::OnDeviceReset()
+{
+
+}
+
 }

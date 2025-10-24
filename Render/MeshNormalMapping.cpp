@@ -104,6 +104,8 @@ void MeshNormalMapping::Initialize(const std::wstring& filename,
     assert(SUCCEEDED(hResult));
 
 
+    Common::AddDeviceLostResource(this);
+
 }
 
 

@@ -8,10 +8,12 @@
 #include <tchar.h>
 #include <atlbase.h>
 
+#include "Common.h"
+
 namespace NSRender
 {
 
-class Mesh
+class Mesh : public IDeviceResettable
 {
 public:
 

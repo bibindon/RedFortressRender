@@ -128,6 +128,7 @@ void MeshInstancing::Initialize()
 
     Common::D3DDevice()->CreateVertexDeclaration(declElems, &m_decl);
 
+    Common::AddDeviceLostResource(this);
 }
 
 void MeshInstancing::Finalize()

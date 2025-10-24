@@ -73,6 +73,7 @@ void PostEffectZShadow::Initialize()
     hResult = Common::D3DDevice()->CreateVertexDeclaration(elems, &g_pQuadDecl);
     assert(hResult == S_OK);
 
+    Common::AddDeviceLostResource(this);
 }
 
 void PostEffectZShadow::Finalize()
@@ -454,7 +455,10 @@ void PostEffectZShadow::SetEnable(const bool arg)
 
 void PostEffectZShadow::OnDeviceLost()
 {
-
+    g_fxDepthBufferShadow->OnLostDevice();
+    SAFE_RELEASE(g_texTemp);
+    SAFE_RELEASE(g_texRenderTargetLightZ);
+    SAFE_RELEASE(g_texRenderTargetShadow);
 }
 
 void PostEffectZShadow::OnDeviceReset()

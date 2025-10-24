@@ -41,6 +41,7 @@ void PostEffectSSAO::Initialize()
                                 &m_rtAoTempTex);
 
     assert(SUCCEEDED(hResult));
+    Common::AddDeviceLostResource(this);
 }
 
 void PostEffectSSAO::Finalize()
@@ -199,17 +200,17 @@ void PostEffectSSAO::DrawFullscreenQuad()
     SAFE_RELEASE(vertexDecl);
 }
 
-void SetEnable(const bool arg)
+void PostEffectSSAO::SetEnable(const bool arg)
 {
 
 }
 
-void OnDeviceLost()
+void PostEffectSSAO::OnDeviceLost()
 {
 
 }
 
-void OnDeviceReset()
+void PostEffectSSAO::OnDeviceReset()
 {
 
 }

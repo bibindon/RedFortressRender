@@ -26,6 +26,7 @@ void PostEffectSaturate::Initialize()
                       D3DFMT_A8R8G8B8,
                       D3DPOOL_DEFAULT,
                       &m_texWork);
+    Common::AddDeviceLostResource(this);
 }
 
 void PostEffectSaturate::Finalize()

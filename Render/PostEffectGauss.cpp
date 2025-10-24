@@ -27,6 +27,7 @@ void PostEffectGauss::Initialize()
                       D3DFMT_A8R8G8B8,
                       D3DPOOL_DEFAULT,
                       &m_texWork);
+    Common::AddDeviceLostResource(this);
 }
 
 LPDIRECT3DTEXTURE9 PostEffectGauss::Draw(LPDIRECT3DTEXTURE9 renderTarget)
