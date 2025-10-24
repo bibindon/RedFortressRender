@@ -99,7 +99,7 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
 
     m_fxSSAO->SetFloat("g_aoStepWorld", 4.0f);   // 5 → 4（半径を少し縮める）
     m_fxSSAO->SetFloat("g_originPush", 0.05f);  // 0.15 → 0.05（押し出し弱め）
-    m_fxSSAO->SetFloat("g_planeThickness", 0.006f); // 0.02 → 0.006（同一面厚みを薄く）
+//    m_fxSSAO->SetFloat("g_planeThickness", 0.006f); // 0.02 → 0.006（同一面厚みを薄く）
     m_fxSSAO->SetFloat("g_edgeZ", 0.006f); // 0.01 → 0.006（縁の深度許容を広げる）
     m_fxSSAO->SetFloat("g_aoStrength", 1.2f);   // 1.5 → 1.2（強すぎ抑制）
     m_fxSSAO->SetFloat("g_aoBias", 0.0002f);// 0.0001 → 0.0002（微バイアス）
