@@ -104,20 +104,21 @@ void WindowManager::ChangeWindowMode()
     D3DPRESENT_PARAMETERS d3dpp;
     ZeroMemory(&d3dpp, sizeof(d3dpp));
 
+    auto resoList = EnumerateFullscreenModes(m_pD3D, 0);
+    bool resoExist = Util::ContainIf(resoList,
+                                     [&](const DisplayModeInfo& elem)
+                                     {
+                                         if (elem.height == Common::ScreenH() &&
+                                             elem.width  == Common::ScreenW())
+                                         {
+                                             return true;
+                                         }
+
+                                         return false;
+                                     });
+
     if (m_eWindowModeRequest == eWindowMode::FULLSCREEN)
     {
-        auto resoList = EnumerateFullscreenModes(m_pD3D, 0);
-        bool resoExist = Util::ContainIf(resoList,
-                                         [&](const DisplayModeInfo& elem)
-                                         {
-                                             if (elem.height == Common::ScreenH() &&
-                                                 elem.width  == Common::ScreenW())
-                                             {
-                                                 return true;
-                                             }
-
-                                             return false;
-                                         });
         d3dpp.Windowed = FALSE;
         d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
         d3dpp.BackBufferFormat = D3DFMT_A8R8G8B8;
@@ -148,6 +149,16 @@ void WindowManager::ChangeWindowMode()
     }
     else if (m_eWindowModeRequest == eWindowMode::WINDOW)
     {
+        RECT rect;
+        {
+            SetRect(&rect, 0, 0, 1600, 900);
+            AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
+            rect.right = rect.right - rect.left;
+            rect.bottom = rect.bottom - rect.top;
+            rect.top = 0;
+            rect.left = 0;
+        }
+
         // 目的モニタを決める
         HMONITOR mon = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
         MONITORINFO mi { sizeof(mi) };
@@ -155,6 +166,9 @@ void WindowManager::ChangeWindowMode()
 
         // 物理座標（タスクバー含む全面）
         RECT r = mi.rcMonitor;
+
+        Common::SetScreenW(1600);
+        Common::SetScreenH(900);
 
         const int x_ = (r.right / 2) - (Common::ScreenW() / 2);
         const int y_ = (r.bottom / 2) - (Common::ScreenH() / 2);
@@ -164,8 +178,8 @@ void WindowManager::ChangeWindowMode()
                      HWND_TOP,
                      x_,
                      y_,
-                     1650,
-                     910,
+                     rect.right,
+                     rect.bottom,
                      SWP_FRAMECHANGED | SWP_SHOWWINDOW);
 
         // ウィンドウサイズの変更をさせない。最小化はOK
@@ -177,8 +191,10 @@ void WindowManager::ChangeWindowMode()
         d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
         d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
         d3dpp.BackBufferCount = 1;
+
         d3dpp.BackBufferWidth = Common::ScreenW();
         d3dpp.BackBufferHeight = Common::ScreenH();
+
         d3dpp.MultiSampleType = D3DMULTISAMPLE_4_SAMPLES;
 
         // TODO 要確認
@@ -210,10 +226,14 @@ void WindowManager::ChangeWindowMode()
                      r.bottom - r.top,
                      SWP_FRAMECHANGED | SWP_SHOWWINDOW);
 
+        Common::SetScreenW(r.right);
+        Common::SetScreenH(r.bottom);
+
         d3dpp.Windowed = TRUE;
         d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
         d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
         d3dpp.BackBufferCount = 1;
+
         d3dpp.BackBufferWidth = Common::ScreenW();
         d3dpp.BackBufferHeight = Common::ScreenH();
 

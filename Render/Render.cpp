@@ -108,7 +108,7 @@ void Render::Draw()
 
     pTempTexture = m_pRenderTarget1;
 
-//    // 深度バッファシャドウ
+    // 深度バッファシャドウ
     pTempTexture = m_postEffectZShadow.Draw(pTempTexture, m_meshMixList);
 
     // SSAO
