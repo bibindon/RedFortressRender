@@ -143,6 +143,15 @@ void PostEffectGauss::OnDeviceLost()
 void PostEffectGauss::OnDeviceReset()
 {
     m_d3dEffect->OnResetDevice();
+
+    D3DXCreateTexture(Common::D3DDevice(),
+                      Common::ScreenW(),
+                      Common::ScreenH(),
+                      1,
+                      D3DUSAGE_RENDERTARGET,
+                      D3DFMT_A8R8G8B8,
+                      D3DPOOL_DEFAULT,
+                      &m_texWork);
 }
 
 }

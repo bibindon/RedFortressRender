@@ -18,50 +18,7 @@ void PostEffectZShadow::Initialize()
                                        NULL);
     assert(hResult == S_OK);
 
-    hResult = D3DXCreateTexture(Common::D3DDevice(),
-                                Common::ScreenW() * 2,
-                                Common::ScreenH() * 2,
-                                1,
-                                D3DUSAGE_RENDERTARGET,
-                                D3DFMT_R32F,
-                                D3DPOOL_DEFAULT,
-                                &g_texRenderTargetLightZ);
-
-    assert(hResult == S_OK);
-
-    D3DSURFACE_DESC bdesc{};
-    g_texRenderTargetLightZ->GetLevelDesc(0, &bdesc);
-
-    // 影用の深度ステンシル（サイズをRT2に合わせる）
-    HRESULT hr = Common::D3DDevice()->CreateDepthStencilSurface(bdesc.Width,
-                                                         bdesc.Height,
-                                                         D3DFMT_D16,
-                                                         D3DMULTISAMPLE_NONE,
-                                                         0,
-                                                         TRUE,
-                                                         &g_surfaceLightZStensil,
-                                                         NULL);
-    assert(hr == S_OK);
-
-    hResult = D3DXCreateTexture(Common::D3DDevice(),
-                                Common::ScreenW(),
-                                Common::ScreenH(),
-                                1,
-                                D3DUSAGE_RENDERTARGET,
-                                D3DFMT_A8R8G8B8,
-                                D3DPOOL_DEFAULT,
-                                &g_texRenderTargetShadow);
-    assert(hResult == S_OK);
-
-    hResult = D3DXCreateTexture(Common::D3DDevice(),
-                                        Common::ScreenW(),
-                                        Common::ScreenH(),
-                                        1,
-                                        D3DUSAGE_RENDERTARGET,
-                                        D3DFMT_A8R8G8B8,
-                                        D3DPOOL_DEFAULT,
-                                        &g_texComposite);
-    assert(hResult == S_OK);
+    CreateTexture();
 
     D3DVERTEXELEMENT9 elems[] =
     {
@@ -464,6 +421,58 @@ void PostEffectZShadow::OnDeviceLost()
 
 void PostEffectZShadow::OnDeviceReset()
 {
+    g_fxDepthBufferShadow->OnResetDevice();
+    CreateTexture();
+}
+
+void PostEffectZShadow::CreateTexture()
+{
+    HRESULT hResult = E_FAIL;
+
+    hResult = D3DXCreateTexture(Common::D3DDevice(),
+                                Common::ScreenW() * 2,
+                                Common::ScreenH() * 2,
+                                1,
+                                D3DUSAGE_RENDERTARGET,
+                                D3DFMT_R32F,
+                                D3DPOOL_DEFAULT,
+                                &g_texRenderTargetLightZ);
+
+    assert(hResult == S_OK);
+
+    D3DSURFACE_DESC bdesc{};
+    g_texRenderTargetLightZ->GetLevelDesc(0, &bdesc);
+
+    // 影用の深度ステンシル（サイズをRT2に合わせる）
+    HRESULT hr = Common::D3DDevice()->CreateDepthStencilSurface(bdesc.Width,
+                                                         bdesc.Height,
+                                                         D3DFMT_D16,
+                                                         D3DMULTISAMPLE_NONE,
+                                                         0,
+                                                         TRUE,
+                                                         &g_surfaceLightZStensil,
+                                                         NULL);
+    assert(hr == S_OK);
+
+    hResult = D3DXCreateTexture(Common::D3DDevice(),
+                                Common::ScreenW(),
+                                Common::ScreenH(),
+                                1,
+                                D3DUSAGE_RENDERTARGET,
+                                D3DFMT_A8R8G8B8,
+                                D3DPOOL_DEFAULT,
+                                &g_texRenderTargetShadow);
+    assert(hResult == S_OK);
+
+    hResult = D3DXCreateTexture(Common::D3DDevice(),
+                                        Common::ScreenW(),
+                                        Common::ScreenH(),
+                                        1,
+                                        D3DUSAGE_RENDERTARGET,
+                                        D3DFMT_A8R8G8B8,
+                                        D3DPOOL_DEFAULT,
+                                        &g_texComposite);
+    assert(hResult == S_OK);
 
 }
 

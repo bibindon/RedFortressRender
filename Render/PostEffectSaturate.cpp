@@ -18,6 +18,13 @@ void PostEffectSaturate::Initialize()
                                        NULL);
     assert(SUCCEEDED(hResult));
 
+    CreateTexture();
+
+    Common::AddDeviceLostResource(this);
+}
+
+void PostEffectSaturate::CreateTexture()
+{
     D3DXCreateTexture(Common::D3DDevice(),
                       Common::ScreenW(),
                       Common::ScreenH(),
@@ -26,7 +33,6 @@ void PostEffectSaturate::Initialize()
                       D3DFMT_A8R8G8B8,
                       D3DPOOL_DEFAULT,
                       &m_texWork);
-    Common::AddDeviceLostResource(this);
 }
 
 void PostEffectSaturate::Finalize()
@@ -135,6 +141,7 @@ void PostEffectSaturate::OnDeviceLost()
 void PostEffectSaturate::OnDeviceReset()
 {
     m_d3dEffect->OnResetDevice();
+    CreateTexture();
 }
 
 }

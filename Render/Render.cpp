@@ -55,23 +55,23 @@ void Render::Initialize(HWND hWnd)
                                   NULL);
     assert(SUCCEEDED(hResult));
 
-//    // 彩度フィルター
-//    m_postEffectSaturate.Initialize();
-//
-//    // ガウスフィルター
-//    m_postEffectGauss.Initialize();
-//
-//    // ブルーム
-//    m_PostEffectBloom.Initialize();
-//
-//    // スターバースト
-//    m_postEffectStarBurst.Initialize();
-//
 //    // SSAO
 //    m_postEffectSSAO.Initialize();
 //
 //    // 深度バッファシャドウ
 //    m_postEffectZShadow.Initialize();
+
+    // 彩度フィルター
+    m_postEffectSaturate.Initialize();
+
+    // ガウスフィルター
+    m_postEffectGauss.Initialize();
+
+    // ブルーム
+    m_PostEffectBloom.Initialize();
+
+    // スターバースト
+    m_postEffectStarBurst.Initialize();
 
     // 最終処理用ポストエフェクト
     m_postEffectEnd.Initialize();
@@ -112,18 +112,18 @@ void Render::Draw()
 //
 //    // SSAO
 //    pTempTexture = m_postEffectSSAO.Draw(pTempTexture, m_rtZTex, m_rtPosTex);
-//
-//    // 彩度変更
-//    pTempTexture = m_postEffectSaturate.Draw(pTempTexture);
-//
-//    // ブルーム
-//    pTempTexture = m_PostEffectBloom.Draw(pTempTexture);
-//
-//    // スターバースト
-//    pTempTexture = m_postEffectStarBurst.Draw(pTempTexture);
-//
-//    // ガウス
-//    pTempTexture = m_postEffectGauss.Draw(pTempTexture);
+
+    // 彩度変更
+    pTempTexture = m_postEffectSaturate.Draw(pTempTexture);
+
+    // ブルーム
+    pTempTexture = m_PostEffectBloom.Draw(pTempTexture);
+
+    // スターバースト
+    pTempTexture = m_postEffectStarBurst.Draw(pTempTexture);
+
+    // ガウス
+    pTempTexture = m_postEffectGauss.Draw(pTempTexture);
 
     // g_pRenderTargetの内容を画面に転送
     m_postEffectEnd.Draw(pTempTexture);

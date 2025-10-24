@@ -18,6 +18,13 @@ void PostEffectBloom::Initialize()
                                        NULL);
     assert(SUCCEEDED(hResult));
 
+    CreateTexture();
+
+    Common::AddDeviceLostResource(this);
+}
+
+void PostEffectBloom::CreateTexture()
+{
     D3DXCreateTexture(Common::D3DDevice(),
                       Common::ScreenW(),
                       Common::ScreenH(),
@@ -71,7 +78,6 @@ void PostEffectBloom::Initialize()
                       D3DFMT_A8R8G8B8,
                       D3DPOOL_DEFAULT,
                       &m_texBlurV2);
-    Common::AddDeviceLostResource(this);
 }
 
 LPDIRECT3DTEXTURE9 PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource)
@@ -238,6 +244,7 @@ void PostEffectBloom::OnDeviceLost()
 void PostEffectBloom::OnDeviceReset()
 {
     m_d3dEffect->OnResetDevice();
+    CreateTexture();
 }
 
 }

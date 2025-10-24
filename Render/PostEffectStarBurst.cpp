@@ -18,80 +18,8 @@ void PostEffectStarBurst::Initialize()
                                        NULL);
     assert(SUCCEEDED(hResult));
 
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
-                      D3DPOOL_DEFAULT,
-                      &m_texPostEffectBack1);
+    CreateTexture();
 
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
-                      D3DPOOL_DEFAULT,
-                      &m_texBright);
-
-    // 0°（水平）
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
-                      D3DPOOL_DEFAULT,
-                      &m_texBlurH);
-
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
-                      D3DPOOL_DEFAULT,
-                      &m_texBlurH2);
-
-    // 60°
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
-                      D3DPOOL_DEFAULT,
-                      &m_texBlurV);
-
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
-                      D3DPOOL_DEFAULT,
-                      &m_texBlurV2);
-
-    // 120°（★追加）
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
-                      D3DPOOL_DEFAULT,
-                      &m_texBlurD);
-
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
-                      D3DPOOL_DEFAULT,
-                      &m_texBlurD2);
     Common::AddDeviceLostResource(this);
 }
 
@@ -271,6 +199,86 @@ void PostEffectStarBurst::OnDeviceLost()
 void PostEffectStarBurst::OnDeviceReset()
 {
     m_d3dEffect->OnResetDevice();
+    CreateTexture();
+}
+
+void PostEffectStarBurst::CreateTexture()
+{
+
+    D3DXCreateTexture(Common::D3DDevice(),
+                      Common::ScreenW(),
+                      Common::ScreenH(),
+                      1,
+                      D3DUSAGE_RENDERTARGET,
+                      D3DFMT_A8R8G8B8,
+                      D3DPOOL_DEFAULT,
+                      &m_texPostEffectBack1);
+
+    D3DXCreateTexture(Common::D3DDevice(),
+                      Common::ScreenW(),
+                      Common::ScreenH(),
+                      1,
+                      D3DUSAGE_RENDERTARGET,
+                      D3DFMT_A8R8G8B8,
+                      D3DPOOL_DEFAULT,
+                      &m_texBright);
+
+    // 0°（水平）
+    D3DXCreateTexture(Common::D3DDevice(),
+                      Common::ScreenW(),
+                      Common::ScreenH(),
+                      1,
+                      D3DUSAGE_RENDERTARGET,
+                      D3DFMT_A8R8G8B8,
+                      D3DPOOL_DEFAULT,
+                      &m_texBlurH);
+
+    D3DXCreateTexture(Common::D3DDevice(),
+                      Common::ScreenW(),
+                      Common::ScreenH(),
+                      1,
+                      D3DUSAGE_RENDERTARGET,
+                      D3DFMT_A8R8G8B8,
+                      D3DPOOL_DEFAULT,
+                      &m_texBlurH2);
+
+    // 60°
+    D3DXCreateTexture(Common::D3DDevice(),
+                      Common::ScreenW(),
+                      Common::ScreenH(),
+                      1,
+                      D3DUSAGE_RENDERTARGET,
+                      D3DFMT_A8R8G8B8,
+                      D3DPOOL_DEFAULT,
+                      &m_texBlurV);
+
+    D3DXCreateTexture(Common::D3DDevice(),
+                      Common::ScreenW(),
+                      Common::ScreenH(),
+                      1,
+                      D3DUSAGE_RENDERTARGET,
+                      D3DFMT_A8R8G8B8,
+                      D3DPOOL_DEFAULT,
+                      &m_texBlurV2);
+
+    // 120°（★追加）
+    D3DXCreateTexture(Common::D3DDevice(),
+                      Common::ScreenW(),
+                      Common::ScreenH(),
+                      1,
+                      D3DUSAGE_RENDERTARGET,
+                      D3DFMT_A8R8G8B8,
+                      D3DPOOL_DEFAULT,
+                      &m_texBlurD);
+
+    D3DXCreateTexture(Common::D3DDevice(),
+                      Common::ScreenW(),
+                      Common::ScreenH(),
+                      1,
+                      D3DUSAGE_RENDERTARGET,
+                      D3DFMT_A8R8G8B8,
+                      D3DPOOL_DEFAULT,
+                      &m_texBlurD2);
 }
 
 }

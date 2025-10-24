@@ -215,7 +215,31 @@ void PostEffectSSAO::OnDeviceLost()
 
 void PostEffectSSAO::OnDeviceReset()
 {
+    m_fxSSAO->OnLostDevice();
 
+    HRESULT hResult = E_FAIL;
+
+    hResult = D3DXCreateTexture(Common::D3DDevice(),
+                                Common::ScreenW(),
+                                Common::ScreenH(),
+                                1,
+                                D3DUSAGE_RENDERTARGET,
+                                D3DFMT_A8R8G8B8,
+                                D3DPOOL_DEFAULT,
+                                &m_rtAoTex);
+
+    assert(SUCCEEDED(hResult));
+
+    hResult = D3DXCreateTexture(Common::D3DDevice(),
+                                Common::ScreenW(),
+                                Common::ScreenH(),
+                                1,
+                                D3DUSAGE_RENDERTARGET,
+                                D3DFMT_A8R8G8B8,
+                                D3DPOOL_DEFAULT,
+                                &m_rtAoTempTex);
+
+    assert(SUCCEEDED(hResult));
 }
 
 }

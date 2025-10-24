@@ -65,6 +65,8 @@ private:
     bool m_bEnable = false;
 
     void SetRTFromTex(LPDIRECT3DTEXTURE9 tex);
+
+    void CreateTexture();
 };
 
 }
