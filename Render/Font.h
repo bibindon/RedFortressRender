@@ -69,6 +69,13 @@ private:
     UINT m_fontColor = UINT_MAX;
     std::vector<TextInfo> m_textList;
 
+    std::wstring m_fontName;
+
+    int m_fontSizeScaled = 0;
+    int m_fontSizeOrigin = 0;
+
+    void CreateResource();
+
 };
 
 }

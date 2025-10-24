@@ -31,6 +31,12 @@ public:
 
     static constexpr float ANIMATION_SPEED = 1.0f / 60;
 
+    // 解像度は1600x900を基本と考える。
+    // 例えば1920x1080は、1.2倍の解像度、と考える。
+    // この考えに従ってUIの大きさやフォントのサイズを調節できる
+    static constexpr int BASE_W = 1600;
+    static constexpr int BASE_H = 900;
+
     static void OnDeviceLostAll();
     static void OnDeviceResetAll();
 
@@ -43,6 +49,10 @@ public:
 
     static int ScreenH();
     static void SetScreenH(const int H);
+
+    // 解像度が1920x1080の時に、800, 450を渡したら、960, 540が返ってくる、そんな関数
+    static POINT ScaledPoint(const POINT& pt);
+    static POINT ScaledPoint(const int x, const int y);
 
 private:
 

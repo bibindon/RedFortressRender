@@ -78,6 +78,32 @@ void Common::SetScreenH(const int H)
     m_screenH = H;
 }
 
+POINT Common::ScaledPoint(const POINT& pt)
+{
+    POINT pt2 { };
+
+    float scaleW = (float)m_screenW / BASE_W;
+    float scaleH = (float)m_screenH / BASE_H;
+
+    pt2.x = pt.x * scaleW;
+    pt2.y = pt.y * scaleH;
+
+    return pt2;
+}
+
+POINT Common::ScaledPoint(const int x, const int y)
+{
+    POINT pt2 { };
+
+    float scaleW = (float)m_screenW / BASE_W;
+    float scaleH = (float)m_screenH / BASE_H;
+
+    pt2.x = x * scaleW;
+    pt2.y = y * scaleH;
+
+    return pt2;
+}
+
 }
 
 

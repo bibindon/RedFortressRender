@@ -9,8 +9,31 @@ void Font::Initialize(const std::wstring& fontName,
 {
     HRESULT hResult = E_FAIL;
 
+    m_fontName = fontName;
+    m_fontSizeOrigin = fontSize;
+    m_fontColor = fontColor;
+
+    CreateResource();
+
+    // デバイスロストを管理する機能にこのリソースを登録
+    Common::AddDeviceLostResource(this);
+}
+
+void Font::CreateResource()
+{
+    HRESULT hResult = E_FAIL;
+
+    // モニターの解像度に合わせてフォントサイズを調節する。
+    // 1920x1080だったら1600x900の1.2倍なので1.2倍のフォントサイズを指定する
+    // 1920x900だったら、横は1.2倍、縦は1倍である。この場合は小さい方の1倍を採用する
+    float scaleW = (float)Common::ScreenW() / Common::BASE_W;
+    float scaleH = (float)Common::ScreenH() / Common::BASE_H;
+    float scaleMin = (std::min)(scaleW, scaleH);
+
+    m_fontSizeScaled = (int)(m_fontSizeOrigin * scaleMin);
+
     D3DXFONT_DESC desc { };
-    desc.Height             = fontSize;
+    desc.Height             = m_fontSizeScaled;
 
     // 幅は必ず0(自動)を指定する
     desc.Width              = 0;
@@ -22,18 +45,13 @@ void Font::Initialize(const std::wstring& fontName,
     desc.OutputPrecision    = OUT_TT_ONLY_PRECIS;
     desc.Quality            = CLEARTYPE_NATURAL_QUALITY;
     desc.PitchAndFamily     = FF_DONTCARE;
-    wcsncpy_s(desc.FaceName, _countof(desc.FaceName), fontName.c_str(), _TRUNCATE);
+    wcsncpy_s(desc.FaceName, _countof(desc.FaceName), m_fontName.c_str(), _TRUNCATE);
 
     hResult = D3DXCreateFontIndirect(Common::D3DDevice(),
                                      &desc,
                                      &m_pFont);
 
     assert(hResult == S_OK);
-
-    m_fontColor = fontColor;
-
-    // デバイスロストを管理する機能にこのリソースを登録
-    Common::AddDeviceLostResource(this);
 }
 
 void Font::AddText(const std::wstring& text,
@@ -42,8 +60,10 @@ void Font::AddText(const std::wstring& text,
 {
     TextInfo textInfo;
 
-    textInfo.m_rect.left = X;
-    textInfo.m_rect.top = Y;
+    POINT pt = Common::ScaledPoint(X, Y);
+
+    textInfo.m_rect.left = pt.x;
+    textInfo.m_rect.top = pt.y;
     textInfo.m_rect.right = 0;
     textInfo.m_rect.bottom = 0;
 
@@ -62,8 +82,10 @@ void Font::AddText(const std::wstring& text,
 {
     TextInfo textInfo;
 
-    textInfo.m_rect.left = X;
-    textInfo.m_rect.top = Y;
+    POINT pt = Common::ScaledPoint(X, Y);
+
+    textInfo.m_rect.left = pt.x;
+    textInfo.m_rect.top = pt.y;
     textInfo.m_rect.right = 0;
     textInfo.m_rect.bottom = 0;
 
@@ -83,10 +105,14 @@ void Font::AddTextCenter(const std::wstring& text,
 {
     TextInfo textInfo;
 
-    textInfo.m_rect.left = X;
-    textInfo.m_rect.top = Y;
-    textInfo.m_rect.right = X + Width;
-    textInfo.m_rect.bottom = Y + Height;
+    POINT pt = Common::ScaledPoint(X, Y);
+    POINT pt2 = Common::ScaledPoint(Width, Height);
+
+    textInfo.m_rect.left = pt.x;
+    textInfo.m_rect.top = pt.y;
+
+    textInfo.m_rect.right = pt.x + pt2.x;
+    textInfo.m_rect.bottom = pt.y + pt2.y;
 
     textInfo.m_text = text;
     textInfo.m_bCenter = true;
@@ -105,10 +131,14 @@ void Font::AddTextCenter(const std::wstring& text,
 {
     TextInfo textInfo;
 
-    textInfo.m_rect.left = X;
-    textInfo.m_rect.top = Y;
-    textInfo.m_rect.right = X + Width;
-    textInfo.m_rect.bottom = Y + Height;
+    POINT pt = Common::ScaledPoint(X, Y);
+    POINT pt2 = Common::ScaledPoint(Width, Height);
+
+    textInfo.m_rect.left = pt.x;
+    textInfo.m_rect.top = pt.y;
+
+    textInfo.m_rect.right = pt.x + pt2.x;
+    textInfo.m_rect.bottom = pt.y + pt2.y;
 
     textInfo.m_text = text;
     textInfo.m_bCenter = true;
@@ -168,12 +198,12 @@ void Font::Finalize()
 
 void Font::OnDeviceLost()
 {
-    m_pFont->OnLostDevice();
+    SAFE_RELEASE(m_pFont);
 }
 
 void Font::OnDeviceReset()
 {
-    m_pFont->OnResetDevice();
+    CreateResource();
 }
 
 }
