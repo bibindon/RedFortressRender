@@ -362,7 +362,7 @@ void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float3 reflectWorld = reflect(-cameraDir, normalize(normalInWorld));
 
-    outColor = float4(texCUBE(g_cubeMapSampler, reflectWorld).rgb, 0.3f);
+    outColor = float4(texCUBE(g_cubeMapSampler, reflectWorld).rgb, 0.1f);
 }
 
 //-------------------------------------------------------------
