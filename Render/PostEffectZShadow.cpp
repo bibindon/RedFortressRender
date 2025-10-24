@@ -459,6 +459,7 @@ void PostEffectZShadow::OnDeviceLost()
     SAFE_RELEASE(g_texTemp);
     SAFE_RELEASE(g_texRenderTargetLightZ);
     SAFE_RELEASE(g_texRenderTargetShadow);
+    SAFE_RELEASE(g_texComposite);
 }
 
 void PostEffectZShadow::OnDeviceReset()

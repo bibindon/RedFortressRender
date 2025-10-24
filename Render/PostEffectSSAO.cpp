@@ -207,6 +207,9 @@ void PostEffectSSAO::SetEnable(const bool arg)
 
 void PostEffectSSAO::OnDeviceLost()
 {
+    m_fxSSAO->OnLostDevice();
+    SAFE_RELEASE(m_rtAoTex);
+    SAFE_RELEASE(m_rtAoTempTex);
 
 }
 

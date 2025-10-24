@@ -137,6 +137,7 @@ void PostEffectGauss::SetIntensity(const float arg)
 void PostEffectGauss::OnDeviceLost()
 {
     m_d3dEffect->OnLostDevice();
+    SAFE_RELEASE(m_texWork);
 }
 
 void PostEffectGauss::OnDeviceReset()

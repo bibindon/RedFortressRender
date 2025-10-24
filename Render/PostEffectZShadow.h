@@ -38,8 +38,11 @@ private:
 
     LPDIRECT3DTEXTURE9 g_texRenderTargetLightZ = NULL;
     LPDIRECT3DTEXTURE9 g_texRenderTargetShadow = NULL;
+    LPDIRECT3DTEXTURE9 g_texComposite = NULL;
     
     LPDIRECT3DSURFACE9 g_surfaceLightZStensil = NULL;
+    LPDIRECT3DSURFACE9 oldRT0 = NULL;
+    LPDIRECT3DSURFACE9 oldZ = NULL;
     
     LPDIRECT3DVERTEXDECLARATION9 g_pQuadDecl = NULL;
 
@@ -55,8 +58,6 @@ private:
         float u, v;
     };
 
-    LPDIRECT3DSURFACE9 oldRT0 = NULL;
-    LPDIRECT3DSURFACE9 oldZ = NULL;
 
     D3DXMATRIX mLightView;
     D3DXMATRIX mLightProj;
@@ -66,7 +67,6 @@ private:
 
     const std::vector<MeshMix>* m_pMeshList;
 
-    LPDIRECT3DTEXTURE9 g_texComposite = NULL;
 };
 
 }

@@ -50,6 +50,7 @@ void Common::OnDeviceResetAll()
 
 void Common::AddDeviceLostResource(IDeviceResettable* res)
 {
+    m_resourceList.push_back(res);
 }
 
 void Common::RemoveDeviceLostResource(const IDeviceResettable* res)

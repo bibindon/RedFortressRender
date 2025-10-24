@@ -233,12 +233,12 @@ void MeshInstancing::Draw()
 
 void MeshInstancing::OnDeviceLost()
 {
-    
+    m_pEffect->OnLostDevice();
 }
 
 void MeshInstancing::OnDeviceReset()
 {
-
+    m_pEffect->OnResetDevice();
 }
 
 void MeshInstancing::copyBuf(unsigned sz, void* src, IDirect3DVertexBuffer9* buf)

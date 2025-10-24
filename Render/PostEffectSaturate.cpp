@@ -129,6 +129,7 @@ void PostEffectSaturate::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
 void PostEffectSaturate::OnDeviceLost()
 {
     m_d3dEffect->OnLostDevice();
+    SAFE_RELEASE(m_texWork);
 }
 
 void PostEffectSaturate::OnDeviceReset()
