@@ -42,51 +42,9 @@ void Render::Initialize(HWND hWnd)
 
     m_sprite.Initialize();
 
-    hResult = D3DXCreateTexture(Common::D3DDevice(),
-                                Common::ScreenW(),
-                                Common::ScreenH(),
-                                1,
-                                D3DUSAGE_RENDERTARGET,
-                                D3DFMT_A8R8G8B8,
-                                D3DPOOL_DEFAULT,
-                                &m_pRenderTarget1);
-    assert(hResult == S_OK);
+    CreateTexture();
 
-    hResult = D3DXCreateTexture(Common::D3DDevice(),
-                                Common::ScreenW(),
-                                Common::ScreenH(),
-                                1,
-                                D3DUSAGE_RENDERTARGET,
-                                D3DFMT_A8R8G8B8,
-                                D3DPOOL_DEFAULT,
-                                &m_pRenderTarget2);
-    assert(hResult == S_OK);
-
-    HRESULT hr = E_FAIL;
-
-    // Z画像（A8R8G8B8: Aに線形Z、RGBは可視化用に使える）
-    hr = D3DXCreateTexture(Common::D3DDevice(),
-                           Common::ScreenW(),
-                           Common::ScreenH(),
-                           1,
-                           D3DUSAGE_RENDERTARGET,
-                           D3DFMT_A16B16G16R16F,
-                           D3DPOOL_DEFAULT,
-                           &m_rtZTex);
-    assert(hr == S_OK);
-
-    // World座標（高精度推奨）
-    hr = D3DXCreateTexture(Common::D3DDevice(),
-                           Common::ScreenW(),
-                           Common::ScreenH(),
-                           1,
-                           D3DUSAGE_RENDERTARGET,
-                           D3DFMT_A16B16G16R16F,
-                           D3DPOOL_DEFAULT,
-                           &m_rtPosTex);
-    assert(hr == S_OK);
-
-    hr = D3DXCreateEffectFromFile(Common::D3DDevice(),
+    hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
                                   //L"res\\shader\\GBuffer.fx",
                                   L"../x64/Debug/GBuffer.cso",
                                   NULL,
@@ -97,26 +55,28 @@ void Render::Initialize(HWND hWnd)
                                   NULL);
     assert(SUCCEEDED(hResult));
 
-    // 彩度フィルター
-    m_postEffectSaturate.Initialize();
-
-    // ガウスフィルター
-    m_postEffectGauss.Initialize();
-
-    // ブルーム
-    m_PostEffectBloom.Initialize();
-
-    // スターバースト
-    m_postEffectStarBurst.Initialize();
-
-    // SSAO
-    m_postEffectSSAO.Initialize();
-
-    // 深度バッファシャドウ
-    m_postEffectZShadow.Initialize();
+//    // 彩度フィルター
+//    m_postEffectSaturate.Initialize();
+//
+//    // ガウスフィルター
+//    m_postEffectGauss.Initialize();
+//
+//    // ブルーム
+//    m_PostEffectBloom.Initialize();
+//
+//    // スターバースト
+//    m_postEffectStarBurst.Initialize();
+//
+//    // SSAO
+//    m_postEffectSSAO.Initialize();
+//
+//    // 深度バッファシャドウ
+//    m_postEffectZShadow.Initialize();
 
     // 最終処理用ポストエフェクト
     m_postEffectEnd.Initialize();
+
+    Common::AddDeviceLostResource(this);
 }
 
 void Render::Finalize()
@@ -147,23 +107,23 @@ void Render::Draw()
 
     pTempTexture = m_pRenderTarget1;
 
-    // 深度バッファシャドウ
-    pTempTexture = m_postEffectZShadow.Draw(pTempTexture, m_meshMixList);
-
-    // SSAO
-    pTempTexture = m_postEffectSSAO.Draw(pTempTexture, m_rtZTex, m_rtPosTex);
-
-    // 彩度変更
-    pTempTexture = m_postEffectSaturate.Draw(pTempTexture);
-
-    // ブルーム
-    pTempTexture = m_PostEffectBloom.Draw(pTempTexture);
-
-    // スターバースト
-    pTempTexture = m_postEffectStarBurst.Draw(pTempTexture);
-
-    // ガウス
-    pTempTexture = m_postEffectGauss.Draw(pTempTexture);
+//    // 深度バッファシャドウ
+//    pTempTexture = m_postEffectZShadow.Draw(pTempTexture, m_meshMixList);
+//
+//    // SSAO
+//    pTempTexture = m_postEffectSSAO.Draw(pTempTexture, m_rtZTex, m_rtPosTex);
+//
+//    // 彩度変更
+//    pTempTexture = m_postEffectSaturate.Draw(pTempTexture);
+//
+//    // ブルーム
+//    pTempTexture = m_PostEffectBloom.Draw(pTempTexture);
+//
+//    // スターバースト
+//    pTempTexture = m_postEffectStarBurst.Draw(pTempTexture);
+//
+//    // ガウス
+//    pTempTexture = m_postEffectGauss.Draw(pTempTexture);
 
     // g_pRenderTargetの内容を画面に転送
     m_postEffectEnd.Draw(pTempTexture);
@@ -822,10 +782,61 @@ void Render::OnDeviceLost()
     SAFE_RELEASE(m_rtZTex);
     SAFE_RELEASE(m_rtPosTex);
     m_fxGBuffer->OnLostDevice();
+    m_sprite.OnDeviceLost();
 }
 
 void Render::OnDeviceReset()
 {
+    CreateTexture();
+    m_fxGBuffer->OnResetDevice();
+    m_sprite.OnDeviceReset();
+}
+
+void Render::CreateTexture()
+{
+    HRESULT hr = E_FAIL;
+
+    hr = D3DXCreateTexture(Common::D3DDevice(),
+                           Common::ScreenW(),
+                           Common::ScreenH(),
+                           1,
+                           D3DUSAGE_RENDERTARGET,
+                           D3DFMT_A8R8G8B8,
+                           D3DPOOL_DEFAULT,
+                           &m_pRenderTarget1);
+    assert(hr == S_OK);
+
+    hr = D3DXCreateTexture(Common::D3DDevice(),
+                           Common::ScreenW(),
+                           Common::ScreenH(),
+                           1,
+                           D3DUSAGE_RENDERTARGET,
+                           D3DFMT_A8R8G8B8,
+                           D3DPOOL_DEFAULT,
+                           &m_pRenderTarget2);
+    assert(hr == S_OK);
+
+    // Z画像（A8R8G8B8: Aに線形Z、RGBは可視化用に使える）
+    hr = D3DXCreateTexture(Common::D3DDevice(),
+                           Common::ScreenW(),
+                           Common::ScreenH(),
+                           1,
+                           D3DUSAGE_RENDERTARGET,
+                           D3DFMT_A16B16G16R16F,
+                           D3DPOOL_DEFAULT,
+                           &m_rtZTex);
+    assert(hr == S_OK);
+
+    // World座標（高精度推奨）
+    hr = D3DXCreateTexture(Common::D3DDevice(),
+                           Common::ScreenW(),
+                           Common::ScreenH(),
+                           1,
+                           D3DUSAGE_RENDERTARGET,
+                           D3DFMT_A16B16G16R16F,
+                           D3DPOOL_DEFAULT,
+                           &m_rtPosTex);
+    assert(hr == S_OK);
 
 }
 

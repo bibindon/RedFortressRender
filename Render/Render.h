@@ -41,7 +41,7 @@
 namespace NSRender
 {
 
-class Render
+class Render : public IDeviceResettable
 {
 
 public:
@@ -270,6 +270,8 @@ private:
     void OnDeviceLost();
 
     void OnDeviceReset();
+
+    void CreateTexture();
 
 };
 }

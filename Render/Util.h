@@ -28,6 +28,35 @@ public:
         c.erase(std::remove_if(std::begin(c), std::end(c), std::move(pred)), std::end(c));
     }
 
+    // 含有チェック（値一致）：要素が含まれていれば true
+    template <class Seq, class T>
+    static bool Contain(const Seq& container, const T& value)
+    {
+        auto foundIter = std::find(std::begin(container), std::end(container), value);
+        if (foundIter != std::end(container))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    // 含有チェック（条件）：述語が true を返す要素があれば true
+    template <class Seq, class Pred>
+    static bool ContainIf(const Seq& container, Pred predicate)
+    {
+        auto foundIter = std::find_if(std::begin(container), std::end(container), predicate);
+        if (foundIter != std::end(container))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
 };
 
 }

@@ -1,6 +1,9 @@
 #include "WindowManager.h"
+
 #include <set>
 #include <algorithm>
+
+#include "Util.h"
 
 namespace NSRender
 {
@@ -103,12 +106,34 @@ void WindowManager::ChangeWindowMode()
 
     if (m_eWindowModeRequest == eWindowMode::FULLSCREEN)
     {
+        auto resoList = EnumerateFullscreenModes(m_pD3D, 0);
+        bool resoExist = Util::ContainIf(resoList,
+                                         [&](const DisplayModeInfo& elem)
+                                         {
+                                             if (elem.height == Common::ScreenH() &&
+                                                 elem.width  == Common::ScreenW())
+                                             {
+                                                 return true;
+                                             }
+
+                                             return false;
+                                         });
         d3dpp.Windowed = FALSE;
         d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
         d3dpp.BackBufferFormat = D3DFMT_A8R8G8B8;
         d3dpp.BackBufferCount = 1;
-        d3dpp.BackBufferWidth = Common::ScreenW();
-        d3dpp.BackBufferHeight = Common::ScreenH();
+
+        if (resoExist)
+        {
+            d3dpp.BackBufferWidth = Common::ScreenW();
+            d3dpp.BackBufferHeight = Common::ScreenH();
+        }
+        else
+        {
+            d3dpp.BackBufferWidth = resoList.begin()->width;
+            d3dpp.BackBufferHeight = resoList.begin()->height;
+        }
+
         d3dpp.MultiSampleType = D3DMULTISAMPLE_4_SAMPLES;
 
         // TODO 要確認
@@ -191,6 +216,7 @@ void WindowManager::ChangeWindowMode()
         d3dpp.BackBufferCount = 1;
         d3dpp.BackBufferWidth = Common::ScreenW();
         d3dpp.BackBufferHeight = Common::ScreenH();
+
         d3dpp.MultiSampleType = D3DMULTISAMPLE_4_SAMPLES;
 
         // TODO 要確認
@@ -203,6 +229,7 @@ void WindowManager::ChangeWindowMode()
         d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
         d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
     }
+
 
     hResult = Common::D3DDevice()->Reset(&d3dpp);
     assert(hResult == S_OK);
