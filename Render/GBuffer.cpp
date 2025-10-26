@@ -54,9 +54,22 @@ void GBuffer::CreateRawResource()
                                 D3DPOOL_DEFAULT,
                                 &m_texRenderTargetPos);
     assert(hResult == S_OK);
+
+    hResult = D3DXCreateTexture(Common::D3DDevice(),
+                                Common::ScreenW(),
+                                Common::ScreenH(),
+                                1,
+                                D3DUSAGE_RENDERTARGET,
+                                D3DFMT_A16B16G16R16F,
+                                D3DPOOL_DEFAULT,
+                                &m_texRenderTargetNormal);
+    assert(hResult == S_OK);
 }
 
-void GBuffer::Draw(const std::vector<MeshMix>& meshList, LPDIRECT3DTEXTURE9* Z, LPDIRECT3DTEXTURE9* Pos)
+void GBuffer::Draw(const std::vector<MeshMix>& meshList,
+                   LPDIRECT3DTEXTURE9* Z,
+                   LPDIRECT3DTEXTURE9* Pos,
+                   LPDIRECT3DTEXTURE9* Normal)
 {
     HRESULT hr = E_FAIL;
 
@@ -67,12 +80,16 @@ void GBuffer::Draw(const std::vector<MeshMix>& meshList, LPDIRECT3DTEXTURE9* Z, 
     // Z と POS のサーフェスを取得
     LPDIRECT3DSURFACE9 surfaceZ = NULL;
     LPDIRECT3DSURFACE9 surfacePos = NULL;
+    LPDIRECT3DSURFACE9 surfaceNorm = NULL;
+
     hr = m_texRenderTargetZ->GetSurfaceLevel(0, &surfaceZ);
     hr = m_texRenderTargetPos->GetSurfaceLevel(0, &surfacePos);
+    hr = m_texRenderTargetNormal->GetSurfaceLevel(0, &surfaceNorm);
 
     // MRT×2 をセット
     hr = Common::D3DDevice()->SetRenderTarget(0, surfaceZ);
     hr = Common::D3DDevice()->SetRenderTarget(1, surfacePos);
+    hr = Common::D3DDevice()->SetRenderTarget(2, surfaceNorm);
 
     // クリア。Zバッファも一緒に初期化して素直に全描画
     hr = Common::D3DDevice()->Clear(0,
@@ -128,15 +145,18 @@ void GBuffer::Draw(const std::vector<MeshMix>& meshList, LPDIRECT3DTEXTURE9* Z, 
     hr = Common::D3DDevice()->EndScene();
 
     // MRT を外し、RT0 を元に戻す
+    Common::D3DDevice()->SetRenderTarget(2, NULL);
     Common::D3DDevice()->SetRenderTarget(1, NULL);
     Common::D3DDevice()->SetRenderTarget(0, surfaceOld);
 
     SAFE_RELEASE(surfaceZ);
     SAFE_RELEASE(surfacePos);
+    SAFE_RELEASE(surfaceNorm);
     SAFE_RELEASE(surfaceOld);
 
     *Z = m_texRenderTargetZ;
     *Pos = m_texRenderTargetPos;
+    *Normal = m_texRenderTargetNormal;
 }
 
 void GBuffer::Finalize()
@@ -149,6 +169,7 @@ void GBuffer::OnDeviceLost()
     m_fxGBuffer->OnLostDevice();
     SAFE_RELEASE(m_texRenderTargetZ);
     SAFE_RELEASE(m_texRenderTargetPos);
+    SAFE_RELEASE(m_texRenderTargetNormal);
 }
 
 void GBuffer::OnDeviceReset()

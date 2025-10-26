@@ -96,7 +96,8 @@ void Render::Draw()
     //---------------------------------------------------------------
     LPDIRECT3DTEXTURE9 pTexTempZ = NULL;
     LPDIRECT3DTEXTURE9 pTexTempPos = NULL;
-    m_GBuffer.Draw(m_meshMixList, &pTexTempZ, &pTexTempPos);
+    LPDIRECT3DTEXTURE9 pTexTempNoral = NULL;
+    m_GBuffer.Draw(m_meshMixList, &pTexTempZ, &pTexTempPos, &pTexTempNoral);
 
     //---------------------------------------------------------------
     // ポストエフェクト

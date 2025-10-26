@@ -1,8 +1,3 @@
-// GBuffer.fx
-// D3D9 / Shader Model 3.0
-// 出力
-//   COLOR0: Z画像（RGB=可視化、A=線形Z）
-//   COLOR1: World座標の0..1エンコード
 
 float4x4 g_matWorld;
 float4x4 g_matView;
@@ -16,6 +11,7 @@ float g_posRange = 50.0f;
 struct VS_INPUT
 {
     float4 positionObject : POSITION0;
+    float3 normalObject   : NORMAL0;
 };
 
 struct VS_OUTPUT
@@ -23,6 +19,7 @@ struct VS_OUTPUT
     float4 positionClip   : POSITION0;
     float  viewSpaceZ     : TEXCOORD0;
     float3 positionWorld  : TEXCOORD1;
+    float3 normalWorld    : TEXCOORD2;
 };
 
 VS_OUTPUT VS_GBuffer(VS_INPUT inputData)
@@ -36,12 +33,17 @@ VS_OUTPUT VS_GBuffer(VS_INPUT inputData)
     outputData.viewSpaceZ = positionView4.z;
     outputData.positionWorld = positionWorld4.xyz;
 
+    float3 nWS = mul(inputData.normalObject, (float3x3)g_matWorld);
+    outputData.normalWorld = normalize(nWS);
+
+
     return outputData;
 }
 
 void PS_GBuffer(VS_OUTPUT inputData,
                  out float4 outRT0 : COLOR0,
-                 out float4 outRT1 : COLOR1)
+                 out float4 outRT1 : COLOR1,
+                 out float4 outRT2 : COLOR2)
 {
     float linearZ = (inputData.viewSpaceZ - g_fNear) / (g_fFar - g_fNear);
     linearZ = saturate(linearZ);
@@ -55,6 +57,10 @@ void PS_GBuffer(VS_OUTPUT inputData,
     world01 = saturate(world01);
     
     outRT1 = float4(world01, 1.0f);
+
+    // ---- RT2: WS 法線を 0..1 にエンコード ----
+    float3 n01 = saturate(inputData.normalWorld * 0.5f + 0.5f);
+    outRT2 = float4(n01, 1.0f);
 }
 
 technique TechniqueGBuffer
