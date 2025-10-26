@@ -33,7 +33,7 @@ void GBuffer::CreateRawResource()
 {
     HRESULT hResult = E_FAIL;
 
-    // Z画像（A8R8G8B8: Aに線形Z、RGBは可視化用に使える）
+    // Z画像
     hResult = D3DXCreateTexture(Common::D3DDevice(),
                                 Common::ScreenW(),
                                 Common::ScreenH(),
@@ -44,7 +44,7 @@ void GBuffer::CreateRawResource()
                                 &m_texRenderTargetZ);
     assert(hResult == S_OK);
 
-    // World座標（高精度推奨）
+    // World座標
     hResult = D3DXCreateTexture(Common::D3DDevice(),
                                 Common::ScreenW(),
                                 Common::ScreenH(),

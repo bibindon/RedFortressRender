@@ -7,10 +7,12 @@
 #include "Common.h"
 
 const D3DXVECTOR3 NSRender::Camera::UPWARD (0.0f, 1.0f, 0.0f);
+
 // m_eyePosに何をセットしても視点は変わらない。視点はm_radianによって決まる。
 D3DXVECTOR3 NSRender::Camera::m_eyePos(0.f, 4.f, -6.f);
 D3DXVECTOR3 NSRender::Camera::m_lookAtPos(0.0f, 0.0f, 0.0f);
 float NSRender::Camera::m_viewAngle = (D3DX_PI / 4);
+
 // m_radian == D3DX_PI * 3 / 2の時（270度の時）カメラは正面を向く
 float NSRender::Camera::m_radian = D3DX_PI * 3 / 2;
 float NSRender::Camera::m_y = 3.f;
@@ -92,11 +94,29 @@ POINT NSRender::Camera::GetScreenPos(const D3DXVECTOR3& world)
 {
     const D3DXMATRIX view_matrix { GetViewMatrix() };
     const D3DXMATRIX projection_matrix { GetProjMatrix() };
-    static const D3DXMATRIX viewport_matrix {
-        Common::ScreenW() / 2.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, -Common::ScreenH() / 2.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        Common::ScreenW() / 2.0f, Common::ScreenH() / 2.0f, 0.0f, 1.0f };
+    static const D3DXMATRIX viewport_matrix
+    {
+        Common::ScreenW() / 2.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+
+        0.0f,
+        -Common::ScreenH() / 2.0f,
+        0.0f,
+        0.0f,
+
+        0.0f,
+        0.0f,
+        1.0f,
+        0.0f,
+
+        Common::ScreenW() / 2.0f,
+        Common::ScreenH() / 2.0f,
+        0.0f,
+        1.0f
+    };
+
     D3DXMATRIX matrix { };
     D3DXMatrixTranslation(&matrix, world.x, world.y, world.z);
     matrix = matrix * view_matrix * projection_matrix * viewport_matrix;

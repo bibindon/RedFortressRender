@@ -1,8 +1,3 @@
-// GBuffer.fx
-// D3D9 / Shader Model 3.0
-// 出力
-//   COLOR0: Z画像（RGB=可視化、A=線形Z）
-//   COLOR1: World座標の0..1エンコード
 
 float4x4 g_matWorld;
 float4x4 g_matView;
