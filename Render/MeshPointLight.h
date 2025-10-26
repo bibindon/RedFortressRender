@@ -6,8 +6,11 @@
 namespace NSRender
 {
 
+// 未使用。動作確認用。
+//
 // ポイントライトが反映されるメッシュ
-// 逆に、これ以外のメッシュはポイントライトが反映されない
+//
+// 現在は、ポストエフェクトでポイントライトを表示するのでこのようなクラスは必要ない。
 class MeshPointLight : public IDeviceResettable
 {
 

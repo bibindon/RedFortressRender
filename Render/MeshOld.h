@@ -13,6 +13,7 @@
 namespace NSRender
 {
 
+// ホシマンというゲームで使われていたメッシュ用クラス
 class MeshOld : public IDeviceResettable
 {
 public:

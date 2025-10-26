@@ -13,12 +13,18 @@
       <UniqueIdentifier>{fa0d1834-c295-4845-b7ae-5081eaf597d4}</UniqueIdentifier>
       <Extensions>fx</Extensions>
     </Filter>
+    <Filter Include="ソース ファイル\Trial">
+      <UniqueIdentifier>{245b2993-a3f7-4d5f-bbb1-bf46a3503f44}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="シェーダー\Trial">
+      <UniqueIdentifier>{64e9c84a-8beb-4479-9f33-0e754043004b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Trial">
+      <UniqueIdentifier>{e192d93b-fe89-40bc-b675-b20b66296252}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Render.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="MeshOld.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="Camera.cpp">
@@ -57,19 +63,7 @@
     <ClCompile Include="MeshInstancing.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="MeshSmooth.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="MeshSSSLike.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="MeshPointLight.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="MeshMix.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="MeshNormalMapping.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="PtrManager.cpp">
@@ -96,12 +90,6 @@
     <ClCompile Include="MeshHierarchy.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="MeshSSS.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="MeshPOM.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="PostEffectSSAO.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -117,12 +105,30 @@
     <ClCompile Include="PostEffectFog.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="MeshSSSLike.cpp">
+      <Filter>ソース ファイル\Trial</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshNormalMapping.cpp">
+      <Filter>ソース ファイル\Trial</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshOld.cpp">
+      <Filter>ソース ファイル\Trial</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshPointLight.cpp">
+      <Filter>ソース ファイル\Trial</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshPOM.cpp">
+      <Filter>ソース ファイル\Trial</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshSmooth.cpp">
+      <Filter>ソース ファイル\Trial</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshSSS.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Render.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="MeshOld.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h">
@@ -161,19 +167,7 @@
     <ClInclude Include="MeshInstancing.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="MeshSmooth.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="MeshSSSLike.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="MeshPointLight.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="MeshMix.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="MeshNormalMapping.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="PtrManager.h">
@@ -200,12 +194,6 @@
     <ClInclude Include="MeshHierarchy.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="MeshSSS.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="MeshPOM.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="PostEffectSSAO.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -221,15 +209,33 @@
     <ClInclude Include="PostEffectFog.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="MeshSSSLike.h">
+      <Filter>ヘッダー ファイル\Trial</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshNormalMapping.h">
+      <Filter>ヘッダー ファイル\Trial</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshOld.h">
+      <Filter>ヘッダー ファイル\Trial</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshPointLight.h">
+      <Filter>ヘッダー ファイル\Trial</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshPOM.h">
+      <Filter>ヘッダー ファイル\Trial</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshSmooth.h">
+      <Filter>ヘッダー ファイル\Trial</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshSSS.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shader\simple.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
     <FxCompile Include="shader\Common.fx">
-      <Filter>シェーダー</Filter>
-    </FxCompile>
-    <FxCompile Include="shader\MeshOld.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
     <FxCompile Include="shader\AnimMeshShader.fx">
@@ -241,13 +247,7 @@
     <FxCompile Include="shader\MeshInstancing.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
-    <FxCompile Include="shader\MeshSmooth.fx">
-      <Filter>シェーダー</Filter>
-    </FxCompile>
     <FxCompile Include="shader\PostEffectSaturate.fx">
-      <Filter>シェーダー</Filter>
-    </FxCompile>
-    <FxCompile Include="shader\MeshPointLight.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
     <FxCompile Include="shader\PostEffectGaussian.fx">
@@ -262,19 +262,7 @@
     <FxCompile Include="shader\PostEffectStarBurst.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
-    <FxCompile Include="shader\MeshNormalMapping.fx">
-      <Filter>シェーダー</Filter>
-    </FxCompile>
     <FxCompile Include="shader\MeshMix.fx">
-      <Filter>シェーダー</Filter>
-    </FxCompile>
-    <FxCompile Include="shader\MeshSSSLike.fx">
-      <Filter>シェーダー</Filter>
-    </FxCompile>
-    <FxCompile Include="shader\MeshSSS.fx">
-      <Filter>シェーダー</Filter>
-    </FxCompile>
-    <FxCompile Include="shader\MeshPOM.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
     <FxCompile Include="shader\GBuffer.fx">
@@ -287,6 +275,27 @@
       <Filter>シェーダー</Filter>
     </FxCompile>
     <FxCompile Include="shader\PostEffectFog.fx">
+      <Filter>シェーダー</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\MeshNormalMapping.fx">
+      <Filter>シェーダー\Trial</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\MeshOld.fx">
+      <Filter>シェーダー\Trial</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\MeshPointLight.fx">
+      <Filter>シェーダー\Trial</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\MeshPOM.fx">
+      <Filter>シェーダー\Trial</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\MeshSmooth.fx">
+      <Filter>シェーダー\Trial</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\MeshSSSLike.fx">
+      <Filter>シェーダー\Trial</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\MeshSSS.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
   </ItemGroup>

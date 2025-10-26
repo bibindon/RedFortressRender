@@ -6,6 +6,8 @@
 namespace NSRender
 {
 
+// 未使用。動作確認用。
+//
 // ピクセルシェーダーでランバート拡散照明やスペキュラ光を処理する
 // 大変滑らかになる
 class MeshSmooth : public IDeviceResettable

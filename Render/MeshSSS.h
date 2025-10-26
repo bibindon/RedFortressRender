@@ -14,6 +14,7 @@
 namespace NSRender
 {
 
+// サブサーフェイススキャッタリングを表現できるメッシュクラス
 class MeshSSS : public IDeviceResettable
 {
 public:

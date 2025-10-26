@@ -48,15 +48,9 @@ void MeshInstancing::Initialize()
 
         if (!pTexPath.empty())
         {
-            bool bUnicode = false;
-
-            int len = MultiByteToWideChar(CP_ACP, 0, pTexPath.c_str(), -1, nullptr, 0);
-            std::wstring pTexPathW(len, 0);
-            MultiByteToWideChar(CP_ACP, 0, pTexPath.c_str(), -1, &pTexPathW[0], len);
-
-            hResult = D3DXCreateTextureFromFile(Common::D3DDevice(),
-                                                pTexPathW.c_str(),
-                                                &m_pTextures[i]);
+            hResult = D3DXCreateTextureFromFileA(Common::D3DDevice(),
+                                                 pTexPath.c_str(),
+                                                 &m_pTextures[i]);
             assert(hResult == S_OK);
         }
     }
@@ -155,7 +149,7 @@ void MeshInstancing::Draw()
                                D3DXToRadian(45),
                                1920.0f / 1080.0f,
                                1.0f,
-                               10000.0f);
+                               1000.0f);
 
     D3DXVECTOR3 vec1(200 * sinf(f), 10, -200 * cosf(f));
     D3DXVECTOR3 vec2(0, 0, 0);

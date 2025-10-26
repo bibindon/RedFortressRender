@@ -8,6 +8,7 @@ namespace NSRender
 
 //------------------------------------------------
 // 法線マッピングができるメッシュ
+// 未使用。動作確認用。
 //------------------------------------------------
 
 class MeshNormalMapping : public IDeviceResettable
