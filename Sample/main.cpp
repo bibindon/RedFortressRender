@@ -16,6 +16,7 @@
 const int WINDOW_SIZE_W = 1600;
 const int WINDOW_SIZE_H = 900;
 const float MOUSE_CAMERA_SENSITIVITY = 0.005f;
+const float MODEL_SPAWN_FORWARD_OFFSET = 6.0f;
 
 bool g_bClose = false;
 NSRender::Render g_Render;
@@ -26,6 +27,8 @@ bool g_bMoveForward = false;
 bool g_bMoveBackward = false;
 bool g_bMoveLeft = false;
 bool g_bMoveRight = false;
+bool g_bMoveUp = false;
+bool g_bMoveDown = false;
 
 int g_sunId = 0;
 
@@ -49,7 +52,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
 
 void UpdateCameraMoveByKeyboard()
 {
-    if (!g_bMoveForward && !g_bMoveBackward && !g_bMoveLeft && !g_bMoveRight)
+    if (!g_bMoveForward && !g_bMoveBackward && !g_bMoveLeft && !g_bMoveRight && !g_bMoveUp && !g_bMoveDown)
     {
         return;
     }
@@ -82,6 +85,16 @@ void UpdateCameraMoveByKeyboard()
     if (g_bMoveLeft)
     {
         move -= right;
+    }
+
+    if (g_bMoveUp)
+    {
+        move += worldUp;
+    }
+
+    if (g_bMoveDown)
+    {
+        move -= worldUp;
     }
 
     if (D3DXVec3LengthSq(&move) <= 0.0f)
@@ -269,6 +282,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                              NULL);
 
     g_Render.Initialize(hWnd);
+    g_Render.SetCamera(D3DXVECTOR3(0.0f, 2.0f, -6.0f), D3DXVECTOR3(0.0f, 1.5f, 0.0f));
     g_fontId = g_Render.SetUpFont(L"BIZ UDゴシック", 20, D3DCOLOR_RGBA(255, 255, 255, 255));
 
     // 光源の方角がわかりやすくなるように、光源の方角に球を表示
@@ -276,6 +290,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
 
     ShowWindow(hWnd, SW_SHOWDEFAULT);
     UpdateWindow(hWnd);
+    EnableMouseLook(hWnd);
 
     MSG msg;
 
@@ -294,6 +309,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
             {
                 std::wstring text;
                 text += L"WASD : カメラ移動\n";
+                text += L"Q/E : カメラ上下移動\n";
                 text += L"矢印キー : カメラ回転\n";
                 text += L"Esc : マウスカメラ操作開始\n";
                 text += L"Ctrl : マウスカメラ操作終了\n";
@@ -443,6 +459,14 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {
             g_bMoveRight = false;
         }
+        else if (wParam == 'E')
+        {
+            g_bMoveUp = false;
+        }
+        else if (wParam == 'Q')
+        {
+            g_bMoveDown = false;
+        }
 
         return 0;
     }
@@ -497,6 +521,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             auto pos = g_Render.GetLookAtPos();
             D3DXVECTOR3 forward = g_Render.GetCameraRotate();
             D3DXVec3Normalize(&forward, &forward);
+            pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
             // Yaw, Pitch を計算
             float yaw = atan2f(forward.x, forward.z);
@@ -510,6 +535,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             auto pos = g_Render.GetLookAtPos();
             D3DXVECTOR3 forward = g_Render.GetCameraRotate();
             D3DXVec3Normalize(&forward, &forward);
+            pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
             // Yaw, Pitch を計算
             float yaw = atan2f(forward.x, forward.z);
@@ -523,6 +549,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             auto pos = g_Render.GetLookAtPos();
             D3DXVECTOR3 forward = g_Render.GetCameraRotate();
             D3DXVec3Normalize(&forward, &forward);
+            pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
             // Yaw, Pitch を計算
             float yaw = atan2f(forward.x, forward.z);
@@ -536,6 +563,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             auto pos = g_Render.GetLookAtPos();
             D3DXVECTOR3 forward = g_Render.GetCameraRotate();
             D3DXVec3Normalize(&forward, &forward);
+            pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
             // Yaw, Pitch を計算
             float yaw = atan2f(forward.x, forward.z);
@@ -549,6 +577,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             auto pos = g_Render.GetLookAtPos();
             D3DXVECTOR3 forward = g_Render.GetCameraRotate();
             D3DXVec3Normalize(&forward, &forward);
+            pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
             // Yaw, Pitch を計算
             float yaw = atan2f(forward.x, forward.z);
@@ -565,6 +594,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             auto pos = g_Render.GetLookAtPos();
             D3DXVECTOR3 forward = g_Render.GetCameraRotate();
             D3DXVec3Normalize(&forward, &forward);
+            pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
             // Yaw, Pitch を計算
             float yaw = atan2f(forward.x, forward.z);
@@ -591,6 +621,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             auto pos = g_Render.GetLookAtPos();
             D3DXVECTOR3 forward = g_Render.GetCameraRotate();
             D3DXVec3Normalize(&forward, &forward);
+            pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
             // Yaw, Pitch を計算
             float yaw = atan2f(forward.x, forward.z);
@@ -605,6 +636,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             auto pos = g_Render.GetLookAtPos();
             D3DXVECTOR3 forward = g_Render.GetCameraRotate();
             D3DXVec3Normalize(&forward, &forward);
+            pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
             // Yaw, Pitch を計算
             float yaw = atan2f(forward.x, forward.z);
@@ -619,6 +651,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             auto pos = g_Render.GetLookAtPos();
             D3DXVECTOR3 forward = g_Render.GetCameraRotate();
             D3DXVec3Normalize(&forward, &forward);
+            pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
             // Yaw, Pitch を計算
             float yaw = atan2f(forward.x, forward.z);
@@ -633,6 +666,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             auto pos = g_Render.GetLookAtPos();
             D3DXVECTOR3 forward = g_Render.GetCameraRotate();
             D3DXVec3Normalize(&forward, &forward);
+            pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
             // Yaw, Pitch を計算
             float yaw = atan2f(forward.x, forward.z);
@@ -668,6 +702,14 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             else if (wParam == 'A')
             {
                 g_bMoveLeft = true;
+            }
+            else if (wParam == 'E')
+            {
+                g_bMoveUp = true;
+            }
+            else if (wParam == 'Q')
+            {
+                g_bMoveDown = true;
             }
         }
 
