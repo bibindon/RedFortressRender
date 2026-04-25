@@ -43,6 +43,35 @@ std::vector<TextInfo> g_textInfoList;
 LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 
+void MoveDialogToRightOfParent(HWND hDlg)
+{
+    HWND parent = GetParent(hDlg);
+    if (parent == NULL)
+    {
+        return;
+    }
+
+    RECT parentRect { };
+    RECT dialogRect { };
+
+    if (!GetWindowRect(parent, &parentRect) || !GetWindowRect(hDlg, &dialogRect))
+    {
+        return;
+    }
+
+    const int dialogW = dialogRect.right - dialogRect.left;
+    const int dialogH = dialogRect.bottom - dialogRect.top;
+    const int gap = 8;
+
+    SetWindowPos(hDlg,
+                 NULL,
+                 parentRect.right + gap,
+                 parentRect.top,
+                 dialogW,
+                 dialogH,
+                 SWP_NOZORDER | SWP_NOACTIVATE);
+}
+
 POINT GetClientCenter(HWND hWnd)
 {
     RECT clientRect { };
@@ -115,6 +144,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
     {
     case WM_INITDIALOG:
     {
+        MoveDialogToRightOfParent(hDlg);
         return TRUE;
     }
     case WM_CLOSE:
