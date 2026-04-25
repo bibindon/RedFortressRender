@@ -133,6 +133,7 @@ public:
     void RotateCamera(const D3DXVECTOR3& rot);
 
     D3DXVECTOR3 GetLookAtPos();
+    D3DXVECTOR3 GetCameraPos();
     D3DXVECTOR3 GetCameraRotate();
 
     // フォント作成

@@ -17,6 +17,7 @@ const int WINDOW_SIZE_W = 1600;
 const int WINDOW_SIZE_H = 900;
 const float MOUSE_CAMERA_SENSITIVITY = 0.005f;
 const float MODEL_SPAWN_FORWARD_OFFSET = 6.0f;
+const float MOUSE_WHEEL_CAMERA_DISTANCE = 1.0f;
 
 bool g_bClose = false;
 NSRender::Render g_Render;
@@ -106,6 +107,24 @@ void UpdateCameraMoveByKeyboard()
 
     const float speed = 0.2f;
     g_Render.MoveCamera(move * speed);
+}
+
+void MoveCameraAwayFromLookAtByWheel(const short wheelDelta)
+{
+    if (wheelDelta == 0)
+    {
+        return;
+    }
+
+    D3DXVECTOR3 forward = g_Render.GetCameraRotate();
+    D3DXVec3Normalize(&forward, &forward);
+
+    const float notchCount = static_cast<float>(-wheelDelta) / WHEEL_DELTA;
+    const D3DXVECTOR3 lookAt = g_Render.GetLookAtPos();
+    const D3DXVECTOR3 eye = g_Render.GetCameraPos();
+    const D3DXVECTOR3 newEye = eye - forward * MOUSE_WHEEL_CAMERA_DISTANCE * notchCount;
+
+    g_Render.SetCamera(newEye, lookAt);
 }
 
 void MoveDialogToRightOfParent(HWND hDlg)
@@ -439,6 +458,11 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             RecenterMouseCursor(hWnd);
         }
 
+        return 0;
+    }
+    case WM_MOUSEWHEEL:
+    {
+        MoveCameraAwayFromLookAtByWheel(GET_WHEEL_DELTA_WPARAM(wParam));
         return 0;
     }
     case WM_KEYUP:

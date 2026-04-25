@@ -309,6 +309,11 @@ D3DXVECTOR3 Render::GetLookAtPos()
     return Camera::GetLookAtPos();
 }
 
+D3DXVECTOR3 Render::GetCameraPos()
+{
+    return Camera::GetEyePos();
+}
+
 D3DXVECTOR3 Render::GetCameraRotate()
 {
     auto eyePos = Camera::GetEyePos();
