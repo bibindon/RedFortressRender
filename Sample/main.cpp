@@ -22,6 +22,10 @@ NSRender::Render g_Render;
 int g_fontId = 0;
 bool g_bRecenteringMouse = false;
 bool g_bMouseLookEnabled = false;
+bool g_bMoveForward = false;
+bool g_bMoveBackward = false;
+bool g_bMoveLeft = false;
+bool g_bMoveRight = false;
 
 int g_sunId = 0;
 
@@ -42,6 +46,54 @@ std::vector<TextInfo> g_textInfoList;
 
 LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
+
+void UpdateCameraMoveByKeyboard()
+{
+    if (!g_bMoveForward && !g_bMoveBackward && !g_bMoveLeft && !g_bMoveRight)
+    {
+        return;
+    }
+
+    D3DXVECTOR3 forward = g_Render.GetCameraRotate();
+    D3DXVec3Normalize(&forward, &forward);
+
+    D3DXVECTOR3 worldUp(0, 1, 0);
+    D3DXVECTOR3 right;
+    D3DXVec3Cross(&right, &worldUp, &forward);
+    D3DXVec3Normalize(&right, &right);
+
+    D3DXVECTOR3 move(0.0f, 0.0f, 0.0f);
+
+    if (g_bMoveForward)
+    {
+        move += forward;
+    }
+
+    if (g_bMoveBackward)
+    {
+        move -= forward;
+    }
+
+    if (g_bMoveRight)
+    {
+        move += right;
+    }
+
+    if (g_bMoveLeft)
+    {
+        move -= right;
+    }
+
+    if (D3DXVec3LengthSq(&move) <= 0.0f)
+    {
+        return;
+    }
+
+    D3DXVec3Normalize(&move, &move);
+
+    const float speed = 0.2f;
+    g_Render.MoveCamera(move * speed);
+}
 
 void MoveDialogToRightOfParent(HWND hDlg)
 {
@@ -313,6 +365,8 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
 //                g_Render.SetMeshMixPos(g_sunId, lightDir);
             }
 
+            UpdateCameraMoveByKeyboard();
+
             g_Render.Draw();
         }
 
@@ -367,6 +421,27 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                                               mouseMoveX * MOUSE_CAMERA_SENSITIVITY,
                                               0.0f));
             RecenterMouseCursor(hWnd);
+        }
+
+        return 0;
+    }
+    case WM_KEYUP:
+    {
+        if (wParam == 'W')
+        {
+            g_bMoveForward = false;
+        }
+        else if (wParam == 'S')
+        {
+            g_bMoveBackward = false;
+        }
+        else if (wParam == 'A')
+        {
+            g_bMoveLeft = false;
+        }
+        else if (wParam == 'D')
+        {
+            g_bMoveRight = false;
         }
 
         return 0;
@@ -578,33 +653,21 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         if (!shift && !control)
         {
-            // 現在向いている前方向ベクトル
-            D3DXVECTOR3 forward = g_Render.GetCameraRotate();
-            D3DXVec3Normalize(&forward, &forward); // 念のため正規化
-
-            // 右方向は 前方向×(世界上方向)
-            D3DXVECTOR3 worldUp(0, 1, 0);
-            D3DXVECTOR3 right;
-            D3DXVec3Cross(&right, &worldUp, &forward);
-            D3DXVec3Normalize(&right, &right);
-
-            const float speed = 0.2f;
-
             if (wParam == 'W')
             {
-                g_Render.MoveCamera(forward * speed);
+                g_bMoveForward = true;
             }
             else if (wParam == 'S')
             {
-                g_Render.MoveCamera(forward * -speed);
+                g_bMoveBackward = true;
             }
             else if (wParam == 'D')
             {
-                g_Render.MoveCamera(right * speed);
+                g_bMoveRight = true;
             }
             else if (wParam == 'A')
             {
-                g_Render.MoveCamera(right * -speed);
+                g_bMoveLeft = true;
             }
         }
 
