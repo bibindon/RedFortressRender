@@ -245,6 +245,12 @@ exit /B %ERRORLEVEL%</Command>
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Sample.rc" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Render\Render.vcxproj">
       <Project>{d8a93a58-4392-4fc4-a4f7-634d4dac81b4}</Project>
     </ProjectReference>

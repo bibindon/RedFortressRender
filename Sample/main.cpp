@@ -9,6 +9,8 @@
 #include <vector>
 #include <windowsx.h>
 
+#include "resource.h"
+
 #define SAFE_RELEASE(p) { if (p) { (p)->Release(); (p) = NULL; } }
 
 const int WINDOW_SIZE_W = 1600;
@@ -39,6 +41,7 @@ struct TextInfo
 std::vector<TextInfo> g_textInfoList;
 
 LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 
 POINT GetClientCenter(HWND hWnd)
 {
@@ -98,6 +101,40 @@ void DisableMouseLook()
     g_bMouseLookEnabled = false;
     g_bRecenteringMouse = false;
     ShowMouseCursor();
+}
+
+void ShowSettingsDialog(HWND hWnd)
+{
+    DisableMouseLook();
+    DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_SETTINGS_DIALOG), hWnd, SettingsDialogProc);
+}
+
+INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch (msg)
+    {
+    case WM_INITDIALOG:
+    {
+        return TRUE;
+    }
+    case WM_CLOSE:
+    {
+        EndDialog(hDlg, 0);
+        return TRUE;
+    }
+    case WM_COMMAND:
+    {
+        const WORD commandId = LOWORD(wParam);
+        if (commandId == IDOK || commandId == IDCANCEL)
+        {
+            EndDialog(hDlg, commandId);
+            return TRUE;
+        }
+        break;
+    }
+    }
+
+    return FALSE;
 }
 
 extern int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
@@ -308,6 +345,12 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
         bool shift = false;
         bool control = false;
+
+        if (wParam == VK_F1)
+        {
+            ShowSettingsDialog(hWnd);
+            return 0;
+        }
 
         if (wParam == VK_ESCAPE)
         {
