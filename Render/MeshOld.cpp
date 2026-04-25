@@ -230,15 +230,18 @@ void MeshOld::Render()
     //--------------------------------------------------------
     // 光源の方向を設定
     //--------------------------------------------------------
-    D3DXVECTOR4 normal = Light::GetLightDir();
+    if (SHADER_FILENAME != _T("res\\shader\\MeshNoLighting.fx"))
+    {
+        D3DXVECTOR4 normal = Light::GetLightDir();
 
-    float work = m_rotate.y * -1.f;
-    normal.x = std::sin(work + D3DX_PI);
-    normal.z = std::cos(work + D3DX_PI);
-    D3DXVec4Normalize(&normal, &normal);
+        float work = m_rotate.y * -1.f;
+        normal.x = std::sin(work + D3DX_PI);
+        normal.z = std::cos(work + D3DX_PI);
+        D3DXVec4Normalize(&normal, &normal);
 
-    hResult = m_D3DEffect->SetVector("g_lightNormal", &normal);
-    assert(hResult == S_OK);
+        hResult = m_D3DEffect->SetVector("g_lightNormal", &normal);
+        assert(hResult == S_OK);
+    }
 
     //--------------------------------------------------------
     // ポイントライトの位置を設定

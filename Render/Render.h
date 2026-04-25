@@ -65,6 +65,12 @@ public:
                 const float scale,
                 const float radius = -1.f);
 
+    int AddMeshNoLighting(const std::wstring& filePath,
+                          const D3DXVECTOR3& pos,
+                          const D3DXVECTOR3& rot,
+                          const float scale,
+                          const float radius = -1.f);
+
     void AddMeshSmooth(const std::wstring& filePath,
                        const D3DXVECTOR3& pos,
                        const D3DXVECTOR3& rot,

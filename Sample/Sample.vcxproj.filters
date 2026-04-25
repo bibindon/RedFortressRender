@@ -86,6 +86,9 @@
     <FxCompile Include="..\Render\shader\MeshOld.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
+    <FxCompile Include="..\Render\shader\MeshNoLighting.fx">
+      <Filter>リソース ファイル</Filter>
+    </FxCompile>
     <FxCompile Include="..\Render\shader\PostEffectFog.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>

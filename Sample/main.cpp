@@ -303,11 +303,11 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
     g_Render.Initialize(hWnd);
     g_Render.SetCamera(D3DXVECTOR3(0.0f, 2.0f, -6.0f), D3DXVECTOR3(0.0f, 1.5f, 0.0f));
     g_fontId = g_Render.SetUpFont(L"BIZ UDゴシック", 20, D3DCOLOR_RGBA(255, 255, 255, 255));
-    g_Render.AddMesh(L"cubeNormalInverse.x",
-                     D3DXVECTOR3(0.0f, 0.0f, 0.0f),
-                     D3DXVECTOR3(0.0f, 0.0f, 0.0f),
-                     1.0f,
-                     100.0f);
+    g_Render.AddMeshNoLighting(L"cubeNormalInverse.x",
+                               D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                               D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                               1.0f,
+                               100.0f);
 
     // 光源の方角がわかりやすくなるように、光源の方角に球を表示
 //    g_sunId = g_Render.AddMeshMix(L"cubeMixSun.blend.x", D3DXVECTOR3(10, 0, 0), D3DXVECTOR3(0, 0, 0), 1.f, 1.f);

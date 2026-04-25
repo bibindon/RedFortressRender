@@ -283,6 +283,9 @@
     <FxCompile Include="shader\MeshOld.fx">
       <Filter>シェーダー\Trial</Filter>
     </FxCompile>
+    <FxCompile Include="shader\MeshNoLighting.fx">
+      <Filter>シェーダー\Trial</Filter>
+    </FxCompile>
     <FxCompile Include="shader\MeshPointLight.fx">
       <Filter>シェーダー\Trial</Filter>
     </FxCompile>
