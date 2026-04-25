@@ -18,9 +18,8 @@ const float MOUSE_CAMERA_SENSITIVITY = 0.005f;
 bool g_bClose = false;
 NSRender::Render g_Render;
 int g_fontId = 0;
-bool g_bMousePosInitialized = false;
-bool g_bTrackingMouseLeave = false;
-POINT g_lastMousePos { };
+bool g_bRecenteringMouse = false;
+bool g_bMouseLookEnabled = false;
 
 int g_sunId = 0;
 
@@ -40,6 +39,66 @@ struct TextInfo
 std::vector<TextInfo> g_textInfoList;
 
 LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+POINT GetClientCenter(HWND hWnd)
+{
+    RECT clientRect { };
+    GetClientRect(hWnd, &clientRect);
+
+    POINT center { };
+    center.x = (clientRect.right - clientRect.left) / 2;
+    center.y = (clientRect.bottom - clientRect.top) / 2;
+    return center;
+}
+
+void RecenterMouseCursor(HWND hWnd)
+{
+    POINT center = GetClientCenter(hWnd);
+    ClientToScreen(hWnd, &center);
+
+    if (SetCursorPos(center.x, center.y))
+    {
+        g_bRecenteringMouse = true;
+    }
+}
+
+void HideMouseCursor()
+{
+    while (ShowCursor(FALSE) >= 0)
+    {
+    }
+}
+
+void ShowMouseCursor()
+{
+    while (ShowCursor(TRUE) < 0)
+    {
+    }
+}
+
+void EnableMouseLook(HWND hWnd)
+{
+    if (g_bMouseLookEnabled)
+    {
+        return;
+    }
+
+    g_bMouseLookEnabled = true;
+    HideMouseCursor();
+    RecenterMouseCursor(hWnd);
+}
+
+void DisableMouseLook()
+{
+    if (!g_bMouseLookEnabled)
+    {
+        return;
+    }
+
+    g_bMouseLookEnabled = false;
+    g_bRecenteringMouse = false;
+    ShowMouseCursor();
+}
 
 extern int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                             _In_opt_ HINSTANCE hPrevInstance,
@@ -117,7 +176,8 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
                 std::wstring text;
                 text += L"WASD : カメラ移動\n";
                 text += L"矢印キー : カメラ回転\n";
-                text += L"マウス移動 : カメラ回転\n";
+                text += L"Esc : マウスカメラ操作開始\n";
+                text += L"Ctrl : マウスカメラ操作終了\n";
                 text += L"\n";
                 text += L"8 : ウィンドウモード\n";
                 text += L"9 : ボーダーレスウィンドウモード\n";
@@ -207,59 +267,59 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
     case WM_DESTROY:
     {
+        ShowMouseCursor();
         PostQuitMessage(0);
         g_bClose = true;
         return 0;
     }
     case WM_MOUSEMOVE:
     {
-        if (!g_bTrackingMouseLeave)
+        if (!g_bMouseLookEnabled)
         {
-            TRACKMOUSEEVENT trackMouseEvent { };
-            trackMouseEvent.cbSize = sizeof(TRACKMOUSEEVENT);
-            trackMouseEvent.dwFlags = TME_LEAVE;
-            trackMouseEvent.hwndTrack = hWnd;
+            return 0;
+        }
 
-            if (TrackMouseEvent(&trackMouseEvent))
-            {
-                g_bTrackingMouseLeave = true;
-            }
+        if (g_bRecenteringMouse)
+        {
+            g_bRecenteringMouse = false;
+            return 0;
         }
 
         POINT currentMousePos { };
         currentMousePos.x = GET_X_LPARAM(lParam);
         currentMousePos.y = GET_Y_LPARAM(lParam);
 
-        if (!g_bMousePosInitialized)
-        {
-            g_lastMousePos = currentMousePos;
-            g_bMousePosInitialized = true;
-            return 0;
-        }
+        POINT centerMousePos = GetClientCenter(hWnd);
 
-        const int mouseMoveX = currentMousePos.x - g_lastMousePos.x;
-        const int mouseMoveY = currentMousePos.y - g_lastMousePos.y;
+        const int mouseMoveX = currentMousePos.x - centerMousePos.x;
+        const int mouseMoveY = currentMousePos.y - centerMousePos.y;
 
         if (mouseMoveX != 0 || mouseMoveY != 0)
         {
             g_Render.RotateCamera(D3DXVECTOR3(mouseMoveY * MOUSE_CAMERA_SENSITIVITY,
                                               mouseMoveX * MOUSE_CAMERA_SENSITIVITY,
                                               0.0f));
+            RecenterMouseCursor(hWnd);
         }
 
-        g_lastMousePos = currentMousePos;
-        return 0;
-    }
-    case WM_MOUSELEAVE:
-    {
-        g_bMousePosInitialized = false;
-        g_bTrackingMouseLeave = false;
         return 0;
     }
     case WM_KEYDOWN:
     {
         bool shift = false;
         bool control = false;
+
+        if (wParam == VK_ESCAPE)
+        {
+            EnableMouseLook(hWnd);
+            return 0;
+        }
+
+        if (wParam == VK_CONTROL)
+        {
+            DisableMouseLook();
+            return 0;
+        }
 
         if ((GetKeyState(VK_SHIFT) & 0x8000) != 0)
         {
