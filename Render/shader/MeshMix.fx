@@ -13,24 +13,24 @@ float4 g_diffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 float4 g_specularColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-// ƒXƒyƒLƒ…ƒ‰Œõ‚Ì‰s‚³
+// ã‚¹ãƒšã‚­ãƒ¥ãƒ©å…‰ã®é‹­ã•
 float g_specularPower = 128.0f;
 //float g_specularPower = 0.0f;
 
-// ƒXƒyƒLƒ…ƒ‰Œõ‚Ì‹­‚³
+// ã‚¹ãƒšã‚­ãƒ¥ãƒ©å…‰ã®å¼·ã•
 float g_specularIntensity = 1.0f;
 //float g_specularIntensity = 0.0f;
 
-// ‹——£ƒtƒHƒO‚ÌF
+// è·é›¢ãƒ•ã‚©ã‚°ã®è‰²
 float4 g_fogDistanceColor = { 0.5f, 0.5f, 1.0f, 1.0f };
 
-// ‹——£ƒtƒHƒO‚Ì‹­‚³
+// è·é›¢ãƒ•ã‚©ã‚°ã®å¼·ã•
 float g_fogDistanceDensity = 0.01f;
 
-// ‚‚³ƒtƒHƒO‚ÌF
+// é«˜ã•ãƒ•ã‚©ã‚°ã®è‰²
 float4 g_fogHeightColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-// ‚‚³ƒtƒHƒO‚Ì‹­‚³
+// é«˜ã•ãƒ•ã‚©ã‚°ã®å¼·ã•
 float g_fogHeightDensity = 0.01f;
 
 texture g_texture;
@@ -48,7 +48,7 @@ sampler g_textureSampler = sampler_state
     MaxMipLevel = 1;
 };
 
-// ŠÂ‹«ƒ}ƒbƒv
+// ç’°å¢ƒãƒãƒƒãƒ—
 textureCUBE g_texCubeMap;
 
 samplerCUBE g_cubeMapSampler = sampler_state
@@ -60,13 +60,13 @@ samplerCUBE g_cubeMapSampler = sampler_state
     AddressU = CLAMP;
     AddressV = CLAMP;
 
-    // ‚Ç‚ê‚­‚ç‚¢‚Ú‚©‚·‚©
-    // ”š‚ª‘å‚«‚¢‚Ù‚Ç‚Ú‚©‚³‚ê‚é
+    // ã©ã‚Œãã‚‰ã„ã¼ã‹ã™ã‹
+    // æ•°å­—ãŒå¤§ãã„ã»ã©ã¼ã‹ã•ã‚Œã‚‹
     //MaxMipLevel = 7;
     MaxMipLevel = 1;
 };
 
-// –@üƒ}ƒbƒv
+// æ³•ç·šãƒãƒƒãƒ—
 texture g_texNormalMap;
 sampler g_normalMapSampler = sampler_state
 {
@@ -82,21 +82,21 @@ sampler g_normalMapSampler = sampler_state
 };
 
 //------------------------------------------------------
-// ‹·Õ•Áƒ}ƒbƒsƒ“ƒOŠÖ˜A
+// è¦–å·®é®è”½ãƒãƒƒãƒ”ãƒ³ã‚°é–¢é€£
 //------------------------------------------------------
 
 bool g_bPOM = true;
 
-// ‚‚³ 0.0 ~ 1.0
+// é«˜ã• 0.0 ~ 1.0
 float g_fHeightMapScale = 0.1f;
 
-// ƒTƒ“ƒvƒŠƒ“ƒO”iÅ¬j
+// ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°æ•°ï¼ˆæœ€å°ï¼‰
 int g_nMinSamples = 50;
 
-// ƒTƒ“ƒvƒŠƒ“ƒO”iÅ‘åj
+// ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°æ•°ï¼ˆæœ€å¤§ï¼‰
 int g_nMaxSamples = 100;
 
-// ‚‚³ƒ}ƒbƒv
+// é«˜ã•ãƒãƒƒãƒ—
 texture g_texHeightMap;
 sampler g_heightMapSampler = sampler_state
 {
@@ -110,7 +110,7 @@ sampler g_heightMapSampler = sampler_state
 float g_time = 0.0f;
 
 //---------------------------------------------------------
-// —h‚ç‚µƒGƒtƒFƒNƒg—pƒpƒ‰ƒ[ƒ^
+// æºã‚‰ã—ã‚¨ãƒ•ã‚§ã‚¯ãƒˆç”¨ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 //---------------------------------------------------------
 bool  g_swayEnable = false;
 float g_swayAmount = 0.5f;
@@ -118,15 +118,15 @@ float g_swaySpeed  = 2.0f;
 float g_swayHeight = 3.0f;
 
 //---------------------------------------------------------
-// ƒ|ƒCƒ“ƒgƒ‰ƒCƒg
+// ãƒã‚¤ãƒ³ãƒˆãƒ©ã‚¤ãƒˆ
 //---------------------------------------------------------
 float3 g_pointLightPos[16];
 float  g_pointLightBrightness[16];
 float3 g_pointLightColor[16];
 
 //---------------------------------------------------------
-// ’¸“_ƒVƒF[ƒ_[
-// ‹·ƒ}ƒbƒsƒ“ƒO‚Íu1ƒpƒX–Ú‚Å‚ÍÀ{‚¹‚¸A2ƒpƒX–Ú‚ÅÀ‘•‚·‚év‚Æ‚¢‚¤‚æ‚¤‚È‚±‚Æ‚Í‚Å‚«‚È‚¢
+// é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼
+// è¦–å·®ãƒãƒƒãƒ”ãƒ³ã‚°ã¯ã€Œ1ãƒ‘ã‚¹ç›®ã§ã¯å®Ÿæ–½ã›ãšã€2ãƒ‘ã‚¹ç›®ã§å®Ÿè£…ã™ã‚‹ã€ã¨ã„ã†ã‚ˆã†ãªã“ã¨ã¯ã§ããªã„
 //
 // WS ... WorldSpace
 // TS ... TangentSpace
@@ -149,23 +149,23 @@ void VertexShader1(in  float4 inPosition     : POSITION,
                    out float3 outvViewTS     : TEXCOORD7,
                    out float2 outvParallaxOffsetTS    : TEXCOORD8)
 {
-    // ‚ä‚ç‚¬Œø‰Êi‘‚Æ‚©j
+    // ã‚†ã‚‰ãåŠ¹æœï¼ˆè‰ã¨ã‹ï¼‰
     if (g_swayEnable)
     {
         float4 pos = inPosition;
     
-        // —h‚ç‚µƒGƒtƒFƒNƒg‚ğ“K—p
-        // YÀ•W‚Ì‚‚³‚ÉŠî‚Ã‚¢‚Ä—h‚ç‚µ‚Ì‹­“x‚ğ•Ï‚¦‚éiã‚É‚¢‚­‚Ù‚Ç‘å‚«‚­—h‚ê‚éj
-        float heightFactor = (pos.y + 1.0) / 3.0; // ‰~’Œ‚Ì‚‚³‚É‡‚í‚¹‚Ä’²®
+        // æºã‚‰ã—ã‚¨ãƒ•ã‚§ã‚¯ãƒˆã‚’é©ç”¨
+        // Yåº§æ¨™ã®é«˜ã•ã«åŸºã¥ã„ã¦æºã‚‰ã—ã®å¼·åº¦ã‚’å¤‰ãˆã‚‹ï¼ˆä¸Šã«ã„ãã»ã©å¤§ããæºã‚Œã‚‹ï¼‰
+        float heightFactor = (pos.y + 1.0) / 3.0; // å††æŸ±ã®é«˜ã•ã«åˆã‚ã›ã¦èª¿æ•´
         heightFactor = pow(heightFactor, 2.0);
         heightFactor = clamp(heightFactor, 0.0, 1.0);
     
-        // •¡”‚Ì”g‚ğ‘g‚İ‡‚í‚¹‚Ä©‘R‚È—h‚ç‚µ‚ğì¬
+        // è¤‡æ•°ã®æ³¢ã‚’çµ„ã¿åˆã‚ã›ã¦è‡ªç„¶ãªæºã‚‰ã—ã‚’ä½œæˆ
         float wave1 = sin(g_time * g_swaySpeed) * g_swayAmount;
         float wave2 = sin(g_time * g_swaySpeed * 0.7 + 1.5) * g_swayAmount * 0.5;
         float wave3 = cos(g_time * g_swaySpeed * 1.3 + 2.0) * g_swayAmount * 0.3;
     
-        // X²‚ÆZ²‚Ì—¼•ûŒü‚É—h‚ç‚µ‚ğ“K—p
+        // Xè»¸ã¨Zè»¸ã®ä¸¡æ–¹å‘ã«æºã‚‰ã—ã‚’é©ç”¨
         float swayX = (wave1 + wave2 + wave3) * heightFactor;
         float swayZ = (sin(g_time * g_swaySpeed * 0.8 + 0.5) * g_swayAmount * 0.7 +
                    cos(g_time * g_swaySpeed * 1.1 + 1.0) * g_swayAmount * 0.4) * heightFactor;
@@ -177,8 +177,8 @@ void VertexShader1(in  float4 inPosition     : POSITION,
 
     outPosition = mul(inPosition, g_matWorldViewProj);
 
-    // outPosWorld‚Å‚Í4x4‚ğg‚¢outNormalWorld‚Å‚Í3x3‚Ì•ÏŠ·s—ñ‚ğg‚Á‚Ä‚¢‚é
-    // ‚±‚¤‚µ‚È‚¢‚ÆŠÂ‹«ƒ}ƒbƒv‚ª‚¨‚©‚µ‚­‚È‚é
+    // outPosWorldã§ã¯4x4ã‚’ä½¿ã„outNormalWorldã§ã¯3x3ã®å¤‰æ›è¡Œåˆ—ã‚’ä½¿ã£ã¦ã„ã‚‹
+    // ã“ã†ã—ãªã„ã¨ç’°å¢ƒãƒãƒƒãƒ—ãŒãŠã‹ã—ããªã‚‹
     outPosWorld = mul(inPosition, g_matWorld).xyz;
 
     float3x3 world3x3 = (float3x3) g_matWorld;
@@ -192,18 +192,18 @@ void VertexShader1(in  float4 inPosition     : POSITION,
     float3 vViewWS = g_cameraPos.xyz - outPosWorld.xyz;
     outvViewWS = vViewWS;
 
-    // ŒõŒ¹ƒxƒNƒgƒ‹i³‹K‰»‚µ‚È‚¢j
+    // å…‰æºãƒ™ã‚¯ãƒˆãƒ«ï¼ˆæ­£è¦åŒ–ã—ãªã„ï¼‰
     float3 vLightWS = g_lightDir.xyz;
 
-    // ŒõŒ¹ƒxƒNƒgƒ‹EƒJƒƒ‰•ûŒüƒxƒNƒgƒ‹‚ğÚ‹óŠÔ‚Ö•ÏŠ·
+    // å…‰æºãƒ™ã‚¯ãƒˆãƒ«ãƒ»ã‚«ãƒ¡ãƒ©æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«ã‚’æ¥ç©ºé–“ã¸å¤‰æ›
     float3x3 mWorldToTangent = float3x3(outTangent, outBinorm, outNormalWorld);
 
     outvLightTS = mul(mWorldToTangent, vLightWS);
     outvViewTS = mul(mWorldToTangent, vViewWS);
 
-    // ƒYƒŒ—Ê
-    // ƒOƒŒ[ƒWƒ“ƒOŠp‚È‚ç‘òRƒYƒŒ‚é‚µA³–Ê‚ğŒü‚¢‚Ä‚é‚È‚çƒYƒŒ‚È‚¢B
-    // ‚»‚ê‚ğ•\‚·”’l
+    // ã‚ºãƒ¬é‡
+    // ã‚°ãƒ¬ãƒ¼ã‚¸ãƒ³ã‚°è§’ãªã‚‰æ²¢å±±ã‚ºãƒ¬ã‚‹ã—ã€æ­£é¢ã‚’å‘ã„ã¦ã‚‹ãªã‚‰ã‚ºãƒ¬ãªã„ã€‚
+    // ãã‚Œã‚’è¡¨ã™æ•°å€¤
     outvParallaxOffsetTS = outvViewTS.xy / outvViewTS.z;
 
     outvParallaxOffsetTS *= g_fHeightMapScale;
@@ -231,18 +231,18 @@ void PixelShader1(in float4 inPosition    : POSITION,
 
                   out float4 outColor     : COLOR)
 {
-    // ³‹K‰»‚ÍƒsƒNƒZƒ‹ƒVƒF[ƒ_[‚Å‚â‚ç‚È‚¢‚Æ‚¢‚¯‚È‚¢
+    // æ­£è¦åŒ–ã¯ãƒ”ã‚¯ã‚»ãƒ«ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã§ã‚„ã‚‰ãªã„ã¨ã„ã‘ãªã„
     float3 normal = normalize(inNormalWorld);
     float3 lightDir = normalize(g_lightDir.xyz);
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float3 halfVector = normalize(lightDir + cameraDir);
 
     // ?
-    // ‚Ç‚±‚©‚Å•K—v‚È‚Í‚¸
+    // ã©ã“ã‹ã§å¿…è¦ãªã¯ãš
     invLightTS = normalize(invLightTS);
 
     //----------------------------------------------------
-    // ‹·Õ•Áƒ}ƒbƒsƒ“ƒO
+    // è¦–å·®é®è”½ãƒãƒƒãƒ”ãƒ³ã‚°
     //----------------------------------------------------
     if (g_bPOM)
     {
@@ -256,12 +256,12 @@ void PixelShader1(in float4 inPosition    : POSITION,
     float3 albedo = tex2D(g_textureSampler, inTexCoord).rgb * g_diffuse.rgb;
 
     //-----------------------------------------------------------------------
-    // –@üƒ}ƒbƒsƒ“ƒO‚ÅNdotL‚ğ’²ß
+    // æ³•ç·šãƒãƒƒãƒ”ãƒ³ã‚°ã§NdotLã‚’èª¿ç¯€
     //-----------------------------------------------------------------------
     float NdotL = 0.f;
     float NdotH = 0.f;
 
-    // –@üƒ}ƒbƒsƒ“ƒO‚ğs‚¤‚©
+    // æ³•ç·šãƒãƒƒãƒ”ãƒ³ã‚°ã‚’è¡Œã†ã‹
     if (true)
     {
         float3 normalInTangent = float3(0, 0, 0);
@@ -271,12 +271,12 @@ void PixelShader1(in float4 inPosition    : POSITION,
         normalInTangent.x *= -1;
         normalInTangent = normalize(normalInTangent);
 
-        // TBNiTangent, Binormal, Normalj‚Åƒ[ƒ‹ƒh‚Ö
+        // TBNï¼ˆTangent, Binormal, Normalï¼‰ã§ãƒ¯ãƒ¼ãƒ«ãƒ‰ã¸
         float3x3 tangentToWorld = float3x3(-inTangent, -inBinorm, normal);
         float3 normalInWorld = normalize(mul(normalInTangent, tangentToWorld));
 
-        // Lambert ŠgUiŒõü•ûŒüj
-        // saturateŠÖ”‚ğ‚±‚±‚ÅÀs‚·‚é‚Æƒ}ƒCƒiƒX¬•ª‚ªÁ‚¦‚éB
+        // Lambert æ‹¡æ•£ï¼ˆå…‰ç·šæ–¹å‘ï¼‰
+        // saturateé–¢æ•°ã‚’ã“ã“ã§å®Ÿè¡Œã™ã‚‹ã¨ãƒã‚¤ãƒŠã‚¹æˆåˆ†ãŒæ¶ˆãˆã‚‹ã€‚
         NdotL = dot(normalInWorld, lightDir);
         NdotH = saturate(dot(normalInWorld, halfVector));
     }
@@ -289,15 +289,15 @@ void PixelShader1(in float4 inPosition    : POSITION,
 
     float3 lambert = 0.f;
     
-    // ƒn[ƒtƒ‰ƒ“ƒo[ƒg
-    // [“xƒoƒbƒtƒ@ƒVƒƒƒhƒE‚ğÀs‚·‚é‚ÆA‰e‚ª2d‚É•\¦‚³‚ê‚Ä‚µ‚Ü‚¤B
-    // ƒn[ƒtƒ‰ƒ“ƒo[ƒg‚È‚çƒ}ƒV‚É‚È‚é
+    // ãƒãƒ¼ãƒ•ãƒ©ãƒ³ãƒãƒ¼ãƒˆ
+    // æ·±åº¦ãƒãƒƒãƒ•ã‚¡ã‚·ãƒ£ãƒ‰ã‚¦ã‚’å®Ÿè¡Œã™ã‚‹ã¨ã€å½±ãŒ2é‡ã«è¡¨ç¤ºã•ã‚Œã¦ã—ã¾ã†ã€‚
+    // ãƒãƒ¼ãƒ•ãƒ©ãƒ³ãƒãƒ¼ãƒˆãªã‚‰ãƒã‚·ã«ãªã‚‹
     if (true)
     {
         NdotL = (NdotL + 1.0f) * 0.5f;
 
-        // 0.5‚ª0.7‚É‚È‚é‚æ‚¤‚È•â³‚ğ‚©‚¯‚é
-        // ‘Î”ƒOƒ‰ƒt‚ÌƒCƒ[ƒW
+        // 0.5ãŒ0.7ã«ãªã‚‹ã‚ˆã†ãªè£œæ­£ã‚’ã‹ã‘ã‚‹
+        // å¯¾æ•°ã‚°ãƒ©ãƒ•ã®ã‚¤ãƒ¡ãƒ¼ã‚¸
         NdotL = pow(NdotL, 0.5);
 
     }
@@ -306,19 +306,19 @@ void PixelShader1(in float4 inPosition    : POSITION,
 
     float3 ambient = float3(0.2, 0.2, 0.2) * albedo;
 
-    // ‰A‚ÌÊ“x‚ğã‚°‚é
-    // —v‚ç‚È‚¢‚©‚à‚µ‚ê‚È‚¢
+    // é™°ã®å½©åº¦ã‚’ä¸Šã’ã‚‹
+    // è¦ã‚‰ãªã„ã‹ã‚‚ã—ã‚Œãªã„
     if (false)
     {
         if (NdotL <= 0.0f)
         {
-            // ƒAƒ‹ƒxƒh‚ÌÊ“x‚ğ‹­’²‚µ‚½F‚ğƒAƒ“ƒrƒGƒ“ƒgF‚Éİ’è‚·‚é
-            // ‰A‚ÌÊ“x‚ğã‚°‚½‚¢‚ªA‚±‚ê‚¾‚Æ‘S‘Ì“I‚ÉÊ“x‚ª‚‚­‚È‚Á‚Ä‚µ‚Ü‚¤B
+            // ã‚¢ãƒ«ãƒ™ãƒ‰ã®å½©åº¦ã‚’å¼·èª¿ã—ãŸè‰²ã‚’ã‚¢ãƒ³ãƒ“ã‚¨ãƒ³ãƒˆè‰²ã«è¨­å®šã™ã‚‹
+            // é™°ã®å½©åº¦ã‚’ä¸Šã’ãŸã„ãŒã€ã“ã‚Œã ã¨å…¨ä½“çš„ã«å½©åº¦ãŒé«˜ããªã£ã¦ã—ã¾ã†ã€‚
             float3 workColor = albedo;
 
             float average = (workColor.r + workColor.g + workColor.b) / 3;
 
-            // Ê“x‚ğã‚°‰º‚°‚·‚é
+            // å½©åº¦ã‚’ä¸Šã’ä¸‹ã’ã™ã‚‹
             workColor.r = average + (workColor.r - average) * 8.0f;
             workColor.g = average + (workColor.g - average) * 8.0f;
             workColor.b = average + (workColor.b - average) * 8.0f;
@@ -388,7 +388,7 @@ void PixelShaderGlass(in float4 inPosition     : POSITION,
     normalInTangent.x *= -1;
     normalInTangent = normalize(normalInTangent);
 
-    // TBNiTangent, Binormal, Normalj‚Åƒ[ƒ‹ƒh‚Ö
+    // TBNï¼ˆTangent, Binormal, Normalï¼‰ã§ãƒ¯ãƒ¼ãƒ«ãƒ‰ã¸
     float3x3 tangentToWorld = float3x3(-inTangent, -inBinorm, normal);
     float3 normalInWorld = normalize(mul(normalInTangent, tangentToWorld));
     
@@ -401,13 +401,13 @@ void PixelShaderGlass(in float4 inPosition     : POSITION,
 //-------------------------------------------------------------
 // Pass 3
 //-------------------------------------------------------------
-// –¶‚ÌŒ¸ŠŠÖ”i‚â‚í‚ç‚©j
+// éœ§ã®æ¸›è¡°é–¢æ•°ï¼ˆã‚„ã‚ã‚‰ã‹ï¼‰
 float FogAmountExp(float distance, float density)
 {
     return 1 - exp(-density * distance);
 }
 
-// –¶‚ÌŒ¸ŠŠÖ”iƒŠƒAƒ‹j
+// éœ§ã®æ¸›è¡°é–¢æ•°ï¼ˆãƒªã‚¢ãƒ«ï¼‰
 float FogAmountExp2(float distance, float density)
 {
     float x = density * distance;
@@ -428,7 +428,7 @@ void PixelShaderPointLight(in  float4 inPosition            : POSITION,
     float3 normalWS = normalize(inNormalWorld);
     float3 cameraDirWS = normalize(g_cameraPos.xyz - inPosWorld);
 
-    // POM‚ÅUVXVi•K—v‚È‚Æ‚«‚¾‚¯j
+    // POMã§UVæ›´æ–°ï¼ˆå¿…è¦ãªã¨ãã ã‘ï¼‰
     float2 uv = inTexCoord;
     if (g_bPOM)
     {
@@ -439,7 +439,7 @@ void PixelShaderPointLight(in  float4 inPosition            : POSITION,
                                 invParallaxOffsetTS );
     }
 
-    // –@üƒ}ƒbƒv ¨ Ú‹óŠÔ ¨ ƒ[ƒ‹ƒh
+    // æ³•ç·šãƒãƒƒãƒ— â†’ æ¥ç©ºé–“ â†’ ãƒ¯ãƒ¼ãƒ«ãƒ‰
     float3 normalTS;
     float4 nTex = tex2D(g_normalMapSampler, uv);
     normalTS.x = nTex.r * 2.0 - 1.0;
@@ -470,7 +470,7 @@ void PixelShaderPointLight(in  float4 inPosition            : POSITION,
         float3 H      = normalize(L + cameraDirWS);
         float  NdotH  = saturate(dot(N, H));
 
-        // Œ¸ŠFŠÈˆÕ 1/dist iŒ³‚Ì®‚ğ‘¸dj
+        // æ¸›è¡°ï¼šç°¡æ˜“ 1/dist ï¼ˆå…ƒã®å¼ã‚’å°Šé‡ï¼‰
         float  atten  = saturate(1.0 / max(dist, 1e-6));
 
         float  diff   = g_pointLightBrightness[i] * atten * NdotL;
@@ -482,14 +482,14 @@ void PixelShaderPointLight(in  float4 inPosition            : POSITION,
                  * g_pointLightBrightness[i] * atten;
         }
 
-        // š RGB ‚ÉuF ~ ‹­“xv‚ğ‰ÁZ
+        // â˜… RGB ã«ã€Œè‰² Ã— å¼·åº¦ã€ã‚’åŠ ç®—
         accum += g_pointLightColor[i] * diff;
         accum += g_pointLightColor[i] * spec;
 
         diffSum += diff;
     }
 
-    // HDR’~ÏF‚±‚±‚ÅƒNƒ‰ƒ“ƒv‚µ‚È‚¢
+    // HDRè“„ç©ï¼šã“ã“ã§ã‚¯ãƒ©ãƒ³ãƒ—ã—ãªã„
     outColor = float4(accum, saturate(diffSum));
 }
 
@@ -502,8 +502,8 @@ float2 CalcUVCoordWithPOM(float3 inNormalizedNormalWS,
     invViewWS = normalize(invViewWS);
     invViewTS= normalize(invViewTS);
 
-    // ‹Šp‚É‰‚¶‚ÄƒTƒ“ƒvƒ‹”‚ğ•ÏXB
-    // ƒOƒŒ[ƒWƒ“ƒOŠp‚Å‚ ‚é‚Ù‚ÇƒXƒeƒbƒv‚ğ×‚©‚­‚µ‚Ä¸“x‚ğã‚°‚éB
+    // è¦–è§’ã«å¿œã˜ã¦ã‚µãƒ³ãƒ—ãƒ«æ•°ã‚’å¤‰æ›´ã€‚
+    // ã‚°ãƒ¬ãƒ¼ã‚¸ãƒ³ã‚°è§’ã§ã‚ã‚‹ã»ã©ã‚¹ãƒ†ãƒƒãƒ—ã‚’ç´°ã‹ãã—ã¦ç²¾åº¦ã‚’ä¸Šã’ã‚‹ã€‚
     int nNumSteps = (int) lerp(g_nMaxSamples, g_nMinSamples, dot(invViewWS, inNormalizedNormalWS));
 
     float fStepSize = 1.0 / (float) nNumSteps;
@@ -514,14 +514,14 @@ float2 CalcUVCoordWithPOM(float3 inNormalizedNormalWS,
     float2 vTexOffsetPerStep = fStepSize * invParallaxOffsetTS;
     float2 vTexCurrentOffset = inTexCoord;
 
-    // ¡‚Ç‚Ì[‚³‚Ì‘wiLayerj‚Ü‚ÅƒŒƒC‚ği‚ß‚½‚©
+    // ä»Šã©ã®æ·±ã•ã®å±¤ï¼ˆLayerï¼‰ã¾ã§ãƒ¬ã‚¤ã‚’é€²ã‚ãŸã‹
     float fCurrentLayer = 1.0;
 
     while (nStepIndex < nNumSteps)
     {
         vTexCurrentOffset -= vTexOffsetPerStep;
 
-        // tex2DgradŠÖ”‚ğg‚¤‚ÆPIX For Windows‚ª—‚¿‚é
+        // tex2Dgradé–¢æ•°ã‚’ä½¿ã†ã¨PIX For WindowsãŒè½ã¡ã‚‹
         // fCurrHeight = tex2Dgrad(g_heightMapSampler, vTexCurrentOffset, dx, dy ).r;
         fCurrHeight = tex2Dlod(g_heightMapSampler, float4(vTexCurrentOffset, 0.0f, 0.0f)).r;
 
@@ -537,7 +537,7 @@ float2 CalcUVCoordWithPOM(float3 inNormalizedNormalWS,
 
     float2 vParallaxOffset = invParallaxOffsetTS * (1 - fCurrentLayer);
 
-    // ‹^—“I‚É‰Ÿ‚µo‚³‚ê‚½•\–Êã‚ÌÅIƒeƒNƒXƒ`ƒƒÀ•W
+    // ç–‘ä¼¼çš„ã«æŠ¼ã—å‡ºã•ã‚ŒãŸè¡¨é¢ä¸Šã®æœ€çµ‚ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
     inTexCoord -= vParallaxOffset;
     return inTexCoord;
 }
