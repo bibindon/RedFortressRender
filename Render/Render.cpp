@@ -28,15 +28,112 @@
 #include <chrono>
 #include <set>
 #include <algorithm>
+#include <fstream>
+#include <sstream>
+#include <cwctype>
 
 namespace NSRender
 {
 
-void Render::Initialize(HWND hWnd)
+std::wstring Render::Trim(const std::wstring& text)
+{
+    const auto first = std::find_if_not(text.begin(), text.end(), [](wchar_t ch)
+    {
+        return std::iswspace(ch) != 0;
+    });
+
+    const auto last = std::find_if_not(text.rbegin(), text.rend(), [](wchar_t ch)
+    {
+        return std::iswspace(ch) != 0;
+    }).base();
+
+    if (first >= last)
+    {
+        return L"";
+    }
+
+    return std::wstring(first, last);
+}
+
+int Render::NormalizeGaussianSampleSize(const int sampleSize)
+{
+    int normalized = (std::max)(1, (std::min)(sampleSize, 101));
+
+    if ((normalized % 2) == 0)
+    {
+        --normalized;
+    }
+
+    return (std::max)(1, normalized);
+}
+
+void Render::LoadSettingsCsv(const std::wstring& settingsCsvPath)
+{
+    m_settings.clear();
+
+    if (settingsCsvPath.empty())
+    {
+        return;
+    }
+
+    std::wifstream file(settingsCsvPath);
+    if (!file)
+    {
+        return;
+    }
+
+    std::wstring line;
+    while (std::getline(file, line))
+    {
+        const std::size_t commentPos = line.find(L'#');
+        if (commentPos != std::wstring::npos)
+        {
+            line = line.substr(0, commentPos);
+        }
+
+        const std::size_t commaPos = line.find(L',');
+        if (commaPos == std::wstring::npos)
+        {
+            continue;
+        }
+
+        const std::wstring key = Trim(line.substr(0, commaPos));
+        const std::wstring value = Trim(line.substr(commaPos + 1));
+
+        if (!key.empty())
+        {
+            m_settings[key] = value;
+        }
+    }
+}
+
+void Render::ApplySettings()
+{
+    const auto gaussianSampleSize = m_settings.find(L"GaussianSampleSize");
+    if (gaussianSampleSize != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectGaussianSampleSize(std::stoi(gaussianSampleSize->second));
+        }
+        catch (...)
+        {
+            SetPostEffectGaussianSampleSize(m_gaussianSampleSize);
+        }
+    }
+    else
+    {
+        SetPostEffectGaussianSampleSize(m_gaussianSampleSize);
+    }
+}
+
+void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
 {
     HRESULT hResult = E_FAIL;
 
     m_hWnd = hWnd;
+
+    LoadSettingsCsv(settingsCsvPath);
 
     m_windowManager.Initialize(hWnd);
 
@@ -60,6 +157,7 @@ void Render::Initialize(HWND hWnd)
 
     // ガウスフィルター
     m_postEffectGauss.Initialize();
+    ApplySettings();
 
     // ブルーム
     m_PostEffectBloom.Initialize();
@@ -421,6 +519,12 @@ void Render::SetPostEffectSaturate(const float level)
 void Render::SetPostEffectGaussianFilter(const bool arg)
 {
     m_postEffectGauss.SetEnable(arg);
+}
+
+void Render::SetPostEffectGaussianSampleSize(const int sampleSize)
+{
+    m_gaussianSampleSize = NormalizeGaussianSampleSize(sampleSize);
+    m_postEffectGauss.SetSampleSize(m_gaussianSampleSize);
 }
 
 void Render::SetPostEffectBloom(const bool arg)

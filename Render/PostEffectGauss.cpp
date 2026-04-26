@@ -38,7 +38,7 @@ LPDIRECT3DTEXTURE9 PostEffectGauss::Draw(LPDIRECT3DTEXTURE9 renderTarget)
     }
 
     m_d3dEffect->SetBool("g_bFilterON", m_bEnable);
-    m_d3dEffect->SetInt("g_sampleSize", 101);
+    m_d3dEffect->SetInt("g_sampleSize", m_sampleSize);
 
     DrawFullscreenQuad(renderTarget,    m_texWork,      "GaussianH");
     DrawFullscreenQuad(m_texWork,       renderTarget,   "GaussianH");
@@ -62,6 +62,11 @@ void PostEffectGauss::SetEnable(const bool arg)
 bool PostEffectGauss::GetEnable() const
 {
     return m_bEnable;
+}
+
+void PostEffectGauss::SetSampleSize(const int sampleSize)
+{
+    m_sampleSize = sampleSize;
 }
 
 void PostEffectGauss::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,

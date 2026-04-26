@@ -13,6 +13,7 @@
 #include <crtdbg.h>
 #include <vector>
 #include <chrono>
+#include <unordered_map>
 
 #include "Font.h"
 #include "Sprite.h"
@@ -51,7 +52,7 @@ class Render : public IDeviceResettable
 
 public:
 
-    void Initialize(HWND hWnd);
+    void Initialize(HWND hWnd, const std::wstring& settingsCsvPath = L"");
     void Finalize();
     void Draw();
 
@@ -183,6 +184,7 @@ public:
     void SetPostEffectSaturate(const float level);
 
     void SetPostEffectGaussianFilter(const bool arg);
+    void SetPostEffectGaussianSampleSize(const int sampleSize);
 
     void SetPostEffectBloom(const bool arg);
 
@@ -258,6 +260,13 @@ private:
     PostEffectEnd m_postEffectEnd;
 
     void Draw2D();
+    void LoadSettingsCsv(const std::wstring& settingsCsvPath);
+    void ApplySettings();
+    static std::wstring Trim(const std::wstring& text);
+    static int NormalizeGaussianSampleSize(const int sampleSize);
+
+    std::unordered_map<std::wstring, std::wstring> m_settings;
+    int m_gaussianSampleSize = 101;
 
     LPDIRECT3DTEXTURE9 m_pRenderTarget1 = NULL;
     LPDIRECT3DTEXTURE9 m_pRenderTarget2 = NULL;

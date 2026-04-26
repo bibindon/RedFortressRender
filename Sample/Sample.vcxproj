@@ -257,6 +257,7 @@ exit /B %ERRORLEVEL%</Command>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="RenderSettings.csv" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\Render\shader\AnimMeshShader.fx" />

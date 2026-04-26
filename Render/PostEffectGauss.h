@@ -17,6 +17,8 @@ public:
     void SetEnable(const bool arg);
     bool GetEnable() const;
 
+    void SetSampleSize(const int sampleSize);
+
     // TODO ŽÀ‘•
     // 0.0 ~ 1.0
     void SetIntensity(const float arg);
@@ -43,6 +45,7 @@ private:
     bool m_bEnable = false;
 
     float m_intensity = 1.0;
+    int m_sampleSize = 101;
 
 };
 

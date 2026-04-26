@@ -24,7 +24,7 @@ struct VS_OUT
 VS_OUT VS_Copy(VS_IN i)
 {
     VS_OUT o;
-    // �N���b�v���(-1..1)�Ŏ󂯎�肻�̂܂ܒʂ�
+    // クリップ空間(-1..1)で受け取りそのまま通す
     o.pos = i.pos;
     o.uv = i.uv;
     return o;
