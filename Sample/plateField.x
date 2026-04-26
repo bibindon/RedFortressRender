@@ -44,7 +44,7 @@ Frame Root {
            0.000000;
            0.000000; 0.000000; 0.000000;;
            0.000000; 0.000000; 0.000000;;
-          TextureFilename {"grass.png";}
+          TextureFilename {"whiteWall.png";}
         }
       }
     }
