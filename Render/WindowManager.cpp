@@ -135,7 +135,7 @@ void WindowManager::ChangeWindowMode()
             d3dpp.BackBufferHeight = resoList.begin()->height;
         }
 
-        d3dpp.MultiSampleType = D3DMULTISAMPLE_4_SAMPLES;
+        d3dpp.MultiSampleType = D3DMULTISAMPLE_NONE;
 
         // TODO 要確認
         d3dpp.MultiSampleQuality = 0;
@@ -195,7 +195,7 @@ void WindowManager::ChangeWindowMode()
         d3dpp.BackBufferWidth = Common::ScreenW();
         d3dpp.BackBufferHeight = Common::ScreenH();
 
-        d3dpp.MultiSampleType = D3DMULTISAMPLE_4_SAMPLES;
+        d3dpp.MultiSampleType = D3DMULTISAMPLE_NONE;
 
         // TODO 要確認
         d3dpp.MultiSampleQuality = 0;
@@ -237,7 +237,7 @@ void WindowManager::ChangeWindowMode()
         d3dpp.BackBufferWidth = Common::ScreenW();
         d3dpp.BackBufferHeight = Common::ScreenH();
 
-        d3dpp.MultiSampleType = D3DMULTISAMPLE_4_SAMPLES;
+        d3dpp.MultiSampleType = D3DMULTISAMPLE_NONE;
 
         // TODO 要確認
         d3dpp.MultiSampleQuality = 0;

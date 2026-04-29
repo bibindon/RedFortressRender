@@ -52,8 +52,6 @@ float  g_HeightStart     = 0.00;   // この高さより下で濃くなる
 bool   g_EnableZ         = true;
 bool   g_EnableHeight    = false;
 
-bool   g_EnableDilate1px = true;
-
 float FogAmountAt(float2 uv)
 {
     float fogZ = 0.0;
@@ -95,20 +93,6 @@ float4 PS_Fog(PS_IN i) : COLOR0
 
     // 中心フォグ
     float fog = FogAmountAt(uv);
-
-    if (g_EnableDilate1px)
-    {
-        // 4 方向（上下左右）
-        float f1 = FogAmountAt(uv + float2( stepZ.x, 0.0));
-        float f2 = FogAmountAt(uv + float2(-stepZ.x, 0.0));
-        float f3 = FogAmountAt(uv + float2(0.0,  stepZ.y));
-        float f4 = FogAmountAt(uv + float2(0.0, -stepZ.y));
-
-        fog = max(fog, f1);
-        fog = max(fog, f2);
-        fog = max(fog, f3);
-        fog = max(fog, f4);
-    }
 
     float3 outColor = lerp(scene, g_FogColor.rgb, saturate(fog));
     return float4(outColor, 1.0);
