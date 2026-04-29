@@ -1,4 +1,4 @@
-#include "MeshMix.h"
+ï»¿#include "MeshMix.h"
 
 #include "Util.h"
 #include "Camera.h"
@@ -25,7 +25,7 @@ void MeshMix::Initialize()
     HRESULT hResult = E_FAIL;
 
     //--------------------------------------------------------
-    // ƒGƒtƒFƒNƒg‚Ìì¬
+    // ã‚¨ãƒ•ã‚§ã‚¯ãƒˆã®ä½œæˆ
     //--------------------------------------------------------
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
                                        SHADER_FILENAME.c_str(),
@@ -39,7 +39,7 @@ void MeshMix::Initialize()
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // Xƒtƒ@ƒCƒ‹‚Ì“Ç‚İ‚İ
+    // Xãƒ•ã‚¡ã‚¤ãƒ«ã®èª­ã¿è¾¼ã¿
     //--------------------------------------------------------
     LPD3DXBUFFER adjacencyBuffer = nullptr;
     LPD3DXBUFFER materialBuffer = nullptr;
@@ -55,24 +55,24 @@ void MeshMix::Initialize()
 
     assert(hResult == S_OK);
 
-    // ‚È‚ß‚ç‚©‚Èƒ‰ƒCƒeƒBƒ“ƒO‚Ì‚½‚ß‚É–@üî•ñ‚ğŒvZ‚µ‚È‚¨‚·
-    // —á‚¦‚Î”¼‹…‚Ì–@ü‚ğÄŒvZ‚·‚é‚ÆƒLƒmƒR‚Ì‚æ‚¤‚É‚È‚èA
-    // ÄŒvZ‚µ‚È‚¢‚Æƒ_ƒCƒ„ƒ‚ƒ“ƒh‚Ì‚æ‚¤‚ÈŒ©‚½–Ú‚É‚È‚éB
+    // ãªã‚ã‚‰ã‹ãªãƒ©ã‚¤ãƒ†ã‚£ãƒ³ã‚°ã®ãŸã‚ã«æ³•ç·šæƒ…å ±ã‚’è¨ˆç®—ã—ãªãŠã™
+    // ä¾‹ãˆã°åŠçƒã®æ³•ç·šã‚’å†è¨ˆç®—ã™ã‚‹ã¨ã‚­ãƒã‚³ã®ã‚ˆã†ã«ãªã‚Šã€
+    // å†è¨ˆç®—ã—ãªã„ã¨ãƒ€ã‚¤ãƒ¤ãƒ¢ãƒ³ãƒ‰ã®ã‚ˆã†ãªè¦‹ãŸç›®ã«ãªã‚‹ã€‚
 
     DWORD* adjacencyList = (DWORD*)adjacencyBuffer->GetBufferPointer();
     if (m_param.smooth)
     {
-        // ModifyMeshForNormalMappingŠÖ”‚Å‚â‚é‚©‚ç•K—v‚È‚¢‚Í‚¸
+        // ModifyMeshForNormalMappingé–¢æ•°ã§ã‚„ã‚‹ã‹ã‚‰å¿…è¦ãªã„ã¯ãš
     //    HRESULT hr = D3DXComputeNormals(m_D3DMesh, adjacencyList);
     }
 
     //--------------------------------------------------------
-    // UVî•ñ‚ğ¶¬
+    // UVæƒ…å ±ã‚’ç”Ÿæˆ
     //--------------------------------------------------------
     ModifyMeshForNormalMapping(m_D3DMesh);
 
     //--------------------------------------------------------
-    // –Ê‚Æ’¸“_‚ğ•À‚×‘Ö‚¦‚ÄƒƒbƒVƒ…‚ğ¶¬‚µA•`‰æƒpƒtƒH[ƒ}ƒ“ƒX‚ğÅ“K‰»
+    // é¢ã¨é ‚ç‚¹ã‚’ä¸¦ã¹æ›¿ãˆã¦ãƒ¡ãƒƒã‚·ãƒ¥ã‚’ç”Ÿæˆã—ã€æç”»ãƒ‘ãƒ•ã‚©ãƒ¼ãƒãƒ³ã‚¹ã‚’æœ€é©åŒ–
     //--------------------------------------------------------
     hResult = m_D3DMesh->OptimizeInplace(D3DXMESHOPT_COMPACT | D3DXMESHOPT_ATTRSORT | D3DXMESHOPT_VERTEXCACHE,
                                          adjacencyList,
@@ -84,11 +84,11 @@ void MeshMix::Initialize()
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // ƒ}ƒeƒŠƒAƒ‹î•ñ‚Ì“Ç‚İ‚İ
+    // ãƒãƒ†ãƒªã‚¢ãƒ«æƒ…å ±ã®èª­ã¿è¾¼ã¿
     //--------------------------------------------------------
     D3DXMATERIAL* materialList = (D3DXMATERIAL*)materialBuffer->GetBufferPointer();
 
-    // Xƒtƒ@ƒCƒ‹‚ÌƒfƒBƒŒƒNƒgƒŠ
+    // Xãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª
     std::wstring xFileDir = m_meshName;
     std::size_t lastPos = xFileDir.find_last_of(L"\\");
     xFileDir = xFileDir.substr(0, lastPos + 1);
@@ -98,8 +98,8 @@ void MeshMix::Initialize()
         if (i == 0)
         {
             //--------------------------------------------------------
-            // ŠgU”½ËF‚Ì“Ç‚İ‚İ
-            // Diffuse‚ÌF‚Í(1, 1, 1)‚ªŠî–{‚Æ‚·‚éB
+            // æ‹¡æ•£åå°„è‰²ã®èª­ã¿è¾¼ã¿
+            // Diffuseã®è‰²ã¯(1, 1, 1)ãŒåŸºæœ¬ã¨ã™ã‚‹ã€‚
             //--------------------------------------------------------
             D3DXVECTOR4 diffuce(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -137,7 +137,7 @@ void MeshMix::Initialize()
 
 void MeshMix::ModifyMeshForNormalMapping(LPD3DXMESH& pMesh)
 {
-    // –Ú•W‚Ì’¸“_éŒ¾iPOSITION, NORMAL, TEXCOORD0, TANGENT0, BINORMAL0j
+    // ç›®æ¨™ã®é ‚ç‚¹å®£è¨€ï¼ˆPOSITION, NORMAL, TEXCOORD0, TANGENT0, BINORMAL0ï¼‰
     D3DVERTEXELEMENT9 declTB[] =
     {
         {0,  0,  D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION,  0},
@@ -156,45 +156,45 @@ void MeshMix::ModifyMeshForNormalMapping(LPD3DXMESH& pMesh)
 
     assert(SUCCEEDED(hr));
 
-    // —×Úî•ñ
+    // éš£æ¥æƒ…å ±
     std::vector<DWORD> adj(pCloned->GetNumFaces() * 3);
     hr = pCloned->GenerateAdjacency(1e-6f, adj.data());
 
     assert(SUCCEEDED(hr));
 
-    // ƒIƒvƒVƒ‡ƒ“i•K—v‚É‰‚¶‚Ä’²®j
+    // ã‚ªãƒ—ã‚·ãƒ§ãƒ³ï¼ˆå¿…è¦ã«å¿œã˜ã¦èª¿æ•´ï¼‰
     DWORD options = D3DXTANGENT_WEIGHT_BY_AREA |
-                    D3DXTANGENT_GENERATE_IN_PLACE;  // “ü—ÍƒƒbƒVƒ…‚ğ‘‚«Š·‚¦‚é
+                    D3DXTANGENT_GENERATE_IN_PLACE;  // å…¥åŠ›ãƒ¡ãƒƒã‚·ãƒ¥ã‚’æ›¸ãæ›ãˆã‚‹
 
     if (m_param.smooth)
     {
         options += D3DXTANGENT_CALCULATE_NORMALS;
     }
 
-    // ³‚µ‚¢ƒVƒOƒlƒ`ƒƒ‡‚Å 16 ˆø”‚ğ“n‚·
+    // æ­£ã—ã„ã‚·ã‚°ãƒãƒãƒ£é †ã§ 16 å¼•æ•°ã‚’æ¸¡ã™
     hr = D3DXComputeTangentFrameEx(pCloned,                   // pMesh
-                                   D3DDECLUSAGE_TEXCOORD, 0,  // ‚Ç‚ÌUV‚ğg‚¤‚©i‚±‚±‚Å‚Í TEXCOORD0j
-                                   D3DDECLUSAGE_TANGENT,  0,  // U•Î”÷•ª‚Ìo—Íæ ¨ TANGENT0
-                                   D3DDECLUSAGE_BINORMAL, 0,  // V•Î”÷•ª‚Ìo—Íæ ¨ BINORMAL0
-                                   D3DDECLUSAGE_NORMAL,   0,  // –@ü‚Ìo—Íæ   ¨ NORMAL0iÄŒvZj
+                                   D3DDECLUSAGE_TEXCOORD, 0,  // ã©ã®UVã‚’ä½¿ã†ã‹ï¼ˆã“ã“ã§ã¯ TEXCOORD0ï¼‰
+                                   D3DDECLUSAGE_TANGENT,  0,  // Uåå¾®åˆ†ã®å‡ºåŠ›å…ˆ â†’ TANGENT0
+                                   D3DDECLUSAGE_BINORMAL, 0,  // Våå¾®åˆ†ã®å‡ºåŠ›å…ˆ â†’ BINORMAL0
+                                   D3DDECLUSAGE_NORMAL,   0,  // æ³•ç·šã®å‡ºåŠ›å…ˆ   â†’ NORMAL0ï¼ˆå†è¨ˆç®—ï¼‰
                                    options,                   // dwOptions
-                                   adj.data(),                // —×Ú
+                                   adj.data(),                // éš£æ¥
                                    0.01f,                     // fPartialEdgeThreshold
                                    0.01f,                     // fSingularPointThreshold
-                                   // Šp‚Ì•½ŠŠ‰»‚ğ–h~B•½–Ê‚É‘Î‚µ‚Ä‚¾‚¯•½ŠŠ‰»‚ğs‚¤‚æ‚¤‚É‚·‚é
-                                   // ‚±‚ê‚ğ‚µ‚È‚¢‚Æ‹·Õ•Áƒ}ƒbƒsƒ“ƒO‚Å–â‘è‚É‚È‚éB
+                                   // è§’ã®å¹³æ»‘åŒ–ã‚’é˜²æ­¢ã€‚å¹³é¢ã«å¯¾ã—ã¦ã ã‘å¹³æ»‘åŒ–ã‚’è¡Œã†ã‚ˆã†ã«ã™ã‚‹
+                                   // ã“ã‚Œã‚’ã—ãªã„ã¨è¦–å·®é®è”½ãƒãƒƒãƒ”ãƒ³ã‚°ã§å•é¡Œã«ãªã‚‹ã€‚
                                    0.999f,                     // fNormalEdgeThreshold
-                                   NULL,                      // ppMeshOutiIN_PLACE w’è‚È‚Ì‚Å•s—vj
-                                   NULL                       // ppVertexMappingi•s—v‚È‚ç NULLj
+                                   NULL,                      // ppMeshOutï¼ˆIN_PLACE æŒ‡å®šãªã®ã§ä¸è¦ï¼‰
+                                   NULL                       // ppVertexMappingï¼ˆä¸è¦ãªã‚‰ NULLï¼‰
     );
 
-    // Œ´ˆö•s–¾
+    // åŸå› ä¸æ˜
     if (FAILED(hr))
     {
         return;
     }
 
-    // UVî•ñ‚ª‚È‚¢ƒƒbƒVƒ…ƒtƒ@ƒCƒ‹‚ğ“Ç‚İ‚Ş‚ÆA‚±‚±‚ÅƒGƒ‰[
+    // UVæƒ…å ±ãŒãªã„ãƒ¡ãƒƒã‚·ãƒ¥ãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­ã¿è¾¼ã‚€ã¨ã€ã“ã“ã§ã‚¨ãƒ©ãƒ¼
     assert(SUCCEEDED(hr));
 
     pMesh->Release();
@@ -231,8 +231,8 @@ void MeshMix::Render()
     HRESULT hResult = E_FAIL;
 
     //--------------------------------------------------------
-    // ‰Šú‰»‚ªI‚í‚Á‚Ä‚¢‚È‚¢‚È‚ç•`‰æ‚µ‚È‚¢
-    // i•ÊƒXƒŒƒbƒh‚Å‰Šú‰»‚ğs‚¤ê‡‚ğl—¶j
+    // åˆæœŸåŒ–ãŒçµ‚ã‚ã£ã¦ã„ãªã„ãªã‚‰æç”»ã—ãªã„
+    // ï¼ˆåˆ¥ã‚¹ãƒ¬ãƒƒãƒ‰ã§åˆæœŸåŒ–ã‚’è¡Œã†å ´åˆã‚’è€ƒæ…®ï¼‰
     //--------------------------------------------------------
     if (m_bLoaded == false)
     {
@@ -240,17 +240,17 @@ void MeshMix::Render()
     }
 
     //--------------------------------------------------------
-    // ŒõŒ¹‚Ì•ûŒü‚ğİ’è
-    // TODO LightNormal‚ÆLightDir‚Å‚Í•ûŒü‚ª‹t‚É‚È‚éBŠÔˆá‚Á‚Ä‚¢‚é
+    // å…‰æºã®æ–¹å‘ã‚’è¨­å®š
+    // TODO LightNormalã¨LightDirã§ã¯æ–¹å‘ãŒé€†ã«ãªã‚‹ã€‚é–“é•ã£ã¦ã„ã‚‹
     //--------------------------------------------------------
     D3DXVECTOR4 normal = Light::GetLightDir();
 
-    // •¶š—ñ‚Åw’è‚·‚é‚Æ’x‚­‚È‚é‚ç‚µ‚¢
+    // æ–‡å­—åˆ—ã§æŒ‡å®šã™ã‚‹ã¨é…ããªã‚‹ã‚‰ã—ã„
     hResult = m_D3DEffect->SetVector("g_lightDir", &normal);
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // ƒ[ƒ‹ƒh•ÏŠ·s—ñ‚ğİ’è
+    // ãƒ¯ãƒ¼ãƒ«ãƒ‰å¤‰æ›è¡Œåˆ—ã‚’è¨­å®š
     //--------------------------------------------------------
     D3DXMATRIX matWorld{ };
     D3DXMatrixIdentity(&matWorld);
@@ -270,7 +270,7 @@ void MeshMix::Render()
     hResult = m_D3DEffect->SetMatrix("g_matWorld", &matWorld);
 
     //--------------------------------------------------------
-    // ƒ[ƒ‹ƒhƒrƒ…[Ë‰e•ÏŠ·s—ñ‚ğİ’è
+    // ãƒ¯ãƒ¼ãƒ«ãƒ‰ãƒ“ãƒ¥ãƒ¼å°„å½±å¤‰æ›è¡Œåˆ—ã‚’è¨­å®š
     //--------------------------------------------------------
     D3DXMATRIX matViewProj{ };
     D3DXMatrixIdentity(&matViewProj);
@@ -289,15 +289,23 @@ void MeshMix::Render()
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // ƒJƒƒ‰
+    // ã‚«ãƒ¡ãƒ©
     //--------------------------------------------------------
     D3DXVECTOR4 cameraPos = D3DXVECTOR4(Camera::GetEyePos(), 1.f);
 
     hResult = m_D3DEffect->SetVector("g_cameraPos", &cameraPos);
     assert(hResult == S_OK);
 
+    const float screenSize[2] =
+    {
+        static_cast<float>(Common::ScreenW()),
+        static_cast<float>(Common::ScreenH())
+    };
+    hResult = m_D3DEffect->SetFloatArray("g_screenSize", screenSize, 2);
+    assert(hResult == S_OK);
+
     //--------------------------------------------------------
-    // •`‰æŠJn
+    // æç”»é–‹å§‹
     //--------------------------------------------------------
     hResult = m_D3DEffect->SetTechnique("Technique1");
     assert(hResult == S_OK);
@@ -306,7 +314,7 @@ void MeshMix::Render()
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // ƒ}ƒeƒŠƒAƒ‹‚Ì”‚¾‚¯F‚ÆƒeƒNƒXƒ`ƒƒ‚ğİ’è‚µ‚Ä•`‰æ
+    // ãƒãƒ†ãƒªã‚¢ãƒ«ã®æ•°ã ã‘è‰²ã¨ãƒ†ã‚¯ã‚¹ãƒãƒ£ã‚’è¨­å®šã—ã¦æç”»
     //--------------------------------------------------------
     hResult = m_D3DEffect->SetVector("g_diffuse", &m_vecDiffuse.at(0));
     assert(hResult == S_OK);
@@ -320,38 +328,38 @@ void MeshMix::Render()
     hResult = m_D3DEffect->SetTexture("g_texNormalMap", m_vecTexture.at(2));
     assert(hResult == S_OK);
 
-    // ‚‚³ƒ}ƒbƒv‚ª‚È‚¢‚Æ‚«‚Í‚ ‚éB‚ ‚Á‚Ä‚à–â‘è‚È‚¢
+    // é«˜ã•ãƒãƒƒãƒ—ãŒãªã„ã¨ãã¯ã‚ã‚‹ã€‚ã‚ã£ã¦ã‚‚å•é¡Œãªã„
     if (m_vecTexture.size() >= 4)
     {
         hResult = m_D3DEffect->SetTexture("g_texHeightMap", m_vecTexture.at(3));
         assert(hResult == S_OK);
     }
 
-    // ŠÔƒpƒ‰ƒ[ƒ^‚ğİ’è
+    // æ™‚é–“ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚’è¨­å®š
     static float f = 0.f;
     f += 0.001f;
     hResult = m_D3DEffect->SetFloat("g_time", f);
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // —h‚ç‚µŒø‰Ê
-    // ‰æ–Ê‚ğ—h‚ç‚·A‚Æ‚¢‚¤ˆÓ–¡‚Å‚Í‚È‚­Aƒ‚ƒfƒ‹‚ğ‘‚â…–Ê‚Ì‚æ‚¤‚É—h‚ç‚·Œø‰Ê
+    // æºã‚‰ã—åŠ¹æœ
+    // ç”»é¢ã‚’æºã‚‰ã™ã€ã¨ã„ã†æ„å‘³ã§ã¯ãªãã€ãƒ¢ãƒ‡ãƒ«ã‚’è‰ã‚„æ°´é¢ã®ã‚ˆã†ã«æºã‚‰ã™åŠ¹æœ
     //--------------------------------------------------------
     if (m_param.sway)
     {
         hResult = m_D3DEffect->SetBool("g_swayEnable", TRUE);
 
-        // —h‚ç‚µ‚Ì‹­“x‚ğİ’è
+        // æºã‚‰ã—ã®å¼·åº¦ã‚’è¨­å®š
         hResult = m_D3DEffect->SetFloat("g_swayAmount", 2.5f);
         assert(hResult == S_OK);
 
-        // —h‚ç‚µ‚Ì‘¬“x‚ğİ’è
+        // æºã‚‰ã—ã®é€Ÿåº¦ã‚’è¨­å®š
         hResult = m_D3DEffect->SetFloat("g_swaySpeed", 1.0f);
         assert(hResult == S_OK);
     }
 
     //--------------------------------------------------------
-    // ƒ|ƒCƒ“ƒgƒ‰ƒCƒg
+    // ãƒã‚¤ãƒ³ãƒˆãƒ©ã‚¤ãƒˆ
     //--------------------------------------------------------
     if (m_param.pointLight)
     {
@@ -393,9 +401,9 @@ void MeshMix::Render()
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // ƒpƒX0
-    // ’Êí‚Ì•`‰æ
-    // –@üƒ}ƒbƒsƒ“ƒO‚ğŠÜ‚Ş
+    // ãƒ‘ã‚¹0
+    // é€šå¸¸ã®æç”»
+    // æ³•ç·šãƒãƒƒãƒ”ãƒ³ã‚°ã‚’å«ã‚€
     //--------------------------------------------------------
     hResult = m_D3DEffect->BeginPass(0);
     assert(hResult == S_OK);
@@ -407,8 +415,8 @@ void MeshMix::Render()
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // ƒpƒX1
-    // ŠÂ‹«ƒ}ƒbƒsƒ“ƒO
+    // ãƒ‘ã‚¹1
+    // ç’°å¢ƒãƒãƒƒãƒ”ãƒ³ã‚°
     //--------------------------------------------------------
     hResult = m_D3DEffect->BeginPass(1);
     assert(hResult == S_OK);
@@ -420,8 +428,8 @@ void MeshMix::Render()
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // ƒpƒX2
-    // ƒKƒ‰ƒXƒGƒtƒFƒNƒg
+    // ãƒ‘ã‚¹2
+    // ã‚¬ãƒ©ã‚¹ã‚¨ãƒ•ã‚§ã‚¯ãƒˆ
     //--------------------------------------------------------
     if (m_param.glass)
     {
@@ -436,8 +444,8 @@ void MeshMix::Render()
     }
 
     //--------------------------------------------------------
-    // ƒpƒX3
-    // ƒ|ƒCƒ“ƒgƒ‰ƒCƒg
+    // ãƒ‘ã‚¹3
+    // ãƒã‚¤ãƒ³ãƒˆãƒ©ã‚¤ãƒˆ
     //--------------------------------------------------------
     hResult = m_D3DEffect->BeginPass(3);
     assert(hResult == S_OK);
@@ -483,7 +491,7 @@ stMeshParam GetMeshParamPreset(const eMeshParamPreset preset)
 {
     stMeshParam param;
 
-    // TODO ˆø”‚ğ‚à‚Æ‚Éƒpƒ‰ƒ[ƒ^‚ÉƒvƒŠƒZƒbƒg‚ğƒZƒbƒg‚·‚é
+    // TODO å¼•æ•°ã‚’ã‚‚ã¨ã«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã«ãƒ—ãƒªã‚»ãƒƒãƒˆã‚’ã‚»ãƒƒãƒˆã™ã‚‹
 
     return param;
 }

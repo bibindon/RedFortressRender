@@ -1,4 +1,4 @@
-#pragma comment( lib, "d3d9.lib" )
+﻿#pragma comment( lib, "d3d9.lib" )
 #if defined(DEBUG) || defined(_DEBUG)
 #pragma comment( lib, "d3dx9d.lib" )
 #else
@@ -34,41 +34,6 @@
 
 namespace NSRender
 {
-
-namespace
-{
-struct DebugLineVertex
-{
-    float x;
-    float y;
-    float z;
-    float rhw;
-    DWORD color;
-};
-
-void DrawDebugVerticalGuideLines()
-{
-    std::vector<DebugLineVertex> vertices;
-    vertices.reserve((Common::ScreenW() / 5 + 1) * 2);
-
-    for (int x = 0; x < Common::ScreenW(); x += 5)
-    {
-        vertices.push_back(DebugLineVertex { static_cast<float>(x) - 0.5f, -0.5f, 0.0f, 1.0f, D3DCOLOR_RGBA(0, 255, 0, 255) });
-        vertices.push_back(DebugLineVertex { static_cast<float>(x) - 0.5f, static_cast<float>(Common::ScreenH()) - 0.5f, 0.0f, 1.0f, D3DCOLOR_RGBA(0, 255, 0, 255) });
-    }
-
-    Common::D3DDevice()->SetTexture(0, NULL);
-    Common::D3DDevice()->SetPixelShader(NULL);
-    Common::D3DDevice()->SetVertexShader(NULL);
-    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
-    Common::D3DDevice()->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
-    Common::D3DDevice()->DrawPrimitiveUP(D3DPT_LINELIST,
-                                         static_cast<UINT>(vertices.size() / 2),
-                                         vertices.data(),
-                                         sizeof(DebugLineVertex));
-    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
-}
-}
 
 std::wstring Render::Trim(const std::wstring& text)
 {
@@ -232,7 +197,7 @@ void Render::Finalize()
 void Render::Draw()
 {
     HRESULT hResult = E_FAIL;
-    const bool kSkipAllPostEffects = true;
+    const bool kSkipAllPostEffects = false;
 
     if (m_bShowFPS)
     {
@@ -877,7 +842,6 @@ void Render::Draw2D()
     }
 
     m_sprite.Draw();
-    DrawDebugVerticalGuideLines();
 
 }
 

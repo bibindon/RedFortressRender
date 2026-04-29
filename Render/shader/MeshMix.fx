@@ -12,6 +12,7 @@ float4 g_ambient = { 0.2f, 0.2f, 0.2f, 1.0f };
 float4 g_diffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 float4 g_specularColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+float2 g_screenSize = { 1600.0f, 900.0f };
 
 // スペキュラ光の鋭さ
 float g_specularPower = 128.0f;
@@ -218,7 +219,7 @@ float2 CalcUVCoordWithPOM(float3 inNormalizedNormalWS,
 //-------------------------------------------------------------
 // Pass 0
 //-------------------------------------------------------------
-void PixelShader1(in float4 inPosition    : POSITION,
+void PixelShader1(in float2 inScreenPos   : VPOS,
                   in float3 inPosWorld    : TEXCOORD0,
                   in float3 inNormalWorld : TEXCOORD1,
                   in float2 inTexCoord    : TEXCOORD2,
@@ -331,6 +332,11 @@ void PixelShader1(in float4 inPosition    : POSITION,
     float3 finalColor = ambient.rgb + lambert + specular;
 
     outColor = saturate(float4(finalColor, 1.f));
+
+    if (abs(inScreenPos.x - (g_screenSize.x * 0.5f)) <= 0.5f)
+    {
+        outColor = float4(0.0f, 1.0f, 0.0f, 1.0f);
+    }
 }
 
 //-------------------------------------------------------------

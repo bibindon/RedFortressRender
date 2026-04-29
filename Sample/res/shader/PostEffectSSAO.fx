@@ -125,6 +125,7 @@ struct Basis
     float3 vOrigin;
     float zRef;
 };
+
 float g_farAdoptMinZ = 0.0001f; // これ以上なら輪郭とみなす（小さすぎは通常面）
 float g_farAdoptMaxZ = 0.01f; // これ以上は大きすぎ（別オブジェクト/空）→遠側採用しない
 
@@ -134,7 +135,6 @@ Basis BuildBasis(float2 uv)
 
     float zC = tex2D(sampZ, uv).a;
     float3 pC = DecodeWorldPos(tex2D(sampPos, uv).rgb);
-
     float2 dx = float2(g_invSize.x, 0.0f) * 2;
     float2 dy = float2(0.0f, g_invSize.y) * 2;
 
@@ -190,7 +190,7 @@ Basis BuildBasis(float2 uv)
     }
 
     // 参照Z（zRef）は従来どおり“遠い側”を使って明るいハロを防止（ここはレンジ外でもOK）
-    const float kEdge = 0.004f; // 以前の kEdge（シルエット検出） ? 必要なら 0.003?0.006
+    const float kEdge = 0.004f; // 以前の kEdge（シルエット検出） ? 必要なら 0.003～0.006
     float zRef = zC;
     float3 pRef = pC;
     if (abs(zR - zL) > kEdge)
@@ -220,13 +220,11 @@ Basis BuildBasis(float2 uv)
         }
     }
 
-    // 出力（原点はレンジガード付きの選択、それ以外は従来どおり）
     o.Nv = Nv;
     o.vOrigin = mul(float4(pC, 1.0f), g_matView).xyz;
     o.zRef = zRef;
     return o;
 }
-
 
 // ========= AO =========
 float4 PS_AO(VS_OUT i) : COLOR0
@@ -425,3 +423,4 @@ technique TechniqueAO_BlurV
         PixelShader = compile ps_3_0 PS_BlurV();
     }
 }
+
