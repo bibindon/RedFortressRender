@@ -527,6 +527,11 @@ void Render::SetPostEffectGaussianSampleSize(const int sampleSize)
     m_postEffectGauss.SetSampleSize(m_gaussianSampleSize);
 }
 
+void Render::SetPostEffectDepthBufferShadow(const bool arg)
+{
+    m_postEffectZShadow.SetEnable(arg);
+}
+
 void Render::SetPostEffectBloom(const bool arg)
 {
     m_PostEffectBloom.SetEnable(arg);

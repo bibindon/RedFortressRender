@@ -48,6 +48,7 @@ extern std::wstring g_selectedAnimMeshPath;
 extern std::wstring g_selectedSkinAnimMeshPath;
 extern bool g_bAnimateLight;
 extern bool g_bGaussianFilter;
+extern bool g_bDepthBufferShadow;
 extern int g_gaussianSampleSize;
 extern int g_sunId;
 extern std::vector<ImageInfo> g_imageInfoList;
