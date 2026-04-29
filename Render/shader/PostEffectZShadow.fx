@@ -11,6 +11,8 @@ float4x4 g_matLightViewProj;
 
 float g_shadowTexelW;
 float g_shadowTexelH;
+float g_compositeTexelW;
+float g_compositeTexelH;
 
 // 影の端に表示されるギザギザを抑制。0.002～0.005 で調整
 float g_shadowBias;
@@ -254,7 +256,9 @@ void VS_Composite(in  float4 inPos  : POSITION,
                   out float2 outUV  : TEXCOORD0)
 {
     outPos = inPos;
-    outUV = inUV;
+    outPos.x -= g_compositeTexelW;
+    outPos.y += g_compositeTexelH;
+    outUV = inUV + float2(0.5f * g_compositeTexelW, 0.5f * g_compositeTexelH);
 }
 
 // 2枚の画像を線形補間で合成する

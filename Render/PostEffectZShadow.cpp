@@ -338,6 +338,8 @@ void PostEffectZShadow::RenderTechnique3()
     g_fxDepthBufferShadow->Begin(&nPassNum, 0);
     g_fxDepthBufferShadow->BeginPass(0);
 
+    g_fxDepthBufferShadow->SetFloat("g_compositeTexelW", 1.0f / static_cast<float>(descComp.Width));
+    g_fxDepthBufferShadow->SetFloat("g_compositeTexelH", 1.0f / static_cast<float>(descComp.Height));
     g_fxDepthBufferShadow->SetTexture("g_texBase",   g_texTemp);               // 元のカラー
     g_fxDepthBufferShadow->SetTexture("g_texShadow", g_texRenderTargetShadow); // 影アルファ
     g_fxDepthBufferShadow->CommitChanges();
@@ -359,36 +361,33 @@ void PostEffectZShadow::DrawFullscreenQuad()
 {
     QuadVertex v[4] { };
 
-    float du = 0.5f / (float)Common::ScreenW();
-    float dv = 0.5f / (float)Common::ScreenH();
-
     v[0].x = -1.0f;
     v[0].y = -1.0f;
     v[0].z = 0.0f;
     v[0].w = 1.0f;
-    v[0].u = 0.0f + du;
-    v[0].v = 1.0f - dv;
+    v[0].u = 0.0f;
+    v[0].v = 1.0f;
 
     v[1].x = -1.0f;
     v[1].y = 1.0f;
     v[1].z = 0.0f;
     v[1].w = 1.0f;
-    v[1].u = 0.0f + du;
-    v[1].v = 0.0f + dv;
+    v[1].u = 0.0f;
+    v[1].v = 0.0f;
 
     v[2].x = 1.0f;
     v[2].y = -1.0f;
     v[2].z = 0.0f;
     v[2].w = 1.0f;
-    v[2].u = 1.0f - du;
-    v[2].v = 1.0f - dv;
+    v[2].u = 1.0f;
+    v[2].v = 1.0f;
 
     v[3].x = 1.0f;
     v[3].y = 1.0f;
     v[3].z = 0.0f;
     v[3].w = 1.0f;
-    v[3].u = 1.0f - du;
-    v[3].v = 0.0f + dv;
+    v[3].u = 1.0f;
+    v[3].v = 0.0f;
 
     HRESULT hr = E_FAIL;
 
