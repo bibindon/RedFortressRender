@@ -195,7 +195,7 @@ bool HandleSampleKeyDown(HWND hWnd, const WPARAM wParam)
 
     if (wParam == 'M' && !shift && !control)
     {
-        SpawnMeshMixAtCameraFront(L"monkeySSAO.blend.x");
+        SpawnMeshMixAtCameraFront(L"..\\..\\Sample\\monkeySSAO.blend.x");
     }
     else if (wParam == 'M' && shift && control)
     {

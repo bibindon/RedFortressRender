@@ -368,7 +368,7 @@ void SpawnMeshMixAtCameraFront(const std::wstring& filePath)
     pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
     const float yaw = atan2f(forward.x, forward.z);
-    g_Render.AddMeshMix(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), 1.0f, 1.0f);
+    g_Render.AddMeshMix(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), 10.0f, 1.0f);
 }
 
 NSRender::AnimSetMap CreateDefaultAnimSetMap()

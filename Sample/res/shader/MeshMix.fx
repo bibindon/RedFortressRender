@@ -86,7 +86,7 @@ sampler g_normalMapSampler = sampler_state
 // 視差遮蔽マッピング関連
 //------------------------------------------------------
 
-bool g_bPOM = true;
+bool g_bPOM = false;
 
 // 高さ 0.0 ~ 1.0
 float g_fHeightMapScale = 0.1f;

@@ -24,7 +24,7 @@ void MeshMix::Initialize()
 {
     HRESULT hResult = E_FAIL;
 
-    auto tempPath = Util::GetExeDir() + SHADER_FILENAME.c_str();
+    auto tempPath = Util::GetExeDir() + SHADER_FILENAME;
 
     //--------------------------------------------------------
     // エフェクトの作成
@@ -46,7 +46,8 @@ void MeshMix::Initialize()
     LPD3DXBUFFER adjacencyBuffer = nullptr;
     LPD3DXBUFFER materialBuffer = nullptr;
 
-    hResult = D3DXLoadMeshFromX(m_meshName.c_str(),
+    tempPath = Util::GetExeDir() + m_meshName;
+    hResult = D3DXLoadMeshFromX(tempPath.c_str(),
                                 D3DXMESH_MANAGED,
                                 Common::D3DDevice(),
                                 &adjacencyBuffer,
@@ -96,7 +97,7 @@ void MeshMix::Initialize()
     D3DXMATERIAL* materialList = (D3DXMATERIAL*)materialBuffer->GetBufferPointer();
 
     // Xファイルのディレクトリ
-    std::wstring xFileDir = m_meshName;
+    std::wstring xFileDir = Util::GetExeDir() + m_meshName;
     std::size_t lastPos = xFileDir.find_last_of(L"\\");
     xFileDir = xFileDir.substr(0, lastPos + 1);
 
