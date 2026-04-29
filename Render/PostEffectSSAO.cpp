@@ -1,4 +1,4 @@
-#include "PostEffectSSAO.h"
+ï»¿#include "PostEffectSSAO.h"
 
 #include "Camera.h"
 
@@ -61,20 +61,20 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
         return renderTarget;
     }
 
-    // ‰æ–ÊƒTƒCƒY‚©‚ç invSize ‚ðŒvŽZ
+    // ç”»é¢ã‚µã‚¤ã‚ºã‹ã‚‰ invSize ã‚’è¨ˆç®—
     D3DSURFACE_DESC descZ = {};
     m_texRenderTargetZ->GetLevelDesc(0, &descZ);
     D3DXVECTOR2 invSize(1.0f / descZ.Width, 1.0f / descZ.Height);
 
-    // ƒrƒ…[EƒvƒƒWƒFƒNƒVƒ‡ƒ“s—ñ
+    // ãƒ“ãƒ¥ãƒ¼ãƒ»ãƒ—ãƒ­ã‚¸ã‚§ã‚¯ã‚·ãƒ§ãƒ³è¡Œåˆ—
     D3DXMATRIX matrixView = Camera::GetViewMatrix();
     D3DXMATRIX matrixProj = Camera::GetProjMatrix();
 
-    // ‹ŒRT‘Þ”ð
+    // æ—§RTé€€é¿
     LPDIRECT3DSURFACE9 oldRt0 = NULL;
     hr = Common::D3DDevice()->GetRenderTarget(0, &oldRt0);
 
-    // ƒT[ƒtƒFƒXŽæ“¾
+    // ã‚µãƒ¼ãƒ•ã‚§ã‚¹å–å¾—
     LPDIRECT3DSURFACE9 surfAO = NULL;
     LPDIRECT3DSURFACE9 surfAOTemp = NULL;
     LPDIRECT3DSURFACE9 surfRT1 = NULL;
@@ -84,7 +84,7 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_rtAoTempTex->GetSurfaceLevel(0, &surfAOTemp);
     renderTarget->GetSurfaceLevel(0, &surfRT1);
 
-    // ========= AO ¶¬ =========
+    // ========= AO ç”Ÿæˆ =========
     hr = Common::D3DDevice()->SetRenderTarget(0, surfAO);
     Common::D3DDevice()->SetRenderTarget(1, NULL);
 
@@ -104,14 +104,14 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_fxSSAO->SetTexture("texPos", m_texRenderTargetPos);
     m_fxSSAO->SetTexture("texNormal", m_texRenderTargetNormal);
 
-    m_fxSSAO->SetFloat("g_aoStepWorld", 4.0f);   // 5 ¨ 4i”¼Œa‚ð­‚µk‚ß‚éj
-    m_fxSSAO->SetFloat("g_originPush", 0.05f);  // 0.15 ¨ 0.05i‰Ÿ‚µo‚µŽã‚ßj
-//    m_fxSSAO->SetFloat("g_planeThickness", 0.006f); // 0.02 ¨ 0.006i“¯ˆê–ÊŒú‚Ý‚ð”–‚­j
-    m_fxSSAO->SetFloat("g_edgeZ", 0.006f); // 0.01 ¨ 0.006i‰‚Ì[“x‹–—e‚ðL‚°‚éj
-    m_fxSSAO->SetFloat("g_aoStrength", 1.2f);   // 1.5 ¨ 1.2i‹­‚·‚¬—}§j
-    m_fxSSAO->SetFloat("g_aoBias", 0.0002f);// 0.0001 ¨ 0.0002i”÷ƒoƒCƒAƒXj
+    m_fxSSAO->SetFloat("g_aoStepWorld", 4.0f);   // 5 â†’ 4ï¼ˆåŠå¾„ã‚’å°‘ã—ç¸®ã‚ã‚‹ï¼‰
+    m_fxSSAO->SetFloat("g_originPush", 0.05f);  // 0.15 â†’ 0.05ï¼ˆæŠ¼ã—å‡ºã—å¼±ã‚ï¼‰
+//    m_fxSSAO->SetFloat("g_planeThickness", 0.006f); // 0.02 â†’ 0.006ï¼ˆåŒä¸€é¢åŽšã¿ã‚’è–„ãï¼‰
+    m_fxSSAO->SetFloat("g_edgeZ", 0.006f); // 0.01 â†’ 0.006ï¼ˆç¸ã®æ·±åº¦è¨±å®¹ã‚’åºƒã’ã‚‹ï¼‰
+    m_fxSSAO->SetFloat("g_aoStrength", 1.2f);   // 1.5 â†’ 1.2ï¼ˆå¼·ã™ãŽæŠ‘åˆ¶ï¼‰
+    m_fxSSAO->SetFloat("g_aoBias", 0.0002f);// 0.0001 â†’ 0.0002ï¼ˆå¾®ãƒã‚¤ã‚¢ã‚¹ï¼‰
 
-    m_fxSSAO->SetTechnique("TechniqueAO_Create"); // PS_AO ‚ðŽÀs
+    m_fxSSAO->SetTechnique("TechniqueAO_Create"); // PS_AO ã‚’å®Ÿè¡Œ
     m_fxSSAO->Begin(NULL, 0);
     m_fxSSAO->BeginPass(0);
     DrawFullscreenQuad();
@@ -150,9 +150,9 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_fxSSAO->EndPass();
     m_fxSSAO->End();
 
-    // ========= Composite: Color ~ AO =========
-    // “ü—Í: m_pRenderTarget1iƒJƒ‰[j, m_rtAoTexiAOj
-    // o—Í: m_pRenderTarget2iˆê’U‚±‚±‚É‘‚«AÅŒã‚É RT2¨RT1 ‚ÖƒRƒs[j
+    // ========= Composite: Color Ã— AO =========
+    // å…¥åŠ›: m_pRenderTarget1ï¼ˆã‚«ãƒ©ãƒ¼ï¼‰, m_rtAoTexï¼ˆAOï¼‰
+    // å‡ºåŠ›: m_pRenderTarget2ï¼ˆä¸€æ—¦ã“ã“ã«æ›¸ãã€æœ€å¾Œã« RT2â†’RT1 ã¸ã‚³ãƒ”ãƒ¼ï¼‰
     hr = Common::D3DDevice()->SetRenderTarget(0, surfAOTemp);
     Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0,0,0,255), 1.0f, 0);
 
@@ -166,10 +166,10 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_fxSSAO->EndPass();
     m_fxSSAO->End();
 
-    // ========= RT2 ¨ RT1 ‚ÖƒRƒs[i“Ç‚Ý‘‚«‹£‡‚ð”ð‚¯‚éj=========
+    // ========= RT2 â†’ RT1 ã¸ã‚³ãƒ”ãƒ¼ï¼ˆèª­ã¿æ›¸ãç«¶åˆã‚’é¿ã‘ã‚‹ï¼‰=========
     Common::D3DDevice()->StretchRect(surfAOTemp, NULL, surfRT1, NULL, D3DTEXF_NONE);
 
-    // ŒãŽn––
+    // å¾Œå§‹æœ«
     Common::D3DDevice()->SetRenderTarget(0, oldRt0);
 
     SAFE_RELEASE(surfAO);

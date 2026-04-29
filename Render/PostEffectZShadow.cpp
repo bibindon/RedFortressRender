@@ -364,28 +364,28 @@ void PostEffectZShadow::DrawFullscreenQuad()
     const float dy = 1.0f / static_cast<float>(Common::ScreenH());
 
     v[0].x = -1.0f - dx;
-    v[0].y = -1.0f + dy;
+    v[0].y = -1.0f - dy;
     v[0].z = 0.0f;
     v[0].w = 1.0f;
     v[0].u = 0.0f;
     v[0].v = 1.0f;
 
     v[1].x = -1.0f - dx;
-    v[1].y = 1.0f + dy;
+    v[1].y = 1.0f - dy;
     v[1].z = 0.0f;
     v[1].w = 1.0f;
     v[1].u = 0.0f;
     v[1].v = 0.0f;
 
     v[2].x = 1.0f - dx;
-    v[2].y = -1.0f + dy;
+    v[2].y = -1.0f - dy;
     v[2].z = 0.0f;
     v[2].w = 1.0f;
     v[2].u = 1.0f;
     v[2].v = 1.0f;
 
-    v[3].x = 1.0f - dx;
-    v[3].y = 1.0f + dy;
+    v[3].x = 1.0f + dx;
+    v[3].y = 1.0f - dy;
     v[3].z = 0.0f;
     v[3].w = 1.0f;
     v[3].u = 1.0f;
