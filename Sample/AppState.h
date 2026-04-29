@@ -14,6 +14,9 @@ constexpr float MOUSE_WHEEL_CAMERA_DISTANCE = 1.0f;
 constexpr float SATURATE_MIN = 0.0f;
 constexpr float SATURATE_MAX = 4.0f;
 constexpr float SATURATE_STEP = 0.1f;
+constexpr float FOG_INTENSITY_MIN = 0.0f;
+constexpr float FOG_INTENSITY_MAX = 20.0f;
+constexpr float FOG_INTENSITY_STEP = 0.1f;
 constexpr int GAUSSIAN_SAMPLE_MIN = 1;
 constexpr int GAUSSIAN_SAMPLE_MAX = 101;
 
@@ -50,6 +53,7 @@ extern bool g_bAnimateLight;
 extern bool g_bGaussianFilter;
 extern bool g_bDepthBufferShadow;
 extern bool g_bSSAO;
+extern float g_fogIntensity;
 extern int g_gaussianSampleSize;
 extern int g_sunId;
 extern std::vector<ImageInfo> g_imageInfoList;
@@ -65,9 +69,12 @@ void EnableMouseLook(HWND hWnd);
 void DisableMouseLook();
 
 void ApplySaturateLevel();
+void ApplyFogIntensity();
 void ApplyGaussianSampleSize();
 int SaturateLevelToSliderValue(float level);
 float SliderValueToSaturateLevel(int sliderValue);
+int FogIntensityToSliderValue(float intensity);
+float SliderValueToFogIntensity(int sliderValue);
 int GaussianSampleSizeToSliderValue(int sampleSize);
 int SliderValueToGaussianSampleSize(int sliderValue);
 
@@ -77,6 +84,7 @@ void SpawnAnimMeshAtCameraFront(const std::wstring& filePath);
 void SpawnSkinAnimMeshAtCameraFront(const std::wstring& filePath);
 NSRender::AnimSetMap CreateDefaultAnimSetMap();
 bool ShowOpenFileDialog(HWND hWnd, const wchar_t* filter, std::wstring& selectedPath);
+void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath);
 
 void DrawSampleOverlay();
 void UpdateDirectionalLight();

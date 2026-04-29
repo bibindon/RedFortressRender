@@ -63,6 +63,7 @@ HWND CreateSampleWindow(const HINSTANCE hInstance)
 
 void InitializeSampleScene(HWND hWnd)
 {
+    LoadSampleSettingsFromCsv(L"RenderSettings.csv");
     g_Render.Initialize(hWnd, L"RenderSettings.csv");
     g_Render.SetCamera(D3DXVECTOR3(0.0f, 2.0f, -6.0f), D3DXVECTOR3(0.0f, 1.5f, 0.0f));
     g_fontId = g_Render.SetUpFont(L"BIZ UDゴシック", 20, D3DCOLOR_RGBA(255, 255, 255, 255));
@@ -78,6 +79,7 @@ void InitializeSampleScene(HWND hWnd)
                      100.0f);
 
     ApplySaturateLevel();
+    ApplyFogIntensity();
     ApplyGaussianSampleSize();
     g_Render.SetPostEffectGaussianFilter(g_bGaussianFilter);
     g_Render.SetPostEffectDepthBufferShadow(g_bDepthBufferShadow);
@@ -115,7 +117,9 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
     {
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
-            if (g_hSettingsDialog != NULL && IsDialogMessage(g_hSettingsDialog, &msg))
+            if (g_hSettingsDialog != NULL &&
+                IsWindowVisible(g_hSettingsDialog) &&
+                IsDialogMessage(g_hSettingsDialog, &msg))
             {
                 continue;
             }

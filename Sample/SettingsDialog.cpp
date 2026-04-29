@@ -14,6 +14,8 @@ namespace
 {
 constexpr int SATURATE_SLIDER_MIN = 0;
 constexpr int SATURATE_SLIDER_MAX = static_cast<int>(SATURATE_MAX / SATURATE_STEP);
+constexpr int FOG_SLIDER_MIN = 0;
+constexpr int FOG_SLIDER_MAX = static_cast<int>(FOG_INTENSITY_MAX / FOG_INTENSITY_STEP);
 constexpr int GAUSSIAN_SLIDER_MIN = 1;
 constexpr int GAUSSIAN_SLIDER_MAX = (GAUSSIAN_SAMPLE_MAX + 1) / 2;
 
@@ -66,6 +68,18 @@ void RefreshSelectedMeshPaths(HWND hDlg)
     SetDlgItemText(hDlg, IDC_EDIT_SKIN_ANIM_MESH_PATH, g_selectedSkinAnimMeshPath.c_str());
 }
 
+void RefreshFogControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_fogIntensity);
+    SetDlgItemText(hDlg, IDC_EDIT_FOG_INTENSITY, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_FOG_INTENSITY,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(FogIntensityToSliderValue(g_fogIntensity)));
+}
+
 void RefreshAnimateLight(HWND hDlg)
 {
     CheckDlgButton(hDlg, IDC_CHECK_ANIMATE_LIGHT, g_bAnimateLight ? BST_CHECKED : BST_UNCHECKED);
@@ -104,6 +118,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshAnimateLight(hDlg);
     RefreshDepthBufferShadow(hDlg);
     RefreshSSAO(hDlg);
+    RefreshFogControls(hDlg);
     RefreshGaussianControls(hDlg);
 }
 
@@ -113,6 +128,11 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_SATURATE_LEVEL, TBM_SETRANGEMAX, FALSE, SATURATE_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SATURATE_LEVEL, TBM_SETTICFREQ, 5, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SATURATE_LEVEL, TBM_SETPAGESIZE, 0, 5);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_INTENSITY, TBM_SETRANGEMIN, FALSE, FOG_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_INTENSITY, TBM_SETRANGEMAX, FALSE, FOG_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_INTENSITY, TBM_SETTICFREQ, 10, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_INTENSITY, TBM_SETPAGESIZE, 0, 10);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETRANGEMIN, FALSE, GAUSSIAN_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETRANGEMAX, FALSE, GAUSSIAN_SLIDER_MAX);
@@ -221,6 +241,19 @@ void ShowSettingsDialog(HWND hWnd, const bool activateDialog)
     }
 }
 
+void ToggleSettingsDialog(HWND hWnd)
+{
+    if (g_hSettingsDialog != NULL && IsWindowVisible(g_hSettingsDialog))
+    {
+        ShowWindow(g_hSettingsDialog, SW_HIDE);
+        SetForegroundWindow(hWnd);
+        SetFocus(hWnd);
+        return;
+    }
+
+    ShowSettingsDialog(hWnd, true);
+}
+
 void RefreshSettingsDialogState()
 {
     if (g_hSettingsDialog != NULL)
@@ -271,6 +304,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_gaussianSampleSize = SliderValueToGaussianSampleSize(sliderValue);
             ApplyGaussianSampleSize();
             RefreshGaussianControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_FOG_INTENSITY))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_fogIntensity = SliderValueToFogIntensity(sliderValue);
+            ApplyFogIntensity();
+            RefreshFogControls(hDlg);
             return TRUE;
         }
 
@@ -340,7 +382,12 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
-        if (commandId == IDOK || commandId == IDCANCEL)
+        if (commandId == IDCANCEL)
+        {
+            return TRUE;
+        }
+
+        if (commandId == IDOK)
         {
             DestroyWindow(hDlg);
             return TRUE;

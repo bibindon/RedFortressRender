@@ -6,6 +6,8 @@
 #include <commdlg.h>
 #include <cwchar>
 #include <cstdlib>
+#include <fstream>
+#include <cwctype>
 #include <windowsx.h>
 
 bool g_bClose = false;
@@ -29,6 +31,7 @@ bool g_bAnimateLight = false;
 bool g_bGaussianFilter = false;
 bool g_bDepthBufferShadow = true;
 bool g_bSSAO = true;
+float g_fogIntensity = 2.0f;
 int g_gaussianSampleSize = 101;
 int g_sunId = 0;
 std::vector<ImageInfo> g_imageInfoList;
@@ -39,6 +42,31 @@ namespace
 float ClampSaturateLevel(const float level)
 {
     return (std::max)(SATURATE_MIN, (std::min)(level, SATURATE_MAX));
+}
+
+float ClampFogIntensity(const float intensity)
+{
+    return (std::max)(FOG_INTENSITY_MIN, (std::min)(intensity, FOG_INTENSITY_MAX));
+}
+
+std::wstring Trim(const std::wstring& text)
+{
+    const auto first = std::find_if_not(text.begin(), text.end(), [](wchar_t ch)
+    {
+        return std::iswspace(ch) != 0;
+    });
+
+    const auto last = std::find_if_not(text.rbegin(), text.rend(), [](wchar_t ch)
+    {
+        return std::iswspace(ch) != 0;
+    }).base();
+
+    if (first >= last)
+    {
+        return L"";
+    }
+
+    return std::wstring(first, last);
 }
 
 int NormalizeGaussianSampleSizeLocal(const int sampleSize)
@@ -209,6 +237,12 @@ void ApplySaturateLevel()
     g_Render.SetPostEffectSaturate(g_saturateLevel);
 }
 
+void ApplyFogIntensity()
+{
+    g_fogIntensity = ClampFogIntensity(g_fogIntensity);
+    g_Render.SetPostEffectFogIntensity(g_fogIntensity);
+}
+
 void ApplyGaussianSampleSize()
 {
     g_gaussianSampleSize = NormalizeGaussianSampleSizeLocal(g_gaussianSampleSize);
@@ -223,6 +257,16 @@ int SaturateLevelToSliderValue(const float level)
 float SliderValueToSaturateLevel(const int sliderValue)
 {
     return ClampSaturateLevel(static_cast<float>(sliderValue) * SATURATE_STEP);
+}
+
+int FogIntensityToSliderValue(const float intensity)
+{
+    return static_cast<int>(std::lround(ClampFogIntensity(intensity) / FOG_INTENSITY_STEP));
+}
+
+float SliderValueToFogIntensity(const int sliderValue)
+{
+    return ClampFogIntensity(static_cast<float>(sliderValue) * FOG_INTENSITY_STEP);
 }
 
 int GaussianSampleSizeToSliderValue(const int sampleSize)
@@ -331,6 +375,58 @@ bool ShowOpenFileDialog(HWND hWnd, const wchar_t* filter, std::wstring& selected
 
     selectedPath = filePath;
     return true;
+}
+
+void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
+{
+    if (settingsCsvPath.empty())
+    {
+        return;
+    }
+
+    std::wifstream file(settingsCsvPath);
+    if (!file)
+    {
+        return;
+    }
+
+    std::wstring line;
+    while (std::getline(file, line))
+    {
+        const std::size_t commentPos = line.find(L'#');
+        if (commentPos != std::wstring::npos)
+        {
+            line = line.substr(0, commentPos);
+        }
+
+        const std::size_t commaPos = line.find(L',');
+        if (commaPos == std::wstring::npos)
+        {
+            continue;
+        }
+
+        const std::wstring key = Trim(line.substr(0, commaPos));
+        const std::wstring value = Trim(line.substr(commaPos + 1));
+        if (key.empty() || value.empty())
+        {
+            continue;
+        }
+
+        try
+        {
+            if (key == L"GaussianSampleSize")
+            {
+                g_gaussianSampleSize = std::stoi(value);
+            }
+            else if (key == L"FogIntensity")
+            {
+                g_fogIntensity = std::stof(value);
+            }
+        }
+        catch (...)
+        {
+        }
+    }
 }
 
 void DrawSampleOverlay()

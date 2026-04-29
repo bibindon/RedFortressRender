@@ -26,3 +26,4 @@
 /Sample/Sample.aps
 /Render/Render/x64/Debug
 *.tlog
+/Sample/Sample/x64/Debug

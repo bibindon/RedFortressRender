@@ -163,7 +163,7 @@ bool HandleSampleKeyDown(HWND hWnd, const WPARAM wParam)
 
     if (wParam == VK_F1)
     {
-        ShowSettingsDialog(hWnd);
+        ToggleSettingsDialog(hWnd);
         return true;
     }
 

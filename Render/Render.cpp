@@ -125,6 +125,23 @@ void Render::ApplySettings()
     {
         SetPostEffectGaussianSampleSize(m_gaussianSampleSize);
     }
+
+    const auto fogIntensity = m_settings.find(L"FogIntensity");
+    if (fogIntensity != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectFogIntensity(std::stof(fogIntensity->second));
+        }
+        catch (...)
+        {
+            SetPostEffectFogIntensity(2.0f);
+        }
+    }
+    else
+    {
+        SetPostEffectFogIntensity(2.0f);
+    }
 }
 
 void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
@@ -535,6 +552,11 @@ void Render::SetPostEffectDepthBufferShadow(const bool arg)
 void Render::SetPostEffectSSAO(const bool arg)
 {
     m_postEffectSSAO.SetEnable(arg);
+}
+
+void Render::SetPostEffectFogIntensity(const float intensity)
+{
+    m_postEffectFog.SetIntensityZ(intensity);
 }
 
 void Render::SetPostEffectBloom(const bool arg)

@@ -52,7 +52,7 @@ private:
     bool m_bEnableZ = true;
     bool m_bEnableHeight = true;
 
-    float m_intensityZ = 10.02f;
+    float m_intensityZ = 2.0f;
     float m_intensityHeight = 0.3f;
 
     float m_heightStart= 0.0f;
