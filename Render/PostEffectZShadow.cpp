@@ -4,6 +4,31 @@
 
 namespace NSRender
 {
+namespace
+{
+D3DXMATRIX BuildMeshWorldMatrix(const MeshMix& mesh)
+{
+    D3DXMATRIX matWorld{};
+    D3DXMatrixIdentity(&matWorld);
+
+    D3DXMATRIX matWork{};
+    D3DXMatrixIdentity(&matWork);
+
+    D3DXMatrixScaling(&matWork, mesh.GetScale(), mesh.GetScale(), mesh.GetScale());
+    matWorld *= matWork;
+
+    const D3DXVECTOR3 rotation = mesh.GetRot();
+    D3DXMatrixRotationYawPitchRoll(&matWork, rotation.y, rotation.x, rotation.z);
+    matWorld *= matWork;
+
+    const D3DXVECTOR3 position = mesh.GetPos();
+    D3DXMatrixTranslation(&matWork, position.x, position.y, position.z);
+    matWorld *= matWork;
+
+    return matWorld;
+}
+}
+
 void PostEffectZShadow::Initialize()
 {
     HRESULT hResult = E_FAIL;
@@ -129,13 +154,8 @@ void PostEffectZShadow::RenderTechnique1()
 
     for (auto& mesh : *m_pMeshList)
     {
-        D3DXMATRIX mWorld;
+        D3DXMATRIX mWorld = BuildMeshWorldMatrix(mesh);
         D3DXMATRIX mWorldViewProjLight;
-
-        D3DXMatrixTranslation(&mWorld,
-                              mesh.GetPos().x,
-                              mesh.GetPos().y,
-                              mesh.GetPos().z);
 
         mWorldViewProjLight = mWorld * mLightView * mLightProj;
         
@@ -269,11 +289,7 @@ void PostEffectZShadow::RenderTechnique2()
 
     for (auto& mesh : *m_pMeshList)
     {
-        D3DXMATRIX mWorld;
-        D3DXMatrixTranslation(&mWorld,
-                              mesh.GetPos().x,
-                              mesh.GetPos().y,
-                              mesh.GetPos().z);
+        D3DXMATRIX mWorld = BuildMeshWorldMatrix(mesh);
 
         D3DXMATRIX mWorldViewProj;
         mWorldViewProj = mWorld * mView * mProj;
