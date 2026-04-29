@@ -290,7 +290,18 @@ float4 PS_Composite(VS_OUT i) : COLOR0
 {
     float3 col = tex2D(sampColor, i.uv).rgb;
     float ao = tex2D(sampAO, i.uv).r;
-    return float4(col * ao, 1.0f);
+    float4 result = float4(col * ao, 1.0f);
+
+    if (false)
+    {
+        float2 pixelCoord = floor(i.uv / g_invSize);
+        if (fmod(pixelCoord.x, 5.0f) == 0.0f || fmod(pixelCoord.y, 5.0f) == 0.0f)
+        {
+            result.rgb = float3(0.0f, 1.0f, 0.0f);
+        }
+    }
+
+    return result;
 }
 
 technique TechniqueAO_Create
