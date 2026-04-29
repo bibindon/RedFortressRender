@@ -30,6 +30,8 @@ bool g_bMoveLeft = false;
 bool g_bMoveRight = false;
 bool g_bMoveUp = false;
 bool g_bMoveDown = false;
+float g_saturateLevel = 1.0f;
+HWND g_hSettingsDialog = NULL;
 
 int g_sunId = 0;
 
@@ -50,6 +52,8 @@ std::vector<TextInfo> g_textInfoList;
 
 LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
+void ApplySaturateLevel();
+void RefreshSettingsDialog(HWND hDlg);
 
 void UpdateCameraMoveByKeyboard()
 {
@@ -219,7 +223,38 @@ void DisableMouseLook()
 void ShowSettingsDialog(HWND hWnd)
 {
     DisableMouseLook();
-    DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_SETTINGS_DIALOG), hWnd, SettingsDialogProc);
+
+    if (g_hSettingsDialog != NULL)
+    {
+        ShowWindow(g_hSettingsDialog, SW_SHOWNORMAL);
+        SetForegroundWindow(g_hSettingsDialog);
+        return;
+    }
+
+    g_hSettingsDialog = CreateDialog(GetModuleHandle(NULL),
+                                     MAKEINTRESOURCE(IDD_SETTINGS_DIALOG),
+                                     hWnd,
+                                     SettingsDialogProc);
+    assert(g_hSettingsDialog != NULL);
+
+    ShowWindow(g_hSettingsDialog, SW_SHOWNORMAL);
+}
+
+void ApplySaturateLevel()
+{
+    if (g_saturateLevel < 0.0f)
+    {
+        g_saturateLevel = 0.0f;
+    }
+
+    g_Render.SetPostEffectSaturate(g_saturateLevel);
+}
+
+void RefreshSettingsDialog(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_saturateLevel);
+    SetDlgItemText(hDlg, IDC_EDIT_SATURATE_LEVEL, buffer);
 }
 
 INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -229,19 +264,53 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
     case WM_INITDIALOG:
     {
         MoveDialogToRightOfParent(hDlg);
+        RefreshSettingsDialog(hDlg);
         return TRUE;
     }
     case WM_CLOSE:
     {
-        EndDialog(hDlg, 0);
+        DestroyWindow(hDlg);
+        return TRUE;
+    }
+    case WM_DESTROY:
+    {
+        if (g_hSettingsDialog == hDlg)
+        {
+            g_hSettingsDialog = NULL;
+        }
         return TRUE;
     }
     case WM_COMMAND:
     {
         const WORD commandId = LOWORD(wParam);
+
+        if (commandId == IDC_BUTTON_SATURATE_DOWN)
+        {
+            g_saturateLevel -= 0.1f;
+            ApplySaturateLevel();
+            RefreshSettingsDialog(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_BUTTON_SATURATE_UP)
+        {
+            g_saturateLevel += 0.1f;
+            ApplySaturateLevel();
+            RefreshSettingsDialog(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_BUTTON_SATURATE_RESET)
+        {
+            g_saturateLevel = 1.0f;
+            ApplySaturateLevel();
+            RefreshSettingsDialog(hDlg);
+            return TRUE;
+        }
+
         if (commandId == IDOK || commandId == IDCANCEL)
         {
-            EndDialog(hDlg, commandId);
+            DestroyWindow(hDlg);
             return TRUE;
         }
         break;
@@ -327,6 +396,12 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
     {
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
+            if (g_hSettingsDialog != NULL && IsDialogMessage(g_hSettingsDialog, &msg))
+            {
+                continue;
+            }
+
+            TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
         else
@@ -820,24 +895,16 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         // 彩度
         {
-            static float saturateLevel = 1.0f;
-
             if (wParam == 'S' && shift)
             {
-                saturateLevel += 0.1f;
-                g_Render.SetPostEffectSaturate(saturateLevel);
+                g_saturateLevel += 0.1f;
+                ApplySaturateLevel();
             }
 
             if (wParam == 'S' && control)
             {
-                saturateLevel -= 0.1f;
-
-                if (saturateLevel < 0.0f)
-                {
-                    saturateLevel = 0.0f;
-                }
-
-                g_Render.SetPostEffectSaturate(saturateLevel);
+                g_saturateLevel -= 0.1f;
+                ApplySaturateLevel();
             }
         }
 
