@@ -1,4 +1,4 @@
-#include "InputHandlers.h"
+﻿#include "InputHandlers.h"
 
 #include <cmath>
 #include <cstdlib>
@@ -289,26 +289,50 @@ bool HandleSampleKeyDown(HWND hWnd, const WPARAM wParam)
     if (wParam == 'G')
     {
         g_bGaussianFilter = !g_bGaussianFilter;
-        g_Render.SetPostEffectGaussianFilter(g_bGaussianFilter);
+        ApplyPostEffectToggleSettings();
         RefreshSettingsDialogState();
     }
 
+    if (wParam == 'T')
     {
-        static bool bBloom = true;
-        if (wParam == 'B' && !shift)
-        {
-            bBloom = !bBloom;
-            g_Render.SetPostEffectBloom(bBloom);
-        }
+        g_bSaturateFilter = !g_bSaturateFilter;
+        ApplyPostEffectToggleSettings();
+        RefreshSettingsDialogState();
     }
 
+    if (wParam == 'B' && !shift)
     {
-        static bool bStarBurst = false;
-        if (wParam == 'B' && shift)
-        {
-            bStarBurst = !bStarBurst;
-            g_Render.SetPostEffectStarBurst(bStarBurst);
-        }
+        g_bBloom = !g_bBloom;
+        ApplyPostEffectToggleSettings();
+        RefreshSettingsDialogState();
+    }
+
+    if (wParam == 'B' && shift)
+    {
+        g_bStarBurst = !g_bStarBurst;
+        ApplyPostEffectToggleSettings();
+        RefreshSettingsDialogState();
+    }
+
+    if (wParam == 'H')
+    {
+        g_bDepthBufferShadow = !g_bDepthBufferShadow;
+        ApplyPostEffectToggleSettings();
+        RefreshSettingsDialogState();
+    }
+
+    if (wParam == 'J')
+    {
+        g_bSSAO = !g_bSSAO;
+        ApplyPostEffectToggleSettings();
+        RefreshSettingsDialogState();
+    }
+
+    if (wParam == 'V')
+    {
+        g_bFog = !g_bFog;
+        ApplyPostEffectToggleSettings();
+        RefreshSettingsDialogState();
     }
 
     {

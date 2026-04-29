@@ -1,4 +1,4 @@
-#include "AppState.h"
+﻿#include "AppState.h"
 
 #include <algorithm>
 #include <cassert>
@@ -31,6 +31,10 @@ bool g_bAnimateLight = false;
 bool g_bGaussianFilter = false;
 bool g_bDepthBufferShadow = true;
 bool g_bSSAO = true;
+bool g_bFog = true;
+bool g_bSaturateFilter = false;
+bool g_bBloom = false;
+bool g_bStarBurst = false;
 float g_fogIntensity = 2.0f;
 int g_gaussianSampleSize = 101;
 int g_sunId = 0;
@@ -237,6 +241,17 @@ void ApplySaturateLevel()
     g_Render.SetPostEffectSaturate(g_saturateLevel);
 }
 
+void ApplyPostEffectToggleSettings()
+{
+    g_Render.SetPostEffectDepthBufferShadow(g_bDepthBufferShadow);
+    g_Render.SetPostEffectSSAO(g_bSSAO);
+    g_Render.SetPostEffectFog(g_bFog);
+    g_Render.SetPostEffectSaturateEnable(g_bSaturateFilter);
+    g_Render.SetPostEffectGaussianFilter(g_bGaussianFilter);
+    g_Render.SetPostEffectBloom(g_bBloom);
+    g_Render.SetPostEffectStarBurst(g_bStarBurst);
+}
+
 void ApplyFogIntensity()
 {
     g_fogIntensity = ClampFogIntensity(g_fogIntensity);
@@ -422,6 +437,34 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_fogIntensity = std::stof(value);
             }
+            else if (key == L"DepthBufferShadowEnable")
+            {
+                g_bDepthBufferShadow = (std::stoi(value) != 0);
+            }
+            else if (key == L"SSAOEnable")
+            {
+                g_bSSAO = (std::stoi(value) != 0);
+            }
+            else if (key == L"FogEnable")
+            {
+                g_bFog = (std::stoi(value) != 0);
+            }
+            else if (key == L"SaturateEnable")
+            {
+                g_bSaturateFilter = (std::stoi(value) != 0);
+            }
+            else if (key == L"GaussianEnable")
+            {
+                g_bGaussianFilter = (std::stoi(value) != 0);
+            }
+            else if (key == L"BloomEnable")
+            {
+                g_bBloom = (std::stoi(value) != 0);
+            }
+            else if (key == L"StarBurstEnable")
+            {
+                g_bStarBurst = (std::stoi(value) != 0);
+            }
         }
         catch (...)
         {
@@ -459,9 +502,13 @@ void DrawSampleOverlay()
     text += L"\n";
     text += L"Shift + s : Saturation up\n";
     text += L"Ctrl + s : Saturation down\n";
+    text += L"t : Saturation filter ON/OFF\n";
     text += L"g : Gaussian filter ON/OFF\n";
     text += L"b : Bloom ON/OFF\n";
     text += L"Shift + b : StarBurst ON/OFF\n";
+    text += L"h : Depth buffer shadow ON/OFF\n";
+    text += L"j : SSAO ON/OFF\n";
+    text += L"v : Fog ON/OFF\n";
     text += L"Shift + f : FPS ON/OFF\n";
     g_Render.DrawText_(g_fontId, text, 10, 40);
 

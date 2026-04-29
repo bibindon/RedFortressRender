@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "../Render/Render.h"
 
@@ -53,6 +53,10 @@ extern bool g_bAnimateLight;
 extern bool g_bGaussianFilter;
 extern bool g_bDepthBufferShadow;
 extern bool g_bSSAO;
+extern bool g_bFog;
+extern bool g_bSaturateFilter;
+extern bool g_bBloom;
+extern bool g_bStarBurst;
 extern float g_fogIntensity;
 extern int g_gaussianSampleSize;
 extern int g_sunId;
@@ -69,6 +73,7 @@ void EnableMouseLook(HWND hWnd);
 void DisableMouseLook();
 
 void ApplySaturateLevel();
+void ApplyPostEffectToggleSettings();
 void ApplyFogIntensity();
 void ApplyGaussianSampleSize();
 int SaturateLevelToSliderValue(float level);

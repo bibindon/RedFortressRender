@@ -1,2 +1,9 @@
+﻿DepthBufferShadowEnable,1
+SSAOEnable,1
+FogEnable,1
+SaturateEnable,0
+GaussianEnable,0
 GaussianSampleSize,101
 FogIntensity,2.0
+BloomEnable,0
+StarBurstEnable,0

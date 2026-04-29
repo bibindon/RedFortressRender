@@ -183,11 +183,13 @@ public:
 
     // 彩度をどれくらい上げるか（下げるか）を設定
     void SetPostEffectSaturate(const float level);
+    void SetPostEffectSaturateEnable(const bool arg);
 
     void SetPostEffectGaussianFilter(const bool arg);
     void SetPostEffectGaussianSampleSize(const int sampleSize);
     void SetPostEffectDepthBufferShadow(const bool arg);
     void SetPostEffectSSAO(const bool arg);
+    void SetPostEffectFog(const bool arg);
     void SetPostEffectFogIntensity(const float intensity);
 
     void SetPostEffectBloom(const bool arg);

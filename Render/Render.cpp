@@ -34,6 +34,32 @@
 
 namespace NSRender
 {
+namespace
+{
+bool TryParseBoolSetting(const std::wstring& value, bool& result)
+{
+    std::wstring normalized;
+    normalized.reserve(value.size());
+    for (wchar_t ch : value)
+    {
+        normalized.push_back(static_cast<wchar_t>(std::towlower(ch)));
+    }
+
+    if (normalized == L"1" || normalized == L"true" || normalized == L"on" || normalized == L"yes")
+    {
+        result = true;
+        return true;
+    }
+
+    if (normalized == L"0" || normalized == L"false" || normalized == L"off" || normalized == L"no")
+    {
+        result = false;
+        return true;
+    }
+
+    return false;
+}
+}
 
 std::wstring Render::Trim(const std::wstring& text)
 {
@@ -109,6 +135,56 @@ void Render::LoadSettingsCsv(const std::wstring& settingsCsvPath)
 
 void Render::ApplySettings()
 {
+    const auto depthBufferShadowEnable = m_settings.find(L"DepthBufferShadowEnable");
+    if (depthBufferShadowEnable != m_settings.end())
+    {
+        bool enabled = true;
+        if (TryParseBoolSetting(depthBufferShadowEnable->second, enabled))
+        {
+            SetPostEffectDepthBufferShadow(enabled);
+        }
+    }
+
+    const auto ssaoEnable = m_settings.find(L"SSAOEnable");
+    if (ssaoEnable != m_settings.end())
+    {
+        bool enabled = true;
+        if (TryParseBoolSetting(ssaoEnable->second, enabled))
+        {
+            SetPostEffectSSAO(enabled);
+        }
+    }
+
+    const auto fogEnable = m_settings.find(L"FogEnable");
+    if (fogEnable != m_settings.end())
+    {
+        bool enabled = true;
+        if (TryParseBoolSetting(fogEnable->second, enabled))
+        {
+            SetPostEffectFog(enabled);
+        }
+    }
+
+    const auto saturateEnable = m_settings.find(L"SaturateEnable");
+    if (saturateEnable != m_settings.end())
+    {
+        bool enabled = true;
+        if (TryParseBoolSetting(saturateEnable->second, enabled))
+        {
+            SetPostEffectSaturateEnable(enabled);
+        }
+    }
+
+    const auto gaussianEnable = m_settings.find(L"GaussianEnable");
+    if (gaussianEnable != m_settings.end())
+    {
+        bool enabled = true;
+        if (TryParseBoolSetting(gaussianEnable->second, enabled))
+        {
+            SetPostEffectGaussianFilter(enabled);
+        }
+    }
+
     const auto gaussianSampleSize = m_settings.find(L"GaussianSampleSize");
     if (gaussianSampleSize != m_settings.end())
     {
@@ -141,6 +217,26 @@ void Render::ApplySettings()
     else
     {
         SetPostEffectFogIntensity(2.0f);
+    }
+
+    const auto bloomEnable = m_settings.find(L"BloomEnable");
+    if (bloomEnable != m_settings.end())
+    {
+        bool enabled = true;
+        if (TryParseBoolSetting(bloomEnable->second, enabled))
+        {
+            SetPostEffectBloom(enabled);
+        }
+    }
+
+    const auto starBurstEnable = m_settings.find(L"StarBurstEnable");
+    if (starBurstEnable != m_settings.end())
+    {
+        bool enabled = true;
+        if (TryParseBoolSetting(starBurstEnable->second, enabled))
+        {
+            SetPostEffectStarBurst(enabled);
+        }
     }
 }
 
@@ -197,7 +293,6 @@ void Render::Finalize()
 void Render::Draw()
 {
     HRESULT hResult = E_FAIL;
-    const bool kSkipAllPostEffects = true;
 
     if (m_bShowFPS)
     {
@@ -205,18 +300,7 @@ void Render::Draw()
         ShowFPS(fps);
     }
 
-    DrawPass1(!kSkipAllPostEffects);
-
-    if (kSkipAllPostEffects)
-    {
-        Draw2D();
-
-        hResult = Common::D3DDevice()->Present(NULL, NULL, NULL, NULL);
-        assert(hResult == S_OK);
-
-        m_windowManager.ChangeWindowMode();
-        return;
-    }
+    DrawPass1(true);
 
     //---------------------------------------------------------------
     // ポストエフェクトのために深度画像とワールド座標画像を作成
@@ -545,6 +629,11 @@ void Render::SetPostEffectSaturate(const float level)
     m_postEffectSaturate.SetPostEffectSaturate(level);
 }
 
+void Render::SetPostEffectSaturateEnable(const bool arg)
+{
+    m_postEffectSaturate.SetEnable(arg);
+}
+
 void Render::SetPostEffectGaussianFilter(const bool arg)
 {
     m_postEffectGauss.SetEnable(arg);
@@ -564,6 +653,12 @@ void Render::SetPostEffectDepthBufferShadow(const bool arg)
 void Render::SetPostEffectSSAO(const bool arg)
 {
     m_postEffectSSAO.SetEnable(arg);
+}
+
+void Render::SetPostEffectFog(const bool arg)
+{
+    m_postEffectFog.SetEnableZ(arg);
+    m_postEffectFog.SetEnableHeight(arg);
 }
 
 void Render::SetPostEffectFogIntensity(const float intensity)

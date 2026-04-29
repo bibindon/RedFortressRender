@@ -1,4 +1,4 @@
-#include <cassert>
+﻿#include <cassert>
 #include <crtdbg.h>
 #include <windows.h>
 #include <commctrl.h>
@@ -81,9 +81,7 @@ void InitializeSampleScene(HWND hWnd)
     ApplySaturateLevel();
     ApplyFogIntensity();
     ApplyGaussianSampleSize();
-    g_Render.SetPostEffectGaussianFilter(g_bGaussianFilter);
-    g_Render.SetPostEffectDepthBufferShadow(g_bDepthBufferShadow);
-    g_Render.SetPostEffectSSAO(g_bSSAO);
+    ApplyPostEffectToggleSettings();
 }
 
 void TickAndRenderFrame()
