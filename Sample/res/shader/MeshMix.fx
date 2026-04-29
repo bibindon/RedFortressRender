@@ -263,7 +263,7 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
     float NdotH = 0.f;
 
     // 法線マッピングを行うか
-    if (true)
+    if (false)
     {
         float3 normalInTangent = float3(0, 0, 0);
         normalInTangent.x = tex2D(g_normalMapSampler, inTexCoord).r * 2.0 - 1.0;
