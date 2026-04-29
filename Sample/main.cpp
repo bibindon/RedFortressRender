@@ -72,16 +72,17 @@ void InitializeSampleScene(HWND hWnd)
                                D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                                1.0f,
                                100.0f,
-                               100.0f);
+                               1.0f);
     g_Render.AddMesh(L"plateField.x",
                      D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                      D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                      1.0f,
                      100.0f,
-                     100.0f);
+                     10.0f);
 
     ApplySaturateLevel();
     ApplyFogIntensity();
+    ApplyShadowIntensity();
     ApplyGaussianSampleSize();
     ApplyPostEffectToggleSettings();
 }

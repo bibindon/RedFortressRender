@@ -268,7 +268,7 @@ void PostEffectZShadow::RenderTechnique2()
     hr = g_fxDepthBufferShadow->SetFloat("g_shadowBias",   0.001f);
     assert(hr == S_OK);
 
-    hr = g_fxDepthBufferShadow->SetFloat("g_shadowIntensity", 0.5f);
+    hr = g_fxDepthBufferShadow->SetFloat("g_shadowIntensity", m_shadowIntensity);
     assert(hr == S_OK);
 
     int nBlurSize = 3;
@@ -419,6 +419,11 @@ void PostEffectZShadow::DrawFullscreenQuad()
 void PostEffectZShadow::SetEnable(const bool arg)
 {
     m_bEnable = arg;
+}
+
+void PostEffectZShadow::SetShadowIntensity(const float intensity)
+{
+    m_shadowIntensity = intensity;
 }
 
 void PostEffectZShadow::OnDeviceLost()

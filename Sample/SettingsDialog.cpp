@@ -16,6 +16,8 @@ constexpr int SATURATE_SLIDER_MIN = 0;
 constexpr int SATURATE_SLIDER_MAX = static_cast<int>(SATURATE_MAX / SATURATE_STEP);
 constexpr int FOG_SLIDER_MIN = 0;
 constexpr int FOG_SLIDER_MAX = static_cast<int>(FOG_INTENSITY_MAX / FOG_INTENSITY_STEP);
+constexpr int SHADOW_SLIDER_MIN = 0;
+constexpr int SHADOW_SLIDER_MAX = static_cast<int>(SHADOW_INTENSITY_MAX / SHADOW_INTENSITY_STEP);
 constexpr int GAUSSIAN_SLIDER_MIN = 1;
 constexpr int GAUSSIAN_SLIDER_MAX = (GAUSSIAN_SAMPLE_MAX + 1) / 2;
 
@@ -80,6 +82,18 @@ void RefreshFogControls(HWND hDlg)
                        static_cast<LPARAM>(FogIntensityToSliderValue(g_fogIntensity)));
 }
 
+void RefreshShadowControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_shadowIntensity);
+    SetDlgItemText(hDlg, IDC_EDIT_SHADOW_INTENSITY, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_SHADOW_INTENSITY,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(ShadowIntensityToSliderValue(g_shadowIntensity)));
+}
+
 void RefreshAnimateLight(HWND hDlg)
 {
     CheckDlgButton(hDlg, IDC_CHECK_ANIMATE_LIGHT, g_bAnimateLight ? BST_CHECKED : BST_UNCHECKED);
@@ -119,6 +133,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshDepthBufferShadow(hDlg);
     RefreshSSAO(hDlg);
     RefreshFogControls(hDlg);
+    RefreshShadowControls(hDlg);
     RefreshGaussianControls(hDlg);
 }
 
@@ -133,6 +148,11 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_INTENSITY, TBM_SETRANGEMAX, FALSE, FOG_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_INTENSITY, TBM_SETTICFREQ, 10, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_INTENSITY, TBM_SETPAGESIZE, 0, 10);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_INTENSITY, TBM_SETRANGEMIN, FALSE, SHADOW_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_INTENSITY, TBM_SETRANGEMAX, FALSE, SHADOW_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_INTENSITY, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_INTENSITY, TBM_SETPAGESIZE, 0, 2);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETRANGEMIN, FALSE, GAUSSIAN_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETRANGEMAX, FALSE, GAUSSIAN_SLIDER_MAX);
@@ -313,6 +333,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_fogIntensity = SliderValueToFogIntensity(sliderValue);
             ApplyFogIntensity();
             RefreshFogControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SHADOW_INTENSITY))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_shadowIntensity = SliderValueToShadowIntensity(sliderValue);
+            ApplyShadowIntensity();
+            RefreshShadowControls(hDlg);
             return TRUE;
         }
 

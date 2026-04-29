@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <deque>
 #include "Common.h"
@@ -19,6 +19,7 @@ public:
                             const std::deque<MeshMix>& meshMixList);
 
     void SetEnable(const bool arg);
+    void SetShadowIntensity(const float intensity);
 
     void OnDeviceLost();
     void OnDeviceReset();
@@ -32,6 +33,7 @@ private:
 
 
     bool m_bEnable = true;
+    float m_shadowIntensity = 0.5f;
 
     LPD3DXEFFECT g_fxDepthBufferShadow = NULL;
 
@@ -52,10 +54,10 @@ private:
 
     struct QuadVertex
     {
-        // ƒNƒŠƒbƒv‹óŠÔi-1..1, w=1j
+        // ã‚¯ãƒªãƒƒãƒ—ç©ºé–“ï¼ˆ-1..1, w=1ï¼‰
         float x, y, z, w;
     
-        // ƒeƒNƒXƒ`ƒƒÀ•W
+        // ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
         float u, v;
     };
 

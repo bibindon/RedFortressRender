@@ -652,6 +652,11 @@ void Render::SetPostEffectDepthBufferShadow(const bool arg)
     m_postEffectZShadow.SetEnable(arg);
 }
 
+void Render::SetPostEffectDepthBufferShadowIntensity(const float intensity)
+{
+    m_postEffectZShadow.SetShadowIntensity(intensity);
+}
+
 void Render::SetPostEffectSSAO(const bool arg)
 {
     m_postEffectSSAO.SetEnable(arg);

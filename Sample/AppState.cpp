@@ -36,6 +36,7 @@ bool g_bSaturateFilter = false;
 bool g_bBloom = false;
 bool g_bStarBurst = false;
 float g_fogIntensity = 2.0f;
+float g_shadowIntensity = 0.5f;
 int g_gaussianSampleSize = 101;
 int g_sunId = 0;
 std::vector<ImageInfo> g_imageInfoList;
@@ -51,6 +52,11 @@ float ClampSaturateLevel(const float level)
 float ClampFogIntensity(const float intensity)
 {
     return (std::max)(FOG_INTENSITY_MIN, (std::min)(intensity, FOG_INTENSITY_MAX));
+}
+
+float ClampShadowIntensity(const float intensity)
+{
+    return (std::max)(SHADOW_INTENSITY_MIN, (std::min)(intensity, SHADOW_INTENSITY_MAX));
 }
 
 std::wstring Trim(const std::wstring& text)
@@ -258,6 +264,12 @@ void ApplyFogIntensity()
     g_Render.SetPostEffectFogIntensity(g_fogIntensity);
 }
 
+void ApplyShadowIntensity()
+{
+    g_shadowIntensity = ClampShadowIntensity(g_shadowIntensity);
+    g_Render.SetPostEffectDepthBufferShadowIntensity(g_shadowIntensity);
+}
+
 void ApplyGaussianSampleSize()
 {
     g_gaussianSampleSize = NormalizeGaussianSampleSizeLocal(g_gaussianSampleSize);
@@ -282,6 +294,16 @@ int FogIntensityToSliderValue(const float intensity)
 float SliderValueToFogIntensity(const int sliderValue)
 {
     return ClampFogIntensity(static_cast<float>(sliderValue) * FOG_INTENSITY_STEP);
+}
+
+int ShadowIntensityToSliderValue(const float intensity)
+{
+    return static_cast<int>(std::lround(ClampShadowIntensity(intensity) / SHADOW_INTENSITY_STEP));
+}
+
+float SliderValueToShadowIntensity(const int sliderValue)
+{
+    return ClampShadowIntensity(static_cast<float>(sliderValue) * SHADOW_INTENSITY_STEP);
 }
 
 int GaussianSampleSizeToSliderValue(const int sampleSize)
@@ -436,6 +458,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"FogIntensity")
             {
                 g_fogIntensity = std::stof(value);
+            }
+            else if (key == L"ShadowIntensity")
+            {
+                g_shadowIntensity = std::stof(value);
             }
             else if (key == L"DepthBufferShadowEnable")
             {

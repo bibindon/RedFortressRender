@@ -5,5 +5,6 @@ SaturateEnable,0
 GaussianEnable,0
 GaussianSampleSize,101
 FogIntensity,2.0
+ShadowIntensity,0.25
 BloomEnable,0
 StarBurstEnable,0
