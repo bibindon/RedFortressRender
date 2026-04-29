@@ -83,6 +83,7 @@ void InitializeSampleScene(HWND hWnd)
     ApplySaturateLevel();
     ApplyFogIntensity();
     ApplyShadowIntensity();
+    ApplySSAOBrightness();
     ApplyGaussianSampleSize();
     ApplyPostEffectToggleSettings();
 }

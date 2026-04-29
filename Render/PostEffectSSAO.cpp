@@ -158,6 +158,7 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
 
     m_fxSSAO->SetTexture("texColor", renderTarget);
     m_fxSSAO->SetTexture("texAO",    m_rtAoTex);
+    m_fxSSAO->SetFloat("g_aoBrightness", m_brightness);
 
     m_fxSSAO->SetTechnique("TechniqueAO_Composite");
     m_fxSSAO->Begin(NULL, 0);
@@ -210,6 +211,11 @@ void PostEffectSSAO::DrawFullscreenQuad()
 void PostEffectSSAO::SetEnable(const bool arg)
 {
     m_bEnable = arg;
+}
+
+void PostEffectSSAO::SetBrightness(const float brightness)
+{
+    m_brightness = brightness;
 }
 
 void PostEffectSSAO::OnDeviceLost()

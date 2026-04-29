@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include "Common.h"
 
@@ -19,16 +19,18 @@ public:
                             LPDIRECT3DTEXTURE9 m_texRenderTargetNormal);
 
     void SetEnable(const bool arg);
+    void SetBrightness(const float brightness);
 
     void OnDeviceLost();
     void OnDeviceReset();
 
-    // SSAO‚Ì‹——£‚ª•\¦‚³‚ê‚é”ÍˆÍ
+    // SSAOã®è·é›¢ãŒè¡¨ç¤ºã•ã‚Œã‚‹ç¯„å›²
     static constexpr float Z_RANGE = 50.f;
 
 private:
 
     bool m_bEnable = true;
+    float m_brightness = 1.0f;
 
     LPD3DXEFFECT m_fxSSAO = NULL;
 

@@ -37,6 +37,7 @@ bool g_bBloom = false;
 bool g_bStarBurst = false;
 float g_fogIntensity = 2.0f;
 float g_shadowIntensity = 0.5f;
+float g_ssaoBrightness = 1.0f;
 int g_gaussianSampleSize = 101;
 int g_sunId = 0;
 std::vector<ImageInfo> g_imageInfoList;
@@ -57,6 +58,11 @@ float ClampFogIntensity(const float intensity)
 float ClampShadowIntensity(const float intensity)
 {
     return (std::max)(SHADOW_INTENSITY_MIN, (std::min)(intensity, SHADOW_INTENSITY_MAX));
+}
+
+float ClampSSAOBrightness(const float brightness)
+{
+    return (std::max)(SSAO_BRIGHTNESS_MIN, (std::min)(brightness, SSAO_BRIGHTNESS_MAX));
 }
 
 std::wstring Trim(const std::wstring& text)
@@ -270,6 +276,12 @@ void ApplyShadowIntensity()
     g_Render.SetPostEffectDepthBufferShadowIntensity(g_shadowIntensity);
 }
 
+void ApplySSAOBrightness()
+{
+    g_ssaoBrightness = ClampSSAOBrightness(g_ssaoBrightness);
+    g_Render.SetPostEffectSSAOBrightness(g_ssaoBrightness);
+}
+
 void ApplyGaussianSampleSize()
 {
     g_gaussianSampleSize = NormalizeGaussianSampleSizeLocal(g_gaussianSampleSize);
@@ -304,6 +316,16 @@ int ShadowIntensityToSliderValue(const float intensity)
 float SliderValueToShadowIntensity(const int sliderValue)
 {
     return ClampShadowIntensity(static_cast<float>(sliderValue) * SHADOW_INTENSITY_STEP);
+}
+
+int SSAOBrightnessToSliderValue(const float brightness)
+{
+    return static_cast<int>(std::lround((ClampSSAOBrightness(brightness) - SSAO_BRIGHTNESS_MIN) / SSAO_BRIGHTNESS_STEP));
+}
+
+float SliderValueToSSAOBrightness(const int sliderValue)
+{
+    return ClampSSAOBrightness(SSAO_BRIGHTNESS_MIN + static_cast<float>(sliderValue) * SSAO_BRIGHTNESS_STEP);
 }
 
 int GaussianSampleSizeToSliderValue(const int sampleSize)
@@ -462,6 +484,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"ShadowIntensity")
             {
                 g_shadowIntensity = std::stof(value);
+            }
+            else if (key == L"SSAOBrightness")
+            {
+                g_ssaoBrightness = std::stof(value);
             }
             else if (key == L"DepthBufferShadowEnable")
             {

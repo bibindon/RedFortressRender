@@ -219,6 +219,40 @@ void Render::ApplySettings()
         SetPostEffectFogIntensity(2.0f);
     }
 
+    const auto shadowIntensity = m_settings.find(L"ShadowIntensity");
+    if (shadowIntensity != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectDepthBufferShadowIntensity(std::stof(shadowIntensity->second));
+        }
+        catch (...)
+        {
+            SetPostEffectDepthBufferShadowIntensity(0.5f);
+        }
+    }
+    else
+    {
+        SetPostEffectDepthBufferShadowIntensity(0.5f);
+    }
+
+    const auto ssaoBrightness = m_settings.find(L"SSAOBrightness");
+    if (ssaoBrightness != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectSSAOBrightness(std::stof(ssaoBrightness->second));
+        }
+        catch (...)
+        {
+            SetPostEffectSSAOBrightness(1.0f);
+        }
+    }
+    else
+    {
+        SetPostEffectSSAOBrightness(1.0f);
+    }
+
     const auto bloomEnable = m_settings.find(L"BloomEnable");
     if (bloomEnable != m_settings.end())
     {
@@ -660,6 +694,11 @@ void Render::SetPostEffectDepthBufferShadowIntensity(const float intensity)
 void Render::SetPostEffectSSAO(const bool arg)
 {
     m_postEffectSSAO.SetEnable(arg);
+}
+
+void Render::SetPostEffectSSAOBrightness(const float brightness)
+{
+    m_postEffectSSAO.SetBrightness(brightness);
 }
 
 void Render::SetPostEffectFog(const bool arg)

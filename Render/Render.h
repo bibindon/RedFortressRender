@@ -192,6 +192,7 @@ public:
     void SetPostEffectDepthBufferShadow(const bool arg);
     void SetPostEffectDepthBufferShadowIntensity(const float intensity);
     void SetPostEffectSSAO(const bool arg);
+    void SetPostEffectSSAOBrightness(const float brightness);
     void SetPostEffectFog(const bool arg);
     void SetPostEffectFogIntensity(const float intensity);
 
