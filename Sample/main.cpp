@@ -38,6 +38,7 @@ std::wstring g_selectedMeshPath;
 std::wstring g_selectedAnimMeshPath;
 std::wstring g_selectedSkinAnimMeshPath;
 bool g_bAnimateLight = false;
+bool g_bGaussianFilter = false;
 
 int g_sunId = 0;
 
@@ -62,6 +63,7 @@ void ApplySaturateLevel();
 void RefreshSettingsDialog(HWND hDlg);
 void RefreshSelectedMeshPaths(HWND hDlg);
 void RefreshAnimateLight(HWND hDlg);
+void RefreshGaussianFilter(HWND hDlg);
 void SpawnMeshAtCameraFront(const std::wstring& filePath);
 void SpawnMeshMixAtCameraFront(const std::wstring& filePath);
 void SpawnAnimMeshAtCameraFront(const std::wstring& filePath);
@@ -314,6 +316,11 @@ void RefreshAnimateLight(HWND hDlg)
     CheckDlgButton(hDlg, IDC_CHECK_ANIMATE_LIGHT, g_bAnimateLight ? BST_CHECKED : BST_UNCHECKED);
 }
 
+void RefreshGaussianFilter(HWND hDlg)
+{
+    CheckDlgButton(hDlg, IDC_CHECK_GAUSSIAN_FILTER, g_bGaussianFilter ? BST_CHECKED : BST_UNCHECKED);
+}
+
 void SpawnMeshAtCameraFront(const std::wstring& filePath)
 {
     if (filePath.empty())
@@ -422,6 +429,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         RefreshSettingsDialog(hDlg);
         RefreshSelectedMeshPaths(hDlg);
         RefreshAnimateLight(hDlg);
+        RefreshGaussianFilter(hDlg);
         return TRUE;
     }
     case WM_CLOSE:
@@ -517,6 +525,14 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         {
             g_bAnimateLight = (IsDlgButtonChecked(hDlg, IDC_CHECK_ANIMATE_LIGHT) == BST_CHECKED);
             RefreshAnimateLight(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_GAUSSIAN_FILTER)
+        {
+            g_bGaussianFilter = (IsDlgButtonChecked(hDlg, IDC_CHECK_GAUSSIAN_FILTER) == BST_CHECKED);
+            g_Render.SetPostEffectGaussianFilter(g_bGaussianFilter);
+            RefreshGaussianFilter(hDlg);
             return TRUE;
         }
 
@@ -1130,11 +1146,14 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         // ガウスフィルター
         {
-            static bool bGauss = false;
             if (wParam == 'G')
             {
-                bGauss = !bGauss;
-                g_Render.SetPostEffectGaussianFilter(bGauss);
+                g_bGaussianFilter = !g_bGaussianFilter;
+                g_Render.SetPostEffectGaussianFilter(g_bGaussianFilter);
+                if (g_hSettingsDialog != NULL)
+                {
+                    RefreshGaussianFilter(g_hSettingsDialog);
+                }
             }
         }
 
