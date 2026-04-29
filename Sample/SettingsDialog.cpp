@@ -139,6 +139,16 @@ void RefreshSSAO(HWND hDlg)
     CheckDlgButton(hDlg, IDC_CHECK_SSAO, g_bSSAO ? BST_CHECKED : BST_UNCHECKED);
 }
 
+void RefreshBloom(HWND hDlg)
+{
+    CheckDlgButton(hDlg, IDC_CHECK_BLOOM, g_bBloom ? BST_CHECKED : BST_UNCHECKED);
+}
+
+void RefreshStarBurst(HWND hDlg)
+{
+    CheckDlgButton(hDlg, IDC_CHECK_STARBURST, g_bStarBurst ? BST_CHECKED : BST_UNCHECKED);
+}
+
 void RefreshGaussianControls(HWND hDlg)
 {
     CheckDlgButton(hDlg, IDC_CHECK_GAUSSIAN_FILTER, g_bGaussianFilter ? BST_CHECKED : BST_UNCHECKED);
@@ -160,6 +170,8 @@ void RefreshAllControls(HWND hDlg)
     RefreshAnimateLight(hDlg);
     RefreshDepthBufferShadow(hDlg);
     RefreshSSAO(hDlg);
+    RefreshBloom(hDlg);
+    RefreshStarBurst(hDlg);
     RefreshFogControls(hDlg);
     RefreshShadowControls(hDlg);
     RefreshSSAOBrightnessControls(hDlg);
@@ -466,6 +478,22 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_bGaussianFilter = (IsDlgButtonChecked(hDlg, IDC_CHECK_GAUSSIAN_FILTER) == BST_CHECKED);
             g_Render.SetPostEffectGaussianFilter(g_bGaussianFilter);
             RefreshGaussianControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_BLOOM)
+        {
+            g_bBloom = (IsDlgButtonChecked(hDlg, IDC_CHECK_BLOOM) == BST_CHECKED);
+            g_Render.SetPostEffectBloom(g_bBloom);
+            RefreshBloom(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_STARBURST)
+        {
+            g_bStarBurst = (IsDlgButtonChecked(hDlg, IDC_CHECK_STARBURST) == BST_CHECKED);
+            g_Render.SetPostEffectStarBurst(g_bStarBurst);
+            RefreshStarBurst(hDlg);
             return TRUE;
         }
 
