@@ -20,6 +20,8 @@ constexpr int SHADOW_SLIDER_MIN = 0;
 constexpr int SHADOW_SLIDER_MAX = static_cast<int>(SHADOW_INTENSITY_MAX / SHADOW_INTENSITY_STEP);
 constexpr int SSAO_BRIGHTNESS_SLIDER_MIN = 0;
 constexpr int SSAO_BRIGHTNESS_SLIDER_MAX = static_cast<int>((SSAO_BRIGHTNESS_MAX - SSAO_BRIGHTNESS_MIN) / SSAO_BRIGHTNESS_STEP);
+constexpr int MODEL_LOAD_SCALE_SLIDER_MIN = 0;
+constexpr int MODEL_LOAD_SCALE_SLIDER_MAX = static_cast<int>((MODEL_LOAD_SCALE_MAX - MODEL_LOAD_SCALE_MIN) / MODEL_LOAD_SCALE_STEP);
 constexpr int GAUSSIAN_SLIDER_MIN = 1;
 constexpr int GAUSSIAN_SLIDER_MAX = (GAUSSIAN_SAMPLE_MAX + 1) / 2;
 
@@ -108,6 +110,18 @@ void RefreshSSAOBrightnessControls(HWND hDlg)
                        static_cast<LPARAM>(SSAOBrightnessToSliderValue(g_ssaoBrightness)));
 }
 
+void RefreshModelLoadScaleControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_modelLoadScale);
+    SetDlgItemText(hDlg, IDC_EDIT_MODEL_LOAD_SCALE, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_MODEL_LOAD_SCALE,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(ModelLoadScaleToSliderValue(g_modelLoadScale)));
+}
+
 void RefreshAnimateLight(HWND hDlg)
 {
     CheckDlgButton(hDlg, IDC_CHECK_ANIMATE_LIGHT, g_bAnimateLight ? BST_CHECKED : BST_UNCHECKED);
@@ -149,6 +163,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshFogControls(hDlg);
     RefreshShadowControls(hDlg);
     RefreshSSAOBrightnessControls(hDlg);
+    RefreshModelLoadScaleControls(hDlg);
     RefreshGaussianControls(hDlg);
 }
 
@@ -173,6 +188,11 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BRIGHTNESS, TBM_SETRANGEMAX, FALSE, SSAO_BRIGHTNESS_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BRIGHTNESS, TBM_SETTICFREQ, 5, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BRIGHTNESS, TBM_SETPAGESIZE, 0, 5);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_MODEL_LOAD_SCALE, TBM_SETRANGEMIN, FALSE, MODEL_LOAD_SCALE_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_MODEL_LOAD_SCALE, TBM_SETRANGEMAX, FALSE, MODEL_LOAD_SCALE_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_MODEL_LOAD_SCALE, TBM_SETTICFREQ, 50, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_MODEL_LOAD_SCALE, TBM_SETPAGESIZE, 0, 50);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETRANGEMIN, FALSE, GAUSSIAN_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETRANGEMAX, FALSE, GAUSSIAN_SLIDER_MAX);
@@ -371,6 +391,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_ssaoBrightness = SliderValueToSSAOBrightness(sliderValue);
             ApplySSAOBrightness();
             RefreshSSAOBrightnessControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_MODEL_LOAD_SCALE))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_modelLoadScale = SliderValueToModelLoadScale(sliderValue);
+            ApplyModelLoadScale();
+            RefreshModelLoadScaleControls(hDlg);
             return TRUE;
         }
 

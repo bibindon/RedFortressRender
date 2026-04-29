@@ -38,6 +38,7 @@ bool g_bStarBurst = false;
 float g_fogIntensity = 2.0f;
 float g_shadowIntensity = 0.5f;
 float g_ssaoBrightness = 1.0f;
+float g_modelLoadScale = 1.0f;
 int g_gaussianSampleSize = 101;
 int g_sunId = 0;
 std::vector<ImageInfo> g_imageInfoList;
@@ -63,6 +64,11 @@ float ClampShadowIntensity(const float intensity)
 float ClampSSAOBrightness(const float brightness)
 {
     return (std::max)(SSAO_BRIGHTNESS_MIN, (std::min)(brightness, SSAO_BRIGHTNESS_MAX));
+}
+
+float ClampModelLoadScale(const float scale)
+{
+    return (std::max)(MODEL_LOAD_SCALE_MIN, (std::min)(scale, MODEL_LOAD_SCALE_MAX));
 }
 
 std::wstring Trim(const std::wstring& text)
@@ -283,6 +289,11 @@ void ApplySSAOBrightness()
     g_Render.SetPostEffectSSAOBrightness(g_ssaoBrightness);
 }
 
+void ApplyModelLoadScale()
+{
+    g_modelLoadScale = ClampModelLoadScale(g_modelLoadScale);
+}
+
 void ApplyGaussianSampleSize()
 {
     g_gaussianSampleSize = NormalizeGaussianSampleSizeLocal(g_gaussianSampleSize);
@@ -329,6 +340,16 @@ float SliderValueToSSAOBrightness(const int sliderValue)
     return ClampSSAOBrightness(SSAO_BRIGHTNESS_MIN + static_cast<float>(sliderValue) * SSAO_BRIGHTNESS_STEP);
 }
 
+int ModelLoadScaleToSliderValue(const float scale)
+{
+    return static_cast<int>(std::lround((ClampModelLoadScale(scale) - MODEL_LOAD_SCALE_MIN) / MODEL_LOAD_SCALE_STEP));
+}
+
+float SliderValueToModelLoadScale(const int sliderValue)
+{
+    return ClampModelLoadScale(MODEL_LOAD_SCALE_MIN + static_cast<float>(sliderValue) * MODEL_LOAD_SCALE_STEP);
+}
+
 int GaussianSampleSizeToSliderValue(const int sampleSize)
 {
     return (NormalizeGaussianSampleSizeLocal(sampleSize) + 1) / 2;
@@ -352,7 +373,7 @@ void SpawnMeshAtCameraFront(const std::wstring& filePath)
     pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
     const float yaw = atan2f(forward.x, forward.z);
-    g_Render.AddMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), 1.0f, 1.0f);
+    g_Render.AddMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), g_modelLoadScale, 1.0f);
 }
 
 void SpawnMeshMixAtCameraFront(const std::wstring& filePath)
@@ -368,7 +389,7 @@ void SpawnMeshMixAtCameraFront(const std::wstring& filePath)
     pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
     const float yaw = atan2f(forward.x, forward.z);
-    g_Render.AddMeshMix(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), 10.0f, 1.0f);
+    g_Render.AddMeshMix(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), g_modelLoadScale, 1.0f);
 }
 
 NSRender::AnimSetMap CreateDefaultAnimSetMap()
@@ -396,7 +417,7 @@ void SpawnAnimMeshAtCameraFront(const std::wstring& filePath)
     pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
     const float yaw = atan2f(forward.x, forward.z);
-    g_Render.AddAnimMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), 1.0f, CreateDefaultAnimSetMap());
+    g_Render.AddAnimMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), g_modelLoadScale, CreateDefaultAnimSetMap());
 }
 
 void SpawnSkinAnimMeshAtCameraFront(const std::wstring& filePath)
@@ -412,7 +433,7 @@ void SpawnSkinAnimMeshAtCameraFront(const std::wstring& filePath)
     pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
     const float yaw = atan2f(forward.x, forward.z);
-    g_Render.AddSkinAnimMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), 1.0f, CreateDefaultAnimSetMap());
+    g_Render.AddSkinAnimMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), g_modelLoadScale, CreateDefaultAnimSetMap());
 }
 
 bool ShowOpenFileDialog(HWND hWnd, const wchar_t* filter, std::wstring& selectedPath)
@@ -489,6 +510,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"SSAOBrightness")
             {
                 g_ssaoBrightness = std::stof(value);
+            }
+            else if (key == L"ModelLoadScale")
+            {
+                g_modelLoadScale = std::stof(value);
             }
             else if (key == L"DepthBufferShadowEnable")
             {
