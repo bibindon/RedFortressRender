@@ -1,4 +1,4 @@
-#include "PostEffectZShadow.h"
+ï»¿#include "PostEffectZShadow.h"
 
 #include "Camera.h"
 
@@ -72,8 +72,8 @@ void PostEffectZShadow::RenderTechnique1()
     hr = Common::D3DDevice()->SetDepthStencilSurface(g_surfaceLightZStensil);
     assert(hr == S_OK);
 
-    // Viewport ‚ðƒeƒNƒXƒ`ƒƒ‚ÌƒTƒCƒY‚É•ÏX
-    // ‚±‚ê‚ð‚µ‚È‚¢‚Æˆê•”‚ÌƒGƒŠƒA‚É‚µ‚©•`‰æ‚³‚ê‚È‚¢
+    // Viewport ã‚’ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®ã‚µã‚¤ã‚ºã«å¤‰æ›´
+    // ã“ã‚Œã‚’ã—ãªã„ã¨ä¸€éƒ¨ã®ã‚¨ãƒªã‚¢ã«ã—ã‹æç”»ã•ã‚Œãªã„
     D3DSURFACE_DESC descLightZ { };
     hr = g_texRenderTargetLightZ->GetLevelDesc(0, &descLightZ);
     assert(hr == S_OK);
@@ -148,7 +148,7 @@ void PostEffectZShadow::RenderTechnique1()
         hr = g_fxDepthBufferShadow->CommitChanges();
         assert(hr == S_OK);
 
-        // ƒƒbƒVƒ…–{‘Ì‚ð•`‰æ
+        // ãƒ¡ãƒƒã‚·ãƒ¥æœ¬ä½“ã‚’æç”»
         LPD3DXMESH d3dMesh = mesh.GetD3DMesh();
         d3dMesh->DrawSubset(0);
     }
@@ -198,7 +198,7 @@ void PostEffectZShadow::RenderTechnique2()
                              0);
     assert(hr == S_OK);
 
-    // ƒJƒƒ‰s—ñ
+    // ã‚«ãƒ¡ãƒ©è¡Œåˆ—
     D3DXMATRIX mView;
     D3DXMATRIX mProj;
 
@@ -313,16 +313,16 @@ void PostEffectZShadow::RenderTechnique3()
 {
     HRESULT hr = E_FAIL;
 
-    // š ‚¢‚Á‚½‚ñŒ»Ý‚Ì RT ‚ð‘Þ”ð
+    // â˜… ã„ã£ãŸã‚“ç¾åœ¨ã® RT ã‚’é€€é¿
     LPDIRECT3DSURFACE9 prevRT = NULL;
     Common::D3DDevice()->GetRenderTarget(0, &prevRT);
 
-    // š ‡¬æRTig_texCompositej‚ÖØ‚è‘Ö‚¦
+    // â˜… åˆæˆå…ˆRTï¼ˆg_texCompositeï¼‰ã¸åˆ‡ã‚Šæ›¿ãˆ
     LPDIRECT3DSURFACE9 rtComp = NULL;
     g_texComposite->GetSurfaceLevel(0, &rtComp);
     Common::D3DDevice()->SetRenderTarget(0, rtComp);
 
-    // š ‡¬æƒTƒCƒY‚Ìƒrƒ…[ƒ|[ƒg‚ðÝ’è
+    // â˜… åˆæˆå…ˆã‚µã‚¤ã‚ºã®ãƒ“ãƒ¥ãƒ¼ãƒãƒ¼ãƒˆã‚’è¨­å®š
     D3DSURFACE_DESC descComp{};
     g_texComposite->GetLevelDesc(0, &descComp);
     D3DVIEWPORT9 vp{};
@@ -330,7 +330,7 @@ void PostEffectZShadow::RenderTechnique3()
     vp.MinZ = 0.0f; vp.MaxZ = 1.0f;
     Common::D3DDevice()->SetViewport(&vp);
 
-    // š ‚±‚±‚Å‚Í‰æ–Ê‚ÍG‚ç‚È‚¢FZ–³Œø/‰æ–ÊƒNƒŠƒA‚Í•s—v
+    // â˜… ã“ã“ã§ã¯ç”»é¢ã¯è§¦ã‚‰ãªã„ï¼šZç„¡åŠ¹/ç”»é¢ã‚¯ãƒªã‚¢ã¯ä¸è¦
     Common::D3DDevice()->BeginScene();
 
     g_fxDepthBufferShadow->SetTechnique("TechniqueComposite");
@@ -338,8 +338,8 @@ void PostEffectZShadow::RenderTechnique3()
     g_fxDepthBufferShadow->Begin(&nPassNum, 0);
     g_fxDepthBufferShadow->BeginPass(0);
 
-    g_fxDepthBufferShadow->SetTexture("g_texBase",   g_texTemp);               // Œ³‚ÌƒJƒ‰[
-    g_fxDepthBufferShadow->SetTexture("g_texShadow", g_texRenderTargetShadow); // ‰eƒAƒ‹ƒtƒ@
+    g_fxDepthBufferShadow->SetTexture("g_texBase",   g_texTemp);               // å…ƒã®ã‚«ãƒ©ãƒ¼
+    g_fxDepthBufferShadow->SetTexture("g_texShadow", g_texRenderTargetShadow); // å½±ã‚¢ãƒ«ãƒ•ã‚¡
     g_fxDepthBufferShadow->CommitChanges();
 
     DrawFullscreenQuad();
@@ -348,7 +348,7 @@ void PostEffectZShadow::RenderTechnique3()
     g_fxDepthBufferShadow->End();
     Common::D3DDevice()->EndScene();
 
-    // š RT ‚ðŒ³‚É–ß‚·
+    // â˜… RT ã‚’å…ƒã«æˆ»ã™
     Common::D3DDevice()->SetRenderTarget(0, prevRT);
 
     SAFE_RELEASE(rtComp);
@@ -439,7 +439,7 @@ void PostEffectZShadow::CreateRawResource()
     D3DSURFACE_DESC bdesc{};
     g_texRenderTargetLightZ->GetLevelDesc(0, &bdesc);
 
-    // ‰e—p‚Ì[“xƒXƒeƒ“ƒVƒ‹iƒTƒCƒY‚ðRT2‚É‡‚í‚¹‚éj
+    // å½±ç”¨ã®æ·±åº¦ã‚¹ãƒ†ãƒ³ã‚·ãƒ«ï¼ˆã‚µã‚¤ã‚ºã‚’RT2ã«åˆã‚ã›ã‚‹ï¼‰
     HRESULT hr = Common::D3DDevice()->CreateDepthStencilSurface(bdesc.Width,
                                                          bdesc.Height,
                                                          D3DFMT_D16,

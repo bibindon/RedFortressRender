@@ -12,15 +12,15 @@ float4x4 g_matLightViewProj;
 float g_shadowTexelW;
 float g_shadowTexelH;
 
-// �e�̒[�ɕ\�������M�U�M�U��}���B0.002�`0.005 �Œ���
+// 影の端に表示されるギザギザを抑制。0.002～0.005 で調整
 float g_shadowBias;
 
-// �e�̔Z��(0 ~ 1)
+// 影の濃さ(0 ~ 1)
 float g_shadowIntensity;
 
 bool g_bBlurEnable = true;
 
-// �e�̃{�P�(�)
+// 影のボケ具合(奇数)
 int g_nBlurSize;
 
 texture g_texLightZ;
@@ -51,8 +51,8 @@ sampler samplerShadow = sampler_state
     MagFilter = LINEAR;
 };
 
-// �ϐ����̖�����OS�̓��[�J�����W�̈Ӗ�
-// �ϐ����̖�����WS�̓O���[�o�����W�̈Ӗ�
+// 変数名の末尾のOSはローカル座標の意味
+// 変数名の末尾のWSはグローバル座標の意味
 
 //-------------------------------------------------------------------------
 // Technique 1
@@ -79,7 +79,7 @@ VSOutDepth VS_DepthFromLight(VSInDepth vin)
     float4 vPosLightView    = mul(inWorldPos, g_matLightView);
 
 
-    // ���`�[�x�i���C�g View ��� z �� near..far �Ő��K���j
+    // 線形深度（ライト View 空間 z を near..far で正規化）
     float  depthLinear = (vPosLightView.z - g_lightNear) / (g_lightFar - g_lightNear);
     vout.fDepth = saturate(depthLinear);
 
@@ -120,8 +120,8 @@ void PS_WriteShadow(in float4 inPos       : POSITION0,
     outColor = float4(0, 0, 0, 0);
     
     //---------------------------------------------------------
-    // �J�������猩���e�s�N�Z���̃��[���h���W�̈ʒu��
-    // �����A�����̈ʒu���猩����A�[�x�͂�����H�A�����߂�
+    // カメラから見た各ピクセルのワールド座標の位置を
+    // もし、光源の位置から見たら、深度はいくら？、を求める
     //---------------------------------------------------------
     float4 vPosLightView = mul(float4(inWorldPos, 1.0f), g_matLightView);
 
@@ -129,28 +129,28 @@ void PS_WriteShadow(in float4 inPos       : POSITION0,
     fDepthLightView = saturate(fDepthLightView);
 
     //---------------------------------------------------------
-    // �J�������猩���e�s�N�Z���̃��[���h���W�̈ʒu��
-    // �����A�����̈ʒu���猩����A���W�͂ǂ��H�A�����߂�
+    // カメラから見た各ピクセルのワールド座標の位置を
+    // もし、光源の位置から見たら、座標はどこ？、を求める
     //---------------------------------------------------------
     float4 vClipLightView = mul(float4(inWorldPos, 1.0f), g_matLightViewProj);
 
-    // ���C�g���猩�Ĕw�ʁiw <= 0�j�́u�e�Ȃ��v����
+    // ライトから見て背面（w <= 0）は「影なし」扱い
     if (vPosLightView.w <= 0)
     {
         outColor.a = 0.0f;
         return;
     }
 
-    // 2D���ʂ�-1 ~ +1�͈̔͂ɐ��K�����������W���擾����
+    // 2D平面の-1 ~ +1の範囲に正規化させた座標を取得する
     float2 uvNormalizedView   = vClipLightView.xy / vClipLightView.w;                // [-1,1]
 
-    // -1 ~ +1 �Ȃ̂�UV�摜�ɍ��킹�邽�߂� 0 ~ 1 �ɒ��߂���
+    // -1 ~ +1 なのでUV画像に合わせるために 0 ~ 1 に調節する
     float2 uvLightView   = uvNormalizedView * float2(0.5f, -0.5f) + 0.5f;  // [0,1]
 
-    // DX9�̔��e�N�Z���␳
+    // DX9の半テクセル補正
     uvLightView += float2(0.5f * g_shadowTexelW, 0.5f * g_shadowTexelH);
 
-    // �x�[�XUV���g�O�Ȃ�u�e�Ȃ��v
+    // ベースUVが枠外なら「影なし」
     if (any(uvLightView < 0.0f) || any(uvLightView > 1.0f))
     {
         outColor.a = 0.0f;
@@ -161,22 +161,22 @@ void PS_WriteShadow(in float4 inPos       : POSITION0,
 
     if (g_bBlurEnable)
     {
-        // �T���v�����O���ꂽ��
+        // サンプリングされた個数
         float fShadowSum = 0.0f;
 
-        // 1�e�N�Z���̃I�t�Z�b�g
+        // 1テクセルのオフセット
         float2 uvTexel = float2(g_shadowTexelW, g_shadowTexelH);
 
         int nHalfSize = g_nBlurSize / 2;
 
-        // ��ł��邱��
+        // 奇数であること
         const int SIZE_MAX = 13;
 
         int nSumpleNum = 0;
 
-        // �{�J�V�̃��x���𒲐߂���
-        // HLSL�ł�for���̊J�n�E�I�������ɒ萔�����g���Ȃ��̂�
-        // ���[�v�񐔂��Œ�ɂ��������ŁA�r���ŏ����𔲂���悤�ɂ��Ď�������
+        // ボカシのレベルを調節する
+        // HLSLではfor文の開始・終了条件に定数しか使えないので
+        // ループ回数を固定にしたうえで、途中で処理を抜けるようにして実現する
         for (int j = 0; j < SIZE_MAX; ++j)
         {
             if (j >= g_nBlurSize)
@@ -184,7 +184,7 @@ void PS_WriteShadow(in float4 inPos       : POSITION0,
                 continue;
             }
 
-            // �T�C�Y��5�Ȃ�-2, -1, 0, 1, 2�Ƃ����悤�ɂ������̂�(5/2)������
+            // サイズが5なら-2, -1, 0, 1, 2というようにしたいので(5/2)を引く
             int j2 = j;
             j2 -= nHalfSize;
 
@@ -202,21 +202,21 @@ void PS_WriteShadow(in float4 inPos       : POSITION0,
 
                 float2 uvNear = uvLightView + float2(i2, j2) * uvTexel;
 
-                // �O��UV�́u�e�Ȃ��v= 0 �Ƃ��Đ����Ȃ��i= �T���v���l 0 �����j
+                // 外れUVは「影なし」= 0 として数えない（= サンプル値 0 扱い）
                 if (any(uvNear < 0.0f) || any(uvNear > 1.0f))
                 {
-                    // �������Ȃ�
+                    // 何もしない
                 }
                 else
                 {
-                    // �[�x�摜�̊Y������UV���W�̐F���擾�B�[�x����F�Ƃ��ĕ`�悵�Ă���̂�
-                    // ���̐F���[�x�ł���B
-                    // tex2D�ł͂Ȃ�tex2Dlod���g��Ȃ��Ă͂����Ȃ��B�������Ȃ��Ɠ����Ȃ�
+                    // 深度画像の該当するUV座標の色を取得。深度情報を色として描画しているので
+                    // この色が深度である。
+                    // tex2Dではなくtex2Dlodを使わなくてはいけない。そうしないと動かない
                     float fDepthLightZTexture = tex2Dlod(samplerLightZ, float4(uvNear, 0, 0)).r;
 
-                    // �ŏd�v�p�[�g
-                    // �[�x�摜�̐[�x�l�Ǝ��ۂ̍��W��������܂ł̋�����[�x�l�ɕϊ������l���r����
-                    // �[�x�摜�̐[�x�l�̕����Z���Ȃ炻���͉e�ł���
+                    // 最重要パート
+                    // 深度画像の深度値と実際の座標から光源までの距離を深度値に変換した値を比較する
+                    // 深度画像の深度値の方が短いならそこは影である
                     if (fDepthLightZTexture < (fDepthLightView - g_shadowBias))
                     {
                         fShadowSum += 1.0f;
@@ -257,7 +257,7 @@ void VS_Composite(in  float4 inPos  : POSITION,
     outUV = inUV;
 }
 
-// 2���̉摜����`��Ԃō�������
+// 2枚の画像を線形補間で合成する
 void PS_Composite(in float4 inPos     : POSITION,
                   in float2 inUV      : TEXCOORD0,
 
@@ -276,7 +276,7 @@ void PS_Composite(in float4 inPos     : POSITION,
     outColor = result;
 }
 
-// �������猩���[�x��`�悷��e�N�j�b�N
+// 光源から見た深度を描画するテクニック
 technique TechniqueDepthFromLight
 {
     pass P0
@@ -286,7 +286,7 @@ technique TechniqueDepthFromLight
     }
 }
 
-// �������猩���[�x�摜�ƃJ�������猩�����[���h���W���g���āA�e��`�悷��e�N�j�b�N
+// 光源から見た深度画像とカメラから見たワールド座標を使って、影を描画するテクニック
 technique TechniqueWriteShadow
 {
     pass P0
@@ -296,7 +296,7 @@ technique TechniqueWriteShadow
     }
 }
 
-// ��̉摜����������e�N�j�b�N
+// 二つの画像を合成するテクニック
 technique TechniqueComposite
 {
     pass P0
