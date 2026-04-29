@@ -77,6 +77,7 @@ void InitializeSampleScene(HWND hWnd)
                      D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                      D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                      1.0f,
+                     100.0f,
                      100.0f);
 
     ApplySaturateLevel();

@@ -1,5 +1,6 @@
 float4x4 g_matWorldViewProj;
 float4 g_lightNormal = { 0.3f, 1.0f, 0.5f, 0.0f };
+float2 g_uvScale = float2(1.0f, 1.0f);
 
 texture g_texture;
 sampler textureSampler = sampler_state
@@ -24,7 +25,7 @@ void VertexShader1(in  float4 inPosition  : POSITION,
     outDiffuse.rgb = max(0, lightIntensity);
     outDiffuse.a = 1.0f;
 
-    outTexCood = inTexCood;
+    outTexCood = inTexCood * float4(g_uvScale.x, g_uvScale.y, 1.0f, 1.0f);
 }
 
 void PixelShader1(in float4 inScreenColor : COLOR0,

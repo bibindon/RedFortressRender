@@ -408,10 +408,11 @@ void MeshOld::Render()
     hResult = m_D3DEffect->SetMatrix("g_matWorldViewProj", &worldViewProjMatrix);
     assert(hResult == S_OK);
 
-    if (SHADER_FILENAME == _T("res\\shader\\MeshNoLighting.fx"))
+    D3DXHANDLE uvScaleHandle = m_D3DEffect->GetParameterByName(nullptr, "g_uvScale");
+    if (uvScaleHandle != nullptr)
     {
         const float uvScale[2] { m_uvTile, m_uvTile };
-        hResult = m_D3DEffect->SetFloatArray("g_uvScale", uvScale, 2);
+        hResult = m_D3DEffect->SetFloatArray(uvScaleHandle, uvScale, 2);
         assert(hResult == S_OK);
     }
 

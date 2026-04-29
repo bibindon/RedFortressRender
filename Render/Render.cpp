@@ -369,9 +369,10 @@ int Render::AddMesh(const std::wstring& filePath,
                     const D3DXVECTOR3& pos,
                     const D3DXVECTOR3& rot,
                     const float scale,
-                    const float radius)
+                    const float radius,
+                    const float uvTile)
 {
-    m_meshList.push_back(MeshOld(filePath, pos, rot, scale, radius));
+    m_meshList.push_back(MeshOld(filePath, pos, rot, scale, radius, uvTile));
     m_meshList.rbegin()->Initialize();
 
     return (int)m_meshList.size() - 1;
