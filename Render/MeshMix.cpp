@@ -4,6 +4,9 @@
 #include "Camera.h"
 #include "Light.h"
 
+#include <Shlwapi.h>
+#pragma comment(lib, "Shlwapi.lib")
+
 namespace NSRender
 {
 
@@ -24,7 +27,9 @@ void MeshMix::Initialize()
 {
     HRESULT hResult = E_FAIL;
 
-    auto tempPath = Util::GetExeDir() + SHADER_FILENAME;
+    std::wstring tempPath;
+
+    tempPath = Util::GetExeDir() + SHADER_FILENAME;
 
     //--------------------------------------------------------
     // エフェクトの作成
@@ -46,7 +51,15 @@ void MeshMix::Initialize()
     LPD3DXBUFFER adjacencyBuffer = nullptr;
     LPD3DXBUFFER materialBuffer = nullptr;
 
-    tempPath = Util::GetExeDir() + m_meshName;
+    if (PathIsRelative(m_meshName.c_str()))
+    {
+        tempPath = Util::GetExeDir() + m_meshName;
+    }
+    else
+    {
+        tempPath = m_meshName;
+    }
+
     hResult = D3DXLoadMeshFromX(tempPath.c_str(),
                                 D3DXMESH_MANAGED,
                                 Common::D3DDevice(),
@@ -97,7 +110,17 @@ void MeshMix::Initialize()
     D3DXMATERIAL* materialList = (D3DXMATERIAL*)materialBuffer->GetBufferPointer();
 
     // Xファイルのディレクトリ
-    std::wstring xFileDir = Util::GetExeDir() + m_meshName;
+
+    std::wstring xFileDir;
+    if (PathIsRelative(m_meshName.c_str()))
+    {
+        xFileDir = Util::GetExeDir() + m_meshName;
+    }
+    else
+    {
+        xFileDir = m_meshName;
+    }
+
     std::size_t lastPos = xFileDir.find_last_of(L"\\");
     xFileDir = xFileDir.substr(0, lastPos + 1);
 
