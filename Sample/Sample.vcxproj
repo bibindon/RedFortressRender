@@ -242,10 +242,16 @@ exit /B %ERRORLEVEL%</Command>
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AppState.cpp" />
+    <ClCompile Include="InputHandlers.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="SettingsDialog.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AppState.h" />
+    <ClInclude Include="InputHandlers.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="SettingsDialog.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sample.rc" />
