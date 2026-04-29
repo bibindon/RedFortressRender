@@ -256,9 +256,7 @@ void VS_Composite(in  float4 inPos  : POSITION,
                   out float2 outUV  : TEXCOORD0)
 {
     outPos = inPos;
-    outPos.x -= g_compositeTexelW;
-    outPos.y += g_compositeTexelH;
-    outUV = inUV + float2(0.5f * g_compositeTexelW, 0.5f * g_compositeTexelH);
+    outUV = inUV;
 }
 
 // 2枚の画像を線形補間で合成する
@@ -267,8 +265,9 @@ void PS_Composite(in float4 inPos     : POSITION,
 
                   out float4 outColor : COLOR0)
 {
-    float4 vBaseColor = tex2D(samplerBase,  inUV);
-    float4 vShadowColor = tex2D(samplerShadow, inUV);
+    float2 uv = inUV + float2(0.5f * g_compositeTexelW, 0.5f * g_compositeTexelH);
+    float4 vBaseColor = tex2D(samplerBase, uv);
+    float4 vShadowColor = tex2D(samplerShadow, uv);
 
     float4 result = float4(0, 0, 0, 0);
 
