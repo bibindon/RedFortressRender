@@ -266,6 +266,7 @@ void PS_Composite(in float4 inPos     : POSITION,
                   out float4 outColor : COLOR0)
 {
     float2 uv = inUV + float2(0.5f * g_compositeTexelW, 0.5f * g_compositeTexelH);
+    float2 pixelCoord = floor(uv / float2(g_compositeTexelW, g_compositeTexelH));
     float4 vBaseColor = tex2D(samplerBase, uv);
     float4 vShadowColor = tex2D(samplerShadow, uv);
 
@@ -273,6 +274,14 @@ void PS_Composite(in float4 inPos     : POSITION,
 
     result.rgb = vBaseColor.rgb * vShadowColor.a;
     result = lerp(vBaseColor, vShadowColor, vShadowColor.a);
+
+    if (false)
+    {
+        if (fmod(pixelCoord.x, 5.0f) == 0.0f || fmod(pixelCoord.y, 5.0f) == 0.0f)
+        {
+            result.rgb = float3(0.0f, 1.0f, 0.0f);
+        }
+    }
 
     result.a = 1.f;
 
