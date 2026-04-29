@@ -355,6 +355,12 @@ void MeshMix::Render()
     hResult = m_D3DEffect->SetTexture("g_texHeightMap", GetAuxTexture(2));
     assert(hResult == S_OK);
 
+    hResult = m_D3DEffect->SetBool("g_bPOM", m_param.parallaxOcclusionMapping ? TRUE : FALSE);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetBool("g_bNormalMapping", m_param.normalMapping ? TRUE : FALSE);
+    assert(hResult == S_OK);
+
     // 時間パラメータを設定
     static float f = 0.f;
     f += 0.001f;

@@ -566,10 +566,14 @@ int Render::AddMeshMix(const std::wstring& filePath,
                        const D3DXVECTOR3& pos,
                        const D3DXVECTOR3& rot,
                        const float scale,
-                       const float radius)
+                       const float radius,
+                       const bool useParallaxOcclusionMapping,
+                       const bool useNormalMapping)
 {
     auto param = GetMeshParamPreset(eMeshParamPreset::GRASS);
     param.smooth = false;
+    param.parallaxOcclusionMapping = useParallaxOcclusionMapping;
+    param.normalMapping = useNormalMapping;
     auto mesh = MeshMix(filePath, pos, rot, scale, param);
     m_meshMixList.push_back(mesh);
     m_meshMixList.rbegin()->Initialize();

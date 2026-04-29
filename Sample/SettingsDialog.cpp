@@ -97,6 +97,19 @@ void RefreshSelectedMeshPaths(HWND hDlg)
     SetDlgItemText(hDlg, IDC_EDIT_SKIN_ANIM_MESH_PATH, g_selectedSkinAnimMeshPath.c_str());
 }
 
+void RefreshMixMeshShaderMode(HWND hDlg)
+{
+    CheckDlgButton(hDlg,
+                   IDC_RADIO_MIX_MESH_NONE,
+                   (g_mixMeshShaderMode == MixMeshShaderMode::None) ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(hDlg,
+                   IDC_RADIO_MIX_MESH_POM,
+                   (g_mixMeshShaderMode == MixMeshShaderMode::ParallaxOcclusionMapping) ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(hDlg,
+                   IDC_RADIO_MIX_MESH_NORMAL_MAP,
+                   (g_mixMeshShaderMode == MixMeshShaderMode::NormalMapping) ? BST_CHECKED : BST_UNCHECKED);
+}
+
 void InitializeLoadedModelListView(HWND hDlg)
 {
     HWND listView = GetDlgItem(hDlg, IDC_LIST_LOADED_MODELS);
@@ -275,6 +288,7 @@ void RefreshAllControls(HWND hDlg)
 {
     RefreshSaturateControls(hDlg);
     RefreshSelectedMeshPaths(hDlg);
+    RefreshMixMeshShaderMode(hDlg);
     RefreshLoadedModelListView(hDlg);
     RefreshAnimateLight(hDlg);
     RefreshDepthBufferShadow(hDlg);
@@ -594,6 +608,27 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         {
             g_bAnimateLight = (IsDlgButtonChecked(hDlg, IDC_CHECK_ANIMATE_LIGHT) == BST_CHECKED);
             RefreshAnimateLight(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_RADIO_MIX_MESH_NONE)
+        {
+            g_mixMeshShaderMode = MixMeshShaderMode::None;
+            RefreshMixMeshShaderMode(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_RADIO_MIX_MESH_POM)
+        {
+            g_mixMeshShaderMode = MixMeshShaderMode::ParallaxOcclusionMapping;
+            RefreshMixMeshShaderMode(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_RADIO_MIX_MESH_NORMAL_MAP)
+        {
+            g_mixMeshShaderMode = MixMeshShaderMode::NormalMapping;
+            RefreshMixMeshShaderMode(hDlg);
             return TRUE;
         }
 

@@ -46,6 +46,9 @@
 #define IDC_SLIDER_STARBURST_THRESHOLD  1045
 #define IDC_STATIC_LOADED_MODELS_LABEL  1046
 #define IDC_LIST_LOADED_MODELS          1047
+#define IDC_RADIO_MIX_MESH_NONE        1048
+#define IDC_RADIO_MIX_MESH_POM         1049
+#define IDC_RADIO_MIX_MESH_NORMAL_MAP  1050
 
 // Next default values for new objects
 // 
@@ -53,7 +56,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1048
+#define _APS_NEXT_CONTROL_VALUE         1051
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

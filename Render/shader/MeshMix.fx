@@ -87,6 +87,7 @@ sampler g_normalMapSampler = sampler_state
 //------------------------------------------------------
 
 bool g_bPOM = false;
+bool g_bNormalMapping = false;
 
 // 高さ 0.0 ~ 1.0
 float g_fHeightMapScale = 0.1f;
@@ -263,7 +264,7 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
     float NdotH = 0.f;
 
     // 法線マッピングを行うか
-    if (false)
+    if (g_bNormalMapping)
     {
         float3 normalInTangent = float3(0, 0, 0);
         normalInTangent.x = tex2D(g_normalMapSampler, inTexCoord).r * 2.0 - 1.0;

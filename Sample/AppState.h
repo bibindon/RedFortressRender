@@ -55,6 +55,13 @@ struct LoadedModelInfo
     float m_scale = 1.0f;
 };
 
+enum class MixMeshShaderMode
+{
+    None,
+    ParallaxOcclusionMapping,
+    NormalMapping,
+};
+
 extern bool g_bClose;
 extern NSRender::Render g_Render;
 extern int g_fontId;
@@ -91,6 +98,7 @@ extern int g_sunId;
 extern std::vector<ImageInfo> g_imageInfoList;
 extern std::vector<TextInfo> g_textInfoList;
 extern std::vector<LoadedModelInfo> g_loadedModelList;
+extern MixMeshShaderMode g_mixMeshShaderMode;
 
 void UpdateCameraMoveByKeyboard();
 void MoveCameraAwayFromLookAtByWheel(short wheelDelta);

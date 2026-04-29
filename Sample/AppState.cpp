@@ -48,6 +48,7 @@ int g_sunId = 0;
 std::vector<ImageInfo> g_imageInfoList;
 std::vector<TextInfo> g_textInfoList;
 std::vector<LoadedModelInfo> g_loadedModelList;
+MixMeshShaderMode g_mixMeshShaderMode = MixMeshShaderMode::None;
 
 namespace
 {
@@ -451,7 +452,15 @@ void SpawnMeshMixAtCameraFront(const std::wstring& filePath)
     pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
     const float yaw = atan2f(forward.x, forward.z);
-    g_Render.AddMeshMix(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), g_modelLoadScale, 1.0f);
+    const bool usePOM = (g_mixMeshShaderMode == MixMeshShaderMode::ParallaxOcclusionMapping);
+    const bool useNormalMapping = (g_mixMeshShaderMode == MixMeshShaderMode::NormalMapping);
+    g_Render.AddMeshMix(filePath,
+                        pos,
+                        D3DXVECTOR3(0, yaw, 0.0f),
+                        g_modelLoadScale,
+                        1.0f,
+                        usePOM,
+                        useNormalMapping);
     RegisterLoadedModel(L"MeshMix", filePath, pos, g_modelLoadScale);
 }
 
