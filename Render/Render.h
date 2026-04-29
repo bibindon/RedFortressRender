@@ -234,7 +234,7 @@ private:
     // マルチパスレンダリング関連
     //---------------------------------------------------------------
 
-    void DrawPass1();
+    void DrawPass1(const bool renderToSceneRenderTargets = true);
 
     // 各ピクセルの深度とワールド座標を表した画像を生成
     GBuffer m_GBuffer;

@@ -35,6 +35,41 @@
 namespace NSRender
 {
 
+namespace
+{
+struct DebugLineVertex
+{
+    float x;
+    float y;
+    float z;
+    float rhw;
+    DWORD color;
+};
+
+void DrawDebugVerticalGuideLines()
+{
+    std::vector<DebugLineVertex> vertices;
+    vertices.reserve((Common::ScreenW() / 5 + 1) * 2);
+
+    for (int x = 0; x < Common::ScreenW(); x += 5)
+    {
+        vertices.push_back(DebugLineVertex { static_cast<float>(x) - 0.5f, -0.5f, 0.0f, 1.0f, D3DCOLOR_RGBA(0, 255, 0, 255) });
+        vertices.push_back(DebugLineVertex { static_cast<float>(x) - 0.5f, static_cast<float>(Common::ScreenH()) - 0.5f, 0.0f, 1.0f, D3DCOLOR_RGBA(0, 255, 0, 255) });
+    }
+
+    Common::D3DDevice()->SetTexture(0, NULL);
+    Common::D3DDevice()->SetPixelShader(NULL);
+    Common::D3DDevice()->SetVertexShader(NULL);
+    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
+    Common::D3DDevice()->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
+    Common::D3DDevice()->DrawPrimitiveUP(D3DPT_LINELIST,
+                                         static_cast<UINT>(vertices.size() / 2),
+                                         vertices.data(),
+                                         sizeof(DebugLineVertex));
+    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
+}
+}
+
 std::wstring Render::Trim(const std::wstring& text)
 {
     const auto first = std::find_if_not(text.begin(), text.end(), [](wchar_t ch)
@@ -197,6 +232,7 @@ void Render::Finalize()
 void Render::Draw()
 {
     HRESULT hResult = E_FAIL;
+    const bool kSkipAllPostEffects = true;
 
     if (m_bShowFPS)
     {
@@ -204,7 +240,18 @@ void Render::Draw()
         ShowFPS(fps);
     }
 
-    DrawPass1();
+    DrawPass1(!kSkipAllPostEffects);
+
+    if (kSkipAllPostEffects)
+    {
+        Draw2D();
+
+        hResult = Common::D3DDevice()->Present(NULL, NULL, NULL, NULL);
+        assert(hResult == S_OK);
+
+        m_windowManager.ChangeWindowMode();
+        return;
+    }
 
     //---------------------------------------------------------------
     // ポストエフェクトのために深度画像とワールド座標画像を作成
@@ -643,28 +690,36 @@ void Render::RotateCamera(const D3DXVECTOR3& rot)
     Camera::SetLookAtPos(lookAt);
 }
 
-void Render::DrawPass1()
+void Render::DrawPass1(const bool renderToSceneRenderTargets)
 {
     HRESULT hResult = E_FAIL;
 
     LPDIRECT3DSURFACE9 surfaceOld = NULL;
-    hResult = Common::D3DDevice()->GetRenderTarget(0, &surfaceOld);
-    assert(hResult == S_OK);
-
     LPDIRECT3DSURFACE9 surfaceRenderTarget0 = NULL;
     LPDIRECT3DSURFACE9 surfaceRenderTarget1 = NULL;
 
-    hResult = m_pRenderTarget1->GetSurfaceLevel(0, &surfaceRenderTarget0);
-    assert(hResult == S_OK);
+    if (renderToSceneRenderTargets)
+    {
+        hResult = Common::D3DDevice()->GetRenderTarget(0, &surfaceOld);
+        assert(hResult == S_OK);
 
-    hResult = m_pRenderTarget2->GetSurfaceLevel(0, &surfaceRenderTarget1);
-    assert(hResult == S_OK);
+        hResult = m_pRenderTarget1->GetSurfaceLevel(0, &surfaceRenderTarget0);
+        assert(hResult == S_OK);
 
-    hResult = Common::D3DDevice()->SetRenderTarget(0, surfaceRenderTarget0);
-    assert(hResult == S_OK);
+        hResult = m_pRenderTarget2->GetSurfaceLevel(0, &surfaceRenderTarget1);
+        assert(hResult == S_OK);
 
-    hResult = Common::D3DDevice()->SetRenderTarget(1, surfaceRenderTarget1);
-    assert(hResult == S_OK);
+        hResult = Common::D3DDevice()->SetRenderTarget(0, surfaceRenderTarget0);
+        assert(hResult == S_OK);
+
+        hResult = Common::D3DDevice()->SetRenderTarget(1, surfaceRenderTarget1);
+        assert(hResult == S_OK);
+    }
+    else
+    {
+        hResult = Common::D3DDevice()->SetRenderTarget(1, NULL);
+        assert(hResult == S_OK);
+    }
 
     hResult = Common::D3DDevice()->Clear(0,
                                          NULL,
@@ -739,11 +794,14 @@ void Render::DrawPass1()
     hResult = Common::D3DDevice()->EndScene();
     assert(hResult == S_OK);
 
-    hResult = Common::D3DDevice()->SetRenderTarget(1, NULL);
-    assert(hResult == S_OK);
+    if (renderToSceneRenderTargets)
+    {
+        hResult = Common::D3DDevice()->SetRenderTarget(1, NULL);
+        assert(hResult == S_OK);
 
-    hResult = Common::D3DDevice()->SetRenderTarget(0, surfaceOld);
-    assert(hResult == S_OK);
+        hResult = Common::D3DDevice()->SetRenderTarget(0, surfaceOld);
+        assert(hResult == S_OK);
+    }
 
     SAFE_RELEASE(surfaceRenderTarget0);
     SAFE_RELEASE(surfaceRenderTarget1);
@@ -819,6 +877,7 @@ void Render::Draw2D()
     }
 
     m_sprite.Draw();
+    DrawDebugVerticalGuideLines();
 
 }
 
