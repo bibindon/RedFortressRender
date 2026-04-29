@@ -7,6 +7,8 @@ GaussianSampleSize,101
 FogIntensity,2.0
 ShadowIntensity,0.25
 SSAOBrightness,1.0
+BloomThreshold,2.5
+StarBurstThreshold,2.8
 ModelLoadScale,1.0
 BloomEnable,0
 StarBurstEnable,0

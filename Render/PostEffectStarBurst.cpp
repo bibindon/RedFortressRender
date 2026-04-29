@@ -1,4 +1,4 @@
-#include "PostEffectStarBurst.h"
+ï»¿#include "PostEffectStarBurst.h"
 
 namespace NSRender
 {
@@ -35,15 +35,16 @@ LPDIRECT3DTEXTURE9 PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource)
         return renderSource;
     }
 
-    // ƒeƒNƒZƒ‹ƒTƒCƒYiƒuƒ‰[‚Åg—pj
+    // Æ’eÆ’NÆ’ZÆ’â€¹Æ’TÆ’CÆ’YÂiÆ’uÆ’â€°Â[â€šÃ…Å½gâ€”pÂj
     float texelSize[2] = { 1.0f / Common::ScreenW(), 1.0f / Common::ScreenH() };
     m_d3dEffect->SetFloatArray("g_TexelSize", texelSize, 2);
+    m_d3dEffect->SetFloat("g_Threshold", m_threshold);
 
-    // (2) BrightPass : “ü—Í=m_renderTarget, o—Í=g_pBrightTex2
+    // (2) BrightPass : â€œÃ¼â€”Ã=m_renderTarget, Âoâ€”Ã=g_pBrightTex2
     SetRTFromTex(m_texBright);
     DrawFullscreenQuad(renderSource, "BrightPass");
 
-    // (3a) 0‹ ƒuƒ‰[ : “ü—Í=m_texBright, o—Í=g_pBlurTexH2
+    // (3a) 0Ââ€¹ Æ’uÆ’â€°Â[ : â€œÃ¼â€”Ã=m_texBright, Âoâ€”Ã=g_pBlurTexH2
     SetRTFromTex(m_texBlurH);
     {
         float dir[4] = { 1.0f, 0.0f, 0, 0 };
@@ -55,7 +56,7 @@ LPDIRECT3DTEXTURE9 PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource)
     SetRTFromTex(m_texBlurH2);
     DrawFullscreenQuad(m_texBlurH, "Blur");
 
-    // (3b) 60‹ ƒuƒ‰[ : “ü—Í=m_texBright, o—Í=g_pBlurTexV2
+    // (3b) 60Ââ€¹ Æ’uÆ’â€°Â[ : â€œÃ¼â€”Ã=m_texBright, Âoâ€”Ã=g_pBlurTexV2
     SetRTFromTex(m_texBlurV);
     {
         float dir[4] = { 0.5f, 0.8660254f, 0, 0 };
@@ -67,7 +68,7 @@ LPDIRECT3DTEXTURE9 PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource)
     SetRTFromTex(m_texBlurV2);
     DrawFullscreenQuad(m_texBlurV, "Blur");
 
-    // (3c) 120‹ ƒuƒ‰[ : “ü—Í=m_texBright, o—Í=g_pBlurTexD
+    // (3c) 120Ââ€¹ Æ’uÆ’â€°Â[ : â€œÃ¼â€”Ã=m_texBright, Âoâ€”Ã=g_pBlurTexD
     SetRTFromTex(m_texBlurD);
     {
         float dir[4] = { -0.5f, 0.8660254f, 0, 0 };
@@ -79,12 +80,12 @@ LPDIRECT3DTEXTURE9 PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource)
     SetRTFromTex(m_texBlurD2);
     DrawFullscreenQuad(m_texBlurD, "Blur");
 
-    // (4) ‡¬ : (SceneTex2 + 0‹ + 60‹ + 120‹) ¨ g_pSceneTex3
+    // (4) Ââ€¡ÂÂ¬ : (SceneTex2 + 0Ââ€¹ + 60Ââ€¹ + 120Ââ€¹) ÂÂ¨ g_pSceneTex3
     SetRTFromTex(m_texPostEffectBack1);
     m_d3dEffect->SetTexture("g_SceneTex", renderSource);
     m_d3dEffect->SetTexture("g_BlurTexH", m_texBlurH2);
     m_d3dEffect->SetTexture("g_BlurTexV", m_texBlurV2);
-    m_d3dEffect->SetTexture("g_BlurTex60", m_texBlurD2); // Combine ‚Í3²‚ğ‰ÁZ
+    m_d3dEffect->SetTexture("g_BlurTex60", m_texBlurD2); // Combine â€šÃ3Å½Â²â€šÃ°â€°ÃÅ½Z
     DrawFullscreenQuad(NULL, "Combine");
 
     return m_texPostEffectBack1;
@@ -93,9 +94,9 @@ LPDIRECT3DTEXTURE9 PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource)
 void PostEffectStarBurst::SetRTFromTex(LPDIRECT3DTEXTURE9 tex)
 {
     LPDIRECT3DSURFACE9 rt = NULL;
-    tex->GetSurfaceLevel(0, &rt);                 // AddRef Ï‚İ‚Å•Ô‚é
-    Common::D3DDevice()->SetRenderTarget(0, rt);         // Device ‘¤‚ªQÆ‚ğ•Û
-    SAFE_RELEASE(rt);                             // ‘¦Release‚ÅOK
+    tex->GetSurfaceLevel(0, &rt);                 // AddRef ÂÃâ€šÃâ€šÃ…â€¢Ã”â€šÃ©
+    Common::D3DDevice()->SetRenderTarget(0, rt);         // Device â€˜Â¤â€šÂªÅ½QÂÃ†â€šÃ°â€¢Ã›Å½Â
+    SAFE_RELEASE(rt);                             // â€˜Â¦Releaseâ€šÃ…OK
 }
 
 void PostEffectStarBurst::Finalize()
@@ -223,7 +224,7 @@ void PostEffectStarBurst::CreateTexture()
                       D3DPOOL_DEFAULT,
                       &m_texBright);
 
-    // 0‹i…•½j
+    // 0Ââ€¹ÂiÂâ€¦â€¢Â½Âj
     D3DXCreateTexture(Common::D3DDevice(),
                       Common::ScreenW(),
                       Common::ScreenH(),
@@ -242,7 +243,7 @@ void PostEffectStarBurst::CreateTexture()
                       D3DPOOL_DEFAULT,
                       &m_texBlurH2);
 
-    // 60‹
+    // 60Ââ€¹
     D3DXCreateTexture(Common::D3DDevice(),
                       Common::ScreenW(),
                       Common::ScreenH(),
@@ -261,7 +262,7 @@ void PostEffectStarBurst::CreateTexture()
                       D3DPOOL_DEFAULT,
                       &m_texBlurV2);
 
-    // 120‹iš’Ç‰Áj
+    // 120Ââ€¹ÂiÂÅ¡â€™Ã‡â€°ÃÂj
     D3DXCreateTexture(Common::D3DDevice(),
                       Common::ScreenW(),
                       Common::ScreenH(),

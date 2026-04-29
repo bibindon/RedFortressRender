@@ -263,6 +263,23 @@ void Render::ApplySettings()
         }
     }
 
+    const auto bloomThreshold = m_settings.find(L"BloomThreshold");
+    if (bloomThreshold != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectBloomThreshold(std::stof(bloomThreshold->second));
+        }
+        catch (...)
+        {
+            SetPostEffectBloomThreshold(2.5f);
+        }
+    }
+    else
+    {
+        SetPostEffectBloomThreshold(2.5f);
+    }
+
     const auto starBurstEnable = m_settings.find(L"StarBurstEnable");
     if (starBurstEnable != m_settings.end())
     {
@@ -271,6 +288,23 @@ void Render::ApplySettings()
         {
             SetPostEffectStarBurst(enabled);
         }
+    }
+
+    const auto starBurstThreshold = m_settings.find(L"StarBurstThreshold");
+    if (starBurstThreshold != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectStarBurstThreshold(std::stof(starBurstThreshold->second));
+        }
+        catch (...)
+        {
+            SetPostEffectStarBurstThreshold(2.8f);
+        }
+    }
+    else
+    {
+        SetPostEffectStarBurstThreshold(2.8f);
     }
 }
 
@@ -717,9 +751,19 @@ void Render::SetPostEffectBloom(const bool arg)
     m_PostEffectBloom.SetEnable(arg);
 }
 
+void Render::SetPostEffectBloomThreshold(const float threshold)
+{
+    m_PostEffectBloom.SetThreshold(threshold);
+}
+
 void Render::SetPostEffectStarBurst(const bool arg)
 {
     m_postEffectStarBurst.SetEnable(arg);
+}
+
+void Render::SetPostEffectStarBurstThreshold(const float threshold)
+{
+    m_postEffectStarBurst.SetThreshold(threshold);
 }
 
 void Render::SetShowFPS(const bool arg)

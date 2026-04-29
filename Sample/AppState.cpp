@@ -38,6 +38,8 @@ bool g_bStarBurst = false;
 float g_fogIntensity = 2.0f;
 float g_shadowIntensity = 0.5f;
 float g_ssaoBrightness = 1.0f;
+float g_bloomThreshold = 2.5f;
+float g_starBurstThreshold = 2.8f;
 float g_modelLoadScale = 1.0f;
 int g_gaussianSampleSize = 101;
 int g_sunId = 0;
@@ -64,6 +66,16 @@ float ClampShadowIntensity(const float intensity)
 float ClampSSAOBrightness(const float brightness)
 {
     return (std::max)(SSAO_BRIGHTNESS_MIN, (std::min)(brightness, SSAO_BRIGHTNESS_MAX));
+}
+
+float ClampBloomThreshold(const float threshold)
+{
+    return (std::max)(BLOOM_THRESHOLD_MIN, (std::min)(threshold, BLOOM_THRESHOLD_MAX));
+}
+
+float ClampStarBurstThreshold(const float threshold)
+{
+    return (std::max)(STARBURST_THRESHOLD_MIN, (std::min)(threshold, STARBURST_THRESHOLD_MAX));
 }
 
 float ClampModelLoadScale(const float scale)
@@ -289,6 +301,18 @@ void ApplySSAOBrightness()
     g_Render.SetPostEffectSSAOBrightness(g_ssaoBrightness);
 }
 
+void ApplyBloomThreshold()
+{
+    g_bloomThreshold = ClampBloomThreshold(g_bloomThreshold);
+    g_Render.SetPostEffectBloomThreshold(g_bloomThreshold);
+}
+
+void ApplyStarBurstThreshold()
+{
+    g_starBurstThreshold = ClampStarBurstThreshold(g_starBurstThreshold);
+    g_Render.SetPostEffectStarBurstThreshold(g_starBurstThreshold);
+}
+
 void ApplyModelLoadScale()
 {
     g_modelLoadScale = ClampModelLoadScale(g_modelLoadScale);
@@ -338,6 +362,26 @@ int SSAOBrightnessToSliderValue(const float brightness)
 float SliderValueToSSAOBrightness(const int sliderValue)
 {
     return ClampSSAOBrightness(SSAO_BRIGHTNESS_MIN + static_cast<float>(sliderValue) * SSAO_BRIGHTNESS_STEP);
+}
+
+int BloomThresholdToSliderValue(const float threshold)
+{
+    return static_cast<int>(std::lround(ClampBloomThreshold(threshold) / BLOOM_THRESHOLD_STEP));
+}
+
+float SliderValueToBloomThreshold(const int sliderValue)
+{
+    return ClampBloomThreshold(static_cast<float>(sliderValue) * BLOOM_THRESHOLD_STEP);
+}
+
+int StarBurstThresholdToSliderValue(const float threshold)
+{
+    return static_cast<int>(std::lround(ClampStarBurstThreshold(threshold) / STARBURST_THRESHOLD_STEP));
+}
+
+float SliderValueToStarBurstThreshold(const int sliderValue)
+{
+    return ClampStarBurstThreshold(static_cast<float>(sliderValue) * STARBURST_THRESHOLD_STEP);
 }
 
 int ModelLoadScaleToSliderValue(const float scale)
@@ -510,6 +554,14 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"SSAOBrightness")
             {
                 g_ssaoBrightness = std::stof(value);
+            }
+            else if (key == L"BloomThreshold")
+            {
+                g_bloomThreshold = std::stof(value);
+            }
+            else if (key == L"StarBurstThreshold")
+            {
+                g_starBurstThreshold = std::stof(value);
             }
             else if (key == L"ModelLoadScale")
             {

@@ -20,6 +20,10 @@ constexpr int SHADOW_SLIDER_MIN = 0;
 constexpr int SHADOW_SLIDER_MAX = static_cast<int>(SHADOW_INTENSITY_MAX / SHADOW_INTENSITY_STEP);
 constexpr int SSAO_BRIGHTNESS_SLIDER_MIN = 0;
 constexpr int SSAO_BRIGHTNESS_SLIDER_MAX = static_cast<int>((SSAO_BRIGHTNESS_MAX - SSAO_BRIGHTNESS_MIN) / SSAO_BRIGHTNESS_STEP);
+constexpr int BLOOM_THRESHOLD_SLIDER_MIN = 0;
+constexpr int BLOOM_THRESHOLD_SLIDER_MAX = static_cast<int>(BLOOM_THRESHOLD_MAX / BLOOM_THRESHOLD_STEP);
+constexpr int STARBURST_THRESHOLD_SLIDER_MIN = 0;
+constexpr int STARBURST_THRESHOLD_SLIDER_MAX = static_cast<int>(STARBURST_THRESHOLD_MAX / STARBURST_THRESHOLD_STEP);
 constexpr int MODEL_LOAD_SCALE_SLIDER_MIN = 0;
 constexpr int MODEL_LOAD_SCALE_SLIDER_MAX = static_cast<int>((MODEL_LOAD_SCALE_MAX - MODEL_LOAD_SCALE_MIN) / MODEL_LOAD_SCALE_STEP);
 constexpr int GAUSSIAN_SLIDER_MIN = 1;
@@ -110,6 +114,30 @@ void RefreshSSAOBrightnessControls(HWND hDlg)
                        static_cast<LPARAM>(SSAOBrightnessToSliderValue(g_ssaoBrightness)));
 }
 
+void RefreshBloomThresholdControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_bloomThreshold);
+    SetDlgItemText(hDlg, IDC_EDIT_BLOOM_THRESHOLD, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_BLOOM_THRESHOLD,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(BloomThresholdToSliderValue(g_bloomThreshold)));
+}
+
+void RefreshStarBurstThresholdControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_starBurstThreshold);
+    SetDlgItemText(hDlg, IDC_EDIT_STARBURST_THRESHOLD, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_STARBURST_THRESHOLD,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(StarBurstThresholdToSliderValue(g_starBurstThreshold)));
+}
+
 void RefreshModelLoadScaleControls(HWND hDlg)
 {
     wchar_t buffer[32];
@@ -175,6 +203,8 @@ void RefreshAllControls(HWND hDlg)
     RefreshFogControls(hDlg);
     RefreshShadowControls(hDlg);
     RefreshSSAOBrightnessControls(hDlg);
+    RefreshBloomThresholdControls(hDlg);
+    RefreshStarBurstThresholdControls(hDlg);
     RefreshModelLoadScaleControls(hDlg);
     RefreshGaussianControls(hDlg);
 }
@@ -200,6 +230,16 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BRIGHTNESS, TBM_SETRANGEMAX, FALSE, SSAO_BRIGHTNESS_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BRIGHTNESS, TBM_SETTICFREQ, 5, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BRIGHTNESS, TBM_SETPAGESIZE, 0, 5);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETRANGEMIN, FALSE, BLOOM_THRESHOLD_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETRANGEMAX, FALSE, BLOOM_THRESHOLD_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETTICFREQ, 5, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETPAGESIZE, 0, 5);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_STARBURST_THRESHOLD, TBM_SETRANGEMIN, FALSE, STARBURST_THRESHOLD_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_STARBURST_THRESHOLD, TBM_SETRANGEMAX, FALSE, STARBURST_THRESHOLD_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_STARBURST_THRESHOLD, TBM_SETTICFREQ, 5, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_STARBURST_THRESHOLD, TBM_SETPAGESIZE, 0, 5);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_MODEL_LOAD_SCALE, TBM_SETRANGEMIN, FALSE, MODEL_LOAD_SCALE_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_MODEL_LOAD_SCALE, TBM_SETRANGEMAX, FALSE, MODEL_LOAD_SCALE_SLIDER_MAX);
@@ -403,6 +443,24 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_ssaoBrightness = SliderValueToSSAOBrightness(sliderValue);
             ApplySSAOBrightness();
             RefreshSSAOBrightnessControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_BLOOM_THRESHOLD))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_bloomThreshold = SliderValueToBloomThreshold(sliderValue);
+            ApplyBloomThreshold();
+            RefreshBloomThresholdControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_STARBURST_THRESHOLD))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_starBurstThreshold = SliderValueToStarBurstThreshold(sliderValue);
+            ApplyStarBurstThreshold();
+            RefreshStarBurstThresholdControls(hDlg);
             return TRUE;
         }
 

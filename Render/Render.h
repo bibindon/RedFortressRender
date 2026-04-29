@@ -197,8 +197,10 @@ public:
     void SetPostEffectFogIntensity(const float intensity);
 
     void SetPostEffectBloom(const bool arg);
+    void SetPostEffectBloomThreshold(const float threshold);
 
     void SetPostEffectStarBurst(const bool arg);
+    void SetPostEffectStarBurstThreshold(const float threshold);
 
     void SetShowFPS(const bool arg);
 

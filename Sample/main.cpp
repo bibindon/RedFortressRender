@@ -84,6 +84,8 @@ void InitializeSampleScene(HWND hWnd)
     ApplyFogIntensity();
     ApplyShadowIntensity();
     ApplySSAOBrightness();
+    ApplyBloomThreshold();
+    ApplyStarBurstThreshold();
     ApplyModelLoadScale();
     ApplyGaussianSampleSize();
     ApplyPostEffectToggleSettings();
