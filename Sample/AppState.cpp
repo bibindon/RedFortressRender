@@ -28,6 +28,7 @@ std::wstring g_selectedSkinAnimMeshPath;
 bool g_bAnimateLight = false;
 bool g_bGaussianFilter = false;
 bool g_bDepthBufferShadow = true;
+bool g_bSSAO = true;
 int g_gaussianSampleSize = 101;
 int g_sunId = 0;
 std::vector<ImageInfo> g_imageInfoList;

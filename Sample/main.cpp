@@ -81,6 +81,7 @@ void InitializeSampleScene(HWND hWnd)
     ApplyGaussianSampleSize();
     g_Render.SetPostEffectGaussianFilter(g_bGaussianFilter);
     g_Render.SetPostEffectDepthBufferShadow(g_bDepthBufferShadow);
+    g_Render.SetPostEffectSSAO(g_bSSAO);
 }
 
 void TickAndRenderFrame()

@@ -24,3 +24,5 @@
 *.pdb
 *.cso
 /Sample/Sample.aps
+/Render/Render/x64/Debug
+*.tlog

@@ -78,6 +78,11 @@ void RefreshDepthBufferShadow(HWND hDlg)
                    g_bDepthBufferShadow ? BST_CHECKED : BST_UNCHECKED);
 }
 
+void RefreshSSAO(HWND hDlg)
+{
+    CheckDlgButton(hDlg, IDC_CHECK_SSAO, g_bSSAO ? BST_CHECKED : BST_UNCHECKED);
+}
+
 void RefreshGaussianControls(HWND hDlg)
 {
     CheckDlgButton(hDlg, IDC_CHECK_GAUSSIAN_FILTER, g_bGaussianFilter ? BST_CHECKED : BST_UNCHECKED);
@@ -98,6 +103,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshSelectedMeshPaths(hDlg);
     RefreshAnimateLight(hDlg);
     RefreshDepthBufferShadow(hDlg);
+    RefreshSSAO(hDlg);
     RefreshGaussianControls(hDlg);
 }
 
@@ -315,6 +321,14 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_bDepthBufferShadow = (IsDlgButtonChecked(hDlg, IDC_CHECK_DEPTH_BUFFER_SHADOW) == BST_CHECKED);
             g_Render.SetPostEffectDepthBufferShadow(g_bDepthBufferShadow);
             RefreshDepthBufferShadow(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_SSAO)
+        {
+            g_bSSAO = (IsDlgButtonChecked(hDlg, IDC_CHECK_SSAO) == BST_CHECKED);
+            g_Render.SetPostEffectSSAO(g_bSSAO);
+            RefreshSSAO(hDlg);
             return TRUE;
         }
 

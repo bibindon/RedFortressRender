@@ -187,6 +187,7 @@ public:
     void SetPostEffectGaussianFilter(const bool arg);
     void SetPostEffectGaussianSampleSize(const int sampleSize);
     void SetPostEffectDepthBufferShadow(const bool arg);
+    void SetPostEffectSSAO(const bool arg);
 
     void SetPostEffectBloom(const bool arg);
 

@@ -55,6 +55,11 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
 {
     HRESULT hr = E_FAIL;
 
+    if (!m_bEnable)
+    {
+        return renderTarget;
+    }
+
     // 画面サイズから invSize を計算
     D3DSURFACE_DESC descZ = {};
     m_texRenderTargetZ->GetLevelDesc(0, &descZ);
@@ -202,7 +207,7 @@ void PostEffectSSAO::DrawFullscreenQuad()
 
 void PostEffectSSAO::SetEnable(const bool arg)
 {
-
+    m_bEnable = arg;
 }
 
 void PostEffectSSAO::OnDeviceLost()
