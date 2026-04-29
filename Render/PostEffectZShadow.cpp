@@ -33,7 +33,7 @@ void PostEffectZShadow::Finalize()
 }
 
 LPDIRECT3DTEXTURE9 PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
-                                           const std::vector<MeshMix>& meshMixList)
+                                           const std::deque<MeshMix>& meshMixList)
 {
     g_texTemp = renderTarget;
     m_pMeshList = &meshMixList;

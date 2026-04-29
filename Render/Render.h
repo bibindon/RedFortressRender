@@ -12,6 +12,7 @@
 #include <cassert>
 #include <crtdbg.h>
 #include <vector>
+#include <deque>
 #include <chrono>
 #include <unordered_map>
 
@@ -208,17 +209,17 @@ private:
 
     void ChangeWindowMode();
 
-    std::vector<MeshOld> m_meshList;
+    std::deque<MeshOld> m_meshList;
     std::vector<AnimMesh*> m_animMeshList;
     std::vector<SkinAnimMesh*> m_skinAnimMeshList;
-    std::vector<MeshSmooth> m_meshSmoothList;
-    std::vector<MeshSSSLike> m_meshSSSLikeList;
-    std::vector<MeshSSS> m_meshSSSList;
-    std::vector<MeshPointLight> m_meshPointLightList;
-    std::vector<MeshNormalMapping> m_meshNormalMapList;
-    std::vector<MeshPOM> m_meshPOMList;
+    std::deque<MeshSmooth> m_meshSmoothList;
+    std::deque<MeshSSSLike> m_meshSSSLikeList;
+    std::deque<MeshSSS> m_meshSSSList;
+    std::deque<MeshPointLight> m_meshPointLightList;
+    std::deque<MeshNormalMapping> m_meshNormalMapList;
+    std::deque<MeshPOM> m_meshPOMList;
 
-    std::vector<MeshMix> m_meshMixList;
+    std::deque<MeshMix> m_meshMixList;
 
     std::unordered_map<std::wstring, MeshInstancing*> m_meshInstancingMap;
 

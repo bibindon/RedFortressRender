@@ -1,5 +1,6 @@
 #pragma once
 
+#include <deque>
 #include "Common.h"
 #include "MeshMix.h"
 
@@ -14,7 +15,7 @@ public:
 
     void Initialize();
 
-    void Draw(const std::vector<MeshMix>& meshList,
+    void Draw(const std::deque<MeshMix>& meshList,
               LPDIRECT3DTEXTURE9* Z,
               LPDIRECT3DTEXTURE9* Pos,
               LPDIRECT3DTEXTURE9* Normal);

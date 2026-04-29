@@ -66,7 +66,7 @@ void GBuffer::CreateRawResource()
     assert(hResult == S_OK);
 }
 
-void GBuffer::Draw(const std::vector<MeshMix>& meshList,
+void GBuffer::Draw(const std::deque<MeshMix>& meshList,
                    LPDIRECT3DTEXTURE9* Z,
                    LPDIRECT3DTEXTURE9* Pos,
                    LPDIRECT3DTEXTURE9* Normal)

@@ -598,7 +598,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
     ShowWindow(hWnd, SW_SHOWDEFAULT);
     UpdateWindow(hWnd);
     ShowSettingsDialog(hWnd, false);
-    EnableMouseLook(hWnd);
+    ShowMouseCursor();
 
     MSG msg;
 
@@ -680,16 +680,19 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
             // 平行光源の方角を変える
             {
                 static float work_f = 0.0f;
+                D3DXVECTOR3 lightDir(0.0f, 0.0f, 0.0f);
+
                 if (g_bAnimateLight)
                 {
                     work_f += 0.02f;
+                    lightDir.x = sinf(work_f);
+                    lightDir.z = cosf(work_f);
+                    lightDir.y = sinf(work_f * 2);
                 }
-
-                D3DXVECTOR3 lightDir(0.0f, 0.0f, 0.0f);
-
-                lightDir.x = sinf(work_f);
-                lightDir.z = cosf(work_f);
-                lightDir.y = sinf(work_f * 2);
+                else
+                {
+                    lightDir = D3DXVECTOR3(1.0f, 1.0f, -1.0f);
+                }
 
                 g_Render.SetLightDir(lightDir);
 

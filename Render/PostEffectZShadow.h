@@ -1,5 +1,6 @@
 #pragma once
 
+#include <deque>
 #include "Common.h"
 #include "MeshMix.h"
 
@@ -15,7 +16,7 @@ public:
     void Finalize();
 
     LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget,
-                            const std::vector<MeshMix>& meshMixList);
+                            const std::deque<MeshMix>& meshMixList);
 
     void SetEnable(const bool arg);
 
@@ -65,7 +66,7 @@ private:
     float fLightNear = 10.0f;
     float fLightFar = 200.0f;
 
-    const std::vector<MeshMix>* m_pMeshList;
+    const std::deque<MeshMix>* m_pMeshList;
 
     void CreateRawResource();
 };
