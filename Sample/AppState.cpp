@@ -162,7 +162,8 @@ void UpdateCameraMoveByKeyboard()
 
     D3DXVec3Normalize(&move, &move);
 
-    const float speed = 0.2f;
+    const bool shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+    const float speed = shift ? (0.2f * 3.0f) : 0.2f;
     g_Render.MoveCamera(move * speed);
 }
 
