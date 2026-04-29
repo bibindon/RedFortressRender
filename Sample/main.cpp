@@ -7,6 +7,7 @@
 #include <cassert>
 #include <crtdbg.h>
 #include <vector>
+#include <commdlg.h>
 #include <windowsx.h>
 
 #include "resource.h"
@@ -32,6 +33,7 @@ bool g_bMoveUp = false;
 bool g_bMoveDown = false;
 float g_saturateLevel = 1.0f;
 HWND g_hSettingsDialog = NULL;
+std::wstring g_selectedMeshPath;
 
 int g_sunId = 0;
 
@@ -54,6 +56,9 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 void ApplySaturateLevel();
 void RefreshSettingsDialog(HWND hDlg);
+void RefreshSelectedMeshPath(HWND hDlg);
+void SpawnMeshAtCameraFront(const std::wstring& filePath);
+bool ShowOpenMeshFileDialog(HWND hWnd);
 
 void UpdateCameraMoveByKeyboard()
 {
@@ -257,6 +262,50 @@ void RefreshSettingsDialog(HWND hDlg)
     SetDlgItemText(hDlg, IDC_EDIT_SATURATE_LEVEL, buffer);
 }
 
+void RefreshSelectedMeshPath(HWND hDlg)
+{
+    SetDlgItemText(hDlg, IDC_EDIT_MESH_PATH, g_selectedMeshPath.c_str());
+}
+
+void SpawnMeshAtCameraFront(const std::wstring& filePath)
+{
+    if (filePath.empty())
+    {
+        return;
+    }
+
+    auto pos = g_Render.GetLookAtPos();
+    D3DXVECTOR3 forward = g_Render.GetCameraRotate();
+    D3DXVec3Normalize(&forward, &forward);
+    pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
+
+    const float yaw = atan2f(forward.x, forward.z);
+    g_Render.AddMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), 1.0f, 1.0f);
+}
+
+bool ShowOpenMeshFileDialog(HWND hWnd)
+{
+    wchar_t filePath[MAX_PATH] { };
+
+    OPENFILENAMEW ofn { };
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hWnd;
+    ofn.lpstrFilter = L"X Files (*.x)\0*.x\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFile = filePath;
+    ofn.nMaxFile = static_cast<DWORD>(_countof(filePath));
+    ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+    ofn.lpstrDefExt = L"x";
+
+    if (!GetOpenFileNameW(&ofn))
+    {
+        return false;
+    }
+
+    g_selectedMeshPath = filePath;
+    SpawnMeshAtCameraFront(g_selectedMeshPath);
+    return true;
+}
+
 INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
@@ -265,6 +314,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
     {
         MoveDialogToRightOfParent(hDlg);
         RefreshSettingsDialog(hDlg);
+        RefreshSelectedMeshPath(hDlg);
         return TRUE;
     }
     case WM_CLOSE:
@@ -305,6 +355,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_saturateLevel = 1.0f;
             ApplySaturateLevel();
             RefreshSettingsDialog(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_BUTTON_OPEN_MESH)
+        {
+            if (ShowOpenMeshFileDialog(hDlg))
+            {
+                RefreshSelectedMeshPath(hDlg);
+            }
             return TRUE;
         }
 
@@ -627,16 +686,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         if (wParam == 'M' && !shift && !control)
         {
-            auto pos = g_Render.GetLookAtPos();
-            D3DXVECTOR3 forward = g_Render.GetCameraRotate();
-            D3DXVec3Normalize(&forward, &forward);
-            pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
-
-            // Yaw, Pitch を計算
-            float yaw = atan2f(forward.x, forward.z);
-
-            //g_Render.AddMeshMix(L"cubeMix.blend.x", pos, D3DXVECTOR3(0, yaw, 0.0f), 1.f, 1.f);
-            g_Render.AddMeshMix(L"monkeySSAO.blend.x", pos, D3DXVECTOR3(0, yaw, 0.0f), 1.f, 1.f);
+            SpawnMeshAtCameraFront(L"monkeySSAO.blend.x");
         }
 
         if (wParam == 'M' && shift && control)
