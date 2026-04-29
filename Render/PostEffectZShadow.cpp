@@ -168,9 +168,13 @@ void PostEffectZShadow::RenderTechnique1()
         hr = g_fxDepthBufferShadow->CommitChanges();
         assert(hr == S_OK);
 
-        // メッシュ本体を描画
+        // subset ごとに描画
         LPD3DXMESH d3dMesh = mesh.GetD3DMesh();
-        d3dMesh->DrawSubset(0);
+        const DWORD subsetCount = (mesh.GetSubsetCount() > 0) ? mesh.GetSubsetCount() : 1;
+        for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
+        {
+            d3dMesh->DrawSubset(subsetIndex);
+        }
     }
 
     g_fxDepthBufferShadow->EndPass();
@@ -303,8 +307,12 @@ void PostEffectZShadow::RenderTechnique2()
         hr = g_fxDepthBufferShadow->CommitChanges();
         assert(hr == S_OK);
 
-        hr = mesh.GetD3DMesh()->DrawSubset(0);
-        assert(hr == S_OK);
+        const DWORD subsetCount = (mesh.GetSubsetCount() > 0) ? mesh.GetSubsetCount() : 1;
+        for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
+        {
+            hr = mesh.GetD3DMesh()->DrawSubset(subsetIndex);
+            assert(hr == S_OK);
+        }
     }
 
     hr = g_fxDepthBufferShadow->EndPass();

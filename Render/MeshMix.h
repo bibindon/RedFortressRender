@@ -232,6 +232,7 @@ public:
     D3DXVECTOR3 GetRot() const;
 
     float GetScale() const;
+    DWORD GetSubsetCount() const;
 
     LPD3DXMESH GetD3DMesh() const;
 
@@ -252,13 +253,12 @@ private:
     LPD3DXEFFECT m_D3DEffect = nullptr;
     LPD3DXMESH m_D3DMesh = nullptr;
 
-    // 1番目のマテリアルは通常のマテリアル
-    // 2番目のマテリアルは環境マップ
-    // 3番目のマテリアルは法線マップ
-    // 4番目のマテリアルは高さマップ
-    // その通りになっていなければ動作しない。
-    // 当面は、1x1の黒画像を設定するなどして対応
+    // subset に割り当てられている先頭 m_subsetCount 個を
+    // 描画用マテリアルとして扱う。
+    // それ以降に追加されているテクスチャは補助マップ
+    // （キューブ/法線/高さ）として解釈する。
     DWORD m_materialCount = 0;
+    DWORD m_subsetCount = 0;
     std::vector<D3DXVECTOR4> m_vecDiffuse;
     std::vector<LPDIRECT3DBASETEXTURE9> m_vecTexture;
 
@@ -278,6 +278,9 @@ private:
     stMeshParam m_param;
 
     void ModifyMeshForNormalMapping(LPD3DXMESH& pMesh);
+    D3DXVECTOR4 GetSubsetDiffuse(const DWORD subsetIndex) const;
+    LPDIRECT3DBASETEXTURE9 GetSubsetTexture(const DWORD subsetIndex) const;
+    LPDIRECT3DBASETEXTURE9 GetAuxTexture(const DWORD auxIndex) const;
 };
 }
 

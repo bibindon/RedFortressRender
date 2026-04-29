@@ -1,4 +1,4 @@
-
+ï»¿
 #include "GBuffer.h"
 
 #include "Common.h"
@@ -33,7 +33,7 @@ void GBuffer::CreateRawResource()
 {
     HRESULT hResult = E_FAIL;
 
-    // Z‰æ‘œ
+    // Zç”»åƒ
     hResult = D3DXCreateTexture(Common::D3DDevice(),
                                 Common::ScreenW(),
                                 Common::ScreenH(),
@@ -43,8 +43,8 @@ void GBuffer::CreateRawResource()
                                 D3DPOOL_DEFAULT,
                                 &m_texRenderTargetZ);
     assert(hResult == S_OK);
-
-    // WorldÀ•W
+    
+    // Worldåº§æ¨™
     hResult = D3DXCreateTexture(Common::D3DDevice(),
                                 Common::ScreenW(),
                                 Common::ScreenH(),
@@ -73,11 +73,11 @@ void GBuffer::Draw(const std::deque<MeshMix>& meshList,
 {
     HRESULT hr = E_FAIL;
 
-    // Šù‘¶‚Ì RT0 ‚ğ‘Ş”ğ
+    // æ—¢å­˜ã® RT0 ã‚’é€€é¿
     LPDIRECT3DSURFACE9 surfaceOld = NULL;
     hr = Common::D3DDevice()->GetRenderTarget(0, &surfaceOld);
 
-    // Z ‚Æ POS ‚ÌƒT[ƒtƒFƒX‚ğæ“¾
+    // Z ã¨ POS ã®ã‚µãƒ¼ãƒ•ã‚§ã‚¹ã‚’å–å¾—
     LPDIRECT3DSURFACE9 surfaceZ = NULL;
     LPDIRECT3DSURFACE9 surfacePos = NULL;
     LPDIRECT3DSURFACE9 surfaceNorm = NULL;
@@ -86,12 +86,12 @@ void GBuffer::Draw(const std::deque<MeshMix>& meshList,
     hr = m_texRenderTargetPos->GetSurfaceLevel(0, &surfacePos);
     hr = m_texRenderTargetNormal->GetSurfaceLevel(0, &surfaceNorm);
 
-    // MRT~2 ‚ğƒZƒbƒg
+    // MRTÃ—2 ã‚’ã‚»ãƒƒãƒˆ
     hr = Common::D3DDevice()->SetRenderTarget(0, surfaceZ);
     hr = Common::D3DDevice()->SetRenderTarget(1, surfacePos);
     hr = Common::D3DDevice()->SetRenderTarget(2, surfaceNorm);
 
-    // ƒNƒŠƒABZƒoƒbƒtƒ@‚àˆê‚É‰Šú‰»‚µ‚Ä‘f’¼‚É‘S•`‰æ
+    // ã‚¯ãƒªã‚¢ã€‚Zãƒãƒƒãƒ•ã‚¡ã‚‚ä¸€ç·’ã«åˆæœŸåŒ–ã—ã¦ç´ ç›´ã«å…¨æç”»
     hr = Common::D3DDevice()->Clear(0,
                                     NULL,
                                     D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
@@ -101,10 +101,10 @@ void GBuffer::Draw(const std::deque<MeshMix>& meshList,
 
     hr = Common::D3DDevice()->BeginScene();
 
-    // ‚±‚±‚Åu•s“§–¾•¨‘Ì‚Ì‚İv‚ğ GBuffer.fx ‚Å•`‚­
+    // ã“ã“ã§ã€Œä¸é€æ˜ç‰©ä½“ã®ã¿ã€ã‚’ GBuffer.fx ã§æã
     for (auto& mesh : meshList)
     {
-        // •K—v‚È’è”‚Ì“Š“ü
+        // å¿…è¦ãªå®šæ•°ã®æŠ•å…¥
         D3DXMATRIX matWorld;
         D3DXMatrixIdentity(&matWorld);
         {
@@ -125,7 +125,7 @@ void GBuffer::Draw(const std::deque<MeshMix>& meshList,
         m_fxGBuffer->SetMatrix("g_matView",  &mView);
         m_fxGBuffer->SetMatrix("g_matProj",  &mProj);
 
-        // ‹ß‰“‚Æ posRange ‚Í SSAO ‘¤‚Æ•K‚¸ˆê’v‚³‚¹‚é
+        // è¿‘é ã¨ posRange ã¯ SSAO å´ã¨å¿…ãšä¸€è‡´ã•ã›ã‚‹
         m_fxGBuffer->SetFloat("g_fNear", Camera::GetNear());
         m_fxGBuffer->SetFloat("g_fFar",  Camera::GetFar());
         m_fxGBuffer->SetFloat("g_posRange", PostEffectSSAO::Z_RANGE);
@@ -134,9 +134,13 @@ void GBuffer::Draw(const std::deque<MeshMix>& meshList,
         m_fxGBuffer->Begin(NULL, 0);
         m_fxGBuffer->BeginPass(0);
 
-        // ƒƒbƒVƒ…–{‘Ì‚ğ•`‰æ
+        // subset ã”ã¨ã«æç”»
         LPD3DXMESH d3dMesh = mesh.GetD3DMesh();
-        d3dMesh->DrawSubset(0);
+        const DWORD subsetCount = (mesh.GetSubsetCount() > 0) ? mesh.GetSubsetCount() : 1;
+        for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
+        {
+            d3dMesh->DrawSubset(subsetIndex);
+        }
 
         m_fxGBuffer->EndPass();
         m_fxGBuffer->End();
@@ -144,7 +148,7 @@ void GBuffer::Draw(const std::deque<MeshMix>& meshList,
 
     hr = Common::D3DDevice()->EndScene();
 
-    // MRT ‚ğŠO‚µART0 ‚ğŒ³‚É–ß‚·
+    // MRT ã‚’å¤–ã—ã€RT0 ã‚’å…ƒã«æˆ»ã™
     Common::D3DDevice()->SetRenderTarget(2, NULL);
     Common::D3DDevice()->SetRenderTarget(1, NULL);
     Common::D3DDevice()->SetRenderTarget(0, surfaceOld);

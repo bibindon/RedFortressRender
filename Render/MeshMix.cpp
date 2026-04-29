@@ -85,6 +85,11 @@ void MeshMix::Initialize()
     SAFE_RELEASE(adjacencyBuffer);
     assert(hResult == S_OK);
 
+    DWORD subsetCount = 0;
+    hResult = m_D3DMesh->GetAttributeTable(nullptr, &subsetCount);
+    assert(SUCCEEDED(hResult));
+    m_subsetCount = (subsetCount > 0) ? subsetCount : m_materialCount;
+
     //--------------------------------------------------------
     // マテリアル情報の読み込み
     //--------------------------------------------------------
@@ -97,37 +102,31 @@ void MeshMix::Initialize()
 
     for (DWORD i = 0; i < m_materialCount; ++i)
     {
-        if (i == 0)
-        {
-            //--------------------------------------------------------
-            // 拡散反射色の読み込み
-            // Diffuseの色は(1, 1, 1)が基本とする。
-            //--------------------------------------------------------
-            D3DXVECTOR4 diffuce(1.0f, 1.0f, 1.0f, 1.0f);
+        //--------------------------------------------------------
+        // 拡散反射色の読み込み
+        //--------------------------------------------------------
+        D3DXVECTOR4 diffuce(1.0f, 1.0f, 1.0f, 1.0f);
+        diffuce.x = materialList[i].MatD3D.Diffuse.r;
+        diffuce.y = materialList[i].MatD3D.Diffuse.g;
+        diffuce.z = materialList[i].MatD3D.Diffuse.b;
+        diffuce.w = materialList[i].MatD3D.Diffuse.a;
+        m_vecDiffuse.push_back(diffuce);
 
-            diffuce.x = materialList[i].MatD3D.Diffuse.r;
-            diffuce.y = materialList[i].MatD3D.Diffuse.g;
-            diffuce.z = materialList[i].MatD3D.Diffuse.b;
-            diffuce.w = materialList[i].MatD3D.Diffuse.a;
-
-            m_vecDiffuse.push_back(diffuce);
-        }
+        LPDIRECT3DBASETEXTURE9 tempTexture = nullptr;
 
         if (materialList[i].pTextureFilename != nullptr &&
             strlen(materialList[i].pTextureFilename) != 0)
         {
-            LPDIRECT3DTEXTURE9 tempTexture = NULL;
-
             std::wstring texturePath = xFileDir;
             texturePath += Util::Utf8ToWstring(materialList[i].pTextureFilename);
             hResult = D3DXCreateTextureFromFile(Common::D3DDevice(),
                                                 texturePath.c_str(),
-                                                &tempTexture);
+                                                reinterpret_cast<LPDIRECT3DTEXTURE9*>(&tempTexture));
 
             assert(hResult == S_OK);
-
-            m_vecTexture.push_back(tempTexture);
         }
+
+        m_vecTexture.push_back(tempTexture);
     }
 
     SAFE_RELEASE(materialBuffer);
@@ -228,6 +227,11 @@ float MeshMix::GetScale() const
     return m_scale;
 }
 
+DWORD MeshMix::GetSubsetCount() const
+{
+    return m_subsetCount;
+}
+
 void MeshMix::Render()
 {
     HRESULT hResult = E_FAIL;
@@ -318,24 +322,14 @@ void MeshMix::Render()
     //--------------------------------------------------------
     // マテリアルの数だけ色とテクスチャを設定して描画
     //--------------------------------------------------------
-    hResult = m_D3DEffect->SetVector("g_diffuse", &m_vecDiffuse.at(0));
+    hResult = m_D3DEffect->SetTexture("g_texCubeMap", GetAuxTexture(0));
     assert(hResult == S_OK);
 
-    hResult = m_D3DEffect->SetTexture("g_texture", m_vecTexture.at(0));
+    hResult = m_D3DEffect->SetTexture("g_texNormalMap", GetAuxTexture(1));
     assert(hResult == S_OK);
 
-    hResult = m_D3DEffect->SetTexture("g_texCubeMap", m_vecTexture.at(1));
+    hResult = m_D3DEffect->SetTexture("g_texHeightMap", GetAuxTexture(2));
     assert(hResult == S_OK);
-
-    hResult = m_D3DEffect->SetTexture("g_texNormalMap", m_vecTexture.at(2));
-    assert(hResult == S_OK);
-
-    // 高さマップがないときはある。あっても問題ない
-    if (m_vecTexture.size() >= 4)
-    {
-        hResult = m_D3DEffect->SetTexture("g_texHeightMap", m_vecTexture.at(3));
-        assert(hResult == S_OK);
-    }
 
     // 時間パラメータを設定
     static float f = 0.f;
@@ -402,32 +396,44 @@ void MeshMix::Render()
     hResult = m_D3DEffect->CommitChanges();
     assert(hResult == S_OK);
 
+    auto drawAllSubsets = [this, &hResult](const UINT passIndex)
+    {
+        hResult = m_D3DEffect->BeginPass(passIndex);
+        assert(hResult == S_OK);
+
+        const DWORD subsetCount = (m_subsetCount > 0) ? m_subsetCount : 1;
+        for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
+        {
+            const D3DXVECTOR4 diffuse = GetSubsetDiffuse(subsetIndex);
+            hResult = m_D3DEffect->SetVector("g_diffuse", &diffuse);
+            assert(hResult == S_OK);
+
+            hResult = m_D3DEffect->SetTexture("g_texture", GetSubsetTexture(subsetIndex));
+            assert(hResult == S_OK);
+
+            hResult = m_D3DEffect->CommitChanges();
+            assert(hResult == S_OK);
+
+            hResult = m_D3DMesh->DrawSubset(subsetIndex);
+            assert(hResult == S_OK);
+        }
+
+        hResult = m_D3DEffect->EndPass();
+        assert(hResult == S_OK);
+    };
+
     //--------------------------------------------------------
     // パス0
     // 通常の描画
     // 法線マッピングを含む
     //--------------------------------------------------------
-    hResult = m_D3DEffect->BeginPass(0);
-    assert(hResult == S_OK);
-
-    hResult = m_D3DMesh->DrawSubset(0);
-    assert(hResult == S_OK);
-
-    hResult = m_D3DEffect->EndPass();
-    assert(hResult == S_OK);
+    drawAllSubsets(0);
 
     //--------------------------------------------------------
     // パス1
     // 環境マッピング
     //--------------------------------------------------------
-    hResult = m_D3DEffect->BeginPass(1);
-    assert(hResult == S_OK);
-
-    hResult = m_D3DMesh->DrawSubset(0);
-    assert(hResult == S_OK);
-
-    hResult = m_D3DEffect->EndPass();
-    assert(hResult == S_OK);
+    drawAllSubsets(1);
 
     //--------------------------------------------------------
     // パス2
@@ -435,28 +441,14 @@ void MeshMix::Render()
     //--------------------------------------------------------
     if (m_param.glass)
     {
-        hResult = m_D3DEffect->BeginPass(2);
-        assert(hResult == S_OK);
-
-        hResult = m_D3DMesh->DrawSubset(0);
-        assert(hResult == S_OK);
-
-        hResult = m_D3DEffect->EndPass();
-        assert(hResult == S_OK);
+        drawAllSubsets(2);
     }
 
     //--------------------------------------------------------
     // パス3
     // ポイントライト
     //--------------------------------------------------------
-    hResult = m_D3DEffect->BeginPass(3);
-    assert(hResult == S_OK);
-
-    hResult = m_D3DMesh->DrawSubset(0);
-    assert(hResult == S_OK);
-
-    hResult = m_D3DEffect->EndPass();
-    assert(hResult == S_OK);
+    drawAllSubsets(3);
 
     hResult = m_D3DEffect->End();
     assert(hResult == S_OK);
@@ -465,6 +457,37 @@ void MeshMix::Render()
 LPD3DXMESH MeshMix::GetD3DMesh() const
 {
     return m_D3DMesh;
+}
+
+D3DXVECTOR4 MeshMix::GetSubsetDiffuse(const DWORD subsetIndex) const
+{
+    if (subsetIndex < m_vecDiffuse.size())
+    {
+        return m_vecDiffuse.at(subsetIndex);
+    }
+
+    return D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
+}
+
+LPDIRECT3DBASETEXTURE9 MeshMix::GetSubsetTexture(const DWORD subsetIndex) const
+{
+    if (subsetIndex < m_vecTexture.size())
+    {
+        return m_vecTexture.at(subsetIndex);
+    }
+
+    return nullptr;
+}
+
+LPDIRECT3DBASETEXTURE9 MeshMix::GetAuxTexture(const DWORD auxIndex) const
+{
+    const DWORD textureIndex = m_subsetCount + auxIndex;
+    if (textureIndex < m_vecTexture.size())
+    {
+        return m_vecTexture.at(textureIndex);
+    }
+
+    return nullptr;
 }
 
 float MeshMix::GetRadius() const
