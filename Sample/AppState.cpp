@@ -337,8 +337,7 @@ void DrawSampleOverlay()
     text += L"WASD : Camera move\n";
     text += L"Q/E : Camera up/down\n";
     text += L"Arrow keys : Camera rotate\n";
-    text += L"Esc : Mouse look ON\n";
-    text += L"Ctrl : Mouse look OFF\n";
+    text += L"Esc : Mouse look ON/OFF\n";
     text += L"\n";
     text += L"8 : Window mode\n";
     text += L"9 : Borderless mode\n";

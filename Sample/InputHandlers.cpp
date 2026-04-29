@@ -169,13 +169,14 @@ bool HandleSampleKeyDown(HWND hWnd, const WPARAM wParam)
 
     if (wParam == VK_ESCAPE)
     {
-        EnableMouseLook(hWnd);
-        return true;
-    }
-
-    if (wParam == VK_CONTROL)
-    {
-        DisableMouseLook();
+        if (g_bMouseLookEnabled)
+        {
+            DisableMouseLook();
+        }
+        else
+        {
+            EnableMouseLook(hWnd);
+        }
         return true;
     }
 
