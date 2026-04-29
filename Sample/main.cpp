@@ -33,7 +33,11 @@ bool g_bMoveUp = false;
 bool g_bMoveDown = false;
 float g_saturateLevel = 1.0f;
 HWND g_hSettingsDialog = NULL;
+std::wstring g_selectedMixMeshPath;
 std::wstring g_selectedMeshPath;
+std::wstring g_selectedAnimMeshPath;
+std::wstring g_selectedSkinAnimMeshPath;
+bool g_bAnimateLight = false;
 
 int g_sunId = 0;
 
@@ -56,9 +60,14 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 void ApplySaturateLevel();
 void RefreshSettingsDialog(HWND hDlg);
-void RefreshSelectedMeshPath(HWND hDlg);
+void RefreshSelectedMeshPaths(HWND hDlg);
+void RefreshAnimateLight(HWND hDlg);
 void SpawnMeshAtCameraFront(const std::wstring& filePath);
-bool ShowOpenMeshFileDialog(HWND hWnd);
+void SpawnMeshMixAtCameraFront(const std::wstring& filePath);
+void SpawnAnimMeshAtCameraFront(const std::wstring& filePath);
+void SpawnSkinAnimMeshAtCameraFront(const std::wstring& filePath);
+NSRender::AnimSetMap CreateDefaultAnimSetMap();
+bool ShowOpenFileDialog(HWND hWnd, const wchar_t* filter, std::wstring& selectedPath);
 
 void UpdateCameraMoveByKeyboard()
 {
@@ -225,14 +234,24 @@ void DisableMouseLook()
     ShowMouseCursor();
 }
 
-void ShowSettingsDialog(HWND hWnd)
+void ShowSettingsDialog(HWND hWnd, const bool activateDialog = true)
 {
-    DisableMouseLook();
+    if (activateDialog)
+    {
+        DisableMouseLook();
+    }
 
     if (g_hSettingsDialog != NULL)
     {
         ShowWindow(g_hSettingsDialog, SW_SHOWNORMAL);
-        SetForegroundWindow(g_hSettingsDialog);
+        if (activateDialog)
+        {
+            SetForegroundWindow(g_hSettingsDialog);
+        }
+        else
+        {
+            SetForegroundWindow(hWnd);
+        }
         return;
     }
 
@@ -243,6 +262,23 @@ void ShowSettingsDialog(HWND hWnd)
     assert(g_hSettingsDialog != NULL);
 
     ShowWindow(g_hSettingsDialog, SW_SHOWNORMAL);
+
+    if (activateDialog)
+    {
+        SetForegroundWindow(g_hSettingsDialog);
+    }
+    else
+    {
+        SetWindowPos(g_hSettingsDialog,
+                     HWND_TOP,
+                     0,
+                     0,
+                     0,
+                     0,
+                     SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+        SetForegroundWindow(hWnd);
+        SetFocus(hWnd);
+    }
 }
 
 void ApplySaturateLevel()
@@ -262,9 +298,17 @@ void RefreshSettingsDialog(HWND hDlg)
     SetDlgItemText(hDlg, IDC_EDIT_SATURATE_LEVEL, buffer);
 }
 
-void RefreshSelectedMeshPath(HWND hDlg)
+void RefreshSelectedMeshPaths(HWND hDlg)
 {
+    SetDlgItemText(hDlg, IDC_EDIT_MIX_MESH_PATH, g_selectedMixMeshPath.c_str());
     SetDlgItemText(hDlg, IDC_EDIT_MESH_PATH, g_selectedMeshPath.c_str());
+    SetDlgItemText(hDlg, IDC_EDIT_ANIM_MESH_PATH, g_selectedAnimMeshPath.c_str());
+    SetDlgItemText(hDlg, IDC_EDIT_SKIN_ANIM_MESH_PATH, g_selectedSkinAnimMeshPath.c_str());
+}
+
+void RefreshAnimateLight(HWND hDlg)
+{
+    CheckDlgButton(hDlg, IDC_CHECK_ANIMATE_LIGHT, g_bAnimateLight ? BST_CHECKED : BST_UNCHECKED);
 }
 
 void SpawnMeshAtCameraFront(const std::wstring& filePath)
@@ -283,14 +327,74 @@ void SpawnMeshAtCameraFront(const std::wstring& filePath)
     g_Render.AddMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), 1.0f, 1.0f);
 }
 
-bool ShowOpenMeshFileDialog(HWND hWnd)
+void SpawnMeshMixAtCameraFront(const std::wstring& filePath)
+{
+    if (filePath.empty())
+    {
+        return;
+    }
+
+    auto pos = g_Render.GetLookAtPos();
+    D3DXVECTOR3 forward = g_Render.GetCameraRotate();
+    D3DXVec3Normalize(&forward, &forward);
+    pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
+
+    const float yaw = atan2f(forward.x, forward.z);
+    g_Render.AddMeshMix(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), 1.0f, 1.0f);
+}
+
+NSRender::AnimSetMap CreateDefaultAnimSetMap()
+{
+    NSRender::AnimSetMap animMap;
+    NSRender::AnimSetting animSetting;
+    animSetting.m_startPos = 0.f;
+    animSetting.m_duration = 1.f;
+    animSetting.m_loop = true;
+    animSetting.m_stopEnd = false;
+    animMap[L"0_Idle"] = animSetting;
+    return animMap;
+}
+
+void SpawnAnimMeshAtCameraFront(const std::wstring& filePath)
+{
+    if (filePath.empty())
+    {
+        return;
+    }
+
+    auto pos = g_Render.GetLookAtPos();
+    D3DXVECTOR3 forward = g_Render.GetCameraRotate();
+    D3DXVec3Normalize(&forward, &forward);
+    pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
+
+    const float yaw = atan2f(forward.x, forward.z);
+    g_Render.AddAnimMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), 1.0f, CreateDefaultAnimSetMap());
+}
+
+void SpawnSkinAnimMeshAtCameraFront(const std::wstring& filePath)
+{
+    if (filePath.empty())
+    {
+        return;
+    }
+
+    auto pos = g_Render.GetLookAtPos();
+    D3DXVECTOR3 forward = g_Render.GetCameraRotate();
+    D3DXVec3Normalize(&forward, &forward);
+    pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
+
+    const float yaw = atan2f(forward.x, forward.z);
+    g_Render.AddSkinAnimMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), 1.0f, CreateDefaultAnimSetMap());
+}
+
+bool ShowOpenFileDialog(HWND hWnd, const wchar_t* filter, std::wstring& selectedPath)
 {
     wchar_t filePath[MAX_PATH] { };
 
     OPENFILENAMEW ofn { };
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = hWnd;
-    ofn.lpstrFilter = L"X Files (*.x)\0*.x\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFilter = filter;
     ofn.lpstrFile = filePath;
     ofn.nMaxFile = static_cast<DWORD>(_countof(filePath));
     ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
@@ -301,8 +405,7 @@ bool ShowOpenMeshFileDialog(HWND hWnd)
         return false;
     }
 
-    g_selectedMeshPath = filePath;
-    SpawnMeshAtCameraFront(g_selectedMeshPath);
+    selectedPath = filePath;
     return true;
 }
 
@@ -314,7 +417,8 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
     {
         MoveDialogToRightOfParent(hDlg);
         RefreshSettingsDialog(hDlg);
-        RefreshSelectedMeshPath(hDlg);
+        RefreshSelectedMeshPaths(hDlg);
+        RefreshAnimateLight(hDlg);
         return TRUE;
     }
     case WM_CLOSE:
@@ -358,12 +462,58 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
+        if (commandId == IDC_BUTTON_OPEN_MIX_MESH)
+        {
+            if (ShowOpenFileDialog(hDlg,
+                                   L"Mix Mesh Files (*.x;*.blend.x)\0*.x;*.blend.x\0All Files (*.*)\0*.*\0",
+                                   g_selectedMixMeshPath))
+            {
+                SpawnMeshMixAtCameraFront(g_selectedMixMeshPath);
+                RefreshSelectedMeshPaths(hDlg);
+            }
+            return TRUE;
+        }
+
         if (commandId == IDC_BUTTON_OPEN_MESH)
         {
-            if (ShowOpenMeshFileDialog(hDlg))
+            if (ShowOpenFileDialog(hDlg,
+                                   L"Mesh Files (*.x)\0*.x\0All Files (*.*)\0*.*\0",
+                                   g_selectedMeshPath))
             {
-                RefreshSelectedMeshPath(hDlg);
+                SpawnMeshAtCameraFront(g_selectedMeshPath);
+                RefreshSelectedMeshPaths(hDlg);
             }
+            return TRUE;
+        }
+
+        if (commandId == IDC_BUTTON_OPEN_ANIM_MESH)
+        {
+            if (ShowOpenFileDialog(hDlg,
+                                   L"Anim Mesh Files (*.x)\0*.x\0All Files (*.*)\0*.*\0",
+                                   g_selectedAnimMeshPath))
+            {
+                SpawnAnimMeshAtCameraFront(g_selectedAnimMeshPath);
+                RefreshSelectedMeshPaths(hDlg);
+            }
+            return TRUE;
+        }
+
+        if (commandId == IDC_BUTTON_OPEN_SKIN_ANIM_MESH)
+        {
+            if (ShowOpenFileDialog(hDlg,
+                                   L"Skin Anim Mesh Files (*.x)\0*.x\0All Files (*.*)\0*.*\0",
+                                   g_selectedSkinAnimMeshPath))
+            {
+                SpawnSkinAnimMeshAtCameraFront(g_selectedSkinAnimMeshPath);
+                RefreshSelectedMeshPaths(hDlg);
+            }
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_ANIMATE_LIGHT)
+        {
+            g_bAnimateLight = (IsDlgButtonChecked(hDlg, IDC_CHECK_ANIMATE_LIGHT) == BST_CHECKED);
+            RefreshAnimateLight(hDlg);
             return TRUE;
         }
 
@@ -447,6 +597,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
 
     ShowWindow(hWnd, SW_SHOWDEFAULT);
     UpdateWindow(hWnd);
+    ShowSettingsDialog(hWnd, false);
     EnableMouseLook(hWnd);
 
     MSG msg;
@@ -529,7 +680,10 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
             // 平行光源の方角を変える
             {
                 static float work_f = 0.0f;
-                work_f += 0.02f;
+                if (g_bAnimateLight)
+                {
+                    work_f += 0.02f;
+                }
 
                 D3DXVECTOR3 lightDir(0.0f, 0.0f, 0.0f);
 
@@ -686,7 +840,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         if (wParam == 'M' && !shift && !control)
         {
-            SpawnMeshAtCameraFront(L"monkeySSAO.blend.x");
+            SpawnMeshMixAtCameraFront(L"monkeySSAO.blend.x");
         }
 
         if (wParam == 'M' && shift && control)
