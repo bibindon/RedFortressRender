@@ -1,4 +1,4 @@
-#include "MeshOld.h"
+ï»¿#include "MeshOld.h"
 
 #include <cassert>
 #include <cmath>
@@ -15,28 +15,32 @@ MeshOld::MeshOld(const std::wstring& xFilename,
            const D3DXVECTOR3& position,
            const D3DXVECTOR3& rotation,
            const float scale,
-           const float radius)
+           const float radius,
+           const float uvTile)
     : m_meshName(xFilename)
     , m_pos(position)
     , m_rotate(rotation)
     , m_scale(scale)
     , m_radius(radius)
+    , m_uvTile(uvTile)
 {
 }
 
-// ƒVƒF[ƒ_[ƒtƒ@ƒCƒ‹‚ğw’è‚Å‚«‚éƒRƒ“ƒXƒgƒ‰ƒNƒ^
+// ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒ•ã‚¡ã‚¤ãƒ«ã‚’æŒ‡å®šã§ãã‚‹ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
 MeshOld::MeshOld(const std::wstring& shaderName,
            const std::wstring& xFilename,
            const D3DXVECTOR3& position,
            const D3DXVECTOR3& rotation,
            const float scale,
-           const float radius)
+           const float radius,
+           const float uvTile)
     : SHADER_FILENAME(shaderName)
     , m_meshName(xFilename)
     , m_pos(position)
     , m_rotate(rotation)
     , m_scale(scale)
     , m_radius(radius)
+    , m_uvTile(uvTile)
 {
 }
 
@@ -49,7 +53,7 @@ void MeshOld::Initialize()
     HRESULT hResult = E_FAIL;
 
     //--------------------------------------------------------
-    // ƒGƒtƒFƒNƒg‚Ìì¬
+    // ã‚¨ãƒ•ã‚§ã‚¯ãƒˆã®ä½œæˆ
     //--------------------------------------------------------
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
                                        SHADER_FILENAME.c_str(),
@@ -63,7 +67,7 @@ void MeshOld::Initialize()
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // Xƒtƒ@ƒCƒ‹‚Ì“Ç‚İ‚İ
+    // Xãƒ•ã‚¡ã‚¤ãƒ«ã®èª­ã¿è¾¼ã¿
     //--------------------------------------------------------
     LPD3DXBUFFER adjacencyBuffer = nullptr;
     LPD3DXBUFFER materialBuffer = nullptr;
@@ -80,7 +84,7 @@ void MeshOld::Initialize()
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // –@üî•ñ‚ğ‚à‚ÂƒƒbƒVƒ…ƒtƒ@ƒCƒ‹‚É•ÏŠ·
+    // æ³•ç·šæƒ…å ±ã‚’ã‚‚ã¤ãƒ¡ãƒƒã‚·ãƒ¥ãƒ•ã‚¡ã‚¤ãƒ«ã«å¤‰æ›
     //--------------------------------------------------------
     D3DVERTEXELEMENT9 decl[4] { };
 
@@ -124,13 +128,13 @@ void MeshOld::Initialize()
     DWORD* adjacencyList = (DWORD*)adjacencyBuffer->GetBufferPointer();
 
     //--------------------------------------------------------
-    // –@üî•ñ‚ğÄŒvZ
+    // æ³•ç·šæƒ…å ±ã‚’å†è¨ˆç®—
     //--------------------------------------------------------
     hResult = D3DXComputeNormals(m_D3DMesh, adjacencyList);
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // –Ê‚Æ’¸“_‚ğ•À‚×‘Ö‚¦‚ÄƒƒbƒVƒ…‚ğ¶¬‚µA•`‰æƒpƒtƒH[ƒ}ƒ“ƒX‚ğÅ“K‰»
+    // é¢ã¨é ‚ç‚¹ã‚’ä¸¦ã¹æ›¿ãˆã¦ãƒ¡ãƒƒã‚·ãƒ¥ã‚’ç”Ÿæˆã—ã€æç”»ãƒ‘ãƒ•ã‚©ãƒ¼ãƒãƒ³ã‚¹ã‚’æœ€é©åŒ–
     //--------------------------------------------------------
     hResult = m_D3DMesh->OptimizeInplace(D3DXMESHOPT_COMPACT | D3DXMESHOPT_ATTRSORT | D3DXMESHOPT_VERTEXCACHE,
                                          adjacencyList,
@@ -142,11 +146,11 @@ void MeshOld::Initialize()
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // ƒ}ƒeƒŠƒAƒ‹î•ñ‚Ì“Ç‚İ‚İ
+    // ãƒãƒ†ãƒªã‚¢ãƒ«æƒ…å ±ã®èª­ã¿è¾¼ã¿
     //--------------------------------------------------------
     D3DXMATERIAL* materialList = (D3DXMATERIAL*)materialBuffer->GetBufferPointer();
 
-    // Xƒtƒ@ƒCƒ‹‚ÌƒfƒBƒŒƒNƒgƒŠ
+    // Xãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª
     std::wstring xFileDir = m_meshName;
     std::size_t lastPos = xFileDir.find_last_of(L"\\");
     xFileDir = xFileDir.substr(0, lastPos + 1);
@@ -154,7 +158,7 @@ void MeshOld::Initialize()
     for (DWORD i = 0; i < m_materialCount; ++i)
     {
         //--------------------------------------------------------
-        // ŠgU”½ËF‚Ì“Ç‚İ‚İ
+        // æ‹¡æ•£åå°„è‰²ã®èª­ã¿è¾¼ã¿
         //--------------------------------------------------------
         D3DXVECTOR4 diffuce(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -169,7 +173,7 @@ void MeshOld::Initialize()
         m_vecDiffuse.push_back(diffuce);
 
         //--------------------------------------------------------
-        // ƒeƒNƒXƒ`ƒƒ‚Ì“Ç‚İ‚İ
+        // ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®èª­ã¿è¾¼ã¿
         //--------------------------------------------------------
         if (materialList[i].pTextureFilename != nullptr &&
             strlen(materialList[i].pTextureFilename) != 0)
@@ -219,8 +223,8 @@ void MeshOld::Render()
     HRESULT hResult = E_FAIL;
 
     //--------------------------------------------------------
-    // ‰Šú‰»‚ªI‚í‚Á‚Ä‚¢‚È‚¢‚È‚ç•`‰æ‚µ‚È‚¢
-    // i•ÊƒXƒŒƒbƒh‚Å‰Šú‰»‚ğs‚¤ê‡‚ğl—¶j
+    // åˆæœŸåŒ–ãŒçµ‚ã‚ã£ã¦ã„ãªã„ãªã‚‰æç”»ã—ãªã„
+    // ï¼ˆåˆ¥ã‚¹ãƒ¬ãƒƒãƒ‰ã§åˆæœŸåŒ–ã‚’è¡Œã†å ´åˆã‚’è€ƒæ…®ï¼‰
     //--------------------------------------------------------
     if (m_bLoaded == false)
     {
@@ -228,7 +232,7 @@ void MeshOld::Render()
     }
 
     //--------------------------------------------------------
-    // ŒõŒ¹‚Ì•ûŒü‚ğİ’è
+    // å…‰æºã®æ–¹å‘ã‚’è¨­å®š
     //--------------------------------------------------------
     if (SHADER_FILENAME != _T("res\\shader\\MeshNoLighting.fx"))
     {
@@ -244,13 +248,13 @@ void MeshOld::Render()
     }
 
     //--------------------------------------------------------
-    // ƒ|ƒCƒ“ƒgƒ‰ƒCƒg‚ÌˆÊ’u‚ğİ’è
+    // ãƒã‚¤ãƒ³ãƒˆãƒ©ã‚¤ãƒˆã®ä½ç½®ã‚’è¨­å®š
     //--------------------------------------------------------
 
     /*
     bool isLit = NSModel::WeaponManager::GetObj()->IsTorchLit();
 
-    // ¼–¾‚Ì“_“”ó‘Ô‚ª•Ï‚í‚Á‚½‚çƒVƒF[ƒ_[‚Éƒ|ƒCƒ“ƒgƒ‰ƒCƒg‚ÌON/OFF‚ğİ’è‚·‚é
+    // æ¾æ˜ã®ç‚¹ç¯çŠ¶æ…‹ãŒå¤‰ã‚ã£ãŸã‚‰ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã«ãƒã‚¤ãƒ³ãƒˆãƒ©ã‚¤ãƒˆã®ON/OFFã‚’è¨­å®šã™ã‚‹
     if (isLit != m_bPointLightEnablePrevious)
     {
         if (isLit)
@@ -282,13 +286,13 @@ void MeshOld::Render()
     */
 
     //--------------------------------------------------------
-    // ŒõŒ¹‚Ì–¾‚é‚³‚ğİ’è
+    // å…‰æºã®æ˜ã‚‹ã•ã‚’è¨­å®š
     //--------------------------------------------------------
     //hResult = m_D3DEffect->SetFloat("g_fLightBrigntness", Light::GetBrightness());
     //assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // “´ŒA
+    // æ´çªŸ
     //--------------------------------------------------------
     /*
     if (SHADER_FILENAME == _T("res\\shader\\MeshShader.fx"))
@@ -302,7 +306,7 @@ void MeshOld::Render()
     */
 
     //--------------------------------------------------------
-    // ‰J‚¾‚Á‚½‚ç–¶‚ğ”Z‚­‚·‚é
+    // é›¨ã ã£ãŸã‚‰éœ§ã‚’æ¿ƒãã™ã‚‹
     //--------------------------------------------------------
     /*
     D3DXVECTOR4 g_vecFogColor;
@@ -314,8 +318,8 @@ void MeshOld::Render()
         g_vecFogColor.z = 0.2f;
         g_vecFogColor.w = 1.0f;
 
-        // –¶‚ğƒTƒ|[ƒg‚µ‚È‚¢ƒVƒF[ƒ_[‚ªƒZƒbƒg‚³‚ê‚Ä‚¢‚é‰Â”\«‚ª‚ ‚é‚Ì‚Å
-        // MeshShader.fx‚Ì‚¾‚¯“K—p‚·‚é
+        // éœ§ã‚’ã‚µãƒãƒ¼ãƒˆã—ãªã„ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãŒã‚»ãƒƒãƒˆã•ã‚Œã¦ã„ã‚‹å¯èƒ½æ€§ãŒã‚ã‚‹ã®ã§
+        // MeshShader.fxã®æ™‚ã ã‘é©ç”¨ã™ã‚‹
         if (SHADER_FILENAME == _T("res\\shader\\MeshShader.fx") ||
             SHADER_FILENAME == _T("res\\shader\\MeshShader2Texture.fx") ||
             SHADER_FILENAME == _T("res\\shader\\MeshShaderCullNone.fx"))
@@ -331,9 +335,9 @@ void MeshOld::Render()
         g_vecFogColor.z = 0.586f;
         g_vecFogColor.w = 1.0f;
 
-        // ‰J‚¾‚Á‚½‚ç–¶‚ğ3”{‹­‚­‚·‚éB
-        // –¶‚ğƒTƒ|[ƒg‚µ‚È‚¢ƒVƒF[ƒ_[‚ªƒZƒbƒg‚³‚ê‚Ä‚¢‚é‰Â”\«‚ª‚ ‚é‚Ì‚Å
-        // MeshShader.fx‚Ì‚¾‚¯“K—p‚·‚é
+        // é›¨ã ã£ãŸã‚‰éœ§ã‚’3å€å¼·ãã™ã‚‹ã€‚
+        // éœ§ã‚’ã‚µãƒãƒ¼ãƒˆã—ãªã„ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãŒã‚»ãƒƒãƒˆã•ã‚Œã¦ã„ã‚‹å¯èƒ½æ€§ãŒã‚ã‚‹ã®ã§
+        // MeshShader.fxã®æ™‚ã ã‘é©ç”¨ã™ã‚‹
         if (SHADER_FILENAME == _T("res\\shader\\MeshShader.fx") ||
             SHADER_FILENAME == _T("res\\shader\\MeshShader2Texture.fx") ||
             SHADER_FILENAME == _T("res\\shader\\MeshShaderCullNone.fx"))
@@ -348,7 +352,7 @@ void MeshOld::Render()
     */
 
     //--------------------------------------------------------
-    // ƒ[ƒ‹ƒh•ÏŠ·s—ñ‚ğİ’è
+    // ãƒ¯ãƒ¼ãƒ«ãƒ‰å¤‰æ›è¡Œåˆ—ã‚’è¨­å®š
     //--------------------------------------------------------
     D3DXMATRIX worldViewProjMatrix { };
     D3DXMatrixIdentity(&worldViewProjMatrix);
@@ -356,7 +360,7 @@ void MeshOld::Render()
     {
         D3DXMATRIX mat;
 
-        // •Ší‚©”Û‚©
+        // æ­¦å™¨ã‹å¦ã‹
 //        if (m_bWeapon)
 //        {
 //            D3DXMatrixScaling(&mat, m_scale, m_scale, m_scale);
@@ -384,7 +388,7 @@ void MeshOld::Render()
     //    assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // ƒJƒƒ‰‚ÌˆÊ’u‚ğİ’è
+    // ã‚«ãƒ¡ãƒ©ã®ä½ç½®ã‚’è¨­å®š
     //--------------------------------------------------------
     D3DXVECTOR4 cameraPos { };
     cameraPos.x = Camera::GetEyePos().x;
@@ -396,7 +400,7 @@ void MeshOld::Render()
     //    assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // ƒ[ƒ‹ƒhƒrƒ…[Ë‰e•ÏŠ·s—ñ‚ğİ’è
+    // ãƒ¯ãƒ¼ãƒ«ãƒ‰ãƒ“ãƒ¥ãƒ¼å°„å½±å¤‰æ›è¡Œåˆ—ã‚’è¨­å®š
     //--------------------------------------------------------
     worldViewProjMatrix *= Camera::GetViewMatrix();
     worldViewProjMatrix *= Camera::GetProjMatrix();
@@ -404,8 +408,15 @@ void MeshOld::Render()
     hResult = m_D3DEffect->SetMatrix("g_matWorldViewProj", &worldViewProjMatrix);
     assert(hResult == S_OK);
 
+    if (SHADER_FILENAME == _T("res\\shader\\MeshNoLighting.fx"))
+    {
+        const float uvScale[2] { m_uvTile, m_uvTile };
+        hResult = m_D3DEffect->SetFloatArray("g_uvScale", uvScale, 2);
+        assert(hResult == S_OK);
+    }
+
     //--------------------------------------------------------
-    // •`‰æŠJn
+    // æç”»é–‹å§‹
     //--------------------------------------------------------
     if (SHADER_FILENAME == _T("res\\shader\\MeshShaderCullNone.fx"))
     {
@@ -425,7 +436,7 @@ void MeshOld::Render()
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // ƒ}ƒeƒŠƒAƒ‹‚Ì”‚¾‚¯F‚ÆƒeƒNƒXƒ`ƒƒ‚ğİ’è‚µ‚Ä•`‰æ
+    // ãƒãƒ†ãƒªã‚¢ãƒ«ã®æ•°ã ã‘è‰²ã¨ãƒ†ã‚¯ã‚¹ãƒãƒ£ã‚’è¨­å®šã—ã¦æç”»
     //--------------------------------------------------------
     for (DWORD i = 0; i < m_materialCount; ++i)
     {
@@ -438,7 +449,7 @@ void MeshOld::Render()
             assert(hResult == S_OK);
         }
 
-        // prolitan.x‚Ìê‡‚ÉŒÀ‚èA‚à‚¤ˆê–‡ƒeƒNƒXƒ`ƒƒ‚ğg‚¤
+        // prolitan.xã®å ´åˆã«é™ã‚Šã€ã‚‚ã†ä¸€æšãƒ†ã‚¯ã‚¹ãƒãƒ£ã‚’ä½¿ã†
         if (m_meshName == L"res\\model\\prolitan.x")
         {
             hResult = m_D3DEffect->SetTexture("g_texture2", m_vecTexture.at(1));

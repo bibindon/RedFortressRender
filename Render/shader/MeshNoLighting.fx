@@ -1,4 +1,5 @@
 float4x4 g_matWorldViewProj;
+float2 g_uvScale = float2(1.0f, 1.0f);
 
 texture g_texture;
 sampler g_textureSampler = sampler_state
@@ -17,7 +18,7 @@ void VertexShader1(in  float3 inPos       : POSITION,
                    out float2 outTexCoord : TEXCOORD0)
 {
     outPos = mul(float4(inPos, 1.0f), g_matWorldViewProj);
-    outTexCoord = inTexCoord;
+    outTexCoord = inTexCoord * g_uvScale;
 }
 
 void PixelShader1(in  float2 inTexCoord   : TEXCOORD0,

@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <d3d9.h>
 #include <d3dx9.h>
@@ -13,7 +13,7 @@
 namespace NSRender
 {
 
-// ƒzƒVƒ}ƒ“‚Æ‚¢‚¤ƒQ[ƒ€‚Åg‚í‚ê‚Ä‚¢‚½ƒƒbƒVƒ…—pƒNƒ‰ƒX
+// ãƒ›ã‚·ãƒãƒ³ã¨ã„ã†ã‚²ãƒ¼ãƒ ã§ä½¿ã‚ã‚Œã¦ã„ãŸãƒ¡ãƒƒã‚·ãƒ¥ç”¨ã‚¯ãƒ©ã‚¹
 class MeshOld : public IDeviceResettable
 {
 public:
@@ -22,15 +22,17 @@ public:
          const D3DXVECTOR3&,
          const D3DXVECTOR3&,
          const float,
-         const float = -1.f);
+         const float = -1.f,
+         const float = 1.0f);
 
-    // ƒVƒF[ƒ_[ƒtƒ@ƒCƒ‹‚ğw’è‚Å‚«‚éƒRƒ“ƒXƒgƒ‰ƒNƒ^
+    // ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒ•ã‚¡ã‚¤ãƒ«ã‚’æŒ‡å®šã§ãã‚‹ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
     MeshOld(const std::wstring&,
          const std::wstring&,
          const D3DXVECTOR3&,
          const D3DXVECTOR3&,
          const float,
-         const float = -1.f);
+         const float = -1.f,
+         const float = 1.0f);
 
     virtual ~MeshOld();
 
@@ -46,7 +48,7 @@ public:
 
     std::wstring GetMeshName();
 
-    // ‰ğ‘œ“x‚âƒEƒBƒ“ƒhƒEƒ‚[ƒh‚ğ•ÏX‚µ‚½‚Æ‚«‚Ì‚½‚ß‚ÌŠÖ”
+    // è§£åƒåº¦ã‚„ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒ¢ãƒ¼ãƒ‰ã‚’å¤‰æ›´ã—ãŸã¨ãã®ãŸã‚ã®é–¢æ•°
     void OnDeviceLost();
     void OnDeviceReset();
 
@@ -66,13 +68,14 @@ private:
     D3DXVECTOR3 m_rotate = D3DXVECTOR3(0.f, 0.f, 0.f);
 
     //-------------------------------------------------
-    // ‚±‚Ì•¨‘Ì‚Ì”¼Œa
-    // ƒvƒŒƒCƒ„[‚ª‚±‚Ì”¼ŒaˆÈ“à‚É‹ß‚Ã‚¢‚½‚ç‚±‚Ì•¨‘Ì‚ÍÕ“Ë”»’è‚Ì‘ÎÛ‚Æ‚È‚é
-    // -1‚¾‚Á‚½‚ç•K‚¸Õ“Ë”»’è‚Ì‘ÎÛ‚É‚·‚é
+    // ã“ã®ç‰©ä½“ã®åŠå¾„
+    // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒã“ã®åŠå¾„ä»¥å†…ã«è¿‘ã¥ã„ãŸã‚‰ã“ã®ç‰©ä½“ã¯è¡çªåˆ¤å®šã®å¯¾è±¡ã¨ãªã‚‹
+    // -1ã ã£ãŸã‚‰å¿…ãšè¡çªåˆ¤å®šã®å¯¾è±¡ã«ã™ã‚‹
     //-------------------------------------------------
     float m_radius = 0.0f;
 
     float m_scale = 0.0f;
+    float m_uvTile = 1.0f;
     bool m_bLoaded = false;
 
     bool m_bWeapon = false;
