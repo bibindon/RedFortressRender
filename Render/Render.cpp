@@ -419,7 +419,7 @@ int Render::AddMeshNoLighting(const std::wstring& filePath,
                               const float radius,
                               const float uvTile)
 {
-    m_meshList.push_back(MeshOld(L"res\\shader\\MeshNoLighting.fx", filePath, pos, rot, scale, radius, uvTile));
+    m_meshList.push_back(MeshOld(L".\\MeshNoLighting.cso", filePath, pos, rot, scale, radius, uvTile));
     m_meshList.rbegin()->Initialize();
 
     return (int)m_meshList.size() - 1;

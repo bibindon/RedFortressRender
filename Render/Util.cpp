@@ -44,5 +44,20 @@ std::string Util::WstringToUtf8(const std::wstring& wstr)
     return result;
 }
 
+std::wstring Util::GetExeDir()
+{
+    wchar_t path[MAX_PATH] = {};
+    GetModuleFileName(nullptr, path, MAX_PATH);
+
+    std::wstring exePath = path;
+    const size_t pos = exePath.find_last_of(L"\\/");
+    if (pos == std::wstring::npos)
+    {
+        return L"";
+    }
+
+    return exePath.substr(0, pos + 1);
+}
+
 }
 

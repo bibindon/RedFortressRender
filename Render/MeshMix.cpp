@@ -24,11 +24,13 @@ void MeshMix::Initialize()
 {
     HRESULT hResult = E_FAIL;
 
+    auto tempPath = Util::GetExeDir() + SHADER_FILENAME.c_str();
+
     //--------------------------------------------------------
     // エフェクトの作成
     //--------------------------------------------------------
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                       SHADER_FILENAME.c_str(),
+                                       tempPath.c_str(),
                                        nullptr,
                                        nullptr,
                                        D3DXSHADER_OPTIMIZATION_LEVEL3,
@@ -149,7 +151,7 @@ void MeshMix::ModifyMeshForNormalMapping(LPD3DXMESH& pMesh)
     };
 
     LPD3DXMESH pCloned = NULL;
-    HRESULT hr = pMesh->CloneMesh(D3DXMESH_MANAGED,
+    HRESULT hr = pMesh->CloneMesh(D3DXMESH_MANAGED | D3DXMESH_32BIT,
                                   declTB,
                                   Common::D3DDevice(),
                                   &pCloned);

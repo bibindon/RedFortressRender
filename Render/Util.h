@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <string>
 
@@ -14,21 +14,23 @@ public:
     static std::wstring Utf8ToWstring(const std::string& utf8);
     static std::string WstringToUtf8(const std::wstring& wstr);
 
-    // ’lˆê’v‚ÅíœFc ‚©‚ç value ‚ğ‚·‚×‚Äæ‚èœ‚­i–ß‚è’l‚È‚µj
+    static std::wstring GetExeDir();
+
+    // å€¤ä¸€è‡´ã§å‰Šé™¤ï¼šc ã‹ã‚‰ value ã‚’ã™ã¹ã¦å–ã‚Šé™¤ãï¼ˆæˆ»ã‚Šå€¤ãªã—ï¼‰
     template <class Seq, class T>
     static void Remove(Seq& c, const T& value)
     {
         c.erase(std::remove(std::begin(c), std::end(c), value), std::end(c));
     }
 
-    // ğŒ‚ÅíœFpred ‚ª true ‚Ì—v‘f‚ğæ‚èœ‚­i–ß‚è’l‚È‚µj
+    // æ¡ä»¶ã§å‰Šé™¤ï¼špred ãŒ true ã®è¦ç´ ã‚’å–ã‚Šé™¤ãï¼ˆæˆ»ã‚Šå€¤ãªã—ï¼‰
     template <class Seq, class Pred>
     static void RemoveIf(Seq& c, Pred pred)
     {
         c.erase(std::remove_if(std::begin(c), std::end(c), std::move(pred)), std::end(c));
     }
 
-    // ŠÜ—Lƒ`ƒFƒbƒNi’lˆê’vjF—v‘f‚ªŠÜ‚Ü‚ê‚Ä‚¢‚ê‚Î true
+    // å«æœ‰ãƒã‚§ãƒƒã‚¯ï¼ˆå€¤ä¸€è‡´ï¼‰ï¼šè¦ç´ ãŒå«ã¾ã‚Œã¦ã„ã‚Œã° true
     template <class Seq, class T>
     static bool Contain(const Seq& container, const T& value)
     {
@@ -43,7 +45,7 @@ public:
         }
     }
 
-    // ŠÜ—Lƒ`ƒFƒbƒNiğŒjFqŒê‚ª true ‚ğ•Ô‚·—v‘f‚ª‚ ‚ê‚Î true
+    // å«æœ‰ãƒã‚§ãƒƒã‚¯ï¼ˆæ¡ä»¶ï¼‰ï¼šè¿°èªãŒ true ã‚’è¿”ã™è¦ç´ ãŒã‚ã‚Œã° true
     template <class Seq, class Pred>
     static bool ContainIf(const Seq& container, Pred predicate)
     {

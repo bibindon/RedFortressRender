@@ -52,11 +52,13 @@ void MeshOld::Initialize()
 {
     HRESULT hResult = E_FAIL;
 
+    auto tempPath = Util::GetExeDir() + SHADER_FILENAME.c_str();
+
     //--------------------------------------------------------
     // エフェクトの作成
     //--------------------------------------------------------
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                       SHADER_FILENAME.c_str(),
+                                       tempPath.c_str(),
                                        nullptr,
                                        nullptr,
                                        D3DXSHADER_OPTIMIZATION_LEVEL3,
@@ -234,7 +236,7 @@ void MeshOld::Render()
     //--------------------------------------------------------
     // 光源の方向を設定
     //--------------------------------------------------------
-    if (SHADER_FILENAME != _T("res\\shader\\MeshNoLighting.fx"))
+    if (SHADER_FILENAME != _T(".\\MeshNoLighting.cso"))
     {
         D3DXVECTOR4 normal = Light::GetLightDir();
 
