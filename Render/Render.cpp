@@ -197,7 +197,7 @@ void Render::Finalize()
 void Render::Draw()
 {
     HRESULT hResult = E_FAIL;
-    const bool kSkipAllPostEffects = false;
+    const bool kSkipAllPostEffects = true;
 
     if (m_bShowFPS)
     {

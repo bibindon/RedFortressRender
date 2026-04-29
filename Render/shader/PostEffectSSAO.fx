@@ -114,7 +114,7 @@ VS_OUT VS_Fullscreen(float4 p : POSITION, float2 uv : TEXCOORD0)
 {
     VS_OUT o;
     o.pos = p;
-    o.uv = uv;
+    o.uv = uv + 0.5f * g_invSize;
     return o;
 }
 
