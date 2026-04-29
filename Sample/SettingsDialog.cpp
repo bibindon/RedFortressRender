@@ -1,4 +1,4 @@
-#include "SettingsDialog.h"
+﻿#include "SettingsDialog.h"
 
 #include <cassert>
 #include <commctrl.h>
@@ -28,6 +28,11 @@ constexpr int MODEL_LOAD_SCALE_SLIDER_MIN = 0;
 constexpr int MODEL_LOAD_SCALE_SLIDER_MAX = static_cast<int>((MODEL_LOAD_SCALE_MAX - MODEL_LOAD_SCALE_MIN) / MODEL_LOAD_SCALE_STEP);
 constexpr int GAUSSIAN_SLIDER_MIN = 1;
 constexpr int GAUSSIAN_SLIDER_MAX = (GAUSSIAN_SAMPLE_MAX + 1) / 2;
+
+std::wstring FormatResolutionLabel(const int width, const int height)
+{
+    return std::to_wstring(width) + L" x " + std::to_wstring(height);
+}
 
 std::wstring FormatLoadedModelScale(const float scale)
 {
@@ -108,6 +113,54 @@ void RefreshMixMeshShaderMode(HWND hDlg)
     CheckDlgButton(hDlg,
                    IDC_RADIO_MIX_MESH_NORMAL_MAP,
                    (g_mixMeshShaderMode == MixMeshShaderMode::NormalMapping) ? BST_CHECKED : BST_UNCHECKED);
+}
+
+void RefreshResolutionControls(HWND hDlg)
+{
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_RESOLUTION);
+    if (combo != NULL)
+    {
+        const std::wstring targetText = FormatResolutionLabel(g_resolutionWidth, g_resolutionHeight);
+        const int count = static_cast<int>(SendMessage(combo, CB_GETCOUNT, 0, 0));
+        for (int i = 0; i < count; ++i)
+        {
+            wchar_t buffer[64] { };
+            SendMessage(combo, CB_GETLBTEXT, static_cast<WPARAM>(i), reinterpret_cast<LPARAM>(buffer));
+            if (targetText == buffer)
+            {
+                SendMessage(combo, CB_SETCURSEL, static_cast<WPARAM>(i), 0);
+                break;
+            }
+        }
+    }
+
+    CheckDlgButton(hDlg,
+                   IDC_RADIO_WINDOW_MODE_WINDOW,
+                   (g_windowMode == NSRender::eWindowMode::WINDOW) ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(hDlg,
+                   IDC_RADIO_WINDOW_MODE_BORDERLESS,
+                   (g_windowMode == NSRender::eWindowMode::BORDERLESS) ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(hDlg,
+                   IDC_RADIO_WINDOW_MODE_FULLSCREEN,
+                   (g_windowMode == NSRender::eWindowMode::FULLSCREEN) ? BST_CHECKED : BST_UNCHECKED);
+}
+
+void PopulateResolutionCombo(HWND hDlg)
+{
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_RESOLUTION);
+    if (combo == NULL)
+    {
+        return;
+    }
+
+    SendMessage(combo, CB_RESETCONTENT, 0, 0);
+
+    const auto resolutionList = g_Render.GetResolutionList();
+    for (const auto& resolution : resolutionList)
+    {
+        const std::wstring label = FormatResolutionLabel(resolution.first, resolution.second);
+        SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(label.c_str()));
+    }
 }
 
 void InitializeLoadedModelListView(HWND hDlg)
@@ -289,6 +342,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshSaturateControls(hDlg);
     RefreshSelectedMeshPaths(hDlg);
     RefreshMixMeshShaderMode(hDlg);
+    RefreshResolutionControls(hDlg);
     RefreshLoadedModelListView(hDlg);
     RefreshAnimateLight(hDlg);
     RefreshDepthBufferShadow(hDlg);
@@ -477,6 +531,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
     {
         MoveDialogToRightOfParent(hDlg);
         InitializeTrackbars(hDlg);
+        PopulateResolutionCombo(hDlg);
         InitializeLoadedModelListView(hDlg);
         RefreshAllControls(hDlg);
         return TRUE;
@@ -629,6 +684,52 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         {
             g_mixMeshShaderMode = MixMeshShaderMode::NormalMapping;
             RefreshMixMeshShaderMode(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_COMBO_RESOLUTION && HIWORD(wParam) == CBN_SELCHANGE)
+        {
+            HWND combo = reinterpret_cast<HWND>(lParam);
+            const int index = static_cast<int>(SendMessage(combo, CB_GETCURSEL, 0, 0));
+            if (index != CB_ERR)
+            {
+                wchar_t buffer[64] { };
+                SendMessage(combo, CB_GETLBTEXT, static_cast<WPARAM>(index), reinterpret_cast<LPARAM>(buffer));
+
+                int width = 0;
+                int height = 0;
+                if (swscanf_s(buffer, L"%d x %d", &width, &height) == 2)
+                {
+                    g_resolutionWidth = width;
+                    g_resolutionHeight = height;
+                    ApplyResolution();
+                    RefreshResolutionControls(hDlg);
+                }
+            }
+            return TRUE;
+        }
+
+        if (commandId == IDC_RADIO_WINDOW_MODE_WINDOW)
+        {
+            g_windowMode = NSRender::eWindowMode::WINDOW;
+            ApplyWindowMode();
+            RefreshResolutionControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_RADIO_WINDOW_MODE_BORDERLESS)
+        {
+            g_windowMode = NSRender::eWindowMode::BORDERLESS;
+            ApplyWindowMode();
+            RefreshResolutionControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_RADIO_WINDOW_MODE_FULLSCREEN)
+        {
+            g_windowMode = NSRender::eWindowMode::FULLSCREEN;
+            ApplyWindowMode();
+            RefreshResolutionControls(hDlg);
             return TRUE;
         }
 

@@ -189,15 +189,21 @@ bool HandleSampleKeyDown(HWND hWnd, const WPARAM wParam)
 
     if (wParam == '8')
     {
+        g_windowMode = NSRender::eWindowMode::WINDOW;
         g_Render.ChangeWindowMode(NSRender::eWindowMode::WINDOW);
+        RefreshSettingsDialogState();
     }
     else if (wParam == '9')
     {
+        g_windowMode = NSRender::eWindowMode::BORDERLESS;
         g_Render.ChangeWindowMode(NSRender::eWindowMode::BORDERLESS);
+        RefreshSettingsDialogState();
     }
     else if (wParam == '0')
     {
+        g_windowMode = NSRender::eWindowMode::FULLSCREEN;
         g_Render.ChangeWindowMode(NSRender::eWindowMode::FULLSCREEN);
+        RefreshSettingsDialogState();
     }
 
     if (wParam == 'M' && !shift && !control)

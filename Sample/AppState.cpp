@@ -45,6 +45,9 @@ float g_starBurstThreshold = 2.8f;
 float g_modelLoadScale = 1.0f;
 int g_gaussianSampleSize = 101;
 int g_sunId = 0;
+int g_resolutionWidth = WINDOW_SIZE_W;
+int g_resolutionHeight = WINDOW_SIZE_H;
+NSRender::eWindowMode g_windowMode = NSRender::eWindowMode::WINDOW;
 std::vector<ImageInfo> g_imageInfoList;
 std::vector<TextInfo> g_textInfoList;
 std::vector<LoadedModelInfo> g_loadedModelList;
@@ -326,6 +329,21 @@ void ApplyGaussianSampleSize()
 {
     g_gaussianSampleSize = NormalizeGaussianSampleSizeLocal(g_gaussianSampleSize);
     g_Render.SetPostEffectGaussianSampleSize(g_gaussianSampleSize);
+}
+
+void ApplyResolution()
+{
+    if (g_resolutionWidth <= 0 || g_resolutionHeight <= 0)
+    {
+        return;
+    }
+
+    g_Render.ChangeResolution(g_resolutionWidth, g_resolutionHeight);
+}
+
+void ApplyWindowMode()
+{
+    g_Render.ChangeWindowMode(g_windowMode);
 }
 
 int SaturateLevelToSliderValue(const float level)

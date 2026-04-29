@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Common.h"
 
@@ -43,6 +43,10 @@ private:
     std::vector<D3DFORMAT> GetCandidateFormats();
 
     std::vector<DisplayModeInfo> EnumerateFullscreenModes(LPDIRECT3D9 d3d, UINT adapterIndex);
+    std::pair<int, int> ResolveFullscreenResolution(int requestedWidth, int requestedHeight);
+    D3DPRESENT_PARAMETERS CreatePresentParameters(eWindowMode mode, int width, int height);
+    void UpdateWindowPlacement(eWindowMode mode, int width, int height);
+    void ResetDeviceForMode(eWindowMode mode, int width, int height);
 
     eWindowMode m_eWindowModeCurrent = eWindowMode::WINDOW;
     eWindowMode m_eWindowModeRequest = eWindowMode::NONE;

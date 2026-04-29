@@ -1,4 +1,4 @@
-#include "WindowManager.h"
+ï»¿#include "WindowManager.h"
 
 #include <set>
 #include <algorithm>
@@ -7,6 +7,34 @@
 
 namespace NSRender
 {
+namespace
+{
+RECT BuildCenteredWindowRect(const HWND hWnd, const int width, const int height)
+{
+    RECT rect { };
+    SetRect(&rect, 0, 0, width, height);
+    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
+    rect.right -= rect.left;
+    rect.bottom -= rect.top;
+    rect.left = 0;
+    rect.top = 0;
+
+    HMONITOR monitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
+    MONITORINFO monitorInfo { sizeof(monitorInfo) };
+    GetMonitorInfo(monitor, &monitorInfo);
+
+    RECT monitorRect = monitorInfo.rcMonitor;
+    const int windowWidth = rect.right;
+    const int windowHeight = rect.bottom;
+
+    rect.left = monitorRect.left + ((monitorRect.right - monitorRect.left - windowWidth) / 2);
+    rect.top = monitorRect.top + ((monitorRect.bottom - monitorRect.top - windowHeight) / 2);
+    rect.right = rect.left + windowWidth;
+    rect.bottom = rect.top + windowHeight;
+
+    return rect;
+}
+}
 
 void WindowManager::Initialize(const HWND hWnd)
 {
@@ -65,7 +93,12 @@ void WindowManager::Finalize()
 
 void WindowManager::ChangeResolution(const int W, const int H)
 {
+    if (W <= 0 || H <= 0)
+    {
+        return;
+    }
 
+    ResetDeviceForMode(m_eWindowModeCurrent, W, H);
 }
 
 void WindowManager::RequestWindowMode(const eWindowMode eWindowMode_)
@@ -97,167 +130,111 @@ void WindowManager::ChangeWindowMode()
         return;
     }
 
-    HRESULT hResult = E_FAIL;
+    ResetDeviceForMode(m_eWindowModeRequest, Common::ScreenW(), Common::ScreenH());
+    m_eWindowModeRequest = eWindowMode::NONE;
+}
 
-    Common::OnDeviceLostAll();
+std::pair<int, int> WindowManager::ResolveFullscreenResolution(const int requestedWidth,
+                                                               const int requestedHeight)
+{
+    std::vector<DisplayModeInfo> modes = EnumerateFullscreenModes(m_pD3D, D3DADAPTER_DEFAULT);
+    for (const auto& mode : modes)
+    {
+        if (static_cast<int>(mode.width) == requestedWidth &&
+            static_cast<int>(mode.height) == requestedHeight)
+        {
+            return { requestedWidth, requestedHeight };
+        }
+    }
+
+    if (!modes.empty())
+    {
+        return { static_cast<int>(modes.front().width), static_cast<int>(modes.front().height) };
+    }
+
+    return { requestedWidth, requestedHeight };
+}
+
+D3DPRESENT_PARAMETERS WindowManager::CreatePresentParameters(const eWindowMode mode,
+                                                             int width,
+                                                             int height)
+{
+    if (mode == eWindowMode::FULLSCREEN)
+    {
+        const auto resolved = ResolveFullscreenResolution(width, height);
+        width = resolved.first;
+        height = resolved.second;
+    }
+
+    Common::SetScreenW(width);
+    Common::SetScreenH(height);
 
     D3DPRESENT_PARAMETERS d3dpp;
     ZeroMemory(&d3dpp, sizeof(d3dpp));
 
-    auto resoList = EnumerateFullscreenModes(m_pD3D, 0);
-    bool resoExist = Util::ContainIf(resoList,
-                                     [&](const DisplayModeInfo& elem)
-                                     {
-                                         if (elem.height == Common::ScreenH() &&
-                                             elem.width  == Common::ScreenW())
-                                         {
-                                             return true;
-                                         }
+    d3dpp.Windowed = (mode != eWindowMode::FULLSCREEN);
+    d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
+    d3dpp.BackBufferFormat = (mode == eWindowMode::FULLSCREEN) ? D3DFMT_A8R8G8B8 : D3DFMT_UNKNOWN;
+    d3dpp.BackBufferCount = 1;
+    d3dpp.BackBufferWidth = width;
+    d3dpp.BackBufferHeight = height;
+    d3dpp.MultiSampleType = D3DMULTISAMPLE_NONE;
+    d3dpp.MultiSampleQuality = 0;
+    d3dpp.EnableAutoDepthStencil = TRUE;
+    d3dpp.AutoDepthStencilFormat = D3DFMT_D24S8;
+    d3dpp.hDeviceWindow = m_hWnd;
+    d3dpp.Flags = 0;
+    d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
+    d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
 
-                                         return false;
-                                     });
+    return d3dpp;
+}
 
-    if (m_eWindowModeRequest == eWindowMode::FULLSCREEN)
+void WindowManager::UpdateWindowPlacement(const eWindowMode mode, const int width, const int height)
+{
+    if (mode == eWindowMode::WINDOW)
     {
-        d3dpp.Windowed = FALSE;
-        d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-        d3dpp.BackBufferFormat = D3DFMT_A8R8G8B8;
-        d3dpp.BackBufferCount = 1;
-
-        if (resoExist)
-        {
-            d3dpp.BackBufferWidth = Common::ScreenW();
-            d3dpp.BackBufferHeight = Common::ScreenH();
-        }
-        else
-        {
-            d3dpp.BackBufferWidth = resoList.begin()->width;
-            d3dpp.BackBufferHeight = resoList.begin()->height;
-        }
-
-        d3dpp.MultiSampleType = D3DMULTISAMPLE_NONE;
-
-        // TODO —vŠm”F
-        d3dpp.MultiSampleQuality = 0;
-
-        d3dpp.EnableAutoDepthStencil = TRUE;
-        d3dpp.AutoDepthStencilFormat = D3DFMT_D24S8;
-        d3dpp.hDeviceWindow = m_hWnd;
-        d3dpp.Flags = 0;
-        d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
-        d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
-    }
-    else if (m_eWindowModeRequest == eWindowMode::WINDOW)
-    {
-        RECT rect;
-        {
-            SetRect(&rect, 0, 0, 1600, 900);
-            AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
-            rect.right = rect.right - rect.left;
-            rect.bottom = rect.bottom - rect.top;
-            rect.top = 0;
-            rect.left = 0;
-        }
-
-        // –Ú“Iƒ‚ƒjƒ^‚ðŒˆ‚ß‚é
-        HMONITOR mon = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
-        MONITORINFO mi { sizeof(mi) };
-        GetMonitorInfo(mon, &mi);
-
-        // •¨—À•Wiƒ^ƒXƒNƒo[ŠÜ‚Þ‘S–Êj
-        RECT r = mi.rcMonitor;
-
-        Common::SetScreenW(1600);
-        Common::SetScreenH(900);
-
-        const int x_ = (r.right / 2) - (Common::ScreenW() / 2);
-        const int y_ = (r.bottom / 2) - (Common::ScreenH() / 2);
-
-        SetWindowLongPtr(m_hWnd, GWL_STYLE, WS_POPUP);
-        SetWindowPos(m_hWnd,
-                     HWND_TOP,
-                     x_,
-                     y_,
-                     rect.right,
-                     rect.bottom,
-                     SWP_FRAMECHANGED | SWP_SHOWWINDOW);
-
-        // ƒEƒBƒ“ƒhƒEƒTƒCƒY‚Ì•ÏX‚ð‚³‚¹‚È‚¢BÅ¬‰»‚ÍOK
+        const RECT rect = BuildCenteredWindowRect(m_hWnd, width, height);
         SetWindowLongPtr(m_hWnd,
                          GWL_STYLE,
                          WS_OVERLAPPEDWINDOW & ~(WS_MAXIMIZEBOX | WS_THICKFRAME) | WS_VISIBLE);
-
-        d3dpp.Windowed = TRUE;
-        d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-        d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
-        d3dpp.BackBufferCount = 1;
-
-        d3dpp.BackBufferWidth = Common::ScreenW();
-        d3dpp.BackBufferHeight = Common::ScreenH();
-
-        d3dpp.MultiSampleType = D3DMULTISAMPLE_NONE;
-
-        // TODO —vŠm”F
-        d3dpp.MultiSampleQuality = 0;
-
-        d3dpp.EnableAutoDepthStencil = TRUE;
-        d3dpp.AutoDepthStencilFormat = D3DFMT_D24S8;
-        d3dpp.hDeviceWindow = m_hWnd;
-        d3dpp.Flags = 0;
-        d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
-        d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
-    }
-    else if (m_eWindowModeRequest == eWindowMode::BORDERLESS)
-    {
-        // –Ú“Iƒ‚ƒjƒ^‚ðŒˆ‚ß‚é
-        HMONITOR mon = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
-        MONITORINFO mi { sizeof(mi) };
-        GetMonitorInfo(mon, &mi);
-
-        // •¨—À•Wiƒ^ƒXƒNƒo[ŠÜ‚Þ‘S–Êj
-        RECT r = mi.rcMonitor;
-
-        SetWindowLongPtr(m_hWnd, GWL_STYLE, WS_POPUP);
         SetWindowPos(m_hWnd,
                      HWND_TOP,
-                     r.left,
-                     r.top,
-                     r.right - r.left,
-                     r.bottom - r.top,
+                     rect.left,
+                     rect.top,
+                     rect.right - rect.left,
+                     rect.bottom - rect.top,
                      SWP_FRAMECHANGED | SWP_SHOWWINDOW);
-
-        Common::SetScreenW(r.right);
-        Common::SetScreenH(r.bottom);
-
-        d3dpp.Windowed = TRUE;
-        d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-        d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
-        d3dpp.BackBufferCount = 1;
-
-        d3dpp.BackBufferWidth = Common::ScreenW();
-        d3dpp.BackBufferHeight = Common::ScreenH();
-
-        d3dpp.MultiSampleType = D3DMULTISAMPLE_NONE;
-
-        // TODO —vŠm”F
-        d3dpp.MultiSampleQuality = 0;
-
-        d3dpp.EnableAutoDepthStencil = TRUE;
-        d3dpp.AutoDepthStencilFormat = D3DFMT_D24S8;
-        d3dpp.hDeviceWindow = m_hWnd;
-        d3dpp.Flags = 0;
-        d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
-        d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
+        return;
     }
 
+    HMONITOR monitor = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
+    MONITORINFO monitorInfo { sizeof(monitorInfo) };
+    GetMonitorInfo(monitor, &monitorInfo);
+    RECT monitorRect = monitorInfo.rcMonitor;
 
-    hResult = Common::D3DDevice()->Reset(&d3dpp);
+    SetWindowLongPtr(m_hWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+    SetWindowPos(m_hWnd,
+                 HWND_TOP,
+                 monitorRect.left,
+                 monitorRect.top,
+                 monitorRect.right - monitorRect.left,
+                 monitorRect.bottom - monitorRect.top,
+                 SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+}
+
+void WindowManager::ResetDeviceForMode(const eWindowMode mode, int width, int height)
+{
+    Common::OnDeviceLostAll();
+
+    D3DPRESENT_PARAMETERS d3dpp = CreatePresentParameters(mode, width, height);
+    UpdateWindowPlacement(mode, static_cast<int>(d3dpp.BackBufferWidth), static_cast<int>(d3dpp.BackBufferHeight));
+
+    const HRESULT hResult = Common::D3DDevice()->Reset(&d3dpp);
     assert(hResult == S_OK);
 
     Common::OnDeviceResetAll();
-
-    m_eWindowModeCurrent = m_eWindowModeRequest;
-    m_eWindowModeRequest = eWindowMode::NONE;
+    m_eWindowModeCurrent = mode;
 }
 
 std::vector<D3DFORMAT> WindowManager::GetCandidateFormats()

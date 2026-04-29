@@ -431,6 +431,7 @@ void Render::ChangeResolution(const int W, const int H)
 void Render::ChangeWindowMode(const eWindowMode eWindowMode_)
 {
     m_windowManager.RequestWindowMode(eWindowMode_);
+    m_windowManager.ChangeWindowMode();
 }
 
 int Render::AddMesh(const std::wstring& filePath,
