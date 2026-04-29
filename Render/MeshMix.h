@@ -253,14 +253,13 @@ private:
     LPD3DXEFFECT m_D3DEffect = nullptr;
     LPD3DXMESH m_D3DMesh = nullptr;
 
-    // subset に割り当てられている先頭 m_subsetCount 個を
-    // 描画用マテリアルとして扱う。
-    // それ以降に追加されているテクスチャは補助マップ
-    // （キューブ/法線/高さ）として解釈する。
     DWORD m_materialCount = 0;
     DWORD m_subsetCount = 0;
     std::vector<D3DXVECTOR4> m_vecDiffuse;
     std::vector<LPDIRECT3DBASETEXTURE9> m_vecTexture;
+    LPDIRECT3DBASETEXTURE9 m_texCubeMap = nullptr;
+    LPDIRECT3DBASETEXTURE9 m_texNormalMap = nullptr;
+    LPDIRECT3DBASETEXTURE9 m_texHeightMap = nullptr;
 
     D3DXVECTOR3 m_pos = D3DXVECTOR3(0.f, 0.f, 0.f);
     D3DXVECTOR3 m_rotate = D3DXVECTOR3(0.f, 0.f, 0.f);
@@ -280,7 +279,6 @@ private:
     void ModifyMeshForNormalMapping(LPD3DXMESH& pMesh);
     D3DXVECTOR4 GetSubsetDiffuse(const DWORD subsetIndex) const;
     LPDIRECT3DBASETEXTURE9 GetSubsetTexture(const DWORD subsetIndex) const;
-    LPDIRECT3DBASETEXTURE9 GetAuxTexture(const DWORD auxIndex) const;
 };
 }
 

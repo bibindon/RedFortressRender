@@ -5,10 +5,58 @@
 #include "Light.h"
 
 #include <Shlwapi.h>
+#include <algorithm>
+#include <cwctype>
 #pragma comment(lib, "Shlwapi.lib")
 
 namespace NSRender
 {
+namespace
+{
+std::wstring ToLowerString(std::wstring text)
+{
+    std::transform(text.begin(), text.end(), text.begin(), [](wchar_t ch)
+    {
+        return static_cast<wchar_t>(std::towlower(ch));
+    });
+    return text;
+}
+
+bool ContainsToken(const std::wstring& text, const std::wstring& token)
+{
+    return text.find(token) != std::wstring::npos;
+}
+
+enum class eMeshTextureRole
+{
+    Diffuse,
+    Normal,
+    Height,
+    Cube
+};
+
+eMeshTextureRole ClassifyTextureRole(const std::wstring& textureFileName)
+{
+    const std::wstring lower = ToLowerString(textureFileName);
+
+    if (ContainsToken(lower, L"normal") || ContainsToken(lower, L"nrm") || ContainsToken(lower, L"bump"))
+    {
+        return eMeshTextureRole::Normal;
+    }
+
+    if (ContainsToken(lower, L"height") || ContainsToken(lower, L"disp") || ContainsToken(lower, L"parallax"))
+    {
+        return eMeshTextureRole::Height;
+    }
+
+    if (ContainsToken(lower, L"cubemap") || ContainsToken(lower, L"cube_map") || ContainsToken(lower, L"env"))
+    {
+        return eMeshTextureRole::Cube;
+    }
+
+    return eMeshTextureRole::Diffuse;
+}
+}
 
 MeshMix::MeshMix(const std::wstring& xFilename,
                  const D3DXVECTOR3& position,
@@ -124,25 +172,25 @@ void MeshMix::Initialize()
     std::size_t lastPos = xFileDir.find_last_of(L"\\");
     xFileDir = xFileDir.substr(0, lastPos + 1);
 
+    std::vector<D3DXVECTOR4> diffuseList;
+    std::vector<LPDIRECT3DBASETEXTURE9> diffuseTextureList;
+
     for (DWORD i = 0; i < m_materialCount; ++i)
     {
-        //--------------------------------------------------------
-        // 拡散反射色の読み込み
-        //--------------------------------------------------------
         D3DXVECTOR4 diffuce(1.0f, 1.0f, 1.0f, 1.0f);
         diffuce.x = materialList[i].MatD3D.Diffuse.r;
         diffuce.y = materialList[i].MatD3D.Diffuse.g;
         diffuce.z = materialList[i].MatD3D.Diffuse.b;
         diffuce.w = materialList[i].MatD3D.Diffuse.a;
-        m_vecDiffuse.push_back(diffuce);
 
         LPDIRECT3DBASETEXTURE9 tempTexture = nullptr;
+        std::wstring textureFileName;
 
         if (materialList[i].pTextureFilename != nullptr &&
             strlen(materialList[i].pTextureFilename) != 0)
         {
-            std::wstring texturePath = xFileDir;
-            texturePath += Util::Utf8ToWstring(materialList[i].pTextureFilename);
+            textureFileName = Util::Utf8ToWstring(materialList[i].pTextureFilename);
+            std::wstring texturePath = xFileDir + textureFileName;
             hResult = D3DXCreateTextureFromFile(Common::D3DDevice(),
                                                 texturePath.c_str(),
                                                 reinterpret_cast<LPDIRECT3DTEXTURE9*>(&tempTexture));
@@ -150,7 +198,45 @@ void MeshMix::Initialize()
             assert(hResult == S_OK);
         }
 
-        m_vecTexture.push_back(tempTexture);
+        const eMeshTextureRole textureRole = ClassifyTextureRole(textureFileName);
+        if (textureRole == eMeshTextureRole::Normal)
+        {
+            if (m_texNormalMap == nullptr)
+            {
+                m_texNormalMap = tempTexture;
+            }
+        }
+        else if (textureRole == eMeshTextureRole::Height)
+        {
+            if (m_texHeightMap == nullptr)
+            {
+                m_texHeightMap = tempTexture;
+            }
+        }
+        else if (textureRole == eMeshTextureRole::Cube)
+        {
+            if (m_texCubeMap == nullptr)
+            {
+                m_texCubeMap = tempTexture;
+            }
+        }
+        else
+        {
+            diffuseList.push_back(diffuce);
+            diffuseTextureList.push_back(tempTexture);
+        }
+    }
+
+    if (!diffuseList.empty())
+    {
+        m_vecDiffuse = diffuseList;
+        m_vecTexture = diffuseTextureList;
+        m_subsetCount = (std::min)(m_subsetCount, static_cast<DWORD>(m_vecDiffuse.size()));
+    }
+    else
+    {
+        m_vecDiffuse.assign(m_subsetCount, D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f));
+        m_vecTexture.assign(m_subsetCount, nullptr);
     }
 
     SAFE_RELEASE(materialBuffer);
@@ -346,13 +432,13 @@ void MeshMix::Render()
     //--------------------------------------------------------
     // マテリアルの数だけ色とテクスチャを設定して描画
     //--------------------------------------------------------
-    hResult = m_D3DEffect->SetTexture("g_texCubeMap", GetAuxTexture(0));
+    hResult = m_D3DEffect->SetTexture("g_texCubeMap", m_texCubeMap);
     assert(hResult == S_OK);
 
-    hResult = m_D3DEffect->SetTexture("g_texNormalMap", GetAuxTexture(1));
+    hResult = m_D3DEffect->SetTexture("g_texNormalMap", m_texNormalMap);
     assert(hResult == S_OK);
 
-    hResult = m_D3DEffect->SetTexture("g_texHeightMap", GetAuxTexture(2));
+    hResult = m_D3DEffect->SetTexture("g_texHeightMap", m_texHeightMap);
     assert(hResult == S_OK);
 
     hResult = m_D3DEffect->SetBool("g_bPOM", m_param.parallaxOcclusionMapping ? TRUE : FALSE);
@@ -504,17 +590,6 @@ LPDIRECT3DBASETEXTURE9 MeshMix::GetSubsetTexture(const DWORD subsetIndex) const
     if (subsetIndex < m_vecTexture.size())
     {
         return m_vecTexture.at(subsetIndex);
-    }
-
-    return nullptr;
-}
-
-LPDIRECT3DBASETEXTURE9 MeshMix::GetAuxTexture(const DWORD auxIndex) const
-{
-    const DWORD textureIndex = m_subsetCount + auxIndex;
-    if (textureIndex < m_vecTexture.size())
-    {
-        return m_vecTexture.at(textureIndex);
     }
 
     return nullptr;
