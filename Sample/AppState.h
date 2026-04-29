@@ -150,6 +150,8 @@ void SpawnAnimMeshAtCameraFront(const std::wstring& filePath);
 void SpawnSkinAnimMeshAtCameraFront(const std::wstring& filePath);
 NSRender::AnimSetMap CreateDefaultAnimSetMap();
 bool ShowOpenFileDialog(HWND hWnd, const wchar_t* filter, std::wstring& selectedPath);
+bool ShowSaveBinaryXFileDialog(HWND hWnd, const std::wstring& sourcePath, std::wstring& selectedPath);
+bool ExportLoadedModelAsBinaryX(size_t modelIndex, const std::wstring& outputPath);
 void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath);
 
 void DrawSampleOverlay();

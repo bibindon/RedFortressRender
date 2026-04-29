@@ -114,10 +114,15 @@ std::vector<std::pair<int, int>> WindowManager::GetResolutionList()
     std::vector<DisplayModeInfo> modes = EnumerateFullscreenModes(m_pD3D, D3DADAPTER_DEFAULT);
 
     std::vector<std::pair<int, int>> resolutionList;
+    std::set<std::pair<int, int>> uniqueResolutions;
 
-    for (auto& mode : modes)
+    for (const auto& mode : modes)
     {
-        resolutionList.push_back({ mode.width, mode.height });
+        const std::pair<int, int> resolution(static_cast<int>(mode.width), static_cast<int>(mode.height));
+        if (uniqueResolutions.insert(resolution).second)
+        {
+            resolutionList.push_back(resolution);
+        }
     }
 
     return resolutionList;

@@ -4,6 +4,7 @@
 #include <commctrl.h>
 #include <string>
 #include <cwchar>
+#include <windowsx.h>
 
 #include "AppState.h"
 #include "resource.h"
@@ -28,6 +29,7 @@ constexpr int MODEL_LOAD_SCALE_SLIDER_MIN = 0;
 constexpr int MODEL_LOAD_SCALE_SLIDER_MAX = static_cast<int>((MODEL_LOAD_SCALE_MAX - MODEL_LOAD_SCALE_MIN) / MODEL_LOAD_SCALE_STEP);
 constexpr int GAUSSIAN_SLIDER_MIN = 1;
 constexpr int GAUSSIAN_SLIDER_MAX = (GAUSSIAN_SAMPLE_MAX + 1) / 2;
+constexpr UINT ID_POPUP_EXPORT_BINARY = 60001;
 
 std::wstring FormatResolutionLabel(const int width, const int height)
 {
@@ -161,6 +163,100 @@ void PopulateResolutionCombo(HWND hDlg)
         const std::wstring label = FormatResolutionLabel(resolution.first, resolution.second);
         SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(label.c_str()));
     }
+}
+
+int GetLoadedModelIndexFromPoint(HWND listView, POINT screenPoint)
+{
+    if (listView == NULL)
+    {
+        return -1;
+    }
+
+    if (screenPoint.x == -1 && screenPoint.y == -1)
+    {
+        return ListView_GetNextItem(listView, -1, LVNI_SELECTED);
+    }
+
+    POINT clientPoint = screenPoint;
+    ScreenToClient(listView, &clientPoint);
+
+    LVHITTESTINFO hitInfo { };
+    hitInfo.pt = clientPoint;
+    const int itemIndex = ListView_SubItemHitTest(listView, &hitInfo);
+    if (itemIndex >= 0)
+    {
+        ListView_SetItemState(listView,
+                              itemIndex,
+                              LVIS_SELECTED | LVIS_FOCUSED,
+                              LVIS_SELECTED | LVIS_FOCUSED);
+    }
+
+    return itemIndex;
+}
+
+bool ShowLoadedModelContextMenu(HWND hDlg, HWND listView, POINT screenPoint)
+{
+    const int itemIndex = GetLoadedModelIndexFromPoint(listView, screenPoint);
+    if (itemIndex < 0)
+    {
+        return false;
+    }
+
+    if (screenPoint.x == -1 && screenPoint.y == -1)
+    {
+        RECT itemRect { };
+        itemRect.left = LVIR_BOUNDS;
+        if (ListView_GetItemRect(listView, itemIndex, &itemRect, LVIR_BOUNDS))
+        {
+            POINT popupPoint { itemRect.left, itemRect.top };
+            ClientToScreen(listView, &popupPoint);
+            screenPoint = popupPoint;
+        }
+    }
+
+    HMENU popupMenu = CreatePopupMenu();
+    if (popupMenu == NULL)
+    {
+        return false;
+    }
+
+    AppendMenuW(popupMenu, MF_STRING, ID_POPUP_EXPORT_BINARY, L"Export_Binary");
+
+    const UINT command = TrackPopupMenu(popupMenu,
+                                        TPM_RETURNCMD | TPM_RIGHTBUTTON,
+                                        screenPoint.x,
+                                        screenPoint.y,
+                                        0,
+                                        hDlg,
+                                        NULL);
+
+    DestroyMenu(popupMenu);
+
+    if (command != ID_POPUP_EXPORT_BINARY)
+    {
+        return false;
+    }
+
+    std::wstring outputPath;
+    if (!ShowSaveBinaryXFileDialog(hDlg, g_loadedModelList.at(itemIndex).m_path, outputPath))
+    {
+        return true;
+    }
+
+    if (!ExportLoadedModelAsBinaryX(static_cast<size_t>(itemIndex), outputPath))
+    {
+        MessageBoxW(hDlg,
+                    L"Binary X export failed.",
+                    L"Export_Binary",
+                    MB_ICONERROR | MB_OK);
+        return true;
+    }
+
+    MessageBoxW(hDlg,
+                L"Binary X export completed.",
+                L"Export_Binary",
+                MB_ICONINFORMATION | MB_OK);
+    return true;
 }
 
 void InitializeLoadedModelListView(HWND hDlg)
@@ -624,6 +720,20 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
+        break;
+    }
+    case WM_CONTEXTMENU:
+    {
+        HWND source = reinterpret_cast<HWND>(wParam);
+        HWND listView = GetDlgItem(hDlg, IDC_LIST_LOADED_MODELS);
+        if (source == listView)
+        {
+            POINT screenPoint { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+            if (ShowLoadedModelContextMenu(hDlg, listView, screenPoint))
+            {
+                return TRUE;
+            }
+        }
         break;
     }
     case WM_COMMAND:

@@ -6,6 +6,7 @@
 #include <commdlg.h>
 #include <cwchar>
 #include <cstdlib>
+#include <cstring>
 #include <fstream>
 #include <cwctype>
 #include <windowsx.h>
@@ -135,6 +136,257 @@ void DrawRandomized2DContent()
     {
         g_Render.DrawImage(elem.m_imageName, elem.m_rect.left, elem.m_rect.top);
     }
+}
+
+char* DuplicateAnsiString(const char* text)
+{
+    if (text == nullptr)
+    {
+        return nullptr;
+    }
+
+    const size_t length = strlen(text);
+    char* copy = NEW char[length + 1];
+    strcpy_s(copy, length + 1, text);
+    return copy;
+}
+
+struct ExportXFrame : public D3DXFRAME
+{
+    D3DXMATRIX m_combinedMatrix;
+};
+
+struct ExportXMeshContainer : public D3DXMESHCONTAINER
+{
+};
+
+class ExportXHierarchyAllocator : public ID3DXAllocateHierarchy
+{
+public:
+    STDMETHOD(CreateFrame)(LPCSTR name, LPD3DXFRAME* newFrame)
+    {
+        if (newFrame == nullptr)
+        {
+            return E_INVALIDARG;
+        }
+
+        ExportXFrame* frame = NEW ExportXFrame();
+        ZeroMemory(frame, sizeof(*frame));
+        frame->Name = DuplicateAnsiString(name);
+        D3DXMatrixIdentity(&frame->TransformationMatrix);
+        D3DXMatrixIdentity(&frame->m_combinedMatrix);
+
+        *newFrame = frame;
+        return S_OK;
+    }
+
+    STDMETHOD(CreateMeshContainer)(LPCSTR name,
+                                   CONST D3DXMESHDATA* meshData,
+                                   CONST D3DXMATERIAL* materials,
+                                   CONST D3DXEFFECTINSTANCE*,
+                                   DWORD materialCount,
+                                   CONST DWORD* adjacency,
+                                   LPD3DXSKININFO skinInfo,
+                                   LPD3DXMESHCONTAINER* meshContainer)
+    {
+        if (meshData == nullptr || meshContainer == nullptr)
+        {
+            return E_INVALIDARG;
+        }
+
+        if (meshData->Type != D3DXMESHTYPE_MESH || meshData->pMesh == nullptr)
+        {
+            return E_FAIL;
+        }
+
+        ExportXMeshContainer* container = NEW ExportXMeshContainer();
+        ZeroMemory(container, sizeof(*container));
+        container->Name = DuplicateAnsiString(name);
+        container->MeshData.Type = D3DXMESHTYPE_MESH;
+        container->MeshData.pMesh = meshData->pMesh;
+        container->MeshData.pMesh->AddRef();
+
+        const DWORD faceCount = meshData->pMesh->GetNumFaces();
+        if (adjacency != nullptr && faceCount > 0)
+        {
+            container->pAdjacency = NEW DWORD[faceCount * 3];
+            memcpy(container->pAdjacency, adjacency, sizeof(DWORD) * faceCount * 3);
+        }
+
+        container->NumMaterials = (std::max)(1UL, materialCount);
+        container->pMaterials = NEW D3DXMATERIAL[container->NumMaterials];
+        ZeroMemory(container->pMaterials, sizeof(D3DXMATERIAL) * container->NumMaterials);
+
+        if (materialCount > 0 && materials != nullptr)
+        {
+            for (DWORD i = 0; i < materialCount; ++i)
+            {
+                container->pMaterials[i].MatD3D = materials[i].MatD3D;
+                container->pMaterials[i].pTextureFilename = DuplicateAnsiString(materials[i].pTextureFilename);
+            }
+        }
+        else
+        {
+            container->pMaterials[0].MatD3D.Diffuse = D3DCOLORVALUE { 0.5f, 0.5f, 0.5f, 1.0f };
+            container->pMaterials[0].MatD3D.Ambient = D3DCOLORVALUE { 0.5f, 0.5f, 0.5f, 1.0f };
+        }
+
+        if (skinInfo != nullptr)
+        {
+            container->pSkinInfo = skinInfo;
+            container->pSkinInfo->AddRef();
+        }
+
+        *meshContainer = container;
+        return S_OK;
+    }
+
+    STDMETHOD(DestroyFrame)(LPD3DXFRAME frame)
+    {
+        if (frame == nullptr)
+        {
+            return S_OK;
+        }
+
+        NSRender::SAFE_DELETE_ARRAY(frame->Name);
+        NSRender::SAFE_DELETE(frame);
+        return S_OK;
+    }
+
+    STDMETHOD(DestroyMeshContainer)(LPD3DXMESHCONTAINER meshContainerBase)
+    {
+        if (meshContainerBase == nullptr)
+        {
+            return S_OK;
+        }
+
+        ExportXMeshContainer* meshContainer = static_cast<ExportXMeshContainer*>(meshContainerBase);
+
+        NSRender::SAFE_RELEASE(meshContainer->MeshData.pMesh);
+        NSRender::SAFE_RELEASE(meshContainer->pSkinInfo);
+        NSRender::SAFE_DELETE_ARRAY(meshContainer->Name);
+        NSRender::SAFE_DELETE_ARRAY(meshContainer->pAdjacency);
+
+        if (meshContainer->pMaterials != nullptr)
+        {
+            for (DWORD i = 0; i < meshContainer->NumMaterials; ++i)
+            {
+                NSRender::SAFE_DELETE_ARRAY(meshContainer->pMaterials[i].pTextureFilename);
+            }
+        }
+
+        NSRender::SAFE_DELETE_ARRAY(meshContainer->pMaterials);
+        NSRender::SAFE_DELETE(meshContainer);
+        return S_OK;
+    }
+};
+
+bool ResolveExistingModelPath(const std::wstring& sourcePath, std::wstring& resolvedPath)
+{
+    if (sourcePath.empty())
+    {
+        return false;
+    }
+
+    wchar_t fullPath[MAX_PATH] { };
+    const DWORD length = GetFullPathNameW(sourcePath.c_str(),
+                                          static_cast<DWORD>(_countof(fullPath)),
+                                          fullPath,
+                                          nullptr);
+    if (length == 0 || length >= _countof(fullPath))
+    {
+        return false;
+    }
+
+    const DWORD attributes = GetFileAttributesW(fullPath);
+    if (attributes == INVALID_FILE_ATTRIBUTES || (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
+    {
+        return false;
+    }
+
+    resolvedPath = fullPath;
+    return true;
+}
+
+bool ExportXHierarchyBinary(const std::wstring& inputPath, const std::wstring& outputPath)
+{
+    ExportXHierarchyAllocator allocator;
+    LPD3DXFRAME frameRoot = nullptr;
+    LPD3DXANIMATIONCONTROLLER animationController = nullptr;
+
+    const HRESULT loadResult = D3DXLoadMeshHierarchyFromXW(inputPath.c_str(),
+                                                           D3DXMESH_SYSTEMMEM,
+                                                           NSRender::Common::D3DDevice(),
+                                                           &allocator,
+                                                           nullptr,
+                                                           &frameRoot,
+                                                           &animationController);
+    if (FAILED(loadResult))
+    {
+        return false;
+    }
+
+    const HRESULT saveResult = D3DXSaveMeshHierarchyToFileW(outputPath.c_str(),
+                                                            D3DXF_FILEFORMAT_BINARY,
+                                                            frameRoot,
+                                                            animationController,
+                                                            nullptr);
+
+    D3DXFrameDestroy(frameRoot, &allocator);
+    NSRender::SAFE_RELEASE(animationController);
+
+    return SUCCEEDED(saveResult);
+}
+
+bool ExportMeshBinary(const std::wstring& inputPath, const std::wstring& outputPath)
+{
+    LPD3DXBUFFER adjacencyBuffer = nullptr;
+    LPD3DXBUFFER materialBuffer = nullptr;
+    LPD3DXBUFFER effectBuffer = nullptr;
+    LPD3DXMESH mesh = nullptr;
+    DWORD materialCount = 0;
+
+    const HRESULT loadResult = D3DXLoadMeshFromXW(inputPath.c_str(),
+                                                  D3DXMESH_SYSTEMMEM,
+                                                  NSRender::Common::D3DDevice(),
+                                                  &adjacencyBuffer,
+                                                  &materialBuffer,
+                                                  &effectBuffer,
+                                                  &materialCount,
+                                                  &mesh);
+
+    if (FAILED(loadResult))
+    {
+        NSRender::SAFE_RELEASE(adjacencyBuffer);
+        NSRender::SAFE_RELEASE(materialBuffer);
+        NSRender::SAFE_RELEASE(effectBuffer);
+        NSRender::SAFE_RELEASE(mesh);
+        return false;
+    }
+
+    const DWORD* adjacency = (adjacencyBuffer != nullptr)
+        ? static_cast<const DWORD*>(adjacencyBuffer->GetBufferPointer())
+        : nullptr;
+    const D3DXMATERIAL* materials = (materialBuffer != nullptr)
+        ? static_cast<const D3DXMATERIAL*>(materialBuffer->GetBufferPointer())
+        : nullptr;
+    const D3DXEFFECTINSTANCE* effects = (effectBuffer != nullptr)
+        ? static_cast<const D3DXEFFECTINSTANCE*>(effectBuffer->GetBufferPointer())
+        : nullptr;
+
+    const HRESULT saveResult = D3DXSaveMeshToXW(outputPath.c_str(),
+                                                mesh,
+                                                adjacency,
+                                                materials,
+                                                effects,
+                                                materialCount,
+                                                D3DXF_FILEFORMAT_BINARY);
+
+    NSRender::SAFE_RELEASE(adjacencyBuffer);
+    NSRender::SAFE_RELEASE(materialBuffer);
+    NSRender::SAFE_RELEASE(effectBuffer);
+    NSRender::SAFE_RELEASE(mesh);
+    return SUCCEEDED(saveResult);
 }
 }
 
@@ -548,6 +800,69 @@ bool ShowOpenFileDialog(HWND hWnd, const wchar_t* filter, std::wstring& selected
 
     selectedPath = filePath;
     return true;
+}
+
+bool ShowSaveBinaryXFileDialog(HWND hWnd, const std::wstring& sourcePath, std::wstring& selectedPath)
+{
+    std::wstring defaultName = sourcePath;
+    const std::size_t slashPos = defaultName.find_last_of(L"\\/");
+    if (slashPos != std::wstring::npos)
+    {
+        defaultName = defaultName.substr(slashPos + 1);
+    }
+
+    const std::size_t dotPos = defaultName.find_last_of(L'.');
+    if (dotPos != std::wstring::npos)
+    {
+        defaultName = defaultName.substr(0, dotPos);
+    }
+
+    defaultName += L"_binary.x";
+    if (defaultName.empty())
+    {
+        defaultName = L"export_binary.x";
+    }
+
+    wchar_t filePath[MAX_PATH] { };
+    wcsncpy_s(filePath, defaultName.c_str(), _TRUNCATE);
+
+    OPENFILENAMEW ofn { };
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hWnd;
+    ofn.lpstrFilter = L"X Files (*.x)\0*.x\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFile = filePath;
+    ofn.nMaxFile = static_cast<DWORD>(_countof(filePath));
+    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST;
+    ofn.lpstrDefExt = L"x";
+
+    if (!GetSaveFileNameW(&ofn))
+    {
+        return false;
+    }
+
+    selectedPath = filePath;
+    return true;
+}
+
+bool ExportLoadedModelAsBinaryX(const size_t modelIndex, const std::wstring& outputPath)
+{
+    if (modelIndex >= g_loadedModelList.size() || outputPath.empty())
+    {
+        return false;
+    }
+
+    std::wstring inputPath;
+    if (!ResolveExistingModelPath(g_loadedModelList.at(modelIndex).m_path, inputPath))
+    {
+        return false;
+    }
+
+    if (ExportXHierarchyBinary(inputPath, outputPath))
+    {
+        return true;
+    }
+
+    return ExportMeshBinary(inputPath, outputPath);
 }
 
 void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
