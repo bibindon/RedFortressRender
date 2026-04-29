@@ -23,6 +23,7 @@ float g_originPush = 0.05f; // small lift along +Nv (x g_aoStepWorld)
 // ========= Textures / Samplers =========
 texture texZ; // RT1: A = linear Z
 texture texPos; // RT2: WorldPos encoded 0..1 with g_posRange
+texture texNormal; // RT3: World normal encoded 0..1
 texture texAO; // AO buffer (for composite)
 texture texColor; // Color buffer (for composite)
 
@@ -38,6 +39,15 @@ sampler sampZ = sampler_state
 sampler sampPos = sampler_state
 {
     Texture = (texPos);
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+sampler sampNormal = sampler_state
+{
+    Texture = (texNormal);
     MinFilter = POINT;
     MagFilter = POINT;
     MipFilter = NONE;
@@ -67,6 +77,11 @@ sampler sampColor = sampler_state
 float3 DecodeWorldPos(float3 enc)
 {
     return (enc * 2.0f - 1.0f) * g_posRange;
+}
+
+float3 DecodeWorldNormal(float3 enc)
+{
+    return normalize(enc * 2.0f - 1.0f);
 }
 
 // D3D9 half-texel aware
@@ -147,7 +162,7 @@ Basis BuildBasis(float2 uv)
               ? ((zD > zU) ? (pD - pC) : (pC - pU))
               : ((abs(zD - zC) <= abs(zU - zC)) ? (pD - pC) : (pC - pU));
 
-    float3 Nw = normalize(cross(vx, vy));
+    float3 Nw = DecodeWorldNormal(tex2D(sampNormal, uv).rgb);
     float3 Nv = normalize(mul(float4(Nw, 0), g_matView).xyz);
 
     // 原点（位置）：どちらかの軸で採用する場合は、その軸の “より遠い方” を使う
@@ -207,7 +222,7 @@ Basis BuildBasis(float2 uv)
 
     // 出力（原点はレンジガード付きの選択、それ以外は従来どおり）
     o.Nv = Nv;
-    o.vOrigin = mul(float4(pFarN, 1.0f), g_matView).xyz; // 採用しない場合は pC になる
+    o.vOrigin = mul(float4(pC, 1.0f), g_matView).xyz;
     o.zRef = zRef;
     return o;
 }

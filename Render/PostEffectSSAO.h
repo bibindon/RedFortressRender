@@ -15,7 +15,8 @@ public:
 
     LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget,
                             LPDIRECT3DTEXTURE9 m_texRenderTargetZ,
-                            LPDIRECT3DTEXTURE9 m_texRenderTargetPos);
+                            LPDIRECT3DTEXTURE9 m_texRenderTargetPos,
+                            LPDIRECT3DTEXTURE9 m_texRenderTargetNormal);
 
     void SetEnable(const bool arg);
 

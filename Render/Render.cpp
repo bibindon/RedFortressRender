@@ -1,4 +1,4 @@
-﻿#pragma comment( lib, "d3d9.lib" )
+#pragma comment( lib, "d3d9.lib" )
 #if defined(DEBUG) || defined(_DEBUG)
 #pragma comment( lib, "d3dx9d.lib" )
 #else
@@ -210,7 +210,7 @@ void Render::Draw()
     pTempTexture = m_postEffectZShadow.Draw(pTempTexture, m_meshMixList);
 
     // SSAO
-    pTempTexture = m_postEffectSSAO.Draw(pTempTexture, pTexTempZ, pTexTempPos);
+    pTempTexture = m_postEffectSSAO.Draw(pTempTexture, pTexTempZ, pTexTempPos, pTexTempNoral);
 
     // 霧
     pTempTexture = m_postEffectFog.Draw(pTempTexture, pTexTempZ, pTexTempPos);

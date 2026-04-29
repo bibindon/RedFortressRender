@@ -85,8 +85,8 @@ POINT Common::ScaledPoint(const POINT& pt)
     float scaleW = (float)m_screenW / BASE_W;
     float scaleH = (float)m_screenH / BASE_H;
 
-    pt2.x = pt.x * scaleW;
-    pt2.y = pt.y * scaleH;
+    pt2.x = (LONG)(pt.x * scaleW);
+    pt2.y = (LONG)(pt.y * scaleH);
 
     return pt2;
 }
@@ -98,8 +98,8 @@ POINT Common::ScaledPoint(const int x, const int y)
     float scaleW = (float)m_screenW / BASE_W;
     float scaleH = (float)m_screenH / BASE_H;
 
-    pt2.x = x * scaleW;
-    pt2.y = y * scaleH;
+    pt2.x = (LONG)(x * scaleW);
+    pt2.y = (LONG)(y * scaleH);
 
     return pt2;
 }

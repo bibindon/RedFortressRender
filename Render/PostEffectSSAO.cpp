@@ -51,7 +51,8 @@ void PostEffectSSAO::Finalize()
 
 LPDIRECT3DTEXTURE9 PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                                         LPDIRECT3DTEXTURE9 m_texRenderTargetZ,
-                                        LPDIRECT3DTEXTURE9 m_texRenderTargetPos)
+                                        LPDIRECT3DTEXTURE9 m_texRenderTargetPos,
+                                        LPDIRECT3DTEXTURE9 m_texRenderTargetNormal)
 {
     HRESULT hr = E_FAIL;
 
@@ -101,6 +102,7 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
 
     m_fxSSAO->SetTexture("texZ",   m_texRenderTargetZ);
     m_fxSSAO->SetTexture("texPos", m_texRenderTargetPos);
+    m_fxSSAO->SetTexture("texNormal", m_texRenderTargetNormal);
 
     m_fxSSAO->SetFloat("g_aoStepWorld", 4.0f);   // 5 → 4（半径を少し縮める）
     m_fxSSAO->SetFloat("g_originPush", 0.05f);  // 0.15 → 0.05（押し出し弱め）
