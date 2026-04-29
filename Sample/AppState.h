@@ -47,6 +47,14 @@ struct TextInfo
     RECT m_rect { };
 };
 
+struct LoadedModelInfo
+{
+    std::wstring m_type;
+    std::wstring m_path;
+    D3DXVECTOR3 m_pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+    float m_scale = 1.0f;
+};
+
 extern bool g_bClose;
 extern NSRender::Render g_Render;
 extern int g_fontId;
@@ -82,6 +90,7 @@ extern int g_gaussianSampleSize;
 extern int g_sunId;
 extern std::vector<ImageInfo> g_imageInfoList;
 extern std::vector<TextInfo> g_textInfoList;
+extern std::vector<LoadedModelInfo> g_loadedModelList;
 
 void UpdateCameraMoveByKeyboard();
 void MoveCameraAwayFromLookAtByWheel(short wheelDelta);
@@ -117,6 +126,10 @@ int ModelLoadScaleToSliderValue(float scale);
 float SliderValueToModelLoadScale(int sliderValue);
 int GaussianSampleSizeToSliderValue(int sampleSize);
 int SliderValueToGaussianSampleSize(int sliderValue);
+void RegisterLoadedModel(const std::wstring& type,
+                         const std::wstring& path,
+                         const D3DXVECTOR3& pos,
+                         float scale);
 
 void SpawnMeshAtCameraFront(const std::wstring& filePath);
 void SpawnMeshMixAtCameraFront(const std::wstring& filePath);

@@ -10,6 +10,8 @@
 #include <cwctype>
 #include <windowsx.h>
 
+#include "SettingsDialog.h"
+
 bool g_bClose = false;
 NSRender::Render g_Render;
 int g_fontId = 0;
@@ -45,6 +47,7 @@ int g_gaussianSampleSize = 101;
 int g_sunId = 0;
 std::vector<ImageInfo> g_imageInfoList;
 std::vector<TextInfo> g_textInfoList;
+std::vector<LoadedModelInfo> g_loadedModelList;
 
 namespace
 {
@@ -404,6 +407,20 @@ int SliderValueToGaussianSampleSize(const int sliderValue)
     return NormalizeGaussianSampleSizeLocal(sliderValue * 2 - 1);
 }
 
+void RegisterLoadedModel(const std::wstring& type,
+                         const std::wstring& path,
+                         const D3DXVECTOR3& pos,
+                         const float scale)
+{
+    LoadedModelInfo info;
+    info.m_type = type;
+    info.m_path = path;
+    info.m_pos = pos;
+    info.m_scale = scale;
+    g_loadedModelList.push_back(info);
+    RefreshSettingsDialogState();
+}
+
 void SpawnMeshAtCameraFront(const std::wstring& filePath)
 {
     if (filePath.empty())
@@ -418,6 +435,7 @@ void SpawnMeshAtCameraFront(const std::wstring& filePath)
 
     const float yaw = atan2f(forward.x, forward.z);
     g_Render.AddMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), g_modelLoadScale, 1.0f);
+    RegisterLoadedModel(L"Mesh", filePath, pos, g_modelLoadScale);
 }
 
 void SpawnMeshMixAtCameraFront(const std::wstring& filePath)
@@ -434,6 +452,7 @@ void SpawnMeshMixAtCameraFront(const std::wstring& filePath)
 
     const float yaw = atan2f(forward.x, forward.z);
     g_Render.AddMeshMix(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), g_modelLoadScale, 1.0f);
+    RegisterLoadedModel(L"MeshMix", filePath, pos, g_modelLoadScale);
 }
 
 NSRender::AnimSetMap CreateDefaultAnimSetMap()
@@ -462,6 +481,7 @@ void SpawnAnimMeshAtCameraFront(const std::wstring& filePath)
 
     const float yaw = atan2f(forward.x, forward.z);
     g_Render.AddAnimMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), g_modelLoadScale, CreateDefaultAnimSetMap());
+    RegisterLoadedModel(L"AnimMesh", filePath, pos, g_modelLoadScale);
 }
 
 void SpawnSkinAnimMeshAtCameraFront(const std::wstring& filePath)
@@ -478,6 +498,7 @@ void SpawnSkinAnimMeshAtCameraFront(const std::wstring& filePath)
 
     const float yaw = atan2f(forward.x, forward.z);
     g_Render.AddSkinAnimMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), g_modelLoadScale, CreateDefaultAnimSetMap());
+    RegisterLoadedModel(L"SkinAnimMesh", filePath, pos, g_modelLoadScale);
 }
 
 bool ShowOpenFileDialog(HWND hWnd, const wchar_t* filter, std::wstring& selectedPath)

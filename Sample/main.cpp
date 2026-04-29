@@ -23,7 +23,7 @@ void InitializeCommonControlsForSample()
 {
     INITCOMMONCONTROLSEX icc { };
     icc.dwSize = sizeof(icc);
-    icc.dwICC = ICC_BAR_CLASSES;
+    icc.dwICC = ICC_BAR_CLASSES | ICC_LISTVIEW_CLASSES;
     InitCommonControlsEx(&icc);
 }
 
@@ -73,12 +73,14 @@ void InitializeSampleScene(HWND hWnd)
                                1.0f,
                                100.0f,
                                1.0f);
+    RegisterLoadedModel(L"MeshNoLighting", L"cubeNormalInverse.x", D3DXVECTOR3(0.0f, 0.0f, 0.0f), 1.0f);
     g_Render.AddMesh(L"plateField.x",
                      D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                      D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                      1.0f,
                      100.0f,
                      10.0f);
+    RegisterLoadedModel(L"Mesh", L"plateField.x", D3DXVECTOR3(0.0f, 0.0f, 0.0f), 1.0f);
 
     ApplySaturateLevel();
     ApplyFogIntensity();

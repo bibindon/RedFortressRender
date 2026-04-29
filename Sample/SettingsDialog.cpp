@@ -29,6 +29,25 @@ constexpr int MODEL_LOAD_SCALE_SLIDER_MAX = static_cast<int>((MODEL_LOAD_SCALE_M
 constexpr int GAUSSIAN_SLIDER_MIN = 1;
 constexpr int GAUSSIAN_SLIDER_MAX = (GAUSSIAN_SAMPLE_MAX + 1) / 2;
 
+std::wstring FormatLoadedModelScale(const float scale)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", scale);
+    return buffer;
+}
+
+std::wstring FormatLoadedModelPos(const D3DXVECTOR3& pos)
+{
+    wchar_t buffer[96];
+    std::swprintf(buffer,
+                  sizeof(buffer) / sizeof(buffer[0]),
+                  L"(%.1f, %.1f, %.1f)",
+                  pos.x,
+                  pos.y,
+                  pos.z);
+    return buffer;
+}
+
 void MoveDialogToRightOfParent(HWND hDlg)
 {
     HWND parent = GetParent(hDlg);
@@ -76,6 +95,67 @@ void RefreshSelectedMeshPaths(HWND hDlg)
     SetDlgItemText(hDlg, IDC_EDIT_MESH_PATH, g_selectedMeshPath.c_str());
     SetDlgItemText(hDlg, IDC_EDIT_ANIM_MESH_PATH, g_selectedAnimMeshPath.c_str());
     SetDlgItemText(hDlg, IDC_EDIT_SKIN_ANIM_MESH_PATH, g_selectedSkinAnimMeshPath.c_str());
+}
+
+void InitializeLoadedModelListView(HWND hDlg)
+{
+    HWND listView = GetDlgItem(hDlg, IDC_LIST_LOADED_MODELS);
+    if (listView == NULL)
+    {
+        return;
+    }
+
+    ListView_SetExtendedListViewStyle(listView, LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
+
+    LVCOLUMN column { };
+    column.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
+
+    column.cx = 70;
+    column.pszText = const_cast<LPWSTR>(L"Type");
+    ListView_InsertColumn(listView, 0, &column);
+
+    column.cx = 110;
+    column.pszText = const_cast<LPWSTR>(L"File");
+    ListView_InsertColumn(listView, 1, &column);
+
+    column.cx = 40;
+    column.pszText = const_cast<LPWSTR>(L"Scale");
+    ListView_InsertColumn(listView, 2, &column);
+
+    column.cx = 120;
+    column.pszText = const_cast<LPWSTR>(L"Pos");
+    ListView_InsertColumn(listView, 3, &column);
+}
+
+void RefreshLoadedModelListView(HWND hDlg)
+{
+    HWND listView = GetDlgItem(hDlg, IDC_LIST_LOADED_MODELS);
+    if (listView == NULL)
+    {
+        return;
+    }
+
+    ListView_DeleteAllItems(listView);
+
+    for (int i = 0; i < static_cast<int>(g_loadedModelList.size()); ++i)
+    {
+        const auto& model = g_loadedModelList.at(i);
+
+        LVITEM item { };
+        item.mask = LVIF_TEXT;
+        item.iItem = i;
+        item.iSubItem = 0;
+        item.pszText = const_cast<LPWSTR>(model.m_type.c_str());
+        ListView_InsertItem(listView, &item);
+
+        ListView_SetItemText(listView, i, 1, const_cast<LPWSTR>(model.m_path.c_str()));
+
+        std::wstring scaleText = FormatLoadedModelScale(model.m_scale);
+        ListView_SetItemText(listView, i, 2, const_cast<LPWSTR>(scaleText.c_str()));
+
+        std::wstring posText = FormatLoadedModelPos(model.m_pos);
+        ListView_SetItemText(listView, i, 3, const_cast<LPWSTR>(posText.c_str()));
+    }
 }
 
 void RefreshFogControls(HWND hDlg)
@@ -195,6 +275,7 @@ void RefreshAllControls(HWND hDlg)
 {
     RefreshSaturateControls(hDlg);
     RefreshSelectedMeshPaths(hDlg);
+    RefreshLoadedModelListView(hDlg);
     RefreshAnimateLight(hDlg);
     RefreshDepthBufferShadow(hDlg);
     RefreshSSAO(hDlg);
@@ -382,6 +463,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
     {
         MoveDialogToRightOfParent(hDlg);
         InitializeTrackbars(hDlg);
+        InitializeLoadedModelListView(hDlg);
         RefreshAllControls(hDlg);
         return TRUE;
     }
