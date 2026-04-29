@@ -333,9 +333,12 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
 
     outColor = saturate(float4(finalColor, 1.f));
 
-    if (abs(inScreenPos.x - (g_screenSize.x * 0.5f)) <= 0.5f)
+    if (false)
     {
-        outColor = float4(0.0f, 1.0f, 0.0f, 1.0f);
+        if (abs(inScreenPos.x - (g_screenSize.x * 0.5f)) <= 0.5f)
+        {
+            outColor = float4(0.0f, 1.0f, 0.0f, 1.0f);
+        }
     }
 }
 
