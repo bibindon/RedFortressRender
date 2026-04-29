@@ -208,6 +208,8 @@ void ShowMouseCursor()
     while (ShowCursor(TRUE) < 0)
     {
     }
+
+    SetCursor(LoadCursor(NULL, IDC_ARROW));
 }
 
 void EnableMouseLook(HWND hWnd)
@@ -219,6 +221,7 @@ void EnableMouseLook(HWND hWnd)
 
     g_bMouseLookEnabled = true;
     HideMouseCursor();
+    SetCursor(NULL);
     RecenterMouseCursor(hWnd);
 }
 
@@ -549,7 +552,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
     wc.cbWndExtra = 0;
     wc.hInstance = GetModuleHandle(NULL);
     wc.hIcon = NULL;
-    wc.hCursor = NULL;
+    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = NULL;
     wc.lpszMenuName = NULL;
     wc.lpszClassName = _T("Window1");
@@ -760,6 +763,16 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
 
         return 0;
+    }
+    case WM_SETCURSOR:
+    {
+        if (LOWORD(lParam) == HTCLIENT)
+        {
+            SetCursor(g_bMouseLookEnabled ? NULL : LoadCursor(NULL, IDC_ARROW));
+            return TRUE;
+        }
+
+        break;
     }
     case WM_MOUSEWHEEL:
     {
