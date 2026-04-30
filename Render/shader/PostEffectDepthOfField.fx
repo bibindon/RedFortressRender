@@ -5,6 +5,10 @@ float g_focusBandHalfWidthMeters = 2.0;
 float g_blurRadiusPixels = 1.0;
 float g_positionRange = 50.0;
 
+// 焦点範囲の外側から、何mごとに 3x3 -> 5x5 -> 7x7 -> 9x9 -> 11x11 と強くするか。
+// C++ 側から渡さなくても、この初期値で動作します。
+float g_blurStepMeters = 2.0;
+
 texture g_SrcTex;
 sampler colorSampler = sampler_state
 {
@@ -50,10 +54,62 @@ float GetDistanceMeters(float2 uv, out float valid)
     return length(worldPos.xyz - g_cameraPos.xyz);
 }
 
-#define DOF_SAMPLE_SIZE 11
-
-float4 PS(in float4 pos : POSITION, in float2 uv : TEXCOORD0) : COLOR0
+bool IsInFocusRange(float distanceMeters)
 {
+    return abs(distanceMeters - g_focalDistanceMeters) <= g_focusBandHalfWidthMeters;
+}
+
+int GetBlurHalfSize(float distanceMeters)
+{
+    float distanceFromFocus = abs(distanceMeters - g_focalDistanceMeters);
+    float outOfFocusDistance = distanceFromFocus - g_focusBandHalfWidthMeters;
+
+    if (outOfFocusDistance <= 0.0f)
+    {
+        return 0;
+    }
+
+    if (outOfFocusDistance < g_blurStepMeters * 1.0f)
+    {
+        return 1; // 3x3
+    }
+
+    if (outOfFocusDistance < g_blurStepMeters * 2.0f)
+    {
+        return 2; // 5x5
+    }
+
+    if (outOfFocusDistance < g_blurStepMeters * 3.0f)
+    {
+        return 3; // 7x7
+    }
+
+    if (outOfFocusDistance < g_blurStepMeters * 4.0f)
+    {
+        return 4; // 9x9
+    }
+
+    return 5; // 11x11
+}
+
+float GetGaussianWeight(int x, int y, int halfSize)
+{
+    float fx = (float)x;
+    float fy = (float)y;
+    float dist2 = fx * fx + fy * fy;
+
+    // 小さいカーネルでは狭く、大きいカーネルでは広くする。
+    float sigma = max(1.0f, (float)halfSize * 0.75f);
+    float sigma2 = sigma * sigma;
+
+    return exp(-dist2 / (2.0f * sigma2));
+}
+
+// ps_3_0 では POSITION をピクセルシェーダー入力にしない。
+// 画面位置は使わず、元の uv と sampleUv の扱いを維持する。
+float4 PS(in float2 uv : TEXCOORD0) : COLOR0
+{
+    // 元のコードと同じ 0.5 texel 補正を残す。
     float2 sampleUv = uv + g_TexelSize * 0.5f;
     float4 baseColor = tex2D(colorSampler, sampleUv);
 
@@ -64,42 +120,53 @@ float4 PS(in float4 pos : POSITION, in float2 uv : TEXCOORD0) : COLOR0
         return baseColor;
     }
 
-    if (abs(centerDistanceMeters - g_focalDistanceMeters) <= g_focusBandHalfWidthMeters)
+    int blurHalfSize = GetBlurHalfSize(centerDistanceMeters);
+    if (blurHalfSize <= 0)
     {
         return baseColor;
     }
 
-    float4 sumColor = baseColor;
-    float weightSum = 1.0f;
+    float4 sumColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float weightSum = 0.0f;
 
-    const int sampleHalf = DOF_SAMPLE_SIZE / 2;
+    const int maxHalfSize = 5;
+
     [unroll]
-    for (int y = -sampleHalf; y <= sampleHalf; ++y)
+    for (int y = -maxHalfSize; y <= maxHalfSize; ++y)
     {
         [unroll]
-        for (int x = -sampleHalf; x <= sampleHalf; ++x)
+        for (int x = -maxHalfSize; x <= maxHalfSize; ++x)
         {
-            if (x == 0 && y == 0)
+            if (x < -blurHalfSize || x > blurHalfSize || y < -blurHalfSize || y > blurHalfSize)
             {
                 continue;
             }
 
             float2 offset = float2((float)x, (float)y) * g_TexelSize * g_blurRadiusPixels;
+            float2 tapUv = sampleUv + offset;
+
             float tapValid = 0.0f;
-            float tapDistanceMeters = GetDistanceMeters(sampleUv + offset, tapValid);
+            float tapDistanceMeters = GetDistanceMeters(tapUv, tapValid);
             if (tapValid <= 0.0f)
             {
                 continue;
             }
 
-            if (abs(tapDistanceMeters - g_focalDistanceMeters) <= g_focusBandHalfWidthMeters)
+            // くっきり表示される範囲はサンプリングに混ぜない。
+            if (IsInFocusRange(tapDistanceMeters))
             {
                 continue;
             }
 
-            sumColor += tex2D(colorSampler, sampleUv + offset);
-            weightSum += 1.0f;
+            float weight = GetGaussianWeight(x, y, blurHalfSize);
+            sumColor += tex2D(colorSampler, tapUv) * weight;
+            weightSum += weight;
         }
+    }
+
+    if (weightSum <= 0.0f)
+    {
+        return baseColor;
     }
 
     return sumColor / weightSum;
