@@ -393,6 +393,16 @@ DWORD MeshMix::GetSubsetCount() const
     return m_subsetCount;
 }
 
+bool MeshMix::IsEnabled() const
+{
+    return m_enabled;
+}
+
+void MeshMix::SetEnabled(const bool enabled)
+{
+    m_enabled = enabled;
+}
+
 void MeshMix::Render()
 {
     HRESULT hResult = E_FAIL;
@@ -401,7 +411,7 @@ void MeshMix::Render()
     // 初期化が終わっていないなら描画しない
     // （別スレッドで初期化を行う場合を考慮）
     //--------------------------------------------------------
-    if (m_bLoaded == false)
+    if (m_bLoaded == false || m_enabled == false)
     {
         return;
     }

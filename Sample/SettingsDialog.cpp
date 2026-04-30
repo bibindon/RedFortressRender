@@ -30,6 +30,7 @@ constexpr int MODEL_LOAD_SCALE_SLIDER_MAX = static_cast<int>((MODEL_LOAD_SCALE_M
 constexpr int GAUSSIAN_SLIDER_MIN = 1;
 constexpr int GAUSSIAN_SLIDER_MAX = (GAUSSIAN_SAMPLE_MAX + 1) / 2;
 constexpr UINT ID_POPUP_EXPORT_BINARY = 60001;
+constexpr UINT ID_POPUP_REMOVE_MODEL = 60002;
 
 std::wstring FormatResolutionLabel(const int width, const int height)
 {
@@ -221,6 +222,7 @@ bool ShowLoadedModelContextMenu(HWND hDlg, HWND listView, POINT screenPoint)
     }
 
     AppendMenuW(popupMenu, MF_STRING, ID_POPUP_EXPORT_BINARY, L"Export_Binary");
+    AppendMenuW(popupMenu, MF_STRING, ID_POPUP_REMOVE_MODEL, L"Remove");
 
     const UINT command = TrackPopupMenu(popupMenu,
                                         TPM_RETURNCMD | TPM_RIGHTBUTTON,
@@ -231,6 +233,18 @@ bool ShowLoadedModelContextMenu(HWND hDlg, HWND listView, POINT screenPoint)
                                         NULL);
 
     DestroyMenu(popupMenu);
+
+    if (command == ID_POPUP_REMOVE_MODEL)
+    {
+        if (!RemoveLoadedModel(static_cast<size_t>(itemIndex)))
+        {
+            MessageBoxW(hDlg,
+                        L"Model remove failed.",
+                        L"Remove",
+                        MB_ICONERROR | MB_OK);
+        }
+        return true;
+    }
 
     if (command != ID_POPUP_EXPORT_BINARY)
     {

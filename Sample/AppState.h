@@ -53,6 +53,7 @@ struct LoadedModelInfo
     std::wstring m_path;
     D3DXVECTOR3 m_pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
     float m_scale = 1.0f;
+    int m_renderId = -1;
 };
 
 enum class MixMeshShaderMode
@@ -142,7 +143,9 @@ int SliderValueToGaussianSampleSize(int sliderValue);
 void RegisterLoadedModel(const std::wstring& type,
                          const std::wstring& path,
                          const D3DXVECTOR3& pos,
-                         float scale);
+                         float scale,
+                         int renderId);
+bool RemoveLoadedModel(size_t modelIndex);
 
 void SpawnMeshAtCameraFront(const std::wstring& filePath);
 void SpawnMeshMixAtCameraFront(const std::wstring& filePath);

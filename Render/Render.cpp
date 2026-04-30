@@ -442,9 +442,21 @@ int Render::AddMesh(const std::wstring& filePath,
                     const float uvTile)
 {
     m_meshList.push_back(MeshOld(filePath, pos, rot, scale, radius, uvTile));
+    m_meshEnabledList.push_back(true);
     m_meshList.rbegin()->Initialize();
 
     return (int)m_meshList.size() - 1;
+}
+
+bool Render::RemoveMesh(const int id)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshEnabledList.size()))
+    {
+        return false;
+    }
+
+    m_meshEnabledList.at(id) = false;
+    return true;
 }
 
 int Render::AddMeshNoLighting(const std::wstring& filePath,
@@ -455,6 +467,7 @@ int Render::AddMeshNoLighting(const std::wstring& filePath,
                               const float uvTile)
 {
     m_meshList.push_back(MeshOld(L".\\MeshNoLighting.cso", filePath, pos, rot, scale, radius, uvTile));
+    m_meshEnabledList.push_back(true);
     m_meshList.rbegin()->Initialize();
 
     return (int)m_meshList.size() - 1;
@@ -482,75 +495,151 @@ void Render::AddMeshSSSLike(const std::wstring& filePath,
     m_meshSSSLikeList.rbegin()->Initialize(filePath, pos, rot, scale, radius);
 }
 
-void Render::AddMeshSSS(const std::wstring& filePath,
-                        const D3DXVECTOR3& pos,
-                        const D3DXVECTOR3& rot,
-                        const float scale,
-                        const float radius)
+int Render::AddMeshSSS(const std::wstring& filePath,
+                       const D3DXVECTOR3& pos,
+                       const D3DXVECTOR3& rot,
+                       const float scale,
+                       const float radius)
 {
     auto mesh = MeshSSS(filePath, pos, rot, scale, radius);
     m_meshSSSList.push_back(mesh);
+    m_meshSSSEnabledList.push_back(true);
     m_meshSSSList.rbegin()->Initialize();
+    return static_cast<int>(m_meshSSSList.size()) - 1;
 }
 
-void Render::AddMeshPointLight(const std::wstring& filePath,
-                               const D3DXVECTOR3& pos,
-                               const D3DXVECTOR3& rot,
-                               const float scale,
-                               const float radius)
+bool Render::RemoveMeshSSS(const int id)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshSSSEnabledList.size()))
+    {
+        return false;
+    }
+
+    m_meshSSSEnabledList.at(id) = false;
+    return true;
+}
+
+int Render::AddMeshPointLight(const std::wstring& filePath,
+                              const D3DXVECTOR3& pos,
+                              const D3DXVECTOR3& rot,
+                              const float scale,
+                              const float radius)
 {
     MeshPointLight mesh;
     m_meshPointLightList.push_back(mesh);
+    m_meshPointLightEnabledList.push_back(true);
     m_meshPointLightList.rbegin()->Initialize(filePath, pos, rot, scale, radius);
+    return static_cast<int>(m_meshPointLightList.size()) - 1;
 }
 
-void Render::AddMeshNormalMapping(const std::wstring& filePath,
-                                  const std::wstring& normalMap,
-                                  const D3DXVECTOR3& pos,
-                                  const D3DXVECTOR3& rot,
-                                  const float scale,
-                                  const float radius)
+bool Render::RemoveMeshPointLight(const int id)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshPointLightEnabledList.size()))
+    {
+        return false;
+    }
+
+    m_meshPointLightEnabledList.at(id) = false;
+    return true;
+}
+
+int Render::AddMeshNormalMapping(const std::wstring& filePath,
+                                 const std::wstring& normalMap,
+                                 const D3DXVECTOR3& pos,
+                                 const D3DXVECTOR3& rot,
+                                 const float scale,
+                                 const float radius)
 {
     MeshNormalMapping mesh;
     m_meshNormalMapList.push_back(mesh);
+    m_meshNormalMapEnabledList.push_back(true);
     m_meshNormalMapList.rbegin()->Initialize(filePath, normalMap, pos, rot, scale, radius);
+    return static_cast<int>(m_meshNormalMapList.size()) - 1;
 }
 
-void Render::AddMeshPOM(const std::wstring& filePath,
-                        const D3DXVECTOR3& pos,
-                        const D3DXVECTOR3& rot,
-                        const float scale,
-                        const float radius)
+bool Render::RemoveMeshNormalMapping(const int id)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshNormalMapEnabledList.size()))
+    {
+        return false;
+    }
+
+    m_meshNormalMapEnabledList.at(id) = false;
+    return true;
+}
+
+int Render::AddMeshPOM(const std::wstring& filePath,
+                       const D3DXVECTOR3& pos,
+                       const D3DXVECTOR3& rot,
+                       const float scale,
+                       const float radius)
 {
     MeshPOM mesh;
     m_meshPOMList.push_back(mesh);
+    m_meshPOMEnabledList.push_back(true);
     m_meshPOMList.rbegin()->Initialize(filePath, pos, rot, scale, radius);
+    return static_cast<int>(m_meshPOMList.size()) - 1;
 }
 
-void Render::AddAnimMesh(const std::wstring& filePath,
-                                   const D3DXVECTOR3& pos,
-                                   const D3DXVECTOR3& rot,
-                                   const float scale,
-                                   const AnimSetMap& animSetMap)
+bool Render::RemoveMeshPOM(const int id)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshPOMEnabledList.size()))
+    {
+        return false;
+    }
+
+    m_meshPOMEnabledList.at(id) = false;
+    return true;
+}
+
+int Render::AddAnimMesh(const std::wstring& filePath,
+                        const D3DXVECTOR3& pos,
+                        const D3DXVECTOR3& rot,
+                        const float scale,
+                        const AnimSetMap& animSetMap)
 {
     AnimMesh* animMesh = NEW AnimMesh(filePath, pos, rot, scale, animSetMap);
     m_animMeshList.push_back(animMesh);
+    return static_cast<int>(m_animMeshList.size()) - 1;
 }
 
-void Render::AddSkinAnimMesh(const std::wstring& filePath,
-                                       const D3DXVECTOR3& pos,
-                                       const D3DXVECTOR3& rot,
-                                       const float scale,
-                                       const AnimSetMap& animSetMap)
+bool Render::RemoveAnimMesh(const int id)
+{
+    if (id < 0 || id >= static_cast<int>(m_animMeshList.size()) || m_animMeshList.at(id) == nullptr)
+    {
+        return false;
+    }
+
+    SAFE_DELETE(m_animMeshList.at(id));
+    return true;
+}
+
+int Render::AddSkinAnimMesh(const std::wstring& filePath,
+                            const D3DXVECTOR3& pos,
+                            const D3DXVECTOR3& rot,
+                            const float scale,
+                            const AnimSetMap& animSetMap)
 {
     SkinAnimMesh* mesh = NEW SkinAnimMesh(filePath, pos, rot, scale, animSetMap);
     m_skinAnimMeshList.push_back(mesh);
+    return static_cast<int>(m_skinAnimMeshList.size()) - 1;
 }
 
-void Render::AddMeshInstansing(const std::wstring& filePath,
-                                         const D3DXVECTOR3& pos,
-                                         const D3DXVECTOR3& rot,
-                                         const float scale)
+bool Render::RemoveSkinAnimMesh(const int id)
+{
+    if (id < 0 || id >= static_cast<int>(m_skinAnimMeshList.size()) || m_skinAnimMeshList.at(id) == nullptr)
+    {
+        return false;
+    }
+
+    SAFE_DELETE(m_skinAnimMeshList.at(id));
+    return true;
+}
+
+int Render::AddMeshInstansing(const std::wstring& filePath,
+                              const D3DXVECTOR3& pos,
+                              const D3DXVECTOR3& rot,
+                              const float scale)
 {
     if (m_meshInstancingMap.find(filePath) == m_meshInstancingMap.end())
     {
@@ -561,6 +650,20 @@ void Render::AddMeshInstansing(const std::wstring& filePath,
     }
 
     m_meshInstancingMap[filePath]->AddInstance(pos);
+    return 0;
+}
+
+bool Render::RemoveMeshInstancing(const std::wstring& filePath)
+{
+    const auto found = m_meshInstancingMap.find(filePath);
+    if (found == m_meshInstancingMap.end())
+    {
+        return false;
+    }
+
+    SAFE_DELETE(found->second);
+    m_meshInstancingMap.erase(found);
+    return true;
 }
 
 int Render::AddMeshMix(const std::wstring& filePath,
@@ -580,6 +683,17 @@ int Render::AddMeshMix(const std::wstring& filePath,
     m_meshMixList.rbegin()->Initialize();
 
     return (int)m_meshMixList.size() - 1;
+}
+
+bool Render::RemoveMeshMix(const int id)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshMixList.size()))
+    {
+        return false;
+    }
+
+    m_meshMixList.at(id).SetEnabled(false);
+    return true;
 }
 
 void Render::SetMeshMixPos(const int id, const D3DXVECTOR3& pos)
@@ -888,9 +1002,12 @@ void Render::DrawPass1(const bool renderToSceneRenderTargets)
     hResult = Common::D3DDevice()->BeginScene();
     assert(hResult == S_OK);
 
-    for (auto& elem : m_meshList)
+    for (size_t i = 0; i < m_meshList.size(); ++i)
     {
-        elem.Render();
+        if (i < m_meshEnabledList.size() && m_meshEnabledList[i])
+        {
+            m_meshList[i].Render();
+        }
     }
 
     for (auto& elem : m_meshSmoothList)
@@ -903,37 +1020,55 @@ void Render::DrawPass1(const bool renderToSceneRenderTargets)
         elem.Draw();
     }
 
-    for (auto& elem : m_meshSSSList)
+    for (size_t i = 0; i < m_meshSSSList.size(); ++i)
     {
-        elem.Render();
+        if (i < m_meshSSSEnabledList.size() && m_meshSSSEnabledList[i])
+        {
+            m_meshSSSList[i].Render();
+        }
     }
 
-    for (auto& elem : m_meshPointLightList)
+    for (size_t i = 0; i < m_meshPointLightList.size(); ++i)
     {
-        elem.Draw();
+        if (i < m_meshPointLightEnabledList.size() && m_meshPointLightEnabledList[i])
+        {
+            m_meshPointLightList[i].Draw();
+        }
     }
 
-    for (auto& elem : m_meshNormalMapList)
+    for (size_t i = 0; i < m_meshNormalMapList.size(); ++i)
     {
-        elem.Draw();
+        if (i < m_meshNormalMapEnabledList.size() && m_meshNormalMapEnabledList[i])
+        {
+            m_meshNormalMapList[i].Draw();
+        }
     }
 
-    for (auto& elem : m_meshPOMList)
+    for (size_t i = 0; i < m_meshPOMList.size(); ++i)
     {
-        elem.Draw();
+        if (i < m_meshPOMEnabledList.size() && m_meshPOMEnabledList[i])
+        {
+            m_meshPOMList[i].Draw();
+        }
     }
 
     for (auto& elem : m_animMeshList)
     {
-        elem->Render();
+        if (elem != nullptr)
+        {
+            elem->Render();
+        }
     }
 
     for (auto& elem : m_skinAnimMeshList)
     {
-        elem->Render(Camera::GetViewMatrix(),
-                     Camera::GetProjMatrix(),
-                     Light::GetLightDir(),
-                     Light::GetBrightness());
+        if (elem != nullptr)
+        {
+            elem->Render(Camera::GetViewMatrix(),
+                         Camera::GetProjMatrix(),
+                         Light::GetLightDir(),
+                         Light::GetBrightness());
+        }
     }
 
     for (auto& elem : m_meshInstancingMap)

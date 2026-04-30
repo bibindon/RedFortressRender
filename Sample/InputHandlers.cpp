@@ -51,23 +51,23 @@ void AddSimpleMeshAtCameraFront(const std::wstring& filePath,
 
     if (useSSS)
     {
-        g_Render.AddMeshSSS(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), scale, 1.0f);
-        RegisterLoadedModel(L"MeshSSS", filePath, pos, scale);
+        const int renderId = g_Render.AddMeshSSS(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), scale, 1.0f);
+        RegisterLoadedModel(L"MeshSSS", filePath, pos, scale, renderId);
     }
     else if (usePOM)
     {
-        g_Render.AddMeshPOM(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), scale, 1.0f);
-        RegisterLoadedModel(L"MeshPOM", filePath, pos, scale);
+        const int renderId = g_Render.AddMeshPOM(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), scale, 1.0f);
+        RegisterLoadedModel(L"MeshPOM", filePath, pos, scale, renderId);
     }
     else if (usePointLight)
     {
-        g_Render.AddMeshPointLight(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), scale);
-        RegisterLoadedModel(L"MeshPointLight", filePath, pos, scale);
+        const int renderId = g_Render.AddMeshPointLight(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), scale);
+        RegisterLoadedModel(L"MeshPointLight", filePath, pos, scale, renderId);
     }
     else
     {
-        g_Render.AddMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), scale, 1.0f);
-        RegisterLoadedModel(L"Mesh", filePath, pos, scale);
+        const int renderId = g_Render.AddMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), scale, 1.0f);
+        RegisterLoadedModel(L"Mesh", filePath, pos, scale, renderId);
     }
 }
 
@@ -79,12 +79,12 @@ void AddNormalMappedMeshAtCameraFront()
     pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
     const float yaw = atan2f(forward.x, forward.z);
-    g_Render.AddMeshNormalMapping(L"cubeNormalMap.x",
-                                  L"normalMap.png",
-                                  pos,
-                                  D3DXVECTOR3(0, yaw, 0.0f),
-                                  1.0f);
-    RegisterLoadedModel(L"MeshNormalMap", L"cubeNormalMap.x", pos, 1.0f);
+    const int renderId = g_Render.AddMeshNormalMapping(L"cubeNormalMap.x",
+                                                       L"normalMap.png",
+                                                       pos,
+                                                       D3DXVECTOR3(0, yaw, 0.0f),
+                                                       1.0f);
+    RegisterLoadedModel(L"MeshNormalMap", L"cubeNormalMap.x", pos, 1.0f, renderId);
 }
 
 void AddSkinAnimMeshAtCameraFront()
@@ -95,12 +95,12 @@ void AddSkinAnimMeshAtCameraFront()
     pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
     const float yaw = atan2f(forward.x, forward.z);
-    g_Render.AddSkinAnimMesh(L"res\\model\\wolf.x",
-                             pos,
-                             D3DXVECTOR3(0, yaw, 0.0f),
-                             3.0f,
-                             CreateDefaultAnimSetMap());
-    RegisterLoadedModel(L"SkinAnimMesh", L"res\\model\\wolf.x", pos, 3.0f);
+    const int renderId = g_Render.AddSkinAnimMesh(L"res\\model\\wolf.x",
+                                                  pos,
+                                                  D3DXVECTOR3(0, yaw, 0.0f),
+                                                  3.0f,
+                                                  CreateDefaultAnimSetMap());
+    RegisterLoadedModel(L"SkinAnimMesh", L"res\\model\\wolf.x", pos, 3.0f, renderId);
 }
 
 void AddAnimMeshAtCameraFront()
@@ -111,12 +111,12 @@ void AddAnimMeshAtCameraFront()
     pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
     const float yaw = atan2f(forward.x, forward.z);
-    g_Render.AddAnimMesh(L"enemyOrangeCube.x",
-                         pos,
-                         D3DXVECTOR3(0, yaw, 0.0f),
-                         1.0f,
-                         CreateDefaultAnimSetMap());
-    RegisterLoadedModel(L"AnimMesh", L"enemyOrangeCube.x", pos, 1.0f);
+    const int renderId = g_Render.AddAnimMesh(L"enemyOrangeCube.x",
+                                              pos,
+                                              D3DXVECTOR3(0, yaw, 0.0f),
+                                              1.0f,
+                                              CreateDefaultAnimSetMap());
+    RegisterLoadedModel(L"AnimMesh", L"enemyOrangeCube.x", pos, 1.0f, renderId);
 }
 
 void AddImageOrPointLight(const bool shift, const bool control)
@@ -245,8 +245,8 @@ bool HandleSampleKeyDown(HWND hWnd, const WPARAM wParam)
         pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
         const float yaw = atan2f(forward.x, forward.z);
-        g_Render.AddMeshInstansing(L"cube.x", pos, D3DXVECTOR3(0, yaw, 0.0f), 1.0f);
-        RegisterLoadedModel(L"Instancing", L"cube.x", pos, 1.0f);
+        const int renderId = g_Render.AddMeshInstansing(L"cube.x", pos, D3DXVECTOR3(0, yaw, 0.0f), 1.0f);
+        RegisterLoadedModel(L"Instancing", L"cube.x", pos, 1.0f, renderId);
     }
 
     if (wParam == 'O')

@@ -67,6 +67,7 @@ public:
                 const float scale,
                 const float radius = -1.f,
                 const float uvTile = 1.0f);
+    bool RemoveMesh(int id);
 
     int AddMeshNoLighting(const std::wstring& filePath,
                           const D3DXVECTOR3& pos,
@@ -87,48 +88,55 @@ public:
                         const float scale,
                         const float radius = -1.f);
 
-    void AddMeshSSS(const std::wstring& filePath,
+    int AddMeshSSS(const std::wstring& filePath,
+                   const D3DXVECTOR3& pos,
+                   const D3DXVECTOR3& rot,
+                   const float scale,
+                   const float radius = -1.f);
+    bool RemoveMeshSSS(int id);
+
+    int AddMeshPointLight(const std::wstring& filePath,
+                          const D3DXVECTOR3& pos,
+                          const D3DXVECTOR3& rot,
+                          const float scale,
+                          const float radius = -1.f);
+    bool RemoveMeshPointLight(int id);
+
+    int AddMeshNormalMapping(const std::wstring& filePath,
+                             const std::wstring& normalMap,
+                             const D3DXVECTOR3& pos,
+                             const D3DXVECTOR3& rot,
+                             const float scale,
+                             const float radius = -1.f);
+    bool RemoveMeshNormalMapping(int id);
+
+    int AddMeshPOM(const std::wstring& filePath,
+                   const D3DXVECTOR3& pos,
+                   const D3DXVECTOR3& rot,
+                   const float scale,
+                   const float radius);
+    bool RemoveMeshPOM(int id);
+
+    int AddAnimMesh(const std::wstring& filePath,
                     const D3DXVECTOR3& pos,
                     const D3DXVECTOR3& rot,
                     const float scale,
-                    const float radius = -1.f);
+                    const AnimSetMap& animSetMap);
+    bool RemoveAnimMesh(int id);
 
-    void AddMeshPointLight(const std::wstring& filePath,
+    int AddSkinAnimMesh(const std::wstring& filePath,
                         const D3DXVECTOR3& pos,
                         const D3DXVECTOR3& rot,
                         const float scale,
-                        const float radius = -1.f);
-
-    void AddMeshNormalMapping(const std::wstring& filePath,
-                              const std::wstring& normalMap,
-                              const D3DXVECTOR3& pos,
-                              const D3DXVECTOR3& rot,
-                              const float scale,
-                              const float radius = -1.f);
-
-    void AddMeshPOM(const std::wstring& filePath,
-                    const D3DXVECTOR3& pos,
-                    const D3DXVECTOR3& rot,
-                    const float scale,
-                    const float radius);
-
-    void AddAnimMesh(const std::wstring& filePath,
-                     const D3DXVECTOR3& pos,
-                     const D3DXVECTOR3& rot,
-                     const float scale,
-                     const AnimSetMap& animSetMap);
-
-    void AddSkinAnimMesh(const std::wstring& filePath,
-                         const D3DXVECTOR3& pos,
-                         const D3DXVECTOR3& rot,
-                         const float scale,
-                         const AnimSetMap& animSetMap);
+                        const AnimSetMap& animSetMap);
+    bool RemoveSkinAnimMesh(int id);
 
     // インスタンシング可能なメッシュ
-    void AddMeshInstansing(const std::wstring& filePath,
-                           const D3DXVECTOR3& pos,
-                           const D3DXVECTOR3& rot,
-                           const float scale);
+    int AddMeshInstansing(const std::wstring& filePath,
+                          const D3DXVECTOR3& pos,
+                          const D3DXVECTOR3& rot,
+                          const float scale);
+    bool RemoveMeshInstancing(const std::wstring& filePath);
 
     int AddMeshMix(const std::wstring& filePath,
                    const D3DXVECTOR3& pos,
@@ -137,6 +145,7 @@ public:
                    const float radius = -1.f,
                    const bool useParallaxOcclusionMapping = false,
                    const bool useNormalMapping = false);
+    bool RemoveMeshMix(int id);
 
     void SetMeshMixPos(const int id, const D3DXVECTOR3& pos);
 
@@ -223,14 +232,19 @@ private:
     void ChangeWindowMode();
 
     std::deque<MeshOld> m_meshList;
+    std::vector<bool> m_meshEnabledList;
     std::vector<AnimMesh*> m_animMeshList;
     std::vector<SkinAnimMesh*> m_skinAnimMeshList;
     std::deque<MeshSmooth> m_meshSmoothList;
     std::deque<MeshSSSLike> m_meshSSSLikeList;
     std::deque<MeshSSS> m_meshSSSList;
+    std::vector<bool> m_meshSSSEnabledList;
     std::deque<MeshPointLight> m_meshPointLightList;
+    std::vector<bool> m_meshPointLightEnabledList;
     std::deque<MeshNormalMapping> m_meshNormalMapList;
+    std::vector<bool> m_meshNormalMapEnabledList;
     std::deque<MeshPOM> m_meshPOMList;
+    std::vector<bool> m_meshPOMEnabledList;
 
     std::deque<MeshMix> m_meshMixList;
 

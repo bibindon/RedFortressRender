@@ -681,15 +681,88 @@ int SliderValueToGaussianSampleSize(const int sliderValue)
 void RegisterLoadedModel(const std::wstring& type,
                          const std::wstring& path,
                          const D3DXVECTOR3& pos,
-                         const float scale)
+                         const float scale,
+                         const int renderId)
 {
     LoadedModelInfo info;
     info.m_type = type;
     info.m_path = path;
     info.m_pos = pos;
     info.m_scale = scale;
+    info.m_renderId = renderId;
     g_loadedModelList.push_back(info);
     RefreshSettingsDialogState();
+}
+
+bool RemoveLoadedModel(const size_t modelIndex)
+{
+    if (modelIndex >= g_loadedModelList.size())
+    {
+        return false;
+    }
+
+    const LoadedModelInfo& model = g_loadedModelList.at(modelIndex);
+    bool removed = false;
+
+    if (model.m_type == L"Mesh")
+    {
+        removed = g_Render.RemoveMesh(model.m_renderId);
+    }
+    else if (model.m_type == L"MeshMix")
+    {
+        removed = g_Render.RemoveMeshMix(model.m_renderId);
+    }
+    else if (model.m_type == L"AnimMesh")
+    {
+        removed = g_Render.RemoveAnimMesh(model.m_renderId);
+    }
+    else if (model.m_type == L"SkinAnimMesh")
+    {
+        removed = g_Render.RemoveSkinAnimMesh(model.m_renderId);
+    }
+    else if (model.m_type == L"MeshSSS")
+    {
+        removed = g_Render.RemoveMeshSSS(model.m_renderId);
+    }
+    else if (model.m_type == L"MeshPOM")
+    {
+        removed = g_Render.RemoveMeshPOM(model.m_renderId);
+    }
+    else if (model.m_type == L"MeshPointLight")
+    {
+        removed = g_Render.RemoveMeshPointLight(model.m_renderId);
+    }
+    else if (model.m_type == L"MeshNormalMap")
+    {
+        removed = g_Render.RemoveMeshNormalMapping(model.m_renderId);
+    }
+    else if (model.m_type == L"Instancing")
+    {
+        removed = g_Render.RemoveMeshInstancing(model.m_path);
+    }
+
+    if (!removed)
+    {
+        return false;
+    }
+
+    if (model.m_type == L"Instancing")
+    {
+        g_loadedModelList.erase(std::remove_if(g_loadedModelList.begin(),
+                                               g_loadedModelList.end(),
+                                               [&model](const LoadedModelInfo& info)
+                                               {
+                                                   return info.m_type == model.m_type && info.m_path == model.m_path;
+                                               }),
+                                g_loadedModelList.end());
+    }
+    else
+    {
+        g_loadedModelList.erase(g_loadedModelList.begin() + static_cast<std::ptrdiff_t>(modelIndex));
+    }
+
+    RefreshSettingsDialogState();
+    return true;
 }
 
 void SpawnMeshAtCameraFront(const std::wstring& filePath)
@@ -705,8 +778,8 @@ void SpawnMeshAtCameraFront(const std::wstring& filePath)
     pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
     const float yaw = atan2f(forward.x, forward.z);
-    g_Render.AddMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), g_modelLoadScale, 1.0f);
-    RegisterLoadedModel(L"Mesh", filePath, pos, g_modelLoadScale);
+    const int renderId = g_Render.AddMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), g_modelLoadScale, 1.0f);
+    RegisterLoadedModel(L"Mesh", filePath, pos, g_modelLoadScale, renderId);
 }
 
 void SpawnMeshMixAtCameraFront(const std::wstring& filePath)
@@ -724,14 +797,14 @@ void SpawnMeshMixAtCameraFront(const std::wstring& filePath)
     const float yaw = atan2f(forward.x, forward.z);
     const bool usePOM = (g_mixMeshShaderMode == MixMeshShaderMode::ParallaxOcclusionMapping);
     const bool useNormalMapping = (g_mixMeshShaderMode == MixMeshShaderMode::NormalMapping);
-    g_Render.AddMeshMix(filePath,
-                        pos,
-                        D3DXVECTOR3(0, yaw, 0.0f),
-                        g_modelLoadScale,
-                        1.0f,
-                        usePOM,
-                        useNormalMapping);
-    RegisterLoadedModel(L"MeshMix", filePath, pos, g_modelLoadScale);
+    const int renderId = g_Render.AddMeshMix(filePath,
+                                             pos,
+                                             D3DXVECTOR3(0, yaw, 0.0f),
+                                             g_modelLoadScale,
+                                             1.0f,
+                                             usePOM,
+                                             useNormalMapping);
+    RegisterLoadedModel(L"MeshMix", filePath, pos, g_modelLoadScale, renderId);
 }
 
 NSRender::AnimSetMap CreateDefaultAnimSetMap()
@@ -759,8 +832,8 @@ void SpawnAnimMeshAtCameraFront(const std::wstring& filePath)
     pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
     const float yaw = atan2f(forward.x, forward.z);
-    g_Render.AddAnimMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), g_modelLoadScale, CreateDefaultAnimSetMap());
-    RegisterLoadedModel(L"AnimMesh", filePath, pos, g_modelLoadScale);
+    const int renderId = g_Render.AddAnimMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), g_modelLoadScale, CreateDefaultAnimSetMap());
+    RegisterLoadedModel(L"AnimMesh", filePath, pos, g_modelLoadScale, renderId);
 }
 
 void SpawnSkinAnimMeshAtCameraFront(const std::wstring& filePath)
@@ -776,8 +849,8 @@ void SpawnSkinAnimMeshAtCameraFront(const std::wstring& filePath)
     pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
     const float yaw = atan2f(forward.x, forward.z);
-    g_Render.AddSkinAnimMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), g_modelLoadScale, CreateDefaultAnimSetMap());
-    RegisterLoadedModel(L"SkinAnimMesh", filePath, pos, g_modelLoadScale);
+    const int renderId = g_Render.AddSkinAnimMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), g_modelLoadScale, CreateDefaultAnimSetMap());
+    RegisterLoadedModel(L"SkinAnimMesh", filePath, pos, g_modelLoadScale, renderId);
 }
 
 bool ShowOpenFileDialog(HWND hWnd, const wchar_t* filter, std::wstring& selectedPath)

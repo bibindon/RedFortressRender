@@ -233,6 +233,8 @@ public:
 
     float GetScale() const;
     DWORD GetSubsetCount() const;
+    bool IsEnabled() const;
+    void SetEnabled(bool enabled);
 
     LPD3DXMESH GetD3DMesh() const;
 
@@ -273,6 +275,7 @@ private:
     float m_scale = 0.0f;
 
     bool m_bLoaded = false;
+    bool m_enabled = true;
 
     stMeshParam m_param;
 

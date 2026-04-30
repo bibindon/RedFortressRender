@@ -104,6 +104,11 @@ void GBuffer::Draw(const std::deque<MeshMix>& meshList,
     // ここで「不透明物体のみ」を GBuffer.fx で描く
     for (auto& mesh : meshList)
     {
+        if (!mesh.IsEnabled())
+        {
+            continue;
+        }
+
         // 必要な定数の投入
         D3DXMATRIX matWorld;
         D3DXMatrixIdentity(&matWorld);
