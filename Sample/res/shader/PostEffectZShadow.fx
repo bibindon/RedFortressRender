@@ -91,27 +91,6 @@ float3 DecodeWorldNormal(float3 encodedNormal)
     return normal / normalLength;
 }
 
-float GetGaussianWeight1D5(int offset)
-{
-    int absOffset = abs(offset);
-    if (absOffset == 0)
-    {
-        return 6.0f;
-    }
-
-    if (absOffset == 1)
-    {
-        return 4.0f;
-    }
-
-    if (absOffset == 2)
-    {
-        return 1.0f;
-    }
-
-    return 0.0f;
-}
-
 float SampleShadowVisibility(float2 uvLightView, float fDepthLightView)
 {
     float2 uvTexel = float2(g_shadowTexelW, g_shadowTexelH);
@@ -130,7 +109,7 @@ float SampleShadowVisibility(float2 uvLightView, float fDepthLightView)
                 continue;
             }
 
-            float weight = GetGaussianWeight1D5(x) * GetGaussianWeight1D5(y);
+            float weight = 1.0f;
             float shadowDepth = tex2Dlod(samplerLightZ, float4(sampleUv, 0, 0)).r;
             if (shadowDepth < (fDepthLightView - g_shadowBias))
             {
@@ -315,7 +294,7 @@ void PS_Composite(in float4 inPos     : POSITION,
                 continue;
             }
 
-            float weight = GetGaussianWeight1D5(x) * GetGaussianWeight1D5(y);
+            float weight = 1.0f;
             vShadowColorSum += tex2D(samplerShadow, sampleUv) * weight;
             totalWeight += weight;
         }

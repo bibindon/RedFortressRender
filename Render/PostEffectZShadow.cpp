@@ -378,8 +378,8 @@ void PostEffectZShadow::RenderTechnique3()
     g_fxDepthBufferShadow->SetTexture("g_texSceneNormal", m_sceneNormalTexture);
     g_fxDepthBufferShadow->SetFloat("g_shadowIntensity", m_shadowIntensity);
     g_fxDepthBufferShadow->SetFloat("g_shadowSaturationBoost", m_shadowSaturationBoost);
-    g_fxDepthBufferShadow->SetFloat("g_edgeDepthThreshold", 0.003f);
-    g_fxDepthBufferShadow->SetFloat("g_edgeNormalThreshold", 0.85f);
+    g_fxDepthBufferShadow->SetFloat("g_edgeDepthThreshold", 0.010f);
+    g_fxDepthBufferShadow->SetFloat("g_edgeNormalThreshold", 0.50f);
     g_fxDepthBufferShadow->CommitChanges();
 
     DrawFullscreenQuad();
