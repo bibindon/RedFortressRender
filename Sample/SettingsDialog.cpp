@@ -18,6 +18,8 @@ constexpr int SATURATE_SLIDER_MIN = 0;
 constexpr int SATURATE_SLIDER_MAX = static_cast<int>(SATURATE_MAX / SATURATE_STEP);
 constexpr int FOG_SLIDER_MIN = 0;
 constexpr int FOG_SLIDER_MAX = static_cast<int>(FOG_INTENSITY_MAX / FOG_INTENSITY_STEP);
+constexpr int SUN_LIGHT_INTENSITY_SLIDER_MIN = 0;
+constexpr int SUN_LIGHT_INTENSITY_SLIDER_MAX = static_cast<int>(SUN_LIGHT_INTENSITY_MAX / SUN_LIGHT_INTENSITY_STEP);
 constexpr int SHADOW_SLIDER_MIN = 0;
 constexpr int SHADOW_SLIDER_MAX = static_cast<int>(SHADOW_INTENSITY_MAX / SHADOW_INTENSITY_STEP);
 constexpr int SHADOW_SATURATION_BOOST_SLIDER_MIN = 0;
@@ -40,7 +42,7 @@ constexpr int POINT_LIGHT_BRIGHTNESS_SLIDER_MIN = 0;
 constexpr int POINT_LIGHT_BRIGHTNESS_SLIDER_MAX = static_cast<int>(POINT_LIGHT_BRIGHTNESS_MAX / POINT_LIGHT_BRIGHTNESS_STEP);
 constexpr int GAUSSIAN_SLIDER_MIN = 1;
 constexpr int GAUSSIAN_SLIDER_MAX = (GAUSSIAN_SAMPLE_MAX + 1) / 2;
-constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 816;
+constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 830;
 constexpr int SETTINGS_DIALOG_WHEEL_STEP_PX = 36;
 constexpr UINT ID_POPUP_EXPORT_BINARY = 60001;
 constexpr UINT ID_POPUP_REMOVE_MODEL = 60002;
@@ -597,6 +599,18 @@ void RefreshShadowControls(HWND hDlg)
                        static_cast<LPARAM>(ShadowIntensityToSliderValue(g_shadowIntensity)));
 }
 
+void RefreshSunLightIntensityControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_sunLightIntensity);
+    SetDlgItemText(hDlg, IDC_EDIT_SUN_LIGHT_INTENSITY, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_SUN_LIGHT_INTENSITY,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(SunLightIntensityToSliderValue(g_sunLightIntensity)));
+}
+
 void RefreshShadowSaturationBoostControls(HWND hDlg)
 {
     wchar_t buffer[32];
@@ -749,6 +763,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshDepthOfField(hDlg);
     RefreshStarBurst(hDlg);
     RefreshFogControls(hDlg);
+    RefreshSunLightIntensityControls(hDlg);
     RefreshShadowControls(hDlg);
     RefreshShadowSaturationBoostControls(hDlg);
     RefreshSSAOBrightnessControls(hDlg);
@@ -771,6 +786,11 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_INTENSITY, TBM_SETRANGEMAX, FALSE, FOG_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_INTENSITY, TBM_SETTICFREQ, 10, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_INTENSITY, TBM_SETPAGESIZE, 0, 10);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SUN_LIGHT_INTENSITY, TBM_SETRANGEMIN, FALSE, SUN_LIGHT_INTENSITY_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SUN_LIGHT_INTENSITY, TBM_SETRANGEMAX, FALSE, SUN_LIGHT_INTENSITY_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SUN_LIGHT_INTENSITY, TBM_SETTICFREQ, 5, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SUN_LIGHT_INTENSITY, TBM_SETPAGESIZE, 0, 5);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_INTENSITY, TBM_SETRANGEMIN, FALSE, SHADOW_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_INTENSITY, TBM_SETRANGEMAX, FALSE, SHADOW_SLIDER_MAX);
@@ -1062,6 +1082,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_fogIntensity = SliderValueToFogIntensity(sliderValue);
             ApplyFogIntensity();
             RefreshFogControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SUN_LIGHT_INTENSITY))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_sunLightIntensity = SliderValueToSunLightIntensity(sliderValue);
+            ApplySunLightIntensity();
+            RefreshSunLightIntensityControls(hDlg);
             return TRUE;
         }
 

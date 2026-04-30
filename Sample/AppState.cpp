@@ -43,6 +43,7 @@ bool g_bBloom = false;
 bool g_bDepthOfField = false;
 bool g_bStarBurst = false;
 float g_fogIntensity = 2.0f;
+float g_sunLightIntensity = 1.0f;
 float g_shadowIntensity = 0.5f;
 float g_shadowSaturationBoost = 0.35f;
 float g_ssaoBrightness = 1.0f;
@@ -73,6 +74,11 @@ float ClampSaturateLevel(const float level)
 float ClampFogIntensity(const float intensity)
 {
     return (std::max)(FOG_INTENSITY_MIN, (std::min)(intensity, FOG_INTENSITY_MAX));
+}
+
+float ClampSunLightIntensity(const float intensity)
+{
+    return (std::max)(SUN_LIGHT_INTENSITY_MIN, (std::min)(intensity, SUN_LIGHT_INTENSITY_MAX));
 }
 
 float ClampShadowIntensity(const float intensity)
@@ -598,6 +604,12 @@ void ApplyFogIntensity()
     g_Render.SetPostEffectFogIntensity(g_fogIntensity);
 }
 
+void ApplySunLightIntensity()
+{
+    g_sunLightIntensity = ClampSunLightIntensity(g_sunLightIntensity);
+    g_Render.SetLightBrightness(g_sunLightIntensity);
+}
+
 void ApplyShadowIntensity()
 {
     g_shadowIntensity = ClampShadowIntensity(g_shadowIntensity);
@@ -703,6 +715,16 @@ int FogIntensityToSliderValue(const float intensity)
 float SliderValueToFogIntensity(const int sliderValue)
 {
     return ClampFogIntensity(static_cast<float>(sliderValue) * FOG_INTENSITY_STEP);
+}
+
+int SunLightIntensityToSliderValue(const float intensity)
+{
+    return static_cast<int>(std::lround(ClampSunLightIntensity(intensity) / SUN_LIGHT_INTENSITY_STEP));
+}
+
+float SliderValueToSunLightIntensity(const int sliderValue)
+{
+    return ClampSunLightIntensity(static_cast<float>(sliderValue) * SUN_LIGHT_INTENSITY_STEP);
 }
 
 int ShadowIntensityToSliderValue(const float intensity)
@@ -1127,6 +1149,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"FogIntensity")
             {
                 g_fogIntensity = std::stof(value);
+            }
+            else if (key == L"SunLightIntensity")
+            {
+                g_sunLightIntensity = std::stof(value);
             }
             else if (key == L"ShadowIntensity")
             {

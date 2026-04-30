@@ -224,6 +224,7 @@ public:
 
     // 平行光源がある方角
     void SetLightDir(const D3DXVECTOR3& dir);
+    void SetLightBrightness(const float brightness);
 
     void AddPointLight(const D3DXVECTOR3& pos, const float brightness, const D3DXCOLOR color);
 

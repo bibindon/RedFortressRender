@@ -987,6 +987,11 @@ void Render::SetLightDir(const D3DXVECTOR3& dir)
     Light::SetLightDir(normal);
 }
 
+void Render::SetLightBrightness(const float brightness)
+{
+    Light::SetBrightness(brightness);
+}
+
 void Render::AddPointLight(const D3DXVECTOR3& pos, const float brightness, const D3DXCOLOR color)
 {
     Light::AddPointLight(pos, color, brightness);

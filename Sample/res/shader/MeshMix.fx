@@ -36,9 +36,9 @@ float4 g_fogHeightColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 float g_fogHeightDensity = 0.01f;
 
 // 空間の明るさ
-// 0なら洞窟、0.1なら夜、1なら快晴、0.5なら室内、という感じ
+// 0なら洞窟、0.1なら夜、1なら明るい室内、3なら快晴、という感じ
 // 1.0を超えると彩度が上がり、逆に暗くなるようにすると面白い気がする。
-float g_fSunLightIntensity = 0.2f;
+float g_fSunLightIntensity = 1.0f;
 
 texture g_texture;
 sampler g_textureSampler = sampler_state

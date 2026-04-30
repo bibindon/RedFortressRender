@@ -426,6 +426,9 @@ void MeshMix::Render()
     hResult = m_D3DEffect->SetVector("g_lightDir", &normal);
     assert(hResult == S_OK);
 
+    hResult = m_D3DEffect->SetFloat("g_fSunLightIntensity", Light::GetBrightness());
+    assert(hResult == S_OK);
+
     //--------------------------------------------------------
     // ワールド変換行列を設定
     //--------------------------------------------------------
