@@ -40,9 +40,13 @@ constexpr int POINT_LIGHT_BRIGHTNESS_SLIDER_MIN = 0;
 constexpr int POINT_LIGHT_BRIGHTNESS_SLIDER_MAX = static_cast<int>(POINT_LIGHT_BRIGHTNESS_MAX / POINT_LIGHT_BRIGHTNESS_STEP);
 constexpr int GAUSSIAN_SLIDER_MIN = 1;
 constexpr int GAUSSIAN_SLIDER_MAX = (GAUSSIAN_SAMPLE_MAX + 1) / 2;
+constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 816;
+constexpr int SETTINGS_DIALOG_WHEEL_STEP_PX = 36;
 constexpr UINT ID_POPUP_EXPORT_BINARY = 60001;
 constexpr UINT ID_POPUP_REMOVE_MODEL = 60002;
 constexpr UINT ID_POPUP_REMOVE_POINT_LIGHT = 60003;
+
+int g_settingsDialogScrollPos = 0;
 
 std::wstring FormatResolutionLabel(const int width, const int height)
 {
@@ -107,6 +111,63 @@ void MoveDialogToRightOfParent(HWND hDlg)
                  dialogW,
                  dialogH,
                  SWP_NOZORDER | SWP_NOACTIVATE);
+}
+
+int GetSettingsDialogContentHeightPx(HWND hDlg)
+{
+    RECT dialogUnits { 0, 0, 0, SETTINGS_DIALOG_CONTENT_HEIGHT_DLU };
+    MapDialogRect(hDlg, &dialogUnits);
+    return dialogUnits.bottom - dialogUnits.top;
+}
+
+int GetSettingsDialogClientHeightPx(HWND hDlg)
+{
+    RECT clientRect { };
+    GetClientRect(hDlg, &clientRect);
+    return clientRect.bottom - clientRect.top;
+}
+
+void UpdateSettingsDialogScrollBar(HWND hDlg)
+{
+    const int contentHeightPx = GetSettingsDialogContentHeightPx(hDlg);
+    const int clientHeightPx = GetSettingsDialogClientHeightPx(hDlg);
+    const int maxScroll = (std::max)(0, contentHeightPx - clientHeightPx);
+    g_settingsDialogScrollPos = (std::max)(0, (std::min)(g_settingsDialogScrollPos, maxScroll));
+
+    SCROLLINFO scrollInfo { };
+    scrollInfo.cbSize = sizeof(scrollInfo);
+    scrollInfo.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
+    scrollInfo.nMin = 0;
+    scrollInfo.nMax = contentHeightPx - 1;
+    scrollInfo.nPage = static_cast<UINT>(clientHeightPx);
+    scrollInfo.nPos = g_settingsDialogScrollPos;
+    SetScrollInfo(hDlg, SB_VERT, &scrollInfo, TRUE);
+}
+
+void ScrollSettingsDialogTo(HWND hDlg, const int newPos)
+{
+    const int contentHeightPx = GetSettingsDialogContentHeightPx(hDlg);
+    const int clientHeightPx = GetSettingsDialogClientHeightPx(hDlg);
+    const int maxScroll = (std::max)(0, contentHeightPx - clientHeightPx);
+    const int clampedPos = (std::max)(0, (std::min)(newPos, maxScroll));
+    const int delta = g_settingsDialogScrollPos - clampedPos;
+    if (delta == 0)
+    {
+        UpdateSettingsDialogScrollBar(hDlg);
+        return;
+    }
+
+    g_settingsDialogScrollPos = clampedPos;
+    ScrollWindowEx(hDlg,
+                   0,
+                   delta,
+                   NULL,
+                   NULL,
+                   NULL,
+                   NULL,
+                   SW_INVALIDATE | SW_ERASE | SW_SCROLLCHILDREN);
+    UpdateWindow(hDlg);
+    UpdateSettingsDialogScrollBar(hDlg);
 }
 
 void RefreshSaturateControls(HWND hDlg)
@@ -911,6 +972,54 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         InitializeLoadedModelListView(hDlg);
         InitializePointLightListView(hDlg);
         RefreshAllControls(hDlg);
+        g_settingsDialogScrollPos = 0;
+        UpdateSettingsDialogScrollBar(hDlg);
+        return TRUE;
+    }
+    case WM_MOUSEWHEEL:
+    {
+        const short wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+        ScrollSettingsDialogTo(hDlg,
+                               g_settingsDialogScrollPos - ((wheelDelta / WHEEL_DELTA) * SETTINGS_DIALOG_WHEEL_STEP_PX));
+        return TRUE;
+    }
+    case WM_VSCROLL:
+    {
+        SCROLLINFO scrollInfo { };
+        scrollInfo.cbSize = sizeof(scrollInfo);
+        scrollInfo.fMask = SIF_ALL;
+        GetScrollInfo(hDlg, SB_VERT, &scrollInfo);
+
+        int newPos = g_settingsDialogScrollPos;
+        switch (LOWORD(wParam))
+        {
+        case SB_LINEUP:
+            newPos -= SETTINGS_DIALOG_WHEEL_STEP_PX;
+            break;
+        case SB_LINEDOWN:
+            newPos += SETTINGS_DIALOG_WHEEL_STEP_PX;
+            break;
+        case SB_PAGEUP:
+            newPos -= static_cast<int>(scrollInfo.nPage);
+            break;
+        case SB_PAGEDOWN:
+            newPos += static_cast<int>(scrollInfo.nPage);
+            break;
+        case SB_THUMBTRACK:
+        case SB_THUMBPOSITION:
+            newPos = scrollInfo.nTrackPos;
+            break;
+        case SB_TOP:
+            newPos = 0;
+            break;
+        case SB_BOTTOM:
+            newPos = scrollInfo.nMax;
+            break;
+        default:
+            return FALSE;
+        }
+
+        ScrollSettingsDialogTo(hDlg, newPos);
         return TRUE;
     }
     case WM_CLOSE:
