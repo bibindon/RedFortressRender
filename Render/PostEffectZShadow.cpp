@@ -1,6 +1,7 @@
 ﻿#include "PostEffectZShadow.h"
 
 #include "Camera.h"
+#include "MeshMixSkinAnim.h"
 
 namespace NSRender
 {
@@ -60,7 +61,8 @@ void PostEffectZShadow::Finalize()
 LPDIRECT3DTEXTURE9 PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                                            LPDIRECT3DTEXTURE9 sceneDepthTexture,
                                            LPDIRECT3DTEXTURE9 sceneNormalTexture,
-                                           const std::deque<MeshMix>& meshMixList)
+                                           const std::deque<MeshMix>& meshMixList,
+                                           const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList)
 {
     if (!m_bEnable)
     {
@@ -68,6 +70,7 @@ LPDIRECT3DTEXTURE9 PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     }
     g_texTemp = renderTarget;
     m_pMeshList = &meshMixList;
+    m_pSkinAnimMeshList = &meshMixSkinAnimList;
     m_sceneDepthTexture = sceneDepthTexture;
     m_sceneNormalTexture = sceneNormalTexture;
 
@@ -76,6 +79,7 @@ LPDIRECT3DTEXTURE9 PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     RenderTechnique3();
 
     m_pMeshList = nullptr;
+    m_pSkinAnimMeshList = nullptr;
     m_sceneDepthTexture = NULL;
     m_sceneNormalTexture = NULL;
 
@@ -149,6 +153,10 @@ void PostEffectZShadow::RenderTechnique1()
     hr = g_fxDepthBufferShadow->SetMatrix("g_matLightView", &mLightView);
     assert(hr == S_OK);
 
+    D3DXMATRIX mLightViewProj = mLightView * mLightProj;
+    hr = g_fxDepthBufferShadow->SetMatrix("g_matLightViewProj", &mLightViewProj);
+    assert(hr == S_OK);
+
     hr = g_fxDepthBufferShadow->SetFloat ("g_lightNear", fLightNear);
     assert(hr == S_OK);
 
@@ -190,6 +198,17 @@ void PostEffectZShadow::RenderTechnique1()
 
     g_fxDepthBufferShadow->EndPass();
     g_fxDepthBufferShadow->End();
+
+    hr = g_fxDepthBufferShadow->SetTechnique("TechniqueDepthFromLightSkin");
+    assert(hr == S_OK);
+
+    for (auto& mesh : *m_pSkinAnimMeshList)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->RenderToEffect(g_fxDepthBufferShadow);
+        }
+    }
 
     hr = Common::D3DDevice()->EndScene();
     assert(hr == S_OK);
@@ -328,6 +347,24 @@ void PostEffectZShadow::RenderTechnique2()
 
     hr = g_fxDepthBufferShadow->End();
     assert(hr == S_OK);
+
+    hr = g_fxDepthBufferShadow->SetTechnique("TechniqueWriteShadowSkin");
+    assert(hr == S_OK);
+
+    D3DXMATRIX mViewProj = mView * mProj;
+    hr = g_fxDepthBufferShadow->SetMatrix("g_matWorldViewProj", &mViewProj);
+    assert(hr == S_OK);
+
+    hr = g_fxDepthBufferShadow->CommitChanges();
+    assert(hr == S_OK);
+
+    for (auto& mesh : *m_pSkinAnimMeshList)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->RenderToEffect(g_fxDepthBufferShadow);
+        }
+    }
 
     hr = Common::D3DDevice()->EndScene();
     assert(hr == S_OK);

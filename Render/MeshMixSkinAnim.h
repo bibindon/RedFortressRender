@@ -27,6 +27,7 @@ public:
 
     void Initialize();
     void Render();
+    void RenderToEffect(LPD3DXEFFECT effect);
 
     void SetPos(const D3DXVECTOR3& pos);
     void SetSaturateShadow(const bool enabled);
@@ -50,6 +51,8 @@ private:
     void UpdateFrameMatrix(const LPD3DXFRAME frameBase, const LPD3DXMATRIX matParent);
     void RenderFrame(const LPD3DXFRAME frame);
     void RenderMeshContainer(const LPD3DXMESHCONTAINER containerBase);
+    void RenderFrameToEffect(const LPD3DXFRAME frame, LPD3DXEFFECT effect);
+    void RenderMeshContainerToEffect(const LPD3DXMESHCONTAINER containerBase, LPD3DXEFFECT effect);
     HRESULT AllocateBoneMatrix(LPD3DXMESHCONTAINER containerBase);
     HRESULT AllocateAllBoneMatrix(LPD3DXFRAME frame);
     void ReleaseMeshAllocator(const LPD3DXFRAME frame);

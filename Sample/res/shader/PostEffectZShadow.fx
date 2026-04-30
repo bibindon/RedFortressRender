@@ -9,6 +9,10 @@ float    g_lightNear;
 float    g_lightFar;
 float4x4 g_matLightViewProj;
 
+static const int MAX_MATRICES = 8;
+float4x3 g_matWorldArray[MAX_MATRICES];
+int g_currentBoneIndex;
+
 float g_shadowTexelW;
 float g_shadowTexelH;
 float g_compositeTexelW;
@@ -145,6 +149,26 @@ struct VSOutDepth
     float  fDepth  : TEXCOORD0;
 };
 
+float3 SkinPosition(float4 inPosition, float4 inBlendWeights, float4 inBlendIndices, int boneNumber)
+{
+    float3 position = 0.0f;
+    float lastWeight = 0.0f;
+
+    int4 indexVector = (int4)inBlendIndices;
+    float blendWeightsArray[4] = (float[4])inBlendWeights;
+    int indexArray[4] = (int[4])indexVector;
+
+    [unroll] for (int i = 0; i < boneNumber - 1; ++i)
+    {
+        lastWeight += blendWeightsArray[i];
+        position += mul(inPosition, g_matWorldArray[indexArray[i]]) * blendWeightsArray[i];
+    }
+
+    lastWeight = 1.0f - lastWeight;
+    position += mul(inPosition, g_matWorldArray[indexArray[boneNumber - 1]]) * lastWeight;
+    return position;
+}
+
 VSOutDepth VS_DepthFromLight(VSInDepth vin)
 {
     VSOutDepth vout;
@@ -160,6 +184,35 @@ VSOutDepth VS_DepthFromLight(VSInDepth vin)
     vout.fDepth = saturate(depthLinear);
 
     return vout;
+}
+
+void VS_DepthFromLightSkin(in  float4 inPosition     : POSITION,
+                           in  float4 inBlendWeights : BLENDWEIGHT,
+                           in  float4 inBlendIndices : BLENDINDICES,
+                           out float4 outPosition    : POSITION0,
+                           out float  outDepth       : TEXCOORD0,
+                           uniform int boneNumber);
+
+VertexShader vsDepthSkinArray[4] =
+{
+    compile vs_3_0 VS_DepthFromLightSkin(1),
+    compile vs_3_0 VS_DepthFromLightSkin(2),
+    compile vs_3_0 VS_DepthFromLightSkin(3),
+    compile vs_3_0 VS_DepthFromLightSkin(4)
+};
+
+void VS_DepthFromLightSkin(in  float4 inPosition     : POSITION,
+                           in  float4 inBlendWeights : BLENDWEIGHT,
+                           in  float4 inBlendIndices : BLENDINDICES,
+                           out float4 outPosition    : POSITION0,
+                           out float  outDepth       : TEXCOORD0,
+                           uniform int boneNumber)
+{
+    float3 worldPos = SkinPosition(inPosition, inBlendWeights, inBlendIndices, boneNumber);
+    float4 posLightView = mul(float4(worldPos, 1.0f), g_matLightView);
+
+    outPosition = mul(float4(worldPos, 1.0f), g_matLightViewProj);
+    outDepth = saturate((posLightView.z - g_lightNear) / (g_lightFar - g_lightNear));
 }
 
 float4 PS_DepthFromLight(VSOutDepth pin) : COLOR0
@@ -185,6 +238,38 @@ void VS_Base(in  float4 inPosOS     : POSITION,
 
     float4 posWS = mul(inPosOS, g_matWorld);
     outWorldPos = posWS.xyz;
+}
+
+void VS_BaseSkin(in  float4 inPosition     : POSITION,
+                 in  float4 inBlendWeights : BLENDWEIGHT,
+                 in  float4 inBlendIndices : BLENDINDICES,
+                 in  float2 inUV           : TEXCOORD0,
+                 out float4 outPosition    : POSITION0,
+                 out float2 outUV          : TEXCOORD0,
+                 out float3 outWorldPos    : TEXCOORD1,
+                 uniform int boneNumber);
+
+VertexShader vsBaseSkinArray[4] =
+{
+    compile vs_3_0 VS_BaseSkin(1),
+    compile vs_3_0 VS_BaseSkin(2),
+    compile vs_3_0 VS_BaseSkin(3),
+    compile vs_3_0 VS_BaseSkin(4)
+};
+
+void VS_BaseSkin(in  float4 inPosition     : POSITION,
+                 in  float4 inBlendWeights : BLENDWEIGHT,
+                 in  float4 inBlendIndices : BLENDINDICES,
+                 in  float2 inUV           : TEXCOORD0,
+                 out float4 outPosition    : POSITION0,
+                 out float2 outUV          : TEXCOORD0,
+                 out float3 outWorldPos    : TEXCOORD1,
+                 uniform int boneNumber)
+{
+    float3 worldPos = SkinPosition(inPosition, inBlendWeights, inBlendIndices, boneNumber);
+    outPosition = mul(float4(worldPos, 1.0f), g_matWorldViewProj);
+    outUV = inUV;
+    outWorldPos = worldPos;
 }
 
 void PS_WriteShadow(in float4 inPos       : POSITION0,
@@ -334,12 +419,30 @@ technique TechniqueDepthFromLight
     }
 }
 
+technique TechniqueDepthFromLightSkin
+{
+    pass P0
+    {
+        VertexShader = (vsDepthSkinArray[g_currentBoneIndex]);
+        PixelShader  = compile ps_3_0 PS_DepthFromLight();
+    }
+}
+
 // 光源から見た深度画像とカメラから見たワールド座標を使って、影を描画するテクニック
 technique TechniqueWriteShadow
 {
     pass P0
     {
         VertexShader = compile vs_3_0 VS_Base();
+        PixelShader  = compile ps_3_0 PS_WriteShadow();
+    }
+}
+
+technique TechniqueWriteShadowSkin
+{
+    pass P0
+    {
+        VertexShader = (vsBaseSkinArray[g_currentBoneIndex]);
         PixelShader  = compile ps_3_0 PS_WriteShadow();
     }
 }

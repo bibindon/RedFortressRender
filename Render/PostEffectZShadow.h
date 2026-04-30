@@ -1,11 +1,13 @@
 ﻿#pragma once
 
 #include <deque>
+#include <vector>
 #include "Common.h"
 #include "MeshMix.h"
 
 namespace NSRender
 {
+class MeshMixSkinAnim;
 
 class PostEffectZShadow : public IDeviceResettable
 {
@@ -18,7 +20,8 @@ public:
     LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget,
                             LPDIRECT3DTEXTURE9 sceneDepthTexture,
                             LPDIRECT3DTEXTURE9 sceneNormalTexture,
-                            const std::deque<MeshMix>& meshMixList);
+                            const std::deque<MeshMix>& meshMixList,
+                            const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList);
 
     void SetEnable(const bool arg);
     void SetShadowIntensity(const float intensity);
@@ -73,6 +76,7 @@ private:
     float fLightFar = 200.0f;
 
     const std::deque<MeshMix>* m_pMeshList;
+    const std::vector<MeshMixSkinAnim*>* m_pSkinAnimMeshList = nullptr;
     LPDIRECT3DTEXTURE9 m_sceneDepthTexture = NULL;
     LPDIRECT3DTEXTURE9 m_sceneNormalTexture = NULL;
 

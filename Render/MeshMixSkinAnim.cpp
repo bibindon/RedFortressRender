@@ -181,6 +181,70 @@ void MeshMixSkinAnim::RenderFrame(const LPD3DXFRAME frame)
     }
 }
 
+void MeshMixSkinAnim::RenderToEffect(LPD3DXEFFECT effect)
+{
+    if (!m_bLoaded || !m_enabled || effect == nullptr)
+    {
+        return;
+    }
+
+    RenderFrameToEffect(m_frameRoot, effect);
+}
+
+void MeshMixSkinAnim::RenderFrameToEffect(const LPD3DXFRAME frame, LPD3DXEFFECT effect)
+{
+    LPD3DXMESHCONTAINER container = frame->pMeshContainer;
+    while (container != nullptr)
+    {
+        RenderMeshContainerToEffect(container, effect);
+        container = container->pNextMeshContainer;
+    }
+
+    if (frame->pFrameSibling != nullptr)
+    {
+        RenderFrameToEffect(frame->pFrameSibling, effect);
+    }
+
+    if (frame->pFrameFirstChild != nullptr)
+    {
+        RenderFrameToEffect(frame->pFrameFirstChild, effect);
+    }
+}
+
+void MeshMixSkinAnim::RenderMeshContainerToEffect(const LPD3DXMESHCONTAINER containerBase, LPD3DXEFFECT effect)
+{
+    auto container = reinterpret_cast<SkinAnimMeshContainer*>(containerBase);
+    auto boneCombination = reinterpret_cast<LPD3DXBONECOMBINATION>(container->m_boneBuffer->GetBufferPointer());
+    const DWORD paletteSize = container->m_paletteSize;
+
+    effect->SetInt("g_currentBoneIndex", container->m_influenceCount - 1);
+
+    effect->Begin(nullptr, 0);
+    effect->BeginPass(0);
+
+    for (DWORD i = 0; i < container->m_boneCount; ++i)
+    {
+        for (DWORD k = 0; k < paletteSize; ++k)
+        {
+            const DWORD boneId = boneCombination[i].BoneId[k];
+            if (boneId == UINT_MAX)
+            {
+                continue;
+            }
+
+            m_matWorldArray[k] = container->m_boneOffsetMatrices[boneId] *
+                                 (*container->m_frameCombinedMatrix[boneId]);
+        }
+
+        effect->SetMatrixArray("g_matWorldArray", &m_matWorldArray[0], paletteSize);
+        effect->CommitChanges();
+        container->MeshData.pMesh->DrawSubset(i);
+    }
+
+    effect->EndPass();
+    effect->End();
+}
+
 void MeshMixSkinAnim::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBase)
 {
     auto container = reinterpret_cast<SkinAnimMeshContainer*>(containerBase);

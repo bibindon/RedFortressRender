@@ -3,6 +3,7 @@
 
 #include "Common.h"
 #include "Camera.h"
+#include "MeshMixSkinAnim.h"
 
 #include "PostEffectSSAO.h"
 
@@ -67,6 +68,7 @@ void GBuffer::CreateRawResource()
 }
 
 void GBuffer::Draw(const std::deque<MeshMix>& meshList,
+                   const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList,
                    LPDIRECT3DTEXTURE9* Z,
                    LPDIRECT3DTEXTURE9* Pos,
                    LPDIRECT3DTEXTURE9* Normal)
@@ -102,6 +104,15 @@ void GBuffer::Draw(const std::deque<MeshMix>& meshList,
     hr = Common::D3DDevice()->BeginScene();
 
     // ここで「不透明物体のみ」を GBuffer.fx で描く
+    auto mView = Camera::GetViewMatrix();
+    auto mProj = Camera::GetProjMatrix();
+
+    m_fxGBuffer->SetMatrix("g_matView",  &mView);
+    m_fxGBuffer->SetMatrix("g_matProj",  &mProj);
+    m_fxGBuffer->SetFloat("g_fNear", Camera::GetNear());
+    m_fxGBuffer->SetFloat("g_fFar",  Camera::GetFar());
+    m_fxGBuffer->SetFloat("g_posRange", PostEffectSSAO::Z_RANGE);
+
     for (auto& mesh : meshList)
     {
         if (!mesh.IsEnabled())
@@ -125,16 +136,6 @@ void GBuffer::Draw(const std::deque<MeshMix>& meshList,
         }
 
         m_fxGBuffer->SetMatrix("g_matWorld", &matWorld);
-        auto mView = Camera::GetViewMatrix();
-        auto mProj = Camera::GetProjMatrix();
-        m_fxGBuffer->SetMatrix("g_matView",  &mView);
-        m_fxGBuffer->SetMatrix("g_matProj",  &mProj);
-
-        // 近遠と posRange は SSAO 側と必ず一致させる
-        m_fxGBuffer->SetFloat("g_fNear", Camera::GetNear());
-        m_fxGBuffer->SetFloat("g_fFar",  Camera::GetFar());
-        m_fxGBuffer->SetFloat("g_posRange", PostEffectSSAO::Z_RANGE);
-
         m_fxGBuffer->SetTechnique("TechniqueGBuffer");
         m_fxGBuffer->Begin(NULL, 0);
         m_fxGBuffer->BeginPass(0);
@@ -149,6 +150,15 @@ void GBuffer::Draw(const std::deque<MeshMix>& meshList,
 
         m_fxGBuffer->EndPass();
         m_fxGBuffer->End();
+    }
+
+    m_fxGBuffer->SetTechnique("TechniqueGBufferSkin");
+    for (auto& mesh : meshMixSkinAnimList)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->RenderToEffect(m_fxGBuffer);
+        }
     }
 
     hr = Common::D3DDevice()->EndScene();

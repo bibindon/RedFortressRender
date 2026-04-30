@@ -1,13 +1,15 @@
-#pragma once
+ï»¿#pragma once
 
 #include <deque>
+#include <vector>
 #include "Common.h"
 #include "MeshMix.h"
 
 namespace NSRender
 {
+class MeshMixSkinAnim;
 
-// ŠeƒsƒNƒZƒ‹‚Ì[“x‚Æƒ[ƒ‹ƒhÀ•W‚ğ•\‚µ‚½‰æ‘œ‚ğ¶¬
+// å„ãƒ”ã‚¯ã‚»ãƒ«ã®æ·±åº¦ã¨ãƒ¯ãƒ¼ãƒ«ãƒ‰åº§æ¨™ã‚’è¡¨ã—ãŸç”»åƒã‚’ç”Ÿæˆ
 class GBuffer : public IDeviceResettable
 {
 
@@ -16,6 +18,7 @@ public:
     void Initialize();
 
     void Draw(const std::deque<MeshMix>& meshList,
+              const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList,
               LPDIRECT3DTEXTURE9* Z,
               LPDIRECT3DTEXTURE9* Pos,
               LPDIRECT3DTEXTURE9* Normal);

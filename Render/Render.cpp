@@ -441,7 +441,7 @@ void Render::Draw()
     LPDIRECT3DTEXTURE9 pTexTempZ = NULL;
     LPDIRECT3DTEXTURE9 pTexTempPos = NULL;
     LPDIRECT3DTEXTURE9 pTexTempNoral = NULL;
-    m_GBuffer.Draw(m_meshMixList, &pTexTempZ, &pTexTempPos, &pTexTempNoral);
+    m_GBuffer.Draw(m_meshMixList, m_meshMixSkinAnimList, &pTexTempZ, &pTexTempPos, &pTexTempNoral);
 
     //---------------------------------------------------------------
     // ポストエフェクト
@@ -453,7 +453,11 @@ void Render::Draw()
     pTempTexture = m_pRenderTarget1;
 
     // 深度バッファシャドウ
-    pTempTexture = m_postEffectZShadow.Draw(pTempTexture, pTexTempZ, pTexTempNoral, m_meshMixList);
+    pTempTexture = m_postEffectZShadow.Draw(pTempTexture,
+                                            pTexTempZ,
+                                            pTexTempNoral,
+                                            m_meshMixList,
+                                            m_meshMixSkinAnimList);
 
     // SSAO
     pTempTexture = m_postEffectSSAO.Draw(pTempTexture, pTexTempZ, pTexTempPos, pTexTempNoral);
