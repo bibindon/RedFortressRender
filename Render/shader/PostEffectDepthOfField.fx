@@ -7,7 +7,7 @@ float g_positionRange = 50.0;
 
 // 焦点範囲の外側から、何mごとに 3x3 -> 5x5 -> 7x7 -> 9x9 -> 11x11 と強くするか。
 // C++ 側から渡さなくても、この初期値で動作します。
-float g_blurStepMeters = 2.0;
+float g_blurStepMeters = 1.0;
 
 texture g_SrcTex;
 sampler colorSampler = sampler_state
@@ -42,7 +42,8 @@ void VS(in float4 inPos : POSITION,
 
 float4 DecodeWorldPosition(float2 uv)
 {
-    float4 encoded = tex2D(positionSampler, uv);
+    float2 positionUv = uv + g_TexelSize;
+    float4 encoded = tex2D(positionSampler, positionUv);
     float3 worldPos = ((encoded.xyz * 2.0f) - 1.0f) * g_positionRange;
     return float4(worldPos, encoded.a);
 }
