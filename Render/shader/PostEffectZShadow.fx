@@ -20,11 +20,8 @@ float g_shadowBias;
 // 影の濃さ(0 ~ 1)
 float g_shadowIntensity;
 float g_shadowSaturationBoost;
-
-bool g_bBlurEnable = true;
-
-// 影のボケ具合(奇数)
-int g_nBlurSize;
+float g_edgeDepthThreshold;
+float g_edgeNormalThreshold;
 
 texture g_texLightZ;
 sampler samplerLightZ = sampler_state
@@ -49,15 +46,107 @@ texture g_texShadow;
 sampler samplerShadow = sampler_state
 {
     Texture   = (g_texShadow);
-    MipFilter = LINEAR;
-    MinFilter = LINEAR;
-    MagFilter = LINEAR;
+    MipFilter = NONE;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+
+texture g_texSceneDepth;
+sampler samplerSceneDepth = sampler_state
+{
+    Texture   = (g_texSceneDepth);
+    MipFilter = NONE;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    AddressU  = CLAMP;
+    AddressV  = CLAMP;
+};
+
+texture g_texSceneNormal;
+sampler samplerSceneNormal = sampler_state
+{
+    Texture   = (g_texSceneNormal);
+    MipFilter = NONE;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    AddressU  = CLAMP;
+    AddressV  = CLAMP;
 };
 
 float3 IncreaseSaturation(float3 color, float amount)
 {
     float luminance = dot(color, float3(0.299f, 0.587f, 0.114f));
     return saturate(lerp(luminance.xxx, color, amount));
+}
+
+float3 DecodeWorldNormal(float3 encodedNormal)
+{
+    float3 normal = encodedNormal * 2.0f - 1.0f;
+    float normalLength = length(normal);
+    if (normalLength <= 0.0001f)
+    {
+        return float3(0.0f, 1.0f, 0.0f);
+    }
+
+    return normal / normalLength;
+}
+
+float GetGaussianWeight1D5(int offset)
+{
+    int absOffset = abs(offset);
+    if (absOffset == 0)
+    {
+        return 6.0f;
+    }
+
+    if (absOffset == 1)
+    {
+        return 4.0f;
+    }
+
+    if (absOffset == 2)
+    {
+        return 1.0f;
+    }
+
+    return 0.0f;
+}
+
+float SampleShadowVisibility(float2 uvLightView, float fDepthLightView)
+{
+    float2 uvTexel = float2(g_shadowTexelW, g_shadowTexelH);
+    const int FILTER_RADIUS = 2;
+
+    float shadowSum = 0.0f;
+    float totalWeight = 0.0f;
+
+    for (int y = -FILTER_RADIUS; y <= FILTER_RADIUS; ++y)
+    {
+        for (int x = -FILTER_RADIUS; x <= FILTER_RADIUS; ++x)
+        {
+            float2 sampleUv = uvLightView + float2((float)x, (float)y) * uvTexel;
+            if (any(sampleUv < 0.0f) || any(sampleUv > 1.0f))
+            {
+                continue;
+            }
+
+            float weight = GetGaussianWeight1D5(x) * GetGaussianWeight1D5(y);
+            float shadowDepth = tex2Dlod(samplerLightZ, float4(sampleUv, 0, 0)).r;
+            if (shadowDepth < (fDepthLightView - g_shadowBias))
+            {
+                shadowSum += weight;
+            }
+
+            totalWeight += weight;
+        }
+    }
+
+    if (totalWeight <= 0.0f)
+    {
+        return 0.0f;
+    }
+
+    return shadowSum / totalWeight;
 }
 
 // 変数名の末尾のOSはローカル座標の意味
@@ -166,88 +255,7 @@ void PS_WriteShadow(in float4 inPos       : POSITION0,
         return;
     }
 
-    float nShadowColor = 0.0f;
-
-    if (g_bBlurEnable)
-    {
-        // サンプリングされた個数
-        float fShadowSum = 0.0f;
-
-        // 1テクセルのオフセット
-        float2 uvTexel = float2(g_shadowTexelW, g_shadowTexelH);
-
-        int nHalfSize = g_nBlurSize / 2;
-
-        // 奇数であること
-        const int SIZE_MAX = 13;
-
-        int nSumpleNum = 0;
-
-        // ボカシのレベルを調節する
-        // HLSLではfor文の開始・終了条件に定数しか使えないので
-        // ループ回数を固定にしたうえで、途中で処理を抜けるようにして実現する
-        for (int j = 0; j < SIZE_MAX; ++j)
-        {
-            if (j >= g_nBlurSize)
-            {
-                continue;
-            }
-
-            // サイズが5なら-2, -1, 0, 1, 2というようにしたいので(5/2)を引く
-            int j2 = j;
-            j2 -= nHalfSize;
-
-            for (int i = 0; i < SIZE_MAX; ++i)
-            {
-                if (i >= g_nBlurSize)
-                {
-                    continue;
-                }
-
-                nSumpleNum++;
-
-                int i2 = i;
-                i2 -= nHalfSize;
-
-                float2 uvNear = uvLightView + float2(i2, j2) * uvTexel;
-
-                // 外れUVは「影なし」= 0 として数えない（= サンプル値 0 扱い）
-                if (any(uvNear < 0.0f) || any(uvNear > 1.0f))
-                {
-                    // 何もしない
-                }
-                else
-                {
-                    // 深度画像の該当するUV座標の色を取得。深度情報を色として描画しているので
-                    // この色が深度である。
-                    // tex2Dではなくtex2Dlodを使わなくてはいけない。そうしないと動かない
-                    float fDepthLightZTexture = tex2Dlod(samplerLightZ, float4(uvNear, 0, 0)).r;
-
-                    // 最重要パート
-                    // 深度画像の深度値と実際の座標から光源までの距離を深度値に変換した値を比較する
-                    // 深度画像の深度値の方が短いならそこは影である
-                    if (fDepthLightZTexture < (fDepthLightView - g_shadowBias))
-                    {
-                        fShadowSum += 1.0f;
-                    }
-                }
-            }
-        }
-
-        nShadowColor = fShadowSum / nSumpleNum;
-    }
-    else
-    {
-        float fDepthLightZTexture = tex2D(samplerLightZ, uvLightView).r;
-        if (fDepthLightZTexture < (fDepthLightView - g_shadowBias))
-        {
-            nShadowColor = 1.0f;
-        }
-        else
-        {
-            nShadowColor = 0.0f;
-        }
-    }
+    float nShadowColor = SampleShadowVisibility(uvLightView, fDepthLightView);
 
     outColor.rgb = nShadowColor.xxx;
     outColor.a = nShadowColor * g_shadowIntensity;
@@ -276,7 +284,48 @@ void PS_Composite(in float4 inPos     : POSITION,
     float2 uv = inUV + float2(0.5f * g_compositeTexelW, 0.5f * g_compositeTexelH);
     float2 pixelCoord = floor(uv / float2(g_compositeTexelW, g_compositeTexelH));
     float4 vBaseColor = tex2D(samplerBase, uv);
-    float4 vShadowColor = tex2D(samplerShadow, uv);
+    float4 vCenterShadowColor = tex2D(samplerShadow, uv);
+    float centerDepth = tex2D(samplerSceneDepth, uv).a;
+    float3 centerNormal = DecodeWorldNormal(tex2D(samplerSceneNormal, uv).rgb);
+
+    float4 vShadowColorSum = 0.0f;
+    float totalWeight = 0.0f;
+    const int FILTER_RADIUS = 2;
+
+    for (int y = -FILTER_RADIUS; y <= FILTER_RADIUS; ++y)
+    {
+        for (int x = -FILTER_RADIUS; x <= FILTER_RADIUS; ++x)
+        {
+            float2 sampleUv = uv + float2((float)x * g_compositeTexelW, (float)y * g_compositeTexelH);
+
+            if (any(sampleUv < 0.0f) || any(sampleUv > 1.0f))
+            {
+                continue;
+            }
+
+            float sampleDepth = tex2D(samplerSceneDepth, sampleUv).a;
+            if (abs(sampleDepth - centerDepth) > g_edgeDepthThreshold)
+            {
+                continue;
+            }
+
+            float3 sampleNormal = DecodeWorldNormal(tex2D(samplerSceneNormal, sampleUv).rgb);
+            if (dot(centerNormal, sampleNormal) < g_edgeNormalThreshold)
+            {
+                continue;
+            }
+
+            float weight = GetGaussianWeight1D5(x) * GetGaussianWeight1D5(y);
+            vShadowColorSum += tex2D(samplerShadow, sampleUv) * weight;
+            totalWeight += weight;
+        }
+    }
+
+    float4 vShadowColor = vCenterShadowColor;
+    if (totalWeight > 0.0f)
+    {
+        vShadowColor = vShadowColorSum / totalWeight;
+    }
 
     float4 result = float4(0, 0, 0, 0);
     float shadowPresence = saturate(vShadowColor.r);

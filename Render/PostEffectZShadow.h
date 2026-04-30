@@ -16,6 +16,8 @@ public:
     void Finalize();
 
     LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget,
+                            LPDIRECT3DTEXTURE9 sceneDepthTexture,
+                            LPDIRECT3DTEXTURE9 sceneNormalTexture,
                             const std::deque<MeshMix>& meshMixList);
 
     void SetEnable(const bool arg);
@@ -71,6 +73,8 @@ private:
     float fLightFar = 200.0f;
 
     const std::deque<MeshMix>* m_pMeshList;
+    LPDIRECT3DTEXTURE9 m_sceneDepthTexture = NULL;
+    LPDIRECT3DTEXTURE9 m_sceneNormalTexture = NULL;
 
     void CreateRawResource();
 };

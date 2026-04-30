@@ -58,6 +58,8 @@ void PostEffectZShadow::Finalize()
 }
 
 LPDIRECT3DTEXTURE9 PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
+                                           LPDIRECT3DTEXTURE9 sceneDepthTexture,
+                                           LPDIRECT3DTEXTURE9 sceneNormalTexture,
                                            const std::deque<MeshMix>& meshMixList)
 {
     if (!m_bEnable)
@@ -66,12 +68,16 @@ LPDIRECT3DTEXTURE9 PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     }
     g_texTemp = renderTarget;
     m_pMeshList = &meshMixList;
+    m_sceneDepthTexture = sceneDepthTexture;
+    m_sceneNormalTexture = sceneNormalTexture;
 
     RenderTechnique1();
     RenderTechnique2();
     RenderTechnique3();
 
     m_pMeshList = nullptr;
+    m_sceneDepthTexture = NULL;
+    m_sceneNormalTexture = NULL;
 
     return g_texComposite;
 }
@@ -274,18 +280,7 @@ void PostEffectZShadow::RenderTechnique2()
     hr = g_fxDepthBufferShadow->SetFloat("g_shadowTexelH", 1.0f / (float)descLightZ.Height);
     assert(hr == S_OK);
 
-    hr = g_fxDepthBufferShadow->SetFloat("g_shadowBias",   0.001f);
-    assert(hr == S_OK);
-
-    hr = g_fxDepthBufferShadow->SetFloat("g_shadowIntensity", m_shadowIntensity);
-    assert(hr == S_OK);
-
-    hr = g_fxDepthBufferShadow->SetFloat("g_shadowSaturationBoost", m_shadowSaturationBoost);
-    assert(hr == S_OK);
-
-    int nBlurSize = 3;
-
-    hr = g_fxDepthBufferShadow->SetInt("g_nBlurSize", nBlurSize);
+    hr = g_fxDepthBufferShadow->SetFloat("g_shadowBias", 0.001f);
     assert(hr == S_OK);
 
     hr = g_fxDepthBufferShadow->SetTechnique("TechniqueWriteShadow");
@@ -379,6 +374,12 @@ void PostEffectZShadow::RenderTechnique3()
     g_fxDepthBufferShadow->SetFloat("g_compositeTexelH", 1.0f / static_cast<float>(descComp.Height));
     g_fxDepthBufferShadow->SetTexture("g_texBase",   g_texTemp);               // 元のカラー
     g_fxDepthBufferShadow->SetTexture("g_texShadow", g_texRenderTargetShadow); // 影アルファ
+    g_fxDepthBufferShadow->SetTexture("g_texSceneDepth", m_sceneDepthTexture);
+    g_fxDepthBufferShadow->SetTexture("g_texSceneNormal", m_sceneNormalTexture);
+    g_fxDepthBufferShadow->SetFloat("g_shadowIntensity", m_shadowIntensity);
+    g_fxDepthBufferShadow->SetFloat("g_shadowSaturationBoost", m_shadowSaturationBoost);
+    g_fxDepthBufferShadow->SetFloat("g_edgeDepthThreshold", 0.003f);
+    g_fxDepthBufferShadow->SetFloat("g_edgeNormalThreshold", 0.85f);
     g_fxDepthBufferShadow->CommitChanges();
 
     DrawFullscreenQuad();
