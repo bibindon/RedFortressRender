@@ -449,17 +449,21 @@ void PixelShaderPointLight(in  float4 inPosition            : POSITION,
                                 invParallaxOffsetTS );
     }
 
-    // 法線マップ → 接空間 → ワールド
-    float3 normalTS;
-    float4 nTex = tex2D(g_normalMapSampler, uv);
-    normalTS.x = nTex.r * 2.0 - 1.0;
-    normalTS.y = nTex.g * 2.0 - 1.0;
-    normalTS.z = nTex.b * 2.0 - 1.0;
-    normalTS.x *= -1.0;
-    normalTS = normalize(normalTS);
+    float3 N = normalWS;
+    if (g_bNormalMapping)
+    {
+        // 法線マップがある場合だけ、接空間法線をワールド空間へ変換して使う
+        float3 normalTS;
+        float4 nTex = tex2D(g_normalMapSampler, uv);
+        normalTS.x = nTex.r * 2.0 - 1.0;
+        normalTS.y = nTex.g * 2.0 - 1.0;
+        normalTS.z = nTex.b * 2.0 - 1.0;
+        normalTS.x *= -1.0;
+        normalTS = normalize(normalTS);
 
-    float3x3 tbn = float3x3(-inTangent, -inBinorm, normalWS);
-    float3 N = normalize(mul(normalTS, tbn));
+        float3x3 tbn = float3x3(-inTangent, -inBinorm, normalWS);
+        N = normalize(mul(normalTS, tbn));
+    }
 
     float3 accum = 0.0;
 
