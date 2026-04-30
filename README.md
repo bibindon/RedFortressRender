@@ -42,6 +42,19 @@
 - スターバースト
 - 彩度フィルタ
 
+## まだ
+
+- [ ] SSGI
+- [ ] GOD RAY
+- [ ] Motion Blur(Object)
+- [ ] Motion Blur(Camera)
+- [ ] Tone Mapping
+- [ ] Gaussian Filter (Crop)
+- [ ] 草、波、水面
+- [ ] パーティクル（煙）
+- [ ] パーティクル（炎）
+- [ ] パーティクル（霧）
+
 ## 仕組み
 
 中心になるクラスは `Render` です。  
