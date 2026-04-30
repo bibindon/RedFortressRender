@@ -328,6 +328,13 @@ bool HandleSampleKeyDown(HWND hWnd, const WPARAM wParam)
         RefreshSettingsDialogState();
     }
 
+    if (wParam == 'U')
+    {
+        g_bDepthOfField = !g_bDepthOfField;
+        ApplyPostEffectToggleSettings();
+        RefreshSettingsDialogState();
+    }
+
     if (wParam == 'H')
     {
         g_bDepthBufferShadow = !g_bDepthBufferShadow;

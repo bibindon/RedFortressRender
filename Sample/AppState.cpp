@@ -37,11 +37,13 @@ bool g_bSSAO = true;
 bool g_bFog = true;
 bool g_bSaturateFilter = false;
 bool g_bBloom = false;
+bool g_bDepthOfField = false;
 bool g_bStarBurst = false;
 float g_fogIntensity = 2.0f;
 float g_shadowIntensity = 0.5f;
 float g_ssaoBrightness = 1.0f;
 float g_bloomThreshold = 2.5f;
+float g_dofFocalDistance = 8.0f;
 float g_starBurstThreshold = 2.8f;
 float g_modelLoadScale = 1.0f;
 int g_gaussianSampleSize = 101;
@@ -79,6 +81,11 @@ float ClampSSAOBrightness(const float brightness)
 float ClampBloomThreshold(const float threshold)
 {
     return (std::max)(BLOOM_THRESHOLD_MIN, (std::min)(threshold, BLOOM_THRESHOLD_MAX));
+}
+
+float ClampDepthOfFieldFocalDistance(const float distance)
+{
+    return (std::max)(DOF_FOCAL_DISTANCE_MIN, (std::min)(distance, DOF_FOCAL_DISTANCE_MAX));
 }
 
 float ClampStarBurstThreshold(const float threshold)
@@ -539,6 +546,7 @@ void ApplyPostEffectToggleSettings()
     g_Render.SetPostEffectSaturateEnable(g_bSaturateFilter);
     g_Render.SetPostEffectGaussianFilter(g_bGaussianFilter);
     g_Render.SetPostEffectBloom(g_bBloom);
+    g_Render.SetPostEffectDepthOfField(g_bDepthOfField);
     g_Render.SetPostEffectStarBurst(g_bStarBurst);
 }
 
@@ -564,6 +572,12 @@ void ApplyBloomThreshold()
 {
     g_bloomThreshold = ClampBloomThreshold(g_bloomThreshold);
     g_Render.SetPostEffectBloomThreshold(g_bloomThreshold);
+}
+
+void ApplyDepthOfFieldFocalDistance()
+{
+    g_dofFocalDistance = ClampDepthOfFieldFocalDistance(g_dofFocalDistance);
+    g_Render.SetPostEffectDepthOfFieldFocalDistance(g_dofFocalDistance);
 }
 
 void ApplyStarBurstThreshold()
@@ -646,6 +660,16 @@ int BloomThresholdToSliderValue(const float threshold)
 float SliderValueToBloomThreshold(const int sliderValue)
 {
     return ClampBloomThreshold(static_cast<float>(sliderValue) * BLOOM_THRESHOLD_STEP);
+}
+
+int DepthOfFieldFocalDistanceToSliderValue(const float distance)
+{
+    return static_cast<int>(std::lround((ClampDepthOfFieldFocalDistance(distance) - DOF_FOCAL_DISTANCE_MIN) / DOF_FOCAL_DISTANCE_STEP));
+}
+
+float SliderValueToDepthOfFieldFocalDistance(const int sliderValue)
+{
+    return ClampDepthOfFieldFocalDistance(DOF_FOCAL_DISTANCE_MIN + static_cast<float>(sliderValue) * DOF_FOCAL_DISTANCE_STEP);
 }
 
 int StarBurstThresholdToSliderValue(const float threshold)
@@ -995,6 +1019,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_bloomThreshold = std::stof(value);
             }
+            else if (key == L"DepthOfFieldFocalDistance")
+            {
+                g_dofFocalDistance = std::stof(value);
+            }
             else if (key == L"StarBurstThreshold")
             {
                 g_starBurstThreshold = std::stof(value);
@@ -1027,6 +1055,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_bBloom = (std::stoi(value) != 0);
             }
+            else if (key == L"DepthOfFieldEnable")
+            {
+                g_bDepthOfField = (std::stoi(value) != 0);
+            }
             else if (key == L"StarBurstEnable")
             {
                 g_bStarBurst = (std::stoi(value) != 0);
@@ -1045,6 +1077,7 @@ void DrawSampleOverlay()
     text += L"Q/E : Camera up/down\n";
     text += L"Arrow keys : Camera rotate\n";
     text += L"Esc : Mouse look ON/OFF\n";
+    text += L"F1 : Settings dialog\n";
     text += L"\n";
     text += L"8 : Window mode\n";
     text += L"9 : Borderless mode\n";
@@ -1071,6 +1104,7 @@ void DrawSampleOverlay()
     text += L"t : Saturation filter ON/OFF\n";
     text += L"g : Gaussian filter ON/OFF\n";
     text += L"b : Bloom ON/OFF\n";
+    text += L"u : Depth of field ON/OFF\n";
     text += L"Shift + b : StarBurst ON/OFF\n";
     text += L"h : Depth buffer shadow ON/OFF\n";
     text += L"j : SSAO ON/OFF\n";

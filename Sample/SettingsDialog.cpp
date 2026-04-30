@@ -23,6 +23,8 @@ constexpr int SSAO_BRIGHTNESS_SLIDER_MIN = 0;
 constexpr int SSAO_BRIGHTNESS_SLIDER_MAX = static_cast<int>((SSAO_BRIGHTNESS_MAX - SSAO_BRIGHTNESS_MIN) / SSAO_BRIGHTNESS_STEP);
 constexpr int BLOOM_THRESHOLD_SLIDER_MIN = 0;
 constexpr int BLOOM_THRESHOLD_SLIDER_MAX = static_cast<int>(BLOOM_THRESHOLD_MAX / BLOOM_THRESHOLD_STEP);
+constexpr int DOF_FOCAL_DISTANCE_SLIDER_MIN = 0;
+constexpr int DOF_FOCAL_DISTANCE_SLIDER_MAX = static_cast<int>((DOF_FOCAL_DISTANCE_MAX - DOF_FOCAL_DISTANCE_MIN) / DOF_FOCAL_DISTANCE_STEP);
 constexpr int STARBURST_THRESHOLD_SLIDER_MIN = 0;
 constexpr int STARBURST_THRESHOLD_SLIDER_MAX = static_cast<int>(STARBURST_THRESHOLD_MAX / STARBURST_THRESHOLD_STEP);
 constexpr int MODEL_LOAD_SCALE_SLIDER_MIN = 0;
@@ -428,6 +430,23 @@ void RefreshBloom(HWND hDlg)
     CheckDlgButton(hDlg, IDC_CHECK_BLOOM, g_bBloom ? BST_CHECKED : BST_UNCHECKED);
 }
 
+void RefreshDepthOfField(HWND hDlg)
+{
+    CheckDlgButton(hDlg, IDC_CHECK_DEPTH_OF_FIELD, g_bDepthOfField ? BST_CHECKED : BST_UNCHECKED);
+}
+
+void RefreshDepthOfFieldControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_dofFocalDistance);
+    SetDlgItemText(hDlg, IDC_EDIT_DOF_FOCAL_DISTANCE, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_DOF_FOCAL_DISTANCE,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(DepthOfFieldFocalDistanceToSliderValue(g_dofFocalDistance)));
+}
+
 void RefreshStarBurst(HWND hDlg)
 {
     CheckDlgButton(hDlg, IDC_CHECK_STARBURST, g_bStarBurst ? BST_CHECKED : BST_UNCHECKED);
@@ -458,11 +477,13 @@ void RefreshAllControls(HWND hDlg)
     RefreshDepthBufferShadow(hDlg);
     RefreshSSAO(hDlg);
     RefreshBloom(hDlg);
+    RefreshDepthOfField(hDlg);
     RefreshStarBurst(hDlg);
     RefreshFogControls(hDlg);
     RefreshShadowControls(hDlg);
     RefreshSSAOBrightnessControls(hDlg);
     RefreshBloomThresholdControls(hDlg);
+    RefreshDepthOfFieldControls(hDlg);
     RefreshStarBurstThresholdControls(hDlg);
     RefreshModelLoadScaleControls(hDlg);
     RefreshGaussianControls(hDlg);
@@ -494,6 +515,11 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETRANGEMAX, FALSE, BLOOM_THRESHOLD_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETTICFREQ, 5, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETPAGESIZE, 0, 5);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_DOF_FOCAL_DISTANCE, TBM_SETRANGEMIN, FALSE, DOF_FOCAL_DISTANCE_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_DOF_FOCAL_DISTANCE, TBM_SETRANGEMAX, FALSE, DOF_FOCAL_DISTANCE_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_DOF_FOCAL_DISTANCE, TBM_SETTICFREQ, 20, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_DOF_FOCAL_DISTANCE, TBM_SETPAGESIZE, 0, 20);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_STARBURST_THRESHOLD, TBM_SETRANGEMIN, FALSE, STARBURST_THRESHOLD_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_STARBURST_THRESHOLD, TBM_SETRANGEMAX, FALSE, STARBURST_THRESHOLD_SLIDER_MAX);
@@ -716,6 +742,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_DOF_FOCAL_DISTANCE))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_dofFocalDistance = SliderValueToDepthOfFieldFocalDistance(sliderValue);
+            ApplyDepthOfFieldFocalDistance();
+            RefreshDepthOfFieldControls(hDlg);
+            return TRUE;
+        }
+
         if (slider == GetDlgItem(hDlg, IDC_SLIDER_STARBURST_THRESHOLD))
         {
             const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
@@ -886,6 +921,14 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_bBloom = (IsDlgButtonChecked(hDlg, IDC_CHECK_BLOOM) == BST_CHECKED);
             g_Render.SetPostEffectBloom(g_bBloom);
             RefreshBloom(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_DEPTH_OF_FIELD)
+        {
+            g_bDepthOfField = (IsDlgButtonChecked(hDlg, IDC_CHECK_DEPTH_OF_FIELD) == BST_CHECKED);
+            g_Render.SetPostEffectDepthOfField(g_bDepthOfField);
+            RefreshDepthOfField(hDlg);
             return TRUE;
         }
 

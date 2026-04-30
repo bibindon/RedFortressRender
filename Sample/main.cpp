@@ -89,6 +89,7 @@ void InitializeSampleScene(HWND hWnd)
     ApplyShadowIntensity();
     ApplySSAOBrightness();
     ApplyBloomThreshold();
+    ApplyDepthOfFieldFocalDistance();
     ApplyStarBurstThreshold();
     ApplyModelLoadScale();
     ApplyGaussianSampleSize();

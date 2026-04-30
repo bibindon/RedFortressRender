@@ -280,6 +280,33 @@ void Render::ApplySettings()
         SetPostEffectBloomThreshold(2.5f);
     }
 
+    const auto depthOfFieldEnable = m_settings.find(L"DepthOfFieldEnable");
+    if (depthOfFieldEnable != m_settings.end())
+    {
+        bool enabled = false;
+        if (TryParseBoolSetting(depthOfFieldEnable->second, enabled))
+        {
+            SetPostEffectDepthOfField(enabled);
+        }
+    }
+
+    const auto depthOfFieldFocalDistance = m_settings.find(L"DepthOfFieldFocalDistance");
+    if (depthOfFieldFocalDistance != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectDepthOfFieldFocalDistance(std::stof(depthOfFieldFocalDistance->second));
+        }
+        catch (...)
+        {
+            SetPostEffectDepthOfFieldFocalDistance(8.0f);
+        }
+    }
+    else
+    {
+        SetPostEffectDepthOfFieldFocalDistance(8.0f);
+    }
+
     const auto starBurstEnable = m_settings.find(L"StarBurstEnable");
     if (starBurstEnable != m_settings.end())
     {
@@ -343,6 +370,9 @@ void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
     // ブルーム
     m_PostEffectBloom.Initialize();
 
+    // 被写界深度
+    m_postEffectDepthOfField.Initialize();
+
     // スターバースト
     m_postEffectStarBurst.Initialize();
 
@@ -399,7 +429,8 @@ void Render::Draw()
     // 彩度変更
     pTempTexture = m_postEffectSaturate.Draw(pTempTexture);
 
-    // TODO 被写界深度
+    // 被写界深度
+    pTempTexture = m_postEffectDepthOfField.Draw(pTempTexture, pTexTempPos);
 
     // ブルーム
     pTempTexture = m_PostEffectBloom.Draw(pTempTexture);
@@ -873,6 +904,16 @@ void Render::SetPostEffectBloom(const bool arg)
 void Render::SetPostEffectBloomThreshold(const float threshold)
 {
     m_PostEffectBloom.SetThreshold(threshold);
+}
+
+void Render::SetPostEffectDepthOfField(const bool arg)
+{
+    m_postEffectDepthOfField.SetEnable(arg);
+}
+
+void Render::SetPostEffectDepthOfFieldFocalDistance(const float distance)
+{
+    m_postEffectDepthOfField.SetFocalDistance(distance);
 }
 
 void Render::SetPostEffectStarBurst(const bool arg)

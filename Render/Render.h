@@ -39,6 +39,7 @@
 #include "PostEffectStarBurst.h"
 #include "PostEffectEnd.h"
 #include "PostEffectSSAO.h"
+#include "PostEffectDepthOfField.h"
 
 #include "WindowManager.h"
 #include "PostEffectZShadow.h"
@@ -209,6 +210,8 @@ public:
 
     void SetPostEffectBloom(const bool arg);
     void SetPostEffectBloomThreshold(const float threshold);
+    void SetPostEffectDepthOfField(const bool arg);
+    void SetPostEffectDepthOfFieldFocalDistance(const float distance);
 
     void SetPostEffectStarBurst(const bool arg);
     void SetPostEffectStarBurstThreshold(const float threshold);
@@ -277,6 +280,9 @@ private:
 
     // ブルームフィルター
     PostEffectBloom m_PostEffectBloom;
+
+    // 被写界深度
+    PostEffectDepthOfField m_postEffectDepthOfField;
 
     // ガウスフィルター
     PostEffectGauss m_postEffectGauss;
