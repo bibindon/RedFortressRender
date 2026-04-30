@@ -92,19 +92,6 @@ int GetBlurHalfSize(float distanceMeters)
     return 5; // 11x11
 }
 
-float GetGaussianWeight(int x, int y, int halfSize)
-{
-    float fx = (float)x;
-    float fy = (float)y;
-    float dist2 = fx * fx + fy * fy;
-
-    // 小さいカーネルでは狭く、大きいカーネルでは広くする。
-    float sigma = max(1.0f, (float)halfSize * 0.75f);
-    float sigma2 = sigma * sigma;
-
-    return exp(-dist2 / (2.0f * sigma2));
-}
-
 // ps_3_0 では POSITION をピクセルシェーダー入力にしない。
 // 画面位置は使わず、元の uv と sampleUv の扱いを維持する。
 float4 PS(in float2 uv : TEXCOORD0) : COLOR0
@@ -114,7 +101,7 @@ float4 PS(in float2 uv : TEXCOORD0) : COLOR0
 
     // 0.5ピクセルずれ確認用のデバッグ表示。
     // 5ピクセルごとに縦線・横線を描く。
-    if (false)
+    if (0)
     {
         float2 pixelCoord = floor(sampleUv / g_TexelSize);
         bool isGridLine = (fmod(pixelCoord.x, 5.0f) == 0.0f) || (fmod(pixelCoord.y, 5.0f) == 0.0f);
@@ -173,9 +160,8 @@ float4 PS(in float2 uv : TEXCOORD0) : COLOR0
                 continue;
             }
 
-            float weight = GetGaussianWeight(x, y, blurHalfSize);
-            sumColor += tex2D(colorSampler, tapUv) * weight;
-            weightSum += weight;
+            sumColor += tex2D(colorSampler, tapUv);
+            weightSum += 1.0f;
         }
     }
 
