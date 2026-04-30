@@ -15,11 +15,12 @@ float4 g_specularColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 float2 g_screenSize = { 1600.0f, 900.0f };
 
 // スペキュラ光の鋭さ
-float g_specularPower = 128.0f;
+float g_specularPower = 16.0f;
+// float g_specularPower = 128.0f;
 //float g_specularPower = 0.0f;
 
 // スペキュラ光の強さ
-float g_specularIntensity = 1.0f;
+float g_specularIntensity = 0.2f;
 //float g_specularIntensity = 0.0f;
 
 // 距離フォグの色
@@ -33,6 +34,11 @@ float4 g_fogHeightColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 // 高さフォグの強さ
 float g_fogHeightDensity = 0.01f;
+
+// 空間の明るさ
+// 0なら洞窟、0.1なら夜、1なら快晴、0.5なら室内、という感じ
+// 1.0を超えると彩度が上がり、逆に暗くなるようにすると面白い気がする。
+float g_fSunLightIntensity = 0.2f;
 
 texture g_texture;
 sampler g_textureSampler = sampler_state
@@ -304,7 +310,7 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
 
     }
 
-    lambert = albedo * NdotL;
+    lambert = albedo * NdotL * g_fSunLightIntensity;
 
     float3 ambient = float3(0.2, 0.2, 0.2) * albedo;
 
