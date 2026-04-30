@@ -946,7 +946,7 @@ bool HandleOpenMeshCommand(HWND hDlg, const WORD commandId)
                                L"Mix Mesh Files (*.x;*.blend.x)\0*.x;*.blend.x\0All Files (*.*)\0*.*\0",
                                g_selectedMixMeshPath))
         {
-            SpawnMeshMixAtCameraFront(g_selectedMixMeshPath);
+            SpawnMeshMixAtLookAt(g_selectedMixMeshPath);
             RefreshSelectedMeshPaths(hDlg);
         }
         return true;
@@ -958,7 +958,7 @@ bool HandleOpenMeshCommand(HWND hDlg, const WORD commandId)
                                L"Mesh Files (*.x)\0*.x\0All Files (*.*)\0*.*\0",
                                g_selectedMeshPath))
         {
-            SpawnMeshAtCameraFront(g_selectedMeshPath);
+            SpawnMeshAtLookAt(g_selectedMeshPath);
             RefreshSelectedMeshPaths(hDlg);
         }
         return true;
@@ -970,7 +970,7 @@ bool HandleOpenMeshCommand(HWND hDlg, const WORD commandId)
                                L"Anim Mesh Files (*.x)\0*.x\0All Files (*.*)\0*.*\0",
                                g_selectedAnimMeshPath))
         {
-            SpawnAnimMeshAtCameraFront(g_selectedAnimMeshPath);
+            SpawnAnimMeshAtLookAt(g_selectedAnimMeshPath);
             RefreshSelectedMeshPaths(hDlg);
         }
         return true;
@@ -982,7 +982,7 @@ bool HandleOpenMeshCommand(HWND hDlg, const WORD commandId)
                                L"Skin Anim Mesh Files (*.x)\0*.x\0All Files (*.*)\0*.*\0",
                                g_selectedSkinAnimMeshPath))
         {
-            SpawnSkinAnimMeshAtCameraFront(g_selectedSkinAnimMeshPath);
+            SpawnSkinAnimMeshAtLookAt(g_selectedSkinAnimMeshPath);
             RefreshSelectedMeshPaths(hDlg);
         }
         return true;

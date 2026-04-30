@@ -53,7 +53,7 @@ float g_shadowDarkness = 0.3f;
 float g_specularIntensity = 0.1f;
 float g_specularEdge = 0.0f;
 float g_bloomThreshold = 2.5f;
-float g_dofFocalDistance = 8.0f;
+float g_dofFocalDistance = 1.0f;
 float g_starBurstThreshold = 2.8f;
 float g_modelLoadScale = 1.0f;
 D3DXCOLOR g_pointLightColor = D3DXCOLOR(1.0f, 0.35f, 0.1f, 1.0f);
@@ -515,7 +515,7 @@ void UpdateCameraMoveByKeyboard()
     D3DXVec3Normalize(&move, &move);
 
     const bool shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
-    const float speed = shift ? (0.2f * 3.0f) : 0.2f;
+    const float speed = shift ? (0.2f * 3.0f / 3.0f) : (0.2f / 3.0f);
     g_Render.MoveCamera(move * speed);
 }
 
@@ -1014,7 +1014,7 @@ bool RemoveLoadedModel(const size_t modelIndex)
     return true;
 }
 
-void SpawnMeshAtCameraFront(const std::wstring& filePath)
+void SpawnMeshAtLookAt(const std::wstring& filePath)
 {
     if (filePath.empty())
     {
@@ -1024,14 +1024,13 @@ void SpawnMeshAtCameraFront(const std::wstring& filePath)
     auto pos = g_Render.GetLookAtPos();
     D3DXVECTOR3 forward = g_Render.GetCameraRotate();
     D3DXVec3Normalize(&forward, &forward);
-    pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
     const float yaw = atan2f(forward.x, forward.z);
     const int renderId = g_Render.AddMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), g_modelLoadScale, 1.0f);
     RegisterLoadedModel(L"Mesh", filePath, pos, g_modelLoadScale, renderId);
 }
 
-void SpawnMeshMixAtCameraFront(const std::wstring& filePath)
+void SpawnMeshMixAtLookAt(const std::wstring& filePath)
 {
     if (filePath.empty())
     {
@@ -1041,7 +1040,6 @@ void SpawnMeshMixAtCameraFront(const std::wstring& filePath)
     auto pos = g_Render.GetLookAtPos();
     D3DXVECTOR3 forward = g_Render.GetCameraRotate();
     D3DXVec3Normalize(&forward, &forward);
-    pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
     const float yaw = atan2f(forward.x, forward.z);
     const bool usePOM = (g_mixMeshShaderMode == MixMeshShaderMode::ParallaxOcclusionMapping);
@@ -1068,7 +1066,7 @@ NSRender::AnimSetMap CreateDefaultAnimSetMap()
     return animMap;
 }
 
-void SpawnAnimMeshAtCameraFront(const std::wstring& filePath)
+void SpawnAnimMeshAtLookAt(const std::wstring& filePath)
 {
     if (filePath.empty())
     {
@@ -1078,14 +1076,13 @@ void SpawnAnimMeshAtCameraFront(const std::wstring& filePath)
     auto pos = g_Render.GetLookAtPos();
     D3DXVECTOR3 forward = g_Render.GetCameraRotate();
     D3DXVec3Normalize(&forward, &forward);
-    pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
     const float yaw = atan2f(forward.x, forward.z);
     const int renderId = g_Render.AddAnimMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), g_modelLoadScale, CreateDefaultAnimSetMap());
     RegisterLoadedModel(L"AnimMesh", filePath, pos, g_modelLoadScale, renderId);
 }
 
-void SpawnSkinAnimMeshAtCameraFront(const std::wstring& filePath)
+void SpawnSkinAnimMeshAtLookAt(const std::wstring& filePath)
 {
     if (filePath.empty())
     {
@@ -1095,7 +1092,6 @@ void SpawnSkinAnimMeshAtCameraFront(const std::wstring& filePath)
     auto pos = g_Render.GetLookAtPos();
     D3DXVECTOR3 forward = g_Render.GetCameraRotate();
     D3DXVec3Normalize(&forward, &forward);
-    pos += forward * MODEL_SPAWN_FORWARD_OFFSET;
 
     const float yaw = atan2f(forward.x, forward.z);
     const int renderId = g_Render.AddSkinAnimMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), g_modelLoadScale, CreateDefaultAnimSetMap());

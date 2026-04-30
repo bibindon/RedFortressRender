@@ -222,10 +222,10 @@ void RegisterLoadedModel(const std::wstring& type,
                          int renderId);
 bool RemoveLoadedModel(size_t modelIndex);
 
-void SpawnMeshAtCameraFront(const std::wstring& filePath);
-void SpawnMeshMixAtCameraFront(const std::wstring& filePath);
-void SpawnAnimMeshAtCameraFront(const std::wstring& filePath);
-void SpawnSkinAnimMeshAtCameraFront(const std::wstring& filePath);
+void SpawnMeshAtLookAt(const std::wstring& filePath);
+void SpawnMeshMixAtLookAt(const std::wstring& filePath);
+void SpawnAnimMeshAtLookAt(const std::wstring& filePath);
+void SpawnSkinAnimMeshAtLookAt(const std::wstring& filePath);
 NSRender::AnimSetMap CreateDefaultAnimSetMap();
 bool ShowOpenFileDialog(HWND hWnd, const wchar_t* filter, std::wstring& selectedPath);
 bool ShowSaveBinaryXFileDialog(HWND hWnd, const std::wstring& sourcePath, std::wstring& selectedPath);

@@ -66,7 +66,7 @@ void InitializeSampleScene(HWND hWnd)
     InitializeRemoteDesktopDefault();
     LoadSampleSettingsFromCsv(L"RenderSettings.csv");
     g_Render.Initialize(hWnd, L"RenderSettings.csv");
-    g_Render.SetCamera(D3DXVECTOR3(0.0f, 2.0f, -6.0f), D3DXVECTOR3(0.0f, 1.5f, 0.0f));
+    g_Render.SetCamera(D3DXVECTOR3(0.0f, 1.7f, -2.0f), D3DXVECTOR3(0.0f, 1.5f, 0.0f));
     g_fontId = g_Render.SetUpFont(L"BIZ UDゴシック", 20, D3DCOLOR_RGBA(255, 255, 255, 255));
     const int cubeNormalInverseId = g_Render.AddMeshMix(L"..\\..\\Sample\\cubeNormalInverse.x",
                                                         D3DXVECTOR3(0.0f, 0.0f, 0.0f),
