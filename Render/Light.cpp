@@ -59,6 +59,17 @@ void Light::AddPointLight(const D3DXVECTOR3& pos,
     }
 }
 
+bool Light::RemovePointLight(const size_t index)
+{
+    if (index >= m_pointLightList.size())
+    {
+        return false;
+    }
+
+    m_pointLightList.erase(m_pointLightList.begin() + static_cast<std::ptrdiff_t>(index));
+    return true;
+}
+
 std::deque<PointLightInfo> Light::GetPointLightList()
 {
     return m_pointLightList;

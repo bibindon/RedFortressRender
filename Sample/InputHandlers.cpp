@@ -123,9 +123,7 @@ void AddImageOrPointLight(const bool shift, const bool control)
 {
     if (control)
     {
-        const auto pos = g_Render.GetLookAtPos();
-        g_Render.AddPointLight(pos, 1.0f, D3DXCOLOR(1.0f, 0.35f, 0.1f, 1.0f));
-        RefreshSettingsDialogState();
+        AddPointLightAtLookAt();
         return;
     }
 

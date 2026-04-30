@@ -37,6 +37,7 @@ public:
     static void AddPointLight(const D3DXVECTOR3& pos,
                               const D3DXCOLOR& color,
                               const float brightness);
+    static bool RemovePointLight(size_t index);
 
     static std::deque<PointLightInfo> GetPointLightList();
 

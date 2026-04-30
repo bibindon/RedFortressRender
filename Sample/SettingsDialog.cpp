@@ -34,10 +34,15 @@ constexpr int STARBURST_THRESHOLD_SLIDER_MIN = 0;
 constexpr int STARBURST_THRESHOLD_SLIDER_MAX = static_cast<int>(STARBURST_THRESHOLD_MAX / STARBURST_THRESHOLD_STEP);
 constexpr int MODEL_LOAD_SCALE_SLIDER_MIN = 0;
 constexpr int MODEL_LOAD_SCALE_SLIDER_MAX = static_cast<int>((MODEL_LOAD_SCALE_MAX - MODEL_LOAD_SCALE_MIN) / MODEL_LOAD_SCALE_STEP);
+constexpr int POINT_LIGHT_COLOR_SLIDER_MIN = 0;
+constexpr int POINT_LIGHT_COLOR_SLIDER_MAX = static_cast<int>(POINT_LIGHT_COLOR_MAX / POINT_LIGHT_COLOR_STEP);
+constexpr int POINT_LIGHT_BRIGHTNESS_SLIDER_MIN = 0;
+constexpr int POINT_LIGHT_BRIGHTNESS_SLIDER_MAX = static_cast<int>(POINT_LIGHT_BRIGHTNESS_MAX / POINT_LIGHT_BRIGHTNESS_STEP);
 constexpr int GAUSSIAN_SLIDER_MIN = 1;
 constexpr int GAUSSIAN_SLIDER_MAX = (GAUSSIAN_SAMPLE_MAX + 1) / 2;
 constexpr UINT ID_POPUP_EXPORT_BINARY = 60001;
 constexpr UINT ID_POPUP_REMOVE_MODEL = 60002;
+constexpr UINT ID_POPUP_REMOVE_POINT_LIGHT = 60003;
 
 std::wstring FormatResolutionLabel(const int width, const int height)
 {
@@ -185,7 +190,7 @@ void PopulateResolutionCombo(HWND hDlg)
     }
 }
 
-int GetLoadedModelIndexFromPoint(HWND listView, POINT screenPoint)
+int GetListViewIndexFromPoint(HWND listView, POINT screenPoint)
 {
     if (listView == NULL)
     {
@@ -216,7 +221,7 @@ int GetLoadedModelIndexFromPoint(HWND listView, POINT screenPoint)
 
 bool ShowLoadedModelContextMenu(HWND hDlg, HWND listView, POINT screenPoint)
 {
-    const int itemIndex = GetLoadedModelIndexFromPoint(listView, screenPoint);
+    const int itemIndex = GetListViewIndexFromPoint(listView, screenPoint);
     if (itemIndex < 0)
     {
         return false;
@@ -289,6 +294,62 @@ bool ShowLoadedModelContextMenu(HWND hDlg, HWND listView, POINT screenPoint)
                 L"Binary X export completed.",
                 L"Export_Binary",
                 MB_ICONINFORMATION | MB_OK);
+    return true;
+}
+
+bool ShowPointLightContextMenu(HWND hDlg, HWND listView, POINT screenPoint)
+{
+    const int itemIndex = GetListViewIndexFromPoint(listView, screenPoint);
+    if (itemIndex < 0)
+    {
+        return false;
+    }
+
+    if (screenPoint.x == -1 && screenPoint.y == -1)
+    {
+        RECT itemRect { };
+        itemRect.left = LVIR_BOUNDS;
+        if (ListView_GetItemRect(listView, itemIndex, &itemRect, LVIR_BOUNDS))
+        {
+            POINT popupPoint { itemRect.left, itemRect.top };
+            ClientToScreen(listView, &popupPoint);
+            screenPoint = popupPoint;
+        }
+    }
+
+    HMENU popupMenu = CreatePopupMenu();
+    if (popupMenu == NULL)
+    {
+        return false;
+    }
+
+    AppendMenuW(popupMenu, MF_STRING, ID_POPUP_REMOVE_POINT_LIGHT, L"Remove");
+
+    const UINT command = TrackPopupMenu(popupMenu,
+                                        TPM_RETURNCMD | TPM_RIGHTBUTTON,
+                                        screenPoint.x,
+                                        screenPoint.y,
+                                        0,
+                                        hDlg,
+                                        NULL);
+
+    DestroyMenu(popupMenu);
+
+    if (command != ID_POPUP_REMOVE_POINT_LIGHT)
+    {
+        return false;
+    }
+
+    if (!NSRender::Light::RemovePointLight(static_cast<size_t>(itemIndex)))
+    {
+        MessageBoxW(hDlg,
+                    L"Point light remove failed.",
+                    L"Remove",
+                    MB_ICONERROR | MB_OK);
+        return true;
+    }
+
+    RefreshSettingsDialogState();
     return true;
 }
 
@@ -412,6 +473,43 @@ void RefreshPointLightListView(HWND hDlg)
                       pointLight.m_brightness);
         ListView_SetItemText(listView, i, 2, brightnessBuffer);
     }
+}
+
+void RefreshPointLightControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_pointLightColor.r);
+    SetDlgItemText(hDlg, IDC_EDIT_POINT_LIGHT_COLOR_R, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_POINT_LIGHT_COLOR_R,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(PointLightColorToSliderValue(g_pointLightColor.r)));
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_pointLightColor.g);
+    SetDlgItemText(hDlg, IDC_EDIT_POINT_LIGHT_COLOR_G, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_POINT_LIGHT_COLOR_G,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(PointLightColorToSliderValue(g_pointLightColor.g)));
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_pointLightColor.b);
+    SetDlgItemText(hDlg, IDC_EDIT_POINT_LIGHT_COLOR_B, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_POINT_LIGHT_COLOR_B,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(PointLightColorToSliderValue(g_pointLightColor.b)));
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_pointLightBrightness);
+    SetDlgItemText(hDlg, IDC_EDIT_POINT_LIGHT_BRIGHTNESS, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_POINT_LIGHT_BRIGHTNESS,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(PointLightBrightnessToSliderValue(g_pointLightBrightness)));
 }
 
 void RefreshFogControls(HWND hDlg)
@@ -581,6 +679,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshResolutionControls(hDlg);
     RefreshLoadedModelListView(hDlg);
     RefreshPointLightListView(hDlg);
+    RefreshPointLightControls(hDlg);
     RefreshAnimateLight(hDlg);
     RefreshRemoteDesktop(hDlg);
     RefreshDepthBufferShadow(hDlg);
@@ -651,6 +750,26 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_MODEL_LOAD_SCALE, TBM_SETRANGEMAX, FALSE, MODEL_LOAD_SCALE_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_MODEL_LOAD_SCALE, TBM_SETTICFREQ, 50, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_MODEL_LOAD_SCALE, TBM_SETPAGESIZE, 0, 50);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_POINT_LIGHT_COLOR_R, TBM_SETRANGEMIN, FALSE, POINT_LIGHT_COLOR_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_POINT_LIGHT_COLOR_R, TBM_SETRANGEMAX, FALSE, POINT_LIGHT_COLOR_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_POINT_LIGHT_COLOR_R, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_POINT_LIGHT_COLOR_R, TBM_SETPAGESIZE, 0, 2);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_POINT_LIGHT_COLOR_G, TBM_SETRANGEMIN, FALSE, POINT_LIGHT_COLOR_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_POINT_LIGHT_COLOR_G, TBM_SETRANGEMAX, FALSE, POINT_LIGHT_COLOR_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_POINT_LIGHT_COLOR_G, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_POINT_LIGHT_COLOR_G, TBM_SETPAGESIZE, 0, 2);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_POINT_LIGHT_COLOR_B, TBM_SETRANGEMIN, FALSE, POINT_LIGHT_COLOR_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_POINT_LIGHT_COLOR_B, TBM_SETRANGEMAX, FALSE, POINT_LIGHT_COLOR_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_POINT_LIGHT_COLOR_B, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_POINT_LIGHT_COLOR_B, TBM_SETPAGESIZE, 0, 2);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_POINT_LIGHT_BRIGHTNESS, TBM_SETRANGEMIN, FALSE, POINT_LIGHT_BRIGHTNESS_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_POINT_LIGHT_BRIGHTNESS, TBM_SETRANGEMAX, FALSE, POINT_LIGHT_BRIGHTNESS_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_POINT_LIGHT_BRIGHTNESS, TBM_SETTICFREQ, 5, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_POINT_LIGHT_BRIGHTNESS, TBM_SETPAGESIZE, 0, 5);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETRANGEMIN, FALSE, GAUSSIAN_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETRANGEMAX, FALSE, GAUSSIAN_SLIDER_MAX);
@@ -909,16 +1028,61 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_POINT_LIGHT_COLOR_R))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_pointLightColor.r = SliderValueToPointLightColor(sliderValue);
+            ApplyPointLightColor();
+            RefreshPointLightControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_POINT_LIGHT_COLOR_G))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_pointLightColor.g = SliderValueToPointLightColor(sliderValue);
+            ApplyPointLightColor();
+            RefreshPointLightControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_POINT_LIGHT_COLOR_B))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_pointLightColor.b = SliderValueToPointLightColor(sliderValue);
+            ApplyPointLightColor();
+            RefreshPointLightControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_POINT_LIGHT_BRIGHTNESS))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_pointLightBrightness = SliderValueToPointLightBrightness(sliderValue);
+            ApplyPointLightBrightness();
+            RefreshPointLightControls(hDlg);
+            return TRUE;
+        }
+
         break;
     }
     case WM_CONTEXTMENU:
     {
         HWND source = reinterpret_cast<HWND>(wParam);
-        HWND listView = GetDlgItem(hDlg, IDC_LIST_LOADED_MODELS);
-        if (source == listView)
+        HWND loadedModelListView = GetDlgItem(hDlg, IDC_LIST_LOADED_MODELS);
+        HWND pointLightListView = GetDlgItem(hDlg, IDC_LIST_POINT_LIGHTS);
+        if (source == loadedModelListView)
         {
             POINT screenPoint { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-            if (ShowLoadedModelContextMenu(hDlg, listView, screenPoint))
+            if (ShowLoadedModelContextMenu(hDlg, loadedModelListView, screenPoint))
+            {
+                return TRUE;
+            }
+        }
+        else if (source == pointLightListView)
+        {
+            POINT screenPoint { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+            if (ShowPointLightContextMenu(hDlg, pointLightListView, screenPoint))
             {
                 return TRUE;
             }
@@ -969,6 +1133,13 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         {
             g_bRemoteDesktop = (IsDlgButtonChecked(hDlg, IDC_CHECK_REMOTE_DESKTOP) == BST_CHECKED);
             RefreshRemoteDesktop(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_BUTTON_ADD_POINT_LIGHT)
+        {
+            AddPointLightAtLookAt();
+            RefreshPointLightControls(hDlg);
             return TRUE;
         }
 

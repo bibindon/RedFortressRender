@@ -51,6 +51,8 @@ float g_bloomThreshold = 2.5f;
 float g_dofFocalDistance = 8.0f;
 float g_starBurstThreshold = 2.8f;
 float g_modelLoadScale = 1.0f;
+D3DXCOLOR g_pointLightColor = D3DXCOLOR(1.0f, 0.35f, 0.1f, 1.0f);
+float g_pointLightBrightness = 1.0f;
 int g_gaussianSampleSize = 101;
 int g_sunId = 0;
 int g_resolutionWidth = WINDOW_SIZE_W;
@@ -111,6 +113,16 @@ float ClampStarBurstThreshold(const float threshold)
 float ClampModelLoadScale(const float scale)
 {
     return (std::max)(MODEL_LOAD_SCALE_MIN, (std::min)(scale, MODEL_LOAD_SCALE_MAX));
+}
+
+float ClampPointLightColor(const float value)
+{
+    return (std::max)(POINT_LIGHT_COLOR_MIN, (std::min)(value, POINT_LIGHT_COLOR_MAX));
+}
+
+float ClampPointLightBrightness(const float brightness)
+{
+    return (std::max)(POINT_LIGHT_BRIGHTNESS_MIN, (std::min)(brightness, POINT_LIGHT_BRIGHTNESS_MAX));
 }
 
 std::wstring Trim(const std::wstring& text)
@@ -633,6 +645,19 @@ void ApplyModelLoadScale()
     g_modelLoadScale = ClampModelLoadScale(g_modelLoadScale);
 }
 
+void ApplyPointLightColor()
+{
+    g_pointLightColor.r = ClampPointLightColor(g_pointLightColor.r);
+    g_pointLightColor.g = ClampPointLightColor(g_pointLightColor.g);
+    g_pointLightColor.b = ClampPointLightColor(g_pointLightColor.b);
+    g_pointLightColor.a = 1.0f;
+}
+
+void ApplyPointLightBrightness()
+{
+    g_pointLightBrightness = ClampPointLightBrightness(g_pointLightBrightness);
+}
+
 void ApplyGaussianSampleSize()
 {
     g_gaussianSampleSize = NormalizeGaussianSampleSizeLocal(g_gaussianSampleSize);
@@ -758,6 +783,26 @@ int ModelLoadScaleToSliderValue(const float scale)
 float SliderValueToModelLoadScale(const int sliderValue)
 {
     return ClampModelLoadScale(MODEL_LOAD_SCALE_MIN + static_cast<float>(sliderValue) * MODEL_LOAD_SCALE_STEP);
+}
+
+int PointLightColorToSliderValue(const float value)
+{
+    return static_cast<int>(std::lround(ClampPointLightColor(value) / POINT_LIGHT_COLOR_STEP));
+}
+
+float SliderValueToPointLightColor(const int sliderValue)
+{
+    return ClampPointLightColor(static_cast<float>(sliderValue) * POINT_LIGHT_COLOR_STEP);
+}
+
+int PointLightBrightnessToSliderValue(const float brightness)
+{
+    return static_cast<int>(std::lround(ClampPointLightBrightness(brightness) / POINT_LIGHT_BRIGHTNESS_STEP));
+}
+
+float SliderValueToPointLightBrightness(const int sliderValue)
+{
+    return ClampPointLightBrightness(static_cast<float>(sliderValue) * POINT_LIGHT_BRIGHTNESS_STEP);
 }
 
 int GaussianSampleSizeToSliderValue(const int sampleSize)
@@ -1028,6 +1073,14 @@ bool ExportLoadedModelAsBinaryX(const size_t modelIndex, const std::wstring& out
     }
 
     return ExportMeshBinary(inputPath, outputPath);
+}
+
+void AddPointLightAtLookAt()
+{
+    ApplyPointLightColor();
+    ApplyPointLightBrightness();
+    g_Render.AddPointLight(g_Render.GetLookAtPos(), g_pointLightBrightness, g_pointLightColor);
+    RefreshSettingsDialogState();
 }
 
 void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
