@@ -11,7 +11,7 @@ namespace NSRender
 {
 
 //const std::wstring SkinAnimMesh::SHADER_FILENAME = L"res\\shader\\SkinAnimMeshShader.fx";
-const std::wstring SkinAnimMesh::SHADER_FILENAME = L"../x64/Debug/SkinAnimMeshShader.cso";
+const std::wstring SkinAnimMesh::SHADER_FILENAME = L".\\SkinAnimMeshShader.cso";
 
 SkinAnimMesh::SkinAnimMesh(const std::wstring &x_filename,
                            const D3DXVECTOR3 &position,
@@ -26,8 +26,12 @@ SkinAnimMesh::SkinAnimMesh(const std::wstring &x_filename,
 {
     HRESULT hr = E_FAIL;
 
+    std::wstring tempPath;
+
+    tempPath = Util::GetExeDir() + SHADER_FILENAME;
+
     hr = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                  SHADER_FILENAME.c_str(),
+                                  tempPath.c_str(),
                                   nullptr,
                                   nullptr,
                                   0,
@@ -42,7 +46,16 @@ SkinAnimMesh::SkinAnimMesh(const std::wstring &x_filename,
 
     LPD3DXANIMATIONCONTROLLER tempAnimController = NULL;
 
-    hr = D3DXLoadMeshHierarchyFromX(x_filename.c_str(),
+    if (PathIsRelative(x_filename.c_str()))
+    {
+        tempPath = Util::GetExeDir() + x_filename;
+    }
+    else
+    {
+        tempPath = x_filename;
+    }
+
+    hr = D3DXLoadMeshHierarchyFromX(tempPath.c_str(),
                                     D3DXMESH_MANAGED,
                                     Common::D3DDevice(),
                                     &m_allocator,

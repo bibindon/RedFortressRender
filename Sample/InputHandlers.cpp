@@ -92,12 +92,12 @@ void AddSkinAnimMeshAtLookAt()
     D3DXVec3Normalize(&forward, &forward);
 
     const float yaw = atan2f(forward.x, forward.z);
-    const int renderId = g_Render.AddSkinAnimMesh(L"res\\model\\wolf.x",
+    const int renderId = g_Render.AddSkinAnimMesh(L"..\\..\\Sample\\res\\model\\wolf.x",
                                                   pos,
                                                   D3DXVECTOR3(0, yaw, 0.0f),
                                                   3.0f,
                                                   CreateDefaultAnimSetMap());
-    RegisterLoadedModel(L"SkinAnimMesh", L"res\\model\\wolf.x", pos, 3.0f, renderId);
+    RegisterLoadedModel(L"SkinAnimMesh", L"..\\..\\Sample\\res\\model\\wolf.x", pos, 3.0f, renderId);
 }
 
 void AddAnimMeshAtLookAt()

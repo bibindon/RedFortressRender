@@ -124,16 +124,25 @@ void SkinAnimMeshAlloc::InitializeMaterials(const DWORD materialCount,
     m_container->NumMaterials = materialCount;
     m_container->pMaterials = NEW D3DXMATERIAL[m_container->NumMaterials];
 
-    size_t pos = xFilename.find_last_of(L"\\/");
-
     std::wstring dirPath;
+
+    if (PathIsRelative(xFilename.c_str()))
+    {
+        dirPath = Util::GetExeDir() + xFilename;
+    }
+    else
+    {
+        dirPath = xFilename;
+    }
+
+    size_t pos = dirPath.find_last_of(L"\\/");
 
     if (pos == std::string::npos)
     {
         throw std::exception("xFilename is wrong.");
     }
 
-    dirPath = xFilename.substr(0, pos);
+    dirPath = dirPath.substr(0, pos);
 
     for (DWORD i = 0; i < materialCount; ++i)
     {
