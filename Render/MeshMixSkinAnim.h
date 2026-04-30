@@ -20,7 +20,8 @@ public:
                     const D3DXVECTOR3& pos,
                     const D3DXVECTOR3& rotate,
                     const float scale,
-                    const stMeshParam& param);
+                    const stMeshParam& param,
+                    const AnimSetMap& animSetMap);
 
     ~MeshMixSkinAnim();
 
@@ -52,9 +53,7 @@ private:
     HRESULT AllocateBoneMatrix(LPD3DXMESHCONTAINER containerBase);
     HRESULT AllocateAllBoneMatrix(LPD3DXFRAME frame);
     void ReleaseMeshAllocator(const LPD3DXFRAME frame);
-    void BuildDefaultAnimSetMap(const LPD3DXANIMATIONCONTROLLER animationController);
-
-    const std::wstring SHADER_FILENAME = L".\\SkinAnimMeshShader.cso";
+    const std::wstring SHADER_FILENAME = L".\\MeshMixSkinAnim.cso";
 
     std::wstring m_meshName;
     SkinAnimMeshAlloc m_allocator;
@@ -69,6 +68,7 @@ private:
     bool m_enabled = true;
     bool m_bLoaded = false;
     stMeshParam m_param;
+    AnimSetMap m_animSetMap;
     AnimController m_animController;
 };
 

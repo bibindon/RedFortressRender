@@ -781,6 +781,7 @@ int Render::AddMeshMixSkinAnim(const std::wstring& filePath,
                                const D3DXVECTOR3& pos,
                                const D3DXVECTOR3& rot,
                                const float scale,
+                               const AnimSetMap& animSetMap,
                                const float radius,
                                const bool useParallaxOcclusionMapping,
                                const bool useNormalMapping)
@@ -795,7 +796,7 @@ int Render::AddMeshMixSkinAnim(const std::wstring& filePath,
     param.specularIntensity = m_meshMixSpecularIntensity;
     param.specularEdge = m_meshMixSpecularEdge;
 
-    MeshMixSkinAnim* mesh = NEW MeshMixSkinAnim(filePath, pos, rot, scale, param);
+    MeshMixSkinAnim* mesh = NEW MeshMixSkinAnim(filePath, pos, rot, scale, param, animSetMap);
     try
     {
         mesh->Initialize();
@@ -1306,6 +1307,14 @@ void Render::DrawPass1(const bool renderToSceneRenderTargets)
         }
     }
 
+    for (auto& elem : m_meshMixSkinAnimList)
+    {
+        if (elem != nullptr)
+        {
+            elem->Render();
+        }
+    }
+
     for (auto& elem : m_meshInstancingMap)
     {
         elem.second->Draw();
@@ -1314,14 +1323,6 @@ void Render::DrawPass1(const bool renderToSceneRenderTargets)
     for (auto& elem : m_meshMixList)
     {
         elem.Render();
-    }
-
-    for (auto& elem : m_meshMixSkinAnimList)
-    {
-        if (elem != nullptr)
-        {
-            elem->Render();
-        }
     }
 
     hResult = Common::D3DDevice()->EndScene();

@@ -1049,13 +1049,13 @@ void SpawnMeshMixAtLookAt(const std::wstring& filePath)
     const float yaw = atan2f(forward.x, forward.z);
     const bool usePOM = (g_mixMeshShaderMode == MixMeshShaderMode::ParallaxOcclusionMapping);
     const bool useNormalMapping = (g_mixMeshShaderMode == MixMeshShaderMode::NormalMapping);
-    const int renderId = g_Render.AddMeshMixSkinAnim(filePath,
-                                                     pos,
-                                                     D3DXVECTOR3(0, yaw, 0.0f),
-                                                     g_modelLoadScale,
-                                                     1.0f,
-                                                     usePOM,
-                                                     useNormalMapping);
+    const int renderId = g_Render.AddMeshMix(filePath,
+                                             pos,
+                                             D3DXVECTOR3(0, yaw, 0.0f),
+                                             g_modelLoadScale,
+                                             1.0f,
+                                             usePOM,
+                                             useNormalMapping);
     RegisterLoadedModel(L"MeshMix", filePath, pos, g_modelLoadScale, renderId);
 }
 
@@ -1117,13 +1117,14 @@ void SpawnMeshMixSkinAnimAtLookAt(const std::wstring& filePath)
     const float yaw = atan2f(forward.x, forward.z);
     const bool usePOM = (g_mixMeshShaderMode == MixMeshShaderMode::ParallaxOcclusionMapping);
     const bool useNormalMapping = (g_mixMeshShaderMode == MixMeshShaderMode::NormalMapping);
-    const int renderId = g_Render.AddMeshMix(filePath,
-                                             pos,
-                                             D3DXVECTOR3(0, yaw, 0.0f),
-                                             g_modelLoadScale,
-                                             1.0f,
-                                             usePOM,
-                                             useNormalMapping);
+    const int renderId = g_Render.AddMeshMixSkinAnim(filePath,
+                                                     pos,
+                                                     D3DXVECTOR3(0, yaw, 0.0f),
+                                                     g_modelLoadScale,
+                                                     CreateDefaultAnimSetMap(),
+                                                     1.0f,
+                                                     usePOM,
+                                                     useNormalMapping);
     RegisterLoadedModel(L"MeshMixSkinAnim", filePath, pos, g_modelLoadScale, renderId);
 }
 

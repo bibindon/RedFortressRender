@@ -1,5 +1,6 @@
 ﻿#include "MeshMixSkinAnim.h"
 
+#include <algorithm>
 #include <exception>
 
 #include "Camera.h"
@@ -14,13 +15,15 @@ MeshMixSkinAnim::MeshMixSkinAnim(const std::wstring& filename,
                                  const D3DXVECTOR3& pos,
                                  const D3DXVECTOR3& rotate,
                                  const float scale,
-                                 const stMeshParam& param)
+                                 const stMeshParam& param,
+                                 const AnimSetMap& animSetMap)
     : m_meshName(filename)
     , m_allocator(filename)
     , m_pos(pos)
     , m_rotate(rotate)
     , m_scale(scale)
     , m_param(param)
+    , m_animSetMap(animSetMap)
 {
 }
 
@@ -78,51 +81,11 @@ void MeshMixSkinAnim::Initialize()
         throw std::exception("Failed to load skin animation mesh.");
     }
 
-    BuildDefaultAnimSetMap(tempAnimController);
+    m_animController.Init(tempAnimController, m_animSetMap);
     AllocateAllBoneMatrix(m_frameRoot);
 
     Common::AddDeviceLostResource(this);
     m_bLoaded = true;
-}
-
-void MeshMixSkinAnim::BuildDefaultAnimSetMap(const LPD3DXANIMATIONCONTROLLER animationController)
-{
-    AnimSetMap animSetMap;
-
-    if (animationController != nullptr && animationController->GetNumAnimationSets() > 0)
-    {
-        LPD3DXANIMATIONSET animationSet = nullptr;
-        const HRESULT hr = animationController->GetAnimationSet(0, &animationSet);
-        if (SUCCEEDED(hr) && animationSet != nullptr)
-        {
-            const char* animationName = animationSet->GetName();
-
-            AnimSetting animSetting;
-            animSetting.m_startPos = 0.0f;
-            animSetting.m_duration = static_cast<float>(animationSet->GetPeriod());
-            animSetting.m_loop = true;
-            animSetting.m_stopEnd = false;
-
-            const std::wstring animName = (animationName != nullptr && animationName[0] != '\0')
-                ? Util::Utf8ToWstring(animationName)
-                : L"0";
-            animSetMap[animName] = animSetting;
-        }
-
-        SAFE_RELEASE(animationSet);
-    }
-
-    if (animSetMap.empty())
-    {
-        AnimSetting animSetting;
-        animSetting.m_startPos = 0.0f;
-        animSetting.m_duration = 1.0f;
-        animSetting.m_loop = true;
-        animSetting.m_stopEnd = false;
-        animSetMap[L"0"] = animSetting;
-    }
-
-    m_animController.Init(animationController, animSetMap);
 }
 
 void MeshMixSkinAnim::Render()
@@ -133,11 +96,23 @@ void MeshMixSkinAnim::Render()
     }
 
     const D3DXVECTOR4 lightDir = Light::GetLightDir();
-    m_D3DEffect->SetVector("g_lightNormal", &lightDir);
-    m_D3DEffect->SetFloat("g_lightBrightness", Light::GetBrightness());
+    m_D3DEffect->SetVector("g_lightDir", &lightDir);
+    m_D3DEffect->SetFloat("g_fSunLightIntensity", Light::GetBrightness());
+
+    const D3DXVECTOR4 cameraPos = D3DXVECTOR4(Camera::GetEyePos(), 1.0f);
+    m_D3DEffect->SetVector("g_cameraPos", &cameraPos);
+    m_D3DEffect->SetBool("g_bSaturateShadow", m_param.saturateShadow ? TRUE : FALSE);
+    m_D3DEffect->SetFloat("g_fSaturateShadowIntensity", m_param.saturateShadowIntensity);
+    m_D3DEffect->SetFloat("g_fShadowDarkness", m_param.shadowDarkness);
+    m_D3DEffect->SetFloat("g_specularIntensity", m_param.specularIntensity);
+
+    const float specularEdge = (std::max)(0.0f, (std::min)(m_param.specularEdge, 1.0f));
+    const float specularPower = 1.0f + (specularEdge * 127.0f);
+    m_D3DEffect->SetFloat("g_specularPower", specularPower);
 
     D3DXMATRIX viewProjectionMatrix = Camera::GetViewMatrix() * Camera::GetProjMatrix();
     m_D3DEffect->SetMatrix("g_matViewProj", &viewProjectionMatrix);
+    m_D3DEffect->SetTechnique("Technique1");
 
     m_animController.Update();
 
@@ -227,7 +202,6 @@ void MeshMixSkinAnim::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBas
         }
 
         m_D3DEffect->SetMatrixArray("g_matWorldArray", &m_matWorldArray[0], paletteSize);
-        m_D3DEffect->SetInt("g_currentBoneIndex", container->m_influenceCount - 1);
 
         const DWORD materialIndex = boneCombination[i].AttribId;
         const D3DMATERIAL9& material = container->pMaterials[materialIndex].MatD3D;
@@ -262,23 +236,38 @@ void MeshMixSkinAnim::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBas
 
 HRESULT MeshMixSkinAnim::AllocateBoneMatrix(LPD3DXMESHCONTAINER containerBase)
 {
+    SkinAnimMeshFrame *frame = nullptr;
+
     auto container = reinterpret_cast<SkinAnimMeshContainer*>(containerBase);
-    const DWORD boneCount = container->pSkinInfo->GetNumBones();
+
+    DWORD boneCount = container->pSkinInfo->GetNumBones();
     container->m_frameCombinedMatrix.resize(boneCount);
 
-    const DWORD maxMatrices = 8;
-    m_matWorldArray.resize((boneCount > maxMatrices) ? maxMatrices : boneCount);
+    DWORD MAX_MATRICES = 8;
+    if (boneCount > MAX_MATRICES)
+    {
+        m_matWorldArray.resize(MAX_MATRICES);
+    }
+    else
+    {
+        m_matWorldArray.resize(boneCount);
+    }
+
+    m_D3DEffect->SetInt("g_currentBoneIndex", container->m_influenceCount - 1);
 
     for (DWORD i = 0; i < boneCount; ++i)
     {
-        auto frame = reinterpret_cast<SkinAnimMeshFrame*>(D3DXFrameFind(m_frameRoot,
-                                                                        container->pSkinInfo->GetBoneName(i)));
+        LPD3DXFRAME p = D3DXFrameFind(m_frameRoot,
+                                      container->pSkinInfo->GetBoneName(i));
+
+        frame = reinterpret_cast<SkinAnimMeshFrame*>(p);
         if (frame == nullptr)
         {
             return E_FAIL;
         }
 
-        container->m_frameCombinedMatrix[i] = &frame->m_combinedMatrix;
+        LPD3DXMATRIX pMat = &frame->m_combinedMatrix;
+        container->m_frameCombinedMatrix.at(i) = pMat;
     }
 
     return S_OK;

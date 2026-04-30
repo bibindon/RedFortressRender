@@ -277,6 +277,9 @@
     <FxCompile Include="shader\MeshMix.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
+    <FxCompile Include="shader\MeshMixSkinAnim.fx">
+      <Filter>シェーダー</Filter>
+    </FxCompile>
     <FxCompile Include="shader\GBuffer.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
