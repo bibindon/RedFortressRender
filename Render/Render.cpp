@@ -253,6 +253,40 @@ void Render::ApplySettings()
         SetPostEffectSSAOBrightness(1.0f);
     }
 
+    const auto shadowSaturationBoost = m_settings.find(L"ShadowSaturationBoost");
+    if (shadowSaturationBoost != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectDepthBufferShadowSaturationBoost(std::stof(shadowSaturationBoost->second));
+        }
+        catch (...)
+        {
+            SetPostEffectDepthBufferShadowSaturationBoost(0.35f);
+        }
+    }
+    else
+    {
+        SetPostEffectDepthBufferShadowSaturationBoost(0.35f);
+    }
+
+    const auto ssaoSaturationBoost = m_settings.find(L"SSAOSaturationBoost");
+    if (ssaoSaturationBoost != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectSSAOSaturationBoost(std::stof(ssaoSaturationBoost->second));
+        }
+        catch (...)
+        {
+            SetPostEffectSSAOSaturationBoost(0.30f);
+        }
+    }
+    else
+    {
+        SetPostEffectSSAOSaturationBoost(0.30f);
+    }
+
     const auto bloomEnable = m_settings.find(L"BloomEnable");
     if (bloomEnable != m_settings.end())
     {
@@ -875,6 +909,11 @@ void Render::SetPostEffectDepthBufferShadowIntensity(const float intensity)
     m_postEffectZShadow.SetShadowIntensity(intensity);
 }
 
+void Render::SetPostEffectDepthBufferShadowSaturationBoost(const float saturationBoost)
+{
+    m_postEffectZShadow.SetShadowSaturationBoost(saturationBoost);
+}
+
 void Render::SetPostEffectSSAO(const bool arg)
 {
     m_postEffectSSAO.SetEnable(arg);
@@ -883,6 +922,11 @@ void Render::SetPostEffectSSAO(const bool arg)
 void Render::SetPostEffectSSAOBrightness(const float brightness)
 {
     m_postEffectSSAO.SetBrightness(brightness);
+}
+
+void Render::SetPostEffectSSAOSaturationBoost(const float saturationBoost)
+{
+    m_postEffectSSAO.SetSaturationBoost(saturationBoost);
 }
 
 void Render::SetPostEffectFog(const bool arg)

@@ -280,6 +280,9 @@ void PostEffectZShadow::RenderTechnique2()
     hr = g_fxDepthBufferShadow->SetFloat("g_shadowIntensity", m_shadowIntensity);
     assert(hr == S_OK);
 
+    hr = g_fxDepthBufferShadow->SetFloat("g_shadowSaturationBoost", m_shadowSaturationBoost);
+    assert(hr == S_OK);
+
     int nBlurSize = 3;
 
     hr = g_fxDepthBufferShadow->SetInt("g_nBlurSize", nBlurSize);
@@ -442,6 +445,11 @@ void PostEffectZShadow::SetEnable(const bool arg)
 void PostEffectZShadow::SetShadowIntensity(const float intensity)
 {
     m_shadowIntensity = intensity;
+}
+
+void PostEffectZShadow::SetShadowSaturationBoost(const float saturationBoost)
+{
+    m_shadowSaturationBoost = saturationBoost;
 }
 
 void PostEffectZShadow::OnDeviceLost()

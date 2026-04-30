@@ -20,6 +20,7 @@ public:
 
     void SetEnable(const bool arg);
     void SetShadowIntensity(const float intensity);
+    void SetShadowSaturationBoost(const float saturationBoost);
 
     void OnDeviceLost();
     void OnDeviceReset();
@@ -34,6 +35,7 @@ private:
 
     bool m_bEnable = true;
     float m_shadowIntensity = 0.5f;
+    float m_shadowSaturationBoost = 0.35f;
 
     LPD3DXEFFECT g_fxDepthBufferShadow = NULL;
 

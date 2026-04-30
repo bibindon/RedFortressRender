@@ -44,7 +44,9 @@ bool g_bDepthOfField = false;
 bool g_bStarBurst = false;
 float g_fogIntensity = 2.0f;
 float g_shadowIntensity = 0.5f;
+float g_shadowSaturationBoost = 0.35f;
 float g_ssaoBrightness = 1.0f;
+float g_ssaoSaturationBoost = 0.30f;
 float g_bloomThreshold = 2.5f;
 float g_dofFocalDistance = 8.0f;
 float g_starBurstThreshold = 2.8f;
@@ -76,9 +78,19 @@ float ClampShadowIntensity(const float intensity)
     return (std::max)(SHADOW_INTENSITY_MIN, (std::min)(intensity, SHADOW_INTENSITY_MAX));
 }
 
+float ClampShadowSaturationBoost(const float boost)
+{
+    return (std::max)(SHADOW_SATURATION_BOOST_MIN, (std::min)(boost, SHADOW_SATURATION_BOOST_MAX));
+}
+
 float ClampSSAOBrightness(const float brightness)
 {
     return (std::max)(SSAO_BRIGHTNESS_MIN, (std::min)(brightness, SSAO_BRIGHTNESS_MAX));
+}
+
+float ClampSSAOSaturationBoost(const float boost)
+{
+    return (std::max)(SSAO_SATURATION_BOOST_MIN, (std::min)(boost, SSAO_SATURATION_BOOST_MAX));
 }
 
 float ClampBloomThreshold(const float threshold)
@@ -580,10 +592,22 @@ void ApplyShadowIntensity()
     g_Render.SetPostEffectDepthBufferShadowIntensity(g_shadowIntensity);
 }
 
+void ApplyShadowSaturationBoost()
+{
+    g_shadowSaturationBoost = ClampShadowSaturationBoost(g_shadowSaturationBoost);
+    g_Render.SetPostEffectDepthBufferShadowSaturationBoost(g_shadowSaturationBoost);
+}
+
 void ApplySSAOBrightness()
 {
     g_ssaoBrightness = ClampSSAOBrightness(g_ssaoBrightness);
     g_Render.SetPostEffectSSAOBrightness(g_ssaoBrightness);
+}
+
+void ApplySSAOSaturationBoost()
+{
+    g_ssaoSaturationBoost = ClampSSAOSaturationBoost(g_ssaoSaturationBoost);
+    g_Render.SetPostEffectSSAOSaturationBoost(g_ssaoSaturationBoost);
 }
 
 void ApplyBloomThreshold()
@@ -666,6 +690,16 @@ float SliderValueToShadowIntensity(const int sliderValue)
     return ClampShadowIntensity(static_cast<float>(sliderValue) * SHADOW_INTENSITY_STEP);
 }
 
+int ShadowSaturationBoostToSliderValue(const float boost)
+{
+    return static_cast<int>(std::lround(ClampShadowSaturationBoost(boost) / SHADOW_SATURATION_BOOST_STEP));
+}
+
+float SliderValueToShadowSaturationBoost(const int sliderValue)
+{
+    return ClampShadowSaturationBoost(static_cast<float>(sliderValue) * SHADOW_SATURATION_BOOST_STEP);
+}
+
 int SSAOBrightnessToSliderValue(const float brightness)
 {
     return static_cast<int>(std::lround((ClampSSAOBrightness(brightness) - SSAO_BRIGHTNESS_MIN) / SSAO_BRIGHTNESS_STEP));
@@ -674,6 +708,16 @@ int SSAOBrightnessToSliderValue(const float brightness)
 float SliderValueToSSAOBrightness(const int sliderValue)
 {
     return ClampSSAOBrightness(SSAO_BRIGHTNESS_MIN + static_cast<float>(sliderValue) * SSAO_BRIGHTNESS_STEP);
+}
+
+int SSAOSaturationBoostToSliderValue(const float boost)
+{
+    return static_cast<int>(std::lround(ClampSSAOSaturationBoost(boost) / SSAO_SATURATION_BOOST_STEP));
+}
+
+float SliderValueToSSAOSaturationBoost(const int sliderValue)
+{
+    return ClampSSAOSaturationBoost(static_cast<float>(sliderValue) * SSAO_SATURATION_BOOST_STEP);
 }
 
 int BloomThresholdToSliderValue(const float threshold)
@@ -1038,6 +1082,14 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"SSAOBrightness")
             {
                 g_ssaoBrightness = std::stof(value);
+            }
+            else if (key == L"ShadowSaturationBoost")
+            {
+                g_shadowSaturationBoost = std::stof(value);
+            }
+            else if (key == L"SSAOSaturationBoost")
+            {
+                g_ssaoSaturationBoost = std::stof(value);
             }
             else if (key == L"BloomThreshold")
             {

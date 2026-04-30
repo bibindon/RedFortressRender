@@ -159,6 +159,7 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_fxSSAO->SetTexture("texColor", renderTarget);
     m_fxSSAO->SetTexture("texAO",    m_rtAoTex);
     m_fxSSAO->SetFloat("g_aoBrightness", m_brightness);
+    m_fxSSAO->SetFloat("g_aoSaturationBoost", m_saturationBoost);
 
     m_fxSSAO->SetTechnique("TechniqueAO_Composite");
     m_fxSSAO->Begin(NULL, 0);
@@ -216,6 +217,11 @@ void PostEffectSSAO::SetEnable(const bool arg)
 void PostEffectSSAO::SetBrightness(const float brightness)
 {
     m_brightness = brightness;
+}
+
+void PostEffectSSAO::SetSaturationBoost(const float saturationBoost)
+{
+    m_saturationBoost = saturationBoost;
 }
 
 void PostEffectSSAO::OnDeviceLost()

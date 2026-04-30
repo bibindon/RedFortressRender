@@ -19,6 +19,7 @@ float g_shadowBias;
 
 // 影の濃さ(0 ~ 1)
 float g_shadowIntensity;
+float g_shadowSaturationBoost;
 
 bool g_bBlurEnable = true;
 
@@ -52,6 +53,12 @@ sampler samplerShadow = sampler_state
     MinFilter = LINEAR;
     MagFilter = LINEAR;
 };
+
+float3 IncreaseSaturation(float3 color, float amount)
+{
+    float luminance = dot(color, float3(0.299f, 0.587f, 0.114f));
+    return saturate(lerp(luminance.xxx, color, amount));
+}
 
 // 変数名の末尾のOSはローカル座標の意味
 // 変数名の末尾のWSはグローバル座標の意味
@@ -271,9 +278,10 @@ void PS_Composite(in float4 inPos     : POSITION,
     float4 vShadowColor = tex2D(samplerShadow, uv);
 
     float4 result = float4(0, 0, 0, 0);
-
-    result.rgb = vBaseColor.rgb * vShadowColor.a;
-    result = lerp(vBaseColor, vShadowColor, vShadowColor.a);
+    float shadowAmount = saturate(vShadowColor.a);
+    float3 shadowedColor = lerp(vBaseColor.rgb, float3(0.0f, 0.0f, 0.0f), shadowAmount);
+    float saturationAmount = lerp(1.0f, 1.0f + g_shadowSaturationBoost, shadowAmount);
+    result.rgb = IncreaseSaturation(shadowedColor, saturationAmount);
 
     if (false)
     {
@@ -284,7 +292,6 @@ void PS_Composite(in float4 inPos     : POSITION,
     }
 
     result.a = 1.f;
-
     outColor = result;
 }
 

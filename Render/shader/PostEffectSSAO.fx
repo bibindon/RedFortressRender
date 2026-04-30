@@ -16,6 +16,7 @@ float g_aoStrength = 1.0f; // 0..2
 float g_aoStepWorld = 0.75f; // base radius in world units
 float g_aoBias = 0.0002f; // small bias in linear-Z
 float g_aoBrightness = 1.0f; // preserves 0 and 1, adjusts only midtones
+float g_aoSaturationBoost = 0.0f;
 
 // Edge handling
 float g_edgeZ = 0.006f; // linear-Z guard near edges
@@ -73,6 +74,12 @@ sampler sampColor = sampler_state
     AddressU = CLAMP;
     AddressV = CLAMP;
 };
+
+float3 IncreaseSaturation(float3 color, float amount)
+{
+    float luminance = dot(color, float3(0.299f, 0.587f, 0.114f));
+    return saturate(lerp(luminance.xxx, color, amount));
+}
 
 // ========= Helpers =========
 float3 DecodeWorldPos(float3 enc)
@@ -292,7 +299,11 @@ float4 PS_Composite(VS_OUT i) : COLOR0
     float3 col = tex2D(sampColor, i.uv).rgb;
     float ao = tex2D(sampAO, i.uv).r;
     float aoAdjusted = pow(saturate(ao), 1.0f / max(g_aoBrightness, 0.0001f));
-    float4 result = float4(col * aoAdjusted, 1.0f);
+    float shadowAmount = saturate(1.0f - aoAdjusted);
+    float3 shadedColor = col * aoAdjusted;
+    float saturationAmount = lerp(1.0f, 1.0f + g_aoSaturationBoost, shadowAmount);
+    float3 resultColor = IncreaseSaturation(shadedColor, saturationAmount);
+    float4 result = float4(resultColor, 1.0f);
 
     if (false)
     {

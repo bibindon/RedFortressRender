@@ -203,8 +203,10 @@ public:
     void SetPostEffectGaussianSampleSize(const int sampleSize);
     void SetPostEffectDepthBufferShadow(const bool arg);
     void SetPostEffectDepthBufferShadowIntensity(const float intensity);
+    void SetPostEffectDepthBufferShadowSaturationBoost(const float saturationBoost);
     void SetPostEffectSSAO(const bool arg);
     void SetPostEffectSSAOBrightness(const float brightness);
+    void SetPostEffectSSAOSaturationBoost(const float saturationBoost);
     void SetPostEffectFog(const bool arg);
     void SetPostEffectFogIntensity(const float intensity);
 

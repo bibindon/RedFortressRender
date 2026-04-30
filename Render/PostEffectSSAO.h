@@ -20,6 +20,7 @@ public:
 
     void SetEnable(const bool arg);
     void SetBrightness(const float brightness);
+    void SetSaturationBoost(const float saturationBoost);
 
     void OnDeviceLost();
     void OnDeviceReset();
@@ -31,6 +32,7 @@ private:
 
     bool m_bEnable = true;
     float m_brightness = 1.0f;
+    float m_saturationBoost = 0.30f;
 
     LPD3DXEFFECT m_fxSSAO = NULL;
 

@@ -19,8 +19,12 @@ constexpr int FOG_SLIDER_MIN = 0;
 constexpr int FOG_SLIDER_MAX = static_cast<int>(FOG_INTENSITY_MAX / FOG_INTENSITY_STEP);
 constexpr int SHADOW_SLIDER_MIN = 0;
 constexpr int SHADOW_SLIDER_MAX = static_cast<int>(SHADOW_INTENSITY_MAX / SHADOW_INTENSITY_STEP);
+constexpr int SHADOW_SATURATION_BOOST_SLIDER_MIN = 0;
+constexpr int SHADOW_SATURATION_BOOST_SLIDER_MAX = static_cast<int>(SHADOW_SATURATION_BOOST_MAX / SHADOW_SATURATION_BOOST_STEP);
 constexpr int SSAO_BRIGHTNESS_SLIDER_MIN = 0;
 constexpr int SSAO_BRIGHTNESS_SLIDER_MAX = static_cast<int>((SSAO_BRIGHTNESS_MAX - SSAO_BRIGHTNESS_MIN) / SSAO_BRIGHTNESS_STEP);
+constexpr int SSAO_SATURATION_BOOST_SLIDER_MIN = 0;
+constexpr int SSAO_SATURATION_BOOST_SLIDER_MAX = static_cast<int>(SSAO_SATURATION_BOOST_MAX / SSAO_SATURATION_BOOST_STEP);
 constexpr int BLOOM_THRESHOLD_SLIDER_MIN = 0;
 constexpr int BLOOM_THRESHOLD_SLIDER_MAX = static_cast<int>(BLOOM_THRESHOLD_MAX / BLOOM_THRESHOLD_STEP);
 constexpr int DOF_FOCAL_DISTANCE_SLIDER_MIN = 0;
@@ -360,6 +364,18 @@ void RefreshShadowControls(HWND hDlg)
                        static_cast<LPARAM>(ShadowIntensityToSliderValue(g_shadowIntensity)));
 }
 
+void RefreshShadowSaturationBoostControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_shadowSaturationBoost);
+    SetDlgItemText(hDlg, IDC_EDIT_SHADOW_SATURATION_BOOST, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_SHADOW_SATURATION_BOOST,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(ShadowSaturationBoostToSliderValue(g_shadowSaturationBoost)));
+}
+
 void RefreshSSAOBrightnessControls(HWND hDlg)
 {
     wchar_t buffer[32];
@@ -370,6 +386,18 @@ void RefreshSSAOBrightnessControls(HWND hDlg)
                        TBM_SETPOS,
                        TRUE,
                        static_cast<LPARAM>(SSAOBrightnessToSliderValue(g_ssaoBrightness)));
+}
+
+void RefreshSSAOSaturationBoostControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_ssaoSaturationBoost);
+    SetDlgItemText(hDlg, IDC_EDIT_SSAO_SATURATION_BOOST, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_SSAO_SATURATION_BOOST,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(SSAOSaturationBoostToSliderValue(g_ssaoSaturationBoost)));
 }
 
 void RefreshBloomThresholdControls(HWND hDlg)
@@ -487,7 +515,9 @@ void RefreshAllControls(HWND hDlg)
     RefreshStarBurst(hDlg);
     RefreshFogControls(hDlg);
     RefreshShadowControls(hDlg);
+    RefreshShadowSaturationBoostControls(hDlg);
     RefreshSSAOBrightnessControls(hDlg);
+    RefreshSSAOSaturationBoostControls(hDlg);
     RefreshBloomThresholdControls(hDlg);
     RefreshDepthOfFieldControls(hDlg);
     RefreshStarBurstThresholdControls(hDlg);
@@ -512,10 +542,20 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_INTENSITY, TBM_SETTICFREQ, 2, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_INTENSITY, TBM_SETPAGESIZE, 0, 2);
 
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_SATURATION_BOOST, TBM_SETRANGEMIN, FALSE, SHADOW_SATURATION_BOOST_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_SATURATION_BOOST, TBM_SETRANGEMAX, FALSE, SHADOW_SATURATION_BOOST_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_SATURATION_BOOST, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_SATURATION_BOOST, TBM_SETPAGESIZE, 0, 2);
+
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BRIGHTNESS, TBM_SETRANGEMIN, FALSE, SSAO_BRIGHTNESS_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BRIGHTNESS, TBM_SETRANGEMAX, FALSE, SSAO_BRIGHTNESS_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BRIGHTNESS, TBM_SETTICFREQ, 5, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BRIGHTNESS, TBM_SETPAGESIZE, 0, 5);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SATURATION_BOOST, TBM_SETRANGEMIN, FALSE, SSAO_SATURATION_BOOST_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SATURATION_BOOST, TBM_SETRANGEMAX, FALSE, SSAO_SATURATION_BOOST_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SATURATION_BOOST, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SATURATION_BOOST, TBM_SETPAGESIZE, 0, 2);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETRANGEMIN, FALSE, BLOOM_THRESHOLD_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETRANGEMAX, FALSE, BLOOM_THRESHOLD_SLIDER_MAX);
@@ -730,12 +770,30 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SHADOW_SATURATION_BOOST))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_shadowSaturationBoost = SliderValueToShadowSaturationBoost(sliderValue);
+            ApplyShadowSaturationBoost();
+            RefreshShadowSaturationBoostControls(hDlg);
+            return TRUE;
+        }
+
         if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSAO_BRIGHTNESS))
         {
             const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
             g_ssaoBrightness = SliderValueToSSAOBrightness(sliderValue);
             ApplySSAOBrightness();
             RefreshSSAOBrightnessControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSAO_SATURATION_BOOST))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_ssaoSaturationBoost = SliderValueToSSAOSaturationBoost(sliderValue);
+            ApplySSAOSaturationBoost();
+            RefreshSSAOSaturationBoostControls(hDlg);
             return TRUE;
         }
 
