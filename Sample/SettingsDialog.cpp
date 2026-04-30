@@ -7,6 +7,7 @@
 #include <windowsx.h>
 
 #include "AppState.h"
+#include "../Render/Light.h"
 #include "resource.h"
 
 #pragma comment(lib, "comctl32.lib")
@@ -59,6 +60,18 @@ std::wstring FormatLoadedModelPos(const D3DXVECTOR3& pos)
                   pos.x,
                   pos.y,
                   pos.z);
+    return buffer;
+}
+
+std::wstring FormatPointLightColor(const D3DXCOLOR& color)
+{
+    wchar_t buffer[96];
+    std::swprintf(buffer,
+                  sizeof(buffer) / sizeof(buffer[0]),
+                  L"(%.2f, %.2f, %.2f)",
+                  color.r,
+                  color.g,
+                  color.b);
     return buffer;
 }
 
@@ -309,6 +322,32 @@ void InitializeLoadedModelListView(HWND hDlg)
     ListView_InsertColumn(listView, 3, &column);
 }
 
+void InitializePointLightListView(HWND hDlg)
+{
+    HWND listView = GetDlgItem(hDlg, IDC_LIST_POINT_LIGHTS);
+    if (listView == NULL)
+    {
+        return;
+    }
+
+    ListView_SetExtendedListViewStyle(listView, LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
+
+    LVCOLUMN column { };
+    column.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
+
+    column.cx = 96;
+    column.pszText = const_cast<LPWSTR>(L"Pos");
+    ListView_InsertColumn(listView, 0, &column);
+
+    column.cx = 96;
+    column.pszText = const_cast<LPWSTR>(L"Color");
+    ListView_InsertColumn(listView, 1, &column);
+
+    column.cx = 64;
+    column.pszText = const_cast<LPWSTR>(L"Brightness");
+    ListView_InsertColumn(listView, 2, &column);
+}
+
 void RefreshLoadedModelListView(HWND hDlg)
 {
     HWND listView = GetDlgItem(hDlg, IDC_LIST_LOADED_MODELS);
@@ -337,6 +376,41 @@ void RefreshLoadedModelListView(HWND hDlg)
 
         std::wstring posText = FormatLoadedModelPos(model.m_pos);
         ListView_SetItemText(listView, i, 3, const_cast<LPWSTR>(posText.c_str()));
+    }
+}
+
+void RefreshPointLightListView(HWND hDlg)
+{
+    HWND listView = GetDlgItem(hDlg, IDC_LIST_POINT_LIGHTS);
+    if (listView == NULL)
+    {
+        return;
+    }
+
+    ListView_DeleteAllItems(listView);
+
+    const auto pointLightList = NSRender::Light::GetPointLightList();
+    for (int i = 0; i < static_cast<int>(pointLightList.size()); ++i)
+    {
+        const auto& pointLight = pointLightList.at(i);
+
+        LVITEM item { };
+        item.mask = LVIF_TEXT;
+        item.iItem = i;
+
+        std::wstring posText = FormatLoadedModelPos(pointLight.m_pos);
+        item.pszText = const_cast<LPWSTR>(posText.c_str());
+        ListView_InsertItem(listView, &item);
+
+        std::wstring colorText = FormatPointLightColor(pointLight.m_color);
+        ListView_SetItemText(listView, i, 1, const_cast<LPWSTR>(colorText.c_str()));
+
+        wchar_t brightnessBuffer[32];
+        std::swprintf(brightnessBuffer,
+                      sizeof(brightnessBuffer) / sizeof(brightnessBuffer[0]),
+                      L"%.2f",
+                      pointLight.m_brightness);
+        ListView_SetItemText(listView, i, 2, brightnessBuffer);
     }
 }
 
@@ -506,6 +580,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshMixMeshShaderMode(hDlg);
     RefreshResolutionControls(hDlg);
     RefreshLoadedModelListView(hDlg);
+    RefreshPointLightListView(hDlg);
     RefreshAnimateLight(hDlg);
     RefreshRemoteDesktop(hDlg);
     RefreshDepthBufferShadow(hDlg);
@@ -715,6 +790,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         InitializeTrackbars(hDlg);
         PopulateResolutionCombo(hDlg);
         InitializeLoadedModelListView(hDlg);
+        InitializePointLightListView(hDlg);
         RefreshAllControls(hDlg);
         return TRUE;
     }
