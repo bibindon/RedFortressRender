@@ -63,6 +63,7 @@ HWND CreateSampleWindow(const HINSTANCE hInstance)
 
 void InitializeSampleScene(HWND hWnd)
 {
+    InitializeRemoteDesktopDefault();
     LoadSampleSettingsFromCsv(L"RenderSettings.csv");
     g_Render.Initialize(hWnd, L"RenderSettings.csv");
     g_Render.SetCamera(D3DXVECTOR3(0.0f, 2.0f, -6.0f), D3DXVECTOR3(0.0f, 1.5f, 0.0f));
@@ -173,17 +174,39 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
 
         POINT currentMousePos { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-        POINT centerMousePos = GetClientCenter(hWnd);
+        int mouseMoveX = 0;
+        int mouseMoveY = 0;
 
-        const int mouseMoveX = currentMousePos.x - centerMousePos.x;
-        const int mouseMoveY = currentMousePos.y - centerMousePos.y;
+        if (g_bRemoteDesktop)
+        {
+            if (!g_bPrevMouseClientPosValid)
+            {
+                g_prevMouseClientPos = currentMousePos;
+                g_bPrevMouseClientPosValid = true;
+                return 0;
+            }
+
+            mouseMoveX = currentMousePos.x - g_prevMouseClientPos.x;
+            mouseMoveY = currentMousePos.y - g_prevMouseClientPos.y;
+            g_prevMouseClientPos = currentMousePos;
+        }
+        else
+        {
+            POINT centerMousePos = GetClientCenter(hWnd);
+            mouseMoveX = currentMousePos.x - centerMousePos.x;
+            mouseMoveY = currentMousePos.y - centerMousePos.y;
+        }
 
         if (mouseMoveX != 0 || mouseMoveY != 0)
         {
             g_Render.RotateCamera(D3DXVECTOR3(mouseMoveY * MOUSE_CAMERA_SENSITIVITY,
                                               mouseMoveX * MOUSE_CAMERA_SENSITIVITY,
                                               0.0f));
-            RecenterMouseCursor(hWnd);
+
+            if (!g_bRemoteDesktop)
+            {
+                RecenterMouseCursor(hWnd);
+            }
         }
 
         return 0;

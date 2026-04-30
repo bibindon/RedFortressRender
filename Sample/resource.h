@@ -8,6 +8,7 @@
 #define IDC_EDIT_MIX_MESH_PATH          1007
 #define IDC_BUTTON_OPEN_MIX_MESH        1008
 #define IDC_CHECK_ANIMATE_LIGHT         1009
+#define IDC_CHECK_REMOTE_DESKTOP        1061
 #define IDC_STATIC_MESH_LABEL           1010
 #define IDC_EDIT_MESH_PATH              1011
 #define IDC_BUTTON_OPEN_MESH            1012
@@ -66,7 +67,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1061
+#define _APS_NEXT_CONTROL_VALUE         1062
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -413,6 +413,11 @@ void RefreshAnimateLight(HWND hDlg)
     CheckDlgButton(hDlg, IDC_CHECK_ANIMATE_LIGHT, g_bAnimateLight ? BST_CHECKED : BST_UNCHECKED);
 }
 
+void RefreshRemoteDesktop(HWND hDlg)
+{
+    CheckDlgButton(hDlg, IDC_CHECK_REMOTE_DESKTOP, g_bRemoteDesktop ? BST_CHECKED : BST_UNCHECKED);
+}
+
 void RefreshDepthBufferShadow(HWND hDlg)
 {
     CheckDlgButton(hDlg,
@@ -474,6 +479,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshResolutionControls(hDlg);
     RefreshLoadedModelListView(hDlg);
     RefreshAnimateLight(hDlg);
+    RefreshRemoteDesktop(hDlg);
     RefreshDepthBufferShadow(hDlg);
     RefreshSSAO(hDlg);
     RefreshBloom(hDlg);
@@ -822,6 +828,13 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         {
             g_bAnimateLight = (IsDlgButtonChecked(hDlg, IDC_CHECK_ANIMATE_LIGHT) == BST_CHECKED);
             RefreshAnimateLight(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_REMOTE_DESKTOP)
+        {
+            g_bRemoteDesktop = (IsDlgButtonChecked(hDlg, IDC_CHECK_REMOTE_DESKTOP) == BST_CHECKED);
+            RefreshRemoteDesktop(hDlg);
             return TRUE;
         }
 

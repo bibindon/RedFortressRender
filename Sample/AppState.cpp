@@ -18,6 +18,8 @@ NSRender::Render g_Render;
 int g_fontId = 0;
 bool g_bRecenteringMouse = false;
 bool g_bMouseLookEnabled = false;
+bool g_bPrevMouseClientPosValid = false;
+POINT g_prevMouseClientPos { };
 bool g_bMoveForward = false;
 bool g_bMoveBackward = false;
 bool g_bMoveLeft = false;
@@ -31,6 +33,7 @@ std::wstring g_selectedMeshPath;
 std::wstring g_selectedAnimMeshPath;
 std::wstring g_selectedSkinAnimMeshPath;
 bool g_bAnimateLight = false;
+bool g_bRemoteDesktop = true;
 bool g_bGaussianFilter = false;
 bool g_bDepthBufferShadow = true;
 bool g_bSSAO = true;
@@ -126,6 +129,16 @@ int NormalizeGaussianSampleSizeLocal(const int sampleSize)
         --normalized;
     }
     return (std::max)(GAUSSIAN_SAMPLE_MIN, normalized);
+}
+
+bool IsWeekdayBusinessHours()
+{
+    SYSTEMTIME localTime { };
+    GetLocalTime(&localTime);
+
+    const bool isWeekday = localTime.wDayOfWeek >= 1 && localTime.wDayOfWeek <= 5;
+    const bool isBusinessHours = localTime.wHour >= 9 && localTime.wHour < 18;
+    return isWeekday && isBusinessHours;
 }
 
 void DrawRandomized2DContent()
@@ -515,9 +528,13 @@ void EnableMouseLook(HWND hWnd)
     }
 
     g_bMouseLookEnabled = true;
+    g_bPrevMouseClientPosValid = false;
     HideMouseCursor();
     SetCursor(NULL);
-    RecenterMouseCursor(hWnd);
+    if (!g_bRemoteDesktop)
+    {
+        RecenterMouseCursor(hWnd);
+    }
 }
 
 void DisableMouseLook()
@@ -529,6 +546,7 @@ void DisableMouseLook()
 
     g_bMouseLookEnabled = false;
     g_bRecenteringMouse = false;
+    g_bPrevMouseClientPosValid = false;
     ShowMouseCursor();
 }
 
@@ -611,6 +629,12 @@ void ApplyWindowMode()
 {
     g_Render.ChangeWindowMode(g_windowMode);
 }
+
+void InitializeRemoteDesktopDefault()
+{
+    g_bRemoteDesktop = IsWeekdayBusinessHours();
+}
+
 
 int SaturateLevelToSliderValue(const float level)
 {
