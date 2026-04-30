@@ -28,3 +28,8 @@
 *.tlog
 /Sample/Sample/x64/Debug
 /Sample/yyb
+/x64/Release/D3DCompiler_43.dll
+/x64/Release/d3dx10_43.dll
+/x64/Release/d3dx11_43.dll
+/x64/Release/d3dx9_43.dll
+/x64/Release/Sample.exe
