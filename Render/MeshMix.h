@@ -77,12 +77,14 @@ struct stMeshParam
     // 見た目になる。綺麗ではない。
     // 陰を表示するときに、輝度を少しだけ下げて、彩度を上げ、色相を少し変えると
     // 良い感じになる。
-    //
-    // しかし、環境マッピングがあればそもそも要らないはず。
-    bool saturateShadow = false;
+    bool saturateShadow = true;
 
     // 彩度影をどれくらい強く効かせるか
-    float saturateShadowIntensity = 0.2f;
+    float saturateShadowIntensity = 1.2f;
+
+    // 陰の暗さをどれくらい強く効かせるか
+    // 0.0なら陰を暗くしない、1.0なら通常のランバート
+    float shadowDarkness = 1.0f;
 
     // 環境マッピングを行うか
     //
@@ -224,6 +226,11 @@ public:
     void Render();
 
     void SetPos(const D3DXVECTOR3& pos);
+    void SetSaturateShadow(const bool enabled);
+    void SetSaturateShadowIntensity(const float intensity);
+    void SetShadowDarkness(const float darkness);
+    void SetSpecularIntensity(const float intensity);
+    void SetSpecularEdge(const float edge);
 
     D3DXVECTOR3 GetPos() const;
 

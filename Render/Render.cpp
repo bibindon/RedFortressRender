@@ -743,6 +743,11 @@ int Render::AddMeshMix(const std::wstring& filePath,
     param.smooth = false;
     param.parallaxOcclusionMapping = useParallaxOcclusionMapping;
     param.normalMapping = useNormalMapping;
+    param.saturateShadow = m_meshMixSaturateShadowEnabled;
+    param.saturateShadowIntensity = m_meshMixSaturateShadowIntensity;
+    param.shadowDarkness = m_meshMixShadowDarkness;
+    param.specularIntensity = m_meshMixSpecularIntensity;
+    param.specularEdge = m_meshMixSpecularEdge;
     auto mesh = MeshMix(filePath, pos, rot, scale, param);
     m_meshMixList.push_back(mesh);
     m_meshMixList.rbegin()->Initialize();
@@ -764,6 +769,56 @@ bool Render::RemoveMeshMix(const int id)
 void Render::SetMeshMixPos(const int id, const D3DXVECTOR3& pos)
 {
     m_meshMixList.at(id).SetPos(pos);
+}
+
+void Render::SetMeshMixSaturateShadow(const bool enabled)
+{
+    m_meshMixSaturateShadowEnabled = enabled;
+
+    for (auto& mesh : m_meshMixList)
+    {
+        mesh.SetSaturateShadow(enabled);
+    }
+}
+
+void Render::SetMeshMixSaturateShadowIntensity(const float intensity)
+{
+    m_meshMixSaturateShadowIntensity = intensity;
+
+    for (auto& mesh : m_meshMixList)
+    {
+        mesh.SetSaturateShadowIntensity(intensity);
+    }
+}
+
+void Render::SetMeshMixShadowDarkness(const float darkness)
+{
+    m_meshMixShadowDarkness = darkness;
+
+    for (auto& mesh : m_meshMixList)
+    {
+        mesh.SetShadowDarkness(darkness);
+    }
+}
+
+void Render::SetMeshMixSpecularIntensity(const float intensity)
+{
+    m_meshMixSpecularIntensity = intensity;
+
+    for (auto& mesh : m_meshMixList)
+    {
+        mesh.SetSpecularIntensity(intensity);
+    }
+}
+
+void Render::SetMeshMixSpecularEdge(const float edge)
+{
+    m_meshMixSpecularEdge = edge;
+
+    for (auto& mesh : m_meshMixList)
+    {
+        mesh.SetSpecularEdge(edge);
+    }
 }
 
 void Render::SetCamera(const D3DXVECTOR3& pos, const D3DXVECTOR3& lookAt)

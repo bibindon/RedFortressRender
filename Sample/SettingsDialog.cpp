@@ -24,6 +24,14 @@ constexpr int SHADOW_SLIDER_MIN = 0;
 constexpr int SHADOW_SLIDER_MAX = static_cast<int>(SHADOW_INTENSITY_MAX / SHADOW_INTENSITY_STEP);
 constexpr int SHADOW_SATURATION_BOOST_SLIDER_MIN = 0;
 constexpr int SHADOW_SATURATION_BOOST_SLIDER_MAX = static_cast<int>(SHADOW_SATURATION_BOOST_MAX / SHADOW_SATURATION_BOOST_STEP);
+constexpr int HALF_LAMBERT_SHADOW_SATURATION_SLIDER_MIN = 0;
+constexpr int HALF_LAMBERT_SHADOW_SATURATION_SLIDER_MAX = static_cast<int>(HALF_LAMBERT_SHADOW_SATURATION_MAX / HALF_LAMBERT_SHADOW_SATURATION_STEP);
+constexpr int SHADOW_DARKNESS_SLIDER_MIN = 0;
+constexpr int SHADOW_DARKNESS_SLIDER_MAX = static_cast<int>(SHADOW_DARKNESS_MAX / SHADOW_DARKNESS_STEP);
+constexpr int SPECULAR_INTENSITY_SLIDER_MIN = 0;
+constexpr int SPECULAR_INTENSITY_SLIDER_MAX = static_cast<int>(SPECULAR_INTENSITY_MAX / SPECULAR_INTENSITY_STEP);
+constexpr int SPECULAR_EDGE_SLIDER_MIN = 0;
+constexpr int SPECULAR_EDGE_SLIDER_MAX = static_cast<int>(SPECULAR_EDGE_MAX / SPECULAR_EDGE_STEP);
 constexpr int SSAO_BRIGHTNESS_SLIDER_MIN = 0;
 constexpr int SSAO_BRIGHTNESS_SLIDER_MAX = static_cast<int>((SSAO_BRIGHTNESS_MAX - SSAO_BRIGHTNESS_MIN) / SSAO_BRIGHTNESS_STEP);
 constexpr int SSAO_SATURATION_BOOST_SLIDER_MIN = 0;
@@ -42,7 +50,7 @@ constexpr int POINT_LIGHT_BRIGHTNESS_SLIDER_MIN = 0;
 constexpr int POINT_LIGHT_BRIGHTNESS_SLIDER_MAX = static_cast<int>(POINT_LIGHT_BRIGHTNESS_MAX / POINT_LIGHT_BRIGHTNESS_STEP);
 constexpr int GAUSSIAN_SLIDER_MIN = 1;
 constexpr int GAUSSIAN_SLIDER_MAX = (GAUSSIAN_SAMPLE_MAX + 1) / 2;
-constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 830;
+constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 866;
 constexpr int SETTINGS_DIALOG_WHEEL_STEP_PX = 36;
 constexpr UINT ID_POPUP_EXPORT_BINARY = 60001;
 constexpr UINT ID_POPUP_REMOVE_MODEL = 60002;
@@ -623,6 +631,54 @@ void RefreshShadowSaturationBoostControls(HWND hDlg)
                        static_cast<LPARAM>(ShadowSaturationBoostToSliderValue(g_shadowSaturationBoost)));
 }
 
+void RefreshHalfLambertShadowSaturationControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_halfLambertShadowSaturation);
+    SetDlgItemText(hDlg, IDC_EDIT_HALF_LAMBERT_SHADOW_SATURATION, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_HALF_LAMBERT_SHADOW_SATURATION,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(HalfLambertShadowSaturationToSliderValue(g_halfLambertShadowSaturation)));
+}
+
+void RefreshShadowDarknessControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_shadowDarkness);
+    SetDlgItemText(hDlg, IDC_EDIT_SHADOW_DARKNESS, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_SHADOW_DARKNESS,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(ShadowDarknessToSliderValue(g_shadowDarkness)));
+}
+
+void RefreshSpecularIntensityControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_specularIntensity);
+    SetDlgItemText(hDlg, IDC_EDIT_SPECULAR_INTENSITY, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_SPECULAR_INTENSITY,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(SpecularIntensityToSliderValue(g_specularIntensity)));
+}
+
+void RefreshSpecularEdgeControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_specularEdge);
+    SetDlgItemText(hDlg, IDC_EDIT_SPECULAR_EDGE, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_SPECULAR_EDGE,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(SpecularEdgeToSliderValue(g_specularEdge)));
+}
+
 void RefreshSSAOBrightnessControls(HWND hDlg)
 {
     wchar_t buffer[32];
@@ -766,6 +822,10 @@ void RefreshAllControls(HWND hDlg)
     RefreshSunLightIntensityControls(hDlg);
     RefreshShadowControls(hDlg);
     RefreshShadowSaturationBoostControls(hDlg);
+    RefreshHalfLambertShadowSaturationControls(hDlg);
+    RefreshShadowDarknessControls(hDlg);
+    RefreshSpecularIntensityControls(hDlg);
+    RefreshSpecularEdgeControls(hDlg);
     RefreshSSAOBrightnessControls(hDlg);
     RefreshSSAOSaturationBoostControls(hDlg);
     RefreshBloomThresholdControls(hDlg);
@@ -801,6 +861,26 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_SATURATION_BOOST, TBM_SETRANGEMAX, FALSE, SHADOW_SATURATION_BOOST_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_SATURATION_BOOST, TBM_SETTICFREQ, 2, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_SATURATION_BOOST, TBM_SETPAGESIZE, 0, 2);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_HALF_LAMBERT_SHADOW_SATURATION, TBM_SETRANGEMIN, FALSE, HALF_LAMBERT_SHADOW_SATURATION_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_HALF_LAMBERT_SHADOW_SATURATION, TBM_SETRANGEMAX, FALSE, HALF_LAMBERT_SHADOW_SATURATION_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_HALF_LAMBERT_SHADOW_SATURATION, TBM_SETTICFREQ, 4, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_HALF_LAMBERT_SHADOW_SATURATION, TBM_SETPAGESIZE, 0, 4);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_DARKNESS, TBM_SETRANGEMIN, FALSE, SHADOW_DARKNESS_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_DARKNESS, TBM_SETRANGEMAX, FALSE, SHADOW_DARKNESS_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_DARKNESS, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_DARKNESS, TBM_SETPAGESIZE, 0, 2);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SPECULAR_INTENSITY, TBM_SETRANGEMIN, FALSE, SPECULAR_INTENSITY_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SPECULAR_INTENSITY, TBM_SETRANGEMAX, FALSE, SPECULAR_INTENSITY_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SPECULAR_INTENSITY, TBM_SETTICFREQ, 4, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SPECULAR_INTENSITY, TBM_SETPAGESIZE, 0, 4);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SPECULAR_EDGE, TBM_SETRANGEMIN, FALSE, SPECULAR_EDGE_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SPECULAR_EDGE, TBM_SETRANGEMAX, FALSE, SPECULAR_EDGE_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SPECULAR_EDGE, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SPECULAR_EDGE, TBM_SETPAGESIZE, 0, 2);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BRIGHTNESS, TBM_SETRANGEMIN, FALSE, SSAO_BRIGHTNESS_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BRIGHTNESS, TBM_SETRANGEMAX, FALSE, SSAO_BRIGHTNESS_SLIDER_MAX);
@@ -1109,6 +1189,42 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_shadowSaturationBoost = SliderValueToShadowSaturationBoost(sliderValue);
             ApplyShadowSaturationBoost();
             RefreshShadowSaturationBoostControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_HALF_LAMBERT_SHADOW_SATURATION))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_halfLambertShadowSaturation = SliderValueToHalfLambertShadowSaturation(sliderValue);
+            ApplyHalfLambertShadowSaturation();
+            RefreshHalfLambertShadowSaturationControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SHADOW_DARKNESS))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_shadowDarkness = SliderValueToShadowDarkness(sliderValue);
+            ApplyShadowDarkness();
+            RefreshShadowDarknessControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SPECULAR_INTENSITY))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_specularIntensity = SliderValueToSpecularIntensity(sliderValue);
+            ApplySpecularIntensity();
+            RefreshSpecularIntensityControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SPECULAR_EDGE))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_specularEdge = SliderValueToSpecularEdge(sliderValue);
+            ApplySpecularEdge();
+            RefreshSpecularEdgeControls(hDlg);
             return TRUE;
         }
 

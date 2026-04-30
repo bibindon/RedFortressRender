@@ -48,6 +48,10 @@ float g_shadowIntensity = 0.5f;
 float g_shadowSaturationBoost = 0.35f;
 float g_ssaoBrightness = 1.0f;
 float g_ssaoSaturationBoost = 0.30f;
+float g_halfLambertShadowSaturation = 0.2f;
+float g_shadowDarkness = 1.0f;
+float g_specularIntensity = 0.0f;
+float g_specularEdge = 0.0f;
 float g_bloomThreshold = 2.5f;
 float g_dofFocalDistance = 8.0f;
 float g_starBurstThreshold = 2.8f;
@@ -99,6 +103,27 @@ float ClampSSAOBrightness(const float brightness)
 float ClampSSAOSaturationBoost(const float boost)
 {
     return (std::max)(SSAO_SATURATION_BOOST_MIN, (std::min)(boost, SSAO_SATURATION_BOOST_MAX));
+}
+
+float ClampHalfLambertShadowSaturation(const float boost)
+{
+    return (std::max)(HALF_LAMBERT_SHADOW_SATURATION_MIN,
+                      (std::min)(boost, HALF_LAMBERT_SHADOW_SATURATION_MAX));
+}
+
+float ClampShadowDarkness(const float darkness)
+{
+    return (std::max)(SHADOW_DARKNESS_MIN, (std::min)(darkness, SHADOW_DARKNESS_MAX));
+}
+
+float ClampSpecularIntensity(const float intensity)
+{
+    return (std::max)(SPECULAR_INTENSITY_MIN, (std::min)(intensity, SPECULAR_INTENSITY_MAX));
+}
+
+float ClampSpecularEdge(const float edge)
+{
+    return (std::max)(SPECULAR_EDGE_MIN, (std::min)(edge, SPECULAR_EDGE_MAX));
 }
 
 float ClampBloomThreshold(const float threshold)
@@ -634,6 +659,31 @@ void ApplySSAOSaturationBoost()
     g_Render.SetPostEffectSSAOSaturationBoost(g_ssaoSaturationBoost);
 }
 
+void ApplyHalfLambertShadowSaturation()
+{
+    g_halfLambertShadowSaturation = ClampHalfLambertShadowSaturation(g_halfLambertShadowSaturation);
+    g_Render.SetMeshMixSaturateShadow(g_halfLambertShadowSaturation > 0.0f);
+    g_Render.SetMeshMixSaturateShadowIntensity(g_halfLambertShadowSaturation);
+}
+
+void ApplyShadowDarkness()
+{
+    g_shadowDarkness = ClampShadowDarkness(g_shadowDarkness);
+    g_Render.SetMeshMixShadowDarkness(g_shadowDarkness);
+}
+
+void ApplySpecularIntensity()
+{
+    g_specularIntensity = ClampSpecularIntensity(g_specularIntensity);
+    g_Render.SetMeshMixSpecularIntensity(g_specularIntensity);
+}
+
+void ApplySpecularEdge()
+{
+    g_specularEdge = ClampSpecularEdge(g_specularEdge);
+    g_Render.SetMeshMixSpecularEdge(g_specularEdge);
+}
+
 void ApplyBloomThreshold()
 {
     g_bloomThreshold = ClampBloomThreshold(g_bloomThreshold);
@@ -765,6 +815,46 @@ int SSAOSaturationBoostToSliderValue(const float boost)
 float SliderValueToSSAOSaturationBoost(const int sliderValue)
 {
     return ClampSSAOSaturationBoost(static_cast<float>(sliderValue) * SSAO_SATURATION_BOOST_STEP);
+}
+
+int HalfLambertShadowSaturationToSliderValue(const float boost)
+{
+    return static_cast<int>(std::lround(ClampHalfLambertShadowSaturation(boost) / HALF_LAMBERT_SHADOW_SATURATION_STEP));
+}
+
+float SliderValueToHalfLambertShadowSaturation(const int sliderValue)
+{
+    return ClampHalfLambertShadowSaturation(static_cast<float>(sliderValue) * HALF_LAMBERT_SHADOW_SATURATION_STEP);
+}
+
+int ShadowDarknessToSliderValue(const float darkness)
+{
+    return static_cast<int>(std::lround(ClampShadowDarkness(darkness) / SHADOW_DARKNESS_STEP));
+}
+
+float SliderValueToShadowDarkness(const int sliderValue)
+{
+    return ClampShadowDarkness(static_cast<float>(sliderValue) * SHADOW_DARKNESS_STEP);
+}
+
+int SpecularIntensityToSliderValue(const float intensity)
+{
+    return static_cast<int>(std::lround(ClampSpecularIntensity(intensity) / SPECULAR_INTENSITY_STEP));
+}
+
+float SliderValueToSpecularIntensity(const int sliderValue)
+{
+    return ClampSpecularIntensity(static_cast<float>(sliderValue) * SPECULAR_INTENSITY_STEP);
+}
+
+int SpecularEdgeToSliderValue(const float edge)
+{
+    return static_cast<int>(std::lround(ClampSpecularEdge(edge) / SPECULAR_EDGE_STEP));
+}
+
+float SliderValueToSpecularEdge(const int sliderValue)
+{
+    return ClampSpecularEdge(static_cast<float>(sliderValue) * SPECULAR_EDGE_STEP);
 }
 
 int BloomThresholdToSliderValue(const float threshold)
@@ -1169,6 +1259,22 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"SSAOSaturationBoost")
             {
                 g_ssaoSaturationBoost = std::stof(value);
+            }
+            else if (key == L"HalfLambertShadowSaturation")
+            {
+                g_halfLambertShadowSaturation = std::stof(value);
+            }
+            else if (key == L"ShadowDarkness")
+            {
+                g_shadowDarkness = std::stof(value);
+            }
+            else if (key == L"SpecularIntensity")
+            {
+                g_specularIntensity = std::stof(value);
+            }
+            else if (key == L"SpecularEdge")
+            {
+                g_specularEdge = std::stof(value);
             }
             else if (key == L"BloomThreshold")
             {

@@ -15,12 +15,13 @@ float4 g_specularColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 float2 g_screenSize = { 1600.0f, 900.0f };
 
 // スペキュラ光の鋭さ
-float g_specularPower = 16.0f;
+//float g_specularPower = 16.0f;
 // float g_specularPower = 128.0f;
-//float g_specularPower = 0.0f;
+float g_specularPower = 1.0f;
 
 // スペキュラ光の強さ
-float g_specularIntensity = 0.2f;
+float g_specularIntensity = 0.1f;
+//float g_specularIntensity = 0.2f;
 //float g_specularIntensity = 0.0f;
 
 // 距離フォグの色
@@ -39,6 +40,9 @@ float g_fogHeightDensity = 0.01f;
 // 0なら洞窟、0.1なら夜、1なら明るい室内、3なら快晴、という感じ
 // 1.0を超えると彩度が上がり、逆に暗くなるようにすると面白い気がする。
 float g_fSunLightIntensity = 1.0f;
+bool g_bSaturateShadow = false;
+float g_fSaturateShadowIntensity = 0.2f;
+float g_fShadowDarkness = 1.0f;
 
 texture g_texture;
 sampler g_textureSampler = sampler_state
@@ -113,6 +117,12 @@ sampler g_heightMapSampler = sampler_state
     MinFilter = LINEAR;
     MagFilter = LINEAR;
 };
+
+float3 IncreaseSaturation(float3 color, float amount)
+{
+    float luminance = dot(color, float3(0.299f, 0.587f, 0.114f));
+    return saturate(lerp(luminance.xxx, color, amount));
+}
 
 
 float g_time = 0.0f;
@@ -300,17 +310,28 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
     // ハーフランバート
     // 深度バッファシャドウを実行すると、影が2重に表示されてしまう。
     // ハーフランバートならマシになる
-    if (true)
+    if (false)
     {
         NdotL = (NdotL + 1.0f) * 0.5f;
 
         // 0.5が0.7になるような補正をかける
         // 対数グラフのイメージ
         NdotL = pow(NdotL, 0.5);
-
+    }
+    else
+    {
+        NdotL = saturate(NdotL);
     }
 
-    lambert = albedo * NdotL * g_fSunLightIntensity;
+    float shadowAmount = saturate(1.0f - NdotL);
+    float3 shadowAlbedo = albedo;
+    if (g_bSaturateShadow)
+    {
+        float saturationAmount = 1.0f + (shadowAmount * g_fSaturateShadowIntensity);
+        shadowAlbedo = IncreaseSaturation(albedo, saturationAmount);
+    }
+
+    lambert = shadowAlbedo * (1.0f - ((1.0f - NdotL) * g_fShadowDarkness)) * g_fSunLightIntensity;
 
     float3 ambient = float3(0.2, 0.2, 0.2) * albedo;
 

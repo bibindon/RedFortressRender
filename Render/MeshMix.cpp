@@ -368,6 +368,31 @@ void MeshMix::SetPos(const D3DXVECTOR3& pos)
     m_pos = pos;
 }
 
+void MeshMix::SetSaturateShadow(const bool enabled)
+{
+    m_param.saturateShadow = enabled;
+}
+
+void MeshMix::SetSaturateShadowIntensity(const float intensity)
+{
+    m_param.saturateShadowIntensity = intensity;
+}
+
+void MeshMix::SetShadowDarkness(const float darkness)
+{
+    m_param.shadowDarkness = darkness;
+}
+
+void MeshMix::SetSpecularIntensity(const float intensity)
+{
+    m_param.specularIntensity = intensity;
+}
+
+void MeshMix::SetSpecularEdge(const float edge)
+{
+    m_param.specularEdge = edge;
+}
+
 void MeshMix::SetRotY(const float rotY)
 {
     m_rotate.y = rotY;
@@ -509,6 +534,22 @@ void MeshMix::Render()
     assert(hResult == S_OK);
 
     hResult = m_D3DEffect->SetBool("g_bNormalMapping", m_param.normalMapping ? TRUE : FALSE);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetBool("g_bSaturateShadow", m_param.saturateShadow ? TRUE : FALSE);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetFloat("g_fSaturateShadowIntensity", m_param.saturateShadowIntensity);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetFloat("g_fShadowDarkness", m_param.shadowDarkness);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetFloat("g_specularIntensity", m_param.specularIntensity);
+    assert(hResult == S_OK);
+
+    const float specularPower = 1.0f + ((std::max)(0.0f, (std::min)(m_param.specularEdge, 1.0f)) * 127.0f);
+    hResult = m_D3DEffect->SetFloat("g_specularPower", specularPower);
     assert(hResult == S_OK);
 
     // 時間パラメータを設定

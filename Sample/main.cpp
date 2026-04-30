@@ -92,6 +92,10 @@ void InitializeSampleScene(HWND hWnd)
     ApplyShadowSaturationBoost();
     ApplySSAOBrightness();
     ApplySSAOSaturationBoost();
+    ApplyHalfLambertShadowSaturation();
+    ApplyShadowDarkness();
+    ApplySpecularIntensity();
+    ApplySpecularEdge();
     ApplyBloomThreshold();
     ApplyDepthOfFieldFocalDistance();
     ApplyStarBurstThreshold();

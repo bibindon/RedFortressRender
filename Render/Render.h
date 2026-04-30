@@ -149,6 +149,11 @@ public:
     bool RemoveMeshMix(int id);
 
     void SetMeshMixPos(const int id, const D3DXVECTOR3& pos);
+    void SetMeshMixSaturateShadow(const bool enabled);
+    void SetMeshMixSaturateShadowIntensity(const float intensity);
+    void SetMeshMixShadowDarkness(const float darkness);
+    void SetMeshMixSpecularIntensity(const float intensity);
+    void SetMeshMixSpecularEdge(const float edge);
 
     void SetCamera(const D3DXVECTOR3& pos, const D3DXVECTOR3& lookAt);
     void MoveCamera(const D3DXVECTOR3& pos);
@@ -304,6 +309,11 @@ private:
 
     std::unordered_map<std::wstring, std::wstring> m_settings;
     int m_gaussianSampleSize = 101;
+    bool m_meshMixSaturateShadowEnabled = false;
+    float m_meshMixSaturateShadowIntensity = 0.2f;
+    float m_meshMixShadowDarkness = 1.0f;
+    float m_meshMixSpecularIntensity = 0.0f;
+    float m_meshMixSpecularEdge = 0.0f;
 
     LPDIRECT3DTEXTURE9 m_pRenderTarget1 = NULL;
     LPDIRECT3DTEXTURE9 m_pRenderTarget2 = NULL;
