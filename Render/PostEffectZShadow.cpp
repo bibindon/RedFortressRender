@@ -299,7 +299,7 @@ void PostEffectZShadow::RenderTechnique2()
     hr = g_fxDepthBufferShadow->SetFloat("g_shadowTexelH", 1.0f / (float)descLightZ.Height);
     assert(hr == S_OK);
 
-    hr = g_fxDepthBufferShadow->SetFloat("g_shadowBias", 0.001f);
+    hr = g_fxDepthBufferShadow->SetFloat("g_shadowBias", 0.0002f);
     assert(hr == S_OK);
 
     hr = g_fxDepthBufferShadow->SetTechnique("TechniqueWriteShadow");
