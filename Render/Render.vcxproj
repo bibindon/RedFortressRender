@@ -38,6 +38,7 @@
     <ClCompile Include="MeshHierarchy.cpp" />
     <ClCompile Include="MeshInstancing.cpp" />
     <ClCompile Include="MeshMix.cpp" />
+    <ClCompile Include="MeshMixSkinAnim.cpp" />
     <ClCompile Include="MeshMixManager.cpp" />
     <ClCompile Include="MeshNormalMapping.cpp" />
     <ClCompile Include="MeshPointLight.cpp" />
@@ -75,6 +76,7 @@
     <ClInclude Include="MeshHierarchy.h" />
     <ClInclude Include="MeshInstancing.h" />
     <ClInclude Include="MeshMix.h" />
+    <ClInclude Include="MeshMixSkinAnim.h" />
     <ClInclude Include="MeshMixManager.h" />
     <ClInclude Include="MeshNormalMapping.h" />
     <ClInclude Include="MeshPointLight.h" />

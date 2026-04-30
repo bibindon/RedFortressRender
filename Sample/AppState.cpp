@@ -32,6 +32,7 @@ std::wstring g_selectedMixMeshPath;
 std::wstring g_selectedMeshPath;
 std::wstring g_selectedAnimMeshPath;
 std::wstring g_selectedSkinAnimMeshPath;
+std::wstring g_selectedMixSkinAnimMeshPath;
 bool g_bAnimateLight = false;
 bool g_bRemoteDesktop = true;
 bool g_bGaussianFilter = false;
@@ -961,6 +962,10 @@ bool RemoveLoadedModel(const size_t modelIndex)
     {
         removed = g_Render.RemoveMeshMix(model.m_renderId);
     }
+    else if (model.m_type == L"MeshMixSkinAnim")
+    {
+        removed = g_Render.RemoveMeshMixSkinAnim(model.m_renderId);
+    }
     else if (model.m_type == L"AnimMesh")
     {
         removed = g_Render.RemoveAnimMesh(model.m_renderId);
@@ -1044,13 +1049,13 @@ void SpawnMeshMixAtLookAt(const std::wstring& filePath)
     const float yaw = atan2f(forward.x, forward.z);
     const bool usePOM = (g_mixMeshShaderMode == MixMeshShaderMode::ParallaxOcclusionMapping);
     const bool useNormalMapping = (g_mixMeshShaderMode == MixMeshShaderMode::NormalMapping);
-    const int renderId = g_Render.AddMeshMix(filePath,
-                                             pos,
-                                             D3DXVECTOR3(0, yaw, 0.0f),
-                                             g_modelLoadScale,
-                                             1.0f,
-                                             usePOM,
-                                             useNormalMapping);
+    const int renderId = g_Render.AddMeshMixSkinAnim(filePath,
+                                                     pos,
+                                                     D3DXVECTOR3(0, yaw, 0.0f),
+                                                     g_modelLoadScale,
+                                                     1.0f,
+                                                     usePOM,
+                                                     useNormalMapping);
     RegisterLoadedModel(L"MeshMix", filePath, pos, g_modelLoadScale, renderId);
 }
 
@@ -1096,6 +1101,30 @@ void SpawnSkinAnimMeshAtLookAt(const std::wstring& filePath)
     const float yaw = atan2f(forward.x, forward.z);
     const int renderId = g_Render.AddSkinAnimMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), g_modelLoadScale, CreateDefaultAnimSetMap());
     RegisterLoadedModel(L"SkinAnimMesh", filePath, pos, g_modelLoadScale, renderId);
+}
+
+void SpawnMeshMixSkinAnimAtLookAt(const std::wstring& filePath)
+{
+    if (filePath.empty())
+    {
+        return;
+    }
+
+    auto pos = g_Render.GetLookAtPos();
+    D3DXVECTOR3 forward = g_Render.GetCameraRotate();
+    D3DXVec3Normalize(&forward, &forward);
+
+    const float yaw = atan2f(forward.x, forward.z);
+    const bool usePOM = (g_mixMeshShaderMode == MixMeshShaderMode::ParallaxOcclusionMapping);
+    const bool useNormalMapping = (g_mixMeshShaderMode == MixMeshShaderMode::NormalMapping);
+    const int renderId = g_Render.AddMeshMix(filePath,
+                                             pos,
+                                             D3DXVECTOR3(0, yaw, 0.0f),
+                                             g_modelLoadScale,
+                                             1.0f,
+                                             usePOM,
+                                             useNormalMapping);
+    RegisterLoadedModel(L"MeshMixSkinAnim", filePath, pos, g_modelLoadScale, renderId);
 }
 
 bool ShowOpenFileDialog(HWND hWnd, const wchar_t* filter, std::wstring& selectedPath)

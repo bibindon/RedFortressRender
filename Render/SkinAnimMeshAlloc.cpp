@@ -1,4 +1,4 @@
-#include "SkinAnimMesh.h"
+ï»¿#include "SkinAnimMesh.h"
 
 #include "Common.h"
 #include "Util.h"
@@ -60,7 +60,7 @@ STDMETHODIMP SkinAnimMeshAlloc::CreateMeshContainer(LPCSTR meshName,
 
         if (FAILED(result))
         {
-            // ‚±‚ÌŠÖ”‚Ínothrow‚ªw’è‚³‚ê‚Ä‚¢‚³‚ê‚Ä‚¢‚é‚Ì‚ÅA—áŠO‚ğ•Ô‚µ‚Ä‚Í‚¢‚¯‚È‚¢
+            // ã“ã®é–¢æ•°ã¯nothrowãŒæŒ‡å®šã•ã‚Œã¦ã„ã•ã‚Œã¦ã„ã‚‹ã®ã§ã€ä¾‹å¤–ã‚’è¿”ã—ã¦ã¯ã„ã‘ãªã„
             return E_FAIL;
         }
 

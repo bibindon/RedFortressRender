@@ -20,6 +20,7 @@
 #include "MeshOld.h"
 #include "AnimMesh.h"
 #include "SkinAnimMesh.h"
+#include "MeshMixSkinAnim.h"
 
 #include "Camera.h"
 #include "Light.h"
@@ -752,7 +753,7 @@ int Render::AddMeshMix(const std::wstring& filePath,
     m_meshMixList.push_back(mesh);
     m_meshMixList.rbegin()->Initialize();
 
-    return (int)m_meshMixList.size() - 1;
+    return static_cast<int>(m_meshMixList.size()) - 1;
 }
 
 bool Render::RemoveMeshMix(const int id)
@@ -768,7 +769,56 @@ bool Render::RemoveMeshMix(const int id)
 
 void Render::SetMeshMixPos(const int id, const D3DXVECTOR3& pos)
 {
+    if (id < 0 || id >= static_cast<int>(m_meshMixList.size()))
+    {
+        return;
+    }
+
     m_meshMixList.at(id).SetPos(pos);
+}
+
+int Render::AddMeshMixSkinAnim(const std::wstring& filePath,
+                               const D3DXVECTOR3& pos,
+                               const D3DXVECTOR3& rot,
+                               const float scale,
+                               const float radius,
+                               const bool useParallaxOcclusionMapping,
+                               const bool useNormalMapping)
+{
+    auto param = GetMeshParamPreset(eMeshParamPreset::GRASS);
+    param.smooth = false;
+    param.parallaxOcclusionMapping = useParallaxOcclusionMapping;
+    param.normalMapping = useNormalMapping;
+    param.saturateShadow = m_meshMixSaturateShadowEnabled;
+    param.saturateShadowIntensity = m_meshMixSaturateShadowIntensity;
+    param.shadowDarkness = m_meshMixShadowDarkness;
+    param.specularIntensity = m_meshMixSpecularIntensity;
+    param.specularEdge = m_meshMixSpecularEdge;
+
+    MeshMixSkinAnim* mesh = NEW MeshMixSkinAnim(filePath, pos, rot, scale, param);
+    try
+    {
+        mesh->Initialize();
+        m_meshMixSkinAnimList.push_back(mesh);
+    }
+    catch (...)
+    {
+        SAFE_DELETE(mesh);
+        throw;
+    }
+
+    return static_cast<int>(m_meshMixSkinAnimList.size()) - 1;
+}
+
+bool Render::RemoveMeshMixSkinAnim(const int id)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshMixSkinAnimList.size()) || m_meshMixSkinAnimList.at(id) == nullptr)
+    {
+        return false;
+    }
+
+    m_meshMixSkinAnimList.at(id)->SetEnabled(false);
+    return true;
 }
 
 void Render::SetMeshMixSaturateShadow(const bool enabled)
@@ -778,6 +828,14 @@ void Render::SetMeshMixSaturateShadow(const bool enabled)
     for (auto& mesh : m_meshMixList)
     {
         mesh.SetSaturateShadow(enabled);
+    }
+
+    for (auto& mesh : m_meshMixSkinAnimList)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->SetSaturateShadow(enabled);
+        }
     }
 }
 
@@ -789,6 +847,14 @@ void Render::SetMeshMixSaturateShadowIntensity(const float intensity)
     {
         mesh.SetSaturateShadowIntensity(intensity);
     }
+
+    for (auto& mesh : m_meshMixSkinAnimList)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->SetSaturateShadowIntensity(intensity);
+        }
+    }
 }
 
 void Render::SetMeshMixShadowDarkness(const float darkness)
@@ -798,6 +864,14 @@ void Render::SetMeshMixShadowDarkness(const float darkness)
     for (auto& mesh : m_meshMixList)
     {
         mesh.SetShadowDarkness(darkness);
+    }
+
+    for (auto& mesh : m_meshMixSkinAnimList)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->SetShadowDarkness(darkness);
+        }
     }
 }
 
@@ -809,6 +883,14 @@ void Render::SetMeshMixSpecularIntensity(const float intensity)
     {
         mesh.SetSpecularIntensity(intensity);
     }
+
+    for (auto& mesh : m_meshMixSkinAnimList)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->SetSpecularIntensity(intensity);
+        }
+    }
 }
 
 void Render::SetMeshMixSpecularEdge(const float edge)
@@ -818,6 +900,14 @@ void Render::SetMeshMixSpecularEdge(const float edge)
     for (auto& mesh : m_meshMixList)
     {
         mesh.SetSpecularEdge(edge);
+    }
+
+    for (auto& mesh : m_meshMixSkinAnimList)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->SetSpecularEdge(edge);
+        }
     }
 }
 
@@ -1224,6 +1314,14 @@ void Render::DrawPass1(const bool renderToSceneRenderTargets)
     for (auto& elem : m_meshMixList)
     {
         elem.Render();
+    }
+
+    for (auto& elem : m_meshMixSkinAnimList)
+    {
+        if (elem != nullptr)
+        {
+            elem->Render();
+        }
     }
 
     hResult = Common::D3DDevice()->EndScene();

@@ -25,6 +25,7 @@
 #include "MeshPointLight.h"
 #include "MeshNormalMapping.h"
 #include "MeshMix.h"
+#include "MeshMixSkinAnim.h"
 #include "MeshSSS.h"
 #include "MeshPOM.h"
 
@@ -147,6 +148,14 @@ public:
                    const bool useParallaxOcclusionMapping = false,
                    const bool useNormalMapping = false);
     bool RemoveMeshMix(int id);
+    int AddMeshMixSkinAnim(const std::wstring& filePath,
+                           const D3DXVECTOR3& pos,
+                           const D3DXVECTOR3& rot,
+                           const float scale,
+                           const float radius = -1.f,
+                           const bool useParallaxOcclusionMapping = false,
+                           const bool useNormalMapping = false);
+    bool RemoveMeshMixSkinAnim(int id);
 
     void SetMeshMixPos(const int id, const D3DXVECTOR3& pos);
     void SetMeshMixSaturateShadow(const bool enabled);
@@ -246,6 +255,7 @@ private:
     std::vector<bool> m_meshEnabledList;
     std::vector<AnimMesh*> m_animMeshList;
     std::vector<SkinAnimMesh*> m_skinAnimMeshList;
+    std::vector<MeshMixSkinAnim*> m_meshMixSkinAnimList;
     std::deque<MeshSmooth> m_meshSmoothList;
     std::deque<MeshSSSLike> m_meshSSSLikeList;
     std::deque<MeshSSS> m_meshSSSList;

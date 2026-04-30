@@ -50,7 +50,7 @@ constexpr int POINT_LIGHT_BRIGHTNESS_SLIDER_MIN = 0;
 constexpr int POINT_LIGHT_BRIGHTNESS_SLIDER_MAX = static_cast<int>(POINT_LIGHT_BRIGHTNESS_MAX / POINT_LIGHT_BRIGHTNESS_STEP);
 constexpr int GAUSSIAN_SLIDER_MIN = 1;
 constexpr int GAUSSIAN_SLIDER_MAX = (GAUSSIAN_SAMPLE_MAX + 1) / 2;
-constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 866;
+constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 878;
 constexpr int SETTINGS_DIALOG_WHEEL_STEP_PX = 36;
 constexpr UINT ID_POPUP_EXPORT_BINARY = 60001;
 constexpr UINT ID_POPUP_REMOVE_MODEL = 60002;
@@ -198,6 +198,7 @@ void RefreshSelectedMeshPaths(HWND hDlg)
     SetDlgItemText(hDlg, IDC_EDIT_MESH_PATH, g_selectedMeshPath.c_str());
     SetDlgItemText(hDlg, IDC_EDIT_ANIM_MESH_PATH, g_selectedAnimMeshPath.c_str());
     SetDlgItemText(hDlg, IDC_EDIT_SKIN_ANIM_MESH_PATH, g_selectedSkinAnimMeshPath.c_str());
+    SetDlgItemText(hDlg, IDC_EDIT_MIX_SKIN_ANIM_MESH_PATH, g_selectedMixSkinAnimMeshPath.c_str());
 }
 
 void RefreshMixMeshShaderMode(HWND hDlg)
@@ -983,6 +984,18 @@ bool HandleOpenMeshCommand(HWND hDlg, const WORD commandId)
                                g_selectedSkinAnimMeshPath))
         {
             SpawnSkinAnimMeshAtLookAt(g_selectedSkinAnimMeshPath);
+            RefreshSelectedMeshPaths(hDlg);
+        }
+        return true;
+    }
+
+    if (commandId == IDC_BUTTON_OPEN_MIX_SKIN_ANIM_MESH)
+    {
+        if (ShowOpenFileDialog(hDlg,
+                               L"MeshMix Skin Anim Files (*.x)\0*.x\0All Files (*.*)\0*.*\0",
+                               g_selectedMixSkinAnimMeshPath))
+        {
+            SpawnMeshMixSkinAnimAtLookAt(g_selectedMixSkinAnimMeshPath);
             RefreshSelectedMeshPaths(hDlg);
         }
         return true;
