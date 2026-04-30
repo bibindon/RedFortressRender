@@ -7,12 +7,21 @@
 #include <Shlwapi.h>
 #include <algorithm>
 #include <cwctype>
+#include <unordered_map>
 #pragma comment(lib, "Shlwapi.lib")
 
 namespace NSRender
 {
 namespace
 {
+using TextureCache = std::unordered_map<std::wstring, LPDIRECT3DBASETEXTURE9>;
+
+TextureCache& GetTextureCache()
+{
+    static TextureCache textureCache;
+    return textureCache;
+}
+
 std::wstring ToLowerString(std::wstring text)
 {
     std::transform(text.begin(), text.end(), text.begin(), [](wchar_t ch)
@@ -25,6 +34,50 @@ std::wstring ToLowerString(std::wstring text)
 bool ContainsToken(const std::wstring& text, const std::wstring& token)
 {
     return text.find(token) != std::wstring::npos;
+}
+
+std::wstring NormalizeTextureCacheKey(const std::wstring& texturePath)
+{
+    std::wstring normalized = texturePath;
+    std::replace(normalized.begin(), normalized.end(), L'/', L'\\');
+    return ToLowerString(normalized);
+}
+
+HRESULT LoadTextureCached(const std::wstring& texturePath, LPDIRECT3DBASETEXTURE9* texture)
+{
+    if (texture == nullptr)
+    {
+        return E_POINTER;
+    }
+
+    *texture = nullptr;
+
+    TextureCache& textureCache = GetTextureCache();
+    const std::wstring cacheKey = NormalizeTextureCacheKey(texturePath);
+    const auto found = textureCache.find(cacheKey);
+    if (found != textureCache.end())
+    {
+        *texture = found->second;
+        if (*texture != nullptr)
+        {
+            (*texture)->AddRef();
+        }
+        return S_OK;
+    }
+
+    LPDIRECT3DTEXTURE9 loadedTexture = nullptr;
+    const HRESULT hr = D3DXCreateTextureFromFile(Common::D3DDevice(),
+                                                 texturePath.c_str(),
+                                                 &loadedTexture);
+    if (FAILED(hr))
+    {
+        return hr;
+    }
+
+    textureCache.emplace(cacheKey, loadedTexture);
+    loadedTexture->AddRef();
+    *texture = loadedTexture;
+    return S_OK;
 }
 
 enum class eMeshTextureRole
@@ -191,9 +244,7 @@ void MeshMix::Initialize()
         {
             textureFileName = Util::Utf8ToWstring(materialList[i].pTextureFilename);
             std::wstring texturePath = xFileDir + textureFileName;
-            hResult = D3DXCreateTextureFromFile(Common::D3DDevice(),
-                                                texturePath.c_str(),
-                                                reinterpret_cast<LPDIRECT3DTEXTURE9*>(&tempTexture));
+            hResult = LoadTextureCached(texturePath, &tempTexture);
 
             assert(hResult == S_OK);
         }
