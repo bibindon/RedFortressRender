@@ -91,13 +91,13 @@ float3 DecodeWorldNormal(float3 encodedNormal)
     return normal / normalLength;
 }
 
-float SampleShadowVisibility(float2 uvLightView, float fDepthLightView)
+float SampleShadowAmount(float2 uvLightView, float fDepthLightView)
 {
     float2 uvTexel = float2(g_shadowTexelW, g_shadowTexelH);
     const int FILTER_RADIUS = 5;
 
     float shadowSum = 0.0f;
-    float totalWeight = 0.0f;
+    float sampleCount = 0.0f;
 
     for (int y = -FILTER_RADIUS; y <= FILTER_RADIUS; ++y)
     {
@@ -109,23 +109,22 @@ float SampleShadowVisibility(float2 uvLightView, float fDepthLightView)
                 continue;
             }
 
-            float weight = 1.0f;
             float shadowDepth = tex2Dlod(samplerLightZ, float4(sampleUv, 0, 0)).r;
             if (shadowDepth < (fDepthLightView - g_shadowBias))
             {
-                shadowSum += weight;
+                shadowSum += 1.0f;
             }
 
-            totalWeight += weight;
+            sampleCount += 1.0f;
         }
     }
 
-    if (totalWeight <= 0.0f)
+    if (sampleCount <= 0.0f)
     {
         return 0.0f;
     }
 
-    return shadowSum / totalWeight;
+    return shadowSum / sampleCount;
 }
 
 // 変数名の末尾のOSはローカル座標の意味
@@ -234,7 +233,7 @@ void PS_WriteShadow(in float4 inPos       : POSITION0,
         return;
     }
 
-    float nShadowColor = SampleShadowVisibility(uvLightView, fDepthLightView);
+    float nShadowColor = SampleShadowAmount(uvLightView, fDepthLightView);
 
     outColor.rgb = nShadowColor.xxx;
     outColor.a = nShadowColor * g_shadowIntensity;
