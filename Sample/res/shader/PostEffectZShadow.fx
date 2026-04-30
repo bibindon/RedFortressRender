@@ -94,7 +94,7 @@ float3 DecodeWorldNormal(float3 encodedNormal)
 float SampleShadowVisibility(float2 uvLightView, float fDepthLightView)
 {
     float2 uvTexel = float2(g_shadowTexelW, g_shadowTexelH);
-    const int FILTER_RADIUS = 2;
+    const int FILTER_RADIUS = 5;
 
     float shadowSum = 0.0f;
     float totalWeight = 0.0f;
@@ -269,7 +269,7 @@ void PS_Composite(in float4 inPos     : POSITION,
 
     float4 vShadowColorSum = 0.0f;
     float totalWeight = 0.0f;
-    const int FILTER_RADIUS = 2;
+    const int FILTER_RADIUS = 5;
 
     for (int y = -FILTER_RADIUS; y <= FILTER_RADIUS; ++y)
     {
