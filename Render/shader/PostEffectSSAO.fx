@@ -299,9 +299,10 @@ float4 PS_Composite(VS_OUT i) : COLOR0
     float3 col = tex2D(sampColor, i.uv).rgb;
     float ao = tex2D(sampAO, i.uv).r;
     float aoAdjusted = pow(saturate(ao), 1.0f / max(g_aoBrightness, 0.0001f));
+    float shadowPresence = saturate(1.0f - ao);
     float shadowAmount = saturate(1.0f - aoAdjusted);
     float3 shadedColor = col * aoAdjusted;
-    float saturationAmount = lerp(1.0f, 1.0f + g_aoSaturationBoost, shadowAmount);
+    float saturationAmount = lerp(1.0f, 1.0f + g_aoSaturationBoost, shadowPresence);
     float3 resultColor = IncreaseSaturation(shadedColor, saturationAmount);
     float4 result = float4(resultColor, 1.0f);
 

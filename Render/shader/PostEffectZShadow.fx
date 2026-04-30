@@ -249,6 +249,7 @@ void PS_WriteShadow(in float4 inPos       : POSITION0,
         }
     }
 
+    outColor.rgb = nShadowColor.xxx;
     outColor.a = nShadowColor * g_shadowIntensity;
 }
 
@@ -278,9 +279,10 @@ void PS_Composite(in float4 inPos     : POSITION,
     float4 vShadowColor = tex2D(samplerShadow, uv);
 
     float4 result = float4(0, 0, 0, 0);
+    float shadowPresence = saturate(vShadowColor.r);
     float shadowAmount = saturate(vShadowColor.a);
     float3 shadowedColor = lerp(vBaseColor.rgb, float3(0.0f, 0.0f, 0.0f), shadowAmount);
-    float saturationAmount = lerp(1.0f, 1.0f + g_shadowSaturationBoost, shadowAmount);
+    float saturationAmount = lerp(1.0f, 1.0f + g_shadowSaturationBoost, shadowPresence);
     result.rgb = IncreaseSaturation(shadowedColor, saturationAmount);
 
     if (false)
