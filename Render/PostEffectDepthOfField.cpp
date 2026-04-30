@@ -140,10 +140,10 @@ void PostEffectDepthOfField::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
     m_d3dEffect->SetFloatArray("g_TexelSize", texelSize, 2);
 
     ScreenVertex quad[4] { };
-    quad[0] = { -0.5f,                              -0.5f,                               0.0f, 1.0f, 0.0f, 0.0f };
-    quad[1] = { -0.5f + static_cast<float>(Common::ScreenW()), -0.5f,                   0.0f, 1.0f, 1.0f, 0.0f };
-    quad[2] = { -0.5f,                              -0.5f + static_cast<float>(Common::ScreenH()), 0.0f, 1.0f, 0.0f, 1.0f };
-    quad[3] = { -0.5f + static_cast<float>(Common::ScreenW()), -0.5f + static_cast<float>(Common::ScreenH()), 0.0f, 1.0f, 1.0f, 1.0f };
+    quad[0] = { 0.f,                              0.f,                               0.0f, 1.0f, 0.0f, 0.0f };
+    quad[1] = { static_cast<float>(Common::ScreenW()), 0.f,                   0.0f, 1.0f, 1.0f, 0.0f };
+    quad[2] = { 0.f,                              static_cast<float>(Common::ScreenH()), 0.0f, 1.0f, 0.0f, 1.0f };
+    quad[3] = { static_cast<float>(Common::ScreenW()), static_cast<float>(Common::ScreenH()), 0.0f, 1.0f, 1.0f, 1.0f };
 
     Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
     Common::D3DDevice()->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);

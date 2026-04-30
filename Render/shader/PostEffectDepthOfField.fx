@@ -111,6 +111,21 @@ float4 PS(in float2 uv : TEXCOORD0) : COLOR0
 {
     // 元のコードと同じ 0.5 texel 補正を残す。
     float2 sampleUv = uv + g_TexelSize * 0.5f;
+
+    // 0.5ピクセルずれ確認用のデバッグ表示。
+    // 5ピクセルごとに縦線・横線を描く。
+    if (false)
+    {
+        float2 pixelCoord = floor(sampleUv / g_TexelSize);
+        bool isGridLine = (fmod(pixelCoord.x, 5.0f) == 0.0f) || (fmod(pixelCoord.y, 5.0f) == 0.0f);
+        if (isGridLine)
+        {
+            return float4(0.0f, 1.0f, 0.0f, 1.0f);
+        }
+
+        return float4(0.0f, 0.0f, 0.0f, 1.0f);
+    }
+
     float4 baseColor = tex2D(colorSampler, sampleUv);
 
     float centerValid = 0.0f;
