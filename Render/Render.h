@@ -47,6 +47,7 @@
 #include "PostEffectZShadow.h"
 #include "GBuffer.h"
 #include "PostEffectFog.h"
+#include "PostEffectGodRay.h"
 
 namespace NSRender
 {
@@ -238,6 +239,13 @@ public:
     void SetPostEffectStarBurst(const bool arg);
     void SetPostEffectStarBurstThreshold(const float threshold);
 
+    void SetPostEffectGodRay(const bool arg);
+    void SetPostEffectGodRayLightPos(const D3DXVECTOR3& pos);
+    void SetPostEffectGodRayRayLength(const float arg);
+    void SetPostEffectGodRayIntensity(const float arg);
+    void SetPostEffectGodRayOcclusionFalloff(const float arg);
+    void SetPostEffectGodRayLightColor(const D3DXVECTOR3& color);
+
     void SetShowFPS(const bool arg);
 
     std::vector<std::pair<int, int>> GetResolutionList();
@@ -316,6 +324,9 @@ private:
 
     // テクスチャ―の内容を画面に出力
     PostEffectEnd m_postEffectEnd;
+
+    // ゴッドレイ
+    PostEffectGodRay m_postEffectGodRay;
 
     void Draw2D();
     void LoadSettingsCsv(const std::wstring& settingsCsvPath);

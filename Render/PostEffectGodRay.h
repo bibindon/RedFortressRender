@@ -1,0 +1,57 @@
+#pragma once
+
+#include "Common.h"
+#include "Camera.h"
+
+namespace NSRender
+{
+
+class PostEffectGodRay : public IDeviceResettable
+{
+
+public:
+
+    void Initialize();
+    LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget,
+                            LPDIRECT3DTEXTURE9 texZ);
+    void Finalize();
+
+    void SetEnable(const bool arg) { m_bEnable = arg; }
+
+    // ゴッドレイ用光源のワールド座標
+    void SetLightPos(const D3DXVECTOR3& pos) { m_lightPosWorld = pos; }
+
+    void SetRayLength(const float arg)        { m_rayLength = arg; }
+    void SetRayIntensity(const float arg)     { m_rayIntensity = arg; }
+    void SetOcclusionFalloff(const float arg) { m_occlusionFalloff = arg; }
+    void SetLightColor(const D3DXVECTOR3& c)  { m_lightColor = c; }
+
+    void OnDeviceLost();
+    void OnDeviceReset();
+
+private:
+
+    void CreateTexture();
+
+    void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
+                            const std::string& technique);
+
+    struct ScreenVertex
+    {
+        float x, y, z, rhw;
+        float u, v;
+    };
+
+    LPD3DXEFFECT        m_d3dEffect      = NULL;
+    LPDIRECT3DTEXTURE9  m_texOcclusion   = NULL;
+    LPDIRECT3DTEXTURE9  m_texResult      = NULL;
+
+    bool        m_bEnable         = false;
+    D3DXVECTOR3 m_lightPosWorld   = D3DXVECTOR3(0.0f, 50.0f, 0.0f);
+    float       m_rayLength       = 1.0f;
+    float       m_rayIntensity    = 0.6f;
+    float       m_occlusionFalloff = 5.0f;
+    D3DXVECTOR3 m_lightColor      = D3DXVECTOR3(1.0f, 0.9f, 0.8f);
+};
+
+}

@@ -456,6 +456,9 @@ void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
     // スターバースト
     m_postEffectStarBurst.Initialize();
 
+    // ゴッドレイ
+    m_postEffectGodRay.Initialize();
+
     // 画面転送
     m_postEffectEnd.Initialize();
 
@@ -522,6 +525,9 @@ void Render::Draw()
 
     // スターバースト
     pTempTexture = m_postEffectStarBurst.Draw(pTempTexture);
+
+    // ゴッドレイ
+    pTempTexture = m_postEffectGodRay.Draw(pTempTexture, pTexTempZ);
 
     // ガウス
     pTempTexture = m_postEffectGauss.Draw(pTempTexture);
@@ -1199,6 +1205,36 @@ void Render::SetPostEffectStarBurst(const bool arg)
 void Render::SetPostEffectStarBurstThreshold(const float threshold)
 {
     m_postEffectStarBurst.SetThreshold(threshold);
+}
+
+void Render::SetPostEffectGodRay(const bool arg)
+{
+    m_postEffectGodRay.SetEnable(arg);
+}
+
+void Render::SetPostEffectGodRayLightPos(const D3DXVECTOR3& pos)
+{
+    m_postEffectGodRay.SetLightPos(pos);
+}
+
+void Render::SetPostEffectGodRayRayLength(const float arg)
+{
+    m_postEffectGodRay.SetRayLength(arg);
+}
+
+void Render::SetPostEffectGodRayIntensity(const float arg)
+{
+    m_postEffectGodRay.SetRayIntensity(arg);
+}
+
+void Render::SetPostEffectGodRayOcclusionFalloff(const float arg)
+{
+    m_postEffectGodRay.SetOcclusionFalloff(arg);
+}
+
+void Render::SetPostEffectGodRayLightColor(const D3DXVECTOR3& color)
+{
+    m_postEffectGodRay.SetLightColor(color);
 }
 
 void Render::SetShowFPS(const bool arg)
