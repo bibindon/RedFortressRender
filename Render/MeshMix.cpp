@@ -333,6 +333,9 @@ void MeshMix::ModifyMeshForNormalMapping(LPD3DXMESH& pMesh)
         options += D3DXTANGENT_CALCULATE_NORMALS;
     }
 
+    // POM では面境界の平滑化をかなり抑え、通常の smooth では広めに法線を共有する。
+    const float normalEdgeThreshold = m_param.parallaxOcclusionMapping ? 0.999f : 0.0f;
+
     // 正しいシグネチャ順で 16 引数を渡す
     hr = D3DXComputeTangentFrameEx(pCloned,                   // pMesh
                                    D3DDECLUSAGE_TEXCOORD, 0,  // どのUVを使うか（ここでは TEXCOORD0）
@@ -343,9 +346,7 @@ void MeshMix::ModifyMeshForNormalMapping(LPD3DXMESH& pMesh)
                                    adj.data(),                // 隣接
                                    0.01f,                     // fPartialEdgeThreshold
                                    0.01f,                     // fSingularPointThreshold
-                                   // 角の平滑化を防止。平面に対してだけ平滑化を行うようにする
-                                   // これをしないと視差遮蔽マッピングで問題になる。
-                                   0.999f,                     // fNormalEdgeThreshold
+                                   normalEdgeThreshold,       // fNormalEdgeThreshold
                                    NULL,                      // ppMeshOut（IN_PLACE 指定なので不要）
                                    NULL                       // ppVertexMapping（不要なら NULL）
     );

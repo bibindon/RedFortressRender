@@ -803,6 +803,8 @@ void MeshMixManager::ModifyMeshForNormalMapping(LPD3DXMESH& pMesh)
         options += D3DXTANGENT_CALCULATE_NORMALS;
     }
 
+    const float normalEdgeThreshold = m_param.parallaxOcclusionMapping ? 0.999f : 0.0f;
+
     hr = D3DXComputeTangentFrameEx(pCloned,
                                    D3DDECLUSAGE_TEXCOORD, 0,
                                    D3DDECLUSAGE_TANGENT, 0,
@@ -812,7 +814,7 @@ void MeshMixManager::ModifyMeshForNormalMapping(LPD3DXMESH& pMesh)
                                    adj.data(),
                                    0.01f,
                                    0.01f,
-                                   0.999f,
+                                   normalEdgeThreshold,
                                    nullptr,
                                    nullptr);
 
