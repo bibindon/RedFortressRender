@@ -69,6 +69,10 @@ std::vector<ImageInfo> g_imageInfoList;
 std::vector<TextInfo> g_textInfoList;
 std::vector<LoadedModelInfo> g_loadedModelList;
 MixMeshShaderMode g_mixMeshShaderMode = MixMeshShaderMode::None;
+bool g_bGodRay = false;
+D3DXVECTOR3 g_godRayLightColor = D3DXVECTOR3(1.0f, 0.9f, 0.8f);
+float g_godRayIntensity = 0.6f;
+D3DXVECTOR3 g_godRayLightPos = D3DXVECTOR3(0.0f, 50.0f, 50.0f);
 
 namespace
 {
@@ -623,6 +627,7 @@ void ApplyPostEffectToggleSettings()
     g_Render.SetPostEffectBloom(g_bBloom);
     g_Render.SetPostEffectDepthOfField(g_bDepthOfField);
     g_Render.SetPostEffectStarBurst(g_bStarBurst);
+    g_Render.SetPostEffectGodRay(g_bGodRay);
 }
 
 void ApplyFogIntensity()
@@ -933,6 +938,63 @@ int GaussianSampleSizeToSliderValue(const int sampleSize)
 int SliderValueToGaussianSampleSize(const int sliderValue)
 {
     return NormalizeGaussianSampleSizeLocal(sliderValue * 2 - 1);
+}
+
+void ApplyGodRay()
+{
+    g_Render.SetPostEffectGodRay(g_bGodRay);
+}
+
+void ApplyGodRayLightColor()
+{
+    g_godRayLightColor.x = (std::max)(GODRAY_LIGHT_COLOR_MIN, (std::min)(g_godRayLightColor.x, GODRAY_LIGHT_COLOR_MAX));
+    g_godRayLightColor.y = (std::max)(GODRAY_LIGHT_COLOR_MIN, (std::min)(g_godRayLightColor.y, GODRAY_LIGHT_COLOR_MAX));
+    g_godRayLightColor.z = (std::max)(GODRAY_LIGHT_COLOR_MIN, (std::min)(g_godRayLightColor.z, GODRAY_LIGHT_COLOR_MAX));
+    g_Render.SetPostEffectGodRayLightColor(g_godRayLightColor);
+}
+
+void ApplyGodRayIntensity()
+{
+    g_godRayIntensity = (std::max)(GODRAY_INTENSITY_MIN, (std::min)(g_godRayIntensity, GODRAY_INTENSITY_MAX));
+    g_Render.SetPostEffectGodRayIntensity(g_godRayIntensity);
+}
+
+void ApplyGodRayLightPos()
+{
+    g_Render.SetPostEffectGodRayLightPos(g_godRayLightPos);
+}
+
+int GodRayLightColorToSliderValue(const float value)
+{
+    return static_cast<int>(std::lround(
+        (std::max)(GODRAY_LIGHT_COLOR_MIN, (std::min)(value, GODRAY_LIGHT_COLOR_MAX)) / GODRAY_LIGHT_COLOR_STEP));
+}
+
+float SliderValueToGodRayLightColor(const int sliderValue)
+{
+    return (std::max)(GODRAY_LIGHT_COLOR_MIN, (std::min)(static_cast<float>(sliderValue) * GODRAY_LIGHT_COLOR_STEP, GODRAY_LIGHT_COLOR_MAX));
+}
+
+int GodRayIntensityToSliderValue(const float intensity)
+{
+    return static_cast<int>(std::lround(
+        (std::max)(GODRAY_INTENSITY_MIN, (std::min)(intensity, GODRAY_INTENSITY_MAX)) / GODRAY_INTENSITY_STEP));
+}
+
+float SliderValueToGodRayIntensity(const int sliderValue)
+{
+    return (std::max)(GODRAY_INTENSITY_MIN, (std::min)(static_cast<float>(sliderValue) * GODRAY_INTENSITY_STEP, GODRAY_INTENSITY_MAX));
+}
+
+int GodRayLightPosToSliderValue(const float pos)
+{
+    return static_cast<int>(std::lround(
+        (std::max)(GODRAY_LIGHT_POS_MIN, (std::min)(pos, GODRAY_LIGHT_POS_MAX)) / GODRAY_LIGHT_POS_STEP));
+}
+
+float SliderValueToGodRayLightPos(const int sliderValue)
+{
+    return (std::max)(GODRAY_LIGHT_POS_MIN, (std::min)(static_cast<float>(sliderValue) * GODRAY_LIGHT_POS_STEP, GODRAY_LIGHT_POS_MAX));
 }
 
 void RegisterLoadedModel(const std::wstring& type,

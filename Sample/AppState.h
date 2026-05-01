@@ -64,6 +64,15 @@ constexpr float POINT_LIGHT_BRIGHTNESS_MAX = 5.0f;
 constexpr float POINT_LIGHT_BRIGHTNESS_STEP = 0.1f;
 constexpr int GAUSSIAN_SAMPLE_MIN = 1;
 constexpr int GAUSSIAN_SAMPLE_MAX = 101;
+constexpr float GODRAY_LIGHT_COLOR_MIN = 0.0f;
+constexpr float GODRAY_LIGHT_COLOR_MAX = 1.0f;
+constexpr float GODRAY_LIGHT_COLOR_STEP = 0.05f;
+constexpr float GODRAY_INTENSITY_MIN = 0.0f;
+constexpr float GODRAY_INTENSITY_MAX = 3.0f;
+constexpr float GODRAY_INTENSITY_STEP = 0.05f;
+constexpr float GODRAY_LIGHT_POS_MIN = -200.0f;
+constexpr float GODRAY_LIGHT_POS_MAX = 200.0f;
+constexpr float GODRAY_LIGHT_POS_STEP = 1.0f;
 
 struct ImageInfo
 {
@@ -149,6 +158,10 @@ extern std::vector<ImageInfo> g_imageInfoList;
 extern std::vector<TextInfo> g_textInfoList;
 extern std::vector<LoadedModelInfo> g_loadedModelList;
 extern MixMeshShaderMode g_mixMeshShaderMode;
+extern bool g_bGodRay;
+extern D3DXVECTOR3 g_godRayLightColor;
+extern float g_godRayIntensity;
+extern D3DXVECTOR3 g_godRayLightPos;
 
 void UpdateCameraMoveByKeyboard();
 void MoveCameraAwayFromLookAtByWheel(short wheelDelta);
@@ -218,6 +231,16 @@ int PointLightBrightnessToSliderValue(float brightness);
 float SliderValueToPointLightBrightness(int sliderValue);
 int GaussianSampleSizeToSliderValue(int sampleSize);
 int SliderValueToGaussianSampleSize(int sliderValue);
+void ApplyGodRay();
+void ApplyGodRayLightColor();
+void ApplyGodRayIntensity();
+void ApplyGodRayLightPos();
+int GodRayLightColorToSliderValue(float value);
+float SliderValueToGodRayLightColor(int sliderValue);
+int GodRayIntensityToSliderValue(float intensity);
+float SliderValueToGodRayIntensity(int sliderValue);
+int GodRayLightPosToSliderValue(float pos);
+float SliderValueToGodRayLightPos(int sliderValue);
 void RegisterLoadedModel(const std::wstring& type,
                          const std::wstring& path,
                          const D3DXVECTOR3& pos,

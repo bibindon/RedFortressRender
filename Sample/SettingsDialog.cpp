@@ -50,7 +50,13 @@ constexpr int POINT_LIGHT_BRIGHTNESS_SLIDER_MIN = 0;
 constexpr int POINT_LIGHT_BRIGHTNESS_SLIDER_MAX = static_cast<int>(POINT_LIGHT_BRIGHTNESS_MAX / POINT_LIGHT_BRIGHTNESS_STEP);
 constexpr int GAUSSIAN_SLIDER_MIN = 1;
 constexpr int GAUSSIAN_SLIDER_MAX = (GAUSSIAN_SAMPLE_MAX + 1) / 2;
-constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 878;
+constexpr int GODRAY_COLOR_SLIDER_MIN = 0;
+constexpr int GODRAY_COLOR_SLIDER_MAX = static_cast<int>(GODRAY_LIGHT_COLOR_MAX / GODRAY_LIGHT_COLOR_STEP);
+constexpr int GODRAY_INTENSITY_SLIDER_MIN = 0;
+constexpr int GODRAY_INTENSITY_SLIDER_MAX = static_cast<int>(GODRAY_INTENSITY_MAX / GODRAY_INTENSITY_STEP);
+constexpr int GODRAY_POS_SLIDER_MIN = static_cast<int>(GODRAY_LIGHT_POS_MIN / GODRAY_LIGHT_POS_STEP);
+constexpr int GODRAY_POS_SLIDER_MAX = static_cast<int>(GODRAY_LIGHT_POS_MAX / GODRAY_LIGHT_POS_STEP);
+constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 1010;
 constexpr int SETTINGS_DIALOG_WHEEL_STEP_PX = 36;
 constexpr UINT ID_POPUP_EXPORT_BINARY = 60001;
 constexpr UINT ID_POPUP_REMOVE_MODEL = 60002;
@@ -811,6 +817,48 @@ void RefreshGaussianControls(HWND hDlg)
                        static_cast<LPARAM>(GaussianSampleSizeToSliderValue(g_gaussianSampleSize)));
 }
 
+void RefreshGodRayControls(HWND hDlg)
+{
+    CheckDlgButton(hDlg, IDC_CHECK_GODRAY, g_bGodRay ? BST_CHECKED : BST_UNCHECKED);
+
+    wchar_t buffer[32];
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_godRayLightColor.x);
+    SetDlgItemText(hDlg, IDC_EDIT_GODRAY_COLOR_R, buffer);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_R, TBM_SETPOS, TRUE,
+                       static_cast<LPARAM>(GodRayLightColorToSliderValue(g_godRayLightColor.x)));
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_godRayLightColor.y);
+    SetDlgItemText(hDlg, IDC_EDIT_GODRAY_COLOR_G, buffer);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_G, TBM_SETPOS, TRUE,
+                       static_cast<LPARAM>(GodRayLightColorToSliderValue(g_godRayLightColor.y)));
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_godRayLightColor.z);
+    SetDlgItemText(hDlg, IDC_EDIT_GODRAY_COLOR_B, buffer);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_B, TBM_SETPOS, TRUE,
+                       static_cast<LPARAM>(GodRayLightColorToSliderValue(g_godRayLightColor.z)));
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_godRayIntensity);
+    SetDlgItemText(hDlg, IDC_EDIT_GODRAY_INTENSITY, buffer);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_INTENSITY, TBM_SETPOS, TRUE,
+                       static_cast<LPARAM>(GodRayIntensityToSliderValue(g_godRayIntensity)));
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_godRayLightPos.x);
+    SetDlgItemText(hDlg, IDC_EDIT_GODRAY_POS_X, buffer);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_POS_X, TBM_SETPOS, TRUE,
+                       static_cast<LPARAM>(GodRayLightPosToSliderValue(g_godRayLightPos.x)));
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_godRayLightPos.y);
+    SetDlgItemText(hDlg, IDC_EDIT_GODRAY_POS_Y, buffer);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_POS_Y, TBM_SETPOS, TRUE,
+                       static_cast<LPARAM>(GodRayLightPosToSliderValue(g_godRayLightPos.y)));
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_godRayLightPos.z);
+    SetDlgItemText(hDlg, IDC_EDIT_GODRAY_POS_Z, buffer);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_POS_Z, TBM_SETPOS, TRUE,
+                       static_cast<LPARAM>(GodRayLightPosToSliderValue(g_godRayLightPos.z)));
+}
+
 void RefreshAllControls(HWND hDlg)
 {
     RefreshSaturateControls(hDlg);
@@ -842,6 +890,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshStarBurstThresholdControls(hDlg);
     RefreshModelLoadScaleControls(hDlg);
     RefreshGaussianControls(hDlg);
+    RefreshGodRayControls(hDlg);
 }
 
 void InitializeTrackbars(HWND hDlg)
@@ -945,6 +994,37 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETRANGEMAX, FALSE, GAUSSIAN_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETTICFREQ, 5, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETPAGESIZE, 0, 5);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_R, TBM_SETRANGEMIN, FALSE, GODRAY_COLOR_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_R, TBM_SETRANGEMAX, FALSE, GODRAY_COLOR_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_R, TBM_SETTICFREQ, 5, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_R, TBM_SETPAGESIZE, 0, 1);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_G, TBM_SETRANGEMIN, FALSE, GODRAY_COLOR_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_G, TBM_SETRANGEMAX, FALSE, GODRAY_COLOR_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_G, TBM_SETTICFREQ, 5, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_G, TBM_SETPAGESIZE, 0, 1);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_B, TBM_SETRANGEMIN, FALSE, GODRAY_COLOR_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_B, TBM_SETRANGEMAX, FALSE, GODRAY_COLOR_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_B, TBM_SETTICFREQ, 5, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_B, TBM_SETPAGESIZE, 0, 1);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_INTENSITY, TBM_SETRANGEMIN, FALSE, GODRAY_INTENSITY_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_INTENSITY, TBM_SETRANGEMAX, FALSE, GODRAY_INTENSITY_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_INTENSITY, TBM_SETTICFREQ, 5, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_INTENSITY, TBM_SETPAGESIZE, 0, 1);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_POS_X, TBM_SETRANGEMIN, FALSE, GODRAY_POS_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_POS_X, TBM_SETRANGEMAX, FALSE, GODRAY_POS_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_POS_X, TBM_SETTICFREQ, 10, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_POS_X, TBM_SETPAGESIZE, 0, 1);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_POS_Y, TBM_SETRANGEMIN, FALSE, GODRAY_POS_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_POS_Y, TBM_SETRANGEMAX, FALSE, GODRAY_POS_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_POS_Y, TBM_SETTICFREQ, 10, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_POS_Y, TBM_SETPAGESIZE, 0, 1);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_POS_Z, TBM_SETRANGEMIN, FALSE, GODRAY_POS_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_POS_Z, TBM_SETRANGEMAX, FALSE, GODRAY_POS_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_POS_Z, TBM_SETTICFREQ, 10, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_POS_Z, TBM_SETPAGESIZE, 0, 1);
 }
 
 bool HandleOpenMeshCommand(HWND hDlg, const WORD commandId)
@@ -1174,6 +1254,69 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_gaussianSampleSize = SliderValueToGaussianSampleSize(sliderValue);
             ApplyGaussianSampleSize();
             RefreshGaussianControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_GODRAY_COLOR_R))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_godRayLightColor.x = SliderValueToGodRayLightColor(sliderValue);
+            ApplyGodRayLightColor();
+            RefreshGodRayControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_GODRAY_COLOR_G))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_godRayLightColor.y = SliderValueToGodRayLightColor(sliderValue);
+            ApplyGodRayLightColor();
+            RefreshGodRayControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_GODRAY_COLOR_B))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_godRayLightColor.z = SliderValueToGodRayLightColor(sliderValue);
+            ApplyGodRayLightColor();
+            RefreshGodRayControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_GODRAY_INTENSITY))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_godRayIntensity = SliderValueToGodRayIntensity(sliderValue);
+            ApplyGodRayIntensity();
+            RefreshGodRayControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_GODRAY_POS_X))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_godRayLightPos.x = SliderValueToGodRayLightPos(sliderValue);
+            ApplyGodRayLightPos();
+            RefreshGodRayControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_GODRAY_POS_Y))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_godRayLightPos.y = SliderValueToGodRayLightPos(sliderValue);
+            ApplyGodRayLightPos();
+            RefreshGodRayControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_GODRAY_POS_Z))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_godRayLightPos.z = SliderValueToGodRayLightPos(sliderValue);
+            ApplyGodRayLightPos();
+            RefreshGodRayControls(hDlg);
             return TRUE;
         }
 
@@ -1530,6 +1673,14 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_bStarBurst = (IsDlgButtonChecked(hDlg, IDC_CHECK_STARBURST) == BST_CHECKED);
             g_Render.SetPostEffectStarBurst(g_bStarBurst);
             RefreshStarBurst(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_GODRAY)
+        {
+            g_bGodRay = (IsDlgButtonChecked(hDlg, IDC_CHECK_GODRAY) == BST_CHECKED);
+            g_Render.SetPostEffectGodRay(g_bGodRay);
+            RefreshGodRayControls(hDlg);
             return TRUE;
         }
 

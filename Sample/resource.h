@@ -100,6 +100,28 @@
 #define IDC_RADIO_WINDOW_MODE_WINDOW   1058
 #define IDC_RADIO_WINDOW_MODE_BORDERLESS 1059
 #define IDC_RADIO_WINDOW_MODE_FULLSCREEN 1060
+#define IDC_CHECK_GODRAY                          1102
+#define IDC_STATIC_GODRAY_COLOR_R_LABEL           1103
+#define IDC_EDIT_GODRAY_COLOR_R                   1104
+#define IDC_SLIDER_GODRAY_COLOR_R                 1105
+#define IDC_STATIC_GODRAY_COLOR_G_LABEL           1106
+#define IDC_EDIT_GODRAY_COLOR_G                   1107
+#define IDC_SLIDER_GODRAY_COLOR_G                 1108
+#define IDC_STATIC_GODRAY_COLOR_B_LABEL           1109
+#define IDC_EDIT_GODRAY_COLOR_B                   1110
+#define IDC_SLIDER_GODRAY_COLOR_B                 1111
+#define IDC_STATIC_GODRAY_INTENSITY_LABEL         1112
+#define IDC_EDIT_GODRAY_INTENSITY                 1113
+#define IDC_SLIDER_GODRAY_INTENSITY               1114
+#define IDC_STATIC_GODRAY_POS_X_LABEL             1115
+#define IDC_EDIT_GODRAY_POS_X                     1116
+#define IDC_SLIDER_GODRAY_POS_X                   1117
+#define IDC_STATIC_GODRAY_POS_Y_LABEL             1118
+#define IDC_EDIT_GODRAY_POS_Y                     1119
+#define IDC_SLIDER_GODRAY_POS_Y                   1120
+#define IDC_STATIC_GODRAY_POS_Z_LABEL             1121
+#define IDC_EDIT_GODRAY_POS_Z                     1122
+#define IDC_SLIDER_GODRAY_POS_Z                   1123
 
 // Next default values for new objects
 // 
@@ -107,7 +129,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1102
+#define _APS_NEXT_CONTROL_VALUE         1125
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
