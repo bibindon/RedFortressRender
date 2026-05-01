@@ -68,6 +68,354 @@ constexpr UINT ID_POPUP_REMOVE_POINT_LIGHT = 60003;
 
 int g_settingsDialogScrollPos = 0;
 
+void RefreshSaturateControls(HWND hDlg);
+void RefreshDepthOfFieldControls(HWND hDlg);
+void RefreshGaussianControls(HWND hDlg);
+void RefreshFogControls(HWND hDlg);
+void RefreshSunLightIntensityControls(HWND hDlg);
+void RefreshShadowControls(HWND hDlg);
+void RefreshShadowSaturationBoostControls(HWND hDlg);
+void RefreshShadowCoverageControls(HWND hDlg);
+void RefreshShadowPcfTapControls(HWND hDlg);
+void RefreshShadowCompositeTapControls(HWND hDlg);
+void RefreshHalfLambertShadowSaturationControls(HWND hDlg);
+void RefreshShadowDarknessControls(HWND hDlg);
+void RefreshSpecularIntensityControls(HWND hDlg);
+void RefreshSpecularEdgeControls(HWND hDlg);
+void RefreshSSAOBrightnessControls(HWND hDlg);
+void RefreshSSAOSaturationBoostControls(HWND hDlg);
+void RefreshBloomThresholdControls(HWND hDlg);
+void RefreshStarBurstThresholdControls(HWND hDlg);
+void RefreshModelLoadScaleControls(HWND hDlg);
+void RefreshPointLightControls(HWND hDlg);
+void RefreshGodRayControls(HWND hDlg);
+
+bool TryParseEditFloat(HWND hDlg, const int controlId, float& value)
+{
+    wchar_t buffer[64] { };
+    GetDlgItemText(hDlg, controlId, buffer, static_cast<int>(sizeof(buffer) / sizeof(buffer[0])));
+
+    try
+    {
+        value = std::stof(buffer);
+        return true;
+    }
+    catch (...)
+    {
+        return false;
+    }
+}
+
+bool TryParseEditInt(HWND hDlg, const int controlId, int& value)
+{
+    wchar_t buffer[64] { };
+    GetDlgItemText(hDlg, controlId, buffer, static_cast<int>(sizeof(buffer) / sizeof(buffer[0])));
+
+    try
+    {
+        value = std::stoi(buffer);
+        return true;
+    }
+    catch (...)
+    {
+        return false;
+    }
+}
+
+void InitializeEditableNumericFields(HWND hDlg)
+{
+    const int controlIds[] =
+    {
+        IDC_EDIT_SATURATE_LEVEL,
+        IDC_EDIT_DOF_FOCAL_DISTANCE,
+        IDC_EDIT_GAUSSIAN_SAMPLE_SIZE,
+        IDC_EDIT_FOG_INTENSITY,
+        IDC_EDIT_SUN_LIGHT_INTENSITY,
+        IDC_EDIT_SHADOW_INTENSITY,
+        IDC_EDIT_SHADOW_SATURATION_BOOST,
+        IDC_EDIT_SHADOW_COVERAGE,
+        IDC_EDIT_SHADOW_PCF_TAPS,
+        IDC_EDIT_SHADOW_COMPOSITE_TAPS,
+        IDC_EDIT_HALF_LAMBERT_SHADOW_SATURATION,
+        IDC_EDIT_SHADOW_DARKNESS,
+        IDC_EDIT_SPECULAR_INTENSITY,
+        IDC_EDIT_SPECULAR_EDGE,
+        IDC_EDIT_SSAO_BRIGHTNESS,
+        IDC_EDIT_SSAO_SATURATION_BOOST,
+        IDC_EDIT_BLOOM_THRESHOLD,
+        IDC_EDIT_STARBURST_THRESHOLD,
+        IDC_EDIT_MODEL_LOAD_SCALE,
+        IDC_EDIT_POINT_LIGHT_COLOR_R,
+        IDC_EDIT_POINT_LIGHT_COLOR_G,
+        IDC_EDIT_POINT_LIGHT_COLOR_B,
+        IDC_EDIT_POINT_LIGHT_BRIGHTNESS,
+        IDC_EDIT_GODRAY_COLOR_R,
+        IDC_EDIT_GODRAY_COLOR_G,
+        IDC_EDIT_GODRAY_COLOR_B,
+        IDC_EDIT_GODRAY_INTENSITY,
+        IDC_EDIT_GODRAY_POS_X,
+        IDC_EDIT_GODRAY_POS_Y,
+        IDC_EDIT_GODRAY_POS_Z,
+    };
+
+    for (const int controlId : controlIds)
+    {
+        SendDlgItemMessage(hDlg, controlId, EM_SETREADONLY, FALSE, 0);
+    }
+}
+
+bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
+{
+    float floatValue = 0.0f;
+    int intValue = 0;
+
+    switch (commandId)
+    {
+    case IDC_EDIT_SATURATE_LEVEL:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_saturateLevel = floatValue;
+            ApplySaturateLevel();
+        }
+        RefreshSaturateControls(hDlg);
+        return true;
+    case IDC_EDIT_DOF_FOCAL_DISTANCE:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_dofFocalDistance = floatValue;
+            ApplyDepthOfFieldFocalDistance();
+        }
+        RefreshDepthOfFieldControls(hDlg);
+        return true;
+    case IDC_EDIT_GAUSSIAN_SAMPLE_SIZE:
+        if (TryParseEditInt(hDlg, commandId, intValue))
+        {
+            g_gaussianSampleSize = intValue;
+            ApplyGaussianSampleSize();
+        }
+        RefreshGaussianControls(hDlg);
+        return true;
+    case IDC_EDIT_FOG_INTENSITY:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_fogIntensity = floatValue;
+            ApplyFogIntensity();
+        }
+        RefreshFogControls(hDlg);
+        return true;
+    case IDC_EDIT_SUN_LIGHT_INTENSITY:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_sunLightIntensity = floatValue;
+            ApplySunLightIntensity();
+        }
+        RefreshSunLightIntensityControls(hDlg);
+        return true;
+    case IDC_EDIT_SHADOW_INTENSITY:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_shadowIntensity = floatValue;
+            ApplyShadowIntensity();
+        }
+        RefreshShadowControls(hDlg);
+        return true;
+    case IDC_EDIT_SHADOW_SATURATION_BOOST:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_shadowSaturationBoost = floatValue;
+            ApplyShadowSaturationBoost();
+        }
+        RefreshShadowSaturationBoostControls(hDlg);
+        return true;
+    case IDC_EDIT_SHADOW_COVERAGE:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_shadowCoverage = floatValue;
+            ApplyShadowCoverage();
+        }
+        RefreshShadowCoverageControls(hDlg);
+        return true;
+    case IDC_EDIT_SHADOW_PCF_TAPS:
+        if (TryParseEditInt(hDlg, commandId, intValue))
+        {
+            g_shadowPcfTapCount = intValue;
+            ApplyShadowPcfTapCount();
+        }
+        RefreshShadowPcfTapControls(hDlg);
+        return true;
+    case IDC_EDIT_SHADOW_COMPOSITE_TAPS:
+        if (TryParseEditInt(hDlg, commandId, intValue))
+        {
+            g_shadowCompositeTapCount = intValue;
+            ApplyShadowCompositeTapCount();
+        }
+        RefreshShadowCompositeTapControls(hDlg);
+        return true;
+    case IDC_EDIT_HALF_LAMBERT_SHADOW_SATURATION:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_halfLambertShadowSaturation = floatValue;
+            ApplyHalfLambertShadowSaturation();
+        }
+        RefreshHalfLambertShadowSaturationControls(hDlg);
+        return true;
+    case IDC_EDIT_SHADOW_DARKNESS:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_shadowDarkness = floatValue;
+            ApplyShadowDarkness();
+        }
+        RefreshShadowDarknessControls(hDlg);
+        return true;
+    case IDC_EDIT_SPECULAR_INTENSITY:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_specularIntensity = floatValue;
+            ApplySpecularIntensity();
+        }
+        RefreshSpecularIntensityControls(hDlg);
+        return true;
+    case IDC_EDIT_SPECULAR_EDGE:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_specularEdge = floatValue;
+            ApplySpecularEdge();
+        }
+        RefreshSpecularEdgeControls(hDlg);
+        return true;
+    case IDC_EDIT_SSAO_BRIGHTNESS:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_ssaoBrightness = floatValue;
+            ApplySSAOBrightness();
+        }
+        RefreshSSAOBrightnessControls(hDlg);
+        return true;
+    case IDC_EDIT_SSAO_SATURATION_BOOST:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_ssaoSaturationBoost = floatValue;
+            ApplySSAOSaturationBoost();
+        }
+        RefreshSSAOSaturationBoostControls(hDlg);
+        return true;
+    case IDC_EDIT_BLOOM_THRESHOLD:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_bloomThreshold = floatValue;
+            ApplyBloomThreshold();
+        }
+        RefreshBloomThresholdControls(hDlg);
+        return true;
+    case IDC_EDIT_STARBURST_THRESHOLD:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_starBurstThreshold = floatValue;
+            ApplyStarBurstThreshold();
+        }
+        RefreshStarBurstThresholdControls(hDlg);
+        return true;
+    case IDC_EDIT_MODEL_LOAD_SCALE:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_modelLoadScale = floatValue;
+            ApplyModelLoadScale();
+        }
+        RefreshModelLoadScaleControls(hDlg);
+        return true;
+    case IDC_EDIT_POINT_LIGHT_COLOR_R:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_pointLightColor.r = floatValue;
+            ApplyPointLightColor();
+        }
+        RefreshPointLightControls(hDlg);
+        return true;
+    case IDC_EDIT_POINT_LIGHT_COLOR_G:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_pointLightColor.g = floatValue;
+            ApplyPointLightColor();
+        }
+        RefreshPointLightControls(hDlg);
+        return true;
+    case IDC_EDIT_POINT_LIGHT_COLOR_B:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_pointLightColor.b = floatValue;
+            ApplyPointLightColor();
+        }
+        RefreshPointLightControls(hDlg);
+        return true;
+    case IDC_EDIT_POINT_LIGHT_BRIGHTNESS:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_pointLightBrightness = floatValue;
+            ApplyPointLightBrightness();
+        }
+        RefreshPointLightControls(hDlg);
+        return true;
+    case IDC_EDIT_GODRAY_COLOR_R:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_godRayLightColor.x = floatValue;
+            ApplyGodRayLightColor();
+        }
+        RefreshGodRayControls(hDlg);
+        return true;
+    case IDC_EDIT_GODRAY_COLOR_G:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_godRayLightColor.y = floatValue;
+            ApplyGodRayLightColor();
+        }
+        RefreshGodRayControls(hDlg);
+        return true;
+    case IDC_EDIT_GODRAY_COLOR_B:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_godRayLightColor.z = floatValue;
+            ApplyGodRayLightColor();
+        }
+        RefreshGodRayControls(hDlg);
+        return true;
+    case IDC_EDIT_GODRAY_INTENSITY:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_godRayIntensity = floatValue;
+            ApplyGodRayIntensity();
+        }
+        RefreshGodRayControls(hDlg);
+        return true;
+    case IDC_EDIT_GODRAY_POS_X:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_godRayLightPos.x = floatValue;
+            ApplyGodRayLightPos();
+        }
+        RefreshGodRayControls(hDlg);
+        return true;
+    case IDC_EDIT_GODRAY_POS_Y:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_godRayLightPos.y = floatValue;
+            ApplyGodRayLightPos();
+        }
+        RefreshGodRayControls(hDlg);
+        return true;
+    case IDC_EDIT_GODRAY_POS_Z:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_godRayLightPos.z = floatValue;
+            ApplyGodRayLightPos();
+        }
+        RefreshGodRayControls(hDlg);
+        return true;
+    default:
+        return false;
+    }
+}
+
 std::wstring FormatResolutionLabel(const int width, const int height)
 {
     return std::to_wstring(width) + L" x " + std::to_wstring(height);
@@ -1226,6 +1574,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
     case WM_INITDIALOG:
     {
         MoveDialogToRightOfParent(hDlg);
+        InitializeEditableNumericFields(hDlg);
         InitializeTrackbars(hDlg);
         PopulateResolutionCombo(hDlg);
         InitializeLoadedModelListView(hDlg);
@@ -1595,6 +1944,12 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
     case WM_COMMAND:
     {
         const WORD commandId = LOWORD(wParam);
+        const WORD notifyCode = HIWORD(wParam);
+
+        if (notifyCode == EN_KILLFOCUS && HandleNumericEditCommit(hDlg, commandId))
+        {
+            return TRUE;
+        }
 
         if (commandId == IDC_BUTTON_SATURATE_DOWN)
         {
