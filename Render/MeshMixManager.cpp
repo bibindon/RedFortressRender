@@ -256,6 +256,10 @@ struct stCsvParam
     float waveIntensity = 0.1f;
     bool litByPointLightDefined = false;
     bool litByPointLight = false;
+    bool shadowDefined = false;
+    bool shadow = false;
+    bool ssaoDefined = false;
+    bool ssao = false;
     bool collisionDefined = false;
     bool collision = false;
     bool cubeMappingRateDefined = false;
@@ -380,6 +384,16 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
         {
             result.litByPointLightDefined = true;
             result.litByPointLight = (value == L"y");
+        }
+        else if (key == L"shadow")
+        {
+            result.shadowDefined = true;
+            result.shadow = (value == L"y");
+        }
+        else if (key == L"ssao")
+        {
+            result.ssaoDefined = true;
+            result.ssao = (value == L"y");
         }
         else if (key == L"collision")
         {
@@ -604,6 +618,16 @@ void MeshMixManager::InitializeInternal()
     if (csvParam.litByPointLightDefined)
     {
         m_param.pointLight = csvParam.litByPointLight;
+    }
+
+    if (csvParam.shadowDefined)
+    {
+        m_param.shadow = csvParam.shadow;
+    }
+
+    if (csvParam.ssaoDefined)
+    {
+        m_param.ssao = csvParam.ssao;
     }
 
     if (csvParam.collisionDefined)
@@ -902,6 +926,17 @@ bool MeshMixManager::IsLoaded() const
 {
     return m_bLoaded;
 }
+
+bool MeshMixManager::IsSsaoEnabled() const
+{
+    return m_param.ssao;
+}
+
+bool MeshMixManager::IsDepthBufferShadowEnabled() const
+{
+    return m_param.shadow;
+}
+
 void MeshMixManager::Render()
 {
     if (!m_bLoaded || !m_enabled)

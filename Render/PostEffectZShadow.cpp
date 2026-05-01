@@ -178,6 +178,11 @@ void PostEffectZShadow::RenderTechnique1()
             continue;
         }
 
+        if (!mesh.IsDepthBufferShadowEnabled())
+        {
+            continue;
+        }
+
         D3DXMATRIX mWorld = BuildMeshWorldMatrix(mesh);
         D3DXMATRIX mWorldViewProjLight;
 
@@ -326,6 +331,11 @@ void PostEffectZShadow::RenderTechnique2()
         }
 
         if (!mesh.IsLoaded())
+        {
+            continue;
+        }
+
+        if (!mesh.IsDepthBufferShadowEnabled())
         {
             continue;
         }

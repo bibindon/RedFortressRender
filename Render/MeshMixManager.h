@@ -56,6 +56,8 @@ public:
     bool IsEnabled() const;
     void SetEnabled(bool enabled);
     bool IsLoaded() const;
+    bool IsSsaoEnabled() const;
+    bool IsDepthBufferShadowEnabled() const;
 
     LPD3DXMESH GetD3DMesh() const;
 

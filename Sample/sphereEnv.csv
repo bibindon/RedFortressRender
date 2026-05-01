@@ -2,3 +2,5 @@ meshtype,envmapping
 smooth,n
 cubemappingrate,1.0
 cubemappinggauss,0.0
+ssao,n
+shadow,n
