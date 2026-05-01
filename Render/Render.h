@@ -226,6 +226,9 @@ public:
     void SetPostEffectSSAOSaturationBoost(const float saturationBoost);
     void SetPostEffectFog(const bool arg);
     void SetPostEffectFogIntensity(const float intensity);
+    void SetPostEffectFogHeightEnable(const bool arg);
+    void SetPostEffectFogHeightIntensity(const float intensity);
+    void SetPostEffectFogHeightStart(const float start);
 
     void SetPostEffectBloom(const bool arg);
     void SetPostEffectBloomThreshold(const float threshold);

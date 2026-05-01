@@ -221,6 +221,50 @@ void Render::ApplySettings()
         SetPostEffectFogIntensity(2.0f);
     }
 
+    const auto fogHeightEnable = m_settings.find(L"FogHeightEnable");
+    if (fogHeightEnable != m_settings.end())
+    {
+        bool enabled = true;
+        if (TryParseBoolSetting(fogHeightEnable->second, enabled))
+        {
+            SetPostEffectFogHeightEnable(enabled);
+        }
+    }
+
+    const auto fogHeightIntensity = m_settings.find(L"FogHeightIntensity");
+    if (fogHeightIntensity != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectFogHeightIntensity(std::stof(fogHeightIntensity->second));
+        }
+        catch (...)
+        {
+            SetPostEffectFogHeightIntensity(0.3f);
+        }
+    }
+    else
+    {
+        SetPostEffectFogHeightIntensity(0.3f);
+    }
+
+    const auto fogHeightStart = m_settings.find(L"FogHeightStart");
+    if (fogHeightStart != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectFogHeightStart(std::stof(fogHeightStart->second));
+        }
+        catch (...)
+        {
+            SetPostEffectFogHeightStart(0.0f);
+        }
+    }
+    else
+    {
+        SetPostEffectFogHeightStart(0.0f);
+    }
+
     const auto shadowIntensity = m_settings.find(L"ShadowIntensity");
     if (shadowIntensity != m_settings.end())
     {
@@ -1109,6 +1153,21 @@ void Render::SetPostEffectFog(const bool arg)
 void Render::SetPostEffectFogIntensity(const float intensity)
 {
     m_postEffectFog.SetIntensityZ(intensity);
+}
+
+void Render::SetPostEffectFogHeightEnable(const bool arg)
+{
+    m_postEffectFog.SetEnableHeight(arg);
+}
+
+void Render::SetPostEffectFogHeightIntensity(const float intensity)
+{
+    m_postEffectFog.SetIntensityHeight(intensity);
+}
+
+void Render::SetPostEffectFogHeightStart(const float start)
+{
+    m_postEffectFog.SetHeightStart(start);
 }
 
 void Render::SetPostEffectBloom(const bool arg)
