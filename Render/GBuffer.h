@@ -3,7 +3,7 @@
 #include <deque>
 #include <vector>
 #include "Common.h"
-#include "MeshMix.h"
+#include "MeshMixManager.h"
 
 namespace NSRender
 {
@@ -17,7 +17,7 @@ public:
 
     void Initialize();
 
-    void Draw(const std::deque<MeshMix>& meshList,
+    void Draw(const std::deque<MeshMixManager>& meshList,
               const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList,
               LPDIRECT3DTEXTURE9* Z,
               LPDIRECT3DTEXTURE9* Pos,

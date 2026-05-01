@@ -69,7 +69,7 @@ void MeshMixSkinAnim::Initialize()
     }
 
     hr = D3DXLoadMeshHierarchyFromX(tempPath.c_str(),
-                                    D3DXMESH_MANAGED,
+                                    D3DXMESH_MANAGED | D3DXMESH_32BIT,
                                     Common::D3DDevice(),
                                     &m_allocator,
                                     nullptr,

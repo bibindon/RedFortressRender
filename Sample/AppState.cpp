@@ -958,7 +958,7 @@ bool RemoveLoadedModel(const size_t modelIndex)
     {
         removed = g_Render.RemoveMesh(model.m_renderId);
     }
-    else if (model.m_type == L"MeshMix")
+    else if (model.m_type == L"MeshMix" || model.m_type == L"MeshMixManager")
     {
         removed = g_Render.RemoveMeshMix(model.m_renderId);
     }
@@ -1056,7 +1056,7 @@ void SpawnMeshMixAtLookAt(const std::wstring& filePath)
                                              1.0f,
                                              usePOM,
                                              useNormalMapping);
-    RegisterLoadedModel(L"MeshMix", filePath, pos, g_modelLoadScale, renderId);
+    RegisterLoadedModel(L"MeshMixManager", filePath, pos, g_modelLoadScale, renderId);
 }
 
 NSRender::AnimSetMap CreateDefaultAnimSetMap()

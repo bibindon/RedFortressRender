@@ -32,6 +32,7 @@
 #include <fstream>
 #include <sstream>
 #include <cwctype>
+#include <utility>
 
 namespace NSRender
 {
@@ -753,8 +754,8 @@ int Render::AddMeshMix(const std::wstring& filePath,
     param.shadowDarkness = m_meshMixShadowDarkness;
     param.specularIntensity = m_meshMixSpecularIntensity;
     param.specularEdge = m_meshMixSpecularEdge;
-    auto mesh = MeshMix(filePath, pos, rot, scale, param);
-    m_meshMixList.push_back(mesh);
+    auto mesh = MeshMixManager(filePath, pos, rot, scale, param);
+    m_meshMixList.push_back(std::move(mesh));
     m_meshMixList.rbegin()->Initialize();
 
     return static_cast<int>(m_meshMixList.size()) - 1;

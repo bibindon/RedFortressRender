@@ -25,6 +25,7 @@
 #include "MeshPointLight.h"
 #include "MeshNormalMapping.h"
 #include "MeshMix.h"
+#include "MeshMixManager.h"
 #include "MeshMixSkinAnim.h"
 #include "MeshSSS.h"
 #include "MeshPOM.h"
@@ -268,7 +269,7 @@ private:
     std::deque<MeshPOM> m_meshPOMList;
     std::vector<bool> m_meshPOMEnabledList;
 
-    std::deque<MeshMix> m_meshMixList;
+    std::deque<MeshMixManager> m_meshMixList;
 
     std::unordered_map<std::wstring, MeshInstancing*> m_meshInstancingMap;
 

@@ -53,7 +53,7 @@ STDMETHODIMP SkinAnimMeshAlloc::CreateMeshContainer(LPCSTR meshName,
     if (!(meshData->pMesh->GetFVF() & D3DFVF_NORMAL))
     {
         m_container->MeshData.Type = D3DXMESHTYPE_MESH;
-        result = meshData->pMesh->CloneMeshFVF(meshData->pMesh->GetOptions(),
+        result = meshData->pMesh->CloneMeshFVF(meshData->pMesh->GetOptions() | D3DXMESH_32BIT,
                                      meshData->pMesh->GetFVF() | D3DFVF_NORMAL,
                                      Common::D3DDevice(),
                                      &m_container->MeshData.pMesh);

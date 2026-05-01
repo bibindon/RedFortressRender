@@ -75,7 +75,7 @@ void InitializeSampleScene(HWND hWnd)
                                                         100.0f,
                                                         false,
                                                         false);
-    RegisterLoadedModel(L"MeshMix", L"..\\..\\Sample\\cubeNormalInverse.x", D3DXVECTOR3(0.0f, 0.0f, 0.0f), 1.0f, cubeNormalInverseId);
+    RegisterLoadedModel(L"MeshMixManager", L"..\\..\\Sample\\cubeNormalInverse.x", D3DXVECTOR3(0.0f, 0.0f, 0.0f), 1.0f, cubeNormalInverseId);
     const int plateFieldId = g_Render.AddMeshMix(L"..\\..\\Sample\\plateField.x",
                                                  D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                                                  D3DXVECTOR3(0.0f, 0.0f, 0.0f),
@@ -83,7 +83,7 @@ void InitializeSampleScene(HWND hWnd)
                                                  100.0f,
                                                  false,
                                                  false);
-    RegisterLoadedModel(L"MeshMix", L"..\\..\\Sample\\plateField.x", D3DXVECTOR3(0.0f, 0.0f, 0.0f), 1.0f, plateFieldId);
+    RegisterLoadedModel(L"MeshMixManager", L"..\\..\\Sample\\plateField.x", D3DXVECTOR3(0.0f, 0.0f, 0.0f), 1.0f, plateFieldId);
 
     ApplySaturateLevel();
     ApplyFogIntensity();

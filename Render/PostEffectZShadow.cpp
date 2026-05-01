@@ -7,7 +7,7 @@ namespace NSRender
 {
 namespace
 {
-D3DXMATRIX BuildMeshWorldMatrix(const MeshMix& mesh)
+D3DXMATRIX BuildMeshWorldMatrix(const MeshMixManager& mesh)
 {
     D3DXMATRIX matWorld{};
     D3DXMatrixIdentity(&matWorld);
@@ -61,7 +61,7 @@ void PostEffectZShadow::Finalize()
 LPDIRECT3DTEXTURE9 PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                                            LPDIRECT3DTEXTURE9 sceneDepthTexture,
                                            LPDIRECT3DTEXTURE9 sceneNormalTexture,
-                                           const std::deque<MeshMix>& meshMixList,
+                                           const std::deque<MeshMixManager>& meshMixList,
                                            const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList)
 {
     if (!m_bEnable)
