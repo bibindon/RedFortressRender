@@ -384,22 +384,10 @@ void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
 {
     outColor = float4(0, 0, 0, 0);
 
-    float3 normal = normalize(inNormalWorld);
-    
-    float3 normalInTangent = float3(0, 0, 0);
-    normalInTangent.x = tex2D(g_normalMapSampler, inTexCoord).r * 2.0 - 1.0;
-    normalInTangent.y = tex2D(g_normalMapSampler, inTexCoord).g * 2.0 - 1.0;
-    normalInTangent.z = tex2D(g_normalMapSampler, inTexCoord).b * 2.0 - 1.0;
-    normalInTangent.x *= -1;
-    normalInTangent = normalize(normalInTangent);
-
-    float3x3 tangentToWorld = float3x3(-inTangent, -inBinorm, normal);
-    float3 normalInWorld = normalize(mul(normalInTangent, tangentToWorld));
-
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
-    float3 reflectWorld = reflect(-cameraDir, normalize(normalInWorld));
+    float3 reflectWorld = reflect(-cameraDir, normalize(inNormalWorld));
 
-    outColor = float4(texCUBE(g_cubeMapSampler, reflectWorld).rgb, 0.1f);
+    outColor = float4(texCUBE(g_cubeMapSampler, reflectWorld).rgb, 1.0f);
 }
 
 //-------------------------------------------------------------
