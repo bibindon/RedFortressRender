@@ -191,8 +191,19 @@ enum class eMeshType
     NormalMapping,
 };
 
-eMeshType ReadMeshTypeFromCsv(const std::wstring& meshFilePath)
+struct stCsvParam
 {
+    eMeshType meshType = eMeshType::None;
+    bool smoothDefined = false;
+    bool smooth = false;
+    bool envMappingDefined = false;
+    bool envMapping = false;
+};
+
+stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
+{
+    stCsvParam result;
+
     std::wstring csvPath = meshFilePath;
     const std::wstring::size_type dotPos = csvPath.find_last_of(L'.');
     if (dotPos != std::wstring::npos)
@@ -207,7 +218,7 @@ eMeshType ReadMeshTypeFromCsv(const std::wstring& meshFilePath)
     std::wifstream csvFile(csvPath);
     if (!csvFile.is_open())
     {
-        return eMeshType::None;
+        return result;
     }
 
     std::wstring line;
@@ -224,20 +235,26 @@ eMeshType ReadMeshTypeFromCsv(const std::wstring& meshFilePath)
         {
             if (value == L"pom")
             {
-                return eMeshType::POM;
+                result.meshType = eMeshType::POM;
             }
             else if (value == L"normalmapping")
             {
-                return eMeshType::NormalMapping;
+                result.meshType = eMeshType::NormalMapping;
             }
-            else
-            {
-                return eMeshType::None;
-            }
+        }
+        else if (key == L"smooth")
+        {
+            result.smoothDefined = true;
+            result.smooth = (value == L"y");
+        }
+        else if (key == L"envmapping")
+        {
+            result.envMappingDefined = true;
+            result.envMapping = (value == L"y");
         }
     }
 
-    return eMeshType::None;
+    return result;
 }
 }
 
@@ -344,18 +361,27 @@ void MeshMixManager::Initialize()
 
     assert(hResult == S_OK);
 
-    const eMeshType meshType = ReadMeshTypeFromCsv(tempPath);
-    if (meshType == eMeshType::POM)
+    const stCsvParam csvParam = ReadCsvParam(tempPath);
+    if (csvParam.meshType == eMeshType::POM)
     {
         m_param.parallaxOcclusionMapping = true;
         m_param.normalMapping = false;
     }
-    else if (meshType == eMeshType::NormalMapping)
+    else if (csvParam.meshType == eMeshType::NormalMapping)
     {
         m_param.parallaxOcclusionMapping = false;
         m_param.normalMapping = true;
     }
 
+    if (csvParam.smoothDefined)
+    {
+        m_param.smooth = csvParam.smooth;
+    }
+
+    if (csvParam.envMappingDefined)
+    {
+        m_param.cubeMapping = csvParam.envMapping;
+    }
     DWORD* adjacencyList = static_cast<DWORD*>(adjacencyBuffer->GetBufferPointer());
 
     ModifyMeshForNormalMapping(m_D3DMesh);

@@ -100,12 +100,14 @@ struct stMeshParam
     // 環境マッピングの表示結果をどれくらい混ぜるか
     //
     // 0.0 ~ 1.0
-    float cubeMappingRate = 0.2f;
+//    float cubeMappingRate = 0.2f;
+    float cubeMappingRate = 1.0f;
 
     // 環境マッピングの表示をどれくらいボカすか
     //
     // 0.0 ~ 1.0
-    float cubeMappingGauss = 0.9f;
+    //float cubeMappingGauss = 0.9f;
+    float cubeMappingGauss = 0.0f;
 
     // 視差遮蔽マッピングを行うか
     // デコボコが本当にあるように見せる
