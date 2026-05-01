@@ -161,13 +161,15 @@ void PostEffectZShadow::RenderTechnique1()
                              0);
     assert(hr == S_OK);
 
-    const D3DXVECTOR3 focusPoint = Camera::GetEyePos();
+    const float viewWidth = CoverageToViewSize(m_coverage);
+    const float focusYOffset = viewWidth * 0.35f;
+    D3DXVECTOR3 focusPoint = Camera::GetLookAtPos();
+    focusPoint.y -= focusYOffset;
     const D3DXVECTOR3 vLightEye = focusPoint + SHADOW_CAMERA_OFFSET;
     const D3DXVECTOR3 vLightAt = focusPoint;
     D3DXVECTOR3 vLightUp(0, 1, 0);
     D3DXMatrixLookAtLH(&mLightView, &vLightEye, &vLightAt, &vLightUp);
 
-    const float viewWidth = CoverageToViewSize(m_coverage);
     const float viewHeight = viewWidth;
     D3DXMatrixOrthoLH(&mLightProj, viewWidth, viewHeight, fLightNear, fLightFar);
 
@@ -296,7 +298,7 @@ void PostEffectZShadow::RenderTechnique2()
     D3DXMatrixPerspectiveFovLH(&mProj,
                                D3DXToRadian(45.0f),
                                (float)Common::ScreenW() / Common::ScreenH(),
-                               1.0f,
+                               0.1f,
                                100.0f);
 
     D3DXVECTOR3 vEye(Camera::GetEyePos());

@@ -148,7 +148,7 @@ void NSRender::Camera::SetHouseMode(const bool arg)
 
 float NSRender::Camera::GetNear()
 {
-    return 1.0f;
+    return 0.1f;
 }
 
 float NSRender::Camera::GetFar()
