@@ -56,39 +56,34 @@ float GetDistanceMeters(float2 uv, out float valid)
     return length(worldPos.xyz - g_cameraPos.xyz);
 }
 
-bool IsInFocusRange(float distanceMeters)
-{
-    return abs(distanceMeters - g_focalDistanceMeters) <= g_focusBandHalfWidthMeters;
-}
-
 int GetBlurHalfSize(float distanceMeters)
 {
-    float distanceFromFocus = abs(distanceMeters - g_focalDistanceMeters);
-    float outOfFocusDistance = distanceFromFocus - g_focusBandHalfWidthMeters;
-    float maxOutOfFocusDistance = abs(g_maxBlurDistanceMeters - g_focalDistanceMeters) - g_focusBandHalfWidthMeters;
-    maxOutOfFocusDistance = max(maxOutOfFocusDistance, 0.0001f);
+    const float nearDistance = min(g_focalDistanceMeters, g_maxBlurDistanceMeters);
+    const float farDistance = max(g_focalDistanceMeters, g_maxBlurDistanceMeters);
+    const float totalRange = max(farDistance - nearDistance, 0.0001f);
+    const float normalized = saturate((distanceMeters - nearDistance) / totalRange);
 
-    if (outOfFocusDistance <= 0.0f)
+    if (distanceMeters <= nearDistance)
     {
-        return 0;
+        return 0; // 1x1
     }
 
-    if (outOfFocusDistance < maxOutOfFocusDistance * 0.25f)
+    if (normalized < 0.20f)
     {
         return 1; // 3x3
     }
 
-    if (outOfFocusDistance < maxOutOfFocusDistance * 0.50f)
+    if (normalized < 0.40f)
     {
         return 2; // 5x5
     }
 
-    if (outOfFocusDistance < maxOutOfFocusDistance * 0.75f)
+    if (normalized < 0.60f)
     {
         return 3; // 7x7
     }
 
-    if (outOfFocusDistance < maxOutOfFocusDistance)
+    if (normalized < 0.80f)
     {
         return 4; // 9x9
     }
@@ -154,12 +149,6 @@ float4 PS(in float2 uv : TEXCOORD0) : COLOR0
             float tapValid = 0.0f;
             float tapDistanceMeters = GetDistanceMeters(tapUv, tapValid);
             if (tapValid <= 0.0f)
-            {
-                continue;
-            }
-
-            // くっきり表示される範囲はサンプリングに混ぜない。
-            if (IsInFocusRange(tapDistanceMeters))
             {
                 continue;
             }
