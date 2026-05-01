@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cwctype>
 #include <fstream>
+#include <sstream>
 #include <unordered_map>
 #include <utility>
 #pragma comment(lib, "Shlwapi.lib")
@@ -234,6 +235,24 @@ struct stCsvParam
     eMeshType meshType = eMeshType::None;
     bool smoothDefined = false;
     bool smooth = false;
+    bool sssDefined = false;
+    bool sss = false;
+    bool sssIntensityDefined = false;
+    float sssIntensity = 0.0f;
+    bool sssColorDefined = false;
+    DWORD sssColor = 0xffff80;
+    bool swayDefined = false;
+    bool sway = false;
+    bool swayIntensityDefined = false;
+    float swayIntensity = 0.1f;
+    bool waveDefined = false;
+    bool wave = false;
+    bool waveIntensityDefined = false;
+    float waveIntensity = 0.1f;
+    bool litByPointLightDefined = false;
+    bool litByPointLight = false;
+    bool collisionDefined = false;
+    bool collision = false;
 };
 
 stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
@@ -286,6 +305,77 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
         {
             result.smoothDefined = true;
             result.smooth = (value == L"y");
+        }
+        else if (key == L"sss")
+        {
+            result.sssDefined = true;
+            result.sss = (value == L"y");
+        }
+        else if (key == L"sssintensity")
+        {
+            try
+            {
+                result.sssIntensityDefined = true;
+                result.sssIntensity = std::stof(std::wstring(value));
+            }
+            catch (...) {}
+        }
+        else if (key == L"ssscolor")
+        {
+            const std::wstring rest = line.substr(commaPos + 1);
+            std::wstringstream ss(rest);
+            std::wstring token;
+            int rgb[3] = { 0, 0, 0 };
+            int idx = 0;
+            while (std::getline(ss, token, L',') && idx < 3)
+            {
+                try { rgb[idx++] = std::stoi(token); } catch (...) {}
+            }
+            if (idx == 3)
+            {
+                result.sssColorDefined = true;
+                result.sssColor = (static_cast<DWORD>(rgb[0]) << 16)
+                                | (static_cast<DWORD>(rgb[1]) << 8)
+                                |  static_cast<DWORD>(rgb[2]);
+            }
+        }
+        else if (key == L"sway")
+        {
+            result.swayDefined = true;
+            result.sway = (value == L"y");
+        }
+        else if (key == L"swayintensity")
+        {
+            try
+            {
+                result.swayIntensityDefined = true;
+                result.swayIntensity = std::stof(std::wstring(value));
+            }
+            catch (...) {}
+        }
+        else if (key == L"wave")
+        {
+            result.waveDefined = true;
+            result.wave = (value == L"y");
+        }
+        else if (key == L"waveintensity")
+        {
+            try
+            {
+                result.waveIntensityDefined = true;
+                result.waveIntensity = std::stof(std::wstring(value));
+            }
+            catch (...) {}
+        }
+        else if (key == L"litbypointlight")
+        {
+            result.litByPointLightDefined = true;
+            result.litByPointLight = (value == L"y");
+        }
+        else if (key == L"collision")
+        {
+            result.collisionDefined = true;
+            result.collision = (value == L"y");
         }
     }
 
@@ -415,6 +505,51 @@ void MeshMixManager::Initialize()
     if (csvParam.smoothDefined)
     {
         m_param.smooth = csvParam.smooth;
+    }
+
+    if (csvParam.sssDefined)
+    {
+        m_param.sss = csvParam.sss;
+    }
+
+    if (csvParam.sssIntensityDefined)
+    {
+        m_param.sssIntensity = csvParam.sssIntensity;
+    }
+
+    if (csvParam.sssColorDefined)
+    {
+        m_param.sssColor = csvParam.sssColor;
+    }
+
+    if (csvParam.swayDefined)
+    {
+        m_param.sway = csvParam.sway;
+    }
+
+    if (csvParam.swayIntensityDefined)
+    {
+        m_param.swayIntensity = csvParam.swayIntensity;
+    }
+
+    if (csvParam.waveDefined)
+    {
+        m_param.wave = csvParam.wave;
+    }
+
+    if (csvParam.waveIntensityDefined)
+    {
+        m_param.waveIntensity = csvParam.waveIntensity;
+    }
+
+    if (csvParam.litByPointLightDefined)
+    {
+        m_param.pointLight = csvParam.litByPointLight;
+    }
+
+    if (csvParam.collisionDefined)
+    {
+        m_param.collision = csvParam.collision;
     }
 
     DWORD* adjacencyList = static_cast<DWORD*>(adjacencyBuffer->GetBufferPointer());
