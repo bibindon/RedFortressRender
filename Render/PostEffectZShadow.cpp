@@ -7,6 +7,11 @@ namespace NSRender
 {
 namespace
 {
+constexpr float SHADOW_VIEW_SIZE_MIN = 20.0f;
+constexpr float SHADOW_VIEW_SIZE_MAX = 120.0f;
+constexpr int SHADOW_BLUR_TAP_COUNT_MIN = 1;
+constexpr int SHADOW_BLUR_TAP_COUNT_MAX = 11;
+
 D3DXMATRIX BuildMeshWorldMatrix(const MeshMixManager& mesh)
 {
     D3DXMATRIX matWorld{};
@@ -27,6 +32,26 @@ D3DXMATRIX BuildMeshWorldMatrix(const MeshMixManager& mesh)
     matWorld *= matWork;
 
     return matWorld;
+}
+
+float ClampZeroToOne(const float value)
+{
+    return (std::max)(0.0f, (std::min)(value, 1.0f));
+}
+
+int NormalizeShadowBlurTapCount(const int tapCount)
+{
+    int normalized = (std::max)(SHADOW_BLUR_TAP_COUNT_MIN, (std::min)(tapCount, SHADOW_BLUR_TAP_COUNT_MAX));
+    if ((normalized % 2) == 0)
+    {
+        --normalized;
+    }
+    return (std::max)(SHADOW_BLUR_TAP_COUNT_MIN, normalized);
+}
+
+float CoverageToViewSize(const float coverage)
+{
+    return SHADOW_VIEW_SIZE_MIN + ((SHADOW_VIEW_SIZE_MAX - SHADOW_VIEW_SIZE_MIN) * ClampZeroToOne(coverage));
 }
 }
 
@@ -140,8 +165,8 @@ void PostEffectZShadow::RenderTechnique1()
     D3DXVECTOR3 vLightUp(0, 1, 0);
     D3DXMatrixLookAtLH(&mLightView, &vLightEye, &vLightAt, &vLightUp);
 
-    float viewWidth = 70.0f;
-    float viewHeight = 70.0f;
+    const float viewWidth = CoverageToViewSize(m_coverage);
+    const float viewHeight = viewWidth;
     D3DXMatrixOrthoLH(&mLightProj, viewWidth, viewHeight, fLightNear, fLightFar);
 
     hr = Common::D3DDevice()->BeginScene();
@@ -312,6 +337,9 @@ void PostEffectZShadow::RenderTechnique2()
     hr = g_fxDepthBufferShadow->SetFloat("g_shadowBias", 0.0002f);
     assert(hr == S_OK);
 
+    hr = g_fxDepthBufferShadow->SetInt("g_shadowBlurTapCount", m_blurTapCount);
+    assert(hr == S_OK);
+
     hr = g_fxDepthBufferShadow->SetTechnique("TechniqueWriteShadow");
     assert(hr == S_OK);
 
@@ -437,6 +465,7 @@ void PostEffectZShadow::RenderTechnique3()
     g_fxDepthBufferShadow->SetFloat("g_shadowSaturationBoost", m_shadowSaturationBoost);
     g_fxDepthBufferShadow->SetFloat("g_edgeDepthThreshold", 0.010f);
     g_fxDepthBufferShadow->SetFloat("g_edgeNormalThreshold", 0.50f);
+    g_fxDepthBufferShadow->SetInt("g_shadowBlurTapCount", m_blurTapCount);
     g_fxDepthBufferShadow->CommitChanges();
 
     DrawFullscreenQuad();
@@ -508,6 +537,16 @@ void PostEffectZShadow::SetShadowIntensity(const float intensity)
 void PostEffectZShadow::SetShadowSaturationBoost(const float saturationBoost)
 {
     m_shadowSaturationBoost = saturationBoost;
+}
+
+void PostEffectZShadow::SetCoverage(const float coverage)
+{
+    m_coverage = ClampZeroToOne(coverage);
+}
+
+void PostEffectZShadow::SetBlurTapCount(const int tapCount)
+{
+    m_blurTapCount = NormalizeShadowBlurTapCount(tapCount);
 }
 
 void PostEffectZShadow::OnDeviceLost()

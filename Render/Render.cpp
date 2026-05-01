@@ -1137,6 +1137,16 @@ void Render::SetPostEffectDepthBufferShadowSaturationBoost(const float saturatio
     m_postEffectZShadow.SetShadowSaturationBoost(saturationBoost);
 }
 
+void Render::SetPostEffectDepthBufferShadowCoverage(const float coverage)
+{
+    m_postEffectZShadow.SetCoverage(coverage);
+}
+
+void Render::SetPostEffectDepthBufferShadowBlurTapCount(const int tapCount)
+{
+    m_postEffectZShadow.SetBlurTapCount(tapCount);
+}
+
 void Render::SetPostEffectSSAO(const bool arg)
 {
     m_postEffectSSAO.SetEnable(arg);

@@ -22,6 +22,8 @@ constexpr int SUN_LIGHT_INTENSITY_SLIDER_MIN = 0;
 constexpr int SUN_LIGHT_INTENSITY_SLIDER_MAX = static_cast<int>(SUN_LIGHT_INTENSITY_MAX / SUN_LIGHT_INTENSITY_STEP);
 constexpr int SHADOW_SLIDER_MIN = 0;
 constexpr int SHADOW_SLIDER_MAX = static_cast<int>(SHADOW_INTENSITY_MAX / SHADOW_INTENSITY_STEP);
+constexpr int SHADOW_COVERAGE_SLIDER_MIN = 0;
+constexpr int SHADOW_COVERAGE_SLIDER_MAX = static_cast<int>(SHADOW_COVERAGE_MAX / SHADOW_COVERAGE_STEP);
 constexpr int SHADOW_SATURATION_BOOST_SLIDER_MIN = 0;
 constexpr int SHADOW_SATURATION_BOOST_SLIDER_MAX = static_cast<int>(SHADOW_SATURATION_BOOST_MAX / SHADOW_SATURATION_BOOST_STEP);
 constexpr int HALF_LAMBERT_SHADOW_SATURATION_SLIDER_MIN = 0;
@@ -50,6 +52,8 @@ constexpr int POINT_LIGHT_BRIGHTNESS_SLIDER_MIN = 0;
 constexpr int POINT_LIGHT_BRIGHTNESS_SLIDER_MAX = static_cast<int>(POINT_LIGHT_BRIGHTNESS_MAX / POINT_LIGHT_BRIGHTNESS_STEP);
 constexpr int GAUSSIAN_SLIDER_MIN = 1;
 constexpr int GAUSSIAN_SLIDER_MAX = (GAUSSIAN_SAMPLE_MAX + 1) / 2;
+constexpr int SHADOW_BLUR_TAP_SLIDER_MIN = 0;
+constexpr int SHADOW_BLUR_TAP_SLIDER_MAX = (SHADOW_BLUR_TAP_COUNT_MAX - 1) / 2;
 constexpr int GODRAY_COLOR_SLIDER_MIN = 0;
 constexpr int GODRAY_COLOR_SLIDER_MAX = static_cast<int>(GODRAY_LIGHT_COLOR_MAX / GODRAY_LIGHT_COLOR_STEP);
 constexpr int GODRAY_INTENSITY_SLIDER_MIN = 0;
@@ -614,6 +618,18 @@ void RefreshShadowControls(HWND hDlg)
                        static_cast<LPARAM>(ShadowIntensityToSliderValue(g_shadowIntensity)));
 }
 
+void RefreshShadowCoverageControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_shadowCoverage);
+    SetDlgItemText(hDlg, IDC_EDIT_SHADOW_COVERAGE, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_SHADOW_COVERAGE,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(ShadowCoverageToSliderValue(g_shadowCoverage)));
+}
+
 void RefreshSunLightIntensityControls(HWND hDlg)
 {
     wchar_t buffer[32];
@@ -817,6 +833,18 @@ void RefreshGaussianControls(HWND hDlg)
                        static_cast<LPARAM>(GaussianSampleSizeToSliderValue(g_gaussianSampleSize)));
 }
 
+void RefreshShadowBlurTapControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%d", g_shadowBlurTapCount);
+    SetDlgItemText(hDlg, IDC_EDIT_SHADOW_BLUR_TAPS, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_SHADOW_BLUR_TAPS,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(ShadowBlurTapCountToSliderValue(g_shadowBlurTapCount)));
+}
+
 void RefreshGodRayControls(HWND hDlg)
 {
     CheckDlgButton(hDlg, IDC_CHECK_GODRAY, g_bGodRay ? BST_CHECKED : BST_UNCHECKED);
@@ -878,6 +906,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshFogControls(hDlg);
     RefreshSunLightIntensityControls(hDlg);
     RefreshShadowControls(hDlg);
+    RefreshShadowCoverageControls(hDlg);
     RefreshShadowSaturationBoostControls(hDlg);
     RefreshHalfLambertShadowSaturationControls(hDlg);
     RefreshShadowDarknessControls(hDlg);
@@ -890,6 +919,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshStarBurstThresholdControls(hDlg);
     RefreshModelLoadScaleControls(hDlg);
     RefreshGaussianControls(hDlg);
+    RefreshShadowBlurTapControls(hDlg);
     RefreshGodRayControls(hDlg);
 }
 
@@ -914,6 +944,11 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_INTENSITY, TBM_SETRANGEMAX, FALSE, SHADOW_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_INTENSITY, TBM_SETTICFREQ, 2, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_INTENSITY, TBM_SETPAGESIZE, 0, 2);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_COVERAGE, TBM_SETRANGEMIN, FALSE, SHADOW_COVERAGE_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_COVERAGE, TBM_SETRANGEMAX, FALSE, SHADOW_COVERAGE_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_COVERAGE, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_COVERAGE, TBM_SETPAGESIZE, 0, 2);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_SATURATION_BOOST, TBM_SETRANGEMIN, FALSE, SHADOW_SATURATION_BOOST_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_SATURATION_BOOST, TBM_SETRANGEMAX, FALSE, SHADOW_SATURATION_BOOST_SLIDER_MAX);
@@ -994,6 +1029,11 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETRANGEMAX, FALSE, GAUSSIAN_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETTICFREQ, 5, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETPAGESIZE, 0, 5);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_BLUR_TAPS, TBM_SETRANGEMIN, FALSE, SHADOW_BLUR_TAP_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_BLUR_TAPS, TBM_SETRANGEMAX, FALSE, SHADOW_BLUR_TAP_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_BLUR_TAPS, TBM_SETTICFREQ, 1, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_BLUR_TAPS, TBM_SETPAGESIZE, 0, 1);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_R, TBM_SETRANGEMIN, FALSE, GODRAY_COLOR_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_R, TBM_SETRANGEMAX, FALSE, GODRAY_COLOR_SLIDER_MAX);
@@ -1257,6 +1297,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SHADOW_BLUR_TAPS))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_shadowBlurTapCount = SliderValueToShadowBlurTapCount(sliderValue);
+            ApplyShadowBlurTapCount();
+            RefreshShadowBlurTapControls(hDlg);
+            return TRUE;
+        }
+
         if (slider == GetDlgItem(hDlg, IDC_SLIDER_GODRAY_COLOR_R))
         {
             const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
@@ -1344,6 +1393,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_shadowIntensity = SliderValueToShadowIntensity(sliderValue);
             ApplyShadowIntensity();
             RefreshShadowControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SHADOW_COVERAGE))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_shadowCoverage = SliderValueToShadowCoverage(sliderValue);
+            ApplyShadowCoverage();
+            RefreshShadowCoverageControls(hDlg);
             return TRUE;
         }
 

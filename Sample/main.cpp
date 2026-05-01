@@ -89,7 +89,9 @@ void InitializeSampleScene(HWND hWnd)
     ApplyFogIntensity();
     ApplySunLightIntensity();
     ApplyShadowIntensity();
+    ApplyShadowCoverage();
     ApplyShadowSaturationBoost();
+    ApplyShadowBlurTapCount();
     ApplySSAOBrightness();
     ApplySSAOSaturationBoost();
     ApplyHalfLambertShadowSaturation();

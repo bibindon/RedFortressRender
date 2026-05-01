@@ -46,6 +46,7 @@ bool g_bStarBurst = false;
 float g_fogIntensity = 2.0f;
 float g_sunLightIntensity = 1.0f;
 float g_shadowIntensity = 0.5f;
+float g_shadowCoverage = 0.5f;
 float g_shadowSaturationBoost = 0.35f;
 float g_ssaoBrightness = 3.5f;
 float g_ssaoSaturationBoost = 0.30f;
@@ -61,6 +62,7 @@ float g_modelLoadScale = 1.0f;
 D3DXCOLOR g_pointLightColor = D3DXCOLOR(1.0f, 0.35f, 0.1f, 1.0f);
 float g_pointLightBrightness = 1.0f;
 int g_gaussianSampleSize = 101;
+int g_shadowBlurTapCount = 11;
 int g_sunId = 0;
 int g_resolutionWidth = WINDOW_SIZE_W;
 int g_resolutionHeight = WINDOW_SIZE_H;
@@ -95,6 +97,11 @@ float ClampSunLightIntensity(const float intensity)
 float ClampShadowIntensity(const float intensity)
 {
     return (std::max)(SHADOW_INTENSITY_MIN, (std::min)(intensity, SHADOW_INTENSITY_MAX));
+}
+
+float ClampShadowCoverage(const float coverage)
+{
+    return (std::max)(SHADOW_COVERAGE_MIN, (std::min)(coverage, SHADOW_COVERAGE_MAX));
 }
 
 float ClampShadowSaturationBoost(const float boost)
@@ -191,6 +198,16 @@ int NormalizeGaussianSampleSizeLocal(const int sampleSize)
         --normalized;
     }
     return (std::max)(GAUSSIAN_SAMPLE_MIN, normalized);
+}
+
+int NormalizeShadowBlurTapCountLocal(const int tapCount)
+{
+    int normalized = (std::max)(SHADOW_BLUR_TAP_COUNT_MIN, (std::min)(tapCount, SHADOW_BLUR_TAP_COUNT_MAX));
+    if ((normalized % 2) == 0)
+    {
+        --normalized;
+    }
+    return (std::max)(SHADOW_BLUR_TAP_COUNT_MIN, normalized);
 }
 
 bool IsWeekdayBusinessHours()
@@ -649,10 +666,22 @@ void ApplyShadowIntensity()
     g_Render.SetPostEffectDepthBufferShadowIntensity(g_shadowIntensity);
 }
 
+void ApplyShadowCoverage()
+{
+    g_shadowCoverage = ClampShadowCoverage(g_shadowCoverage);
+    g_Render.SetPostEffectDepthBufferShadowCoverage(g_shadowCoverage);
+}
+
 void ApplyShadowSaturationBoost()
 {
     g_shadowSaturationBoost = ClampShadowSaturationBoost(g_shadowSaturationBoost);
     g_Render.SetPostEffectDepthBufferShadowSaturationBoost(g_shadowSaturationBoost);
+}
+
+void ApplyShadowBlurTapCount()
+{
+    g_shadowBlurTapCount = NormalizeShadowBlurTapCountLocal(g_shadowBlurTapCount);
+    g_Render.SetPostEffectDepthBufferShadowBlurTapCount(g_shadowBlurTapCount);
 }
 
 void ApplySSAOBrightness()
@@ -801,6 +830,16 @@ float SliderValueToShadowIntensity(const int sliderValue)
     return ClampShadowIntensity(static_cast<float>(sliderValue) * SHADOW_INTENSITY_STEP);
 }
 
+int ShadowCoverageToSliderValue(const float coverage)
+{
+    return static_cast<int>(std::lround(ClampShadowCoverage(coverage) / SHADOW_COVERAGE_STEP));
+}
+
+float SliderValueToShadowCoverage(const int sliderValue)
+{
+    return ClampShadowCoverage(static_cast<float>(sliderValue) * SHADOW_COVERAGE_STEP);
+}
+
 int ShadowSaturationBoostToSliderValue(const float boost)
 {
     return static_cast<int>(std::lround(ClampShadowSaturationBoost(boost) / SHADOW_SATURATION_BOOST_STEP));
@@ -809,6 +848,16 @@ int ShadowSaturationBoostToSliderValue(const float boost)
 float SliderValueToShadowSaturationBoost(const int sliderValue)
 {
     return ClampShadowSaturationBoost(static_cast<float>(sliderValue) * SHADOW_SATURATION_BOOST_STEP);
+}
+
+int ShadowBlurTapCountToSliderValue(const int tapCount)
+{
+    return ((NormalizeShadowBlurTapCountLocal(tapCount) - 1) / 2);
+}
+
+int SliderValueToShadowBlurTapCount(const int sliderValue)
+{
+    return NormalizeShadowBlurTapCountLocal((sliderValue * 2) + 1);
 }
 
 int SSAOBrightnessToSliderValue(const float brightness)
@@ -1373,9 +1422,17 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_shadowIntensity = std::stof(value);
             }
+            else if (key == L"ShadowCoverage")
+            {
+                g_shadowCoverage = std::stof(value);
+            }
             else if (key == L"SSAOBrightness")
             {
                 g_ssaoBrightness = std::stof(value);
+            }
+            else if (key == L"ShadowBlurTapCount")
+            {
+                g_shadowBlurTapCount = std::stoi(value);
             }
             else if (key == L"ShadowSaturationBoost")
             {

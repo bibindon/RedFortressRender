@@ -388,12 +388,20 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
         else if (key == L"shadow")
         {
             result.shadowDefined = true;
-            result.shadow = (value == L"y");
+
+            if (value == L"n")
+            {
+                result.shadow = false;
+            }
         }
         else if (key == L"ssao")
         {
             result.ssaoDefined = true;
-            result.ssao = (value == L"y");
+
+            if (value == L"n")
+            {
+                result.ssao = false;
+            }
         }
         else if (key == L"collision")
         {

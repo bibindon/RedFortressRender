@@ -72,7 +72,7 @@ struct stMeshParam
     bool smooth = false;
 
     // 影が表示されるようにするかどうか。
-    bool shadow = false;
+    bool shadow = true;
 
     // 彩度影の表示を行うか。
     //
@@ -147,7 +147,7 @@ struct stMeshParam
     bool pointLight = true;
 
     // SSAOを有効にするか
-    bool ssao = false;
+    bool ssao = true;
 
     // 衝突判定の対象とするか
     bool collision = false;

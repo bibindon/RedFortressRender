@@ -26,6 +26,7 @@ float g_shadowIntensity;
 float g_shadowSaturationBoost;
 float g_edgeDepthThreshold;
 float g_edgeNormalThreshold;
+int g_shadowBlurTapCount;
 
 texture g_texLightZ;
 sampler samplerLightZ = sampler_state
@@ -98,15 +99,22 @@ float3 DecodeWorldNormal(float3 encodedNormal)
 float SampleShadowAmount(float2 uvLightView, float fDepthLightView)
 {
     float2 uvTexel = float2(g_shadowTexelW, g_shadowTexelH);
-    const int FILTER_RADIUS = 5;
+    const int FILTER_RADIUS_MAX = 5;
+    int filterRadius = (g_shadowBlurTapCount - 1) / 2;
+    filterRadius = clamp(filterRadius, 0, FILTER_RADIUS_MAX);
 
     float shadowSum = 0.0f;
     float sampleCount = 0.0f;
 
-    for (int y = -FILTER_RADIUS; y <= FILTER_RADIUS; ++y)
+    for (int y = -FILTER_RADIUS_MAX; y <= FILTER_RADIUS_MAX; ++y)
     {
-        for (int x = -FILTER_RADIUS; x <= FILTER_RADIUS; ++x)
+        for (int x = -FILTER_RADIUS_MAX; x <= FILTER_RADIUS_MAX; ++x)
         {
+            if (abs(x) > filterRadius || abs(y) > filterRadius)
+            {
+                continue;
+            }
+
             float2 sampleUv = uvLightView + float2((float)x, (float)y) * uvTexel;
             if (any(sampleUv < 0.0f) || any(sampleUv > 1.0f))
             {
@@ -353,12 +361,19 @@ void PS_Composite(in float4 inPos     : POSITION,
 
     float4 vShadowColorSum = 0.0f;
     float totalWeight = 0.0f;
-    const int FILTER_RADIUS = 5;
+    const int FILTER_RADIUS_MAX = 5;
+    int filterRadius = (g_shadowBlurTapCount - 1) / 2;
+    filterRadius = clamp(filterRadius, 0, FILTER_RADIUS_MAX);
 
-    for (int y = -FILTER_RADIUS; y <= FILTER_RADIUS; ++y)
+    for (int y = -FILTER_RADIUS_MAX; y <= FILTER_RADIUS_MAX; ++y)
     {
-        for (int x = -FILTER_RADIUS; x <= FILTER_RADIUS; ++x)
+        for (int x = -FILTER_RADIUS_MAX; x <= FILTER_RADIUS_MAX; ++x)
         {
+            if (abs(x) > filterRadius || abs(y) > filterRadius)
+            {
+                continue;
+            }
+
             float2 sampleUv = uv + float2((float)x * g_compositeTexelW, (float)y * g_compositeTexelH);
 
             if (any(sampleUv < 0.0f) || any(sampleUv > 1.0f))

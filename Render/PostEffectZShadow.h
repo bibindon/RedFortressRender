@@ -26,6 +26,8 @@ public:
     void SetEnable(const bool arg);
     void SetShadowIntensity(const float intensity);
     void SetShadowSaturationBoost(const float saturationBoost);
+    void SetCoverage(const float coverage);
+    void SetBlurTapCount(const int tapCount);
 
     void OnDeviceLost();
     void OnDeviceReset();
@@ -41,6 +43,8 @@ private:
     bool m_bEnable = true;
     float m_shadowIntensity = 0.5f;
     float m_shadowSaturationBoost = 0.35f;
+    float m_coverage = 0.5f;
+    int m_blurTapCount = 11;
 
     LPD3DXEFFECT g_fxDepthBufferShadow = NULL;
 

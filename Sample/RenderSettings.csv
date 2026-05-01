@@ -6,6 +6,8 @@ GaussianEnable,0
 GaussianSampleSize,101
 FogIntensity,2.0
 ShadowIntensity,0.25
+ShadowCoverage,0.5
+ShadowBlurTapCount,11
 SSAOBrightness,1.0
 BloomThreshold,2.5
 StarBurstThreshold,2.8
