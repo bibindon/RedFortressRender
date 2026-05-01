@@ -116,6 +116,43 @@ HRESULT LoadTextureCached(const std::wstring& texturePath, LPDIRECT3DBASETEXTURE
     return S_OK;
 }
 
+HRESULT LoadCubeTextureCached(const std::wstring& texturePath, LPDIRECT3DBASETEXTURE9* texture)
+{
+    if (texture == nullptr)
+    {
+        return E_POINTER;
+    }
+
+    *texture = nullptr;
+
+    TextureCache& textureCache = GetTextureCache();
+    const std::wstring cacheKey = NormalizeTextureCacheKey(texturePath) + L"__cube";
+    const auto found = textureCache.find(cacheKey);
+    if (found != textureCache.end())
+    {
+        *texture = found->second;
+        if (*texture != nullptr)
+        {
+            (*texture)->AddRef();
+        }
+        return S_OK;
+    }
+
+    LPDIRECT3DCUBETEXTURE9 loadedTexture = nullptr;
+    const HRESULT hr = D3DXCreateCubeTextureFromFile(Common::D3DDevice(),
+                                                     texturePath.c_str(),
+                                                     &loadedTexture);
+    if (FAILED(hr))
+    {
+        return hr;
+    }
+
+    textureCache.emplace(cacheKey, loadedTexture);
+    loadedTexture->AddRef();
+    *texture = loadedTexture;
+    return S_OK;
+}
+
 enum class eMeshTextureRole
 {
     Diffuse,
@@ -425,11 +462,23 @@ void MeshMixManager::Initialize()
         {
             textureFileName = Util::Utf8ToWstring(materialList[i].pTextureFilename);
             const std::wstring texturePath = xFileDir + textureFileName;
-            hResult = LoadTextureCached(texturePath, &tempTexture);
+            const std::wstring lowerExt = ToLowerString(textureFileName.substr(textureFileName.find_last_of(L'.') + 1));
+            if (csvParam.meshType == eMeshType::EnvMapping && lowerExt == L"dds")
+            {
+                hResult = LoadCubeTextureCached(texturePath, &tempTexture);
+            }
+            else
+            {
+                hResult = LoadTextureCached(texturePath, &tempTexture);
+            }
             assert(hResult == S_OK);
         }
 
-        const eMeshTextureRole textureRole = ClassifyTextureRole(textureFileName);
+        const std::wstring lowerExtRole = (textureFileName.find_last_of(L'.') != std::wstring::npos)
+            ? ToLowerString(textureFileName.substr(textureFileName.find_last_of(L'.') + 1))
+            : L"";
+        const bool isCubeByEnvMapping = (csvParam.meshType == eMeshType::EnvMapping && lowerExtRole == L"dds");
+        const eMeshTextureRole textureRole = isCubeByEnvMapping ? eMeshTextureRole::Cube : ClassifyTextureRole(textureFileName);
         if (textureRole == eMeshTextureRole::Normal)
         {
             if (m_texNormalMap == nullptr)
