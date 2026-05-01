@@ -24,6 +24,9 @@ float g_specularIntensity = 0.1f;
 //float g_specularIntensity = 0.2f;
 //float g_specularIntensity = 0.0f;
 
+float g_cubeMappingRate = 1.0f;
+float g_cubeMappingGauss = 0.0f;
+
 // 距離フォグの色
 float4 g_fogDistanceColor = { 0.5f, 0.5f, 1.0f, 1.0f };
 
@@ -387,7 +390,9 @@ void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float3 reflectWorld = reflect(-cameraDir, normalize(inNormalWorld));
 
-    outColor = float4(texCUBE(g_cubeMapSampler, reflectWorld).rgb, 1.0f);
+    float cubeLod = g_cubeMappingGauss * 7.0f;
+    float3 cubeColor = texCUBElod(g_cubeMapSampler, float4(reflectWorld, cubeLod)).rgb;
+    outColor = float4(cubeColor, saturate(g_cubeMappingRate));
 }
 
 //-------------------------------------------------------------

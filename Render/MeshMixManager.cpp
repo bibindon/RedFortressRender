@@ -59,6 +59,11 @@ float ConvertXMaterialPowerToShaderPower(const float materialPower)
     return 1.0f + ((1.0f - (clampedPower / 255.0f)) * 127.0f);
 }
 
+float ClampZeroToOne(const float value)
+{
+    return (std::max)(0.0f, (std::min)(value, 1.0f));
+}
+
 std::wstring ToLowerString(std::wstring text)
 {
     std::transform(text.begin(), text.end(), text.begin(), [](wchar_t ch)
@@ -253,6 +258,10 @@ struct stCsvParam
     bool litByPointLight = false;
     bool collisionDefined = false;
     bool collision = false;
+    bool cubeMappingRateDefined = false;
+    float cubeMappingRate = 1.0f;
+    bool cubeMappingGaussDefined = false;
+    float cubeMappingGauss = 0.0f;
 };
 
 stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
@@ -376,6 +385,24 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
         {
             result.collisionDefined = true;
             result.collision = (value == L"y");
+        }
+        else if (key == L"cubemappingrate")
+        {
+            try
+            {
+                result.cubeMappingRateDefined = true;
+                result.cubeMappingRate = ClampZeroToOne(std::stof(std::wstring(value)));
+            }
+            catch (...) {}
+        }
+        else if (key == L"cubemappinggauss")
+        {
+            try
+            {
+                result.cubeMappingGaussDefined = true;
+                result.cubeMappingGauss = ClampZeroToOne(std::stof(std::wstring(value)));
+            }
+            catch (...) {}
         }
     }
 
@@ -582,6 +609,16 @@ void MeshMixManager::InitializeInternal()
     if (csvParam.collisionDefined)
     {
         m_param.collision = csvParam.collision;
+    }
+
+    if (csvParam.cubeMappingRateDefined)
+    {
+        m_param.cubeMappingRate = csvParam.cubeMappingRate;
+    }
+
+    if (csvParam.cubeMappingGaussDefined)
+    {
+        m_param.cubeMappingGauss = csvParam.cubeMappingGauss;
     }
 
     DWORD* adjacencyList = static_cast<DWORD*>(adjacencyBuffer->GetBufferPointer());
@@ -958,6 +995,12 @@ void MeshMixManager::Render()
     assert(hResult == S_OK);
 
     hResult = sharedEffect->SetFloat("g_specularIntensity", m_param.specularIntensity);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetFloat("g_cubeMappingRate", m_param.cubeMappingRate);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetFloat("g_cubeMappingGauss", m_param.cubeMappingGauss);
     assert(hResult == S_OK);
 
     static float f = 0.f;
