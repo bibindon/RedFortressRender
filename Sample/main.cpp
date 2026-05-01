@@ -103,6 +103,10 @@ void InitializeSampleScene(HWND hWnd)
     ApplyModelLoadScale();
     ApplyGaussianSampleSize();
     ApplyPostEffectToggleSettings();
+    ApplyGodRayLightColor();
+    ApplyGodRayIntensity();
+    ApplyGodRayLightPos();
+    ApplyGodRay();
 }
 
 void TickAndRenderFrame()

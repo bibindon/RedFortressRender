@@ -73,6 +73,7 @@ bool g_bGodRay = false;
 D3DXVECTOR3 g_godRayLightColor = D3DXVECTOR3(1.0f, 0.9f, 0.8f);
 float g_godRayIntensity = 0.6f;
 D3DXVECTOR3 g_godRayLightPos = D3DXVECTOR3(0.0f, 50.0f, 50.0f);
+int g_godRayMarkerMeshId = -1;
 
 namespace
 {
@@ -940,9 +941,33 @@ int SliderValueToGaussianSampleSize(const int sliderValue)
     return NormalizeGaussianSampleSizeLocal(sliderValue * 2 - 1);
 }
 
+static const std::wstring GODRAY_MARKER_PATH = L"..\\..\\Sample\\cube.x";
+
 void ApplyGodRay()
 {
     g_Render.SetPostEffectGodRay(g_bGodRay);
+
+    if (g_bGodRay)
+    {
+        if (g_godRayMarkerMeshId == -1)
+        {
+            g_godRayMarkerMeshId = g_Render.AddMeshMix(GODRAY_MARKER_PATH,
+                                                       g_godRayLightPos,
+                                                       D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                                                       1.0f,
+                                                       1.0f,
+                                                       false,
+                                                       false);
+        }
+    }
+    else
+    {
+        if (g_godRayMarkerMeshId != -1)
+        {
+            g_Render.RemoveMeshMix(g_godRayMarkerMeshId);
+            g_godRayMarkerMeshId = -1;
+        }
+    }
 }
 
 void ApplyGodRayLightColor()
@@ -962,6 +987,11 @@ void ApplyGodRayIntensity()
 void ApplyGodRayLightPos()
 {
     g_Render.SetPostEffectGodRayLightPos(g_godRayLightPos);
+
+    if (g_godRayMarkerMeshId != -1)
+    {
+        g_Render.SetMeshMixPos(g_godRayMarkerMeshId, g_godRayLightPos);
+    }
 }
 
 int GodRayLightColorToSliderValue(const float value)
