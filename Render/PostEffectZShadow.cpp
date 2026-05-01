@@ -170,6 +170,12 @@ void PostEffectZShadow::RenderTechnique1()
     D3DXVECTOR3 vLightUp(0, 1, 0);
     D3DXMatrixLookAtLH(&mLightView, &vLightEye, &vLightAt, &vLightUp);
 
+    const D3DXVECTOR3 lightViewDir = vLightAt - vLightEye;
+    const float lookDistance = D3DXVec3Length(&lightViewDir);
+    const float depthHalfRange = (std::max)(4.0f, viewWidth * 6.0f);
+    fLightNear = (std::max)(0.1f, lookDistance - depthHalfRange);
+    fLightFar = lookDistance + depthHalfRange;
+
     const float viewHeight = viewWidth;
     D3DXMatrixOrthoLH(&mLightProj, viewWidth, viewHeight, fLightNear, fLightFar);
 
