@@ -189,6 +189,7 @@ enum class eMeshType
     None,
     POM,
     NormalMapping,
+    EnvMapping,
 };
 
 struct stCsvParam
@@ -196,8 +197,6 @@ struct stCsvParam
     eMeshType meshType = eMeshType::None;
     bool smoothDefined = false;
     bool smooth = false;
-    bool envMappingDefined = false;
-    bool envMapping = false;
 };
 
 stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
@@ -241,16 +240,15 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
             {
                 result.meshType = eMeshType::NormalMapping;
             }
+            else if (value == L"envmapping")
+            {
+                result.meshType = eMeshType::EnvMapping;
+            }
         }
         else if (key == L"smooth")
         {
             result.smoothDefined = true;
             result.smooth = (value == L"y");
-        }
-        else if (key == L"envmapping")
-        {
-            result.envMappingDefined = true;
-            result.envMapping = (value == L"y");
         }
     }
 
@@ -372,16 +370,16 @@ void MeshMixManager::Initialize()
         m_param.parallaxOcclusionMapping = false;
         m_param.normalMapping = true;
     }
+    else if (csvParam.meshType == eMeshType::EnvMapping)
+    {
+        m_param.cubeMapping = true;
+    }
 
     if (csvParam.smoothDefined)
     {
         m_param.smooth = csvParam.smooth;
     }
 
-    if (csvParam.envMappingDefined)
-    {
-        m_param.cubeMapping = csvParam.envMapping;
-    }
     DWORD* adjacencyList = static_cast<DWORD*>(adjacencyBuffer->GetBufferPointer());
 
     ModifyMeshForNormalMapping(m_D3DMesh);
@@ -819,7 +817,11 @@ void MeshMixManager::Render()
     };
 
     drawAllSubsets(0);
-    drawAllSubsets(1);
+
+    if (m_param.cubeMapping)
+    {
+        drawAllSubsets(1);
+    }
 
     if (m_param.glass)
     {
