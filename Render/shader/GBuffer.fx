@@ -122,6 +122,15 @@ void PS_GBuffer(VS_OUTPUT inputData,
     outRT2 = float4(n01, 1.0f);
 }
 
+// バックフェイスの線形深度だけを出力する（厚み情報用）
+void PS_GBufferBackFace(VS_OUTPUT inputData,
+                        out float4 outRT0 : COLOR0)
+{
+    float linearZ = (inputData.viewSpaceZ - g_fNear) / (g_fFar - g_fNear);
+    linearZ = saturate(linearZ);
+    outRT0 = float4(linearZ, linearZ, linearZ, linearZ);
+}
+
 technique TechniqueGBuffer
 {
     pass P0
@@ -133,6 +142,21 @@ technique TechniqueGBuffer
 
         VertexShader = compile vs_3_0 VS_GBuffer();
         PixelShader  = compile ps_3_0 PS_GBuffer();
+    }
+}
+
+// バックフェイスのみ描画して背面深度を取得（厚み = 背面深度 - 前面深度）
+technique TechniqueGBufferBackFace
+{
+    pass P0
+    {
+        CullMode         = CW;
+        ZEnable          = TRUE;
+        ZWriteEnable     = TRUE;
+        AlphaBlendEnable = FALSE;
+
+        VertexShader = compile vs_3_0 VS_GBuffer();
+        PixelShader  = compile ps_3_0 PS_GBufferBackFace();
     }
 }
 

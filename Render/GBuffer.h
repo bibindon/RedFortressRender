@@ -21,7 +21,8 @@ public:
               const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList,
               LPDIRECT3DTEXTURE9* Z,
               LPDIRECT3DTEXTURE9* Pos,
-              LPDIRECT3DTEXTURE9* Normal);
+              LPDIRECT3DTEXTURE9* Normal,
+              LPDIRECT3DTEXTURE9* Thickness);
 
     void Finalize();
 
@@ -33,6 +34,7 @@ private:
     LPDIRECT3DTEXTURE9 m_texRenderTargetZ = NULL;
     LPDIRECT3DTEXTURE9 m_texRenderTargetPos = NULL;
     LPDIRECT3DTEXTURE9 m_texRenderTargetNormal = NULL;
+    LPDIRECT3DTEXTURE9 m_texRenderTargetThickness = NULL;
 
     LPD3DXEFFECT m_fxGBuffer = NULL;
 

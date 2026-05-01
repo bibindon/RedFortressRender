@@ -486,7 +486,8 @@ void Render::Draw()
     LPDIRECT3DTEXTURE9 pTexTempZ = NULL;
     LPDIRECT3DTEXTURE9 pTexTempPos = NULL;
     LPDIRECT3DTEXTURE9 pTexTempNoral = NULL;
-    m_GBuffer.Draw(m_meshMixList, m_meshMixSkinAnimList, &pTexTempZ, &pTexTempPos, &pTexTempNoral);
+    LPDIRECT3DTEXTURE9 pTexTempThickness = NULL;
+    m_GBuffer.Draw(m_meshMixList, m_meshMixSkinAnimList, &pTexTempZ, &pTexTempPos, &pTexTempNoral, &pTexTempThickness);
 
     //---------------------------------------------------------------
     // ポストエフェクト

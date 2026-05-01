@@ -65,13 +65,25 @@ void GBuffer::CreateRawResource()
                                 D3DPOOL_DEFAULT,
                                 &m_texRenderTargetNormal);
     assert(hResult == S_OK);
+
+    // 厚み情報（バックフェイス深度）
+    hResult = D3DXCreateTexture(Common::D3DDevice(),
+                                Common::ScreenW(),
+                                Common::ScreenH(),
+                                1,
+                                D3DUSAGE_RENDERTARGET,
+                                D3DFMT_A16B16G16R16F,
+                                D3DPOOL_DEFAULT,
+                                &m_texRenderTargetThickness);
+    assert(hResult == S_OK);
 }
 
 void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
                    const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList,
                    LPDIRECT3DTEXTURE9* Z,
                    LPDIRECT3DTEXTURE9* Pos,
-                   LPDIRECT3DTEXTURE9* Normal)
+                   LPDIRECT3DTEXTURE9* Normal,
+                   LPDIRECT3DTEXTURE9* Thickness)
 {
     HRESULT hr = E_FAIL;
 
@@ -173,9 +185,64 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     SAFE_RELEASE(surfaceNorm);
     SAFE_RELEASE(surfaceOld);
 
+    // --- 厚みパス（バックフェイス深度）---
+    LPDIRECT3DSURFACE9 surfaceThickness = NULL;
+    m_texRenderTargetThickness->GetSurfaceLevel(0, &surfaceThickness);
+
+    LPDIRECT3DSURFACE9 surfaceOld2 = NULL;
+    Common::D3DDevice()->GetRenderTarget(0, &surfaceOld2);
+    Common::D3DDevice()->SetRenderTarget(0, surfaceThickness);
+
+    Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
+                               D3DCOLOR_RGBA(0, 0, 0, 0), 1.0f, 0);
+    Common::D3DDevice()->BeginScene();
+
+    for (auto& mesh : meshList)
+    {
+        if (!mesh.IsEnabled())
+        {
+            continue;
+        }
+
+        D3DXMATRIX matWorld;
+        D3DXMatrixIdentity(&matWorld);
+        {
+            D3DXMATRIX m;
+            D3DXMatrixIdentity(&m);
+            D3DXMatrixScaling(&m, mesh.GetScale(), mesh.GetScale(), mesh.GetScale());
+            matWorld *= m;
+            D3DXMatrixRotationYawPitchRoll(&m, mesh.GetRot().y, mesh.GetRot().x, mesh.GetRot().z);
+            matWorld *= m;
+            D3DXVECTOR3 p = mesh.GetPos();
+            D3DXMatrixTranslation(&m, p.x, p.y, p.z);
+            matWorld *= m;
+        }
+
+        m_fxGBuffer->SetMatrix("g_matWorld", &matWorld);
+        m_fxGBuffer->SetTechnique("TechniqueGBufferBackFace");
+        m_fxGBuffer->Begin(NULL, 0);
+        m_fxGBuffer->BeginPass(0);
+
+        LPD3DXMESH d3dMesh = mesh.GetD3DMesh();
+        const DWORD subsetCount = (mesh.GetSubsetCount() > 0) ? mesh.GetSubsetCount() : 1;
+        for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
+        {
+            d3dMesh->DrawSubset(subsetIndex);
+        }
+
+        m_fxGBuffer->EndPass();
+        m_fxGBuffer->End();
+    }
+
+    Common::D3DDevice()->EndScene();
+    Common::D3DDevice()->SetRenderTarget(0, surfaceOld2);
+    SAFE_RELEASE(surfaceThickness);
+    SAFE_RELEASE(surfaceOld2);
+
     *Z = m_texRenderTargetZ;
     *Pos = m_texRenderTargetPos;
     *Normal = m_texRenderTargetNormal;
+    *Thickness = m_texRenderTargetThickness;
 }
 
 void GBuffer::Finalize()
@@ -189,6 +256,7 @@ void GBuffer::OnDeviceLost()
     SAFE_RELEASE(m_texRenderTargetZ);
     SAFE_RELEASE(m_texRenderTargetPos);
     SAFE_RELEASE(m_texRenderTargetNormal);
+    SAFE_RELEASE(m_texRenderTargetThickness);
 }
 
 void GBuffer::OnDeviceReset()
