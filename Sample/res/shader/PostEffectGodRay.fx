@@ -77,12 +77,13 @@ VS_OUT VS(VS_IN i)
 // Pass1: オクルージョンマスク生成
 // Z画像のα成分に線形深度が入っている（GBuffer.fx の RT0.a = linearZ）
 // 光源のビュー空間線形Zより手前なら黒（遮蔽）、奥または同じなら白（透過）
+// pixelZ == 0.0 は何も描画されていない背景（クリア値）なので遮蔽なしとして扱う
 float4 PS_OcclusionMask(VS_OUT i) : COLOR
 {
     float pixelZ = tex2D(g_ZSampler, i.uv).a;
 
-    // ピクセルが光源より手前にある = 遮蔽
-    float mask = (pixelZ < g_LightViewZ) ? 0.0f : 1.0f;
+    // pixelZ が 0 のピクセルは GBuffer 未書き込み（背景）→ 遮蔽なし（白）
+    float mask = (pixelZ > 0.0f && pixelZ < g_LightViewZ) ? 0.0f : 1.0f;
     return float4(mask, mask, mask, 1.0f);
 }
 

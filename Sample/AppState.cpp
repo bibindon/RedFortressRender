@@ -1453,6 +1453,38 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_bStarBurst = (std::stoi(value) != 0);
             }
+            else if (key == L"GodRayEnable")
+            {
+                g_bGodRay = (std::stoi(value) != 0);
+            }
+            else if (key == L"GodRayLightColorR")
+            {
+                g_godRayLightColor.x = std::stof(value);
+            }
+            else if (key == L"GodRayLightColorG")
+            {
+                g_godRayLightColor.y = std::stof(value);
+            }
+            else if (key == L"GodRayLightColorB")
+            {
+                g_godRayLightColor.z = std::stof(value);
+            }
+            else if (key == L"GodRayIntensity")
+            {
+                g_godRayIntensity = std::stof(value);
+            }
+            else if (key == L"GodRayLightPosX")
+            {
+                g_godRayLightPos.x = std::stof(value);
+            }
+            else if (key == L"GodRayLightPosY")
+            {
+                g_godRayLightPos.y = std::stof(value);
+            }
+            else if (key == L"GodRayLightPosZ")
+            {
+                g_godRayLightPos.z = std::stof(value);
+            }
         }
         catch (...)
         {

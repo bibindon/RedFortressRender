@@ -16,3 +16,12 @@ StarBurstEnable,0
 FogHeightEnable,1
 FogHeightIntensity,0.3
 FogHeightStart,0.0
+
+GodRayEnable,0
+GodRayLightColorR,1.0
+GodRayLightColorG,0.9
+GodRayLightColorB,0.8
+GodRayIntensity,0.1
+GodRayLightPosX,10.0
+GodRayLightPosY,10.0
+GodRayLightPosZ,10.0
