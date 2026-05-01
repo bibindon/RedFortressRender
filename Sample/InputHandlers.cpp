@@ -169,6 +169,12 @@ bool HandleSampleKeyDown(HWND hWnd, const WPARAM wParam)
         return true;
     }
 
+    if (wParam == VK_F2)
+    {
+        g_bShowOverlay = !g_bShowOverlay;
+        return true;
+    }
+
     if (wParam == VK_ESCAPE)
     {
         if (g_bMouseLookEnabled)

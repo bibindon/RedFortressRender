@@ -132,6 +132,7 @@ extern bool g_bSaturateFilter;
 extern bool g_bBloom;
 extern bool g_bDepthOfField;
 extern bool g_bStarBurst;
+extern bool g_bShowOverlay;
 extern float g_fogIntensity;
 extern float g_sunLightIntensity;
 extern float g_shadowIntensity;

@@ -1492,14 +1492,22 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
     }
 }
 
+bool g_bShowOverlay = true; // グローバル変数
+
 void DrawSampleOverlay()
 {
+    if (!g_bShowOverlay)
+    {
+        return;
+    }
+
     std::wstring text;
     text += L"WASD : Camera move\n";
     text += L"Q/E : Camera up/down\n";
     text += L"Arrow keys : Camera rotate\n";
     text += L"Esc : Mouse look ON/OFF\n";
     text += L"F1 : Settings dialog\n";
+    text += L"F2 : Toggle overlay\n"; // F2キーの説明を追加
     text += L"\n";
     text += L"8 : Window mode\n";
     text += L"9 : Borderless mode\n";
@@ -1535,6 +1543,14 @@ void DrawSampleOverlay()
     g_Render.DrawText_(g_fontId, text, 10, 40);
 
     DrawRandomized2DContent();
+}
+
+void HandleKeyPress(WPARAM key)
+{
+    if (key == VK_F2)
+    {
+        g_bShowOverlay = !g_bShowOverlay;
+    }
 }
 
 void UpdateDirectionalLight()
