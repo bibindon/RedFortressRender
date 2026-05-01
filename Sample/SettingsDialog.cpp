@@ -1679,7 +1679,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         if (commandId == IDC_CHECK_GODRAY)
         {
             g_bGodRay = (IsDlgButtonChecked(hDlg, IDC_CHECK_GODRAY) == BST_CHECKED);
-            g_Render.SetPostEffectGodRay(g_bGodRay);
+            ApplyGodRay();
             RefreshGodRayControls(hDlg);
             return TRUE;
         }

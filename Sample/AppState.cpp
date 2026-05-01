@@ -628,7 +628,7 @@ void ApplyPostEffectToggleSettings()
     g_Render.SetPostEffectBloom(g_bBloom);
     g_Render.SetPostEffectDepthOfField(g_bDepthOfField);
     g_Render.SetPostEffectStarBurst(g_bStarBurst);
-    g_Render.SetPostEffectGodRay(g_bGodRay);
+    ApplyGodRay();
 }
 
 void ApplyFogIntensity()
@@ -941,7 +941,7 @@ int SliderValueToGaussianSampleSize(const int sliderValue)
     return NormalizeGaussianSampleSizeLocal(sliderValue * 2 - 1);
 }
 
-static const std::wstring GODRAY_MARKER_PATH = L"..\\..\\Sample\\cube.x";
+static const std::wstring GODRAY_MARKER_PATH = L"..\\..\\Sample\\cube.x"; // 作業ディレクトリからの相対パス
 
 void ApplyGodRay()
 {
@@ -952,7 +952,7 @@ void ApplyGodRay()
         if (g_godRayMarkerMeshId == -1)
         {
             g_godRayMarkerMeshId = g_Render.AddMeshMix(GODRAY_MARKER_PATH,
-                                                       g_godRayLightPos,
+                                                       g_godRayLightPos + D3DXVECTOR3(0.0f, 1.0f, 0.0f),
                                                        D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                                                        1.0f,
                                                        1.0f,
@@ -990,7 +990,7 @@ void ApplyGodRayLightPos()
 
     if (g_godRayMarkerMeshId != -1)
     {
-        g_Render.SetMeshMixPos(g_godRayMarkerMeshId, g_godRayLightPos);
+        g_Render.SetMeshMixPos(g_godRayMarkerMeshId, g_godRayLightPos + D3DXVECTOR3(0.0f, 1.0f, 0.0f));
     }
 }
 
