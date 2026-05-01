@@ -165,6 +165,7 @@ public:
     void SetMeshMixShadowDarkness(const float darkness);
     void SetMeshMixSpecularIntensity(const float intensity);
     void SetMeshMixSpecularEdge(const float edge);
+    void SetMeshMixSpecularEdgeOverrideEnabled(const bool enabled);
 
     void SetCamera(const D3DXVECTOR3& pos, const D3DXVECTOR3& lookAt);
     void MoveCamera(const D3DXVECTOR3& pos);
@@ -326,6 +327,7 @@ private:
     float m_meshMixShadowDarkness = 1.0f;
     float m_meshMixSpecularIntensity = 0.0f;
     float m_meshMixSpecularEdge = 0.0f;
+    bool m_meshMixSpecularEdgeOverrideEnabled = true;
 
     LPDIRECT3DTEXTURE9 m_pRenderTarget1 = NULL;
     LPDIRECT3DTEXTURE9 m_pRenderTarget2 = NULL;

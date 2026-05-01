@@ -30,6 +30,9 @@ struct stMeshParam
     //float specularEdge = 0.8f;
     float specularEdge = 0.0f;
 
+    // 設定ダイアログのスペキュラ光の鋭さで上書きするか
+    bool specularEdgeOverrideEnabled = true;
+
     // TODO 霧は陰の後に表示しないといけないので、ポストエフェクトで実行しなければいけない。
 
     //--------------------------------------------------------

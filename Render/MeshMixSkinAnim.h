@@ -35,6 +35,7 @@ public:
     void SetShadowDarkness(const float darkness);
     void SetSpecularIntensity(const float intensity);
     void SetSpecularEdge(const float edge);
+    void SetSpecularEdgeOverrideEnabled(const bool enabled);
     void SetRotY(const float rotY);
 
     D3DXVECTOR3 GetRot() const;

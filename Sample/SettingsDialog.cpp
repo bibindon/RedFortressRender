@@ -678,6 +678,14 @@ void RefreshSpecularEdgeControls(HWND hDlg)
                        TBM_SETPOS,
                        TRUE,
                        static_cast<LPARAM>(SpecularEdgeToSliderValue(g_specularEdge)));
+
+    CheckDlgButton(hDlg,
+                   IDC_CHECK_SPECULAR_EDGE_OVERRIDE,
+                   g_bUseSpecularEdgeOverride ? BST_CHECKED : BST_UNCHECKED);
+
+    const BOOL enabled = g_bUseSpecularEdgeOverride ? TRUE : FALSE;
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SPECULAR_EDGE), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SPECULAR_EDGE), enabled);
 }
 
 void RefreshSSAOBrightnessControls(HWND hDlg)
@@ -1522,6 +1530,14 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_bStarBurst = (IsDlgButtonChecked(hDlg, IDC_CHECK_STARBURST) == BST_CHECKED);
             g_Render.SetPostEffectStarBurst(g_bStarBurst);
             RefreshStarBurst(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_SPECULAR_EDGE_OVERRIDE)
+        {
+            g_bUseSpecularEdgeOverride = (IsDlgButtonChecked(hDlg, IDC_CHECK_SPECULAR_EDGE_OVERRIDE) == BST_CHECKED);
+            ApplySpecularEdgeOverride();
+            RefreshSpecularEdgeControls(hDlg);
             return TRUE;
         }
 

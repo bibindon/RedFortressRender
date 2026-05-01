@@ -505,6 +505,11 @@ void MeshMixManager::SetSpecularEdge(const float edge)
     m_param.specularEdge = edge;
 }
 
+void MeshMixManager::SetSpecularEdgeOverrideEnabled(const bool enabled)
+{
+    m_param.specularEdgeOverrideEnabled = enabled;
+}
+
 void MeshMixManager::SetRotY(const float rotY)
 {
     m_rotate.y = rotY;
@@ -749,6 +754,11 @@ D3DXVECTOR4 MeshMixManager::GetSubsetDiffuse(const DWORD subsetIndex) const
 
 float MeshMixManager::GetSubsetSpecularPower(const DWORD subsetIndex) const
 {
+    if (m_param.specularEdgeOverrideEnabled)
+    {
+        return ConvertSpecularEdgeToShaderPower(m_param.specularEdge);
+    }
+
     if (subsetIndex < m_vecSpecularPower.size())
     {
         return m_vecSpecularPower.at(subsetIndex);

@@ -53,6 +53,7 @@ float g_halfLambertShadowSaturation = 1.0f;
 float g_shadowDarkness = 0.3f;
 float g_specularIntensity = 0.1f;
 float g_specularEdge = 0.0f;
+bool g_bUseSpecularEdgeOverride = true;
 float g_bloomThreshold = 2.5f;
 float g_dofFocalDistance = 1.0f;
 float g_starBurstThreshold = 2.8f;
@@ -685,6 +686,12 @@ void ApplySpecularEdge()
     g_Render.SetMeshMixSpecularEdge(g_specularEdge);
 }
 
+void ApplySpecularEdgeOverride()
+{
+    g_Render.SetMeshMixSpecularEdgeOverrideEnabled(g_bUseSpecularEdgeOverride);
+    RefreshSettingsDialogState();
+}
+
 void ApplyBloomThreshold()
 {
     g_bloomThreshold = ClampBloomThreshold(g_bloomThreshold);
@@ -1301,6 +1308,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"SpecularEdge")
             {
                 g_specularEdge = std::stof(value);
+            }
+            else if (key == L"SpecularEdgeOverride")
+            {
+                g_bUseSpecularEdgeOverride = (std::stoi(value) != 0);
             }
             else if (key == L"BloomThreshold")
             {

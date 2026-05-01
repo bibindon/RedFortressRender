@@ -38,6 +38,7 @@ public:
     void SetShadowDarkness(const float darkness);
     void SetSpecularIntensity(const float intensity);
     void SetSpecularEdge(const float edge);
+    void SetSpecularEdgeOverrideEnabled(const bool enabled);
 
     D3DXVECTOR3 GetPos() const;
 

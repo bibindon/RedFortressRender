@@ -10,6 +10,24 @@
 
 namespace NSRender
 {
+namespace
+{
+float ClampSpecularEdge(const float edge)
+{
+    return (std::max)(0.0f, (std::min)(edge, 1.0f));
+}
+
+float ConvertSpecularEdgeToShaderPower(const float edge)
+{
+    return 1.0f + (ClampSpecularEdge(edge) * 127.0f);
+}
+
+float ConvertXMaterialPowerToShaderPower(const float materialPower)
+{
+    const float clampedPower = (std::max)(0.0f, (std::min)(materialPower, 255.0f));
+    return 1.0f + ((1.0f - (clampedPower / 255.0f)) * 127.0f);
+}
+}
 
 MeshMixSkinAnim::MeshMixSkinAnim(const std::wstring& filename,
                                  const D3DXVECTOR3& pos,
@@ -105,10 +123,6 @@ void MeshMixSkinAnim::Render()
     m_D3DEffect->SetFloat("g_fSaturateShadowIntensity", m_param.saturateShadowIntensity);
     m_D3DEffect->SetFloat("g_fShadowDarkness", m_param.shadowDarkness);
     m_D3DEffect->SetFloat("g_specularIntensity", m_param.specularIntensity);
-
-    const float specularEdge = (std::max)(0.0f, (std::min)(m_param.specularEdge, 1.0f));
-    const float specularPower = 1.0f + (specularEdge * 127.0f);
-    m_D3DEffect->SetFloat("g_specularPower", specularPower);
 
     D3DXMATRIX viewProjectionMatrix = Camera::GetViewMatrix() * Camera::GetProjMatrix();
     m_D3DEffect->SetMatrix("g_matViewProj", &viewProjectionMatrix);
@@ -275,6 +289,11 @@ void MeshMixSkinAnim::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBas
                             material.Diffuse.a);
         m_D3DEffect->SetVector("g_diffuse", &diffuse);
 
+        const float specularPower = m_param.specularEdgeOverrideEnabled
+            ? ConvertSpecularEdgeToShaderPower(m_param.specularEdge)
+            : ConvertXMaterialPowerToShaderPower(material.Power);
+        m_D3DEffect->SetFloat("g_specularPower", specularPower);
+
         if (materialIndex < container->m_textureList.size())
         {
             m_D3DEffect->SetTexture("g_texture", container->m_textureList[materialIndex]);
@@ -405,6 +424,11 @@ void MeshMixSkinAnim::SetSpecularIntensity(const float intensity)
 void MeshMixSkinAnim::SetSpecularEdge(const float edge)
 {
     m_param.specularEdge = edge;
+}
+
+void MeshMixSkinAnim::SetSpecularEdgeOverrideEnabled(const bool enabled)
+{
+    m_param.specularEdgeOverrideEnabled = enabled;
 }
 
 void MeshMixSkinAnim::SetRotY(const float rotY)

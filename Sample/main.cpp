@@ -96,6 +96,7 @@ void InitializeSampleScene(HWND hWnd)
     ApplyShadowDarkness();
     ApplySpecularIntensity();
     ApplySpecularEdge();
+    ApplySpecularEdgeOverride();
     ApplyBloomThreshold();
     ApplyDepthOfFieldFocalDistance();
     ApplyStarBurstThreshold();

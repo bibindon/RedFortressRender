@@ -754,6 +754,7 @@ int Render::AddMeshMix(const std::wstring& filePath,
     param.shadowDarkness = m_meshMixShadowDarkness;
     param.specularIntensity = m_meshMixSpecularIntensity;
     param.specularEdge = m_meshMixSpecularEdge;
+    param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
     auto mesh = MeshMixManager(filePath, pos, rot, scale, param);
     m_meshMixList.push_back(std::move(mesh));
     m_meshMixList.rbegin()->Initialize();
@@ -800,6 +801,7 @@ int Render::AddMeshMixSkinAnim(const std::wstring& filePath,
     param.shadowDarkness = m_meshMixShadowDarkness;
     param.specularIntensity = m_meshMixSpecularIntensity;
     param.specularEdge = m_meshMixSpecularEdge;
+    param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
 
     MeshMixSkinAnim* mesh = NEW MeshMixSkinAnim(filePath, pos, rot, scale, param, animSetMap);
     try
@@ -913,6 +915,24 @@ void Render::SetMeshMixSpecularEdge(const float edge)
         if (mesh != nullptr)
         {
             mesh->SetSpecularEdge(edge);
+        }
+    }
+}
+
+void Render::SetMeshMixSpecularEdgeOverrideEnabled(const bool enabled)
+{
+    m_meshMixSpecularEdgeOverrideEnabled = enabled;
+
+    for (auto& mesh : m_meshMixList)
+    {
+        mesh.SetSpecularEdgeOverrideEnabled(enabled);
+    }
+
+    for (auto& mesh : m_meshMixSkinAnimList)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->SetSpecularEdgeOverrideEnabled(enabled);
         }
     }
 }
