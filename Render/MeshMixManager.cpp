@@ -7,6 +7,7 @@
 #include <Shlwapi.h>
 #include <algorithm>
 #include <cwctype>
+#include <fstream>
 #include <unordered_map>
 #include <utility>
 #pragma comment(lib, "Shlwapi.lib")
@@ -182,6 +183,62 @@ void ReleaseSharedEffectRef()
         GetSharedEffectLostState() = false;
     }
 }
+
+enum class eMeshType
+{
+    None,
+    POM,
+    NormalMapping,
+};
+
+eMeshType ReadMeshTypeFromCsv(const std::wstring& meshFilePath)
+{
+    std::wstring csvPath = meshFilePath;
+    const std::wstring::size_type dotPos = csvPath.find_last_of(L'.');
+    if (dotPos != std::wstring::npos)
+    {
+        csvPath = csvPath.substr(0, dotPos) + L".csv";
+    }
+    else
+    {
+        csvPath += L".csv";
+    }
+
+    std::wifstream csvFile(csvPath);
+    if (!csvFile.is_open())
+    {
+        return eMeshType::None;
+    }
+
+    std::wstring line;
+    while (std::getline(csvFile, line))
+    {
+        const std::wstring::size_type commaPos = line.find(L',');
+        if (commaPos == std::wstring::npos)
+        {
+            continue;
+        }
+        const std::wstring key = ToLowerString(line.substr(0, commaPos));
+        const std::wstring value = ToLowerString(line.substr(commaPos + 1));
+        if (key == L"meshtype")
+        {
+            if (value == L"pom")
+            {
+                return eMeshType::POM;
+            }
+            else if (value == L"normalmapping")
+            {
+                return eMeshType::NormalMapping;
+            }
+            else
+            {
+                return eMeshType::None;
+            }
+        }
+    }
+
+    return eMeshType::None;
+}
 }
 
 MeshMixManager::MeshMixManager(const std::wstring& filename,
@@ -286,6 +343,18 @@ void MeshMixManager::Initialize()
                                 &m_D3DMesh);
 
     assert(hResult == S_OK);
+
+    const eMeshType meshType = ReadMeshTypeFromCsv(tempPath);
+    if (meshType == eMeshType::POM)
+    {
+        m_param.parallaxOcclusionMapping = true;
+        m_param.normalMapping = false;
+    }
+    else if (meshType == eMeshType::NormalMapping)
+    {
+        m_param.parallaxOcclusionMapping = false;
+        m_param.normalMapping = true;
+    }
 
     DWORD* adjacencyList = static_cast<DWORD*>(adjacencyBuffer->GetBufferPointer());
 
