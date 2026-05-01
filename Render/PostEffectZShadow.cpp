@@ -7,7 +7,7 @@ namespace NSRender
 {
 namespace
 {
-constexpr float SHADOW_VIEW_SIZE_MIN = 3.0f;
+constexpr float SHADOW_VIEW_SIZE_MIN = 1.0f;
 constexpr float SHADOW_VIEW_SIZE_MAX = 120.0f;
 constexpr int SHADOW_BLUR_TAP_COUNT_MIN = 1;
 constexpr int SHADOW_BLUR_TAP_COUNT_MAX = 11;
@@ -166,7 +166,7 @@ void PostEffectZShadow::RenderTechnique1()
     D3DXVECTOR3 focusPoint = Camera::GetLookAtPos();
     focusPoint.y -= focusYOffset;
     const D3DXVECTOR3 vLightEye = focusPoint + SHADOW_CAMERA_OFFSET;
-    const D3DXVECTOR3 vLightAt = focusPoint;
+    const D3DXVECTOR3 vLightAt = Camera::GetEyePos();
     D3DXVECTOR3 vLightUp(0, 1, 0);
     D3DXMatrixLookAtLH(&mLightView, &vLightEye, &vLightAt, &vLightUp);
 
