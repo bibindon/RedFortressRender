@@ -41,6 +41,22 @@ bool& GetSharedEffectLostState()
     return lostState;
 }
 
+float ClampSpecularEdge(const float edge)
+{
+    return (std::max)(0.0f, (std::min)(edge, 1.0f));
+}
+
+float ConvertSpecularEdgeToShaderPower(const float edge)
+{
+    return 1.0f + (ClampSpecularEdge(edge) * 127.0f);
+}
+
+float ConvertXMaterialPowerToShaderPower(const float materialPower)
+{
+    const float clampedPower = (std::max)(0.0f, (std::min)(materialPower, 255.0f));
+    return 1.0f + ((1.0f - (clampedPower / 255.0f)) * 127.0f);
+}
+
 std::wstring ToLowerString(std::wstring text)
 {
     std::transform(text.begin(), text.end(), text.begin(), [](wchar_t ch)
@@ -208,6 +224,7 @@ MeshMixManager& MeshMixManager::operator=(MeshMixManager&& other) noexcept
     m_materialCount = other.m_materialCount;
     m_subsetCount = other.m_subsetCount;
     m_vecDiffuse = std::move(other.m_vecDiffuse);
+    m_vecSpecularPower = std::move(other.m_vecSpecularPower);
     m_vecTexture = std::move(other.m_vecTexture);
 
     m_texCubeMap = other.m_texCubeMap;
@@ -295,6 +312,7 @@ void MeshMixManager::Initialize()
     xFileDir = xFileDir.substr(0, lastPos + 1);
 
     std::vector<D3DXVECTOR4> diffuseList;
+    std::vector<float> specularPowerList;
     std::vector<LPDIRECT3DBASETEXTURE9> diffuseTextureList;
 
     for (DWORD i = 0; i < m_materialCount; ++i)
@@ -304,6 +322,7 @@ void MeshMixManager::Initialize()
         diffuse.y = materialList[i].MatD3D.Diffuse.g;
         diffuse.z = materialList[i].MatD3D.Diffuse.b;
         diffuse.w = materialList[i].MatD3D.Diffuse.a;
+        const float specularPower = ConvertXMaterialPowerToShaderPower(materialList[i].MatD3D.Power);
 
         LPDIRECT3DBASETEXTURE9 tempTexture = nullptr;
         std::wstring textureFileName;
@@ -342,6 +361,7 @@ void MeshMixManager::Initialize()
         else
         {
             diffuseList.push_back(diffuse);
+            specularPowerList.push_back(specularPower);
             diffuseTextureList.push_back(tempTexture);
         }
     }
@@ -349,12 +369,14 @@ void MeshMixManager::Initialize()
     if (!diffuseList.empty())
     {
         m_vecDiffuse = diffuseList;
+        m_vecSpecularPower = specularPowerList;
         m_vecTexture = diffuseTextureList;
         m_subsetCount = (std::min)(m_subsetCount, static_cast<DWORD>(m_vecDiffuse.size()));
     }
     else
     {
         m_vecDiffuse.assign(m_subsetCount, D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f));
+        m_vecSpecularPower.assign(m_subsetCount, ConvertSpecularEdgeToShaderPower(m_param.specularEdge));
         m_vecTexture.assign(m_subsetCount, nullptr);
     }
 
@@ -391,6 +413,7 @@ void MeshMixManager::ReleaseOwnedResources()
     }
     m_vecTexture.clear();
     m_vecDiffuse.clear();
+    m_vecSpecularPower.clear();
 
     SAFE_RELEASE(m_texCubeMap);
     SAFE_RELEASE(m_texNormalMap);
@@ -614,10 +637,6 @@ void MeshMixManager::Render()
     hResult = sharedEffect->SetFloat("g_specularIntensity", m_param.specularIntensity);
     assert(hResult == S_OK);
 
-    const float specularPower = 1.0f + ((std::max)(0.0f, (std::min)(m_param.specularEdge, 1.0f)) * 127.0f);
-    hResult = sharedEffect->SetFloat("g_specularPower", specularPower);
-    assert(hResult == S_OK);
-
     static float f = 0.f;
     f += 0.001f;
     hResult = sharedEffect->SetFloat("g_time", f);
@@ -682,6 +701,9 @@ void MeshMixManager::Render()
             hResult = sharedEffect->SetVector("g_diffuse", &diffuse);
             assert(hResult == S_OK);
 
+            hResult = sharedEffect->SetFloat("g_specularPower", GetSubsetSpecularPower(subsetIndex));
+            assert(hResult == S_OK);
+
             hResult = sharedEffect->SetTexture("g_texture", GetSubsetTexture(subsetIndex));
             assert(hResult == S_OK);
 
@@ -723,6 +745,16 @@ D3DXVECTOR4 MeshMixManager::GetSubsetDiffuse(const DWORD subsetIndex) const
     }
 
     return D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
+}
+
+float MeshMixManager::GetSubsetSpecularPower(const DWORD subsetIndex) const
+{
+    if (subsetIndex < m_vecSpecularPower.size())
+    {
+        return m_vecSpecularPower.at(subsetIndex);
+    }
+
+    return ConvertSpecularEdgeToShaderPower(m_param.specularEdge);
 }
 
 LPDIRECT3DBASETEXTURE9 MeshMixManager::GetSubsetTexture(const DWORD subsetIndex) const

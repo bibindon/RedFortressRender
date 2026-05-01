@@ -69,6 +69,7 @@ private:
     DWORD m_materialCount = 0;
     DWORD m_subsetCount = 0;
     std::vector<D3DXVECTOR4> m_vecDiffuse;
+    std::vector<float> m_vecSpecularPower;
     std::vector<LPDIRECT3DBASETEXTURE9> m_vecTexture;
     LPDIRECT3DBASETEXTURE9 m_texCubeMap = nullptr;
     LPDIRECT3DBASETEXTURE9 m_texNormalMap = nullptr;
@@ -86,6 +87,7 @@ private:
 
     void ModifyMeshForNormalMapping(LPD3DXMESH& pMesh);
     D3DXVECTOR4 GetSubsetDiffuse(const DWORD subsetIndex) const;
+    float GetSubsetSpecularPower(const DWORD subsetIndex) const;
     LPDIRECT3DBASETEXTURE9 GetSubsetTexture(const DWORD subsetIndex) const;
     void ReleaseOwnedResources();
 };
