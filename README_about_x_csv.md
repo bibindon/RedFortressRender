@@ -2,9 +2,9 @@
 
 メッシュファイル（`.x`）と同じディレクトリに、同じ名前の `.csv` ファイルを置くことで、メッシュの描画設定を指定できます。
 
-例：`aaa.x` に対して `aaa.csv` を用意する。
+例: `aaa.x` に対して `aaa.csv` を用意する
 
-CSVファイルが存在しない場合はエラーにはならず、デフォルトの設定で描画されます。
+CSVファイルが存在しない場合はエラーにはならず、デフォルト設定で描画されます。
 
 ---
 
@@ -12,10 +12,12 @@ CSVファイルが存在しない場合はエラーにはならず、デフォ�
 
 各行に `キー,値` の形式で記述します。
 
-```
+```csv
 MeshType,POM
 smooth,y
 ```
+
+キー名と値は大文字小文字を区別しません。
 
 ---
 
@@ -43,6 +45,9 @@ smooth,y
 | `y` | スムージングを有効にする |
 | `n` | スムージングを無効にする |
 
+補足:
+`POM` の場合は形状破綻を避けるため、通常の `smooth,y` よりも面境界を強く残す設定になります。
+
 ---
 
 ### sss
@@ -58,15 +63,15 @@ smooth,y
 
 SSSの強さを指定します。
 
-```
+```csv
 sssIntensity,1.0
 ```
 
 ### sssColor
 
-SSSで透けて見える色をR,G,Bで指定します（各値は0〜255）。
+SSSで透けて見える色を `R,G,B` で指定します（各値は `0` から `255`）。
 
-```
+```csv
 sssColor,0,255,127
 ```
 
@@ -85,7 +90,7 @@ sssColor,0,255,127
 
 揺れの強さを指定します。
 
-```
+```csv
 swayIntensity,1.0
 ```
 
@@ -104,7 +109,7 @@ swayIntensity,1.0
 
 波の強さを指定します。
 
-```
+```csv
 waveIntensity,1.0
 ```
 
@@ -121,6 +126,62 @@ waveIntensity,1.0
 
 ---
 
+### cubeMappingRate
+
+`EnvMapping` のときに、環境マップをどれくらい混ぜるかを指定します。
+
+`0.0` から `1.0` の範囲で指定します。
+
+| 値 | 説明 |
+|---|---|
+| `0.0` | 環境マップを表示しない |
+| `1.0` | 環境マップを100%表示する |
+
+```csv
+cubeMappingRate,0.35
+```
+
+---
+
+### cubeMappingGauss
+
+`EnvMapping` のときに、環境マップをどれくらいぼかして表示するかを指定します。
+
+`0.0` から `1.0` の範囲で指定します。
+
+| 値 | 説明 |
+|---|---|
+| `0.0` | ぼかさない |
+| `1.0` | 強くぼかす |
+
+```csv
+cubeMappingGauss,0.6
+```
+
+---
+
+### ssao
+
+SSAO の対象にするかどうかを指定します。
+
+| 値 | 説明 |
+|---|---|
+| `y` | SSAO の対象にする |
+| `n` | SSAO の対象にしない |
+
+---
+
+### shadow
+
+深度バッファシャドウの対象にするかどうかを指定します。
+
+| 値 | 説明 |
+|---|---|
+| `y` | 深度バッファシャドウの対象にする |
+| `n` | 深度バッファシャドウの対象にしない |
+
+---
+
 ### collision
 
 衝突判定の対象とするかどうかを指定します。
@@ -134,16 +195,13 @@ waveIntensity,1.0
 
 ## 記述例
 
-```
-MeshType,NormalMapping
+```csv
+MeshType,EnvMapping
 smooth,y
-sss,y
-sssIntensity,1.0
-sssColor,0,255,127
-sway,y
-swayIntensity,1.0
-wave,n
-waveIntensity,1.0
+cubeMappingRate,1.0
+cubeMappingGauss,0.2
 litByPointLight,y
-collision,y
+ssao,n
+shadow,y
+collision,n
 ```
