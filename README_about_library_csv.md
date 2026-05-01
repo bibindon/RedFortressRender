@@ -32,8 +32,6 @@ FogIntensity,2.0    # 霧の強さ
 | `BloomEnable` | ブルームを有効にするか | `0` |
 | `StarBurstEnable` | スターバーストを有効にするか | `0` |
 | `DepthOfFieldEnable` | 被写界深度を有効にするか | `0` |
-| `litByPointLight` | ポイントライトによる照明を有効にするか | `0` |
-| `collision` | 衝突判定を有効にするか | `0` |
 
 ### 数値パラメータ
 
@@ -67,5 +65,3 @@ BloomThreshold,2.5
 StarBurstThreshold,2.8
 BloomEnable,0
 StarBurstEnable,0
-litByPointLight,y
-collision,y
