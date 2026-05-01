@@ -1,6 +1,7 @@
 float2 g_TexelSize = float2(1.0 / 1600.0, 1.0 / 900.0);
 float4 g_cameraPos = float4(0.0, 0.0, 0.0, 1.0);
 float g_focalDistanceMeters = 8.0;
+float g_maxBlurDistanceMeters = 16.0;
 float g_focusBandHalfWidthMeters = 2.0;
 float g_blurRadiusPixels = 1.0;
 float g_positionRange = 50.0;
@@ -64,28 +65,30 @@ int GetBlurHalfSize(float distanceMeters)
 {
     float distanceFromFocus = abs(distanceMeters - g_focalDistanceMeters);
     float outOfFocusDistance = distanceFromFocus - g_focusBandHalfWidthMeters;
+    float maxOutOfFocusDistance = abs(g_maxBlurDistanceMeters - g_focalDistanceMeters) - g_focusBandHalfWidthMeters;
+    maxOutOfFocusDistance = max(maxOutOfFocusDistance, 0.0001f);
 
     if (outOfFocusDistance <= 0.0f)
     {
         return 0;
     }
 
-    if (outOfFocusDistance < g_blurStepMeters * 1.0f)
+    if (outOfFocusDistance < maxOutOfFocusDistance * 0.25f)
     {
         return 1; // 3x3
     }
 
-    if (outOfFocusDistance < g_blurStepMeters * 2.0f)
+    if (outOfFocusDistance < maxOutOfFocusDistance * 0.50f)
     {
         return 2; // 5x5
     }
 
-    if (outOfFocusDistance < g_blurStepMeters * 3.0f)
+    if (outOfFocusDistance < maxOutOfFocusDistance * 0.75f)
     {
         return 3; // 7x7
     }
 
-    if (outOfFocusDistance < g_blurStepMeters * 4.0f)
+    if (outOfFocusDistance < maxOutOfFocusDistance)
     {
         return 4; // 9x9
     }

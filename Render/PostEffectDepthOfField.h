@@ -20,6 +20,7 @@ public:
     bool GetEnable() const;
 
     void SetFocalDistance(float focalDistance);
+    void SetMaxBlurDistance(float maxBlurDistance);
     void SetFocusBandHalfWidth(float focusBandHalfWidth);
     void SetBlurRadiusPixels(float blurRadiusPixels);
 
@@ -44,6 +45,7 @@ private:
 
     bool m_enable = false;
     float m_focalDistance = 8.0f;
+    float m_maxBlurDistance = 16.0f;
     float m_focusBandHalfWidth = 2.0f;
     float m_blurRadiusPixels = 1.0f;
 };

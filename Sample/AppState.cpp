@@ -57,6 +57,7 @@ float g_specularEdge = 0.0f;
 bool g_bUseSpecularEdgeOverride = true;
 float g_bloomThreshold = 2.5f;
 float g_dofFocalDistance = 1.0f;
+float g_dofMaxBlurDistance = 8.0f;
 float g_starBurstThreshold = 2.8f;
 float g_modelLoadScale = 1.0f;
 D3DXCOLOR g_pointLightColor = D3DXCOLOR(1.0f, 0.35f, 0.1f, 1.0f);
@@ -149,6 +150,11 @@ float ClampBloomThreshold(const float threshold)
 float ClampDepthOfFieldFocalDistance(const float distance)
 {
     return (std::max)(DOF_FOCAL_DISTANCE_MIN, (std::min)(distance, DOF_FOCAL_DISTANCE_MAX));
+}
+
+float ClampDepthOfFieldMaxBlurDistance(const float distance)
+{
+    return (std::max)(DOF_MAX_BLUR_DISTANCE_MIN, (std::min)(distance, DOF_MAX_BLUR_DISTANCE_MAX));
 }
 
 float ClampStarBurstThreshold(const float threshold)
@@ -746,6 +752,12 @@ void ApplyDepthOfFieldFocalDistance()
     g_Render.SetPostEffectDepthOfFieldFocalDistance(g_dofFocalDistance);
 }
 
+void ApplyDepthOfFieldMaxBlurDistance()
+{
+    g_dofMaxBlurDistance = ClampDepthOfFieldMaxBlurDistance(g_dofMaxBlurDistance);
+    g_Render.SetPostEffectDepthOfFieldMaxBlurDistance(g_dofMaxBlurDistance);
+}
+
 void ApplyStarBurstThreshold()
 {
     g_starBurstThreshold = ClampStarBurstThreshold(g_starBurstThreshold);
@@ -945,6 +957,16 @@ int DepthOfFieldFocalDistanceToSliderValue(const float distance)
 float SliderValueToDepthOfFieldFocalDistance(const int sliderValue)
 {
     return ClampDepthOfFieldFocalDistance(DOF_FOCAL_DISTANCE_MIN + static_cast<float>(sliderValue) * DOF_FOCAL_DISTANCE_STEP);
+}
+
+int DepthOfFieldMaxBlurDistanceToSliderValue(const float distance)
+{
+    return static_cast<int>(std::lround((ClampDepthOfFieldMaxBlurDistance(distance) - DOF_MAX_BLUR_DISTANCE_MIN) / DOF_MAX_BLUR_DISTANCE_STEP));
+}
+
+float SliderValueToDepthOfFieldMaxBlurDistance(const int sliderValue)
+{
+    return ClampDepthOfFieldMaxBlurDistance(DOF_MAX_BLUR_DISTANCE_MIN + static_cast<float>(sliderValue) * DOF_MAX_BLUR_DISTANCE_STEP);
 }
 
 int StarBurstThresholdToSliderValue(const float threshold)
@@ -1486,6 +1508,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"DepthOfFieldFocalDistance")
             {
                 g_dofFocalDistance = std::stof(value);
+            }
+            else if (key == L"DepthOfFieldMaxBlurDistance")
+            {
+                g_dofMaxBlurDistance = std::stof(value);
             }
             else if (key == L"StarBurstThreshold")
             {

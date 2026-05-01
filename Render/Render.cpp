@@ -1213,6 +1213,11 @@ void Render::SetPostEffectDepthOfFieldFocalDistance(const float distance)
     m_postEffectDepthOfField.SetFocalDistance(distance);
 }
 
+void Render::SetPostEffectDepthOfFieldMaxBlurDistance(const float distance)
+{
+    m_postEffectDepthOfField.SetMaxBlurDistance(distance);
+}
+
 void Render::SetPostEffectStarBurst(const bool arg)
 {
     m_postEffectStarBurst.SetEnable(arg);

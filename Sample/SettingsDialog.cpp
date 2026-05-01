@@ -42,6 +42,8 @@ constexpr int BLOOM_THRESHOLD_SLIDER_MIN = 0;
 constexpr int BLOOM_THRESHOLD_SLIDER_MAX = static_cast<int>(BLOOM_THRESHOLD_MAX / BLOOM_THRESHOLD_STEP);
 constexpr int DOF_FOCAL_DISTANCE_SLIDER_MIN = 0;
 constexpr int DOF_FOCAL_DISTANCE_SLIDER_MAX = static_cast<int>((DOF_FOCAL_DISTANCE_MAX - DOF_FOCAL_DISTANCE_MIN) / DOF_FOCAL_DISTANCE_STEP);
+constexpr int DOF_MAX_BLUR_DISTANCE_SLIDER_MIN = 0;
+constexpr int DOF_MAX_BLUR_DISTANCE_SLIDER_MAX = static_cast<int>((DOF_MAX_BLUR_DISTANCE_MAX - DOF_MAX_BLUR_DISTANCE_MIN) / DOF_MAX_BLUR_DISTANCE_STEP);
 constexpr int STARBURST_THRESHOLD_SLIDER_MIN = 0;
 constexpr int STARBURST_THRESHOLD_SLIDER_MAX = static_cast<int>(STARBURST_THRESHOLD_MAX / STARBURST_THRESHOLD_STEP);
 constexpr int MODEL_LOAD_SCALE_SLIDER_MIN = 0;
@@ -70,6 +72,7 @@ int g_settingsDialogScrollPos = 0;
 
 void RefreshSaturateControls(HWND hDlg);
 void RefreshDepthOfFieldControls(HWND hDlg);
+void RefreshDepthOfFieldMaxBlurControls(HWND hDlg);
 void RefreshGaussianControls(HWND hDlg);
 void RefreshFogControls(HWND hDlg);
 void RefreshSunLightIntensityControls(HWND hDlg);
@@ -128,6 +131,7 @@ void InitializeEditableNumericFields(HWND hDlg)
     {
         IDC_EDIT_SATURATE_LEVEL,
         IDC_EDIT_DOF_FOCAL_DISTANCE,
+        IDC_EDIT_DOF_MAX_BLUR_DISTANCE,
         IDC_EDIT_GAUSSIAN_SAMPLE_SIZE,
         IDC_EDIT_FOG_INTENSITY,
         IDC_EDIT_SUN_LIGHT_INTENSITY,
@@ -186,6 +190,14 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
             ApplyDepthOfFieldFocalDistance();
         }
         RefreshDepthOfFieldControls(hDlg);
+        return true;
+    case IDC_EDIT_DOF_MAX_BLUR_DISTANCE:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_dofMaxBlurDistance = floatValue;
+            ApplyDepthOfFieldMaxBlurDistance();
+        }
+        RefreshDepthOfFieldMaxBlurControls(hDlg);
         return true;
     case IDC_EDIT_GAUSSIAN_SAMPLE_SIZE:
         if (TryParseEditInt(hDlg, commandId, intValue))
@@ -1162,6 +1174,18 @@ void RefreshDepthOfFieldControls(HWND hDlg)
                        static_cast<LPARAM>(DepthOfFieldFocalDistanceToSliderValue(g_dofFocalDistance)));
 }
 
+void RefreshDepthOfFieldMaxBlurControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_dofMaxBlurDistance);
+    SetDlgItemText(hDlg, IDC_EDIT_DOF_MAX_BLUR_DISTANCE, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_DOF_MAX_BLUR_DISTANCE,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(DepthOfFieldMaxBlurDistanceToSliderValue(g_dofMaxBlurDistance)));
+}
+
 void RefreshStarBurst(HWND hDlg)
 {
     CheckDlgButton(hDlg, IDC_CHECK_STARBURST, g_bStarBurst ? BST_CHECKED : BST_UNCHECKED);
@@ -1276,6 +1300,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshSSAOSaturationBoostControls(hDlg);
     RefreshBloomThresholdControls(hDlg);
     RefreshDepthOfFieldControls(hDlg);
+    RefreshDepthOfFieldMaxBlurControls(hDlg);
     RefreshStarBurstThresholdControls(hDlg);
     RefreshModelLoadScaleControls(hDlg);
     RefreshGaussianControls(hDlg);
@@ -1355,6 +1380,11 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_DOF_FOCAL_DISTANCE, TBM_SETRANGEMAX, FALSE, DOF_FOCAL_DISTANCE_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_DOF_FOCAL_DISTANCE, TBM_SETTICFREQ, 20, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_DOF_FOCAL_DISTANCE, TBM_SETPAGESIZE, 0, 20);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_DOF_MAX_BLUR_DISTANCE, TBM_SETRANGEMIN, FALSE, DOF_MAX_BLUR_DISTANCE_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_DOF_MAX_BLUR_DISTANCE, TBM_SETRANGEMAX, FALSE, DOF_MAX_BLUR_DISTANCE_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_DOF_MAX_BLUR_DISTANCE, TBM_SETTICFREQ, 20, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_DOF_MAX_BLUR_DISTANCE, TBM_SETPAGESIZE, 0, 20);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_STARBURST_THRESHOLD, TBM_SETRANGEMIN, FALSE, STARBURST_THRESHOLD_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_STARBURST_THRESHOLD, TBM_SETRANGEMAX, FALSE, STARBURST_THRESHOLD_SLIDER_MAX);
@@ -1859,6 +1889,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_dofFocalDistance = SliderValueToDepthOfFieldFocalDistance(sliderValue);
             ApplyDepthOfFieldFocalDistance();
             RefreshDepthOfFieldControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_DOF_MAX_BLUR_DISTANCE))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_dofMaxBlurDistance = SliderValueToDepthOfFieldMaxBlurDistance(sliderValue);
+            ApplyDepthOfFieldMaxBlurDistance();
+            RefreshDepthOfFieldMaxBlurControls(hDlg);
             return TRUE;
         }
 

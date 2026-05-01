@@ -239,6 +239,7 @@ public:
     void SetPostEffectBloomThreshold(const float threshold);
     void SetPostEffectDepthOfField(const bool arg);
     void SetPostEffectDepthOfFieldFocalDistance(const float distance);
+    void SetPostEffectDepthOfFieldMaxBlurDistance(const float distance);
 
     void SetPostEffectStarBurst(const bool arg);
     void SetPostEffectStarBurstThreshold(const float threshold);

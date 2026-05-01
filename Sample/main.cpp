@@ -102,6 +102,7 @@ void InitializeSampleScene(HWND hWnd)
     ApplySpecularEdgeOverride();
     ApplyBloomThreshold();
     ApplyDepthOfFieldFocalDistance();
+    ApplyDepthOfFieldMaxBlurDistance();
     ApplyStarBurstThreshold();
     ApplyModelLoadScale();
     ApplyGaussianSampleSize();
