@@ -60,7 +60,7 @@ constexpr int GODRAY_INTENSITY_SLIDER_MIN = 0;
 constexpr int GODRAY_INTENSITY_SLIDER_MAX = static_cast<int>(GODRAY_INTENSITY_MAX / GODRAY_INTENSITY_STEP);
 constexpr int GODRAY_POS_SLIDER_MIN = static_cast<int>(GODRAY_LIGHT_POS_MIN / GODRAY_LIGHT_POS_STEP);
 constexpr int GODRAY_POS_SLIDER_MAX = static_cast<int>(GODRAY_LIGHT_POS_MAX / GODRAY_LIGHT_POS_STEP);
-constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 986;
+constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 998;
 constexpr int SETTINGS_DIALOG_WHEEL_STEP_PX = 36;
 constexpr UINT ID_POPUP_EXPORT_BINARY = 60001;
 constexpr UINT ID_POPUP_REMOVE_MODEL = 60002;
@@ -833,16 +833,28 @@ void RefreshGaussianControls(HWND hDlg)
                        static_cast<LPARAM>(GaussianSampleSizeToSliderValue(g_gaussianSampleSize)));
 }
 
-void RefreshShadowBlurTapControls(HWND hDlg)
+void RefreshShadowPcfTapControls(HWND hDlg)
 {
     wchar_t buffer[32];
-    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%d", g_shadowBlurTapCount);
-    SetDlgItemText(hDlg, IDC_EDIT_SHADOW_BLUR_TAPS, buffer);
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%d", g_shadowPcfTapCount);
+    SetDlgItemText(hDlg, IDC_EDIT_SHADOW_PCF_TAPS, buffer);
     SendDlgItemMessage(hDlg,
-                       IDC_SLIDER_SHADOW_BLUR_TAPS,
+                       IDC_SLIDER_SHADOW_PCF_TAPS,
                        TBM_SETPOS,
                        TRUE,
-                       static_cast<LPARAM>(ShadowBlurTapCountToSliderValue(g_shadowBlurTapCount)));
+                       static_cast<LPARAM>(ShadowTapCountToSliderValue(g_shadowPcfTapCount)));
+}
+
+void RefreshShadowCompositeTapControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%d", g_shadowCompositeTapCount);
+    SetDlgItemText(hDlg, IDC_EDIT_SHADOW_COMPOSITE_TAPS, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_SHADOW_COMPOSITE_TAPS,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(ShadowTapCountToSliderValue(g_shadowCompositeTapCount)));
 }
 
 void RefreshGodRayControls(HWND hDlg)
@@ -919,7 +931,8 @@ void RefreshAllControls(HWND hDlg)
     RefreshStarBurstThresholdControls(hDlg);
     RefreshModelLoadScaleControls(hDlg);
     RefreshGaussianControls(hDlg);
-    RefreshShadowBlurTapControls(hDlg);
+    RefreshShadowPcfTapControls(hDlg);
+    RefreshShadowCompositeTapControls(hDlg);
     RefreshGodRayControls(hDlg);
 }
 
@@ -1030,10 +1043,15 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETTICFREQ, 5, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETPAGESIZE, 0, 5);
 
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_BLUR_TAPS, TBM_SETRANGEMIN, FALSE, SHADOW_BLUR_TAP_SLIDER_MIN);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_BLUR_TAPS, TBM_SETRANGEMAX, FALSE, SHADOW_BLUR_TAP_SLIDER_MAX);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_BLUR_TAPS, TBM_SETTICFREQ, 1, 0);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_BLUR_TAPS, TBM_SETPAGESIZE, 0, 1);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_PCF_TAPS, TBM_SETRANGEMIN, FALSE, SHADOW_BLUR_TAP_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_PCF_TAPS, TBM_SETRANGEMAX, FALSE, SHADOW_BLUR_TAP_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_PCF_TAPS, TBM_SETTICFREQ, 1, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_PCF_TAPS, TBM_SETPAGESIZE, 0, 1);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_COMPOSITE_TAPS, TBM_SETRANGEMIN, FALSE, SHADOW_BLUR_TAP_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_COMPOSITE_TAPS, TBM_SETRANGEMAX, FALSE, SHADOW_BLUR_TAP_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_COMPOSITE_TAPS, TBM_SETTICFREQ, 1, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_COMPOSITE_TAPS, TBM_SETPAGESIZE, 0, 1);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_R, TBM_SETRANGEMIN, FALSE, GODRAY_COLOR_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_R, TBM_SETRANGEMAX, FALSE, GODRAY_COLOR_SLIDER_MAX);
@@ -1297,12 +1315,21 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
-        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SHADOW_BLUR_TAPS))
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SHADOW_PCF_TAPS))
         {
             const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
-            g_shadowBlurTapCount = SliderValueToShadowBlurTapCount(sliderValue);
-            ApplyShadowBlurTapCount();
-            RefreshShadowBlurTapControls(hDlg);
+            g_shadowPcfTapCount = SliderValueToShadowTapCount(sliderValue);
+            ApplyShadowPcfTapCount();
+            RefreshShadowPcfTapControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SHADOW_COMPOSITE_TAPS))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_shadowCompositeTapCount = SliderValueToShadowTapCount(sliderValue);
+            ApplyShadowCompositeTapCount();
+            RefreshShadowCompositeTapControls(hDlg);
             return TRUE;
         }
 

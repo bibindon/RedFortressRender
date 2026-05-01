@@ -341,7 +341,7 @@ void PostEffectZShadow::RenderTechnique2()
     hr = g_fxDepthBufferShadow->SetFloat("g_shadowBias", 0.0002f);
     assert(hr == S_OK);
 
-    hr = g_fxDepthBufferShadow->SetInt("g_shadowBlurTapCount", m_blurTapCount);
+    hr = g_fxDepthBufferShadow->SetInt("g_shadowPcfTapCount", m_pcfTapCount);
     assert(hr == S_OK);
 
     hr = g_fxDepthBufferShadow->SetTechnique("TechniqueWriteShadow");
@@ -469,7 +469,8 @@ void PostEffectZShadow::RenderTechnique3()
     g_fxDepthBufferShadow->SetFloat("g_shadowSaturationBoost", m_shadowSaturationBoost);
     g_fxDepthBufferShadow->SetFloat("g_edgeDepthThreshold", 0.010f);
     g_fxDepthBufferShadow->SetFloat("g_edgeNormalThreshold", 0.50f);
-    g_fxDepthBufferShadow->SetInt("g_shadowBlurTapCount", m_blurTapCount);
+    g_fxDepthBufferShadow->SetInt("g_shadowPcfTapCount", m_pcfTapCount);
+    g_fxDepthBufferShadow->SetInt("g_shadowCompositeTapCount", m_compositeTapCount);
     g_fxDepthBufferShadow->CommitChanges();
 
     DrawFullscreenQuad();
@@ -548,9 +549,14 @@ void PostEffectZShadow::SetCoverage(const float coverage)
     m_coverage = ClampZeroToOne(coverage);
 }
 
-void PostEffectZShadow::SetBlurTapCount(const int tapCount)
+void PostEffectZShadow::SetPcfTapCount(const int tapCount)
 {
-    m_blurTapCount = NormalizeShadowBlurTapCount(tapCount);
+    m_pcfTapCount = NormalizeShadowBlurTapCount(tapCount);
+}
+
+void PostEffectZShadow::SetCompositeTapCount(const int tapCount)
+{
+    m_compositeTapCount = NormalizeShadowBlurTapCount(tapCount);
 }
 
 void PostEffectZShadow::OnDeviceLost()

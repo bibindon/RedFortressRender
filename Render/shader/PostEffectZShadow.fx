@@ -26,7 +26,8 @@ float g_shadowIntensity;
 float g_shadowSaturationBoost;
 float g_edgeDepthThreshold;
 float g_edgeNormalThreshold;
-int g_shadowBlurTapCount;
+int g_shadowPcfTapCount;
+int g_shadowCompositeTapCount;
 
 texture g_texLightZ;
 sampler samplerLightZ = sampler_state
@@ -100,7 +101,7 @@ float SampleShadowAmount(float2 uvLightView, float fDepthLightView)
 {
     float2 uvTexel = float2(g_shadowTexelW, g_shadowTexelH);
     const int FILTER_RADIUS_MAX = 5;
-    int filterRadius = (g_shadowBlurTapCount - 1) / 2;
+    int filterRadius = (g_shadowPcfTapCount - 1) / 2;
     filterRadius = clamp(filterRadius, 0, FILTER_RADIUS_MAX);
 
     float shadowSum = 0.0f;
@@ -362,7 +363,7 @@ void PS_Composite(in float4 inPos     : POSITION,
     float4 vShadowColorSum = 0.0f;
     float totalWeight = 0.0f;
     const int FILTER_RADIUS_MAX = 5;
-    int filterRadius = (g_shadowBlurTapCount - 1) / 2;
+    int filterRadius = (g_shadowCompositeTapCount - 1) / 2;
     filterRadius = clamp(filterRadius, 0, FILTER_RADIUS_MAX);
 
     for (int y = -FILTER_RADIUS_MAX; y <= FILTER_RADIUS_MAX; ++y)

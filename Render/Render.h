@@ -224,7 +224,8 @@ public:
     void SetPostEffectDepthBufferShadowIntensity(const float intensity);
     void SetPostEffectDepthBufferShadowSaturationBoost(const float saturationBoost);
     void SetPostEffectDepthBufferShadowCoverage(const float coverage);
-    void SetPostEffectDepthBufferShadowBlurTapCount(const int tapCount);
+    void SetPostEffectDepthBufferShadowPcfTapCount(const int tapCount);
+    void SetPostEffectDepthBufferShadowCompositeTapCount(const int tapCount);
     void SetPostEffectSSAO(const bool arg);
     void SetPostEffectSSAOBrightness(const float brightness);
     void SetPostEffectSSAOSaturationBoost(const float saturationBoost);

@@ -62,7 +62,8 @@ float g_modelLoadScale = 1.0f;
 D3DXCOLOR g_pointLightColor = D3DXCOLOR(1.0f, 0.35f, 0.1f, 1.0f);
 float g_pointLightBrightness = 1.0f;
 int g_gaussianSampleSize = 101;
-int g_shadowBlurTapCount = 11;
+int g_shadowPcfTapCount = 11;
+int g_shadowCompositeTapCount = 11;
 int g_sunId = 0;
 int g_resolutionWidth = WINDOW_SIZE_W;
 int g_resolutionHeight = WINDOW_SIZE_H;
@@ -678,10 +679,16 @@ void ApplyShadowSaturationBoost()
     g_Render.SetPostEffectDepthBufferShadowSaturationBoost(g_shadowSaturationBoost);
 }
 
-void ApplyShadowBlurTapCount()
+void ApplyShadowPcfTapCount()
 {
-    g_shadowBlurTapCount = NormalizeShadowBlurTapCountLocal(g_shadowBlurTapCount);
-    g_Render.SetPostEffectDepthBufferShadowBlurTapCount(g_shadowBlurTapCount);
+    g_shadowPcfTapCount = NormalizeShadowBlurTapCountLocal(g_shadowPcfTapCount);
+    g_Render.SetPostEffectDepthBufferShadowPcfTapCount(g_shadowPcfTapCount);
+}
+
+void ApplyShadowCompositeTapCount()
+{
+    g_shadowCompositeTapCount = NormalizeShadowBlurTapCountLocal(g_shadowCompositeTapCount);
+    g_Render.SetPostEffectDepthBufferShadowCompositeTapCount(g_shadowCompositeTapCount);
 }
 
 void ApplySSAOBrightness()
@@ -850,12 +857,12 @@ float SliderValueToShadowSaturationBoost(const int sliderValue)
     return ClampShadowSaturationBoost(static_cast<float>(sliderValue) * SHADOW_SATURATION_BOOST_STEP);
 }
 
-int ShadowBlurTapCountToSliderValue(const int tapCount)
+int ShadowTapCountToSliderValue(const int tapCount)
 {
     return ((NormalizeShadowBlurTapCountLocal(tapCount) - 1) / 2);
 }
 
-int SliderValueToShadowBlurTapCount(const int sliderValue)
+int SliderValueToShadowTapCount(const int sliderValue)
 {
     return NormalizeShadowBlurTapCountLocal((sliderValue * 2) + 1);
 }
@@ -1432,7 +1439,17 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             }
             else if (key == L"ShadowBlurTapCount")
             {
-                g_shadowBlurTapCount = std::stoi(value);
+                const int tapCount = std::stoi(value);
+                g_shadowPcfTapCount = tapCount;
+                g_shadowCompositeTapCount = tapCount;
+            }
+            else if (key == L"ShadowPcfTapCount")
+            {
+                g_shadowPcfTapCount = std::stoi(value);
+            }
+            else if (key == L"ShadowCompositeTapCount")
+            {
+                g_shadowCompositeTapCount = std::stoi(value);
             }
             else if (key == L"ShadowSaturationBoost")
             {
@@ -1489,6 +1506,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"FogEnable")
             {
                 g_bFog = (std::stoi(value) != 0);
+            }
+            else if (key == L"SaturateLevel")
+            {
+                g_saturateLevel = std::stof(value);
             }
             else if (key == L"SaturateEnable")
             {

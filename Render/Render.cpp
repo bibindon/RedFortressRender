@@ -1142,9 +1142,14 @@ void Render::SetPostEffectDepthBufferShadowCoverage(const float coverage)
     m_postEffectZShadow.SetCoverage(coverage);
 }
 
-void Render::SetPostEffectDepthBufferShadowBlurTapCount(const int tapCount)
+void Render::SetPostEffectDepthBufferShadowPcfTapCount(const int tapCount)
 {
-    m_postEffectZShadow.SetBlurTapCount(tapCount);
+    m_postEffectZShadow.SetPcfTapCount(tapCount);
+}
+
+void Render::SetPostEffectDepthBufferShadowCompositeTapCount(const int tapCount)
+{
+    m_postEffectZShadow.SetCompositeTapCount(tapCount);
 }
 
 void Render::SetPostEffectSSAO(const bool arg)

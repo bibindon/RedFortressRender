@@ -125,9 +125,12 @@
 #define IDC_STATIC_SHADOW_COVERAGE_LABEL          1124
 #define IDC_EDIT_SHADOW_COVERAGE                  1125
 #define IDC_SLIDER_SHADOW_COVERAGE                1126
-#define IDC_STATIC_SHADOW_BLUR_TAPS_LABEL         1127
-#define IDC_EDIT_SHADOW_BLUR_TAPS                 1128
-#define IDC_SLIDER_SHADOW_BLUR_TAPS               1129
+#define IDC_STATIC_SHADOW_PCF_TAPS_LABEL          1127
+#define IDC_EDIT_SHADOW_PCF_TAPS                  1128
+#define IDC_SLIDER_SHADOW_PCF_TAPS                1129
+#define IDC_STATIC_SHADOW_COMPOSITE_TAPS_LABEL    1130
+#define IDC_EDIT_SHADOW_COMPOSITE_TAPS            1131
+#define IDC_SLIDER_SHADOW_COMPOSITE_TAPS          1132
 
 // Next default values for new objects
 // 
@@ -135,7 +138,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1130
+#define _APS_NEXT_CONTROL_VALUE         1133
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
