@@ -794,7 +794,8 @@ int Render::AddMeshMix(const std::wstring& filePath,
                        const float scale,
                        const float radius,
                        const bool useParallaxOcclusionMapping,
-                       const bool useNormalMapping)
+                       const bool useNormalMapping,
+                       const bool async)
 {
     auto param = GetMeshParamPreset(eMeshParamPreset::GRASS);
     param.smooth = false;
@@ -808,7 +809,7 @@ int Render::AddMeshMix(const std::wstring& filePath,
     param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
     auto mesh = MeshMixManager(filePath, pos, rot, scale, param);
     m_meshMixList.push_back(std::move(mesh));
-    m_meshMixList.rbegin()->Initialize();
+    m_meshMixList.rbegin()->Initialize(async);
 
     return static_cast<int>(m_meshMixList.size()) - 1;
 }

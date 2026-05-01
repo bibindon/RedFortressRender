@@ -398,6 +398,10 @@ MeshMixManager::MeshMixManager(const std::wstring& filename,
 
 MeshMixManager::~MeshMixManager()
 {
+    if (m_loadThread.joinable())
+    {
+        m_loadThread.join();
+    }
     Finalize();
 }
 
@@ -436,10 +440,11 @@ MeshMixManager& MeshMixManager::operator=(MeshMixManager&& other) noexcept
     m_pos = other.m_pos;
     m_rotate = other.m_rotate;
     m_scale = other.m_scale;
-    m_bLoaded = other.m_bLoaded;
+    m_bLoaded = other.m_bLoaded.load();
     m_enabled = other.m_enabled;
     m_deviceResourceRegistered = other.m_deviceResourceRegistered;
     m_param = other.m_param;
+    m_loadThread = std::move(other.m_loadThread);
 
     other.m_materialCount = 0;
     other.m_subsetCount = 0;
@@ -450,8 +455,9 @@ MeshMixManager& MeshMixManager::operator=(MeshMixManager&& other) noexcept
     return *this;
 }
 
-void MeshMixManager::Initialize()
+void MeshMixManager::Initialize(bool async)
 {
+    // シェーダーの作成はメインスレッドで行う必要があるため、ここで実行する
     HRESULT hResult = EnsureSharedEffectCreated(SHADER_FILENAME);
     assert(hResult == S_OK);
 
@@ -461,6 +467,32 @@ void MeshMixManager::Initialize()
     }
 
     AddSharedEffectRef();
+
+    if (async)
+    {
+        if (m_loadThread.joinable())
+        {
+            m_loadThread.join();
+        }
+        m_loadThread = std::thread([this]() { InitializeInternal(); });
+    }
+    else
+    {
+        InitializeInternal();
+    }
+}
+
+void MeshMixManager::WaitForLoad()
+{
+    if (m_loadThread.joinable())
+    {
+        m_loadThread.join();
+    }
+}
+
+void MeshMixManager::InitializeInternal()
+{
+    HRESULT hResult = S_OK;
 
     LPD3DXBUFFER adjacencyBuffer = nullptr;
     LPD3DXBUFFER materialBuffer = nullptr;
@@ -670,6 +702,11 @@ void MeshMixManager::Initialize()
 
 void MeshMixManager::Finalize()
 {
+    if (m_loadThread.joinable())
+    {
+        m_loadThread.join();
+    }
+
     if (!m_bLoaded && m_D3DMesh == nullptr && m_texCubeMap == nullptr && m_texNormalMap == nullptr && m_texHeightMap == nullptr)
     {
         return;
@@ -822,6 +859,10 @@ void MeshMixManager::SetEnabled(const bool enabled)
     m_enabled = enabled;
 }
 
+bool MeshMixManager::IsLoaded() const
+{
+    return m_bLoaded;
+}
 void MeshMixManager::Render()
 {
     if (!m_bLoaded || !m_enabled)

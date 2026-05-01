@@ -148,7 +148,8 @@ public:
                    const float scale,
                    const float radius = -1.f,
                    const bool useParallaxOcclusionMapping = false,
-                   const bool useNormalMapping = false);
+                   const bool useNormalMapping = false,
+                   const bool async = true);
     bool RemoveMeshMix(int id);
     int AddMeshMixSkinAnim(const std::wstring& filePath,
                            const D3DXVECTOR3& pos,

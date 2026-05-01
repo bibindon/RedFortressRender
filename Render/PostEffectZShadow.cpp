@@ -173,6 +173,11 @@ void PostEffectZShadow::RenderTechnique1()
             continue;
         }
 
+        if (!mesh.IsLoaded())
+        {
+            continue;
+        }
+
         D3DXMATRIX mWorld = BuildMeshWorldMatrix(mesh);
         D3DXMATRIX mWorldViewProjLight;
 
@@ -316,6 +321,11 @@ void PostEffectZShadow::RenderTechnique2()
     for (auto& mesh : *m_pMeshList)
     {
         if (!mesh.IsEnabled())
+        {
+            continue;
+        }
+
+        if (!mesh.IsLoaded())
         {
             continue;
         }

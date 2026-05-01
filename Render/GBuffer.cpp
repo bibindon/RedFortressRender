@@ -132,6 +132,11 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
             continue;
         }
 
+        if (!mesh.IsLoaded())
+        {
+            continue;
+        }
+
         // 必要な定数の投入
         D3DXMATRIX matWorld;
         D3DXMatrixIdentity(&matWorld);
@@ -200,6 +205,11 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     for (auto& mesh : meshList)
     {
         if (!mesh.IsEnabled())
+        {
+            continue;
+        }
+
+        if (!mesh.IsLoaded())
         {
             continue;
         }

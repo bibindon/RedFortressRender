@@ -3,6 +3,9 @@
 #include "Common.h"
 #include "MeshMix.h"
 
+#include <atomic>
+#include <thread>
+
 namespace NSRender
 {
 
@@ -26,7 +29,9 @@ public:
     MeshMixManager(MeshMixManager&& other) noexcept;
     MeshMixManager& operator=(MeshMixManager&& other) noexcept;
 
-    void Initialize();
+    void Initialize(bool async = true);
+
+    void WaitForLoad();
 
     void Finalize();
 
@@ -50,6 +55,7 @@ public:
     DWORD GetSubsetCount() const;
     bool IsEnabled() const;
     void SetEnabled(bool enabled);
+    bool IsLoaded() const;
 
     LPD3DXMESH GetD3DMesh() const;
 
@@ -80,9 +86,10 @@ private:
     D3DXVECTOR3 m_rotate = D3DXVECTOR3(0.f, 0.f, 0.f);
     float m_scale = 0.0f;
 
-    bool m_bLoaded = false;
+    std::atomic<bool> m_bLoaded { false };
     bool m_enabled = true;
     bool m_deviceResourceRegistered = false;
+    std::thread m_loadThread;
 
     stMeshParam m_param;
 
@@ -91,5 +98,6 @@ private:
     float GetSubsetSpecularPower(const DWORD subsetIndex) const;
     LPDIRECT3DBASETEXTURE9 GetSubsetTexture(const DWORD subsetIndex) const;
     void ReleaseOwnedResources();
+    void InitializeInternal();
 };
 }
