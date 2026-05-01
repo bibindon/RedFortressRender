@@ -549,7 +549,7 @@ void MeshMixManager::InitializeInternal()
     if (csvParam.meshType == eMeshType::POM)
     {
         m_param.parallaxOcclusionMapping = true;
-        m_param.normalMapping = false;
+        m_param.normalMapping = true;
     }
     else if (csvParam.meshType == eMeshType::NormalMapping)
     {
