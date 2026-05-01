@@ -27,6 +27,18 @@ float g_shadowSaturationBoost;
 float g_edgeDepthThreshold;
 float g_edgeNormalThreshold;
 int g_shadowBlurTapCount;
+bool g_bUseTextureAlpha;
+
+texture g_texture;
+sampler samplerTexture = sampler_state
+{
+    Texture   = (g_texture);
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    MipFilter = LINEAR;
+    AddressU  = WRAP;
+    AddressV  = WRAP;
+};
 
 texture g_texLightZ;
 sampler samplerLightZ = sampler_state
@@ -149,12 +161,14 @@ float SampleShadowAmount(float2 uvLightView, float fDepthLightView)
 struct VSInDepth
 {
     float4 vPosOS  : POSITION0;
+    float2 vUV     : TEXCOORD0;
 };
 
 struct VSOutDepth
 {
     float4 vPos    : POSITION0;
     float  fDepth  : TEXCOORD0;
+    float2 uv      : TEXCOORD1;
 };
 
 float3 SkinPosition(float4 inPosition, float4 inBlendWeights, float4 inBlendIndices, int boneNumber)
@@ -190,6 +204,7 @@ VSOutDepth VS_DepthFromLight(VSInDepth vin)
     // 線形深度（ライト View 空間 z を near..far で正規化）
     float  depthLinear = (vPosLightView.z - g_lightNear) / (g_lightFar - g_lightNear);
     vout.fDepth = saturate(depthLinear);
+    vout.uv = vin.vUV;
 
     return vout;
 }
@@ -197,8 +212,10 @@ VSOutDepth VS_DepthFromLight(VSInDepth vin)
 void VS_DepthFromLightSkin(in  float4 inPosition     : POSITION,
                            in  float4 inBlendWeights : BLENDWEIGHT,
                            in  float4 inBlendIndices : BLENDINDICES,
+                           in  float2 inUV           : TEXCOORD0,
                            out float4 outPosition    : POSITION0,
                            out float  outDepth       : TEXCOORD0,
+                           out float2 outUV          : TEXCOORD1,
                            uniform int boneNumber);
 
 VertexShader vsDepthSkinArray[4] =
@@ -212,8 +229,10 @@ VertexShader vsDepthSkinArray[4] =
 void VS_DepthFromLightSkin(in  float4 inPosition     : POSITION,
                            in  float4 inBlendWeights : BLENDWEIGHT,
                            in  float4 inBlendIndices : BLENDINDICES,
+                           in  float2 inUV           : TEXCOORD0,
                            out float4 outPosition    : POSITION0,
                            out float  outDepth       : TEXCOORD0,
+                           out float2 outUV          : TEXCOORD1,
                            uniform int boneNumber)
 {
     float3 worldPos = SkinPosition(inPosition, inBlendWeights, inBlendIndices, boneNumber);
@@ -221,10 +240,17 @@ void VS_DepthFromLightSkin(in  float4 inPosition     : POSITION,
 
     outPosition = mul(float4(worldPos, 1.0f), g_matLightViewProj);
     outDepth = saturate((posLightView.z - g_lightNear) / (g_lightFar - g_lightNear));
+    outUV = inUV;
 }
 
 float4 PS_DepthFromLight(VSOutDepth pin) : COLOR0
 {
+    if (g_bUseTextureAlpha)
+    {
+        float alpha = tex2D(samplerTexture, pin.uv).a;
+        clip(alpha - 0.5f);
+    }
+
     float d = pin.fDepth;
     return float4(d, d, d, 1.0f);
 }
@@ -286,6 +312,12 @@ void PS_WriteShadow(in float4 inPos       : POSITION0,
 
                     out float4 outColor   : COLOR0)
 {
+    if (g_bUseTextureAlpha)
+    {
+        float alpha = tex2D(samplerTexture, inUV).a;
+        clip(alpha - 0.5f);
+    }
+
     outColor = float4(0, 0, 0, 0);
     
     //---------------------------------------------------------

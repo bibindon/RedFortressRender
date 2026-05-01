@@ -7,10 +7,11 @@ namespace NSRender
 {
 namespace
 {
-constexpr float SHADOW_VIEW_SIZE_MIN = 20.0f;
+constexpr float SHADOW_VIEW_SIZE_MIN = 3.0f;
 constexpr float SHADOW_VIEW_SIZE_MAX = 120.0f;
 constexpr int SHADOW_BLUR_TAP_COUNT_MIN = 1;
 constexpr int SHADOW_BLUR_TAP_COUNT_MAX = 11;
+const D3DXVECTOR3 SHADOW_CAMERA_OFFSET(40.0f, 50.0f, -40.0f);
 
 D3DXMATRIX BuildMeshWorldMatrix(const MeshMixManager& mesh)
 {
@@ -160,8 +161,9 @@ void PostEffectZShadow::RenderTechnique1()
                              0);
     assert(hr == S_OK);
 
-    D3DXVECTOR3 vLightEye(40, 50, -40);
-    D3DXVECTOR3 vLightAt(0, 0, 0);
+    const D3DXVECTOR3 focusPoint = Camera::GetEyePos();
+    const D3DXVECTOR3 vLightEye = focusPoint + SHADOW_CAMERA_OFFSET;
+    const D3DXVECTOR3 vLightAt = focusPoint;
     D3DXVECTOR3 vLightUp(0, 1, 0);
     D3DXMatrixLookAtLH(&mLightView, &vLightEye, &vLightAt, &vLightUp);
 

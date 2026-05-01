@@ -98,7 +98,6 @@ private:
     void ModifyMeshForNormalMapping(LPD3DXMESH& pMesh);
     D3DXVECTOR4 GetSubsetDiffuse(const DWORD subsetIndex) const;
     float GetSubsetSpecularPower(const DWORD subsetIndex) const;
-    LPDIRECT3DBASETEXTURE9 GetSubsetTexture(const DWORD subsetIndex) const;
     void ReleaseOwnedResources();
     void InitializeInternal();
 };
