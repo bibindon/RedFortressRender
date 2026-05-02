@@ -30,6 +30,9 @@ struct stMeshParam
     //float specularEdge = 0.8f;
     float specularEdge = 0.0f;
 
+    // 設定ダイアログのスペキュラ光の強さで上書きするか
+    bool specularIntensityOverrideEnabled = true;
+
     // 設定ダイアログのスペキュラ光の鋭さで上書きするか
     bool specularEdgeOverrideEnabled = true;
 

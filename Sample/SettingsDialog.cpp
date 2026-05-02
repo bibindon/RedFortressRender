@@ -1071,6 +1071,14 @@ void RefreshSpecularIntensityControls(HWND hDlg)
                        TBM_SETPOS,
                        TRUE,
                        static_cast<LPARAM>(SpecularIntensityToSliderValue(g_specularIntensity)));
+
+    CheckDlgButton(hDlg,
+                   IDC_CHECK_SPECULAR_INTENSITY_OVERRIDE,
+                   g_bUseSpecularIntensityOverride ? BST_CHECKED : BST_UNCHECKED);
+
+    const BOOL enabled = g_bUseSpecularIntensityOverride ? TRUE : FALSE;
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SPECULAR_INTENSITY), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SPECULAR_INTENSITY), enabled);
 }
 
 void RefreshSpecularEdgeControls(HWND hDlg)
@@ -2253,6 +2261,14 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_bGodRay = (IsDlgButtonChecked(hDlg, IDC_CHECK_GODRAY) == BST_CHECKED);
             ApplyGodRay();
             RefreshGodRayControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_SPECULAR_INTENSITY_OVERRIDE)
+        {
+            g_bUseSpecularIntensityOverride = (IsDlgButtonChecked(hDlg, IDC_CHECK_SPECULAR_INTENSITY_OVERRIDE) == BST_CHECKED);
+            ApplySpecularIntensityOverride();
+            RefreshSpecularIntensityControls(hDlg);
             return TRUE;
         }
 

@@ -35,6 +35,7 @@ public:
     void SetShadowDarkness(const float darkness);
     void SetSpecularIntensity(const float intensity);
     void SetSpecularEdge(const float edge);
+    void SetSpecularIntensityOverrideEnabled(const bool enabled);
     void SetSpecularEdgeOverrideEnabled(const bool enabled);
     void SetRotY(const float rotY);
 

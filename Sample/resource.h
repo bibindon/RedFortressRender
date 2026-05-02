@@ -142,6 +142,7 @@
 #define IDC_SLIDER_GODRAY_VIRTUAL_PROXIMITY       1138
 #define IDC_RADIO_DEPTH_OF_FIELD_ON     1139
 #define IDC_RADIO_DEPTH_OF_FIELD_AUTO   1140
+#define IDC_CHECK_SPECULAR_INTENSITY_OVERRIDE 1144
 
 // Next default values for new objects
 // 
@@ -149,7 +150,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1144
+#define _APS_NEXT_CONTROL_VALUE         1145
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

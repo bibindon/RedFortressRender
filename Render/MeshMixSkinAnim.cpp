@@ -27,6 +27,12 @@ float ConvertXMaterialPowerToShaderPower(const float materialPower)
     const float clampedPower = (std::max)(0.0f, (std::min)(materialPower, 255.0f));
     return clampedPower;
 }
+
+float GetMaterialSpecularIntensity(const D3DMATERIAL9& material)
+{
+    return (std::max)(material.Specular.r,
+           (std::max)(material.Specular.g, material.Specular.b));
+}
 }
 
 MeshMixSkinAnim::MeshMixSkinAnim(const std::wstring& filename,
@@ -289,6 +295,11 @@ void MeshMixSkinAnim::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBas
                             material.Diffuse.a);
         m_D3DEffect->SetVector("g_diffuse", &diffuse);
 
+        const float specularIntensity = m_param.specularIntensityOverrideEnabled
+            ? m_param.specularIntensity
+            : GetMaterialSpecularIntensity(material);
+        m_D3DEffect->SetFloat("g_specularIntensity", specularIntensity);
+
         const float specularPower = m_param.specularEdgeOverrideEnabled
             ? ConvertSpecularEdgeToShaderPower(m_param.specularEdge)
             : ConvertXMaterialPowerToShaderPower(material.Power);
@@ -424,6 +435,11 @@ void MeshMixSkinAnim::SetSpecularIntensity(const float intensity)
 void MeshMixSkinAnim::SetSpecularEdge(const float edge)
 {
     m_param.specularEdge = edge;
+}
+
+void MeshMixSkinAnim::SetSpecularIntensityOverrideEnabled(const bool enabled)
+{
+    m_param.specularIntensityOverrideEnabled = enabled;
 }
 
 void MeshMixSkinAnim::SetSpecularEdgeOverrideEnabled(const bool enabled)

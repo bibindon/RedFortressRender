@@ -13,6 +13,8 @@ ShadowPcfTapCount,3
 ShadowCompositeTapCount,3
 SSAOBrightness,1.0
 SSAOSaturationBoost,1.00
+SpecularIntensity,0.1
+SpecularIntensityOverride,0
 BloomThreshold,2.5
 DepthOfFieldMode,0
 DepthOfFieldFocalDistance,1.0

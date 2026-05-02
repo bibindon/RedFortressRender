@@ -476,6 +476,7 @@ MeshMixManager& MeshMixManager::operator=(MeshMixManager&& other) noexcept
     m_materialCount = other.m_materialCount;
     m_subsetCount = other.m_subsetCount;
     m_vecDiffuse = std::move(other.m_vecDiffuse);
+    m_vecSpecularIntensity = std::move(other.m_vecSpecularIntensity);
     m_vecSpecularPower = std::move(other.m_vecSpecularPower);
     m_vecTexture = std::move(other.m_vecTexture);
 
@@ -678,6 +679,7 @@ void MeshMixManager::InitializeInternal()
     xFileDir = xFileDir.substr(0, lastPos + 1);
 
     std::vector<D3DXVECTOR4> diffuseList;
+    std::vector<float> specularIntensityList;
     std::vector<float> specularPowerList;
     std::vector<LPDIRECT3DBASETEXTURE9> diffuseTextureList;
 
@@ -688,6 +690,9 @@ void MeshMixManager::InitializeInternal()
         diffuse.y = materialList[i].MatD3D.Diffuse.g;
         diffuse.z = materialList[i].MatD3D.Diffuse.b;
         diffuse.w = materialList[i].MatD3D.Diffuse.a;
+        const float specularIntensity = (std::max)(materialList[i].MatD3D.Specular.r,
+                                        (std::max)(materialList[i].MatD3D.Specular.g,
+                                                   materialList[i].MatD3D.Specular.b));
         const float specularPower = ConvertXMaterialPowerToShaderPower(materialList[i].MatD3D.Power);
 
         LPDIRECT3DBASETEXTURE9 tempTexture = nullptr;
@@ -739,6 +744,7 @@ void MeshMixManager::InitializeInternal()
         else
         {
             diffuseList.push_back(diffuse);
+            specularIntensityList.push_back(specularIntensity);
             specularPowerList.push_back(specularPower);
             diffuseTextureList.push_back(tempTexture);
         }
@@ -747,6 +753,7 @@ void MeshMixManager::InitializeInternal()
     if (!diffuseList.empty())
     {
         m_vecDiffuse = diffuseList;
+        m_vecSpecularIntensity = specularIntensityList;
         m_vecSpecularPower = specularPowerList;
         m_vecTexture = diffuseTextureList;
         m_subsetCount = (std::min)(m_subsetCount, static_cast<DWORD>(m_vecDiffuse.size()));
@@ -754,6 +761,7 @@ void MeshMixManager::InitializeInternal()
     else
     {
         m_vecDiffuse.assign(m_subsetCount, D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f));
+        m_vecSpecularIntensity.assign(m_subsetCount, m_param.specularIntensity);
         m_vecSpecularPower.assign(m_subsetCount, ConvertSpecularEdgeToShaderPower(m_param.specularEdge));
         m_vecTexture.assign(m_subsetCount, nullptr);
     }
@@ -796,6 +804,7 @@ void MeshMixManager::ReleaseOwnedResources()
     }
     m_vecTexture.clear();
     m_vecDiffuse.clear();
+    m_vecSpecularIntensity.clear();
     m_vecSpecularPower.clear();
 
     SAFE_RELEASE(m_texCubeMap);
@@ -883,6 +892,11 @@ void MeshMixManager::SetShadowDarkness(const float darkness)
 void MeshMixManager::SetSpecularIntensity(const float intensity)
 {
     m_param.specularIntensity = intensity;
+}
+
+void MeshMixManager::SetSpecularIntensityOverrideEnabled(const bool enabled)
+{
+    m_param.specularIntensityOverrideEnabled = enabled;
 }
 
 void MeshMixManager::SetSpecularEdge(const float edge)
@@ -1112,6 +1126,9 @@ void MeshMixManager::Render()
             hResult = sharedEffect->SetVector("g_diffuse", &diffuse);
             assert(hResult == S_OK);
 
+            hResult = sharedEffect->SetFloat("g_specularIntensity", GetSubsetSpecularIntensity(subsetIndex));
+            assert(hResult == S_OK);
+
             hResult = sharedEffect->SetFloat("g_specularPower", GetSubsetSpecularPower(subsetIndex));
             assert(hResult == S_OK);
 
@@ -1160,6 +1177,21 @@ D3DXVECTOR4 MeshMixManager::GetSubsetDiffuse(const DWORD subsetIndex) const
     }
 
     return D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
+}
+
+float MeshMixManager::GetSubsetSpecularIntensity(const DWORD subsetIndex) const
+{
+    if (m_param.specularIntensityOverrideEnabled)
+    {
+        return m_param.specularIntensity;
+    }
+
+    if (subsetIndex < m_vecSpecularIntensity.size())
+    {
+        return m_vecSpecularIntensity.at(subsetIndex);
+    }
+
+    return m_param.specularIntensity;
 }
 
 float MeshMixManager::GetSubsetSpecularPower(const DWORD subsetIndex) const

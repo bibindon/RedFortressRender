@@ -54,6 +54,7 @@ float g_halfLambertShadowSaturation = 1.0f;
 float g_shadowDarkness = 0.3f;
 float g_specularIntensity = 0.1f;
 float g_specularEdge = 0.0f;
+bool g_bUseSpecularIntensityOverride = false;
 bool g_bUseSpecularEdgeOverride = false;
 float g_bloomThreshold = 2.5f;
 float g_dofFocalDistance = 1.0f;
@@ -735,6 +736,12 @@ void ApplySpecularIntensity()
 {
     g_specularIntensity = ClampSpecularIntensity(g_specularIntensity);
     g_Render.SetMeshMixSpecularIntensity(g_specularIntensity);
+}
+
+void ApplySpecularIntensityOverride()
+{
+    g_Render.SetMeshMixSpecularIntensityOverrideEnabled(g_bUseSpecularIntensityOverride);
+    RefreshSettingsDialogState();
 }
 
 void ApplySpecularEdge()
@@ -1631,6 +1638,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"SpecularIntensity")
             {
                 g_specularIntensity = std::stof(value);
+            }
+            else if (key == L"SpecularIntensityOverride")
+            {
+                g_bUseSpecularIntensityOverride = (std::stoi(value) != 0);
             }
             else if (key == L"SpecularEdge")
             {

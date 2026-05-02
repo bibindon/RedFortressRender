@@ -98,6 +98,7 @@ void InitializeSampleScene(HWND hWnd)
     ApplyHalfLambertShadowSaturation();
     ApplyShadowDarkness();
     ApplySpecularIntensity();
+    ApplySpecularIntensityOverride();
     ApplySpecularEdge();
     ApplySpecularEdgeOverride();
     ApplyBloomThreshold();
