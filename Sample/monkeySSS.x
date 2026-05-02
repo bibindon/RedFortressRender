@@ -30692,7 +30692,7 @@ Frame Root {
            96.078431;
            0.500000; 0.500000; 0.500000;;
            0.000000; 0.000000; 0.000000;;
-          TextureFilename {"wood.png";}
+          TextureFilename {"SSS.png";}
         }
       } // End of Suzanne material list
     } // End of Suzanne mesh

@@ -1,4 +1,4 @@
-#include "MeshSSSLike.h"
+ï»¿#include "MeshSSSLike.h"
 
 #include "Camera.h"
 
@@ -43,7 +43,7 @@ void MeshSSSLike::Initialize(const std::wstring& filename,
     assert(hResult == S_OK);
 
     {
-        // ‚È‚ß‚ç‚©‚Èƒ‰ƒCƒeƒBƒ“ƒO‚Ì‚½‚ß‚É–@üî•ñ‚ðŒvŽZ‚µ‚È‚¨‚·
+        // ãªã‚ã‚‰ã‹ãªãƒ©ã‚¤ãƒ†ã‚£ãƒ³ã‚°ã®ãŸã‚ã«æ³•ç·šæƒ…å ±ã‚’è¨ˆç®—ã—ãªãŠã™
 
         DWORD fvf = m_D3DMesh->GetFVF();
         if ((fvf & D3DFVF_NORMAL) == 0)
@@ -59,7 +59,7 @@ void MeshSSSLike::Initialize(const std::wstring& filename,
 
         std::vector<DWORD> adj(m_D3DMesh->GetNumFaces() * 3);
 
-        // ‚µ‚«‚¢’l‚Íƒ‚ƒfƒ‹‚É‡‚í‚¹‚Ä
+        // ã—ãã„å€¤ã¯ãƒ¢ãƒ‡ãƒ«ã«åˆã‚ã›ã¦
         m_D3DMesh->GenerateAdjacency(1e-6f, adj.data());
 
         HRESULT hr = D3DXComputeNormals(m_D3DMesh, adj.data());
