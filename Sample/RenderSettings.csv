@@ -4,6 +4,8 @@ FogEnable,1
 SaturateEnable,1
 SaturateLevel,0.4
 GaussianEnable,0
+MaskedGaussianEnable,0
+MaskedGaussianMaskPath,
 GaussianSampleSize,101
 FogIntensity,20.0
 ShadowIntensity,0.25

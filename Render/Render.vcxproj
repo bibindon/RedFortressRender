@@ -53,6 +53,7 @@
     <ClCompile Include="PostEffectZShadow.cpp" />
     <ClCompile Include="PostEffectEnd.cpp" />
     <ClCompile Include="PostEffectGauss.cpp" />
+    <ClCompile Include="PostEffectMaskedGauss.cpp" />
     <ClCompile Include="PostEffectSaturate.cpp" />
     <ClCompile Include="PostEffectSSAO.cpp" />
     <ClCompile Include="PostEffectStarBurst.cpp" />
@@ -92,6 +93,7 @@
     <ClInclude Include="PostEffectZShadow.h" />
     <ClInclude Include="PostEffectEnd.h" />
     <ClInclude Include="PostEffectGauss.h" />
+    <ClInclude Include="PostEffectMaskedGauss.h" />
     <ClInclude Include="PostEffectSaturate.h" />
     <ClInclude Include="PostEffectSSAO.h" />
     <ClInclude Include="PostEffectStarBurst.h" />
@@ -170,6 +172,7 @@
       <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableOptimizations>
       <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</EnableDebuggingInformation>
     </FxCompile>
+    <FxCompile Include="shader\PostEffectMaskedGaussian.fx" />
     <FxCompile Include="shader\PostEffectSaturate.fx">
       <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableOptimizations>
       <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</EnableDebuggingInformation>

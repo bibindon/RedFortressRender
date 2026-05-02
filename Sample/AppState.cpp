@@ -33,9 +33,11 @@ std::wstring g_selectedMeshPath;
 std::wstring g_selectedAnimMeshPath;
 std::wstring g_selectedSkinAnimMeshPath;
 std::wstring g_selectedMixSkinAnimMeshPath;
+std::wstring g_selectedMaskedGaussianMaskPath;
 bool g_bAnimateLight = false;
 bool g_bRemoteDesktop = true;
 bool g_bGaussianFilter = false;
+bool g_bMaskedGaussianFilter = false;
 bool g_bDepthBufferShadow = true;
 bool g_bSSAO = true;
 bool g_bFog = true;
@@ -659,10 +661,17 @@ void ApplyPostEffectToggleSettings()
     g_Render.SetPostEffectFog(g_bFog);
     g_Render.SetPostEffectSaturateEnable(g_bSaturateFilter);
     g_Render.SetPostEffectGaussianFilter(g_bGaussianFilter);
+    g_Render.SetPostEffectMaskedGaussianFilter(g_bMaskedGaussianFilter);
     g_Render.SetPostEffectBloom(g_bBloom);
     ApplyDepthOfFieldMode();
     g_Render.SetPostEffectStarBurst(g_bStarBurst);
     ApplyGodRay();
+}
+
+void ApplyMaskedGaussianMaskPath()
+{
+    g_Render.SetPostEffectMaskedGaussianMaskPath(g_selectedMaskedGaussianMaskPath);
+    RefreshSettingsDialogState();
 }
 
 void ApplyFogIntensity()
@@ -1451,7 +1460,7 @@ void SpawnMeshMixSkinAnimAtLookAt(const std::wstring& filePath)
     RegisterLoadedModel(L"MeshMixSkinAnim", filePath, pos, g_modelLoadScale, renderId);
 }
 
-bool ShowOpenFileDialog(HWND hWnd, const wchar_t* filter, std::wstring& selectedPath)
+bool ShowOpenFileDialog(HWND hWnd, const wchar_t* filter, std::wstring& selectedPath, const wchar_t* defaultExt)
 {
     wchar_t filePath[MAX_PATH] { };
 
@@ -1462,7 +1471,7 @@ bool ShowOpenFileDialog(HWND hWnd, const wchar_t* filter, std::wstring& selected
     ofn.lpstrFile = filePath;
     ofn.nMaxFile = static_cast<DWORD>(_countof(filePath));
     ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
-    ofn.lpstrDefExt = L"x";
+    ofn.lpstrDefExt = defaultExt;
 
     if (!GetOpenFileNameW(&ofn))
     {
@@ -1698,6 +1707,14 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"GaussianEnable")
             {
                 g_bGaussianFilter = (std::stoi(value) != 0);
+            }
+            else if (key == L"MaskedGaussianEnable")
+            {
+                g_bMaskedGaussianFilter = (std::stoi(value) != 0);
+            }
+            else if (key == L"MaskedGaussianMaskPath")
+            {
+                g_selectedMaskedGaussianMaskPath = value;
             }
             else if (key == L"BloomEnable")
             {

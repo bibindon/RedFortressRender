@@ -36,6 +36,7 @@
 #include "MeshInstancing.h"
 
 #include "PostEffectGauss.h"
+#include "PostEffectMaskedGauss.h"
 #include "PostEffectSaturate.h"
 #include "PostEffectBloom.h"
 #include "PostEffectStarBurst.h"
@@ -221,6 +222,9 @@ public:
 
     void SetPostEffectGaussianFilter(const bool arg);
     void SetPostEffectGaussianSampleSize(const int sampleSize);
+    void SetPostEffectMaskedGaussianFilter(const bool arg);
+    void SetPostEffectMaskedGaussianSampleSize(const int sampleSize);
+    void SetPostEffectMaskedGaussianMaskPath(const std::wstring& maskPath);
     void SetPostEffectDepthBufferShadow(const bool arg);
     void SetPostEffectDepthBufferShadowIntensity(const float intensity);
     void SetPostEffectDepthBufferShadowSaturationBoost(const float saturationBoost);
@@ -328,6 +332,7 @@ private:
 
     // ガウスフィルター
     PostEffectGauss m_postEffectGauss;
+    PostEffectMaskedGauss m_postEffectMaskedGauss;
 
     // スターバースト
     PostEffectStarBurst m_postEffectStarBurst;
@@ -346,8 +351,10 @@ private:
 
     std::unordered_map<std::wstring, std::wstring> m_settings;
     int m_gaussianSampleSize = 101;
+    std::wstring m_maskedGaussianMaskPath;
     bool m_postEffectSaturateEnabled = false;
     bool m_postEffectGaussEnabled = false;
+    bool m_postEffectMaskedGaussEnabled = false;
     bool m_postEffectZShadowEnabled = true;
     bool m_postEffectSSAOEnabled = true;
     bool m_postEffectFogZEnabled = true;

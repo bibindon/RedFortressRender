@@ -108,6 +108,7 @@ void InitializeSampleScene(HWND hWnd)
     ApplyStarBurstThreshold();
     ApplyModelLoadScale();
     ApplyGaussianSampleSize();
+    ApplyMaskedGaussianMaskPath();
     ApplyPostEffectToggleSettings();
     ApplyGodRayLightColor();
     ApplyGodRayIntensity();

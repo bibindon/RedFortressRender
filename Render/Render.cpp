@@ -204,6 +204,22 @@ void Render::ApplySettings()
         SetPostEffectGaussianSampleSize(m_gaussianSampleSize);
     }
 
+    const auto maskedGaussianEnable = m_settings.find(L"MaskedGaussianEnable");
+    if (maskedGaussianEnable != m_settings.end())
+    {
+        bool enabled = true;
+        if (TryParseBoolSetting(maskedGaussianEnable->second, enabled))
+        {
+            SetPostEffectMaskedGaussianFilter(enabled);
+        }
+    }
+
+    const auto maskedGaussianMaskPath = m_settings.find(L"MaskedGaussianMaskPath");
+    if (maskedGaussianMaskPath != m_settings.end())
+    {
+        SetPostEffectMaskedGaussianMaskPath(maskedGaussianMaskPath->second);
+    }
+
     const auto fogIntensity = m_settings.find(L"FogIntensity");
     if (fogIntensity != m_settings.end())
     {
@@ -489,6 +505,7 @@ void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
 
     // ガウスフィルター
     m_postEffectGauss.Initialize();
+    m_postEffectMaskedGauss.Initialize();
     ApplySettings();
 
     // ブルーム
@@ -605,6 +622,11 @@ void Render::Draw()
     if (m_postEffectGaussEnabled)
     {
         pTempTexture = m_postEffectGauss.Draw(pTempTexture);
+    }
+
+    if (m_postEffectMaskedGaussEnabled)
+    {
+        pTempTexture = m_postEffectMaskedGauss.Draw(pTempTexture);
     }
 
     // g_pRenderTargetの内容を画面に転送
@@ -1224,6 +1246,24 @@ void Render::SetPostEffectGaussianSampleSize(const int sampleSize)
 {
     m_gaussianSampleSize = NormalizeGaussianSampleSize(sampleSize);
     m_postEffectGauss.SetSampleSize(m_gaussianSampleSize);
+    m_postEffectMaskedGauss.SetSampleSize(m_gaussianSampleSize);
+}
+
+void Render::SetPostEffectMaskedGaussianFilter(const bool arg)
+{
+    m_postEffectMaskedGaussEnabled = arg;
+}
+
+void Render::SetPostEffectMaskedGaussianSampleSize(const int sampleSize)
+{
+    m_gaussianSampleSize = NormalizeGaussianSampleSize(sampleSize);
+    m_postEffectMaskedGauss.SetSampleSize(m_gaussianSampleSize);
+}
+
+void Render::SetPostEffectMaskedGaussianMaskPath(const std::wstring& maskPath)
+{
+    m_maskedGaussianMaskPath = maskPath;
+    m_postEffectMaskedGauss.SetMaskPath(maskPath);
 }
 
 void Render::SetPostEffectDepthBufferShadow(const bool arg)

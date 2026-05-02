@@ -592,6 +592,7 @@ void RefreshSelectedMeshPaths(HWND hDlg)
     SetDlgItemText(hDlg, IDC_EDIT_ANIM_MESH_PATH, g_selectedAnimMeshPath.c_str());
     SetDlgItemText(hDlg, IDC_EDIT_SKIN_ANIM_MESH_PATH, g_selectedSkinAnimMeshPath.c_str());
     SetDlgItemText(hDlg, IDC_EDIT_MIX_SKIN_ANIM_MESH_PATH, g_selectedMixSkinAnimMeshPath.c_str());
+    SetDlgItemText(hDlg, IDC_EDIT_MASKED_GAUSSIAN_MASK_PATH, g_selectedMaskedGaussianMaskPath.c_str());
 }
 
 void RefreshMixMeshShaderMode(HWND hDlg)
@@ -1245,6 +1246,7 @@ void RefreshStarBurst(HWND hDlg)
 void RefreshGaussianControls(HWND hDlg)
 {
     CheckDlgButton(hDlg, IDC_CHECK_GAUSSIAN_FILTER, g_bGaussianFilter ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(hDlg, IDC_CHECK_MASKED_GAUSSIAN_FILTER, g_bMaskedGaussianFilter ? BST_CHECKED : BST_UNCHECKED);
 
     wchar_t buffer[32];
     std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%d", g_gaussianSampleSize);
@@ -1587,6 +1589,19 @@ bool HandleOpenMeshCommand(HWND hDlg, const WORD commandId)
                                g_selectedMixSkinAnimMeshPath))
         {
             SpawnMeshMixSkinAnimAtLookAt(g_selectedMixSkinAnimMeshPath);
+            RefreshSelectedMeshPaths(hDlg);
+        }
+        return true;
+    }
+
+    if (commandId == IDC_BUTTON_OPEN_MASKED_GAUSSIAN_MASK)
+    {
+        if (ShowOpenFileDialog(hDlg,
+                               L"Image Files (*.png;*.jpg;*.jpeg;*.bmp;*.dds;*.tga)\0*.png;*.jpg;*.jpeg;*.bmp;*.dds;*.tga\0All Files (*.*)\0*.*\0",
+                               g_selectedMaskedGaussianMaskPath,
+                               L"png"))
+        {
+            ApplyMaskedGaussianMaskPath();
             RefreshSelectedMeshPaths(hDlg);
         }
         return true;
@@ -2212,6 +2227,14 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         {
             g_bGaussianFilter = (IsDlgButtonChecked(hDlg, IDC_CHECK_GAUSSIAN_FILTER) == BST_CHECKED);
             g_Render.SetPostEffectGaussianFilter(g_bGaussianFilter);
+            RefreshGaussianControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_MASKED_GAUSSIAN_FILTER)
+        {
+            g_bMaskedGaussianFilter = (IsDlgButtonChecked(hDlg, IDC_CHECK_MASKED_GAUSSIAN_FILTER) == BST_CHECKED);
+            g_Render.SetPostEffectMaskedGaussianFilter(g_bMaskedGaussianFilter);
             RefreshGaussianControls(hDlg);
             return TRUE;
         }
