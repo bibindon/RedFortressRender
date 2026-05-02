@@ -1140,7 +1140,10 @@ void ApplyGodRayIntensity()
 
 void ApplyGodRayLightPos()
 {
-    g_Render.SetPostEffectGodRayLightPos(GetGodRayRenderLightPos());
+    const bool useVirtualLight = IsGodRayLightBehindCamera();
+    g_Render.SetPostEffectGodRayLightPos(useVirtualLight ? GetEffectiveGodRayLightPos()
+                                                         : g_godRayLightPos);
+    g_Render.SetPostEffectGodRayReverseSampling(useVirtualLight);
 
     if (g_godRaySourceMarkerMeshId != -1)
     {

@@ -13,6 +13,7 @@ float3 g_LightColor = float3(1.0f, 0.9f, 0.8f);
 float  g_RayLength = 1.0f;
 float  g_RayIntensity = 0.6f;
 float  g_OcclusionFalloff = 5.0f;
+float  g_ReverseSampling = 0.0f;
 
 static const int SAMPLE_COUNT = 128;
 
@@ -115,6 +116,10 @@ float4 PS_Blur(VS_OUT i) : COLOR
 float4 PS_GodRay(VS_OUT i) : COLOR
 {
     float2 dir = g_LightScreenPos - i.uv;
+    if (g_ReverseSampling > 0.5f)
+    {
+        dir = -dir;
+    }
 
     float visibilitySum = 0.0f;
     float validSampleCount = 0.0f;

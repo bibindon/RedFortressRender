@@ -1261,6 +1261,11 @@ void Render::SetPostEffectGodRayLightPos(const D3DXVECTOR3& pos)
     m_postEffectGodRay.SetLightPos(pos);
 }
 
+void Render::SetPostEffectGodRayReverseSampling(const bool arg)
+{
+    m_postEffectGodRay.SetReverseSampling(arg);
+}
+
 void Render::SetPostEffectGodRayRayLength(const float arg)
 {
     m_postEffectGodRay.SetRayLength(arg);

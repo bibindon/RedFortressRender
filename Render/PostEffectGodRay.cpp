@@ -97,11 +97,13 @@ LPDIRECT3DTEXTURE9 PostEffectGodRay::Draw(LPDIRECT3DTEXTURE9 renderTarget,
 
     float lightPos2[2] = { screenU, screenV };
     float lightColor3[3] = { m_lightColor.x, m_lightColor.y, m_lightColor.z };
+    const float reverseSampling = m_reverseSampling ? 1.0f : 0.0f;
 
     m_d3dEffect->SetTexture("g_SceneTex", renderTarget);
     m_d3dEffect->SetTexture("g_OcclusionTex", m_texOcclusionBlurred);
     m_d3dEffect->SetFloatArray("g_LightScreenPos", lightPos2, 2);
     m_d3dEffect->SetFloatArray("g_LightColor", lightColor3, 3);
+    m_d3dEffect->SetFloat("g_ReverseSampling", reverseSampling);
     m_d3dEffect->SetFloat("g_RayLength", m_rayLength);
     m_d3dEffect->SetFloat("g_RayIntensity", m_rayIntensity * lightVisible);
     m_d3dEffect->SetFloat("g_OcclusionFalloff", m_occlusionFalloff);

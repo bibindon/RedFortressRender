@@ -23,6 +23,7 @@ public:
     void SetRayIntensity(const float arg)     { m_rayIntensity = arg; }
     void SetOcclusionFalloff(const float arg) { m_occlusionFalloff = arg; }
     void SetLightColor(const D3DXVECTOR3& c)  { m_lightColor = c; }
+    void SetReverseSampling(const bool arg)   { m_reverseSampling = arg; }
 
     void OnDeviceLost();
     void OnDeviceReset();
@@ -52,6 +53,7 @@ private:
     float       m_rayIntensity    = 0.6f;
     float       m_occlusionFalloff = 5.0f;
     D3DXVECTOR3 m_lightColor      = D3DXVECTOR3(1.0f, 0.9f, 0.8f);
+    bool        m_reverseSampling = false;
 };
 
 }
