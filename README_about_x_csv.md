@@ -180,6 +180,19 @@ SSAO の対象にするかどうかを指定します。
 | `y` | 深度バッファシャドウの対象にする |
 | `n` | 深度バッファシャドウの対象にしない |
 
+`zshadow` というキー名でも同じ意味で指定できます。
+
+---
+
+### lambertShadow
+
+ランバート拡散による陰を出すかどうかを指定します。
+
+| 値 | 説明 |
+|---|---|
+| `y` | 通常どおり陰を出す |
+| `n` | ランバートの陰を出さない |
+
 ---
 
 ### collision
@@ -203,5 +216,6 @@ cubeMappingGauss,0.2
 litByPointLight,y
 ssao,n
 shadow,y
+lambertShadow,y
 collision,n
 ```

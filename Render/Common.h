@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <d3d9.h>
 #include <d3dx9.h>
@@ -31,9 +31,9 @@ public:
 
     static constexpr float ANIMATION_SPEED = 1.0f / 60;
 
-    // ‰ğ‘œ“x‚Í1600x900‚ğŠî–{‚Æl‚¦‚éB
-    // —á‚¦‚Î1920x1080‚ÍA1.2”{‚Ì‰ğ‘œ“xA‚Æl‚¦‚éB
-    // ‚±‚Ìl‚¦‚É]‚Á‚ÄUI‚Ì‘å‚«‚³‚âƒtƒHƒ“ƒg‚ÌƒTƒCƒY‚ğ’²ß‚Å‚«‚é
+    // è§£åƒåº¦ã¯1600x900ã‚’åŸºæœ¬ã¨è€ƒãˆã‚‹ã€‚
+    // ä¾‹ãˆã°1920x1080ã¯ã€1.2å€ã®è§£åƒåº¦ã€ã¨è€ƒãˆã‚‹ã€‚
+    // ã“ã®è€ƒãˆã«å¾“ã£ã¦UIã®å¤§ãã•ã‚„ãƒ•ã‚©ãƒ³ãƒˆã®ã‚µã‚¤ã‚ºã‚’èª¿ç¯€ã§ãã‚‹
     static constexpr int BASE_W = 1600;
     static constexpr int BASE_H = 900;
 
@@ -50,11 +50,11 @@ public:
     static int ScreenH();
     static void SetScreenH(const int H);
 
-    // ‰ğ‘œ“x‚ª1920x1080‚Ì‚ÉA800, 450‚ğ“n‚µ‚½‚çA960, 540‚ª•Ô‚Á‚Ä‚­‚éA‚»‚ñ‚ÈŠÖ”
+    // è§£åƒåº¦ãŒ1920x1080ã®æ™‚ã«ã€800, 450ã‚’æ¸¡ã—ãŸã‚‰ã€960, 540ãŒè¿”ã£ã¦ãã‚‹ã€ãã‚“ãªé–¢æ•°
     static POINT ScaledPoint(const POINT& pt);
     static POINT ScaledPoint(const int x, const int y);
 
-    // ‰ğ‘œ“x‚ª1920x900‚Ì‚Æ‚«‚ÉA1.2, 1.0‚ª•Ô‚Á‚Ä‚­‚éA‚»‚ñ‚ÈŠÖ”
+    // è§£åƒåº¦ãŒ1920x900ã®ã¨ãã«ã€1.2, 1.0ãŒè¿”ã£ã¦ãã‚‹ã€ãã‚“ãªé–¢æ•°
     static D3DXVECTOR2 ScaledSize();
 
 private:
@@ -113,7 +113,7 @@ inline void SAFE_DELETE_ARRAY(T*& p)
     p = nullptr;
 }
 
-// ƒfƒoƒCƒXƒŠƒZƒbƒg—pƒCƒ“ƒ^[ƒtƒF[ƒX
+// ãƒ‡ãƒã‚¤ã‚¹ãƒªã‚»ãƒƒãƒˆç”¨ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹
 class IDeviceResettable
 {
 public :
@@ -122,7 +122,7 @@ public :
 };
 
 
-// —v‚ç‚È‚¢‹C‚ª‚·‚é
+// è¦ã‚‰ãªã„æ°—ãŒã™ã‚‹
 
 template<typename T>
 using Ptr = std::shared_ptr<T>;

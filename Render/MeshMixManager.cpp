@@ -278,6 +278,8 @@ struct stCsvParam
     bool litByPointLight = false;
     bool shadowDefined = false;
     bool shadow = false;
+    bool lambertShadowDefined = false;
+    bool lambertShadow = true;
     bool ssaoDefined = false;
     bool ssao = false;
     bool collisionDefined = false;
@@ -409,7 +411,7 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
             result.litByPointLightDefined = true;
             result.litByPointLight = (value == L"y");
         }
-        else if (key == L"shadow")
+        else if (key == L"shadow" || key == L"zshadow")
         {
             result.shadowDefined = true;
 
@@ -417,6 +419,11 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
             {
                 result.shadow = false;
             }
+        }
+        else if (key == L"lambertshadow")
+        {
+            result.lambertShadowDefined = true;
+            result.lambertShadow = (value != L"n");
         }
         else if (key == L"ssao")
         {
@@ -660,6 +667,12 @@ void MeshMixManager::InitializeInternal()
     if (csvParam.shadowDefined)
     {
         m_param.shadow = csvParam.shadow;
+    }
+
+    if (csvParam.lambertShadowDefined && !csvParam.lambertShadow)
+    {
+        m_param.shadowDarkness = 0.0f;
+        m_param.saturateShadow = false;
     }
 
     if (csvParam.ssaoDefined)

@@ -90,9 +90,6 @@
     <ClCompile Include="WindowManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="MeshHierarchy.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="PostEffectSSAO.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -126,9 +123,6 @@
     <ClCompile Include="MeshSmooth.cpp">
       <Filter>ソース ファイル\Trial</Filter>
     </ClCompile>
-    <ClCompile Include="MeshSSS.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="PostEffectDepthOfField.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -140,6 +134,12 @@
     </ClCompile>
     <ClCompile Include="PostEffectHeightFog.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshSSS.cpp">
+      <Filter>ソース ファイル\Trial</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshHierarchy.cpp">
+      <Filter>ソース ファイル\Trial</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -209,9 +209,6 @@
     <ClInclude Include="WindowManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="MeshHierarchy.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="PostEffectSSAO.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -245,9 +242,6 @@
     <ClInclude Include="MeshSmooth.h">
       <Filter>ヘッダー ファイル\Trial</Filter>
     </ClInclude>
-    <ClInclude Include="MeshSSS.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="PostEffectDepthOfField.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -259,6 +253,12 @@
     </ClInclude>
     <ClInclude Include="PostEffectHeightFog.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshSSS.h">
+      <Filter>ヘッダー ファイル\Trial</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshHierarchy.h">
+      <Filter>ヘッダー ファイル\Trial</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -331,9 +331,6 @@
     <FxCompile Include="shader\MeshSSSLike.fx">
       <Filter>シェーダー\Trial</Filter>
     </FxCompile>
-    <FxCompile Include="shader\MeshSSS.fx">
-      <Filter>シェーダー</Filter>
-    </FxCompile>
     <FxCompile Include="shader\PostEffectDepthOfField.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
@@ -345,6 +342,9 @@
     </FxCompile>
     <FxCompile Include="shader\PostEffectHeightFog.fx">
       <Filter>シェーダー</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\MeshSSS.fx">
+      <Filter>シェーダー\Trial</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
