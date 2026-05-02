@@ -106,6 +106,7 @@ LPDIRECT3DTEXTURE9 PostEffectGodRay::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_d3dEffect->SetFloat("g_ReverseSampling", reverseSampling);
     m_d3dEffect->SetFloat("g_RayLength", m_rayLength);
     m_d3dEffect->SetFloat("g_RayIntensity", m_rayIntensity * lightVisible);
+    m_d3dEffect->SetFloat("g_VirtualProximityStrength", m_virtualProximityStrength);
     m_d3dEffect->SetFloat("g_OcclusionFalloff", m_occlusionFalloff);
     DrawFullscreenQuad(m_texResult, "GodRay");
 

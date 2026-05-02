@@ -76,6 +76,7 @@ MixMeshShaderMode g_mixMeshShaderMode = MixMeshShaderMode::None;
 bool g_bGodRay = false;
 D3DXVECTOR3 g_godRayLightColor = D3DXVECTOR3(1.0f, 0.9f, 0.8f);
 float g_godRayIntensity = 0.6f;
+float g_godRayVirtualProximityStrength = 1.5f;
 D3DXVECTOR3 g_godRayLightPos = D3DXVECTOR3(0.0f, 50.0f, 50.0f);
 int g_godRaySourceMarkerMeshId = -1;
 int g_godRayEffectiveMarkerMeshId = -1;
@@ -1138,6 +1139,14 @@ void ApplyGodRayIntensity()
     g_Render.SetPostEffectGodRayIntensity(g_godRayIntensity);
 }
 
+void ApplyGodRayVirtualProximityStrength()
+{
+    g_godRayVirtualProximityStrength = (std::max)(
+        GODRAY_VIRTUAL_PROXIMITY_MIN,
+        (std::min)(g_godRayVirtualProximityStrength, GODRAY_VIRTUAL_PROXIMITY_MAX));
+    g_Render.SetPostEffectGodRayVirtualProximityStrength(g_godRayVirtualProximityStrength);
+}
+
 void ApplyGodRayLightPos()
 {
     const bool useVirtualLight = IsGodRayLightBehindCamera();
@@ -1176,6 +1185,21 @@ int GodRayIntensityToSliderValue(const float intensity)
 float SliderValueToGodRayIntensity(const int sliderValue)
 {
     return (std::max)(GODRAY_INTENSITY_MIN, (std::min)(static_cast<float>(sliderValue) * GODRAY_INTENSITY_STEP, GODRAY_INTENSITY_MAX));
+}
+
+int GodRayVirtualProximityStrengthToSliderValue(const float strength)
+{
+    return static_cast<int>(std::lround(
+        (std::max)(GODRAY_VIRTUAL_PROXIMITY_MIN,
+                   (std::min)(strength, GODRAY_VIRTUAL_PROXIMITY_MAX)) /
+        GODRAY_VIRTUAL_PROXIMITY_STEP));
+}
+
+float SliderValueToGodRayVirtualProximityStrength(const int sliderValue)
+{
+    return (std::max)(GODRAY_VIRTUAL_PROXIMITY_MIN,
+                      (std::min)(static_cast<float>(sliderValue) * GODRAY_VIRTUAL_PROXIMITY_STEP,
+                                 GODRAY_VIRTUAL_PROXIMITY_MAX));
 }
 
 int GodRayLightPosToSliderValue(const float pos)
@@ -1660,6 +1684,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"GodRayIntensity")
             {
                 g_godRayIntensity = std::stof(value);
+            }
+            else if (key == L"GodRayVirtualProximityStrength")
+            {
+                g_godRayVirtualProximityStrength = std::stof(value);
             }
             else if (key == L"GodRayLightPosX")
             {

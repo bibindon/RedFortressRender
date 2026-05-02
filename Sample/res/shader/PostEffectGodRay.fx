@@ -14,6 +14,7 @@ float  g_RayLength = 1.0f;
 float  g_RayIntensity = 0.6f;
 float  g_OcclusionFalloff = 5.0f;
 float  g_ReverseSampling = 0.0f;
+float  g_VirtualProximityStrength = 1.5f;
 
 static const int SAMPLE_COUNT = 128;
 
@@ -119,6 +120,20 @@ float4 PS_GodRay(VS_OUT i) : COLOR
     if (g_ReverseSampling > 0.5f)
     {
         dir = -dir;
+
+        float rayToEdge = 1.0f;
+        if (abs(dir.x) > 0.000001f)
+        {
+            float tx = (dir.x > 0.0f) ? ((1.0f - i.uv.x) / dir.x) : ((0.0f - i.uv.x) / dir.x);
+            rayToEdge = tx;
+        }
+        if (abs(dir.y) > 0.000001f)
+        {
+            float ty = (dir.y > 0.0f) ? ((1.0f - i.uv.y) / dir.y) : ((0.0f - i.uv.y) / dir.y);
+            rayToEdge = min(rayToEdge, ty);
+        }
+        rayToEdge = max(rayToEdge, 0.0f);
+        dir *= rayToEdge;
     }
 
     float visibilitySum = 0.0f;
@@ -127,7 +142,14 @@ float4 PS_GodRay(VS_OUT i) : COLOR
     [loop]
     for (int s = 0; s < SAMPLE_COUNT; ++s)
     {
-        float t = g_RayLength * (float(s) / float(SAMPLE_COUNT - 1));
+        float t = float(s) / float(SAMPLE_COUNT - 1);
+        if (g_ReverseSampling > 0.5f)
+        {
+            // Virtual-light mode samples more densely near the current pixel
+            // and more sparsely toward the screen edge.
+            t = t * t;
+        }
+        t *= g_RayLength;
         float2 sampleUv = i.uv + dir * t;
 
         if (sampleUv.x >= 0.0f && sampleUv.x <= 1.0f &&
@@ -139,13 +161,23 @@ float4 PS_GodRay(VS_OUT i) : COLOR
     }
 
     float lightRays = 0.0f;
-    if (validSampleCount > 0.0f)
+    if (g_ReverseSampling > 0.5f)
+    {
+        if (validSampleCount > 0.0f)
+        {
+            const float maskVisibility = visibilitySum / validSampleCount;
+            const float distanceToVirtualLight = distance(i.uv, g_LightScreenPos);
+            const float proximityToVirtualLight =
+                saturate(1.0f - distanceToVirtualLight * g_VirtualProximityStrength);
+            lightRays = maskVisibility * proximityToVirtualLight;
+        }
+    }
+    else if (validSampleCount > 0.0f)
     {
         lightRays = visibilitySum / validSampleCount;
+        float occlusion = 1.0f - lightRays;
+        lightRays = exp(-g_OcclusionFalloff * occlusion);
     }
-
-    float occlusion = 1.0f - lightRays;
-    lightRays = exp(-g_OcclusionFalloff * occlusion);
 
     float3 sceneColor = tex2D(g_SceneSampler, i.uv).rgb;
     float3 rayColor = lightRays * g_RayIntensity * g_LightColor;

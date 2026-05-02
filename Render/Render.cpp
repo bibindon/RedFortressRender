@@ -1276,6 +1276,11 @@ void Render::SetPostEffectGodRayIntensity(const float arg)
     m_postEffectGodRay.SetRayIntensity(arg);
 }
 
+void Render::SetPostEffectGodRayVirtualProximityStrength(const float arg)
+{
+    m_postEffectGodRay.SetVirtualProximityStrength(arg);
+}
+
 void Render::SetPostEffectGodRayOcclusionFalloff(const float arg)
 {
     m_postEffectGodRay.SetOcclusionFalloff(arg);

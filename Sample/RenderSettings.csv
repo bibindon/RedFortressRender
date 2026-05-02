@@ -30,6 +30,7 @@ GodRayLightColorR,1.0
 GodRayLightColorG,0.9
 GodRayLightColorB,0.8
 GodRayIntensity,0.1
+GodRayVirtualProximityStrength,1.5
 GodRayLightPosX,10.0
 GodRayLightPosY,10.0
 GodRayLightPosZ,10.0

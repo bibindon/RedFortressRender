@@ -24,6 +24,7 @@ public:
     void SetOcclusionFalloff(const float arg) { m_occlusionFalloff = arg; }
     void SetLightColor(const D3DXVECTOR3& c)  { m_lightColor = c; }
     void SetReverseSampling(const bool arg)   { m_reverseSampling = arg; }
+    void SetVirtualProximityStrength(const float arg) { m_virtualProximityStrength = arg; }
 
     void OnDeviceLost();
     void OnDeviceReset();
@@ -54,6 +55,7 @@ private:
     float       m_occlusionFalloff = 5.0f;
     D3DXVECTOR3 m_lightColor      = D3DXVECTOR3(1.0f, 0.9f, 0.8f);
     bool        m_reverseSampling = false;
+    float       m_virtualProximityStrength = 1.5f;
 };
 
 }

@@ -60,9 +60,11 @@ constexpr int GODRAY_COLOR_SLIDER_MIN = 0;
 constexpr int GODRAY_COLOR_SLIDER_MAX = static_cast<int>(GODRAY_LIGHT_COLOR_MAX / GODRAY_LIGHT_COLOR_STEP);
 constexpr int GODRAY_INTENSITY_SLIDER_MIN = 0;
 constexpr int GODRAY_INTENSITY_SLIDER_MAX = static_cast<int>(GODRAY_INTENSITY_MAX / GODRAY_INTENSITY_STEP);
+constexpr int GODRAY_VIRTUAL_PROXIMITY_SLIDER_MIN = 0;
+constexpr int GODRAY_VIRTUAL_PROXIMITY_SLIDER_MAX = static_cast<int>(GODRAY_VIRTUAL_PROXIMITY_MAX / GODRAY_VIRTUAL_PROXIMITY_STEP);
 constexpr int GODRAY_POS_SLIDER_MIN = static_cast<int>(GODRAY_LIGHT_POS_MIN / GODRAY_LIGHT_POS_STEP);
 constexpr int GODRAY_POS_SLIDER_MAX = static_cast<int>(GODRAY_LIGHT_POS_MAX / GODRAY_LIGHT_POS_STEP);
-constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 998;
+constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 1010;
 constexpr int SETTINGS_DIALOG_WHEEL_STEP_PX = 36;
 constexpr UINT ID_POPUP_EXPORT_BINARY = 60001;
 constexpr UINT ID_POPUP_REMOVE_MODEL = 60002;
@@ -157,6 +159,7 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_GODRAY_COLOR_G,
         IDC_EDIT_GODRAY_COLOR_B,
         IDC_EDIT_GODRAY_INTENSITY,
+        IDC_EDIT_GODRAY_VIRTUAL_PROXIMITY,
         IDC_EDIT_GODRAY_POS_X,
         IDC_EDIT_GODRAY_POS_Y,
         IDC_EDIT_GODRAY_POS_Z,
@@ -396,6 +399,14 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
         {
             g_godRayIntensity = floatValue;
             ApplyGodRayIntensity();
+        }
+        RefreshGodRayControls(hDlg);
+        return true;
+    case IDC_EDIT_GODRAY_VIRTUAL_PROXIMITY:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_godRayVirtualProximityStrength = floatValue;
+            ApplyGodRayVirtualProximityStrength();
         }
         RefreshGodRayControls(hDlg);
         return true;
@@ -1255,6 +1266,11 @@ void RefreshGodRayControls(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_INTENSITY, TBM_SETPOS, TRUE,
                        static_cast<LPARAM>(GodRayIntensityToSliderValue(g_godRayIntensity)));
 
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_godRayVirtualProximityStrength);
+    SetDlgItemText(hDlg, IDC_EDIT_GODRAY_VIRTUAL_PROXIMITY, buffer);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_VIRTUAL_PROXIMITY, TBM_SETPOS, TRUE,
+                       static_cast<LPARAM>(GodRayVirtualProximityStrengthToSliderValue(g_godRayVirtualProximityStrength)));
+
     std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_godRayLightPos.x);
     SetDlgItemText(hDlg, IDC_EDIT_GODRAY_POS_X, buffer);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_POS_X, TBM_SETPOS, TRUE,
@@ -1448,6 +1464,11 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_INTENSITY, TBM_SETRANGEMAX, FALSE, GODRAY_INTENSITY_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_INTENSITY, TBM_SETTICFREQ, 5, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_INTENSITY, TBM_SETPAGESIZE, 0, 1);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_VIRTUAL_PROXIMITY, TBM_SETRANGEMIN, FALSE, GODRAY_VIRTUAL_PROXIMITY_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_VIRTUAL_PROXIMITY, TBM_SETRANGEMAX, FALSE, GODRAY_VIRTUAL_PROXIMITY_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_VIRTUAL_PROXIMITY, TBM_SETTICFREQ, 5, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_VIRTUAL_PROXIMITY, TBM_SETPAGESIZE, 0, 1);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_POS_X, TBM_SETRANGEMIN, FALSE, GODRAY_POS_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_POS_X, TBM_SETRANGEMAX, FALSE, GODRAY_POS_SLIDER_MAX);
@@ -1744,6 +1765,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
             g_godRayIntensity = SliderValueToGodRayIntensity(sliderValue);
             ApplyGodRayIntensity();
+            RefreshGodRayControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_GODRAY_VIRTUAL_PROXIMITY))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_godRayVirtualProximityStrength = SliderValueToGodRayVirtualProximityStrength(sliderValue);
+            ApplyGodRayVirtualProximityStrength();
             RefreshGodRayControls(hDlg);
             return TRUE;
         }

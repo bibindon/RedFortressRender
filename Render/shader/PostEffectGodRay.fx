@@ -14,6 +14,7 @@ float  g_RayLength = 1.0f;
 float  g_RayIntensity = 0.6f;
 float  g_OcclusionFalloff = 5.0f;
 float  g_ReverseSampling = 0.0f;
+float  g_VirtualProximityStrength = 1.5f;
 
 static const int SAMPLE_COUNT = 128;
 
@@ -115,7 +116,10 @@ float4 PS_Blur(VS_OUT i) : COLOR
 
 float4 PS_GodRay(VS_OUT i) : COLOR
 {
-    float2 dir = g_LightScreenPos - i.uv;
+    float2 dirToVirtualLight = g_LightScreenPos - i.uv;
+    float distanceToVirtualLight = length(dirToVirtualLight);
+    float distanceToEdge = 0.0f;
+    float2 dir = dirToVirtualLight;
     if (g_ReverseSampling > 0.5f)
     {
         dir = -dir;
@@ -133,6 +137,7 @@ float4 PS_GodRay(VS_OUT i) : COLOR
         }
         rayToEdge = max(rayToEdge, 0.0f);
         dir *= rayToEdge;
+        distanceToEdge = length(dir) * g_RayLength;
     }
 
     float visibilitySum = 0.0f;
@@ -160,13 +165,24 @@ float4 PS_GodRay(VS_OUT i) : COLOR
     }
 
     float lightRays = 0.0f;
-    if (validSampleCount > 0.0f)
+    if (g_ReverseSampling > 0.5f)
+    {
+        if (validSampleCount > 0.0f)
+        {
+            const float maskVisibility = visibilitySum / validSampleCount;
+            const float totalSpan = max(distanceToVirtualLight + distanceToEdge, 0.000001f);
+            const float normalizedProximity = saturate(1.0f - (distanceToVirtualLight / totalSpan));
+            const float proximityBlend = saturate(g_VirtualProximityStrength / 5.0f);
+            const float proximityToVirtualLight = normalizedProximity * proximityBlend;
+            lightRays = lerp(maskVisibility, 1.0f, proximityToVirtualLight);
+        }
+    }
+    else if (validSampleCount > 0.0f)
     {
         lightRays = visibilitySum / validSampleCount;
+        float occlusion = 1.0f - lightRays;
+        lightRays = exp(-g_OcclusionFalloff * occlusion);
     }
-
-    float occlusion = 1.0f - lightRays;
-    lightRays = exp(-g_OcclusionFalloff * occlusion);
 
     float3 sceneColor = tex2D(g_SceneSampler, i.uv).rgb;
     float3 rayColor = lightRays * g_RayIntensity * g_LightColor;

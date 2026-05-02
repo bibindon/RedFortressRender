@@ -109,6 +109,7 @@ void InitializeSampleScene(HWND hWnd)
     ApplyPostEffectToggleSettings();
     ApplyGodRayLightColor();
     ApplyGodRayIntensity();
+    ApplyGodRayVirtualProximityStrength();
     ApplyGodRayLightPos();
     ApplyGodRay();
 }

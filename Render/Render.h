@@ -249,6 +249,7 @@ public:
     void SetPostEffectGodRayReverseSampling(const bool arg);
     void SetPostEffectGodRayRayLength(const float arg);
     void SetPostEffectGodRayIntensity(const float arg);
+    void SetPostEffectGodRayVirtualProximityStrength(const float arg);
     void SetPostEffectGodRayOcclusionFalloff(const float arg);
     void SetPostEffectGodRayLightColor(const D3DXVECTOR3& color);
 
