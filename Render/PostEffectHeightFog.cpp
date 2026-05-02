@@ -39,6 +39,7 @@ LPDIRECT3DTEXTURE9 PostEffectHeightFog::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_d3dEffect->SetFloat("g_IntensityHeight", m_intensity);
     m_d3dEffect->SetFloat("g_HeightStart", m_startHeight);
     m_d3dEffect->SetFloat("g_HeightMax", m_maxHeight);
+    m_d3dEffect->SetFloat("g_PosRange", 50.0f);
     m_d3dEffect->SetVector("g_FogColor", &m_fogColor);
     m_d3dEffect->SetTexture("g_PosTex", texRenderTargetPos);
 

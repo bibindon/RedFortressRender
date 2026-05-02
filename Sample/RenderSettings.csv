@@ -32,6 +32,7 @@ SunLightIntensity,1.0
 FogHeightEnable,1
 FogHeightIntensity,0.3
 FogHeightStart,0.0
+FogHeightMax,-5.0
 
 GodRayEnable,0
 GodRayLightColorR,1.0

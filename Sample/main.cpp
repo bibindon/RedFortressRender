@@ -87,6 +87,9 @@ void InitializeSampleScene(HWND hWnd)
 
     ApplySaturateLevel();
     ApplyFogIntensity();
+    ApplyHeightFogIntensity();
+    ApplyHeightFogStart();
+    ApplyHeightFogMax();
     ApplySunLightIntensity();
     ApplyShadowIntensity();
     ApplyShadowCoverage();

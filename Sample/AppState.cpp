@@ -47,7 +47,7 @@ bool g_bBloom = false;
 NSRender::DepthOfFieldMode g_depthOfFieldMode = NSRender::DepthOfFieldMode::Disabled;
 bool g_bStarBurst = false;
 float g_fogIntensity = 2.0f;
-float g_heightFogIntensity = 10.3f;
+float g_heightFogIntensity = 0.3f;
 float g_heightFogStart = 0.0f;
 float g_heightFogMax = -5.0f;
 float g_sunLightIntensity = 1.0f;
@@ -1748,6 +1748,22 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"FogEnable")
             {
                 g_bFog = (std::stoi(value) != 0);
+            }
+            else if (key == L"FogHeightEnable")
+            {
+                g_bHeightFog = (std::stoi(value) != 0);
+            }
+            else if (key == L"FogHeightIntensity")
+            {
+                g_heightFogIntensity = std::stof(value);
+            }
+            else if (key == L"FogHeightStart")
+            {
+                g_heightFogStart = std::stof(value);
+            }
+            else if (key == L"FogHeightMax")
+            {
+                g_heightFogMax = std::stof(value);
             }
             else if (key == L"SaturateLevel")
             {
