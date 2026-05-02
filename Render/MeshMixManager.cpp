@@ -59,6 +59,25 @@ float ConvertXMaterialPowerToShaderPower(const float materialPower)
     return clampedPower;
 }
 
+float ConvertXMaterialPowerToSpecularIntensity(const float materialPower)
+{
+    const float clampedPower = (std::max)(0.0f, (std::min)(materialPower, 255.0f));
+    return (clampedPower / 255.0f) * 0.5f;
+}
+
+float GetMaterialSpecularIntensity(const D3DMATERIAL9& material)
+{
+    if (true)
+    {
+        return ConvertXMaterialPowerToSpecularIntensity(material.Power);
+    }
+    else
+    {
+        return (std::max)(material.Specular.r,
+               (std::max)(material.Specular.g, material.Specular.b));
+    }
+}
+
 float ClampZeroToOne(const float value)
 {
     return (std::max)(0.0f, (std::min)(value, 1.0f));
@@ -690,9 +709,7 @@ void MeshMixManager::InitializeInternal()
         diffuse.y = materialList[i].MatD3D.Diffuse.g;
         diffuse.z = materialList[i].MatD3D.Diffuse.b;
         diffuse.w = materialList[i].MatD3D.Diffuse.a;
-        const float specularIntensity = (std::max)(materialList[i].MatD3D.Specular.r,
-                                        (std::max)(materialList[i].MatD3D.Specular.g,
-                                                   materialList[i].MatD3D.Specular.b));
+        const float specularIntensity = GetMaterialSpecularIntensity(materialList[i].MatD3D);
         const float specularPower = ConvertXMaterialPowerToShaderPower(materialList[i].MatD3D.Power);
 
         LPDIRECT3DBASETEXTURE9 tempTexture = nullptr;

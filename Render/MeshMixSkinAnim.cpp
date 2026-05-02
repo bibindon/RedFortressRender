@@ -28,10 +28,23 @@ float ConvertXMaterialPowerToShaderPower(const float materialPower)
     return clampedPower;
 }
 
+float ConvertXMaterialPowerToSpecularIntensity(const float materialPower)
+{
+    const float clampedPower = (std::max)(0.0f, (std::min)(materialPower, 255.0f));
+    return (clampedPower / 255.0f) * 2.0f;
+}
+
 float GetMaterialSpecularIntensity(const D3DMATERIAL9& material)
 {
-    return (std::max)(material.Specular.r,
-           (std::max)(material.Specular.g, material.Specular.b));
+    if (true)
+    {
+        return ConvertXMaterialPowerToSpecularIntensity(material.Power);
+    }
+    else
+    {
+        return (std::max)(material.Specular.r,
+               (std::max)(material.Specular.g, material.Specular.b));
+    }
 }
 }
 
