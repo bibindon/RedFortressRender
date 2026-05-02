@@ -423,9 +423,11 @@ void PixelShaderGlass(in float4 inPosition     : POSITION,
     float3 normalInWorld = normalize(mul(normalInTangent, tangentToWorld));
     
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
-    float3 refractWorld = refract(-cameraDir, normalize(normalInWorld), 1.f / 1.5f);
+    float3 refractWorld = refract(-cameraDir, normalize(inNormalWorld), 1.f / 1.5f);
+    float cubeLod = g_cubeMappingGauss * 7.0f;
+    float3 cubeColor = texCUBElod(g_cubeMapSampler, float4(refractWorld, cubeLod)).rgb;
 
-    outColor = float4(texCUBE(g_cubeMapSampler, refractWorld).rgb, 0.8f);
+    outColor = float4(cubeColor, saturate(g_cubeMappingRate));
 }
 
 //-------------------------------------------------------------

@@ -252,6 +252,7 @@ enum class eMeshType
     POM,
     NormalMapping,
     EnvMapping,
+    Glass,
 };
 
 struct stCsvParam
@@ -331,6 +332,10 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
             else if (value == L"envmapping")
             {
                 result.meshType = eMeshType::EnvMapping;
+            }
+            else if (value == L"glass")
+            {
+                result.meshType = eMeshType::Glass;
             }
         }
         else if (key == L"smooth")
@@ -602,6 +607,10 @@ void MeshMixManager::InitializeInternal()
     {
         m_param.cubeMapping = true;
     }
+    else if (csvParam.meshType == eMeshType::Glass)
+    {
+        m_param.glass = true;
+    }
 
     if (csvParam.smoothDefined)
     {
@@ -721,7 +730,8 @@ void MeshMixManager::InitializeInternal()
             textureFileName = Util::Utf8ToWstring(materialList[i].pTextureFilename);
             const std::wstring texturePath = xFileDir + textureFileName;
             const std::wstring lowerExt = ToLowerString(textureFileName.substr(textureFileName.find_last_of(L'.') + 1));
-            if (csvParam.meshType == eMeshType::EnvMapping && lowerExt == L"dds")
+            if ((csvParam.meshType == eMeshType::EnvMapping || csvParam.meshType == eMeshType::Glass) &&
+                lowerExt == L"dds")
             {
                 hResult = LoadCubeTextureCached(texturePath, &tempTexture);
             }
@@ -735,7 +745,9 @@ void MeshMixManager::InitializeInternal()
         const std::wstring lowerExtRole = (textureFileName.find_last_of(L'.') != std::wstring::npos)
             ? ToLowerString(textureFileName.substr(textureFileName.find_last_of(L'.') + 1))
             : L"";
-        const bool isCubeByEnvMapping = (csvParam.meshType == eMeshType::EnvMapping && lowerExtRole == L"dds");
+        const bool isCubeByEnvMapping =
+            ((csvParam.meshType == eMeshType::EnvMapping || csvParam.meshType == eMeshType::Glass) &&
+             lowerExtRole == L"dds");
         const eMeshTextureRole textureRole = isCubeByEnvMapping ? eMeshTextureRole::Cube : ClassifyTextureRole(textureFileName);
         if (textureRole == eMeshTextureRole::Normal)
         {
