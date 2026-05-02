@@ -27,6 +27,7 @@ public:
     void SetMaxBlurDistance(float maxBlurDistance);
     void SetFocusBandHalfWidth(float focusBandHalfWidth);
     void SetBlurRadiusPixels(float blurRadiusPixels);
+    void SetAutoActivationDistance(float autoActivationDistance);
     void SetBlend(float blend);
     float GetBlend() const;
     void UpdateAutoBlend(LPDIRECT3DTEXTURE9 texRenderTargetPos);

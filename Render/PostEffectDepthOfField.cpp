@@ -91,6 +91,11 @@ void PostEffectDepthOfField::SetBlurRadiusPixels(float blurRadiusPixels)
     m_blurRadiusPixels = blurRadiusPixels;
 }
 
+void PostEffectDepthOfField::SetAutoActivationDistance(float autoActivationDistance)
+{
+    m_autoActivationDistance = (std::max)(0.1f, autoActivationDistance);
+}
+
 void PostEffectDepthOfField::SetBlend(float blend)
 {
     m_blend = (std::max)(0.0f, (std::min)(blend, 1.0f));

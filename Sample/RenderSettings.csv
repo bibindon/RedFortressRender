@@ -17,6 +17,7 @@ BloomThreshold,2.5
 DepthOfFieldMode,0
 DepthOfFieldFocalDistance,1.0
 DepthOfFieldMaxBlurDistance,8.0
+DepthOfFieldAutoActivationDistance,10.0
 StarBurstThreshold,2.8
 ModelLoadScale,1.0
 BloomEnable,0

@@ -414,6 +414,23 @@ void Render::ApplySettings()
         SetPostEffectDepthOfFieldFocalDistance(8.0f);
     }
 
+    const auto depthOfFieldAutoActivationDistance = m_settings.find(L"DepthOfFieldAutoActivationDistance");
+    if (depthOfFieldAutoActivationDistance != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectDepthOfFieldAutoActivationDistance(std::stof(depthOfFieldAutoActivationDistance->second));
+        }
+        catch (...)
+        {
+            SetPostEffectDepthOfFieldAutoActivationDistance(10.0f);
+        }
+    }
+    else
+    {
+        SetPostEffectDepthOfFieldAutoActivationDistance(10.0f);
+    }
+
     const auto starBurstEnable = m_settings.find(L"StarBurstEnable");
     if (starBurstEnable != m_settings.end())
     {
@@ -1296,6 +1313,11 @@ void Render::SetPostEffectDepthOfFieldFocalDistance(const float distance)
 void Render::SetPostEffectDepthOfFieldMaxBlurDistance(const float distance)
 {
     m_postEffectDepthOfField.SetMaxBlurDistance(distance);
+}
+
+void Render::SetPostEffectDepthOfFieldAutoActivationDistance(const float distance)
+{
+    m_postEffectDepthOfField.SetAutoActivationDistance(distance);
 }
 
 void Render::SetPostEffectStarBurst(const bool arg)

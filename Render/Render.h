@@ -241,6 +241,7 @@ public:
     void SetPostEffectDepthOfFieldMode(const DepthOfFieldMode mode);
     void SetPostEffectDepthOfFieldFocalDistance(const float distance);
     void SetPostEffectDepthOfFieldMaxBlurDistance(const float distance);
+    void SetPostEffectDepthOfFieldAutoActivationDistance(const float distance);
 
     void SetPostEffectStarBurst(const bool arg);
     void SetPostEffectStarBurstThreshold(const float threshold);

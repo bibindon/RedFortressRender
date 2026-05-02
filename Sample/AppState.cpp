@@ -58,6 +58,7 @@ bool g_bUseSpecularEdgeOverride = false;
 float g_bloomThreshold = 2.5f;
 float g_dofFocalDistance = 1.0f;
 float g_dofMaxBlurDistance = 8.0f;
+float g_dofAutoActivationDistance = 10.0f;
 float g_starBurstThreshold = 2.8f;
 float g_modelLoadScale = 1.0f;
 D3DXCOLOR g_pointLightColor = D3DXCOLOR(1.0f, 0.35f, 0.1f, 1.0f);
@@ -157,6 +158,12 @@ float ClampDepthOfFieldFocalDistance(const float distance)
 float ClampDepthOfFieldMaxBlurDistance(const float distance)
 {
     return (std::max)(DOF_MAX_BLUR_DISTANCE_MIN, (std::min)(distance, DOF_MAX_BLUR_DISTANCE_MAX));
+}
+
+float ClampDepthOfFieldAutoActivationDistance(const float distance)
+{
+    return (std::max)(DOF_AUTO_ACTIVATION_DISTANCE_MIN,
+                      (std::min)(distance, DOF_AUTO_ACTIVATION_DISTANCE_MAX));
 }
 
 float ClampStarBurstThreshold(const float threshold)
@@ -765,6 +772,12 @@ void ApplyDepthOfFieldMaxBlurDistance()
     g_Render.SetPostEffectDepthOfFieldMaxBlurDistance(g_dofMaxBlurDistance);
 }
 
+void ApplyDepthOfFieldAutoActivationDistance()
+{
+    g_dofAutoActivationDistance = ClampDepthOfFieldAutoActivationDistance(g_dofAutoActivationDistance);
+    g_Render.SetPostEffectDepthOfFieldAutoActivationDistance(g_dofAutoActivationDistance);
+}
+
 void ApplyStarBurstThreshold()
 {
     g_starBurstThreshold = ClampStarBurstThreshold(g_starBurstThreshold);
@@ -974,6 +987,19 @@ int DepthOfFieldMaxBlurDistanceToSliderValue(const float distance)
 float SliderValueToDepthOfFieldMaxBlurDistance(const int sliderValue)
 {
     return ClampDepthOfFieldMaxBlurDistance(DOF_MAX_BLUR_DISTANCE_MIN + static_cast<float>(sliderValue) * DOF_MAX_BLUR_DISTANCE_STEP);
+}
+
+int DepthOfFieldAutoActivationDistanceToSliderValue(const float distance)
+{
+    return static_cast<int>(std::lround(
+        (ClampDepthOfFieldAutoActivationDistance(distance) - DOF_AUTO_ACTIVATION_DISTANCE_MIN) /
+        DOF_AUTO_ACTIVATION_DISTANCE_STEP));
+}
+
+float SliderValueToDepthOfFieldAutoActivationDistance(const int sliderValue)
+{
+    return ClampDepthOfFieldAutoActivationDistance(
+        DOF_AUTO_ACTIVATION_DISTANCE_MIN + static_cast<float>(sliderValue) * DOF_AUTO_ACTIVATION_DISTANCE_STEP);
 }
 
 int StarBurstThresholdToSliderValue(const float threshold)
@@ -1625,6 +1651,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"DepthOfFieldMaxBlurDistance")
             {
                 g_dofMaxBlurDistance = std::stof(value);
+            }
+            else if (key == L"DepthOfFieldAutoActivationDistance")
+            {
+                g_dofAutoActivationDistance = std::stof(value);
             }
             else if (key == L"StarBurstThreshold")
             {

@@ -103,6 +103,7 @@ void InitializeSampleScene(HWND hWnd)
     ApplyBloomThreshold();
     ApplyDepthOfFieldFocalDistance();
     ApplyDepthOfFieldMaxBlurDistance();
+    ApplyDepthOfFieldAutoActivationDistance();
     ApplyStarBurstThreshold();
     ApplyModelLoadScale();
     ApplyGaussianSampleSize();
