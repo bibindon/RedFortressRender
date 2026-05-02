@@ -1,4 +1,4 @@
-#include "PostEffectHeightFog.h"
+﻿#include "PostEffectHeightFog.h"
 
 namespace NSRender
 {
