@@ -37,12 +37,6 @@ LPDIRECT3DTEXTURE9 PostEffectFog::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                                        LPDIRECT3DTEXTURE9 texRenderTargetZ,
                                        LPDIRECT3DTEXTURE9 texRenderTargetPos)
 {
-    // 霧が無効ならパススルー
-    if (!m_bEnableZ && !m_bEnableHeight)
-    {
-        return renderTarget;
-    }
-
     // 入力チェック（必要テクスチャが無ければパススルー）
     if (m_bEnableZ && texRenderTargetZ == NULL)
     {

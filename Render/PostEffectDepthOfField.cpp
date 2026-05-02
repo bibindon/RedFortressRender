@@ -39,7 +39,7 @@ void PostEffectDepthOfField::Initialize()
 LPDIRECT3DTEXTURE9 PostEffectDepthOfField::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                                                 LPDIRECT3DTEXTURE9 texRenderTargetPos)
 {
-    if (!m_enable || renderTarget == NULL || texRenderTargetPos == NULL)
+    if (renderTarget == NULL || texRenderTargetPos == NULL)
     {
         return renderTarget;
     }

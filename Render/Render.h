@@ -341,6 +341,16 @@ private:
 
     std::unordered_map<std::wstring, std::wstring> m_settings;
     int m_gaussianSampleSize = 101;
+    bool m_postEffectSaturateEnabled = false;
+    bool m_postEffectGaussEnabled = false;
+    bool m_postEffectZShadowEnabled = true;
+    bool m_postEffectSSAOEnabled = true;
+    bool m_postEffectFogZEnabled = true;
+    bool m_postEffectFogHeightEnabled = true;
+    bool m_postEffectBloomEnabled = false;
+    bool m_postEffectDepthOfFieldEnabled = false;
+    bool m_postEffectStarBurstEnabled = false;
+    bool m_postEffectGodRayEnabled = false;
     bool m_meshMixSaturateShadowEnabled = false;
     float m_meshMixSaturateShadowIntensity = 0.2f;
     float m_meshMixShadowDarkness = 1.0f;

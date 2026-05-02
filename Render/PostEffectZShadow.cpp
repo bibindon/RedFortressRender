@@ -90,10 +90,6 @@ LPDIRECT3DTEXTURE9 PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                                            const std::deque<MeshMixManager>& meshMixList,
                                            const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList)
 {
-    if (!m_bEnable)
-    {
-        return renderTarget;
-    }
     g_texTemp = renderTarget;
     m_pMeshList = &meshMixList;
     m_pSkinAnimMeshList = &meshMixSkinAnimList;

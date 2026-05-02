@@ -62,11 +62,6 @@ void PostEffectGodRay::CreateTexture()
 LPDIRECT3DTEXTURE9 PostEffectGodRay::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                                           LPDIRECT3DTEXTURE9 texZ)
 {
-    if (!m_bEnable)
-    {
-        return renderTarget;
-    }
-
     D3DXMATRIX matView = Camera::GetViewMatrix();
     D3DXMATRIX matProj = Camera::GetProjMatrix();
 

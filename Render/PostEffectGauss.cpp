@@ -32,12 +32,7 @@ void PostEffectGauss::Initialize()
 
 LPDIRECT3DTEXTURE9 PostEffectGauss::Draw(LPDIRECT3DTEXTURE9 renderTarget)
 {
-    if (!m_bEnable)
-    {
-        return renderTarget;
-    }
-
-    m_d3dEffect->SetBool("g_bFilterON", m_bEnable);
+    m_d3dEffect->SetBool("g_bFilterON", TRUE);
     m_d3dEffect->SetInt("g_sampleSize", m_sampleSize);
 
     DrawFullscreenQuad(renderTarget,    m_texWork,      "GaussianH");

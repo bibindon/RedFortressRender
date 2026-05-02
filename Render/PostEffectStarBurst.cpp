@@ -30,11 +30,6 @@ LPDIRECT3DTEXTURE9 PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource)
         return renderSource;
     }
 
-    if (!m_bEnable)
-    {
-        return renderSource;
-    }
-
     // ƒeƒNƒZƒ‹ƒTƒCƒYiƒuƒ‰[‚ÅŽg—pj
     float texelSize[2] = { 1.0f / Common::ScreenW(), 1.0f / Common::ScreenH() };
     m_d3dEffect->SetFloatArray("g_TexelSize", texelSize, 2);

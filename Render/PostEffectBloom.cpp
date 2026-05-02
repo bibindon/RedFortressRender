@@ -82,11 +82,6 @@ void PostEffectBloom::CreateTexture()
 
 LPDIRECT3DTEXTURE9 PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource)
 {
-    if (!m_bEnable)
-    {
-        return renderSource;
-    }
-
     m_d3dEffect->SetInt("g_sampleSize", 101);
     m_d3dEffect->SetFloat("g_Threshold", m_threshold);
 

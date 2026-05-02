@@ -1,4 +1,4 @@
-#include "PostEffectSaturate.h"
+﻿#include "PostEffectSaturate.h"
 
 #include <cmath>
 
@@ -45,11 +45,6 @@ void PostEffectSaturate::Finalize()
 
 LPDIRECT3DTEXTURE9 PostEffectSaturate::Draw(LPDIRECT3DTEXTURE9 renderTarget)
 {
-    if (!m_bEnable)
-    {
-        return renderTarget;
-    }
-
     m_d3dEffect->SetFloat("g_level", m_saturateLevel);
 
     m_d3dEffect->SetTexture("texture1", renderTarget);

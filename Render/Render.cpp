@@ -501,36 +501,54 @@ void Render::Draw()
 
     pTempTexture = m_pRenderTarget1;
 
-    // 深度バッファシャドウ
-    pTempTexture = m_postEffectZShadow.Draw(pTempTexture,
-                                            pTexTempZ,
-                                            pTexTempNoral,
-                                            m_meshMixList,
-                                            m_meshMixSkinAnimList);
+    if (m_postEffectZShadowEnabled)
+    {
+        pTempTexture = m_postEffectZShadow.Draw(pTempTexture,
+                                                pTexTempZ,
+                                                pTexTempNoral,
+                                                m_meshMixList,
+                                                m_meshMixSkinAnimList);
+    }
 
-    // SSAO
-    pTempTexture = m_postEffectSSAO.Draw(pTempTexture, pTexTempZ, pTexTempPos, pTexTempNoral);
+    if (m_postEffectSSAOEnabled)
+    {
+        pTempTexture = m_postEffectSSAO.Draw(pTempTexture, pTexTempZ, pTexTempPos, pTexTempNoral);
+    }
 
-    // 霧
-    pTempTexture = m_postEffectFog.Draw(pTempTexture, pTexTempZ, pTexTempPos);
+    if (m_postEffectFogZEnabled || m_postEffectFogHeightEnabled)
+    {
+        pTempTexture = m_postEffectFog.Draw(pTempTexture, pTexTempZ, pTexTempPos);
+    }
 
-    // 彩度変更
-    pTempTexture = m_postEffectSaturate.Draw(pTempTexture);
+    if (m_postEffectSaturateEnabled)
+    {
+        pTempTexture = m_postEffectSaturate.Draw(pTempTexture);
+    }
 
-    // 被写界深度
-    pTempTexture = m_postEffectDepthOfField.Draw(pTempTexture, pTexTempPos);
+    if (m_postEffectDepthOfFieldEnabled)
+    {
+        pTempTexture = m_postEffectDepthOfField.Draw(pTempTexture, pTexTempPos);
+    }
 
-    // ブルーム
-    pTempTexture = m_PostEffectBloom.Draw(pTempTexture);
+    if (m_postEffectBloomEnabled)
+    {
+        pTempTexture = m_PostEffectBloom.Draw(pTempTexture);
+    }
 
-    // スターバースト
-    pTempTexture = m_postEffectStarBurst.Draw(pTempTexture);
+    if (m_postEffectStarBurstEnabled)
+    {
+        pTempTexture = m_postEffectStarBurst.Draw(pTempTexture);
+    }
 
-    // ゴッドレイ
-    pTempTexture = m_postEffectGodRay.Draw(pTempTexture, pTexTempZ);
+    if (m_postEffectGodRayEnabled)
+    {
+        pTempTexture = m_postEffectGodRay.Draw(pTempTexture, pTexTempZ);
+    }
 
-    // ガウス
-    pTempTexture = m_postEffectGauss.Draw(pTempTexture);
+    if (m_postEffectGaussEnabled)
+    {
+        pTempTexture = m_postEffectGauss.Draw(pTempTexture);
+    }
 
     // g_pRenderTargetの内容を画面に転送
     m_postEffectEnd.Draw(pTempTexture);
@@ -1103,16 +1121,19 @@ void Render::DrawImage(const std::wstring& text,
 
 void Render::SetPostEffectSaturate(const float level)
 {
+    m_postEffectSaturateEnabled = (level < 0.9999f || level > 1.0001f);
     m_postEffectSaturate.SetPostEffectSaturate(level);
 }
 
 void Render::SetPostEffectSaturateEnable(const bool arg)
 {
+    m_postEffectSaturateEnabled = arg;
     m_postEffectSaturate.SetEnable(arg);
 }
 
 void Render::SetPostEffectGaussianFilter(const bool arg)
 {
+    m_postEffectGaussEnabled = arg;
     m_postEffectGauss.SetEnable(arg);
 }
 
@@ -1124,6 +1145,7 @@ void Render::SetPostEffectGaussianSampleSize(const int sampleSize)
 
 void Render::SetPostEffectDepthBufferShadow(const bool arg)
 {
+    m_postEffectZShadowEnabled = arg;
     m_postEffectZShadow.SetEnable(arg);
 }
 
@@ -1154,6 +1176,7 @@ void Render::SetPostEffectDepthBufferShadowCompositeTapCount(const int tapCount)
 
 void Render::SetPostEffectSSAO(const bool arg)
 {
+    m_postEffectSSAOEnabled = arg;
     m_postEffectSSAO.SetEnable(arg);
 }
 
@@ -1169,6 +1192,8 @@ void Render::SetPostEffectSSAOSaturationBoost(const float saturationBoost)
 
 void Render::SetPostEffectFog(const bool arg)
 {
+    m_postEffectFogZEnabled = arg;
+    m_postEffectFogHeightEnabled = arg;
     m_postEffectFog.SetEnableZ(arg);
     m_postEffectFog.SetEnableHeight(arg);
 }
@@ -1180,6 +1205,7 @@ void Render::SetPostEffectFogIntensity(const float intensity)
 
 void Render::SetPostEffectFogHeightEnable(const bool arg)
 {
+    m_postEffectFogHeightEnabled = arg;
     m_postEffectFog.SetEnableHeight(arg);
 }
 
@@ -1195,6 +1221,7 @@ void Render::SetPostEffectFogHeightStart(const float start)
 
 void Render::SetPostEffectBloom(const bool arg)
 {
+    m_postEffectBloomEnabled = arg;
     m_PostEffectBloom.SetEnable(arg);
 }
 
@@ -1205,6 +1232,7 @@ void Render::SetPostEffectBloomThreshold(const float threshold)
 
 void Render::SetPostEffectDepthOfField(const bool arg)
 {
+    m_postEffectDepthOfFieldEnabled = arg;
     m_postEffectDepthOfField.SetEnable(arg);
 }
 
@@ -1220,6 +1248,7 @@ void Render::SetPostEffectDepthOfFieldMaxBlurDistance(const float distance)
 
 void Render::SetPostEffectStarBurst(const bool arg)
 {
+    m_postEffectStarBurstEnabled = arg;
     m_postEffectStarBurst.SetEnable(arg);
 }
 
@@ -1230,6 +1259,7 @@ void Render::SetPostEffectStarBurstThreshold(const float threshold)
 
 void Render::SetPostEffectGodRay(const bool arg)
 {
+    m_postEffectGodRayEnabled = arg;
     m_postEffectGodRay.SetEnable(arg);
 }
 
