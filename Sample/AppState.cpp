@@ -77,7 +77,8 @@ bool g_bGodRay = false;
 D3DXVECTOR3 g_godRayLightColor = D3DXVECTOR3(1.0f, 0.9f, 0.8f);
 float g_godRayIntensity = 0.6f;
 D3DXVECTOR3 g_godRayLightPos = D3DXVECTOR3(0.0f, 50.0f, 50.0f);
-int g_godRayMarkerMeshId = -1;
+int g_godRaySourceMarkerMeshId = -1;
+int g_godRayEffectiveMarkerMeshId = -1;
 
 namespace
 {
@@ -1021,29 +1022,104 @@ int SliderValueToGaussianSampleSize(const int sliderValue)
 
 static const std::wstring GODRAY_MARKER_PATH = L"..\\..\\Sample\\cube.x"; // 作業ディレクトリからの相対パス
 
+namespace
+{
+D3DXVECTOR3 GetEffectiveGodRayLightPos()
+{
+    const D3DXVECTOR3 cameraPos = g_Render.GetCameraPos();
+    const D3DXVECTOR3 toLight = g_godRayLightPos - cameraPos;
+    return cameraPos - toLight;
+}
+
+bool IsGodRayLightBehindCamera()
+{
+    D3DXVECTOR3 forward = g_Render.GetCameraRotate();
+    D3DXVec3Normalize(&forward, &forward);
+
+    const D3DXVECTOR3 cameraPos = g_Render.GetCameraPos();
+    D3DXVECTOR3 toLight = g_godRayLightPos - cameraPos;
+    if (D3DXVec3LengthSq(&toLight) <= 0.000001f)
+    {
+        return false;
+    }
+    D3DXVec3Normalize(&toLight, &toLight);
+
+    return D3DXVec3Dot(&forward, &toLight) < 0.0f;
+}
+
+D3DXVECTOR3 GetGodRayRenderLightPos()
+{
+    if (IsGodRayLightBehindCamera())
+    {
+        return GetEffectiveGodRayLightPos();
+    }
+
+    return g_godRayLightPos;
+}
+
+D3DXVECTOR3 GetGodRaySourceMarkerPos()
+{
+    return g_godRayLightPos + D3DXVECTOR3(0.0f, 1.0f, 0.0f);
+}
+
+D3DXVECTOR3 GetGodRayEffectiveMarkerPos()
+{
+    return GetEffectiveGodRayLightPos() + D3DXVECTOR3(0.0f, 1.0f, 0.0f);
+}
+
+std::wstring FormatVector3(const wchar_t* label, const D3DXVECTOR3& value)
+{
+    wchar_t buffer[128] { };
+    std::swprintf(buffer,
+                  sizeof(buffer) / sizeof(buffer[0]),
+                  L"%ls (%.2f, %.2f, %.2f)\n",
+                  label,
+                  value.x,
+                  value.y,
+                  value.z);
+    return buffer;
+}
+
+int AddGodRayMarker(const D3DXVECTOR3& pos)
+{
+    return g_Render.AddMeshMix(GODRAY_MARKER_PATH,
+                               pos,
+                               D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                               1.0f,
+                               1.0f,
+                               false,
+                               false);
+}
+}
+
 void ApplyGodRay()
 {
     g_Render.SetPostEffectGodRay(g_bGodRay);
 
     if (g_bGodRay)
     {
-        if (g_godRayMarkerMeshId == -1)
+        if (g_godRaySourceMarkerMeshId == -1)
         {
-            g_godRayMarkerMeshId = g_Render.AddMeshMix(GODRAY_MARKER_PATH,
-                                                       g_godRayLightPos + D3DXVECTOR3(0.0f, 1.0f, 0.0f),
-                                                       D3DXVECTOR3(0.0f, 0.0f, 0.0f),
-                                                       1.0f,
-                                                       1.0f,
-                                                       false,
-                                                       false);
+            g_godRaySourceMarkerMeshId = AddGodRayMarker(GetGodRaySourceMarkerPos());
+        }
+
+        if (g_godRayEffectiveMarkerMeshId == -1)
+        {
+            g_godRayEffectiveMarkerMeshId = AddGodRayMarker(GetGodRayEffectiveMarkerPos());
         }
     }
     else
     {
-        if (g_godRayMarkerMeshId != -1)
+        if (g_godRaySourceMarkerMeshId != -1)
         {
-            g_Render.RemoveMeshMix(g_godRayMarkerMeshId);
-            g_godRayMarkerMeshId = -1;
+            g_Render.RemoveMeshMix(g_godRaySourceMarkerMeshId);
+            g_godRaySourceMarkerMeshId = -1;
+        }
+
+        if (g_godRayEffectiveMarkerMeshId != -1)
+        {
+            g_Render.RemoveMeshMix(g_godRayEffectiveMarkerMeshId);
+            g_godRayEffectiveMarkerMeshId = -1;
         }
     }
 }
@@ -1064,11 +1140,16 @@ void ApplyGodRayIntensity()
 
 void ApplyGodRayLightPos()
 {
-    g_Render.SetPostEffectGodRayLightPos(g_godRayLightPos);
+    g_Render.SetPostEffectGodRayLightPos(GetGodRayRenderLightPos());
 
-    if (g_godRayMarkerMeshId != -1)
+    if (g_godRaySourceMarkerMeshId != -1)
     {
-        g_Render.SetMeshMixPos(g_godRayMarkerMeshId, g_godRayLightPos + D3DXVECTOR3(0.0f, 1.0f, 0.0f));
+        g_Render.SetMeshMixPos(g_godRaySourceMarkerMeshId, GetGodRaySourceMarkerPos());
+    }
+
+    if (g_godRayEffectiveMarkerMeshId != -1)
+    {
+        g_Render.SetMeshMixPos(g_godRayEffectiveMarkerMeshId, GetGodRayEffectiveMarkerPos());
     }
 }
 
@@ -1644,6 +1725,10 @@ void DrawSampleOverlay()
     text += L"j : SSAO ON/OFF\n";
     text += L"v : Fog ON/OFF\n";
     text += L"Shift + f : FPS ON/OFF\n";
+    text += L"\n";
+    text += FormatVector3(L"Eye        :", g_Render.GetCameraPos());
+    text += FormatVector3(L"Real Light :", g_godRayLightPos);
+    text += FormatVector3(L"Virtual    :", GetEffectiveGodRayLightPos());
     g_Render.DrawText_(g_fontId, text, 10, 40);
 
     DrawRandomized2DContent();

@@ -175,7 +175,8 @@ extern bool g_bGodRay;
 extern D3DXVECTOR3 g_godRayLightColor;
 extern float g_godRayIntensity;
 extern D3DXVECTOR3 g_godRayLightPos;
-extern int g_godRayMarkerMeshId;
+extern int g_godRaySourceMarkerMeshId;
+extern int g_godRayEffectiveMarkerMeshId;
 
 void UpdateCameraMoveByKeyboard();
 void MoveCameraAwayFromLookAtByWheel(short wheelDelta);

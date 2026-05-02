@@ -118,6 +118,10 @@ void TickAndRenderFrame()
     DrawSampleOverlay();
     UpdateDirectionalLight();
     UpdateCameraMoveByKeyboard();
+    if (g_bGodRay)
+    {
+        ApplyGodRayLightPos();
+    }
     g_Render.Draw();
 }
 }

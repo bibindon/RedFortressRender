@@ -86,12 +86,7 @@ LPDIRECT3DTEXTURE9 PostEffectGodRay::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     {
         screenU = (lightProj.x / lightProj.w) * 0.5f + 0.5f;
         screenV = (-lightProj.y / lightProj.w) * 0.5f + 0.5f;
-
-        if (screenU >= 0.0f && screenU <= 1.0f &&
-            screenV >= 0.0f && screenV <= 1.0f)
-        {
-            lightVisible = 1.0f;
-        }
+        lightVisible = 1.0f;
     }
 
     m_d3dEffect->SetTexture("g_ZTex", texZ);
