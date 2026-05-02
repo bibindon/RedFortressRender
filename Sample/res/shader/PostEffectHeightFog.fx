@@ -53,7 +53,7 @@ struct PS_IN
 
 float4 PS_HeightFog(PS_IN i) : COLOR0
 {
-    float2 uv = i.uv;
+    float2 uv = i.uv - (g_TexelSize * 0.5f);
     float3 scene = tex2D(sSrc, uv).rgb;
     float fog = HeightFogAmountAt(uv);
     float3 outColor = lerp(scene, g_FogColor.rgb, fog);
