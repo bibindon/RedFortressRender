@@ -207,6 +207,8 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
                                D3DCOLOR_RGBA(0, 0, 0, 0), 1.0f, 0);
     Common::D3DDevice()->BeginScene();
 
+    m_fxGBuffer->SetTexture("g_texFrontDepth", m_texRenderTargetZ);
+
     for (auto& mesh : meshList)
     {
         if (!mesh.IsEnabled())
@@ -252,6 +254,15 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
 
         m_fxGBuffer->EndPass();
         m_fxGBuffer->End();
+    }
+
+    m_fxGBuffer->SetTechnique("TechniqueGBufferSkinBackFace");
+    for (auto& mesh : meshMixSkinAnimList)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->RenderToEffect(m_fxGBuffer);
+        }
     }
 
     Common::D3DDevice()->EndScene();

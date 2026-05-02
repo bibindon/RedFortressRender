@@ -12,6 +12,17 @@ float g_fFar   = 1000.0f;
 
 float g_posRange = 50.0f;
 
+texture g_texFrontDepth;
+sampler sampFrontDepth = sampler_state
+{
+    Texture = (g_texFrontDepth);
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+
 struct VS_INPUT
 {
     float4 positionObject : POSITION0;
@@ -24,6 +35,7 @@ struct VS_OUTPUT
     float  viewSpaceZ     : TEXCOORD0;
     float3 positionWorld  : TEXCOORD1;
     float3 normalWorld    : TEXCOORD2;
+    float2 screenUV       : TEXCOORD3;
 };
 
 VS_OUTPUT VS_GBuffer(VS_INPUT inputData)
@@ -33,6 +45,8 @@ VS_OUTPUT VS_GBuffer(VS_INPUT inputData)
     float4 positionWorld4 = mul(inputData.positionObject, g_matWorld);
     float4 positionView4  = mul(positionWorld4, g_matView);
     outputData.positionClip = mul(positionView4, g_matProj);
+    float2 ndc = outputData.positionClip.xy / outputData.positionClip.w;
+    outputData.screenUV = float2(ndc.x * 0.5f + 0.5f, -ndc.y * 0.5f + 0.5f);
 
     outputData.viewSpaceZ = positionView4.z;
     outputData.positionWorld = positionWorld4.xyz;
@@ -52,6 +66,7 @@ void VS_GBufferSkin(in  float4 inPosition     : POSITION,
                     out float  outViewSpaceZ  : TEXCOORD0,
                     out float3 outWorldPos    : TEXCOORD1,
                     out float3 outWorldNormal : TEXCOORD2,
+                    out float2 outScreenUV    : TEXCOORD3,
                     uniform int boneNumber);
 
 VertexShader vsSkinArray[4] =
@@ -70,6 +85,7 @@ void VS_GBufferSkin(in  float4 inPosition     : POSITION,
                     out float  outViewSpaceZ  : TEXCOORD0,
                     out float3 outWorldPos    : TEXCOORD1,
                     out float3 outWorldNormal : TEXCOORD2,
+                    out float2 outScreenUV    : TEXCOORD3,
                     uniform int boneNumber)
 {
     float3 position = 0.0f;
@@ -94,6 +110,8 @@ void VS_GBufferSkin(in  float4 inPosition     : POSITION,
     float4 positionView4 = mul(float4(position, 1.0f), g_matView);
 
     outPosition = mul(positionView4, g_matProj);
+    float2 ndc = outPosition.xy / outPosition.w;
+    outScreenUV = float2(ndc.x * 0.5f + 0.5f, -ndc.y * 0.5f + 0.5f);
     outViewSpaceZ = positionView4.z;
     outWorldPos = position;
     outWorldNormal = normalize(normalPosition - position);
@@ -126,9 +144,12 @@ void PS_GBuffer(VS_OUTPUT inputData,
 void PS_GBufferBackFace(VS_OUTPUT inputData,
                         out float4 outRT0 : COLOR0)
 {
-    float linearZ = (inputData.viewSpaceZ - g_fNear) / (g_fFar - g_fNear);
-    linearZ = saturate(linearZ);
-    outRT0 = float4(linearZ, linearZ, linearZ, linearZ);
+    float backLinearZ = (inputData.viewSpaceZ - g_fNear) / (g_fFar - g_fNear);
+    backLinearZ = saturate(backLinearZ);
+
+    float frontLinearZ = tex2D(sampFrontDepth, inputData.screenUV).a;
+    float thickness = max(backLinearZ - frontLinearZ, 0.0f);
+    outRT0 = float4(thickness, thickness, thickness, thickness);
 }
 
 technique TechniqueGBuffer
@@ -171,5 +192,19 @@ technique TechniqueGBufferSkin
 
         VertexShader = (vsSkinArray[g_currentBoneIndex]);
         PixelShader  = compile ps_3_0 PS_GBuffer();
+    }
+}
+
+technique TechniqueGBufferSkinBackFace
+{
+    pass P0
+    {
+        CullMode         = CW;
+        ZEnable          = TRUE;
+        ZWriteEnable     = TRUE;
+        AlphaBlendEnable = FALSE;
+
+        VertexShader = (vsSkinArray[g_currentBoneIndex]);
+        PixelShader  = compile ps_3_0 PS_GBufferBackFace();
     }
 }
