@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Common.h"
 
@@ -14,14 +14,10 @@ public:
 
     LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget,
                             LPDIRECT3DTEXTURE9 texRenderTargetZ,
-                            LPDIRECT3DTEXTURE9 texRenderTargetPos);
+                            LPDIRECT3DTEXTURE9 texRenderTargetPos,
+                            const bool enableZ,
+                            const bool enableHeight);
     void Finalize();
-
-    void SetEnableZ(const bool arg);
-    bool GetEnableZ() const;
-
-    void SetEnableHeight(const bool arg);
-    bool GetEnableHeight() const;
 
     void SetIntensityZ(const float arg);
 
@@ -48,9 +44,6 @@ private:
         float x, y, z, rhw;
         float u, v;
     };
-
-    bool m_bEnableZ = true;
-    bool m_bEnableHeight = true;
 
     float m_intensityZ = 2.0f;
     float m_intensityHeight = 0.3f;

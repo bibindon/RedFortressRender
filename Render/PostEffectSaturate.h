@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Common.h"
 
@@ -17,8 +17,6 @@ public:
 
     void SetPostEffectSaturate(const float arg);
     float GetPostEffectSaturate() const;
-
-    void SetEnable(const bool arg);
 
     void OnDeviceLost();
     void OnDeviceReset();
@@ -44,8 +42,6 @@ private:
     };
 
     float m_saturateLevel = 1.0f;
-
-    bool m_bEnable = false;
 
     void CreateTexture();
 };

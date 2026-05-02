@@ -18,7 +18,6 @@ public:
                             LPDIRECT3DTEXTURE9 m_texRenderTargetPos,
                             LPDIRECT3DTEXTURE9 m_texRenderTargetNormal);
 
-    void SetEnable(const bool arg);
     void SetBrightness(const float brightness);
     void SetSaturationBoost(const float saturationBoost);
 
@@ -30,7 +29,6 @@ public:
 
 private:
 
-    bool m_bEnable = true;
     float m_brightness = 1.0f;
     float m_saturationBoost = 0.30f;
 

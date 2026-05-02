@@ -206,11 +206,6 @@ void PostEffectBloom::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
     
 }
 
-void PostEffectBloom::SetEnable(const bool arg)
-{
-    m_bEnable = arg;
-}
-
 void PostEffectBloom::SetThreshold(const float arg)
 {
     m_threshold = arg;

@@ -1,7 +1,5 @@
 ﻿#include "PostEffectSaturate.h"
 
-#include <cmath>
-
 namespace NSRender
 {
 
@@ -54,15 +52,9 @@ LPDIRECT3DTEXTURE9 PostEffectSaturate::Draw(LPDIRECT3DTEXTURE9 renderTarget)
     return m_texWork;
 }
 
-void PostEffectSaturate::SetEnable(const bool arg)
-{
-    m_bEnable = arg;
-}
-
 void PostEffectSaturate::SetPostEffectSaturate(const float level)
 {
     m_saturateLevel = level;
-    m_bEnable = std::fabs(level - 1.0f) > 0.0001f;
 }
 
 float PostEffectSaturate::GetPostEffectSaturate() const

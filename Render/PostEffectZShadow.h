@@ -23,7 +23,6 @@ public:
                             const std::deque<MeshMixManager>& meshMixList,
                             const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList);
 
-    void SetEnable(const bool arg);
     void SetShadowIntensity(const float intensity);
     void SetShadowSaturationBoost(const float saturationBoost);
     void SetCoverage(const float coverage);
@@ -41,7 +40,6 @@ private:
     void RenderTechnique3();
 
 
-    bool m_bEnable = true;
     float m_shadowIntensity = 0.5f;
     float m_shadowSaturationBoost = 0.35f;
     float m_coverage = 0.5f;

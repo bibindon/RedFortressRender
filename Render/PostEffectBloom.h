@@ -15,7 +15,6 @@ public:
     LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget);
     void Finalize();
 
-    void SetEnable(const bool arg);
     void SetThreshold(const float arg);
     void SetIntensity(const float arg);
     void SetSize(const float arg);
@@ -59,8 +58,6 @@ private:
     // ブルームの広さ
     // 0.0 ~ 1.0
     float m_size = 1.0f;
-
-    bool m_bEnable = false;
 
     void CreateTexture();
 };

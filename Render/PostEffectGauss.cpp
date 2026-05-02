@@ -49,16 +49,6 @@ void PostEffectGauss::Finalize()
     SAFE_RELEASE(m_d3dEffect);
 }
 
-void PostEffectGauss::SetEnable(const bool arg)
-{
-    m_bEnable = arg;
-}
-
-bool PostEffectGauss::GetEnable() const
-{
-    return m_bEnable;
-}
-
 void PostEffectGauss::SetSampleSize(const int sampleSize)
 {
     m_sampleSize = sampleSize;

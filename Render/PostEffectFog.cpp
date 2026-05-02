@@ -35,23 +35,25 @@ void PostEffectFog::Initialize()
 
 LPDIRECT3DTEXTURE9 PostEffectFog::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                                        LPDIRECT3DTEXTURE9 texRenderTargetZ,
-                                       LPDIRECT3DTEXTURE9 texRenderTargetPos)
+                                       LPDIRECT3DTEXTURE9 texRenderTargetPos,
+                                       const bool enableZ,
+                                       const bool enableHeight)
 {
     // 入力チェック（必要テクスチャが無ければパススルー）
-    if (m_bEnableZ && texRenderTargetZ == NULL)
+    if (enableZ && texRenderTargetZ == NULL)
     {
         return renderTarget;
     }
 
-    if (m_bEnableHeight && texRenderTargetPos == NULL)
+    if (enableHeight && texRenderTargetPos == NULL)
     {
         return renderTarget;
     }
 
     // エフェクトパラメータ設定
     // 霧の強度等
-    m_d3dEffect->SetBool("g_EnableZ", m_bEnableZ ? TRUE : FALSE);
-    m_d3dEffect->SetBool("g_EnableHeight", m_bEnableHeight ? TRUE : FALSE);
+    m_d3dEffect->SetBool("g_EnableZ", enableZ ? TRUE : FALSE);
+    m_d3dEffect->SetBool("g_EnableHeight", enableHeight ? TRUE : FALSE);
 
     m_d3dEffect->SetFloat("g_IntensityZ", m_intensityZ);
     m_d3dEffect->SetFloat("g_IntensityHeight", m_intensityHeight);
@@ -75,26 +77,6 @@ void PostEffectFog::Finalize()
 {
     SAFE_RELEASE(m_texWork);
     SAFE_RELEASE(m_d3dEffect);
-}
-
-void PostEffectFog::SetEnableZ(const bool arg)
-{
-    m_bEnableZ = arg;
-}
-
-bool PostEffectFog::GetEnableZ() const
-{
-    return m_bEnableZ;
-}
-
-void PostEffectFog::SetEnableHeight(const bool arg)
-{
-    m_bEnableHeight = arg;
-}
-
-bool PostEffectFog::GetEnableHeight() const
-{
-    return m_bEnableHeight;
 }
 
 void PostEffectFog::SetIntensityZ(const float arg)

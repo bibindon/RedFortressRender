@@ -16,8 +16,6 @@ public:
                             LPDIRECT3DTEXTURE9 texZ);
     void Finalize();
 
-    void SetEnable(const bool arg) { m_bEnable = arg; }
-
     // ゴッドレイ用光源のワールド座標
     void SetLightPos(const D3DXVECTOR3& pos) { m_lightPosWorld = pos; }
 
@@ -49,7 +47,6 @@ private:
     LPDIRECT3DTEXTURE9  m_texOcclusionBlurred = NULL;
     LPDIRECT3DTEXTURE9  m_texResult      = NULL;
 
-    bool        m_bEnable         = false;
     D3DXVECTOR3 m_lightPosWorld   = D3DXVECTOR3(0.0f, 50.0f, 0.0f);
     float       m_rayLength       = 1.0f;
     float       m_rayIntensity    = 0.6f;

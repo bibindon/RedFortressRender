@@ -159,11 +159,6 @@ void PostEffectStarBurst::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
     
 }
 
-void PostEffectStarBurst::SetEnable(const bool arg)
-{
-    m_bEnable = arg;
-}
-
 void PostEffectStarBurst::SetThreshold(const float arg)
 {
     m_threshold = arg;

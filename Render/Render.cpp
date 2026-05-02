@@ -517,7 +517,11 @@ void Render::Draw()
 
     if (m_postEffectFogZEnabled || m_postEffectFogHeightEnabled)
     {
-        pTempTexture = m_postEffectFog.Draw(pTempTexture, pTexTempZ, pTexTempPos);
+        pTempTexture = m_postEffectFog.Draw(pTempTexture,
+                                            pTexTempZ,
+                                            pTexTempPos,
+                                            m_postEffectFogZEnabled,
+                                            m_postEffectFogHeightEnabled);
     }
 
     if (m_postEffectSaturateEnabled)
@@ -1128,13 +1132,11 @@ void Render::SetPostEffectSaturate(const float level)
 void Render::SetPostEffectSaturateEnable(const bool arg)
 {
     m_postEffectSaturateEnabled = arg;
-    m_postEffectSaturate.SetEnable(arg);
 }
 
 void Render::SetPostEffectGaussianFilter(const bool arg)
 {
     m_postEffectGaussEnabled = arg;
-    m_postEffectGauss.SetEnable(arg);
 }
 
 void Render::SetPostEffectGaussianSampleSize(const int sampleSize)
@@ -1146,7 +1148,6 @@ void Render::SetPostEffectGaussianSampleSize(const int sampleSize)
 void Render::SetPostEffectDepthBufferShadow(const bool arg)
 {
     m_postEffectZShadowEnabled = arg;
-    m_postEffectZShadow.SetEnable(arg);
 }
 
 void Render::SetPostEffectDepthBufferShadowIntensity(const float intensity)
@@ -1177,7 +1178,6 @@ void Render::SetPostEffectDepthBufferShadowCompositeTapCount(const int tapCount)
 void Render::SetPostEffectSSAO(const bool arg)
 {
     m_postEffectSSAOEnabled = arg;
-    m_postEffectSSAO.SetEnable(arg);
 }
 
 void Render::SetPostEffectSSAOBrightness(const float brightness)
@@ -1194,8 +1194,6 @@ void Render::SetPostEffectFog(const bool arg)
 {
     m_postEffectFogZEnabled = arg;
     m_postEffectFogHeightEnabled = arg;
-    m_postEffectFog.SetEnableZ(arg);
-    m_postEffectFog.SetEnableHeight(arg);
 }
 
 void Render::SetPostEffectFogIntensity(const float intensity)
@@ -1206,7 +1204,6 @@ void Render::SetPostEffectFogIntensity(const float intensity)
 void Render::SetPostEffectFogHeightEnable(const bool arg)
 {
     m_postEffectFogHeightEnabled = arg;
-    m_postEffectFog.SetEnableHeight(arg);
 }
 
 void Render::SetPostEffectFogHeightIntensity(const float intensity)
@@ -1222,7 +1219,6 @@ void Render::SetPostEffectFogHeightStart(const float start)
 void Render::SetPostEffectBloom(const bool arg)
 {
     m_postEffectBloomEnabled = arg;
-    m_PostEffectBloom.SetEnable(arg);
 }
 
 void Render::SetPostEffectBloomThreshold(const float threshold)
@@ -1233,7 +1229,6 @@ void Render::SetPostEffectBloomThreshold(const float threshold)
 void Render::SetPostEffectDepthOfField(const bool arg)
 {
     m_postEffectDepthOfFieldEnabled = arg;
-    m_postEffectDepthOfField.SetEnable(arg);
 }
 
 void Render::SetPostEffectDepthOfFieldFocalDistance(const float distance)
@@ -1249,7 +1244,6 @@ void Render::SetPostEffectDepthOfFieldMaxBlurDistance(const float distance)
 void Render::SetPostEffectStarBurst(const bool arg)
 {
     m_postEffectStarBurstEnabled = arg;
-    m_postEffectStarBurst.SetEnable(arg);
 }
 
 void Render::SetPostEffectStarBurstThreshold(const float threshold)
@@ -1260,7 +1254,6 @@ void Render::SetPostEffectStarBurstThreshold(const float threshold)
 void Render::SetPostEffectGodRay(const bool arg)
 {
     m_postEffectGodRayEnabled = arg;
-    m_postEffectGodRay.SetEnable(arg);
 }
 
 void Render::SetPostEffectGodRayLightPos(const D3DXVECTOR3& pos)

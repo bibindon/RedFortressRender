@@ -531,11 +531,6 @@ void PostEffectZShadow::DrawFullscreenQuad()
     assert(hr == S_OK);
 }
 
-void PostEffectZShadow::SetEnable(const bool arg)
-{
-    m_bEnable = arg;
-}
-
 void PostEffectZShadow::SetShadowIntensity(const float intensity)
 {
     m_shadowIntensity = intensity;

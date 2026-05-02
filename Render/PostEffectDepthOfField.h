@@ -16,9 +16,6 @@ public:
 
     void Finalize();
 
-    void SetEnable(bool enable);
-    bool GetEnable() const;
-
     void SetFocalDistance(float focalDistance);
     void SetMaxBlurDistance(float maxBlurDistance);
     void SetFocusBandHalfWidth(float focusBandHalfWidth);
@@ -43,7 +40,6 @@ private:
     LPD3DXEFFECT m_d3dEffect = NULL;
     LPDIRECT3DTEXTURE9 m_texWork = NULL;
 
-    bool m_enable = false;
     float m_focalDistance = 8.0f;
     float m_maxBlurDistance = 16.0f;
     float m_focusBandHalfWidth = 2.0f;

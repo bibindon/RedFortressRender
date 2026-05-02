@@ -1,11 +1,11 @@
-#pragma once
+ï»¿#pragma once
 
 #include "Common.h"
 
 namespace NSRender
 {
 
-// TODO ˆê“x¬‚³‚­•\¦‚µ‚Ä‚©‚çŠg‘å‚·‚éA‚Æ‚¢‚¤‚Ì‚ğ‚â‚Á‚½•û‚ª‚«‚ê‚¢‚ç‚µ‚¢
+// TODO ä¸€åº¦å°ã•ãè¡¨ç¤ºã—ã¦ã‹ã‚‰æ‹¡å¤§ã™ã‚‹ã€ã¨ã„ã†ã®ã‚’ã‚„ã£ãŸæ–¹ãŒãã‚Œã„ã‚‰ã—ã„
 class PostEffectStarBurst : public IDeviceResettable
 {
 
@@ -15,7 +15,6 @@ public:
     LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget);
     void Finalize();
 
-    void SetEnable(const bool arg);
     void SetThreshold(const float arg);
     void SetIntensity(const float arg);
     void SetSize(const float arg);
@@ -50,19 +49,17 @@ private:
         float v;
     };
 
-    // ‚Ç‚ê‚­‚ç‚¢‚Ì–¾‚é‚³‚©‚çƒuƒ‹[ƒ€‚Ì‘ÎÛ‚Æ‚·‚é‚©
+    // ã©ã‚Œãã‚‰ã„ã®æ˜ã‚‹ã•ã‹ã‚‰ãƒ–ãƒ«ãƒ¼ãƒ ã®å¯¾è±¡ã¨ã™ã‚‹ã‹
     // 0.0 ~ 1.0
     float m_threshold = 1.0f;
 
-    // ƒuƒ‹[ƒ€‚Ì–¾‚é‚³
+    // ãƒ–ãƒ«ãƒ¼ãƒ ã®æ˜ã‚‹ã•
     // 0.0 ~ 1.0
     float m_intensity = 1.0f;
 
-    // ƒuƒ‹[ƒ€‚ÌL‚³
+    // ãƒ–ãƒ«ãƒ¼ãƒ ã®åºƒã•
     // 0.0 ~ 1.0
     float m_size = 1.0f;
-
-    bool m_bEnable = false;
 
     void SetRTFromTex(LPDIRECT3DTEXTURE9 tex);
 

@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include "Common.h"
 
@@ -14,12 +14,9 @@ public:
     LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget);
     void Finalize();
 
-    void SetEnable(const bool arg);
-    bool GetEnable() const;
-
     void SetSampleSize(const int sampleSize);
 
-    // TODO ŽÀ‘•
+    // TODO
     // 0.0 ~ 1.0
     void SetIntensity(const float arg);
 
@@ -41,8 +38,6 @@ private:
         float x, y, z, rhw;
         float u, v;
     };
-
-    bool m_bEnable = false;
 
     float m_intensity = 1.0;
     int m_sampleSize = 101;

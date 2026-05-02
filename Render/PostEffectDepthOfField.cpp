@@ -64,16 +64,6 @@ void PostEffectDepthOfField::Finalize()
     SAFE_RELEASE(m_d3dEffect);
 }
 
-void PostEffectDepthOfField::SetEnable(bool enable)
-{
-    m_enable = enable;
-}
-
-bool PostEffectDepthOfField::GetEnable() const
-{
-    return m_enable;
-}
-
 void PostEffectDepthOfField::SetFocalDistance(float focalDistance)
 {
     m_focalDistance = focalDistance;

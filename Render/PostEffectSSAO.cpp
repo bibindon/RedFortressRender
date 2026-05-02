@@ -204,11 +204,6 @@ void PostEffectSSAO::DrawFullscreenQuad()
     SAFE_RELEASE(vertexDecl);
 }
 
-void PostEffectSSAO::SetEnable(const bool arg)
-{
-    m_bEnable = arg;
-}
-
 void PostEffectSSAO::SetBrightness(const float brightness)
 {
     m_brightness = brightness;
