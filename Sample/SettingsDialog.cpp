@@ -22,6 +22,8 @@ constexpr int HEIGHT_FOG_INTENSITY_SLIDER_MIN = 0;
 constexpr int HEIGHT_FOG_INTENSITY_SLIDER_MAX = static_cast<int>(HEIGHT_FOG_INTENSITY_MAX / HEIGHT_FOG_INTENSITY_STEP);
 constexpr int HEIGHT_FOG_HEIGHT_SLIDER_MIN = 0;
 constexpr int HEIGHT_FOG_HEIGHT_SLIDER_MAX = static_cast<int>((HEIGHT_FOG_HEIGHT_MAX - HEIGHT_FOG_HEIGHT_MIN) / HEIGHT_FOG_HEIGHT_STEP);
+constexpr int HEIGHT_FOG_DISTANCE_SLIDER_MIN = 0;
+constexpr int HEIGHT_FOG_DISTANCE_SLIDER_MAX = static_cast<int>((HEIGHT_FOG_DISTANCE_MAX - HEIGHT_FOG_DISTANCE_MIN) / HEIGHT_FOG_DISTANCE_STEP);
 constexpr int SUN_LIGHT_INTENSITY_SLIDER_MIN = 0;
 constexpr int SUN_LIGHT_INTENSITY_SLIDER_MAX = static_cast<int>(SUN_LIGHT_INTENSITY_MAX / SUN_LIGHT_INTENSITY_STEP);
 constexpr int SHADOW_SLIDER_MIN = 0;
@@ -70,7 +72,7 @@ constexpr int GODRAY_VIRTUAL_PROXIMITY_SLIDER_MIN = 0;
 constexpr int GODRAY_VIRTUAL_PROXIMITY_SLIDER_MAX = static_cast<int>(GODRAY_VIRTUAL_PROXIMITY_MAX / GODRAY_VIRTUAL_PROXIMITY_STEP);
 constexpr int GODRAY_POS_SLIDER_MIN = static_cast<int>(GODRAY_LIGHT_POS_MIN / GODRAY_LIGHT_POS_STEP);
 constexpr int GODRAY_POS_SLIDER_MAX = static_cast<int>(GODRAY_LIGHT_POS_MAX / GODRAY_LIGHT_POS_STEP);
-constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 1060;
+constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 1110;
 constexpr int SETTINGS_DIALOG_WHEEL_STEP_PX = 36;
 constexpr UINT ID_POPUP_EXPORT_BINARY = 60001;
 constexpr UINT ID_POPUP_REMOVE_MODEL = 60002;
@@ -88,6 +90,8 @@ void RefreshHeightFogControls(HWND hDlg);
 void RefreshHeightFogIntensityControls(HWND hDlg);
 void RefreshHeightFogStartControls(HWND hDlg);
 void RefreshHeightFogMaxControls(HWND hDlg);
+void RefreshHeightFogDistanceStartControls(HWND hDlg);
+void RefreshHeightFogDistanceMaxControls(HWND hDlg);
 void RefreshSunLightIntensityControls(HWND hDlg);
 void RefreshShadowControls(HWND hDlg);
 void RefreshShadowSaturationBoostControls(HWND hDlg);
@@ -151,6 +155,8 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_HEIGHT_FOG_INTENSITY,
         IDC_EDIT_HEIGHT_FOG_START,
         IDC_EDIT_HEIGHT_FOG_MAX,
+        IDC_EDIT_HEIGHT_FOG_DISTANCE_START,
+        IDC_EDIT_HEIGHT_FOG_DISTANCE_MAX,
         IDC_EDIT_SUN_LIGHT_INTENSITY,
         IDC_EDIT_SHADOW_INTENSITY,
         IDC_EDIT_SHADOW_SATURATION_BOOST,
@@ -264,6 +270,22 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
             ApplyHeightFogMax();
         }
         RefreshHeightFogMaxControls(hDlg);
+        return true;
+    case IDC_EDIT_HEIGHT_FOG_DISTANCE_START:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_heightFogDistanceStart = floatValue;
+            ApplyHeightFogDistanceStart();
+        }
+        RefreshHeightFogDistanceStartControls(hDlg);
+        return true;
+    case IDC_EDIT_HEIGHT_FOG_DISTANCE_MAX:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_heightFogDistanceMax = floatValue;
+            ApplyHeightFogDistanceMax();
+        }
+        RefreshHeightFogDistanceMaxControls(hDlg);
         return true;
     case IDC_EDIT_SUN_LIGHT_INTENSITY:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
@@ -1031,6 +1053,8 @@ void RefreshHeightFogControls(HWND hDlg)
     RefreshHeightFogIntensityControls(hDlg);
     RefreshHeightFogStartControls(hDlg);
     RefreshHeightFogMaxControls(hDlg);
+    RefreshHeightFogDistanceStartControls(hDlg);
+    RefreshHeightFogDistanceMaxControls(hDlg);
 }
 
 void RefreshHeightFogIntensityControls(HWND hDlg)
@@ -1067,6 +1091,30 @@ void RefreshHeightFogMaxControls(HWND hDlg)
                        TBM_SETPOS,
                        TRUE,
                        static_cast<LPARAM>(HeightFogHeightToSliderValue(g_heightFogMax)));
+}
+
+void RefreshHeightFogDistanceStartControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_heightFogDistanceStart);
+    SetDlgItemText(hDlg, IDC_EDIT_HEIGHT_FOG_DISTANCE_START, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_HEIGHT_FOG_DISTANCE_START,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(HeightFogDistanceToSliderValue(g_heightFogDistanceStart)));
+}
+
+void RefreshHeightFogDistanceMaxControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_heightFogDistanceMax);
+    SetDlgItemText(hDlg, IDC_EDIT_HEIGHT_FOG_DISTANCE_MAX, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_HEIGHT_FOG_DISTANCE_MAX,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(HeightFogDistanceToSliderValue(g_heightFogDistanceMax)));
 }
 
 void RefreshShadowControls(HWND hDlg)
@@ -1474,6 +1522,16 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_HEIGHT_FOG_MAX, TBM_SETRANGEMAX, FALSE, HEIGHT_FOG_HEIGHT_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_HEIGHT_FOG_MAX, TBM_SETTICFREQ, 20, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_HEIGHT_FOG_MAX, TBM_SETPAGESIZE, 0, 10);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_HEIGHT_FOG_DISTANCE_START, TBM_SETRANGEMIN, FALSE, HEIGHT_FOG_DISTANCE_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_HEIGHT_FOG_DISTANCE_START, TBM_SETRANGEMAX, FALSE, HEIGHT_FOG_DISTANCE_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_HEIGHT_FOG_DISTANCE_START, TBM_SETTICFREQ, 20, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_HEIGHT_FOG_DISTANCE_START, TBM_SETPAGESIZE, 0, 10);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_HEIGHT_FOG_DISTANCE_MAX, TBM_SETRANGEMIN, FALSE, HEIGHT_FOG_DISTANCE_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_HEIGHT_FOG_DISTANCE_MAX, TBM_SETRANGEMAX, FALSE, HEIGHT_FOG_DISTANCE_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_HEIGHT_FOG_DISTANCE_MAX, TBM_SETTICFREQ, 20, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_HEIGHT_FOG_DISTANCE_MAX, TBM_SETPAGESIZE, 0, 10);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_SUN_LIGHT_INTENSITY, TBM_SETRANGEMIN, FALSE, SUN_LIGHT_INTENSITY_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SUN_LIGHT_INTENSITY, TBM_SETRANGEMAX, FALSE, SUN_LIGHT_INTENSITY_SLIDER_MAX);
@@ -1994,6 +2052,24 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_heightFogMax = SliderValueToHeightFogHeight(sliderValue);
             ApplyHeightFogMax();
             RefreshHeightFogMaxControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_HEIGHT_FOG_DISTANCE_START))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_heightFogDistanceStart = SliderValueToHeightFogDistance(sliderValue);
+            ApplyHeightFogDistanceStart();
+            RefreshHeightFogDistanceStartControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_HEIGHT_FOG_DISTANCE_MAX))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_heightFogDistanceMax = SliderValueToHeightFogDistance(sliderValue);
+            ApplyHeightFogDistanceMax();
+            RefreshHeightFogDistanceMaxControls(hDlg);
             return TRUE;
         }
 

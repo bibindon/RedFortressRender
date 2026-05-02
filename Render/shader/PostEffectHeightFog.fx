@@ -26,7 +26,10 @@ float4 g_FogColor = float4(0.72, 0.78, 0.86, 1.0);
 float g_IntensityHeight = 0.3;
 float g_HeightStart = 0.0;
 float g_HeightMax = -5.0;
+float g_DistanceStart = 0.0;
+float g_DistanceMax = 20.0;
 float g_PosRange = 50.0;
+float4 g_CameraPos = float4(0.0, 0.0, 0.0, 1.0);
 
 float HeightFogAmountAt(float2 uv)
 {
@@ -43,7 +46,16 @@ float HeightFogAmountAt(float2 uv)
         amount = saturate((wp.y - g_HeightStart) / (g_HeightMax - g_HeightStart));
     }
 
-    return saturate(amount * g_IntensityHeight);
+    float fogByHeight = saturate(amount * g_IntensityHeight);
+
+    float fogByDistance = 1.0f;
+    if (g_DistanceMax > g_DistanceStart)
+    {
+        float distanceToCamera = distance(wp, g_CameraPos.xyz);
+        fogByDistance = saturate((distanceToCamera - g_DistanceStart) / (g_DistanceMax - g_DistanceStart));
+    }
+
+    return saturate(fogByHeight * fogByDistance);
 }
 
 struct PS_IN

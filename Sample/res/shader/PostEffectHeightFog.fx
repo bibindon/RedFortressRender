@@ -26,7 +26,10 @@ float4 g_FogColor = float4(0.72, 0.78, 0.86, 1.0);
 float g_IntensityHeight = 0.3;
 float g_HeightStart = 0.0;
 float g_HeightMax = -5.0;
+float g_DistanceStart = 0.0;
+float g_DistanceMax = 20.0;
 float g_PosRange = 50.0;
+float4 g_CameraPos = float4(0.0, 0.0, 0.0, 1.0);
 
 float HeightFogAmountAt(float2 uv)
 {
@@ -43,7 +46,16 @@ float HeightFogAmountAt(float2 uv)
         amount = saturate((wp.y - g_HeightStart) / (g_HeightMax - g_HeightStart));
     }
 
-    return saturate(amount * g_IntensityHeight);
+    float fogByHeight = saturate(amount * g_IntensityHeight);
+
+    float fogByDistance = 1.0f;
+    if (g_DistanceMax > g_DistanceStart)
+    {
+        float distanceToCamera = distance(wp, g_CameraPos.xyz);
+        fogByDistance = saturate((distanceToCamera - g_DistanceStart) / (g_DistanceMax - g_DistanceStart));
+    }
+
+    return saturate(fogByHeight * fogByDistance);
 }
 
 struct PS_IN
@@ -54,17 +66,24 @@ struct PS_IN
 float4 PS_HeightFog(PS_IN i) : COLOR0
 {
     float2 uv = i.uv;
-    // uv += (g_TexelSize * 0.5f);
     float3 scene = tex2D(sSrc, uv).rgb;
+
+     // なぜか1ピクセル右下のピクセルを見るとうまくいく。
+     uv += (g_TexelSize * 0.5f);
+     uv += (g_TexelSize * 0.5f);
+
     float fog = HeightFogAmountAt(uv);
     float3 outColor = lerp(scene, g_FogColor.rgb, fog);
 
-    float2 pixelPos = uv / g_TexelSize;
-    float gridX = frac(pixelPos.x / 5.0f);
-    float gridY = frac(pixelPos.y / 5.0f);
-    if (gridX < 0.2f || gridY < 0.2f)
+    if (false)
     {
-        outColor = float3(0.0f, 1.0f, 0.0f);
+        float2 pixelPos = uv / g_TexelSize;
+        float gridX = frac(pixelPos.x / 5.0f);
+        float gridY = frac(pixelPos.y / 5.0f);
+        if (gridX < 0.2f || gridY < 0.2f)
+        {
+            outColor = float3(0.0f, 1.0f, 0.0f);
+        }
     }
 
     return float4(outColor, 1.0);

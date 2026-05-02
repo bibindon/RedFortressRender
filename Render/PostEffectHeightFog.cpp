@@ -1,4 +1,5 @@
-﻿#include "PostEffectHeightFog.h"
+#include "PostEffectHeightFog.h"
+#include "Camera.h"
 
 namespace NSRender
 {
@@ -39,7 +40,12 @@ LPDIRECT3DTEXTURE9 PostEffectHeightFog::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_d3dEffect->SetFloat("g_IntensityHeight", m_intensity);
     m_d3dEffect->SetFloat("g_HeightStart", m_startHeight);
     m_d3dEffect->SetFloat("g_HeightMax", m_maxHeight);
+    m_d3dEffect->SetFloat("g_DistanceStart", m_distanceStart);
+    m_d3dEffect->SetFloat("g_DistanceMax", m_distanceMax);
     m_d3dEffect->SetFloat("g_PosRange", 50.0f);
+    const D3DXVECTOR3 eye = Camera::GetEyePos();
+    const D3DXVECTOR4 cameraPos(eye.x, eye.y, eye.z, 1.0f);
+    m_d3dEffect->SetVector("g_CameraPos", &cameraPos);
     m_d3dEffect->SetVector("g_FogColor", &m_fogColor);
     m_d3dEffect->SetTexture("g_PosTex", texRenderTargetPos);
 
@@ -66,6 +72,16 @@ void PostEffectHeightFog::SetStartHeight(const float startHeight)
 void PostEffectHeightFog::SetMaxHeight(const float maxHeight)
 {
     m_maxHeight = maxHeight;
+}
+
+void PostEffectHeightFog::SetDistanceStart(const float distanceStart)
+{
+    m_distanceStart = distanceStart;
+}
+
+void PostEffectHeightFog::SetDistanceMax(const float distanceMax)
+{
+    m_distanceMax = distanceMax;
 }
 
 void PostEffectHeightFog::SetFogColor(const D3DXCOLOR& color)

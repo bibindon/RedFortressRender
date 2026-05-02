@@ -298,6 +298,40 @@ void Render::ApplySettings()
         SetPostEffectHeightFogMax(-5.0f);
     }
 
+    const auto fogHeightDistanceStart = m_settings.find(L"FogHeightDistanceStart");
+    if (fogHeightDistanceStart != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectHeightFogDistanceStart(std::stof(fogHeightDistanceStart->second));
+        }
+        catch (...)
+        {
+            SetPostEffectHeightFogDistanceStart(0.0f);
+        }
+    }
+    else
+    {
+        SetPostEffectHeightFogDistanceStart(0.0f);
+    }
+
+    const auto fogHeightDistanceMax = m_settings.find(L"FogHeightDistanceMax");
+    if (fogHeightDistanceMax != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectHeightFogDistanceMax(std::stof(fogHeightDistanceMax->second));
+        }
+        catch (...)
+        {
+            SetPostEffectHeightFogDistanceMax(20.0f);
+        }
+    }
+    else
+    {
+        SetPostEffectHeightFogDistanceMax(20.0f);
+    }
+
     const auto shadowIntensity = m_settings.find(L"ShadowIntensity");
     if (shadowIntensity != m_settings.end())
     {
@@ -1363,6 +1397,16 @@ void Render::SetPostEffectHeightFogStart(const float start)
 void Render::SetPostEffectHeightFogMax(const float maxHeight)
 {
     m_postEffectHeightFog.SetMaxHeight(maxHeight);
+}
+
+void Render::SetPostEffectHeightFogDistanceStart(const float distanceStart)
+{
+    m_postEffectHeightFog.SetDistanceStart(distanceStart);
+}
+
+void Render::SetPostEffectHeightFogDistanceMax(const float distanceMax)
+{
+    m_postEffectHeightFog.SetDistanceMax(distanceMax);
 }
 
 void Render::SetPostEffectFogHeightEnable(const bool arg)

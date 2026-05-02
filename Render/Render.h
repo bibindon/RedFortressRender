@@ -241,6 +241,8 @@ public:
     void SetPostEffectHeightFogIntensity(const float intensity);
     void SetPostEffectHeightFogStart(const float start);
     void SetPostEffectHeightFogMax(const float maxHeight);
+    void SetPostEffectHeightFogDistanceStart(const float distanceStart);
+    void SetPostEffectHeightFogDistanceMax(const float distanceMax);
     void SetPostEffectFogHeightEnable(const bool arg);
     void SetPostEffectFogHeightIntensity(const float intensity);
     void SetPostEffectFogHeightStart(const float start);

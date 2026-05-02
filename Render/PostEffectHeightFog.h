@@ -1,5 +1,6 @@
 ﻿// 高さフォグ
 // 高さフォグでは、高さとカメラとの距離で霧の強さを決める。
+// まず高さで霧の濃さを決めて、そのあと、距離によって、霧の濃さに補正をかける。
 #pragma once
 
 #include "Common.h"
@@ -20,6 +21,8 @@ public:
     void SetIntensity(const float intensity);
     void SetStartHeight(const float startHeight);
     void SetMaxHeight(const float maxHeight);
+    void SetDistanceStart(const float distanceStart);
+    void SetDistanceMax(const float distanceMax);
     void SetFogColor(const D3DXCOLOR& color);
 
     void OnDeviceLost() override;
@@ -42,6 +45,8 @@ private:
     float m_intensity = 0.3f;
     float m_startHeight = 0.0f;
     float m_maxHeight = -5.0f;
+    float m_distanceStart = 0.0f;
+    float m_distanceMax = 20.0f;
     D3DXVECTOR4 m_fogColor = D3DXVECTOR4(0.72f, 0.78f, 0.86f, 1.0f);
 };
 

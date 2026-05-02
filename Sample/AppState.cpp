@@ -50,6 +50,8 @@ float g_fogIntensity = 2.0f;
 float g_heightFogIntensity = 0.3f;
 float g_heightFogStart = 0.0f;
 float g_heightFogMax = -5.0f;
+float g_heightFogDistanceStart = 0.0f;
+float g_heightFogDistanceMax = 20.0f;
 float g_sunLightIntensity = 1.0f;
 float g_shadowIntensity = 0.5f;
 float g_shadowCoverage = 0.5f;
@@ -109,6 +111,11 @@ float ClampHeightFogIntensity(const float intensity)
 float ClampHeightFogHeight(const float height)
 {
     return (std::max)(HEIGHT_FOG_HEIGHT_MIN, (std::min)(height, HEIGHT_FOG_HEIGHT_MAX));
+}
+
+float ClampHeightFogDistance(const float distance)
+{
+    return (std::max)(HEIGHT_FOG_DISTANCE_MIN, (std::min)(distance, HEIGHT_FOG_DISTANCE_MAX));
 }
 
 float ClampSunLightIntensity(const float intensity)
@@ -713,6 +720,18 @@ void ApplyHeightFogMax()
     g_Render.SetPostEffectHeightFogMax(g_heightFogMax);
 }
 
+void ApplyHeightFogDistanceStart()
+{
+    g_heightFogDistanceStart = ClampHeightFogDistance(g_heightFogDistanceStart);
+    g_Render.SetPostEffectHeightFogDistanceStart(g_heightFogDistanceStart);
+}
+
+void ApplyHeightFogDistanceMax()
+{
+    g_heightFogDistanceMax = ClampHeightFogDistance(g_heightFogDistanceMax);
+    g_Render.SetPostEffectHeightFogDistanceMax(g_heightFogDistanceMax);
+}
+
 void ApplySunLightIntensity()
 {
     g_sunLightIntensity = ClampSunLightIntensity(g_sunLightIntensity);
@@ -916,6 +935,16 @@ int HeightFogHeightToSliderValue(const float height)
 float SliderValueToHeightFogHeight(const int sliderValue)
 {
     return ClampHeightFogHeight(HEIGHT_FOG_HEIGHT_MIN + static_cast<float>(sliderValue) * HEIGHT_FOG_HEIGHT_STEP);
+}
+
+int HeightFogDistanceToSliderValue(const float distance)
+{
+    return static_cast<int>(std::lround((ClampHeightFogDistance(distance) - HEIGHT_FOG_DISTANCE_MIN) / HEIGHT_FOG_DISTANCE_STEP));
+}
+
+float SliderValueToHeightFogDistance(const int sliderValue)
+{
+    return ClampHeightFogDistance(HEIGHT_FOG_DISTANCE_MIN + static_cast<float>(sliderValue) * HEIGHT_FOG_DISTANCE_STEP);
 }
 
 int SunLightIntensityToSliderValue(const float intensity)
@@ -1764,6 +1793,14 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"FogHeightMax")
             {
                 g_heightFogMax = std::stof(value);
+            }
+            else if (key == L"FogHeightDistanceStart")
+            {
+                g_heightFogDistanceStart = std::stof(value);
+            }
+            else if (key == L"FogHeightDistanceMax")
+            {
+                g_heightFogDistanceMax = std::stof(value);
             }
             else if (key == L"SaturateLevel")
             {
