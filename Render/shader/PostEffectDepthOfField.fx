@@ -5,6 +5,7 @@ float g_maxBlurDistanceMeters = 16.0;
 float g_focusBandHalfWidthMeters = 2.0;
 float g_blurRadiusPixels = 1.0;
 float g_positionRange = 50.0;
+float g_dofBlend = 1.0;
 
 // 焦点範囲の外側から、何mごとに 3x3 -> 5x5 -> 7x7 -> 9x9 -> 11x11 と強くするか。
 // C++ 側から渡さなくても、この初期値で動作します。
@@ -163,7 +164,8 @@ float4 PS(in float2 uv : TEXCOORD0) : COLOR0
         return baseColor;
     }
 
-    return sumColor / weightSum;
+    const float4 blurredColor = sumColor / weightSum;
+    return lerp(baseColor, blurredColor, saturate(g_dofBlend));
 }
 
 technique Technique1

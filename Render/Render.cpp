@@ -360,13 +360,40 @@ void Render::ApplySettings()
         SetPostEffectBloomThreshold(2.5f);
     }
 
-    const auto depthOfFieldEnable = m_settings.find(L"DepthOfFieldEnable");
-    if (depthOfFieldEnable != m_settings.end())
+    const auto depthOfFieldMode = m_settings.find(L"DepthOfFieldMode");
+    if (depthOfFieldMode != m_settings.end())
     {
-        bool enabled = false;
-        if (TryParseBoolSetting(depthOfFieldEnable->second, enabled))
+        try
         {
-            SetPostEffectDepthOfField(enabled);
+            const int modeValue = std::stoi(depthOfFieldMode->second);
+            if (modeValue <= 0)
+            {
+                SetPostEffectDepthOfFieldMode(DepthOfFieldMode::Disabled);
+            }
+            else if (modeValue == 1)
+            {
+                SetPostEffectDepthOfFieldMode(DepthOfFieldMode::Enabled);
+            }
+            else
+            {
+                SetPostEffectDepthOfFieldMode(DepthOfFieldMode::AutoNear);
+            }
+        }
+        catch (...)
+        {
+            SetPostEffectDepthOfFieldMode(DepthOfFieldMode::Disabled);
+        }
+    }
+    else
+    {
+        const auto depthOfFieldEnable = m_settings.find(L"DepthOfFieldEnable");
+        if (depthOfFieldEnable != m_settings.end())
+        {
+            bool enabled = false;
+            if (TryParseBoolSetting(depthOfFieldEnable->second, enabled))
+            {
+                SetPostEffectDepthOfField(enabled);
+            }
         }
     }
 
@@ -529,9 +556,18 @@ void Render::Draw()
         pTempTexture = m_postEffectSaturate.Draw(pTempTexture);
     }
 
-    if (m_postEffectDepthOfFieldEnabled)
+    if (m_postEffectDepthOfFieldMode == DepthOfFieldMode::Enabled)
     {
+        m_postEffectDepthOfField.SetBlend(1.0f);
         pTempTexture = m_postEffectDepthOfField.Draw(pTempTexture, pTexTempPos);
+    }
+    else if (m_postEffectDepthOfFieldMode == DepthOfFieldMode::AutoNear)
+    {
+        m_postEffectDepthOfField.UpdateAutoBlend(pTexTempPos);
+        if (m_postEffectDepthOfField.GetBlend() > 0.001f)
+        {
+            pTempTexture = m_postEffectDepthOfField.Draw(pTempTexture, pTexTempPos);
+        }
     }
 
     if (m_postEffectBloomEnabled)
@@ -1236,7 +1272,20 @@ void Render::SetPostEffectBloomThreshold(const float threshold)
 
 void Render::SetPostEffectDepthOfField(const bool arg)
 {
-    m_postEffectDepthOfFieldEnabled = arg;
+    SetPostEffectDepthOfFieldMode(arg ? DepthOfFieldMode::Enabled : DepthOfFieldMode::Disabled);
+}
+
+void Render::SetPostEffectDepthOfFieldMode(const DepthOfFieldMode mode)
+{
+    m_postEffectDepthOfFieldMode = mode;
+    if (mode == DepthOfFieldMode::Disabled)
+    {
+        m_postEffectDepthOfField.SetBlend(0.0f);
+    }
+    else if (mode == DepthOfFieldMode::Enabled)
+    {
+        m_postEffectDepthOfField.SetBlend(1.0f);
+    }
 }
 
 void Render::SetPostEffectDepthOfFieldFocalDistance(const float distance)

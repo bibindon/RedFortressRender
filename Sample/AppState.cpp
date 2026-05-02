@@ -41,7 +41,7 @@ bool g_bSSAO = true;
 bool g_bFog = true;
 bool g_bSaturateFilter = false;
 bool g_bBloom = false;
-bool g_bDepthOfField = false;
+NSRender::DepthOfFieldMode g_depthOfFieldMode = NSRender::DepthOfFieldMode::Disabled;
 bool g_bStarBurst = false;
 float g_fogIntensity = 2.0f;
 float g_sunLightIntensity = 1.0f;
@@ -652,7 +652,7 @@ void ApplyPostEffectToggleSettings()
     g_Render.SetPostEffectSaturateEnable(g_bSaturateFilter);
     g_Render.SetPostEffectGaussianFilter(g_bGaussianFilter);
     g_Render.SetPostEffectBloom(g_bBloom);
-    g_Render.SetPostEffectDepthOfField(g_bDepthOfField);
+    ApplyDepthOfFieldMode();
     g_Render.SetPostEffectStarBurst(g_bStarBurst);
     ApplyGodRay();
 }
@@ -746,6 +746,11 @@ void ApplyBloomThreshold()
 {
     g_bloomThreshold = ClampBloomThreshold(g_bloomThreshold);
     g_Render.SetPostEffectBloomThreshold(g_bloomThreshold);
+}
+
+void ApplyDepthOfFieldMode()
+{
+    g_Render.SetPostEffectDepthOfFieldMode(g_depthOfFieldMode);
 }
 
 void ApplyDepthOfFieldFocalDistance()
@@ -1659,7 +1664,25 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             }
             else if (key == L"DepthOfFieldEnable")
             {
-                g_bDepthOfField = (std::stoi(value) != 0);
+                g_depthOfFieldMode = (std::stoi(value) != 0)
+                    ? NSRender::DepthOfFieldMode::Enabled
+                    : NSRender::DepthOfFieldMode::Disabled;
+            }
+            else if (key == L"DepthOfFieldMode")
+            {
+                const int modeValue = std::stoi(value);
+                if (modeValue <= 0)
+                {
+                    g_depthOfFieldMode = NSRender::DepthOfFieldMode::Disabled;
+                }
+                else if (modeValue == 1)
+                {
+                    g_depthOfFieldMode = NSRender::DepthOfFieldMode::Enabled;
+                }
+                else
+                {
+                    g_depthOfFieldMode = NSRender::DepthOfFieldMode::AutoNear;
+                }
             }
             else if (key == L"StarBurstEnable")
             {
@@ -1750,7 +1773,7 @@ void DrawSampleOverlay()
     text += L"t : Saturation filter ON/OFF\n";
     text += L"g : Gaussian filter ON/OFF\n";
     text += L"b : Bloom ON/OFF\n";
-    text += L"u : Depth of field ON/OFF\n";
+    text += L"u : Depth of field mode\n";
     text += L"Shift + b : StarBurst ON/OFF\n";
     text += L"h : Depth buffer shadow ON/OFF\n";
     text += L"j : SSAO ON/OFF\n";

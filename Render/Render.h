@@ -238,6 +238,7 @@ public:
     void SetPostEffectBloom(const bool arg);
     void SetPostEffectBloomThreshold(const float threshold);
     void SetPostEffectDepthOfField(const bool arg);
+    void SetPostEffectDepthOfFieldMode(const DepthOfFieldMode mode);
     void SetPostEffectDepthOfFieldFocalDistance(const float distance);
     void SetPostEffectDepthOfFieldMaxBlurDistance(const float distance);
 
@@ -350,7 +351,7 @@ private:
     bool m_postEffectFogZEnabled = true;
     bool m_postEffectFogHeightEnabled = true;
     bool m_postEffectBloomEnabled = false;
-    bool m_postEffectDepthOfFieldEnabled = false;
+    DepthOfFieldMode m_postEffectDepthOfFieldMode = DepthOfFieldMode::Disabled;
     bool m_postEffectStarBurstEnabled = false;
     bool m_postEffectGodRayEnabled = false;
     bool m_meshMixSaturateShadowEnabled = false;

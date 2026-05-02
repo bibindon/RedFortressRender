@@ -329,8 +329,19 @@ bool HandleSampleKeyDown(HWND hWnd, const WPARAM wParam)
 
     if (wParam == 'U')
     {
-        g_bDepthOfField = !g_bDepthOfField;
-        ApplyPostEffectToggleSettings();
+        if (g_depthOfFieldMode == NSRender::DepthOfFieldMode::Disabled)
+        {
+            g_depthOfFieldMode = NSRender::DepthOfFieldMode::Enabled;
+        }
+        else if (g_depthOfFieldMode == NSRender::DepthOfFieldMode::Enabled)
+        {
+            g_depthOfFieldMode = NSRender::DepthOfFieldMode::AutoNear;
+        }
+        else
+        {
+            g_depthOfFieldMode = NSRender::DepthOfFieldMode::Disabled;
+        }
+        ApplyDepthOfFieldMode();
         RefreshSettingsDialogState();
     }
 

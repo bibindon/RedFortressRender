@@ -1170,7 +1170,15 @@ void RefreshBloom(HWND hDlg)
 
 void RefreshDepthOfField(HWND hDlg)
 {
-    CheckDlgButton(hDlg, IDC_CHECK_DEPTH_OF_FIELD, g_bDepthOfField ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(hDlg,
+                   IDC_RADIO_DEPTH_OF_FIELD_OFF,
+                   g_depthOfFieldMode == NSRender::DepthOfFieldMode::Disabled ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(hDlg,
+                   IDC_RADIO_DEPTH_OF_FIELD_ON,
+                   g_depthOfFieldMode == NSRender::DepthOfFieldMode::Enabled ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(hDlg,
+                   IDC_RADIO_DEPTH_OF_FIELD_AUTO,
+                   g_depthOfFieldMode == NSRender::DepthOfFieldMode::AutoNear ? BST_CHECKED : BST_UNCHECKED);
 }
 
 void RefreshDepthOfFieldControls(HWND hDlg)
@@ -2169,10 +2177,26 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
-        if (commandId == IDC_CHECK_DEPTH_OF_FIELD)
+        if (commandId == IDC_RADIO_DEPTH_OF_FIELD_OFF)
         {
-            g_bDepthOfField = (IsDlgButtonChecked(hDlg, IDC_CHECK_DEPTH_OF_FIELD) == BST_CHECKED);
-            g_Render.SetPostEffectDepthOfField(g_bDepthOfField);
+            g_depthOfFieldMode = NSRender::DepthOfFieldMode::Disabled;
+            ApplyDepthOfFieldMode();
+            RefreshDepthOfField(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_RADIO_DEPTH_OF_FIELD_ON)
+        {
+            g_depthOfFieldMode = NSRender::DepthOfFieldMode::Enabled;
+            ApplyDepthOfFieldMode();
+            RefreshDepthOfField(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_RADIO_DEPTH_OF_FIELD_AUTO)
+        {
+            g_depthOfFieldMode = NSRender::DepthOfFieldMode::AutoNear;
+            ApplyDepthOfFieldMode();
             RefreshDepthOfField(hDlg);
             return TRUE;
         }
