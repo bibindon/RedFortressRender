@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Common.h"
 #include "Camera.h"
@@ -35,6 +35,7 @@ private:
 
     void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
                             const std::string& technique);
+    void BlurOcclusionTexture();
 
     struct ScreenVertex
     {
@@ -44,6 +45,8 @@ private:
 
     LPD3DXEFFECT        m_d3dEffect      = NULL;
     LPDIRECT3DTEXTURE9  m_texOcclusion   = NULL;
+    LPDIRECT3DTEXTURE9  m_texBlurTemp    = NULL;
+    LPDIRECT3DTEXTURE9  m_texOcclusionBlurred = NULL;
     LPDIRECT3DTEXTURE9  m_texResult      = NULL;
 
     bool        m_bEnable         = false;

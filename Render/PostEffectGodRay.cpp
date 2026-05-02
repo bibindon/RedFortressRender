@@ -1,4 +1,4 @@
-#include "PostEffectGodRay.h"
+﻿#include "PostEffectGodRay.h"
 
 namespace NSRender
 {
@@ -38,26 +38,43 @@ void PostEffectGodRay::CreateTexture()
                       D3DUSAGE_RENDERTARGET,
                       D3DFMT_A8R8G8B8,
                       D3DPOOL_DEFAULT,
+                      &m_texBlurTemp);
+
+    D3DXCreateTexture(Common::D3DDevice(),
+                      Common::ScreenW(),
+                      Common::ScreenH(),
+                      1,
+                      D3DUSAGE_RENDERTARGET,
+                      D3DFMT_A8R8G8B8,
+                      D3DPOOL_DEFAULT,
+                      &m_texOcclusionBlurred);
+
+    D3DXCreateTexture(Common::D3DDevice(),
+                      Common::ScreenW(),
+                      Common::ScreenH(),
+                      1,
+                      D3DUSAGE_RENDERTARGET,
+                      D3DFMT_A8R8G8B8,
+                      D3DPOOL_DEFAULT,
                       &m_texResult);
 }
 
 LPDIRECT3DTEXTURE9 PostEffectGodRay::Draw(LPDIRECT3DTEXTURE9 renderTarget,
-                                           LPDIRECT3DTEXTURE9 texZ)
+                                          LPDIRECT3DTEXTURE9 texZ)
 {
     if (!m_bEnable)
     {
         return renderTarget;
     }
 
-    // ---- 光源ワールド座標をスクリーンUVに変換 ----
     D3DXMATRIX matView = Camera::GetViewMatrix();
     D3DXMATRIX matProj = Camera::GetProjMatrix();
 
     D3DXVECTOR4 lightClip;
     D3DXVECTOR4 lightWorld4(m_lightPosWorld.x,
-                             m_lightPosWorld.y,
-                             m_lightPosWorld.z,
-                             1.0f);
+                            m_lightPosWorld.y,
+                            m_lightPosWorld.z,
+                            1.0f);
     D3DXVec4Transform(&lightClip, &lightWorld4, &matView);
     float lightViewZ = (lightClip.z - Camera::GetNear()) /
                        (Camera::GetFar() - Camera::GetNear());
@@ -69,37 +86,63 @@ LPDIRECT3DTEXTURE9 PostEffectGodRay::Draw(LPDIRECT3DTEXTURE9 renderTarget,
 
     float screenU = 0.5f;
     float screenV = 0.5f;
-    if (lightProj.w != 0.0f)
+    float lightVisible = 0.0f;
+    if (lightProj.w > 0.0f)
     {
-        screenU = ( lightProj.x / lightProj.w) * 0.5f + 0.5f;
+        screenU = (lightProj.x / lightProj.w) * 0.5f + 0.5f;
         screenV = (-lightProj.y / lightProj.w) * 0.5f + 0.5f;
+
+        if (screenU >= 0.0f && screenU <= 1.0f &&
+            screenV >= 0.0f && screenV <= 1.0f)
+        {
+            lightVisible = 1.0f;
+        }
     }
 
-    // ---- Pass1: オクルージョンマスク生成 ----
     m_d3dEffect->SetTexture("g_ZTex", texZ);
     m_d3dEffect->SetFloat("g_LightViewZ", lightViewZ);
-
     DrawFullscreenQuad(m_texOcclusion, "OcclusionMask");
 
-    // ---- Pass2: ゴッドレイ合成 ----
+    BlurOcclusionTexture();
+
     float lightPos2[2] = { screenU, screenV };
     float lightColor3[3] = { m_lightColor.x, m_lightColor.y, m_lightColor.z };
 
     m_d3dEffect->SetTexture("g_SceneTex", renderTarget);
-    m_d3dEffect->SetTexture("g_OcclusionTex", m_texOcclusion);
+    m_d3dEffect->SetTexture("g_OcclusionTex", m_texOcclusionBlurred);
     m_d3dEffect->SetFloatArray("g_LightScreenPos", lightPos2, 2);
     m_d3dEffect->SetFloatArray("g_LightColor", lightColor3, 3);
     m_d3dEffect->SetFloat("g_RayLength", m_rayLength);
-    m_d3dEffect->SetFloat("g_RayIntensity", m_rayIntensity);
+    m_d3dEffect->SetFloat("g_RayIntensity", m_rayIntensity * lightVisible);
     m_d3dEffect->SetFloat("g_OcclusionFalloff", m_occlusionFalloff);
-
     DrawFullscreenQuad(m_texResult, "GodRay");
 
     return m_texResult;
 }
 
+void PostEffectGodRay::BlurOcclusionTexture()
+{
+    const float texelSize[2] =
+    {
+        1.0f / static_cast<float>(Common::ScreenW()),
+        1.0f / static_cast<float>(Common::ScreenH())
+    };
+    const float horizontal[2] = { 1.0f, 0.0f };
+    const float vertical[2] = { 0.0f, 1.0f };
+
+    m_d3dEffect->SetTexture("g_BlurSourceTex", m_texOcclusion);
+    m_d3dEffect->SetFloatArray("g_TexelSize", texelSize, 2);
+    m_d3dEffect->SetFloatArray("g_BlurDirection", horizontal, 2);
+    DrawFullscreenQuad(m_texBlurTemp, "Blur");
+
+    m_d3dEffect->SetTexture("g_BlurSourceTex", m_texBlurTemp);
+    m_d3dEffect->SetFloatArray("g_TexelSize", texelSize, 2);
+    m_d3dEffect->SetFloatArray("g_BlurDirection", vertical, 2);
+    DrawFullscreenQuad(m_texOcclusionBlurred, "Blur");
+}
+
 void PostEffectGodRay::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
-                                           const std::string& technique)
+                                          const std::string& technique)
 {
     LPDIRECT3DSURFACE9 pSurface = NULL;
     texTarget->GetSurfaceLevel(0, &pSurface);
@@ -140,6 +183,8 @@ void PostEffectGodRay::Finalize()
 {
     SAFE_RELEASE(m_d3dEffect);
     SAFE_RELEASE(m_texOcclusion);
+    SAFE_RELEASE(m_texBlurTemp);
+    SAFE_RELEASE(m_texOcclusionBlurred);
     SAFE_RELEASE(m_texResult);
 }
 
@@ -147,6 +192,8 @@ void PostEffectGodRay::OnDeviceLost()
 {
     m_d3dEffect->OnLostDevice();
     SAFE_RELEASE(m_texOcclusion);
+    SAFE_RELEASE(m_texBlurTemp);
+    SAFE_RELEASE(m_texOcclusionBlurred);
     SAFE_RELEASE(m_texResult);
 }
 

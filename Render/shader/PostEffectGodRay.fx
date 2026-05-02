@@ -1,57 +1,64 @@
-// ゴッドレイ（シャフトオブライト）ポストエフェクト
+// God ray post effect.
 //
-// Pass1 OcclusionMask : シーンのZ画像を使い、光源より手前にあるピクセルを黒く塗る
-// Pass2 GodRay        : オクルージョンマスクに対してレイマーチし、シーンと合成
+// Pass1: build a screen-space occlusion mask from the GBuffer depth.
+// Pass2: blur the occlusion mask horizontally and vertically.
+// Pass3: ray-march the blurred mask and composite the result with the scene.
 
-// ---- 共通 ----
 texture g_SceneTex;
 texture g_OcclusionTex;
+texture g_BlurSourceTex;
 
-// 光源のスクリーンUV座標 (0..1)
 float2 g_LightScreenPos = float2(0.5f, 0.3f);
-
-float3 g_LightColor    = float3(1.0f, 0.9f, 0.8f);
-float  g_RayLength     = 1.0f;
-float  g_RayIntensity  = 0.6f;
+float3 g_LightColor = float3(1.0f, 0.9f, 0.8f);
+float  g_RayLength = 1.0f;
+float  g_RayIntensity = 0.6f;
 float  g_OcclusionFalloff = 5.0f;
 
 static const int SAMPLE_COUNT = 128;
 
-// ---- Pass1: オクルージョンマスク ----
-// Z画像からライトより奥にある部分を白、遮蔽部分を黒にする
 texture g_ZTex;
-float   g_LightViewZ;   // ライトのビュー空間Z（正規化済み near..far）
-float   g_fNear;
-float   g_fFar;
+float   g_LightViewZ;
+float2  g_TexelSize = float2(1.0f / 1280.0f, 1.0f / 720.0f);
+float2  g_BlurDirection = float2(1.0f, 0.0f);
 
 sampler g_SceneSampler = sampler_state
 {
-    Texture   = (g_SceneTex);
+    Texture = (g_SceneTex);
     MinFilter = LINEAR;
     MagFilter = LINEAR;
     MipFilter = NONE;
-    AddressU  = CLAMP;
-    AddressV  = CLAMP;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
 };
 
 sampler g_OcclusionSampler = sampler_state
 {
-    Texture   = (g_OcclusionTex);
+    Texture = (g_OcclusionTex);
     MinFilter = LINEAR;
     MagFilter = LINEAR;
     MipFilter = NONE;
-    AddressU  = CLAMP;
-    AddressV  = CLAMP;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+
+sampler g_BlurSourceSampler = sampler_state
+{
+    Texture = (g_BlurSourceTex);
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
 };
 
 sampler g_ZSampler = sampler_state
 {
-    Texture   = (g_ZTex);
+    Texture = (g_ZTex);
     MinFilter = POINT;
     MagFilter = POINT;
     MipFilter = NONE;
-    AddressU  = CLAMP;
-    AddressV  = CLAMP;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
 };
 
 struct VS_IN
@@ -70,29 +77,46 @@ VS_OUT VS(VS_IN i)
 {
     VS_OUT o;
     o.pos = i.pos;
-    o.uv  = i.uv;
+    o.uv = i.uv;
     return o;
 }
 
-// Pass1: オクルージョンマスク生成
-// Z画像のα成分に線形深度が入っている（GBuffer.fx の RT0.a = linearZ）
-// 光源のビュー空間線形Zより手前なら黒（遮蔽）、奥または同じなら白（透過）
-// pixelZ == 0.0 は何も描画されていない背景（クリア値）なので遮蔽なしとして扱う
 float4 PS_OcclusionMask(VS_OUT i) : COLOR
 {
     float pixelZ = tex2D(g_ZSampler, i.uv).a;
-
-    // pixelZ が 0 のピクセルは GBuffer 未書き込み（背景）→ 遮蔽なし（白）
     float mask = (pixelZ > 0.0f && pixelZ < g_LightViewZ) ? 0.0f : 1.0f;
     return float4(mask, mask, mask, 1.0f);
 }
 
-// Pass2: ゴッドレイ合成
+float4 PS_Blur(VS_OUT i) : COLOR
+{
+    const float weights[5] =
+    {
+        0.2270270270f,
+        0.1945945946f,
+        0.1216216216f,
+        0.0540540541f,
+        0.0162162162f
+    };
+
+    float3 color = tex2D(g_BlurSourceSampler, i.uv).rgb * weights[0];
+
+    [unroll]
+    for (int tap = 1; tap < 5; ++tap)
+    {
+        float2 offset = g_BlurDirection * g_TexelSize * float(tap);
+        color += tex2D(g_BlurSourceSampler, i.uv + offset).rgb * weights[tap];
+        color += tex2D(g_BlurSourceSampler, i.uv - offset).rgb * weights[tap];
+    }
+
+    return float4(color, 1.0f);
+}
+
 float4 PS_GodRay(VS_OUT i) : COLOR
 {
     float2 dir = g_LightScreenPos - i.uv;
 
-    float visibilitySum   = 0.0f;
+    float visibilitySum = 0.0f;
     float validSampleCount = 0.0f;
 
     [loop]
@@ -104,8 +128,8 @@ float4 PS_GodRay(VS_OUT i) : COLOR
         if (sampleUv.x >= 0.0f && sampleUv.x <= 1.0f &&
             sampleUv.y >= 0.0f && sampleUv.y <= 1.0f)
         {
-            visibilitySum     += tex2D(g_OcclusionSampler, sampleUv).r;
-            validSampleCount  += 1.0f;
+            visibilitySum += tex2D(g_OcclusionSampler, sampleUv).r;
+            validSampleCount += 1.0f;
         }
     }
 
@@ -119,7 +143,7 @@ float4 PS_GodRay(VS_OUT i) : COLOR
     lightRays = exp(-g_OcclusionFalloff * occlusion);
 
     float3 sceneColor = tex2D(g_SceneSampler, i.uv).rgb;
-    float3 rayColor   = lightRays * g_RayIntensity * g_LightColor;
+    float3 rayColor = lightRays * g_RayIntensity * g_LightColor;
     return float4(sceneColor + rayColor, 1.0f);
 }
 
@@ -127,12 +151,25 @@ technique OcclusionMask
 {
     pass P0
     {
-        CullMode         = NONE;
-        ZEnable          = FALSE;
-        ZWriteEnable     = FALSE;
+        CullMode = NONE;
+        ZEnable = FALSE;
+        ZWriteEnable = FALSE;
         AlphaBlendEnable = FALSE;
-        VertexShader     = compile vs_3_0 VS();
-        PixelShader      = compile ps_3_0 PS_OcclusionMask();
+        VertexShader = compile vs_3_0 VS();
+        PixelShader = compile ps_3_0 PS_OcclusionMask();
+    }
+}
+
+technique Blur
+{
+    pass P0
+    {
+        CullMode = NONE;
+        ZEnable = FALSE;
+        ZWriteEnable = FALSE;
+        AlphaBlendEnable = FALSE;
+        VertexShader = compile vs_3_0 VS();
+        PixelShader = compile ps_3_0 PS_Blur();
     }
 }
 
@@ -140,11 +177,11 @@ technique GodRay
 {
     pass P0
     {
-        CullMode         = NONE;
-        ZEnable          = FALSE;
-        ZWriteEnable     = FALSE;
+        CullMode = NONE;
+        ZEnable = FALSE;
+        ZWriteEnable = FALSE;
         AlphaBlendEnable = FALSE;
-        VertexShader     = compile vs_3_0 VS();
-        PixelShader      = compile ps_3_0 PS_GodRay();
+        VertexShader = compile vs_3_0 VS();
+        PixelShader = compile ps_3_0 PS_GodRay();
     }
 }
