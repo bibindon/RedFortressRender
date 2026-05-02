@@ -57,6 +57,7 @@ float g_shadowIntensity = 0.5f;
 float g_shadowCoverage = 0.5f;
 float g_shadowSaturationBoost = 0.35f;
 float g_ssaoBrightness = 3.5f;
+float g_ssaoSampleRadius = 4.0f;
 float g_ssaoSaturationBoost = 0.30f;
 float g_halfLambertShadowSaturation = 1.0f;
 float g_shadowDarkness = 0.3f;
@@ -141,6 +142,11 @@ float ClampShadowSaturationBoost(const float boost)
 float ClampSSAOBrightness(const float brightness)
 {
     return (std::max)(SSAO_BRIGHTNESS_MIN, (std::min)(brightness, SSAO_BRIGHTNESS_MAX));
+}
+
+float ClampSSAOSampleRadius(const float sampleRadius)
+{
+    return (std::max)(SSAO_SAMPLE_RADIUS_MIN, (std::min)(sampleRadius, SSAO_SAMPLE_RADIUS_MAX));
 }
 
 float ClampSSAOSaturationBoost(const float boost)
@@ -774,6 +780,12 @@ void ApplySSAOBrightness()
     g_Render.SetPostEffectSSAOBrightness(g_ssaoBrightness);
 }
 
+void ApplySSAOSampleRadius()
+{
+    g_ssaoSampleRadius = ClampSSAOSampleRadius(g_ssaoSampleRadius);
+    g_Render.SetPostEffectSSAOSampleRadius(g_ssaoSampleRadius);
+}
+
 void ApplySSAOSaturationBoost()
 {
     g_ssaoSaturationBoost = ClampSSAOSaturationBoost(g_ssaoSaturationBoost);
@@ -1005,6 +1017,16 @@ int SSAOBrightnessToSliderValue(const float brightness)
 float SliderValueToSSAOBrightness(const int sliderValue)
 {
     return ClampSSAOBrightness(SSAO_BRIGHTNESS_MIN + static_cast<float>(sliderValue) * SSAO_BRIGHTNESS_STEP);
+}
+
+int SSAOSampleRadiusToSliderValue(const float sampleRadius)
+{
+    return static_cast<int>(std::lround((ClampSSAOSampleRadius(sampleRadius) - SSAO_SAMPLE_RADIUS_MIN) / SSAO_SAMPLE_RADIUS_STEP));
+}
+
+float SliderValueToSSAOSampleRadius(const int sliderValue)
+{
+    return ClampSSAOSampleRadius(SSAO_SAMPLE_RADIUS_MIN + static_cast<float>(sliderValue) * SSAO_SAMPLE_RADIUS_STEP);
 }
 
 int SSAOSaturationBoostToSliderValue(const float boost)
@@ -1695,6 +1717,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"SSAOBrightness")
             {
                 g_ssaoBrightness = std::stof(value);
+            }
+            else if (key == L"SSAOSampleRadius")
+            {
+                g_ssaoSampleRadius = std::stof(value);
             }
             else if (key == L"ShadowBlurTapCount")
             {

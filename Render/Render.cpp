@@ -400,6 +400,23 @@ void Render::ApplySettings()
         SetPostEffectSSAOSaturationBoost(0.30f);
     }
 
+    const auto ssaoSampleRadius = m_settings.find(L"SSAOSampleRadius");
+    if (ssaoSampleRadius != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectSSAOSampleRadius(std::stof(ssaoSampleRadius->second));
+        }
+        catch (...)
+        {
+            SetPostEffectSSAOSampleRadius(4.0f);
+        }
+    }
+    else
+    {
+        SetPostEffectSSAOSampleRadius(4.0f);
+    }
+
     const auto bloomEnable = m_settings.find(L"BloomEnable");
     if (bloomEnable != m_settings.end())
     {
@@ -1366,6 +1383,11 @@ void Render::SetPostEffectSSAOBrightness(const float brightness)
 void Render::SetPostEffectSSAOSaturationBoost(const float saturationBoost)
 {
     m_postEffectSSAO.SetSaturationBoost(saturationBoost);
+}
+
+void Render::SetPostEffectSSAOSampleRadius(const float sampleRadius)
+{
+    m_postEffectSSAO.SetSampleRadius(sampleRadius);
 }
 
 void Render::SetPostEffectFog(const bool arg)

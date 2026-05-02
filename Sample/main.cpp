@@ -99,6 +99,7 @@ void InitializeSampleScene(HWND hWnd)
     ApplyShadowPcfTapCount();
     ApplyShadowCompositeTapCount();
     ApplySSAOBrightness();
+    ApplySSAOSampleRadius();
     ApplySSAOSaturationBoost();
     ApplyHalfLambertShadowSaturation();
     ApplyShadowDarkness();

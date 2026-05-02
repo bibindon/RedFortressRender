@@ -99,7 +99,7 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_fxSSAO->SetTexture("texPos", m_texRenderTargetPos);
     m_fxSSAO->SetTexture("texNormal", m_texRenderTargetNormal);
 
-    m_fxSSAO->SetFloat("g_aoStepWorld", 4.0f);   // 5 → 4（半径を少し縮める）
+    m_fxSSAO->SetFloat("g_aoStepWorld", m_sampleRadius);
     m_fxSSAO->SetFloat("g_originPush", 0.05f);  // 0.15 → 0.05（押し出し弱め）
 //    m_fxSSAO->SetFloat("g_planeThickness", 0.006f); // 0.02 → 0.006（同一面厚みを薄く）
     m_fxSSAO->SetFloat("g_edgeZ", 0.006f); // 0.01 → 0.006（縁の深度許容を広げる）
@@ -212,6 +212,11 @@ void PostEffectSSAO::SetBrightness(const float brightness)
 void PostEffectSSAO::SetSaturationBoost(const float saturationBoost)
 {
     m_saturationBoost = saturationBoost;
+}
+
+void PostEffectSSAO::SetSampleRadius(const float sampleRadius)
+{
+    m_sampleRadius = sampleRadius;
 }
 
 void PostEffectSSAO::OnDeviceLost()
