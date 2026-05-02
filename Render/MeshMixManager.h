@@ -98,6 +98,7 @@ private:
     stMeshParam m_param;
 
     void ModifyMeshForNormalMapping(LPD3DXMESH& pMesh);
+    void DrawAllSubsets(LPD3DXEFFECT sharedEffect, UINT passIndex);
     D3DXVECTOR4 GetSubsetDiffuse(const DWORD subsetIndex) const;
     float GetSubsetSpecularIntensity(const DWORD subsetIndex) const;
     float GetSubsetSpecularPower(const DWORD subsetIndex) const;

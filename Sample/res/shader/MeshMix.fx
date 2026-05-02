@@ -529,6 +529,22 @@ void PixelShaderPointLight(in  float4 inPosition            : POSITION,
     outColor = float4(accum, saturate(diffSum));
 }
 
+void PixelShaderEmit(in  float4 inPosition     : POSITION,
+                     in  float3 inPosWorld     : TEXCOORD0,
+                     in  float3 inNormalWorld  : TEXCOORD1,
+                     in  float2 inTexCoord     : TEXCOORD2,
+                     in  float3 inTangent      : TEXCOORD3,
+                     in  float3 inBinorm       : TEXCOORD4,
+                     in  float3 invViewWS      : TEXCOORD5,
+                     in  float3 invLightTS     : TEXCOORD6,
+                     in  float3 invViewTS      : TEXCOORD7,
+                     in  float2 invParallaxOffsetTS  : TEXCOORD8,
+                     out float4 outColor       : COLOR)
+{
+    float3 albedo = tex2D(g_textureSampler, inTexCoord).rgb * g_diffuse.rgb;
+    outColor = float4(saturate(albedo), 1.0f);
+}
+
 float2 CalcUVCoordWithPOM(float3 inNormalizedNormalWS,
                           float2 inTexCoord,
                           float3 invViewWS,
@@ -614,6 +630,12 @@ technique Technique1
 
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShaderPointLight();
+    }
+
+    pass PassEmit
+    {
+        VertexShader = compile vs_3_0 VertexShader1();
+        PixelShader = compile ps_3_0 PixelShaderEmit();
     }
 
 }

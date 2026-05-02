@@ -253,6 +253,7 @@ enum class eMeshType
     NormalMapping,
     EnvMapping,
     Glass,
+    Emit,
 };
 
 struct stCsvParam
@@ -338,6 +339,10 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
             else if (value == L"glass")
             {
                 result.meshType = eMeshType::Glass;
+            }
+            else if (value == L"emit")
+            {
+                result.meshType = eMeshType::Emit;
             }
         }
         else if (key == L"smooth")
@@ -617,6 +622,14 @@ void MeshMixManager::InitializeInternal()
     else if (csvParam.meshType == eMeshType::Glass)
     {
         m_param.glass = true;
+    }
+    else if (csvParam.meshType == eMeshType::Emit)
+    {
+        m_param.emit = true;
+        m_param.ssao = false;
+        m_param.shadow = false;
+        m_param.saturateShadow = false;
+        m_param.shadowDarkness = 0.0f;
     }
 
     if (csvParam.smoothDefined)
@@ -1156,53 +1169,60 @@ void MeshMixManager::Render()
     hResult = sharedEffect->CommitChanges();
     assert(hResult == S_OK);
 
-    auto drawAllSubsets = [this, sharedEffect, &hResult](const UINT passIndex)
+    if (m_param.emit)
     {
-        hResult = sharedEffect->BeginPass(passIndex);
-        assert(hResult == S_OK);
+        DrawAllSubsets(sharedEffect, 4);
+    }
+    else
+    {
+        DrawAllSubsets(sharedEffect, 0);
 
-        const DWORD subsetCount = (m_subsetCount > 0) ? m_subsetCount : 1;
-        for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
+        if (m_param.cubeMapping)
         {
-            const D3DXVECTOR4 diffuse = GetSubsetDiffuse(subsetIndex);
-            hResult = sharedEffect->SetVector("g_diffuse", &diffuse);
-            assert(hResult == S_OK);
-
-            hResult = sharedEffect->SetFloat("g_specularIntensity", GetSubsetSpecularIntensity(subsetIndex));
-            assert(hResult == S_OK);
-
-            hResult = sharedEffect->SetFloat("g_specularPower", GetSubsetSpecularPower(subsetIndex));
-            assert(hResult == S_OK);
-
-            hResult = sharedEffect->SetTexture("g_texture", GetSubsetTexture(subsetIndex));
-            assert(hResult == S_OK);
-
-            hResult = sharedEffect->CommitChanges();
-            assert(hResult == S_OK);
-
-            hResult = m_D3DMesh->DrawSubset(subsetIndex);
-            assert(hResult == S_OK);
+            DrawAllSubsets(sharedEffect, 1);
         }
 
-        hResult = sharedEffect->EndPass();
-        assert(hResult == S_OK);
-    };
+        if (m_param.glass)
+        {
+            DrawAllSubsets(sharedEffect, 2);
+        }
 
-    drawAllSubsets(0);
-
-    if (m_param.cubeMapping)
-    {
-        drawAllSubsets(1);
+        DrawAllSubsets(sharedEffect, 3);
     }
-
-    if (m_param.glass)
-    {
-        drawAllSubsets(2);
-    }
-
-    drawAllSubsets(3);
 
     hResult = sharedEffect->End();
+    assert(hResult == S_OK);
+}
+
+void MeshMixManager::DrawAllSubsets(LPD3DXEFFECT sharedEffect, const UINT passIndex)
+{
+    HRESULT hResult = sharedEffect->BeginPass(passIndex);
+    assert(hResult == S_OK);
+
+    const DWORD subsetCount = (m_subsetCount > 0) ? m_subsetCount : 1;
+    for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
+    {
+        const D3DXVECTOR4 diffuse = GetSubsetDiffuse(subsetIndex);
+        hResult = sharedEffect->SetVector("g_diffuse", &diffuse);
+        assert(hResult == S_OK);
+
+        hResult = sharedEffect->SetFloat("g_specularIntensity", GetSubsetSpecularIntensity(subsetIndex));
+        assert(hResult == S_OK);
+
+        hResult = sharedEffect->SetFloat("g_specularPower", GetSubsetSpecularPower(subsetIndex));
+        assert(hResult == S_OK);
+
+        hResult = sharedEffect->SetTexture("g_texture", GetSubsetTexture(subsetIndex));
+        assert(hResult == S_OK);
+
+        hResult = sharedEffect->CommitChanges();
+        assert(hResult == S_OK);
+
+        hResult = m_D3DMesh->DrawSubset(subsetIndex);
+        assert(hResult == S_OK);
+    }
+
+    hResult = sharedEffect->EndPass();
     assert(hResult == S_OK);
 }
 

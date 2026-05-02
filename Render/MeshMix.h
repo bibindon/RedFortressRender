@@ -126,6 +126,9 @@ struct stMeshParam
     // ガラスか
     bool glass = false;
 
+    // 発光物か
+    bool emit = false;
+
     // 波
     //
     // 海面のような波

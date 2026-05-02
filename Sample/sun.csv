@@ -1,4 +1,1 @@
-meshtype,none
-ssao,n
-zshadow,n
-lambertShadow,n
+meshtype,Emit
