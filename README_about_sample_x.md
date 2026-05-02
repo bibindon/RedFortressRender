@@ -32,3 +32,5 @@ monkey.blend.x
 mask.png
   マスクありのガウスフィルタで使う
 
+monkeySSS.x
+  サブサーフェイススキャッタリングで表示
