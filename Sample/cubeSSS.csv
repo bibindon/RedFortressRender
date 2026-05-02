@@ -1,2 +1,4 @@
 meshtype,none
 sss,true
+sssintensity,1.0
+ssscolor,0,255,1

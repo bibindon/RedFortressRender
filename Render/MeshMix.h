@@ -171,7 +171,7 @@ struct stMeshParam
     // 光がちょっと透ける物体用。
     bool sss = false;
 
-    float sssIntensity = 0.0f;
+    float sssIntensity = 1.0f;
 
     // SSSで表示される色を自ら指定？
     // 自動化できないのだろうか

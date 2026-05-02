@@ -611,16 +611,19 @@ void Render::Draw()
         ShowFPS(fps);
     }
 
-    DrawPass1(true);
-
     //---------------------------------------------------------------
-    // ポストエフェクトのために深度画像とワールド座標画像を作成
+    // ポストエフェクトと一部のメッシュ描画のために深度画像と
+    // ワールド座標画像を先に作成
     //---------------------------------------------------------------
     LPDIRECT3DTEXTURE9 pTexTempZ = NULL;
     LPDIRECT3DTEXTURE9 pTexTempPos = NULL;
     LPDIRECT3DTEXTURE9 pTexTempNoral = NULL;
     LPDIRECT3DTEXTURE9 pTexTempThickness = NULL;
     m_GBuffer.Draw(m_meshMixList, m_meshMixSkinAnimList, &pTexTempZ, &pTexTempPos, &pTexTempNoral, &pTexTempThickness);
+
+    MeshMixManager::SetSharedThicknessTexture(pTexTempThickness);
+
+    DrawPass1(true);
 
     //---------------------------------------------------------------
     // ポストエフェクト

@@ -43,6 +43,12 @@ bool& GetSharedEffectLostState()
     return lostState;
 }
 
+LPDIRECT3DTEXTURE9& GetSharedThicknessTexture()
+{
+    static LPDIRECT3DTEXTURE9 sharedThicknessTexture = nullptr;
+    return sharedThicknessTexture;
+}
+
 float ClampSpecularEdge(const float edge)
 {
     return (std::max)(0.0f, (std::min)(edge, 1.0f));
@@ -266,7 +272,7 @@ struct stCsvParam
     bool sssIntensityDefined = false;
     float sssIntensity = 0.0f;
     bool sssColorDefined = false;
-    DWORD sssColor = 0xffff80;
+    DWORD sssColor = 0x80ff80;
     bool swayDefined = false;
     bool sway = false;
     bool swayIntensityDefined = false;
@@ -949,6 +955,11 @@ void MeshMixManager::SetSpecularIntensity(const float intensity)
     m_param.specularIntensity = intensity;
 }
 
+void MeshMixManager::SetSharedThicknessTexture(LPDIRECT3DTEXTURE9 texture)
+{
+    GetSharedThicknessTexture() = texture;
+}
+
 void MeshMixManager::SetSpecularIntensityOverrideEnabled(const bool enabled)
 {
     m_param.specularIntensityOverrideEnabled = enabled;
@@ -1093,10 +1104,27 @@ void MeshMixManager::Render()
     hResult = sharedEffect->SetTexture("g_texHeightMap", m_texHeightMap);
     assert(hResult == S_OK);
 
+    hResult = sharedEffect->SetTexture("g_texThickness", GetSharedThicknessTexture());
+    assert(hResult == S_OK);
+
     hResult = sharedEffect->SetBool("g_bPOM", m_param.parallaxOcclusionMapping ? TRUE : FALSE);
     assert(hResult == S_OK);
 
     hResult = sharedEffect->SetBool("g_bNormalMapping", m_param.normalMapping ? TRUE : FALSE);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetBool("g_bSSS", m_param.sss ? TRUE : FALSE);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetFloat("g_sssIntensity", m_param.sssIntensity);
+    assert(hResult == S_OK);
+
+    D3DXVECTOR4 sssColor;
+    sssColor.x = static_cast<float>((m_param.sssColor >> 16) & 0xff) / 255.0f;
+    sssColor.y = static_cast<float>((m_param.sssColor >> 8) & 0xff) / 255.0f;
+    sssColor.z = static_cast<float>(m_param.sssColor & 0xff) / 255.0f;
+    sssColor.w = static_cast<float>((m_param.sssColor >> 24) & 0xff) / 255.0f;
+    hResult = sharedEffect->SetVector("g_sssColor", &sssColor);
     assert(hResult == S_OK);
 
     hResult = sharedEffect->SetBool("g_bSaturateShadow", m_param.saturateShadow ? TRUE : FALSE);

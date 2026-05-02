@@ -16,6 +16,8 @@ class MeshMixManager : public IDeviceResettable
 
 public:
 
+    static void SetSharedThicknessTexture(LPDIRECT3DTEXTURE9 texture);
+
     MeshMixManager(const std::wstring& filename,
                    const D3DXVECTOR3& pos,
                    const D3DXVECTOR3& rotate,

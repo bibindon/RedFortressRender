@@ -95,12 +95,26 @@ sampler g_normalMapSampler = sampler_state
     MaxMipLevel = 1;
 };
 
+texture g_texThickness;
+sampler g_thicknessSampler = sampler_state
+{
+    Texture = (g_texThickness);
+    MipFilter = NONE;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+
 //------------------------------------------------------
 // 視差遮蔽マッピング関連
 //------------------------------------------------------
 
 bool g_bPOM = false;
 bool g_bNormalMapping = false;
+bool g_bSSS = false;
+float g_sssIntensity = 1.0f;
+float4 g_sssColor = { 0.5f, 1.0f, 0.5f, 1.0f };
 
 // 高さ 0.0 ~ 1.0
 float g_fHeightMapScale = 0.1f;
@@ -361,6 +375,14 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
     float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_specularColor.xyz;
 
     float3 finalColor = ambient.rgb + lambert + specular;
+
+    if (g_bSSS)
+    {
+        float2 thicknessUV = (inScreenPos.xy + 0.5f) / g_screenSize;
+        float thickness = tex2D(g_thicknessSampler, thicknessUV).r;
+        float sssBlend = saturate(exp(-thickness * 8.0f) * (g_sssIntensity + 1.0f));
+        finalColor = lerp(finalColor, g_sssColor.rgb, sssBlend);
+    }
 
     outColor = saturate(float4(finalColor, 1.f));
 
