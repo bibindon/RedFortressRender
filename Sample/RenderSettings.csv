@@ -2,7 +2,7 @@
 SSAOEnable,1
 FogEnable,1
 SaturateEnable,1
-SaturateLevel,0.5
+SaturateLevel,0.4
 GaussianEnable,0
 GaussianSampleSize,101
 FogIntensity,20.0
@@ -20,6 +20,8 @@ StarBurstThreshold,2.8
 ModelLoadScale,1.0
 BloomEnable,0
 StarBurstEnable,0
+
+SunLightIntensity,1.3
 
 FogHeightEnable,1
 FogHeightIntensity,0.3
