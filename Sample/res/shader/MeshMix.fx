@@ -380,7 +380,8 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
     {
         float2 thicknessUV = (inScreenPos.xy + 0.5f) / g_screenSize;
         float thickness = tex2D(g_thicknessSampler, thicknessUV).r;
-        float sssBlend = saturate(exp(-thickness * 8.0f) * (g_sssIntensity + 1.0f));
+        float sigmaT = max(g_sssIntensity, 0.001f);
+        float sssBlend = saturate(exp(-sigmaT * thickness));
         finalColor = lerp(finalColor, g_sssColor.rgb, sssBlend);
     }
 

@@ -103,6 +103,16 @@ bool ContainsToken(const std::wstring& text, const std::wstring& token)
     return text.find(token) != std::wstring::npos;
 }
 
+bool IsCsvTrueValue(const std::wstring& value)
+{
+    return value == L"y" || value == L"yes" || value == L"true" || value == L"1";
+}
+
+bool IsCsvFalseValue(const std::wstring& value)
+{
+    return value == L"n" || value == L"no" || value == L"false" || value == L"0";
+}
+
 std::wstring NormalizeTextureCacheKey(const std::wstring& texturePath)
 {
     std::wstring normalized = texturePath;
@@ -354,12 +364,12 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
         else if (key == L"smooth")
         {
             result.smoothDefined = true;
-            result.smooth = (value == L"y");
+            result.smooth = IsCsvTrueValue(value);
         }
         else if (key == L"sss")
         {
             result.sssDefined = true;
-            result.sss = (value == L"y");
+            result.sss = IsCsvTrueValue(value);
         }
         else if (key == L"sssintensity")
         {
@@ -392,7 +402,7 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
         else if (key == L"sway")
         {
             result.swayDefined = true;
-            result.sway = (value == L"y");
+            result.sway = IsCsvTrueValue(value);
         }
         else if (key == L"swayintensity")
         {
@@ -406,7 +416,7 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
         else if (key == L"wave")
         {
             result.waveDefined = true;
-            result.wave = (value == L"y");
+            result.wave = IsCsvTrueValue(value);
         }
         else if (key == L"waveintensity")
         {
@@ -420,35 +430,27 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
         else if (key == L"litbypointlight")
         {
             result.litByPointLightDefined = true;
-            result.litByPointLight = (value == L"y");
+            result.litByPointLight = IsCsvTrueValue(value);
         }
         else if (key == L"shadow" || key == L"zshadow")
         {
             result.shadowDefined = true;
-
-            if (value == L"n")
-            {
-                result.shadow = false;
-            }
+            result.shadow = !IsCsvFalseValue(value);
         }
         else if (key == L"lambertshadow")
         {
             result.lambertShadowDefined = true;
-            result.lambertShadow = (value != L"n");
+            result.lambertShadow = !IsCsvFalseValue(value);
         }
         else if (key == L"ssao")
         {
             result.ssaoDefined = true;
-
-            if (value == L"n")
-            {
-                result.ssao = false;
-            }
+            result.ssao = !IsCsvFalseValue(value);
         }
         else if (key == L"collision")
         {
             result.collisionDefined = true;
-            result.collision = (value == L"y");
+            result.collision = IsCsvTrueValue(value);
         }
         else if (key == L"cubemappingrate")
         {

@@ -1,4 +1,5 @@
 meshtype,none
-sss,true
-sssintensity,1.0
-ssscolor,0,255,1
+smooth,y
+sss,y
+sssintensity,10.00001
+ssscolor,215,235,215
