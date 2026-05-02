@@ -281,6 +281,23 @@ void Render::ApplySettings()
         SetPostEffectFogHeightStart(0.0f);
     }
 
+    const auto fogHeightMax = m_settings.find(L"FogHeightMax");
+    if (fogHeightMax != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectHeightFogMax(std::stof(fogHeightMax->second));
+        }
+        catch (...)
+        {
+            SetPostEffectHeightFogMax(-5.0f);
+        }
+    }
+    else
+    {
+        SetPostEffectHeightFogMax(-5.0f);
+    }
+
     const auto shadowIntensity = m_settings.find(L"ShadowIntensity");
     if (shadowIntensity != m_settings.end())
     {
@@ -499,6 +516,7 @@ void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
 
     // 霧
     m_postEffectFog.Initialize();
+    m_postEffectHeightFog.Initialize();
 
     // 彩度フィルター
     m_postEffectSaturate.Initialize();
@@ -576,13 +594,18 @@ void Render::Draw()
         pTempTexture = m_postEffectSSAO.Draw(pTempTexture, pTexTempZ, pTexTempPos, pTexTempNoral);
     }
 
-    if (m_postEffectFogZEnabled || m_postEffectFogHeightEnabled)
+    if (m_postEffectFogZEnabled)
     {
         pTempTexture = m_postEffectFog.Draw(pTempTexture,
                                             pTexTempZ,
                                             pTexTempPos,
                                             m_postEffectFogZEnabled,
-                                            m_postEffectFogHeightEnabled);
+                                            false);
+    }
+
+    if (m_postEffectFogHeightEnabled)
+    {
+        pTempTexture = m_postEffectHeightFog.Draw(pTempTexture, pTexTempPos);
     }
 
     if (m_postEffectSaturateEnabled)
@@ -1322,19 +1345,39 @@ void Render::SetPostEffectFogIntensity(const float intensity)
     m_postEffectFog.SetIntensityZ(intensity);
 }
 
-void Render::SetPostEffectFogHeightEnable(const bool arg)
+void Render::SetPostEffectHeightFog(const bool arg)
 {
     m_postEffectFogHeightEnabled = arg;
 }
 
+void Render::SetPostEffectHeightFogIntensity(const float intensity)
+{
+    m_postEffectHeightFog.SetIntensity(intensity);
+}
+
+void Render::SetPostEffectHeightFogStart(const float start)
+{
+    m_postEffectHeightFog.SetStartHeight(start);
+}
+
+void Render::SetPostEffectHeightFogMax(const float maxHeight)
+{
+    m_postEffectHeightFog.SetMaxHeight(maxHeight);
+}
+
+void Render::SetPostEffectFogHeightEnable(const bool arg)
+{
+    SetPostEffectHeightFog(arg);
+}
+
 void Render::SetPostEffectFogHeightIntensity(const float intensity)
 {
-    m_postEffectFog.SetIntensityHeight(intensity);
+    SetPostEffectHeightFogIntensity(intensity);
 }
 
 void Render::SetPostEffectFogHeightStart(const float start)
 {
-    m_postEffectFog.SetHeightStart(start);
+    SetPostEffectHeightFogStart(start);
 }
 
 void Render::SetPostEffectBloom(const bool arg)

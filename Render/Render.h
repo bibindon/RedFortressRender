@@ -43,6 +43,7 @@
 #include "PostEffectEnd.h"
 #include "PostEffectSSAO.h"
 #include "PostEffectDepthOfField.h"
+#include "PostEffectHeightFog.h"
 
 #include "WindowManager.h"
 #include "PostEffectZShadow.h"
@@ -236,6 +237,10 @@ public:
     void SetPostEffectSSAOSaturationBoost(const float saturationBoost);
     void SetPostEffectFog(const bool arg);
     void SetPostEffectFogIntensity(const float intensity);
+    void SetPostEffectHeightFog(const bool arg);
+    void SetPostEffectHeightFogIntensity(const float intensity);
+    void SetPostEffectHeightFogStart(const float start);
+    void SetPostEffectHeightFogMax(const float maxHeight);
     void SetPostEffectFogHeightEnable(const bool arg);
     void SetPostEffectFogHeightIntensity(const float intensity);
     void SetPostEffectFogHeightStart(const float start);
@@ -320,6 +325,7 @@ private:
 
     // 霧
     PostEffectFog m_postEffectFog;
+    PostEffectHeightFog m_postEffectHeightFog;
 
     // 彩度フィルター
     PostEffectSaturate m_postEffectSaturate;
@@ -358,7 +364,7 @@ private:
     bool m_postEffectZShadowEnabled = true;
     bool m_postEffectSSAOEnabled = true;
     bool m_postEffectFogZEnabled = true;
-    bool m_postEffectFogHeightEnabled = true;
+    bool m_postEffectFogHeightEnabled = false;
     bool m_postEffectBloomEnabled = false;
     DepthOfFieldMode m_postEffectDepthOfFieldMode = DepthOfFieldMode::Disabled;
     bool m_postEffectStarBurstEnabled = false;

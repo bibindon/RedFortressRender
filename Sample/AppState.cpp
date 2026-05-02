@@ -41,11 +41,15 @@ bool g_bMaskedGaussianFilter = false;
 bool g_bDepthBufferShadow = true;
 bool g_bSSAO = true;
 bool g_bFog = true;
+bool g_bHeightFog = true;
 bool g_bSaturateFilter = false;
 bool g_bBloom = false;
 NSRender::DepthOfFieldMode g_depthOfFieldMode = NSRender::DepthOfFieldMode::Disabled;
 bool g_bStarBurst = false;
 float g_fogIntensity = 2.0f;
+float g_heightFogIntensity = 10.3f;
+float g_heightFogStart = 0.0f;
+float g_heightFogMax = -5.0f;
 float g_sunLightIntensity = 1.0f;
 float g_shadowIntensity = 0.5f;
 float g_shadowCoverage = 0.5f;
@@ -95,6 +99,16 @@ float ClampSaturateLevel(const float level)
 float ClampFogIntensity(const float intensity)
 {
     return (std::max)(FOG_INTENSITY_MIN, (std::min)(intensity, FOG_INTENSITY_MAX));
+}
+
+float ClampHeightFogIntensity(const float intensity)
+{
+    return (std::max)(HEIGHT_FOG_INTENSITY_MIN, (std::min)(intensity, HEIGHT_FOG_INTENSITY_MAX));
+}
+
+float ClampHeightFogHeight(const float height)
+{
+    return (std::max)(HEIGHT_FOG_HEIGHT_MIN, (std::min)(height, HEIGHT_FOG_HEIGHT_MAX));
 }
 
 float ClampSunLightIntensity(const float intensity)
@@ -659,6 +673,7 @@ void ApplyPostEffectToggleSettings()
     g_Render.SetPostEffectDepthBufferShadow(g_bDepthBufferShadow);
     g_Render.SetPostEffectSSAO(g_bSSAO);
     g_Render.SetPostEffectFog(g_bFog);
+    g_Render.SetPostEffectHeightFog(g_bHeightFog);
     g_Render.SetPostEffectSaturateEnable(g_bSaturateFilter);
     g_Render.SetPostEffectGaussianFilter(g_bGaussianFilter);
     g_Render.SetPostEffectMaskedGaussianFilter(g_bMaskedGaussianFilter);
@@ -678,6 +693,24 @@ void ApplyFogIntensity()
 {
     g_fogIntensity = ClampFogIntensity(g_fogIntensity);
     g_Render.SetPostEffectFogIntensity(g_fogIntensity);
+}
+
+void ApplyHeightFogIntensity()
+{
+    g_heightFogIntensity = ClampHeightFogIntensity(g_heightFogIntensity);
+    g_Render.SetPostEffectHeightFogIntensity(g_heightFogIntensity);
+}
+
+void ApplyHeightFogStart()
+{
+    g_heightFogStart = ClampHeightFogHeight(g_heightFogStart);
+    g_Render.SetPostEffectHeightFogStart(g_heightFogStart);
+}
+
+void ApplyHeightFogMax()
+{
+    g_heightFogMax = ClampHeightFogHeight(g_heightFogMax);
+    g_Render.SetPostEffectHeightFogMax(g_heightFogMax);
 }
 
 void ApplySunLightIntensity()
@@ -863,6 +896,26 @@ int FogIntensityToSliderValue(const float intensity)
 float SliderValueToFogIntensity(const int sliderValue)
 {
     return ClampFogIntensity(static_cast<float>(sliderValue) * FOG_INTENSITY_STEP);
+}
+
+int HeightFogIntensityToSliderValue(const float intensity)
+{
+    return static_cast<int>(std::lround(ClampHeightFogIntensity(intensity) / HEIGHT_FOG_INTENSITY_STEP));
+}
+
+float SliderValueToHeightFogIntensity(const int sliderValue)
+{
+    return ClampHeightFogIntensity(static_cast<float>(sliderValue) * HEIGHT_FOG_INTENSITY_STEP);
+}
+
+int HeightFogHeightToSliderValue(const float height)
+{
+    return static_cast<int>(std::lround((ClampHeightFogHeight(height) - HEIGHT_FOG_HEIGHT_MIN) / HEIGHT_FOG_HEIGHT_STEP));
+}
+
+float SliderValueToHeightFogHeight(const int sliderValue)
+{
+    return ClampHeightFogHeight(HEIGHT_FOG_HEIGHT_MIN + static_cast<float>(sliderValue) * HEIGHT_FOG_HEIGHT_STEP);
 }
 
 int SunLightIntensityToSliderValue(const float intensity)
