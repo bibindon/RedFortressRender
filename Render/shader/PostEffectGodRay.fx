@@ -171,11 +171,11 @@ float4 PS_GodRay(VS_OUT i) : COLOR
         {
             const float maskVisibility = visibilitySum / validSampleCount;
             const float totalSpan = max(distanceToVirtualLight + distanceToEdge, 0.000001f);
-            const float normalizedProximity = saturate(1.0f - (distanceToVirtualLight / totalSpan));
+            const float normalizedProximity = saturate(1.0f - (distanceToVirtualLight / (totalSpan*totalSpan)));
             const float proximityBlend = saturate(g_VirtualProximityStrength / 5.0f);
             const float proximityToVirtualLight = normalizedProximity * proximityBlend;
             lightRays = lerp(maskVisibility, 1.0f, proximityToVirtualLight);
-            lightRays *= 0.6f;
+            lightRays *= lightRays;
         }
     }
     else if (validSampleCount > 0.0f)
