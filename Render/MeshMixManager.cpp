@@ -56,9 +56,6 @@ float ConvertSpecularEdgeToShaderPower(const float edge)
 float ConvertXMaterialPowerToShaderPower(const float materialPower)
 {
     float clampedPower = (std::max)(0.0f, (std::min)(materialPower, 255.0f));
-    clampedPower += 1.f;
-    clampedPower /= 64.f;
-    clampedPower = 3.f;
     return clampedPower;
 }
 

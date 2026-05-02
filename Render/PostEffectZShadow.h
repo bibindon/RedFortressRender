@@ -28,6 +28,10 @@ public:
     void SetCoverage(const float coverage);
     void SetPcfTapCount(const int tapCount);
     void SetCompositeTapCount(const int tapCount);
+    void DrawDebugLightDepthOverlay(const int x,
+                                    const int y,
+                                    const int width,
+                                    const int height);
 
     void OnDeviceLost();
     void OnDeviceReset();

@@ -21,7 +21,7 @@ ModelLoadScale,1.0
 BloomEnable,0
 StarBurstEnable,0
 
-SunLightIntensity,1.3
+SunLightIntensity,1.0
 
 FogHeightEnable,1
 FogHeightIntensity,0.3

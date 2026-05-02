@@ -162,7 +162,7 @@ void PostEffectZShadow::RenderTechnique1()
     D3DXVECTOR3 focusPoint = Camera::GetLookAtPos();
     focusPoint.y -= focusYOffset;
     const D3DXVECTOR3 vLightEye = focusPoint + SHADOW_CAMERA_OFFSET;
-    const D3DXVECTOR3 vLightAt = Camera::GetEyePos();
+    const D3DXVECTOR3 vLightAt = (Camera::GetEyePos() + Camera::GetLookAtPos()) * 0.5f;
     D3DXVECTOR3 vLightUp(0, 1, 0);
     D3DXMatrixLookAtLH(&mLightView, &vLightEye, &vLightAt, &vLightUp);
 
@@ -486,6 +486,58 @@ void PostEffectZShadow::RenderTechnique3()
 
     SAFE_RELEASE(rtComp);
     SAFE_RELEASE(prevRT);
+}
+
+void PostEffectZShadow::DrawDebugLightDepthOverlay(const int x,
+                                                   const int y,
+                                                   const int width,
+                                                   const int height)
+{
+    if (g_fxDepthBufferShadow == NULL || g_texRenderTargetLightZ == NULL)
+    {
+        return;
+    }
+
+    D3DVIEWPORT9 oldViewport { };
+    Common::D3DDevice()->GetViewport(&oldViewport);
+
+    D3DVIEWPORT9 debugViewport { };
+    debugViewport.X = static_cast<DWORD>(x);
+    debugViewport.Y = static_cast<DWORD>(y);
+    debugViewport.Width = static_cast<DWORD>((std::max)(1, width));
+    debugViewport.Height = static_cast<DWORD>((std::max)(1, height));
+    debugViewport.MinZ = 0.0f;
+    debugViewport.MaxZ = 1.0f;
+    Common::D3DDevice()->SetViewport(&debugViewport);
+
+    HRESULT hr = Common::D3DDevice()->BeginScene();
+    assert(hr == S_OK);
+
+    hr = g_fxDepthBufferShadow->SetTechnique("TechniqueDebugLightZ");
+    assert(hr == S_OK);
+
+    hr = g_fxDepthBufferShadow->SetTexture("g_texLightZ", g_texRenderTargetLightZ);
+    assert(hr == S_OK);
+
+    UINT passCount = 0;
+    hr = g_fxDepthBufferShadow->Begin(&passCount, 0);
+    assert(hr == S_OK);
+
+    hr = g_fxDepthBufferShadow->BeginPass(0);
+    assert(hr == S_OK);
+
+    DrawFullscreenQuad();
+
+    hr = g_fxDepthBufferShadow->EndPass();
+    assert(hr == S_OK);
+
+    hr = g_fxDepthBufferShadow->End();
+    assert(hr == S_OK);
+
+    hr = Common::D3DDevice()->EndScene();
+    assert(hr == S_OK);
+
+    Common::D3DDevice()->SetViewport(&oldViewport);
 }
 
 void PostEffectZShadow::DrawFullscreenQuad()

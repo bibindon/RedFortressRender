@@ -425,6 +425,13 @@ void PS_Composite(in float4 inPos     : POSITION,
     outColor = result;
 }
 
+float4 PS_DebugLightZ(in float4 inPos : POSITION,
+                      in float2 inUV  : TEXCOORD0) : COLOR0
+{
+    float depth = tex2D(samplerLightZ, inUV).r;
+    return float4(depth, depth, depth, 1.0f);
+}
+
 // 光源から見た深度を描画するテクニック
 technique TechniqueDepthFromLight
 {
@@ -470,6 +477,15 @@ technique TechniqueComposite
     {
         VertexShader = compile vs_3_0 VS_Composite();
         PixelShader  = compile ps_3_0 PS_Composite();
+    }
+}
+
+technique TechniqueDebugLightZ
+{
+    pass P0
+    {
+        VertexShader = compile vs_3_0 VS_Composite();
+        PixelShader  = compile ps_3_0 PS_DebugLightZ();
     }
 }
 

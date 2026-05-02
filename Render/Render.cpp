@@ -560,6 +560,14 @@ void Render::Draw()
     // 文字と画像は彩度フィルタの影響を受けないようにする
     Draw2D();
 
+    if (m_postEffectZShadowEnabled)
+    {
+        if (false)
+        {
+            m_postEffectZShadow.DrawDebugLightDepthOverlay(10, 10, 256, 256);
+        }
+    }
+
     hResult = Common::D3DDevice()->Present(NULL, NULL, NULL, NULL);
     assert(hResult == S_OK);
 
