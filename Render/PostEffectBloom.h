@@ -1,11 +1,11 @@
-#pragma once
+﻿#pragma once
 
 #include "Common.h"
 
 namespace NSRender
 {
 
-// TODO ��x�������\�����Ă���g�傷��A�Ƃ����̂�������������ꂢ�炵��
+// TODO 一度小さく表示してから拡大する、というのをやった方がきれいらしい
 class PostEffectBloom : public IDeviceResettable
 {
 
@@ -48,15 +48,15 @@ private:
         float v;
     };
 
-    // �ǂꂭ�炢�̖��邳����u���[���̑ΏۂƂ��邩
+    // どれくらいの明るさからブルームの対象とするか
     // 0.0 ~ 1.0
     float m_threshold = 1.0f;
 
-    // �u���[���̖��邳
+    // ブルームの明るさ
     // 0.0 ~ 1.0
     float m_intensity = 1.0f;
 
-    // �u���[���̍L��
+    // ブルームの広さ
     // 0.0 ~ 1.0
     float m_size = 1.0f;
 
