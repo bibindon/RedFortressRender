@@ -175,6 +175,7 @@ float4 PS_GodRay(VS_OUT i) : COLOR
             const float proximityBlend = saturate(g_VirtualProximityStrength / 5.0f);
             const float proximityToVirtualLight = normalizedProximity * proximityBlend;
             lightRays = lerp(maskVisibility, 1.0f, proximityToVirtualLight);
+            lightRays *= 0.6f;
         }
     }
     else if (validSampleCount > 0.0f)
