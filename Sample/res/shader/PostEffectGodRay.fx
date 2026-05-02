@@ -116,7 +116,10 @@ float4 PS_Blur(VS_OUT i) : COLOR
 
 float4 PS_GodRay(VS_OUT i) : COLOR
 {
-    float2 dir = g_LightScreenPos - i.uv;
+    float2 dirToVirtualLight = g_LightScreenPos - i.uv;
+    float distanceToVirtualLight = length(dirToVirtualLight);
+    float distanceToEdge = 0.0f;
+    float2 dir = dirToVirtualLight;
     if (g_ReverseSampling > 0.5f)
     {
         dir = -dir;
@@ -134,6 +137,7 @@ float4 PS_GodRay(VS_OUT i) : COLOR
         }
         rayToEdge = max(rayToEdge, 0.0f);
         dir *= rayToEdge;
+        distanceToEdge = length(dir) * g_RayLength;
     }
 
     float visibilitySum = 0.0f;
@@ -166,10 +170,12 @@ float4 PS_GodRay(VS_OUT i) : COLOR
         if (validSampleCount > 0.0f)
         {
             const float maskVisibility = visibilitySum / validSampleCount;
-            const float distanceToVirtualLight = distance(i.uv, g_LightScreenPos);
-            const float proximityToVirtualLight =
-                saturate(1.0f - distanceToVirtualLight * g_VirtualProximityStrength);
-            lightRays = maskVisibility * proximityToVirtualLight;
+            const float totalSpan = max(distanceToVirtualLight + distanceToEdge, 0.000001f);
+            const float normalizedProximity = saturate(1.0f - (distanceToVirtualLight / (totalSpan*totalSpan)));
+            const float proximityBlend = saturate(g_VirtualProximityStrength / 5.0f);
+            const float proximityToVirtualLight = normalizedProximity * proximityBlend;
+            lightRays = lerp(maskVisibility, 1.0f, proximityToVirtualLight);
+            lightRays *= lightRays;
         }
     }
     else if (validSampleCount > 0.0f)
