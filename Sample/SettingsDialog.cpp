@@ -64,6 +64,8 @@ constexpr int POINT_LIGHT_BRIGHTNESS_SLIDER_MIN = 0;
 constexpr int POINT_LIGHT_BRIGHTNESS_SLIDER_MAX = static_cast<int>(POINT_LIGHT_BRIGHTNESS_MAX / POINT_LIGHT_BRIGHTNESS_STEP);
 constexpr int GAUSSIAN_SLIDER_MIN = 1;
 constexpr int GAUSSIAN_SLIDER_MAX = (GAUSSIAN_SAMPLE_MAX + 1) / 2;
+constexpr int FXAA_QUALITY_SLIDER_MIN = FXAA_QUALITY_MIN;
+constexpr int FXAA_QUALITY_SLIDER_MAX = FXAA_QUALITY_MAX;
 constexpr int SHADOW_BLUR_TAP_SLIDER_MIN = 0;
 constexpr int SHADOW_BLUR_TAP_SLIDER_MAX = (SHADOW_BLUR_TAP_COUNT_MAX - 1) / 2;
 constexpr int GODRAY_COLOR_SLIDER_MIN = 0;
@@ -87,6 +89,7 @@ void RefreshDepthOfFieldControls(HWND hDlg);
 void RefreshDepthOfFieldMaxBlurControls(HWND hDlg);
 void RefreshDepthOfFieldAutoActivationControls(HWND hDlg);
 void RefreshGaussianControls(HWND hDlg);
+void RefreshFXAAControls(HWND hDlg);
 void RefreshFogControls(HWND hDlg);
 void RefreshHeightFogControls(HWND hDlg);
 void RefreshHeightFogIntensityControls(HWND hDlg);
@@ -154,6 +157,7 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_DOF_MAX_BLUR_DISTANCE,
         IDC_EDIT_DOF_AUTO_ACTIVATION_DISTANCE,
         IDC_EDIT_GAUSSIAN_SAMPLE_SIZE,
+        IDC_EDIT_FXAA_QUALITY,
         IDC_EDIT_FOG_INTENSITY,
         IDC_EDIT_HEIGHT_FOG_INTENSITY,
         IDC_EDIT_HEIGHT_FOG_START,
@@ -242,6 +246,14 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
             ApplyGaussianSampleSize();
         }
         RefreshGaussianControls(hDlg);
+        return true;
+    case IDC_EDIT_FXAA_QUALITY:
+        if (TryParseEditInt(hDlg, commandId, intValue))
+        {
+            g_fxaaQuality = intValue;
+            ApplyFXAAQuality();
+        }
+        RefreshFXAAControls(hDlg);
         return true;
     case IDC_EDIT_FOG_INTENSITY:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
@@ -1409,6 +1421,20 @@ void RefreshGaussianControls(HWND hDlg)
                        static_cast<LPARAM>(GaussianSampleSizeToSliderValue(g_gaussianSampleSize)));
 }
 
+void RefreshFXAAControls(HWND hDlg)
+{
+    CheckDlgButton(hDlg, IDC_CHECK_FXAA, g_bFXAA ? BST_CHECKED : BST_UNCHECKED);
+
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%d", g_fxaaQuality);
+    SetDlgItemText(hDlg, IDC_EDIT_FXAA_QUALITY, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_FXAA_QUALITY,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(FXAAQualityToSliderValue(g_fxaaQuality)));
+}
+
 void RefreshShadowPcfTapControls(HWND hDlg)
 {
     wchar_t buffer[32];
@@ -1516,6 +1542,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshStarBurstThresholdControls(hDlg);
     RefreshModelLoadScaleControls(hDlg);
     RefreshGaussianControls(hDlg);
+    RefreshFXAAControls(hDlg);
     RefreshShadowPcfTapControls(hDlg);
     RefreshShadowCompositeTapControls(hDlg);
     RefreshGodRayControls(hDlg);
@@ -1667,6 +1694,11 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETRANGEMAX, FALSE, GAUSSIAN_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETTICFREQ, 5, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETPAGESIZE, 0, 5);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FXAA_QUALITY, TBM_SETRANGEMIN, FALSE, FXAA_QUALITY_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FXAA_QUALITY, TBM_SETRANGEMAX, FALSE, FXAA_QUALITY_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FXAA_QUALITY, TBM_SETTICFREQ, 1, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FXAA_QUALITY, TBM_SETPAGESIZE, 0, 1);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_PCF_TAPS, TBM_SETRANGEMIN, FALSE, SHADOW_BLUR_TAP_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_PCF_TAPS, TBM_SETRANGEMAX, FALSE, SHADOW_BLUR_TAP_SLIDER_MAX);
@@ -1956,6 +1988,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_gaussianSampleSize = SliderValueToGaussianSampleSize(sliderValue);
             ApplyGaussianSampleSize();
             RefreshGaussianControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_FXAA_QUALITY))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_fxaaQuality = SliderValueToFXAAQuality(sliderValue);
+            ApplyFXAAQuality();
+            RefreshFXAAControls(hDlg);
             return TRUE;
         }
 
@@ -2481,6 +2522,14 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_bMaskedGaussianFilter = (IsDlgButtonChecked(hDlg, IDC_CHECK_MASKED_GAUSSIAN_FILTER) == BST_CHECKED);
             g_Render.SetPostEffectMaskedGaussianFilter(g_bMaskedGaussianFilter);
             RefreshGaussianControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_FXAA)
+        {
+            g_bFXAA = (IsDlgButtonChecked(hDlg, IDC_CHECK_FXAA) == BST_CHECKED);
+            g_Render.SetPostEffectFXAA(g_bFXAA);
+            RefreshFXAAControls(hDlg);
             return TRUE;
         }
 

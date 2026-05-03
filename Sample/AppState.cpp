@@ -38,6 +38,7 @@ bool g_bAnimateLight = false;
 bool g_bRemoteDesktop = true;
 bool g_bGaussianFilter = false;
 bool g_bMaskedGaussianFilter = false;
+bool g_bFXAA = false;
 bool g_bDepthBufferShadow = true;
 bool g_bSSAO = true;
 bool g_bFog = true;
@@ -74,6 +75,7 @@ float g_modelLoadScale = 1.0f;
 D3DXCOLOR g_pointLightColor = D3DXCOLOR(1.0f, 0.35f, 0.1f, 1.0f);
 float g_pointLightBrightness = 1.0f;
 int g_gaussianSampleSize = 101;
+int g_fxaaQuality = 4;
 int g_shadowPcfTapCount = 11;
 int g_shadowCompositeTapCount = 11;
 int g_sunId = 0;
@@ -244,6 +246,11 @@ int NormalizeGaussianSampleSizeLocal(const int sampleSize)
         --normalized;
     }
     return (std::max)(GAUSSIAN_SAMPLE_MIN, normalized);
+}
+
+int NormalizeFXAAQualityLocal(const int quality)
+{
+    return (std::max)(FXAA_QUALITY_MIN, (std::min)(quality, FXAA_QUALITY_MAX));
 }
 
 int NormalizeShadowBlurTapCountLocal(const int tapCount)
@@ -690,6 +697,7 @@ void ApplyPostEffectToggleSettings()
     g_Render.SetPostEffectSaturateEnable(g_bSaturateFilter);
     g_Render.SetPostEffectGaussianFilter(g_bGaussianFilter);
     g_Render.SetPostEffectMaskedGaussianFilter(g_bMaskedGaussianFilter);
+    g_Render.SetPostEffectFXAA(g_bFXAA);
     g_Render.SetPostEffectBloom(g_bBloom);
     ApplyDepthOfFieldMode();
     g_Render.SetPostEffectStarBurst(g_bStarBurst);
@@ -886,6 +894,12 @@ void ApplyGaussianSampleSize()
 {
     g_gaussianSampleSize = NormalizeGaussianSampleSizeLocal(g_gaussianSampleSize);
     g_Render.SetPostEffectGaussianSampleSize(g_gaussianSampleSize);
+}
+
+void ApplyFXAAQuality()
+{
+    g_fxaaQuality = NormalizeFXAAQualityLocal(g_fxaaQuality);
+    g_Render.SetPostEffectFXAAQuality(g_fxaaQuality);
 }
 
 void ApplyResolution()
@@ -1170,6 +1184,16 @@ int GaussianSampleSizeToSliderValue(const int sampleSize)
 int SliderValueToGaussianSampleSize(const int sliderValue)
 {
     return NormalizeGaussianSampleSizeLocal(sliderValue * 2 - 1);
+}
+
+int FXAAQualityToSliderValue(const int quality)
+{
+    return NormalizeFXAAQualityLocal(quality);
+}
+
+int SliderValueToFXAAQuality(const int sliderValue)
+{
+    return NormalizeFXAAQualityLocal(sliderValue);
 }
 
 static const std::wstring GODRAY_MARKER_PATH = L"..\\..\\Sample\\cube.x"; // 作業ディレクトリからの相対パス
@@ -1698,6 +1722,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_gaussianSampleSize = std::stoi(value);
             }
+            else if (key == L"FXAAQuality")
+            {
+                g_fxaaQuality = std::stoi(value);
+            }
             else if (key == L"FogIntensity")
             {
                 g_fogIntensity = std::stof(value);
@@ -1843,6 +1871,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"MaskedGaussianEnable")
             {
                 g_bMaskedGaussianFilter = (std::stoi(value) != 0);
+            }
+            else if (key == L"FXAAEnable")
+            {
+                g_bFXAA = (std::stoi(value) != 0);
             }
             else if (key == L"MaskedGaussianMaskPath")
             {

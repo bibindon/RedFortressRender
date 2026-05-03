@@ -95,6 +95,11 @@ int Render::NormalizeGaussianSampleSize(const int sampleSize)
     return (std::max)(1, normalized);
 }
 
+int NormalizeFXAAQuality(const int quality)
+{
+    return (std::max)(1, (std::min)(quality, 8));
+}
+
 void Render::LoadSettingsCsv(const std::wstring& settingsCsvPath)
 {
     m_settings.clear();
@@ -218,6 +223,33 @@ void Render::ApplySettings()
     if (maskedGaussianMaskPath != m_settings.end())
     {
         SetPostEffectMaskedGaussianMaskPath(maskedGaussianMaskPath->second);
+    }
+
+    const auto fxaaEnable = m_settings.find(L"FXAAEnable");
+    if (fxaaEnable != m_settings.end())
+    {
+        bool enabled = false;
+        if (TryParseBoolSetting(fxaaEnable->second, enabled))
+        {
+            SetPostEffectFXAA(enabled);
+        }
+    }
+
+    const auto fxaaQuality = m_settings.find(L"FXAAQuality");
+    if (fxaaQuality != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectFXAAQuality(std::stoi(fxaaQuality->second));
+        }
+        catch (...)
+        {
+            SetPostEffectFXAAQuality(m_fxaaQuality);
+        }
+    }
+    else
+    {
+        SetPostEffectFXAAQuality(m_fxaaQuality);
     }
 
     const auto fogIntensity = m_settings.find(L"FogIntensity");
@@ -575,6 +607,7 @@ void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
     // ガウスフィルター
     m_postEffectGauss.Initialize();
     m_postEffectMaskedGauss.Initialize();
+    m_postEffectFXAA.Initialize();
     ApplySettings();
 
     // ブルーム
@@ -704,6 +737,11 @@ void Render::Draw()
     if (m_postEffectMaskedGaussEnabled)
     {
         pTempTexture = m_postEffectMaskedGauss.Draw(pTempTexture);
+    }
+
+    if (m_postEffectFXAAEnabled)
+    {
+        pTempTexture = m_postEffectFXAA.Draw(pTempTexture);
     }
 
     // g_pRenderTargetの内容を画面に転送
@@ -1341,6 +1379,17 @@ void Render::SetPostEffectMaskedGaussianMaskPath(const std::wstring& maskPath)
 {
     m_maskedGaussianMaskPath = maskPath;
     m_postEffectMaskedGauss.SetMaskPath(maskPath);
+}
+
+void Render::SetPostEffectFXAA(const bool arg)
+{
+    m_postEffectFXAAEnabled = arg;
+}
+
+void Render::SetPostEffectFXAAQuality(const int quality)
+{
+    m_fxaaQuality = NormalizeFXAAQuality(quality);
+    m_postEffectFXAA.SetQuality(m_fxaaQuality);
 }
 
 void Render::SetPostEffectDepthBufferShadow(const bool arg)

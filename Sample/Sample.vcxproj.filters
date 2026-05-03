@@ -56,6 +56,9 @@
     <FxCompile Include="..\Render\shader\PostEffectGaussian.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
+    <FxCompile Include="..\Render\shader\PostEffectFXAA.fx">
+      <Filter>リソース ファイル</Filter>
+    </FxCompile>
     <FxCompile Include="..\Render\shader\PostEffectEnd.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>

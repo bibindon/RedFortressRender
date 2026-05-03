@@ -44,6 +44,7 @@
 #include "PostEffectSSAO.h"
 #include "PostEffectDepthOfField.h"
 #include "PostEffectHeightFog.h"
+#include "PostEffectFXAA.h"
 
 #include "WindowManager.h"
 #include "PostEffectZShadow.h"
@@ -226,6 +227,8 @@ public:
     void SetPostEffectMaskedGaussianFilter(const bool arg);
     void SetPostEffectMaskedGaussianSampleSize(const int sampleSize);
     void SetPostEffectMaskedGaussianMaskPath(const std::wstring& maskPath);
+    void SetPostEffectFXAA(const bool arg);
+    void SetPostEffectFXAAQuality(const int quality);
     void SetPostEffectDepthBufferShadow(const bool arg);
     void SetPostEffectDepthBufferShadowIntensity(const float intensity);
     void SetPostEffectDepthBufferShadowSaturationBoost(const float saturationBoost);
@@ -343,6 +346,9 @@ private:
     PostEffectGauss m_postEffectGauss;
     PostEffectMaskedGauss m_postEffectMaskedGauss;
 
+    // FXAA
+    PostEffectFXAA m_postEffectFXAA;
+
     // スターバースト
     PostEffectStarBurst m_postEffectStarBurst;
 
@@ -361,9 +367,11 @@ private:
     std::unordered_map<std::wstring, std::wstring> m_settings;
     int m_gaussianSampleSize = 101;
     std::wstring m_maskedGaussianMaskPath;
+    int m_fxaaQuality = 4;
     bool m_postEffectSaturateEnabled = false;
     bool m_postEffectGaussEnabled = false;
     bool m_postEffectMaskedGaussEnabled = false;
+    bool m_postEffectFXAAEnabled = false;
     bool m_postEffectZShadowEnabled = true;
     bool m_postEffectSSAOEnabled = true;
     bool m_postEffectFogZEnabled = true;

@@ -49,6 +49,7 @@
     <ClCompile Include="PostEffectBloom.cpp" />
     <ClCompile Include="PostEffectDepthOfField.cpp" />
     <ClCompile Include="PostEffectFog.cpp" />
+    <ClCompile Include="PostEffectFXAA.cpp" />
     <ClCompile Include="PostEffectHeightFog.cpp" />
     <ClCompile Include="PostEffectGodRay.cpp" />
     <ClCompile Include="PostEffectZShadow.cpp" />
@@ -90,6 +91,7 @@
     <ClInclude Include="PostEffectBloom.h" />
     <ClInclude Include="PostEffectDepthOfField.h" />
     <ClInclude Include="PostEffectFog.h" />
+    <ClInclude Include="PostEffectFXAA.h" />
     <ClInclude Include="PostEffectHeightFog.h" />
     <ClInclude Include="PostEffectGodRay.h" />
     <ClInclude Include="PostEffectZShadow.h" />
@@ -165,6 +167,7 @@
     <FxCompile Include="shader\PostEffectGodRay.fx" />
     <FxCompile Include="shader\PostEffectDepthOfField.fx" />
     <FxCompile Include="shader\PostEffectFog.fx" />
+    <FxCompile Include="shader\PostEffectFXAA.fx" />
     <FxCompile Include="shader\PostEffectHeightFog.fx" />
     <FxCompile Include="shader\PostEffectZShadow.fx" />
     <FxCompile Include="shader\PostEffectEnd.fx">
