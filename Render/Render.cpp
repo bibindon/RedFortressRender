@@ -105,6 +105,16 @@ int NormalizeMotionBlurCameraQuality(const int quality)
     return (std::max)(1, (std::min)(quality, 8));
 }
 
+float NormalizeMotionBlurCameraMaxBlurPixels(const float maxBlurPixels)
+{
+    return (std::max)(1.0f, (std::min)(maxBlurPixels, 64.0f));
+}
+
+int NormalizeMotionBlurCameraSampleCount(const int sampleCount)
+{
+    return (std::max)(2, (std::min)(sampleCount, 21));
+}
+
 float ClampUnitSetting(const float value)
 {
     return (std::max)(0.0f, (std::min)(value, 1.0f));
@@ -287,6 +297,32 @@ void Render::ApplySettings()
     else
     {
         SetPostEffectMotionBlurCameraQuality(m_motionBlurCameraQuality);
+    }
+
+    const auto motionBlurCameraMaxBlurPixels = m_settings.find(L"MotionBlurCameraMaxBlurPixels");
+    if (motionBlurCameraMaxBlurPixels != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectMotionBlurCameraMaxBlurPixels(std::stof(motionBlurCameraMaxBlurPixels->second));
+        }
+        catch (...)
+        {
+            SetPostEffectMotionBlurCameraMaxBlurPixels(m_motionBlurCameraMaxBlurPixels);
+        }
+    }
+
+    const auto motionBlurCameraSampleCount = m_settings.find(L"MotionBlurCameraSampleCount");
+    if (motionBlurCameraSampleCount != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectMotionBlurCameraSampleCount(std::stoi(motionBlurCameraSampleCount->second));
+        }
+        catch (...)
+        {
+            SetPostEffectMotionBlurCameraSampleCount(m_motionBlurCameraSampleCount);
+        }
     }
 
     const auto sssEnable = m_settings.find(L"SSSEnable");
@@ -1556,6 +1592,20 @@ void Render::SetPostEffectMotionBlurCameraQuality(const int quality)
 {
     m_motionBlurCameraQuality = NormalizeMotionBlurCameraQuality(quality);
     m_postEffectMotionBlurCamera.SetQuality(m_motionBlurCameraQuality);
+    m_motionBlurCameraMaxBlurPixels = m_postEffectMotionBlurCamera.GetMaxBlurPixels();
+    m_motionBlurCameraSampleCount = m_postEffectMotionBlurCamera.GetSampleCount();
+}
+
+void Render::SetPostEffectMotionBlurCameraMaxBlurPixels(const float maxBlurPixels)
+{
+    m_motionBlurCameraMaxBlurPixels = NormalizeMotionBlurCameraMaxBlurPixels(maxBlurPixels);
+    m_postEffectMotionBlurCamera.SetMaxBlurPixels(m_motionBlurCameraMaxBlurPixels);
+}
+
+void Render::SetPostEffectMotionBlurCameraSampleCount(const int sampleCount)
+{
+    m_motionBlurCameraSampleCount = NormalizeMotionBlurCameraSampleCount(sampleCount);
+    m_postEffectMotionBlurCamera.SetSampleCount(m_motionBlurCameraSampleCount);
 }
 
 void Render::SetPostEffectDepthBufferShadow(const bool arg)

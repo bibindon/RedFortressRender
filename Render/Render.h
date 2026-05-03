@@ -232,6 +232,8 @@ public:
     void SetPostEffectFXAAQuality(const int quality);
     void SetPostEffectMotionBlurCamera(const bool arg);
     void SetPostEffectMotionBlurCameraQuality(const int quality);
+    void SetPostEffectMotionBlurCameraMaxBlurPixels(const float maxBlurPixels);
+    void SetPostEffectMotionBlurCameraSampleCount(const int sampleCount);
     void SetPostEffectDepthBufferShadow(const bool arg);
     void SetPostEffectDepthBufferShadowIntensity(const float intensity);
     void SetPostEffectDepthBufferShadowSaturationBoost(const float saturationBoost);
@@ -378,6 +380,8 @@ private:
     std::wstring m_maskedGaussianMaskPath;
     int m_fxaaQuality = 4;
     int m_motionBlurCameraQuality = 4;
+    float m_motionBlurCameraMaxBlurPixels = 24.0f;
+    int m_motionBlurCameraSampleCount = 13;
     bool m_postEffectSaturateEnabled = false;
     bool m_postEffectGaussEnabled = false;
     bool m_postEffectMaskedGaussEnabled = false;

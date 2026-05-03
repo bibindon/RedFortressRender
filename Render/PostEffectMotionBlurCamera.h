@@ -19,6 +19,10 @@ public:
 
     void SetQuality(const int quality);
     int GetQuality() const;
+    void SetMaxBlurPixels(const float maxBlurPixels);
+    float GetMaxBlurPixels() const;
+    void SetSampleCount(const int sampleCount);
+    int GetSampleCount() const;
 
     void OnDeviceLost() override;
     void OnDeviceReset() override;
@@ -36,6 +40,8 @@ private:
     float m_motionBlurScaleThisFrame = 1.0f;
     bool m_hasPrevViewProj = false;
     int m_quality = 4;
+    float m_maxBlurPixels = 24.0f;
+    int m_sampleCount = 13;
 
     void CreateTexture();
     bool ShouldApplyMotionBlur(const D3DXMATRIX& currentViewProj);

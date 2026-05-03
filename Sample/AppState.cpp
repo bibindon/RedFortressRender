@@ -40,6 +40,8 @@ bool g_bGaussianFilter = false;
 bool g_bMaskedGaussianFilter = false;
 bool g_bFXAA = false;
 bool g_bMotionBlurCamera = false;
+float g_motionBlurCameraMaxBlurPixels = 24.0f;
+int g_motionBlurCameraSampleCount = 13;
 bool g_bDepthBufferShadow = true;
 bool g_bSSAO = true;
 bool g_bFog = true;
@@ -279,6 +281,18 @@ int NormalizeFXAAQualityLocal(const int quality)
 int NormalizeMotionBlurCameraQualityLocal(const int quality)
 {
     return (std::max)(MOTION_BLUR_CAMERA_QUALITY_MIN, (std::min)(quality, MOTION_BLUR_CAMERA_QUALITY_MAX));
+}
+
+float NormalizeMotionBlurCameraMaxBlurPixelsLocal(const float maxBlurPixels)
+{
+    return (std::max)(MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS_MIN,
+                      (std::min)(maxBlurPixels, MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS_MAX));
+}
+
+int NormalizeMotionBlurCameraSampleCountLocal(const int sampleCount)
+{
+    return (std::max)(MOTION_BLUR_CAMERA_SAMPLE_COUNT_MIN,
+                      (std::min)(sampleCount, MOTION_BLUR_CAMERA_SAMPLE_COUNT_MAX));
 }
 
 int NormalizeShadowBlurTapCountLocal(const int tapCount)
@@ -963,10 +977,15 @@ void ApplyFXAAQuality()
     g_Render.SetPostEffectFXAAQuality(g_fxaaQuality);
 }
 
-void ApplyMotionBlurCameraQuality()
+void ApplyMotionBlurCameraSettings()
 {
     g_motionBlurCameraQuality = NormalizeMotionBlurCameraQualityLocal(g_motionBlurCameraQuality);
+    g_motionBlurCameraMaxBlurPixels = NormalizeMotionBlurCameraMaxBlurPixelsLocal(g_motionBlurCameraMaxBlurPixels);
+    g_motionBlurCameraSampleCount = NormalizeMotionBlurCameraSampleCountLocal(g_motionBlurCameraSampleCount);
+
     g_Render.SetPostEffectMotionBlurCameraQuality(g_motionBlurCameraQuality);
+    g_Render.SetPostEffectMotionBlurCameraMaxBlurPixels(g_motionBlurCameraMaxBlurPixels);
+    g_Render.SetPostEffectMotionBlurCameraSampleCount(g_motionBlurCameraSampleCount);
 }
 
 void ApplyResolution()
@@ -1291,6 +1310,26 @@ int MotionBlurCameraQualityToSliderValue(const int quality)
 int SliderValueToMotionBlurCameraQuality(const int sliderValue)
 {
     return NormalizeMotionBlurCameraQualityLocal(sliderValue);
+}
+
+int MotionBlurCameraMaxBlurPixelsToSliderValue(const float maxBlurPixels)
+{
+    return static_cast<int>(NormalizeMotionBlurCameraMaxBlurPixelsLocal(maxBlurPixels));
+}
+
+float SliderValueToMotionBlurCameraMaxBlurPixels(const int sliderValue)
+{
+    return NormalizeMotionBlurCameraMaxBlurPixelsLocal(static_cast<float>(sliderValue));
+}
+
+int MotionBlurCameraSampleCountToSliderValue(const int sampleCount)
+{
+    return NormalizeMotionBlurCameraSampleCountLocal(sampleCount);
+}
+
+int SliderValueToMotionBlurCameraSampleCount(const int sliderValue)
+{
+    return NormalizeMotionBlurCameraSampleCountLocal(sliderValue);
 }
 
 static const std::wstring GODRAY_MARKER_PATH = L"..\\..\\Sample\\cube.x"; // 作業ディレクトリからの相対パス
@@ -1826,6 +1865,16 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"MotionBlurCameraQuality")
             {
                 g_motionBlurCameraQuality = std::stoi(value);
+                g_motionBlurCameraMaxBlurPixels = static_cast<float>(g_motionBlurCameraQuality * 6);
+                g_motionBlurCameraSampleCount = 5 + g_motionBlurCameraQuality * 2;
+            }
+            else if (key == L"MotionBlurCameraMaxBlurPixels")
+            {
+                g_motionBlurCameraMaxBlurPixels = std::stof(value);
+            }
+            else if (key == L"MotionBlurCameraSampleCount")
+            {
+                g_motionBlurCameraSampleCount = std::stoi(value);
             }
             else if (key == L"FogIntensity")
             {

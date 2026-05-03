@@ -15,6 +15,16 @@ int ClampMotionBlurQuality(const int quality)
     return (std::max)(1, (std::min)(quality, 8));
 }
 
+float ClampMotionBlurMaxBlurPixels(const float maxBlurPixels)
+{
+    return (std::max)(1.0f, (std::min)(maxBlurPixels, 64.0f));
+}
+
+int ClampMotionBlurSampleCount(const int sampleCount)
+{
+    return (std::max)(2, (std::min)(sampleCount, 21));
+}
+
 float ClampUnit(const float value)
 {
     return (std::max)(-1.0f, (std::min)(value, 1.0f));
@@ -131,11 +141,33 @@ void PostEffectMotionBlurCamera::UpdateFrameMatrices()
 void PostEffectMotionBlurCamera::SetQuality(const int quality)
 {
     m_quality = ClampMotionBlurQuality(quality);
+    m_maxBlurPixels = static_cast<float>(m_quality) * 6.0f;
+    m_sampleCount = ClampMotionBlurSampleCount(5 + m_quality * 2);
 }
 
 int PostEffectMotionBlurCamera::GetQuality() const
 {
     return m_quality;
+}
+
+void PostEffectMotionBlurCamera::SetMaxBlurPixels(const float maxBlurPixels)
+{
+    m_maxBlurPixels = ClampMotionBlurMaxBlurPixels(maxBlurPixels);
+}
+
+float PostEffectMotionBlurCamera::GetMaxBlurPixels() const
+{
+    return m_maxBlurPixels;
+}
+
+void PostEffectMotionBlurCamera::SetSampleCount(const int sampleCount)
+{
+    m_sampleCount = ClampMotionBlurSampleCount(sampleCount);
+}
+
+int PostEffectMotionBlurCamera::GetSampleCount() const
+{
+    return m_sampleCount;
 }
 
 bool PostEffectMotionBlurCamera::ShouldApplyMotionBlur(const D3DXMATRIX& currentViewProj)
@@ -265,16 +297,13 @@ void PostEffectMotionBlurCamera::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource
                                 static_cast<float>(Common::ScreenH()));
 
     const float blurScale = 2.0f * m_motionBlurScaleThisFrame;
-    const float maxBlurPixels = static_cast<float>(m_quality) * 6.0f;
-    const int sampleCount = (std::min)(21, 5 + m_quality * 2);
-
     m_d3dEffect->SetTexture("texture1", texSource);
     m_d3dEffect->SetTexture("depthTexture", depthTexture);
     m_d3dEffect->SetMatrix("g_matInvCurrentViewProj", &invCurrentViewProj);
     m_d3dEffect->SetMatrix("g_matPrevViewProj", &m_motionBlurPrevViewProj);
     m_d3dEffect->SetFloat("g_fBlurScale", blurScale);
-    m_d3dEffect->SetFloat("g_fMaxBlurPixels", maxBlurPixels);
-    m_d3dEffect->SetInt("g_iSampleCount", sampleCount);
+    m_d3dEffect->SetFloat("g_fMaxBlurPixels", m_maxBlurPixels);
+    m_d3dEffect->SetInt("g_iSampleCount", m_sampleCount);
     m_d3dEffect->SetInt("g_iMotionBlurEnabled", 1);
     m_d3dEffect->SetInt("g_iDebugGridEnabled", 0);
     m_d3dEffect->SetVector("g_vTexelSize", &texelSize);

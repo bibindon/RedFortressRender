@@ -70,8 +70,12 @@ constexpr int GAUSSIAN_SLIDER_MIN = 1;
 constexpr int GAUSSIAN_SLIDER_MAX = (GAUSSIAN_SAMPLE_MAX + 1) / 2;
 constexpr int FXAA_QUALITY_SLIDER_MIN = FXAA_QUALITY_MIN;
 constexpr int FXAA_QUALITY_SLIDER_MAX = FXAA_QUALITY_MAX;
-constexpr int MOTION_BLUR_CAMERA_QUALITY_SLIDER_MIN = MOTION_BLUR_CAMERA_QUALITY_MIN;
-constexpr int MOTION_BLUR_CAMERA_QUALITY_SLIDER_MAX = MOTION_BLUR_CAMERA_QUALITY_MAX;
+constexpr int MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS_SLIDER_MIN =
+    static_cast<int>(MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS_MIN / MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS_STEP);
+constexpr int MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS_SLIDER_MAX =
+    static_cast<int>(MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS_MAX / MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS_STEP);
+constexpr int MOTION_BLUR_CAMERA_SAMPLE_COUNT_SLIDER_MIN = MOTION_BLUR_CAMERA_SAMPLE_COUNT_MIN;
+constexpr int MOTION_BLUR_CAMERA_SAMPLE_COUNT_SLIDER_MAX = MOTION_BLUR_CAMERA_SAMPLE_COUNT_MAX;
 constexpr int SHADOW_BLUR_TAP_SLIDER_MIN = 0;
 constexpr int SHADOW_BLUR_TAP_SLIDER_MAX = (SHADOW_BLUR_TAP_COUNT_MAX - 1) / 2;
 constexpr int GODRAY_COLOR_SLIDER_MIN = 0;
@@ -166,7 +170,8 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_DOF_AUTO_ACTIVATION_DISTANCE,
         IDC_EDIT_GAUSSIAN_SAMPLE_SIZE,
         IDC_EDIT_FXAA_QUALITY,
-        IDC_EDIT_MOTION_BLUR_CAMERA_QUALITY,
+        IDC_EDIT_MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS,
+        IDC_EDIT_MOTION_BLUR_CAMERA_SAMPLE_COUNT,
         IDC_EDIT_FOG_INTENSITY,
         IDC_EDIT_HEIGHT_FOG_INTENSITY,
         IDC_EDIT_HEIGHT_FOG_START,
@@ -268,11 +273,19 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
         }
         RefreshFXAAControls(hDlg);
         return true;
-    case IDC_EDIT_MOTION_BLUR_CAMERA_QUALITY:
+    case IDC_EDIT_MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_motionBlurCameraMaxBlurPixels = floatValue;
+            ApplyMotionBlurCameraSettings();
+        }
+        RefreshMotionBlurCameraControls(hDlg);
+        return true;
+    case IDC_EDIT_MOTION_BLUR_CAMERA_SAMPLE_COUNT:
         if (TryParseEditInt(hDlg, commandId, intValue))
         {
-            g_motionBlurCameraQuality = intValue;
-            ApplyMotionBlurCameraQuality();
+            g_motionBlurCameraSampleCount = intValue;
+            ApplyMotionBlurCameraSettings();
         }
         RefreshMotionBlurCameraControls(hDlg);
         return true;
@@ -1541,17 +1554,27 @@ void RefreshMotionBlurCameraControls(HWND hDlg)
     CheckDlgButton(hDlg, IDC_CHECK_MOTION_BLUR_CAMERA, g_bMotionBlurCamera ? BST_CHECKED : BST_UNCHECKED);
 
     wchar_t buffer[32];
-    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%d", g_motionBlurCameraQuality);
-    SetDlgItemText(hDlg, IDC_EDIT_MOTION_BLUR_CAMERA_QUALITY, buffer);
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.0f", g_motionBlurCameraMaxBlurPixels);
+    SetDlgItemText(hDlg, IDC_EDIT_MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS, buffer);
     SendDlgItemMessage(hDlg,
-                       IDC_SLIDER_MOTION_BLUR_CAMERA_QUALITY,
+                       IDC_SLIDER_MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS,
                        TBM_SETPOS,
                        TRUE,
-                       static_cast<LPARAM>(MotionBlurCameraQualityToSliderValue(g_motionBlurCameraQuality)));
+                       static_cast<LPARAM>(MotionBlurCameraMaxBlurPixelsToSliderValue(g_motionBlurCameraMaxBlurPixels)));
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%d", g_motionBlurCameraSampleCount);
+    SetDlgItemText(hDlg, IDC_EDIT_MOTION_BLUR_CAMERA_SAMPLE_COUNT, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_MOTION_BLUR_CAMERA_SAMPLE_COUNT,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(MotionBlurCameraSampleCountToSliderValue(g_motionBlurCameraSampleCount)));
 
     const BOOL enabled = g_bMotionBlurCamera ? TRUE : FALSE;
-    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_MOTION_BLUR_CAMERA_QUALITY), enabled);
-    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_QUALITY), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_MOTION_BLUR_CAMERA_SAMPLE_COUNT), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_SAMPLE_COUNT), enabled);
 }
 
 void RefreshShadowPcfTapControls(HWND hDlg)
@@ -1841,10 +1864,14 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_FXAA_QUALITY, TBM_SETTICFREQ, 1, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_FXAA_QUALITY, TBM_SETPAGESIZE, 0, 1);
 
-    SendDlgItemMessage(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_QUALITY, TBM_SETRANGEMIN, FALSE, MOTION_BLUR_CAMERA_QUALITY_SLIDER_MIN);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_QUALITY, TBM_SETRANGEMAX, FALSE, MOTION_BLUR_CAMERA_QUALITY_SLIDER_MAX);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_QUALITY, TBM_SETTICFREQ, 1, 0);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_QUALITY, TBM_SETPAGESIZE, 0, 1);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS, TBM_SETRANGEMIN, FALSE, MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS, TBM_SETRANGEMAX, FALSE, MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS, TBM_SETTICFREQ, 4, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS, TBM_SETPAGESIZE, 0, 4);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_SAMPLE_COUNT, TBM_SETRANGEMIN, FALSE, MOTION_BLUR_CAMERA_SAMPLE_COUNT_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_SAMPLE_COUNT, TBM_SETRANGEMAX, FALSE, MOTION_BLUR_CAMERA_SAMPLE_COUNT_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_SAMPLE_COUNT, TBM_SETTICFREQ, 1, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_SAMPLE_COUNT, TBM_SETPAGESIZE, 0, 1);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_PCF_TAPS, TBM_SETRANGEMIN, FALSE, SHADOW_BLUR_TAP_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_PCF_TAPS, TBM_SETRANGEMAX, FALSE, SHADOW_BLUR_TAP_SLIDER_MAX);
@@ -2146,11 +2173,20 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
-        if (slider == GetDlgItem(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_QUALITY))
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS))
         {
             const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
-            g_motionBlurCameraQuality = SliderValueToMotionBlurCameraQuality(sliderValue);
-            ApplyMotionBlurCameraQuality();
+            g_motionBlurCameraMaxBlurPixels = SliderValueToMotionBlurCameraMaxBlurPixels(sliderValue);
+            ApplyMotionBlurCameraSettings();
+            RefreshMotionBlurCameraControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_SAMPLE_COUNT))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_motionBlurCameraSampleCount = SliderValueToMotionBlurCameraSampleCount(sliderValue);
+            ApplyMotionBlurCameraSettings();
             RefreshMotionBlurCameraControls(hDlg);
             return TRUE;
         }
