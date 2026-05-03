@@ -9,6 +9,8 @@ MaskedGaussianMaskPath,
 GaussianSampleSize,101
 FXAAEnable,0
 FXAAQuality,4
+MotionBlurCameraEnable,0
+MotionBlurCameraQuality,4
 SSSEnable,0
 SSSIntensity,1.0
 SSSColorR,1.0

@@ -39,6 +39,7 @@ bool g_bRemoteDesktop = true;
 bool g_bGaussianFilter = false;
 bool g_bMaskedGaussianFilter = false;
 bool g_bFXAA = false;
+bool g_bMotionBlurCamera = false;
 bool g_bDepthBufferShadow = true;
 bool g_bSSAO = true;
 bool g_bFog = true;
@@ -79,6 +80,7 @@ D3DXCOLOR g_pointLightColor = D3DXCOLOR(1.0f, 0.35f, 0.1f, 1.0f);
 float g_pointLightBrightness = 1.0f;
 int g_gaussianSampleSize = 101;
 int g_fxaaQuality = 4;
+int g_motionBlurCameraQuality = 4;
 int g_shadowPcfTapCount = 11;
 int g_shadowCompositeTapCount = 11;
 int g_sunId = 0;
@@ -272,6 +274,11 @@ int NormalizeGaussianSampleSizeLocal(const int sampleSize)
 int NormalizeFXAAQualityLocal(const int quality)
 {
     return (std::max)(FXAA_QUALITY_MIN, (std::min)(quality, FXAA_QUALITY_MAX));
+}
+
+int NormalizeMotionBlurCameraQualityLocal(const int quality)
+{
+    return (std::max)(MOTION_BLUR_CAMERA_QUALITY_MIN, (std::min)(quality, MOTION_BLUR_CAMERA_QUALITY_MAX));
 }
 
 int NormalizeShadowBlurTapCountLocal(const int tapCount)
@@ -719,6 +726,7 @@ void ApplyPostEffectToggleSettings()
     g_Render.SetPostEffectGaussianFilter(g_bGaussianFilter);
     g_Render.SetPostEffectMaskedGaussianFilter(g_bMaskedGaussianFilter);
     g_Render.SetPostEffectFXAA(g_bFXAA);
+    g_Render.SetPostEffectMotionBlurCamera(g_bMotionBlurCamera);
     g_Render.SetMeshMixSSS(g_bSSS);
     g_Render.SetPostEffectBloom(g_bBloom);
     ApplyDepthOfFieldMode();
@@ -943,6 +951,12 @@ void ApplyFXAAQuality()
 {
     g_fxaaQuality = NormalizeFXAAQualityLocal(g_fxaaQuality);
     g_Render.SetPostEffectFXAAQuality(g_fxaaQuality);
+}
+
+void ApplyMotionBlurCameraQuality()
+{
+    g_motionBlurCameraQuality = NormalizeMotionBlurCameraQualityLocal(g_motionBlurCameraQuality);
+    g_Render.SetPostEffectMotionBlurCameraQuality(g_motionBlurCameraQuality);
 }
 
 void ApplyResolution()
@@ -1257,6 +1271,16 @@ int FXAAQualityToSliderValue(const int quality)
 int SliderValueToFXAAQuality(const int sliderValue)
 {
     return NormalizeFXAAQualityLocal(sliderValue);
+}
+
+int MotionBlurCameraQualityToSliderValue(const int quality)
+{
+    return NormalizeMotionBlurCameraQualityLocal(quality);
+}
+
+int SliderValueToMotionBlurCameraQuality(const int sliderValue)
+{
+    return NormalizeMotionBlurCameraQualityLocal(sliderValue);
 }
 
 static const std::wstring GODRAY_MARKER_PATH = L"..\\..\\Sample\\cube.x"; // 作業ディレクトリからの相対パス
@@ -1789,6 +1813,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_fxaaQuality = std::stoi(value);
             }
+            else if (key == L"MotionBlurCameraQuality")
+            {
+                g_motionBlurCameraQuality = std::stoi(value);
+            }
             else if (key == L"FogIntensity")
             {
                 g_fogIntensity = std::stof(value);
@@ -1938,6 +1966,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"FXAAEnable")
             {
                 g_bFXAA = (std::stoi(value) != 0);
+            }
+            else if (key == L"MotionBlurCameraEnable")
+            {
+                g_bMotionBlurCamera = (std::stoi(value) != 0);
             }
             else if (key == L"SSSEnable")
             {

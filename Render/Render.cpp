@@ -100,6 +100,11 @@ int NormalizeFXAAQuality(const int quality)
     return (std::max)(1, (std::min)(quality, 8));
 }
 
+int NormalizeMotionBlurCameraQuality(const int quality)
+{
+    return (std::max)(1, (std::min)(quality, 8));
+}
+
 float ClampUnitSetting(const float value)
 {
     return (std::max)(0.0f, (std::min)(value, 1.0f));
@@ -255,6 +260,33 @@ void Render::ApplySettings()
     else
     {
         SetPostEffectFXAAQuality(m_fxaaQuality);
+    }
+
+    const auto motionBlurCameraEnable = m_settings.find(L"MotionBlurCameraEnable");
+    if (motionBlurCameraEnable != m_settings.end())
+    {
+        bool enabled = false;
+        if (TryParseBoolSetting(motionBlurCameraEnable->second, enabled))
+        {
+            SetPostEffectMotionBlurCamera(enabled);
+        }
+    }
+
+    const auto motionBlurCameraQuality = m_settings.find(L"MotionBlurCameraQuality");
+    if (motionBlurCameraQuality != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectMotionBlurCameraQuality(std::stoi(motionBlurCameraQuality->second));
+        }
+        catch (...)
+        {
+            SetPostEffectMotionBlurCameraQuality(m_motionBlurCameraQuality);
+        }
+    }
+    else
+    {
+        SetPostEffectMotionBlurCameraQuality(m_motionBlurCameraQuality);
     }
 
     const auto sssEnable = m_settings.find(L"SSSEnable");
@@ -688,6 +720,7 @@ void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
     m_postEffectGauss.Initialize();
     m_postEffectMaskedGauss.Initialize();
     m_postEffectFXAA.Initialize();
+    m_postEffectMotionBlurCamera.Initialize();
     ApplySettings();
 
     // ブルーム
@@ -817,6 +850,15 @@ void Render::Draw()
     if (m_postEffectMaskedGaussEnabled)
     {
         pTempTexture = m_postEffectMaskedGauss.Draw(pTempTexture);
+    }
+
+    if (m_postEffectMotionBlurCameraEnabled)
+    {
+        pTempTexture = m_postEffectMotionBlurCamera.Draw(pTempTexture, pTexTempZ);
+    }
+    else
+    {
+        m_postEffectMotionBlurCamera.UpdateFrameMatrices();
     }
 
     if (m_postEffectFXAAEnabled)
@@ -1503,6 +1545,17 @@ void Render::SetPostEffectFXAAQuality(const int quality)
 {
     m_fxaaQuality = NormalizeFXAAQuality(quality);
     m_postEffectFXAA.SetQuality(m_fxaaQuality);
+}
+
+void Render::SetPostEffectMotionBlurCamera(const bool arg)
+{
+    m_postEffectMotionBlurCameraEnabled = arg;
+}
+
+void Render::SetPostEffectMotionBlurCameraQuality(const int quality)
+{
+    m_motionBlurCameraQuality = NormalizeMotionBlurCameraQuality(quality);
+    m_postEffectMotionBlurCamera.SetQuality(m_motionBlurCameraQuality);
 }
 
 void Render::SetPostEffectDepthBufferShadow(const bool arg)

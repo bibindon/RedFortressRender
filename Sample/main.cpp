@@ -118,6 +118,7 @@ void InitializeSampleScene(HWND hWnd)
     ApplyModelLoadScale();
     ApplyGaussianSampleSize();
     ApplyFXAAQuality();
+    ApplyMotionBlurCameraQuality();
     ApplyMaskedGaussianMaskPath();
     ApplyPostEffectToggleSettings();
     ApplyGodRayLightColor();

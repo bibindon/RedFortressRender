@@ -52,6 +52,7 @@
     <ClCompile Include="PostEffectFXAA.cpp" />
     <ClCompile Include="PostEffectHeightFog.cpp" />
     <ClCompile Include="PostEffectGodRay.cpp" />
+    <ClCompile Include="PostEffectMotionBlurCamera.cpp" />
     <ClCompile Include="PostEffectZShadow.cpp" />
     <ClCompile Include="PostEffectEnd.cpp" />
     <ClCompile Include="PostEffectGauss.cpp" />
@@ -94,6 +95,7 @@
     <ClInclude Include="PostEffectFXAA.h" />
     <ClInclude Include="PostEffectHeightFog.h" />
     <ClInclude Include="PostEffectGodRay.h" />
+    <ClInclude Include="PostEffectMotionBlurCamera.h" />
     <ClInclude Include="PostEffectZShadow.h" />
     <ClInclude Include="PostEffectEnd.h" />
     <ClInclude Include="PostEffectGauss.h" />
@@ -169,6 +171,7 @@
     <FxCompile Include="shader\PostEffectFog.fx" />
     <FxCompile Include="shader\PostEffectFXAA.fx" />
     <FxCompile Include="shader\PostEffectHeightFog.fx" />
+    <FxCompile Include="shader\PostEffectMotionBlurCamera.fx" />
     <FxCompile Include="shader\PostEffectZShadow.fx" />
     <FxCompile Include="shader\PostEffectEnd.fx">
       <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableOptimizations>

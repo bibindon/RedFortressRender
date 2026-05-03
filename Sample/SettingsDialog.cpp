@@ -70,6 +70,8 @@ constexpr int GAUSSIAN_SLIDER_MIN = 1;
 constexpr int GAUSSIAN_SLIDER_MAX = (GAUSSIAN_SAMPLE_MAX + 1) / 2;
 constexpr int FXAA_QUALITY_SLIDER_MIN = FXAA_QUALITY_MIN;
 constexpr int FXAA_QUALITY_SLIDER_MAX = FXAA_QUALITY_MAX;
+constexpr int MOTION_BLUR_CAMERA_QUALITY_SLIDER_MIN = MOTION_BLUR_CAMERA_QUALITY_MIN;
+constexpr int MOTION_BLUR_CAMERA_QUALITY_SLIDER_MAX = MOTION_BLUR_CAMERA_QUALITY_MAX;
 constexpr int SHADOW_BLUR_TAP_SLIDER_MIN = 0;
 constexpr int SHADOW_BLUR_TAP_SLIDER_MAX = (SHADOW_BLUR_TAP_COUNT_MAX - 1) / 2;
 constexpr int GODRAY_COLOR_SLIDER_MIN = 0;
@@ -94,6 +96,7 @@ void RefreshDepthOfFieldMaxBlurControls(HWND hDlg);
 void RefreshDepthOfFieldAutoActivationControls(HWND hDlg);
 void RefreshGaussianControls(HWND hDlg);
 void RefreshFXAAControls(HWND hDlg);
+void RefreshMotionBlurCameraControls(HWND hDlg);
 void RefreshFogControls(HWND hDlg);
 void RefreshHeightFogControls(HWND hDlg);
 void RefreshHeightFogIntensityControls(HWND hDlg);
@@ -163,6 +166,7 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_DOF_AUTO_ACTIVATION_DISTANCE,
         IDC_EDIT_GAUSSIAN_SAMPLE_SIZE,
         IDC_EDIT_FXAA_QUALITY,
+        IDC_EDIT_MOTION_BLUR_CAMERA_QUALITY,
         IDC_EDIT_FOG_INTENSITY,
         IDC_EDIT_HEIGHT_FOG_INTENSITY,
         IDC_EDIT_HEIGHT_FOG_START,
@@ -263,6 +267,14 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
             ApplyFXAAQuality();
         }
         RefreshFXAAControls(hDlg);
+        return true;
+    case IDC_EDIT_MOTION_BLUR_CAMERA_QUALITY:
+        if (TryParseEditInt(hDlg, commandId, intValue))
+        {
+            g_motionBlurCameraQuality = intValue;
+            ApplyMotionBlurCameraQuality();
+        }
+        RefreshMotionBlurCameraControls(hDlg);
         return true;
     case IDC_EDIT_FOG_INTENSITY:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
@@ -1524,6 +1536,24 @@ void RefreshFXAAControls(HWND hDlg)
                        static_cast<LPARAM>(FXAAQualityToSliderValue(g_fxaaQuality)));
 }
 
+void RefreshMotionBlurCameraControls(HWND hDlg)
+{
+    CheckDlgButton(hDlg, IDC_CHECK_MOTION_BLUR_CAMERA, g_bMotionBlurCamera ? BST_CHECKED : BST_UNCHECKED);
+
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%d", g_motionBlurCameraQuality);
+    SetDlgItemText(hDlg, IDC_EDIT_MOTION_BLUR_CAMERA_QUALITY, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_MOTION_BLUR_CAMERA_QUALITY,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(MotionBlurCameraQualityToSliderValue(g_motionBlurCameraQuality)));
+
+    const BOOL enabled = g_bMotionBlurCamera ? TRUE : FALSE;
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_MOTION_BLUR_CAMERA_QUALITY), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_QUALITY), enabled);
+}
+
 void RefreshShadowPcfTapControls(HWND hDlg)
 {
     wchar_t buffer[32];
@@ -1633,6 +1663,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshModelLoadScaleControls(hDlg);
     RefreshGaussianControls(hDlg);
     RefreshFXAAControls(hDlg);
+    RefreshMotionBlurCameraControls(hDlg);
     RefreshShadowPcfTapControls(hDlg);
     RefreshShadowCompositeTapControls(hDlg);
     RefreshGodRayControls(hDlg);
@@ -1809,6 +1840,11 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_FXAA_QUALITY, TBM_SETRANGEMAX, FALSE, FXAA_QUALITY_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_FXAA_QUALITY, TBM_SETTICFREQ, 1, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_FXAA_QUALITY, TBM_SETPAGESIZE, 0, 1);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_QUALITY, TBM_SETRANGEMIN, FALSE, MOTION_BLUR_CAMERA_QUALITY_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_QUALITY, TBM_SETRANGEMAX, FALSE, MOTION_BLUR_CAMERA_QUALITY_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_QUALITY, TBM_SETTICFREQ, 1, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_QUALITY, TBM_SETPAGESIZE, 0, 1);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_PCF_TAPS, TBM_SETRANGEMIN, FALSE, SHADOW_BLUR_TAP_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_PCF_TAPS, TBM_SETRANGEMAX, FALSE, SHADOW_BLUR_TAP_SLIDER_MAX);
@@ -2107,6 +2143,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_fxaaQuality = SliderValueToFXAAQuality(sliderValue);
             ApplyFXAAQuality();
             RefreshFXAAControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_QUALITY))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_motionBlurCameraQuality = SliderValueToMotionBlurCameraQuality(sliderValue);
+            ApplyMotionBlurCameraQuality();
+            RefreshMotionBlurCameraControls(hDlg);
             return TRUE;
         }
 
@@ -2676,6 +2721,14 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_bFXAA = (IsDlgButtonChecked(hDlg, IDC_CHECK_FXAA) == BST_CHECKED);
             g_Render.SetPostEffectFXAA(g_bFXAA);
             RefreshFXAAControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_MOTION_BLUR_CAMERA)
+        {
+            g_bMotionBlurCamera = (IsDlgButtonChecked(hDlg, IDC_CHECK_MOTION_BLUR_CAMERA) == BST_CHECKED);
+            g_Render.SetPostEffectMotionBlurCamera(g_bMotionBlurCamera);
+            RefreshMotionBlurCameraControls(hDlg);
             return TRUE;
         }
 

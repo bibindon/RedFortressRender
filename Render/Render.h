@@ -51,6 +51,7 @@
 #include "GBuffer.h"
 #include "PostEffectFog.h"
 #include "PostEffectGodRay.h"
+#include "PostEffectMotionBlurCamera.h"
 
 namespace NSRender
 {
@@ -229,6 +230,8 @@ public:
     void SetPostEffectMaskedGaussianMaskPath(const std::wstring& maskPath);
     void SetPostEffectFXAA(const bool arg);
     void SetPostEffectFXAAQuality(const int quality);
+    void SetPostEffectMotionBlurCamera(const bool arg);
+    void SetPostEffectMotionBlurCameraQuality(const int quality);
     void SetPostEffectDepthBufferShadow(const bool arg);
     void SetPostEffectDepthBufferShadowIntensity(const float intensity);
     void SetPostEffectDepthBufferShadowSaturationBoost(const float saturationBoost);
@@ -352,6 +355,9 @@ private:
     // FXAA
     PostEffectFXAA m_postEffectFXAA;
 
+    // カメラモーションブラー
+    PostEffectMotionBlurCamera m_postEffectMotionBlurCamera;
+
     // スターバースト
     PostEffectStarBurst m_postEffectStarBurst;
 
@@ -371,10 +377,12 @@ private:
     int m_gaussianSampleSize = 101;
     std::wstring m_maskedGaussianMaskPath;
     int m_fxaaQuality = 4;
+    int m_motionBlurCameraQuality = 4;
     bool m_postEffectSaturateEnabled = false;
     bool m_postEffectGaussEnabled = false;
     bool m_postEffectMaskedGaussEnabled = false;
     bool m_postEffectFXAAEnabled = false;
+    bool m_postEffectMotionBlurCameraEnabled = false;
     bool m_postEffectZShadowEnabled = true;
     bool m_postEffectSSAOEnabled = true;
     bool m_postEffectFogZEnabled = true;
