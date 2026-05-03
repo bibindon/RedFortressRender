@@ -9,7 +9,7 @@
 const D3DXVECTOR3 NSRender::Camera::UPWARD (0.0f, 1.0f, 0.0f);
 
 // m_eyePosに何をセットしても視点は変わらない。視点はm_radianによって決まる。
-D3DXVECTOR3 NSRender::Camera::m_eyePos(0.f, 4.f, -6.f);
+D3DXVECTOR3 NSRender::Camera::m_eyePos(0.f, 1.f, -2.f);
 D3DXVECTOR3 NSRender::Camera::m_lookAtPos(0.0f, 0.0f, 0.0f);
 float NSRender::Camera::m_viewAngle = (D3DX_PI / 4);
 
