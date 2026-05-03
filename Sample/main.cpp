@@ -1,5 +1,6 @@
 ﻿#include <cassert>
 #include <crtdbg.h>
+#include <vector>
 #include <windows.h>
 #include <commctrl.h>
 #include <tchar.h>
@@ -19,6 +20,54 @@ extern int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
 
 namespace
 {
+bool RegisterRawMouseInput(const HWND hWnd)
+{
+    RAWINPUTDEVICE rawInputDevice { };
+    rawInputDevice.usUsagePage = 0x01;
+    rawInputDevice.usUsage = 0x02;
+    rawInputDevice.dwFlags = 0;
+    rawInputDevice.hwndTarget = hWnd;
+    return RegisterRawInputDevices(&rawInputDevice, 1, sizeof(rawInputDevice)) == TRUE;
+}
+
+bool TryGetRawMouseDelta(const LPARAM lParam, LONG& deltaX, LONG& deltaY)
+{
+    deltaX = 0;
+    deltaY = 0;
+
+    UINT rawInputSize = 0;
+    if (GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam),
+                        RID_INPUT,
+                        NULL,
+                        &rawInputSize,
+                        sizeof(RAWINPUTHEADER)) != 0 ||
+        rawInputSize == 0)
+    {
+        return false;
+    }
+
+    std::vector<BYTE> rawInputBuffer(rawInputSize);
+    const UINT bytesRead = GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam),
+                                           RID_INPUT,
+                                           rawInputBuffer.data(),
+                                           &rawInputSize,
+                                           sizeof(RAWINPUTHEADER));
+    if (bytesRead != rawInputSize)
+    {
+        return false;
+    }
+
+    const RAWINPUT* rawInput = reinterpret_cast<const RAWINPUT*>(rawInputBuffer.data());
+    if (rawInput->header.dwType != RIM_TYPEMOUSE)
+    {
+        return false;
+    }
+
+    deltaX = rawInput->data.mouse.lLastX;
+    deltaY = rawInput->data.mouse.lLastY;
+    return true;
+}
+
 void InitializeCommonControlsForSample()
 {
     INITCOMMONCONTROLSEX icc { };
@@ -63,6 +112,9 @@ HWND CreateSampleWindow(const HINSTANCE hInstance)
 
 void InitializeSampleScene(HWND hWnd)
 {
+    const bool rawMouseRegistered = RegisterRawMouseInput(hWnd);
+    assert(rawMouseRegistered);
+
     InitializeRemoteDesktopDefault();
     LoadSampleSettingsFromCsv(L"RenderSettings.csv");
     g_Render.Initialize(hWnd, L"RenderSettings.csv");
@@ -161,7 +213,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
 
     while (!g_bClose)
     {
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
             if (g_hSettingsDialog != NULL &&
                 IsWindowVisible(g_hSettingsDialog) &&
@@ -173,7 +225,8 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
-        else
+
+        if (!g_bClose)
         {
             TickAndRenderFrame();
         }
@@ -198,6 +251,10 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_MOUSEMOVE:
     {
         if (!g_bMouseLookEnabled)
+        {
+            return 0;
+        }
+        if (!g_bRemoteDesktop)
         {
             return 0;
         }
@@ -242,6 +299,29 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             {
                 RecenterMouseCursor(hWnd);
             }
+        }
+
+        return 0;
+    }
+    case WM_INPUT:
+    {
+        if (!g_bMouseLookEnabled || g_bRemoteDesktop)
+        {
+            return 0;
+        }
+
+        LONG mouseMoveX = 0;
+        LONG mouseMoveY = 0;
+        if (!TryGetRawMouseDelta(lParam, mouseMoveX, mouseMoveY))
+        {
+            return 0;
+        }
+
+        if (mouseMoveX != 0 || mouseMoveY != 0)
+        {
+            g_Render.RotateCamera(D3DXVECTOR3(static_cast<float>(mouseMoveY) * MOUSE_CAMERA_SENSITIVITY,
+                                              static_cast<float>(mouseMoveX) * MOUSE_CAMERA_SENSITIVITY,
+                                              0.0f));
         }
 
         return 0;

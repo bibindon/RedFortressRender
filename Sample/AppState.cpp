@@ -689,11 +689,20 @@ void EnableMouseLook(HWND hWnd)
 
     g_bMouseLookEnabled = true;
     g_bPrevMouseClientPosValid = false;
+    g_bRecenteringMouse = false;
     HideMouseCursor();
     SetCursor(NULL);
     if (!g_bRemoteDesktop)
     {
-        RecenterMouseCursor(hWnd);
+        RECT clientRect { };
+        GetClientRect(hWnd, &clientRect);
+        POINT topLeft { clientRect.left, clientRect.top };
+        POINT bottomRight { clientRect.right, clientRect.bottom };
+        ClientToScreen(hWnd, &topLeft);
+        ClientToScreen(hWnd, &bottomRight);
+
+        RECT clipRect { topLeft.x, topLeft.y, bottomRight.x, bottomRight.y };
+        ClipCursor(&clipRect);
     }
 }
 
@@ -707,6 +716,7 @@ void DisableMouseLook()
     g_bMouseLookEnabled = false;
     g_bRecenteringMouse = false;
     g_bPrevMouseClientPosValid = false;
+    ClipCursor(NULL);
     ShowMouseCursor();
 }
 
