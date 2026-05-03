@@ -47,6 +47,7 @@ void PostEffectMotionBlurCamera::Initialize()
     assert(SUCCEEDED(hResult));
 
     D3DXMatrixIdentity(&m_prevViewProj);
+    D3DXMatrixIdentity(&m_motionBlurPrevViewProj);
     CreateTexture();
     Common::AddDeviceLostResource(this);
 }
@@ -80,6 +81,7 @@ LPDIRECT3DTEXTURE9 PostEffectMotionBlurCamera::Draw(LPDIRECT3DTEXTURE9 renderTar
         return renderTarget;
     }
 
+    UpdateMotionBlurPrevViewProj();
     DrawFullscreenQuad(renderTarget, depthTexture, m_texWork);
     UpdateFrameMatrices();
     return m_texWork;
@@ -132,6 +134,44 @@ bool PostEffectMotionBlurCamera::ShouldApplyMotionBlur(const D3DXMATRIX& current
            (rotationMotion > kMotionBlurRotationThreshold);
 }
 
+void PostEffectMotionBlurCamera::UpdateMotionBlurPrevViewProj()
+{
+    const D3DXVECTOR3 currentEye = Camera::GetEyePos();
+    const D3DXVECTOR3 currentLookAt = Camera::GetLookAtPos();
+
+    D3DXVECTOR3 lookAtMotion = currentLookAt - m_prevLookAt;
+    const float lookAtMotionLength = D3DXVec3Length(&lookAtMotion);
+    const D3DXVECTOR3 prevEyeOffset = m_prevEye - m_prevLookAt;
+    const D3DXVECTOR3 currentEyeOffset = currentEye - currentLookAt;
+    const float distanceMotion = fabsf(D3DXVec3Length(&currentEyeOffset) - D3DXVec3Length(&prevEyeOffset));
+
+    const D3DXVECTOR3 prevDirection = GetCameraDirection(m_prevEye, m_prevLookAt);
+    const D3DXVECTOR3 currentDirection = GetCameraDirection(currentEye, currentLookAt);
+    const float directionDot = ClampUnit(D3DXVec3Dot(&prevDirection, &currentDirection));
+    const float rotationMotion = acosf(directionDot);
+
+    static const float kMotionBlurTranslationThreshold = 0.001f;
+    static const float kMotionBlurRotationThreshold = 0.01f;
+    const bool orbitRotationOnly =
+        (lookAtMotionLength <= kMotionBlurTranslationThreshold) &&
+        (distanceMotion <= kMotionBlurTranslationThreshold) &&
+        (rotationMotion > kMotionBlurRotationThreshold);
+
+    if (!orbitRotationOnly)
+    {
+        m_motionBlurPrevViewProj = m_prevViewProj;
+        return;
+    }
+
+    const float currentDistance = D3DXVec3Length(&currentEyeOffset);
+    const D3DXVECTOR3 prevLookAtForBlur = currentEye + prevDirection * currentDistance;
+    const D3DXVECTOR3 up(0.0f, 1.0f, 0.0f);
+
+    D3DXMATRIX prevView { };
+    D3DXMatrixLookAtLH(&prevView, &currentEye, &prevLookAtForBlur, &up);
+    m_motionBlurPrevViewProj = prevView * Camera::GetProjMatrix();
+}
+
 void PostEffectMotionBlurCamera::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
                                                     LPDIRECT3DTEXTURE9 depthTexture,
                                                     LPDIRECT3DTEXTURE9 texTarget)
@@ -148,6 +188,7 @@ void PostEffectMotionBlurCamera::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource
     if (!m_hasPrevViewProj)
     {
         m_prevViewProj = currentViewProj;
+        m_motionBlurPrevViewProj = currentViewProj;
     }
 
     const D3DXVECTOR4 texelSize(1.0f / static_cast<float>(Common::ScreenW()),
@@ -162,11 +203,12 @@ void PostEffectMotionBlurCamera::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource
     m_d3dEffect->SetTexture("texture1", texSource);
     m_d3dEffect->SetTexture("depthTexture", depthTexture);
     m_d3dEffect->SetMatrix("g_matInvCurrentViewProj", &invCurrentViewProj);
-    m_d3dEffect->SetMatrix("g_matPrevViewProj", &m_prevViewProj);
+    m_d3dEffect->SetMatrix("g_matPrevViewProj", &m_motionBlurPrevViewProj);
     m_d3dEffect->SetFloat("g_fBlurScale", blurScale);
     m_d3dEffect->SetFloat("g_fMaxBlurPixels", maxBlurPixels);
     m_d3dEffect->SetInt("g_iSampleCount", sampleCount);
     m_d3dEffect->SetInt("g_iMotionBlurEnabled", 1);
+    m_d3dEffect->SetInt("g_iDebugGridEnabled", 0);
     m_d3dEffect->SetVector("g_vTexelSize", &texelSize);
     m_d3dEffect->SetFloat("g_fNear", Camera::GetNear());
     m_d3dEffect->SetFloat("g_fFar", Camera::GetFar());

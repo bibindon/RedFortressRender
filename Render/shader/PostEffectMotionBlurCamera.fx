@@ -4,6 +4,7 @@ float g_fBlurScale = 1.0f;
 float g_fMaxBlurPixels = 24.0f;
 int g_iSampleCount = 21;
 int g_iMotionBlurEnabled = 1;
+int g_iDebugGridEnabled = 0;
 float4 g_vTexelSize = { 1.0f / 1600.0f, 1.0f / 900.0f, 1600.0f, 900.0f };
 float g_fNear = 0.1f;
 float g_fFar = 30000.0f;
@@ -114,7 +115,7 @@ void PixelShader1(in float2 inTexCoord : TEXCOORD0,
                         tex2D(colorSampler, sampleUv) :
                         SampleMotionBlur(sampleUv, velocity);
 
-    if (false)
+    if (g_iDebugGridEnabled != 0)
     {
         float2 pixelCoord = floor(sampleUv * g_vTexelSize.zw);
         float gridX = fmod(pixelCoord.x, 5.0f);

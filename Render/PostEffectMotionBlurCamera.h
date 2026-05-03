@@ -28,6 +28,7 @@ private:
     LPD3DXEFFECT m_d3dEffect = NULL;
     LPDIRECT3DTEXTURE9 m_texWork = NULL;
     D3DXMATRIX m_prevViewProj { };
+    D3DXMATRIX m_motionBlurPrevViewProj { };
     D3DXVECTOR3 m_prevEye { };
     D3DXVECTOR3 m_prevLookAt { };
     bool m_hasPrevViewProj = false;
@@ -35,6 +36,7 @@ private:
 
     void CreateTexture();
     bool ShouldApplyMotionBlur(const D3DXMATRIX& currentViewProj);
+    void UpdateMotionBlurPrevViewProj();
     void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
                             LPDIRECT3DTEXTURE9 depthTexture,
                             LPDIRECT3DTEXTURE9 texTarget);
