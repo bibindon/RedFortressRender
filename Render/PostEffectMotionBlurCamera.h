@@ -31,11 +31,15 @@ private:
     D3DXMATRIX m_motionBlurPrevViewProj { };
     D3DXVECTOR3 m_prevEye { };
     D3DXVECTOR3 m_prevLookAt { };
+    ULONGLONG m_prevFrameTick = 0;
+    float m_frameMotionScale = 1.0f;
+    float m_motionBlurScaleThisFrame = 1.0f;
     bool m_hasPrevViewProj = false;
     int m_quality = 4;
 
     void CreateTexture();
     bool ShouldApplyMotionBlur(const D3DXMATRIX& currentViewProj);
+    float UpdateFrameMotionScale();
     void UpdateMotionBlurPrevViewProj();
     void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
                             LPDIRECT3DTEXTURE9 depthTexture,

@@ -1,6 +1,6 @@
 float4x4 g_matInvCurrentViewProj;
 float4x4 g_matPrevViewProj;
-float g_fBlurScale = 1.0f;
+float g_fBlurScale = 0.3f;
 float g_fMaxBlurPixels = 24.0f;
 int g_iSampleCount = 21;
 int g_iMotionBlurEnabled = 1;

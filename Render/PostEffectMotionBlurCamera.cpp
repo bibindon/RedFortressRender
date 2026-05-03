@@ -32,6 +32,19 @@ D3DXVECTOR3 GetCameraDirection(const D3DXVECTOR3& eye, const D3DXVECTOR3& lookAt
     D3DXVec3Normalize(&direction, &direction);
     return direction;
 }
+
+D3DXVECTOR3 LerpDirection(const D3DXVECTOR3& from, const D3DXVECTOR3& to, const float t)
+{
+    D3DXVECTOR3 result = from + (to - from) * t;
+    const float length = D3DXVec3Length(&result);
+    if (length <= 0.0001f)
+    {
+        return to;
+    }
+
+    D3DXVec3Normalize(&result, &result);
+    return result;
+}
 }
 
 void PostEffectMotionBlurCamera::Initialize()
@@ -48,6 +61,7 @@ void PostEffectMotionBlurCamera::Initialize()
 
     D3DXMatrixIdentity(&m_prevViewProj);
     D3DXMatrixIdentity(&m_motionBlurPrevViewProj);
+    m_prevFrameTick = GetTickCount64();
     CreateTexture();
     Common::AddDeviceLostResource(this);
 }
@@ -75,6 +89,7 @@ LPDIRECT3DTEXTURE9 PostEffectMotionBlurCamera::Draw(LPDIRECT3DTEXTURE9 renderTar
                                                     LPDIRECT3DTEXTURE9 depthTexture)
 {
     const D3DXMATRIX currentViewProj = Camera::GetViewMatrix() * Camera::GetProjMatrix();
+    m_frameMotionScale = UpdateFrameMotionScale();
     if (!ShouldApplyMotionBlur(currentViewProj))
     {
         UpdateFrameMatrices();
@@ -134,16 +149,34 @@ bool PostEffectMotionBlurCamera::ShouldApplyMotionBlur(const D3DXMATRIX& current
            (rotationMotion > kMotionBlurRotationThreshold);
 }
 
+float PostEffectMotionBlurCamera::UpdateFrameMotionScale()
+{
+    const ULONGLONG currentTick = GetTickCount64();
+    float deltaSeconds = static_cast<float>(currentTick - m_prevFrameTick) / 1000.0f;
+    m_prevFrameTick = currentTick;
+
+    if (deltaSeconds > 0.1f)
+    {
+        deltaSeconds = 0.1f;
+    }
+
+    static const float kMotionVectorFrameSeconds = 1.0f / 60.0f;
+    return (std::min)(1.0f, kMotionVectorFrameSeconds / (std::max)(deltaSeconds, 0.0001f));
+}
+
 void PostEffectMotionBlurCamera::UpdateMotionBlurPrevViewProj()
 {
+    const float motionScale = m_frameMotionScale;
     const D3DXVECTOR3 currentEye = Camera::GetEyePos();
     const D3DXVECTOR3 currentLookAt = Camera::GetLookAtPos();
 
-    D3DXVECTOR3 lookAtMotion = currentLookAt - m_prevLookAt;
-    const float lookAtMotionLength = D3DXVec3Length(&lookAtMotion);
+    const D3DXVECTOR3 targetMotion = currentLookAt - m_prevLookAt;
+    const float targetMotionLength = D3DXVec3Length(&targetMotion);
     const D3DXVECTOR3 prevEyeOffset = m_prevEye - m_prevLookAt;
     const D3DXVECTOR3 currentEyeOffset = currentEye - currentLookAt;
-    const float distanceMotion = fabsf(D3DXVec3Length(&currentEyeOffset) - D3DXVec3Length(&prevEyeOffset));
+    const float prevDistance = D3DXVec3Length(&prevEyeOffset);
+    const float currentDistance = D3DXVec3Length(&currentEyeOffset);
+    const float distanceMotion = currentDistance - prevDistance;
 
     const D3DXVECTOR3 prevDirection = GetCameraDirection(m_prevEye, m_prevLookAt);
     const D3DXVECTOR3 currentDirection = GetCameraDirection(currentEye, currentLookAt);
@@ -152,23 +185,24 @@ void PostEffectMotionBlurCamera::UpdateMotionBlurPrevViewProj()
 
     static const float kMotionBlurTranslationThreshold = 0.001f;
     static const float kMotionBlurRotationThreshold = 0.01f;
-    const bool orbitRotationOnly =
-        (lookAtMotionLength <= kMotionBlurTranslationThreshold) &&
-        (distanceMotion <= kMotionBlurTranslationThreshold) &&
-        (rotationMotion > kMotionBlurRotationThreshold);
+    static const float kRotationOnlyBlurScale = 0.3f;
+    const bool hasTranslationMotion =
+        (targetMotionLength > kMotionBlurTranslationThreshold) ||
+        (fabsf(distanceMotion) > kMotionBlurTranslationThreshold);
+    const bool hasRotationMotion = (rotationMotion > kMotionBlurRotationThreshold);
 
-    if (!orbitRotationOnly)
-    {
-        m_motionBlurPrevViewProj = m_prevViewProj;
-        return;
-    }
+    m_motionBlurScaleThisFrame = hasTranslationMotion ? 1.0f : kRotationOnlyBlurScale;
 
-    const float currentDistance = D3DXVec3Length(&currentEyeOffset);
-    const D3DXVECTOR3 prevLookAtForBlur = currentEye + prevDirection * currentDistance;
+    const D3DXVECTOR3 prevTargetForBlur = currentLookAt - targetMotion * motionScale;
+    const float prevDistanceForBlur = currentDistance - distanceMotion * motionScale;
+    const D3DXVECTOR3 prevDirectionForBlur = hasRotationMotion ?
+        LerpDirection(currentDirection, prevDirection, motionScale) :
+        currentDirection;
+    const D3DXVECTOR3 prevEyeForBlur = prevTargetForBlur - prevDirectionForBlur * prevDistanceForBlur;
     const D3DXVECTOR3 up(0.0f, 1.0f, 0.0f);
 
     D3DXMATRIX prevView { };
-    D3DXMatrixLookAtLH(&prevView, &currentEye, &prevLookAtForBlur, &up);
+    D3DXMatrixLookAtLH(&prevView, &prevEyeForBlur, &prevTargetForBlur, &up);
     m_motionBlurPrevViewProj = prevView * Camera::GetProjMatrix();
 }
 
@@ -196,7 +230,7 @@ void PostEffectMotionBlurCamera::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource
                                 static_cast<float>(Common::ScreenW()),
                                 static_cast<float>(Common::ScreenH()));
 
-    const float blurScale = 1.0f;
+    const float blurScale = 2.0f * m_motionBlurScaleThisFrame;
     const float maxBlurPixels = static_cast<float>(m_quality) * 6.0f;
     const int sampleCount = (std::min)(21, 5 + m_quality * 2);
 
