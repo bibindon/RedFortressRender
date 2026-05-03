@@ -1012,6 +1012,21 @@ void MeshMixManager::SetEnabled(const bool enabled)
     m_enabled = enabled;
 }
 
+void MeshMixManager::SetSSS(const bool enabled)
+{
+    m_param.sss = enabled;
+}
+
+void MeshMixManager::SetSSSIntensity(const float intensity)
+{
+    m_param.sssIntensity = intensity;
+}
+
+void MeshMixManager::SetSSSColor(const DWORD color)
+{
+    m_param.sssColor = color;
+}
+
 bool MeshMixManager::IsLoaded() const
 {
     return m_bLoaded;

@@ -66,6 +66,9 @@ float g_specularIntensity = 0.1f;
 float g_specularEdge = 0.0f;
 bool g_bUseSpecularIntensityOverride = false;
 bool g_bUseSpecularEdgeOverride = false;
+bool g_bSSS = false;
+float g_sssIntensity = 1.0f;
+D3DXCOLOR g_sssColor = D3DXCOLOR(1.0f, 1.0f, 0.5f, 1.0f);
 float g_bloomThreshold = 2.5f;
 float g_dofFocalDistance = 1.0f;
 float g_dofMaxBlurDistance = 8.0f;
@@ -175,6 +178,24 @@ float ClampSpecularIntensity(const float intensity)
 float ClampSpecularEdge(const float edge)
 {
     return (std::max)(SPECULAR_EDGE_MIN, (std::min)(edge, SPECULAR_EDGE_MAX));
+}
+
+float ClampSSSIntensity(const float intensity)
+{
+    return (std::max)(SSS_INTENSITY_MIN, (std::min)(intensity, SSS_INTENSITY_MAX));
+}
+
+float ClampSSSColor(const float value)
+{
+    return (std::max)(SSS_COLOR_MIN, (std::min)(value, SSS_COLOR_MAX));
+}
+
+DWORD SSSColorToDWORD(const D3DXCOLOR& color)
+{
+    const DWORD r = static_cast<DWORD>(std::lround(ClampSSSColor(color.r) * 255.0f));
+    const DWORD g = static_cast<DWORD>(std::lround(ClampSSSColor(color.g) * 255.0f));
+    const DWORD b = static_cast<DWORD>(std::lround(ClampSSSColor(color.b) * 255.0f));
+    return (r << 16) | (g << 8) | b;
 }
 
 float ClampBloomThreshold(const float threshold)
@@ -698,6 +719,7 @@ void ApplyPostEffectToggleSettings()
     g_Render.SetPostEffectGaussianFilter(g_bGaussianFilter);
     g_Render.SetPostEffectMaskedGaussianFilter(g_bMaskedGaussianFilter);
     g_Render.SetPostEffectFXAA(g_bFXAA);
+    g_Render.SetMeshMixSSS(g_bSSS);
     g_Render.SetPostEffectBloom(g_bBloom);
     ApplyDepthOfFieldMode();
     g_Render.SetPostEffectStarBurst(g_bStarBurst);
@@ -835,6 +857,27 @@ void ApplySpecularEdgeOverride()
 {
     g_Render.SetMeshMixSpecularEdgeOverrideEnabled(g_bUseSpecularEdgeOverride);
     RefreshSettingsDialogState();
+}
+
+void ApplySSS()
+{
+    g_Render.SetMeshMixSSS(g_bSSS);
+    RefreshSettingsDialogState();
+}
+
+void ApplySSSIntensity()
+{
+    g_sssIntensity = ClampSSSIntensity(g_sssIntensity);
+    g_Render.SetMeshMixSSSIntensity(g_sssIntensity);
+}
+
+void ApplySSSColor()
+{
+    g_sssColor.r = ClampSSSColor(g_sssColor.r);
+    g_sssColor.g = ClampSSSColor(g_sssColor.g);
+    g_sssColor.b = ClampSSSColor(g_sssColor.b);
+    g_sssColor.a = 1.0f;
+    g_Render.SetMeshMixSSSColor(SSSColorToDWORD(g_sssColor));
 }
 
 void ApplyBloomThreshold()
@@ -1091,6 +1134,26 @@ int SpecularEdgeToSliderValue(const float edge)
 float SliderValueToSpecularEdge(const int sliderValue)
 {
     return ClampSpecularEdge(static_cast<float>(sliderValue) * SPECULAR_EDGE_STEP);
+}
+
+int SSSIntensityToSliderValue(const float intensity)
+{
+    return static_cast<int>(std::lround(ClampSSSIntensity(intensity) / SSS_INTENSITY_STEP));
+}
+
+float SliderValueToSSSIntensity(const int sliderValue)
+{
+    return ClampSSSIntensity(static_cast<float>(sliderValue) * SSS_INTENSITY_STEP);
+}
+
+int SSSColorToSliderValue(const float value)
+{
+    return static_cast<int>(std::lround(ClampSSSColor(value) / SSS_COLOR_STEP));
+}
+
+float SliderValueToSSSColor(const int sliderValue)
+{
+    return ClampSSSColor(static_cast<float>(sliderValue) * SSS_COLOR_STEP);
 }
 
 int BloomThresholdToSliderValue(const float threshold)
@@ -1875,6 +1938,26 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"FXAAEnable")
             {
                 g_bFXAA = (std::stoi(value) != 0);
+            }
+            else if (key == L"SSSEnable")
+            {
+                g_bSSS = (std::stoi(value) != 0);
+            }
+            else if (key == L"SSSIntensity")
+            {
+                g_sssIntensity = std::stof(value);
+            }
+            else if (key == L"SSSColorR")
+            {
+                g_sssColor.r = std::stof(value);
+            }
+            else if (key == L"SSSColorG")
+            {
+                g_sssColor.g = std::stof(value);
+            }
+            else if (key == L"SSSColorB")
+            {
+                g_sssColor.b = std::stof(value);
             }
             else if (key == L"MaskedGaussianMaskPath")
             {

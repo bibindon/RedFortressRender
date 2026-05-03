@@ -47,6 +47,9 @@ public:
     void SetSpecularEdge(const float edge);
     void SetSpecularIntensityOverrideEnabled(const bool enabled);
     void SetSpecularEdgeOverrideEnabled(const bool enabled);
+    void SetSSS(const bool enabled);
+    void SetSSSIntensity(const float intensity);
+    void SetSSSColor(const DWORD color);
 
     D3DXVECTOR3 GetPos() const;
 

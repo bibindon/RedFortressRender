@@ -107,6 +107,9 @@ void InitializeSampleScene(HWND hWnd)
     ApplySpecularIntensityOverride();
     ApplySpecularEdge();
     ApplySpecularEdgeOverride();
+    ApplySSSIntensity();
+    ApplySSSColor();
+    ApplySSS();
     ApplyBloomThreshold();
     ApplyDepthOfFieldFocalDistance();
     ApplyDepthOfFieldMaxBlurDistance();

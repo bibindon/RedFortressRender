@@ -244,6 +244,9 @@ public:
     void SetShadowDarkness(const float darkness);
     void SetSpecularIntensity(const float intensity);
     void SetSpecularEdge(const float edge);
+    void SetSSS(const bool enabled);
+    void SetSSSIntensity(const float intensity);
+    void SetSSSColor(const DWORD color);
 
     D3DXVECTOR3 GetPos() const;
 

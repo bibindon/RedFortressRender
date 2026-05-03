@@ -278,6 +278,9 @@ public:
     // 平行光源がある方角
     void SetLightDir(const D3DXVECTOR3& dir);
     void SetLightBrightness(const float brightness);
+    void SetMeshMixSSS(const bool enabled);
+    void SetMeshMixSSSIntensity(const float intensity);
+    void SetMeshMixSSSColor(const DWORD color);
 
     void AddPointLight(const D3DXVECTOR3& pos, const float brightness, const D3DXCOLOR color);
 
@@ -387,6 +390,9 @@ private:
     float m_meshMixSpecularEdge = 0.0f;
     bool m_meshMixSpecularIntensityOverrideEnabled = true;
     bool m_meshMixSpecularEdgeOverrideEnabled = true;
+    bool m_meshMixSSSEnabled = false;
+    float m_meshMixSSSIntensity = 1.0f;
+    DWORD m_meshMixSSSColor = 0xffff80;
 
     LPDIRECT3DTEXTURE9 m_pRenderTarget1 = NULL;
     LPDIRECT3DTEXTURE9 m_pRenderTarget2 = NULL;

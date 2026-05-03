@@ -100,6 +100,11 @@ int NormalizeFXAAQuality(const int quality)
     return (std::max)(1, (std::min)(quality, 8));
 }
 
+float ClampUnitSetting(const float value)
+{
+    return (std::max)(0.0f, (std::min)(value, 1.0f));
+}
+
 void Render::LoadSettingsCsv(const std::wstring& settingsCsvPath)
 {
     m_settings.clear();
@@ -250,6 +255,81 @@ void Render::ApplySettings()
     else
     {
         SetPostEffectFXAAQuality(m_fxaaQuality);
+    }
+
+    const auto sssEnable = m_settings.find(L"SSSEnable");
+    if (sssEnable != m_settings.end())
+    {
+        bool enabled = false;
+        if (TryParseBoolSetting(sssEnable->second, enabled))
+        {
+            SetMeshMixSSS(enabled);
+        }
+    }
+
+    const auto sssIntensity = m_settings.find(L"SSSIntensity");
+    if (sssIntensity != m_settings.end())
+    {
+        try
+        {
+            SetMeshMixSSSIntensity(std::stof(sssIntensity->second));
+        }
+        catch (...)
+        {
+            SetMeshMixSSSIntensity(m_meshMixSSSIntensity);
+        }
+    }
+
+    float sssColorR = static_cast<float>((m_meshMixSSSColor >> 16) & 0xff) / 255.0f;
+    float sssColorG = static_cast<float>((m_meshMixSSSColor >> 8) & 0xff) / 255.0f;
+    float sssColorB = static_cast<float>(m_meshMixSSSColor & 0xff) / 255.0f;
+    bool sssColorChanged = false;
+
+    const auto sssColorRSetting = m_settings.find(L"SSSColorR");
+    if (sssColorRSetting != m_settings.end())
+    {
+        try
+        {
+            sssColorR = ClampUnitSetting(std::stof(sssColorRSetting->second));
+            sssColorChanged = true;
+        }
+        catch (...)
+        {
+        }
+    }
+
+    const auto sssColorGSetting = m_settings.find(L"SSSColorG");
+    if (sssColorGSetting != m_settings.end())
+    {
+        try
+        {
+            sssColorG = ClampUnitSetting(std::stof(sssColorGSetting->second));
+            sssColorChanged = true;
+        }
+        catch (...)
+        {
+        }
+    }
+
+    const auto sssColorBSetting = m_settings.find(L"SSSColorB");
+    if (sssColorBSetting != m_settings.end())
+    {
+        try
+        {
+            sssColorB = ClampUnitSetting(std::stof(sssColorBSetting->second));
+            sssColorChanged = true;
+        }
+        catch (...)
+        {
+        }
+    }
+
+    if (sssColorChanged)
+    {
+        const DWORD r = static_cast<DWORD>(sssColorR * 255.0f + 0.5f);
+        const DWORD g = static_cast<DWORD>(sssColorG * 255.0f + 0.5f);
+        const DWORD b = static_cast<DWORD>(sssColorB * 255.0f + 0.5f);
+        SetMeshMixSSSColor((r << 16) | (g << 8) | b);
     }
 
     const auto fogIntensity = m_settings.find(L"FogIntensity");
@@ -1028,6 +1108,9 @@ int Render::AddMeshMix(const std::wstring& filePath,
     param.specularEdge = m_meshMixSpecularEdge;
     param.specularIntensityOverrideEnabled = m_meshMixSpecularIntensityOverrideEnabled;
     param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
+    param.sss = m_meshMixSSSEnabled;
+    param.sssIntensity = m_meshMixSSSIntensity;
+    param.sssColor = m_meshMixSSSColor;
     auto mesh = MeshMixManager(filePath, pos, rot, scale, param);
     m_meshMixList.push_back(std::move(mesh));
     m_meshMixList.rbegin()->Initialize(async);
@@ -1226,6 +1309,36 @@ void Render::SetMeshMixSpecularEdgeOverrideEnabled(const bool enabled)
         {
             mesh->SetSpecularEdgeOverrideEnabled(enabled);
         }
+    }
+}
+
+void Render::SetMeshMixSSS(const bool enabled)
+{
+    m_meshMixSSSEnabled = enabled;
+
+    for (auto& mesh : m_meshMixList)
+    {
+        mesh.SetSSS(enabled);
+    }
+}
+
+void Render::SetMeshMixSSSIntensity(const float intensity)
+{
+    m_meshMixSSSIntensity = intensity;
+
+    for (auto& mesh : m_meshMixList)
+    {
+        mesh.SetSSSIntensity(intensity);
+    }
+}
+
+void Render::SetMeshMixSSSColor(const DWORD color)
+{
+    m_meshMixSSSColor = color;
+
+    for (auto& mesh : m_meshMixList)
+    {
+        mesh.SetSSSColor(color);
     }
 }
 

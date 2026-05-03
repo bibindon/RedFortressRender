@@ -40,6 +40,10 @@ constexpr int SPECULAR_INTENSITY_SLIDER_MIN = 0;
 constexpr int SPECULAR_INTENSITY_SLIDER_MAX = static_cast<int>(SPECULAR_INTENSITY_MAX / SPECULAR_INTENSITY_STEP);
 constexpr int SPECULAR_EDGE_SLIDER_MIN = 0;
 constexpr int SPECULAR_EDGE_SLIDER_MAX = static_cast<int>(SPECULAR_EDGE_MAX / SPECULAR_EDGE_STEP);
+constexpr int SSS_INTENSITY_SLIDER_MIN = 0;
+constexpr int SSS_INTENSITY_SLIDER_MAX = static_cast<int>(SSS_INTENSITY_MAX / SSS_INTENSITY_STEP);
+constexpr int SSS_COLOR_SLIDER_MIN = 0;
+constexpr int SSS_COLOR_SLIDER_MAX = static_cast<int>(SSS_COLOR_MAX / SSS_COLOR_STEP);
 constexpr int SSAO_BRIGHTNESS_SLIDER_MIN = 0;
 constexpr int SSAO_BRIGHTNESS_SLIDER_MAX = static_cast<int>((SSAO_BRIGHTNESS_MAX - SSAO_BRIGHTNESS_MIN) / SSAO_BRIGHTNESS_STEP);
 constexpr int SSAO_SAMPLE_RADIUS_SLIDER_MIN = 0;
@@ -107,6 +111,7 @@ void RefreshHalfLambertShadowSaturationControls(HWND hDlg);
 void RefreshShadowDarknessControls(HWND hDlg);
 void RefreshSpecularIntensityControls(HWND hDlg);
 void RefreshSpecularEdgeControls(HWND hDlg);
+void RefreshSSSControls(HWND hDlg);
 void RefreshSSAOBrightnessControls(HWND hDlg);
 void RefreshSSAOSampleRadiusControls(HWND hDlg);
 void RefreshSSAOSaturationBoostControls(HWND hDlg);
@@ -174,6 +179,10 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_SHADOW_DARKNESS,
         IDC_EDIT_SPECULAR_INTENSITY,
         IDC_EDIT_SPECULAR_EDGE,
+        IDC_EDIT_SSS_INTENSITY,
+        IDC_EDIT_SSS_COLOR_R,
+        IDC_EDIT_SSS_COLOR_G,
+        IDC_EDIT_SSS_COLOR_B,
         IDC_EDIT_SSAO_BRIGHTNESS,
         IDC_EDIT_SSAO_SAMPLE_RADIUS,
         IDC_EDIT_SSAO_SATURATION_BOOST,
@@ -382,6 +391,38 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
             ApplySpecularEdge();
         }
         RefreshSpecularEdgeControls(hDlg);
+        return true;
+    case IDC_EDIT_SSS_INTENSITY:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_sssIntensity = floatValue;
+            ApplySSSIntensity();
+        }
+        RefreshSSSControls(hDlg);
+        return true;
+    case IDC_EDIT_SSS_COLOR_R:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_sssColor.r = floatValue;
+            ApplySSSColor();
+        }
+        RefreshSSSControls(hDlg);
+        return true;
+    case IDC_EDIT_SSS_COLOR_G:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_sssColor.g = floatValue;
+            ApplySSSColor();
+        }
+        RefreshSSSControls(hDlg);
+        return true;
+    case IDC_EDIT_SSS_COLOR_B:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_sssColor.b = floatValue;
+            ApplySSSColor();
+        }
+        RefreshSSSControls(hDlg);
         return true;
     case IDC_EDIT_SSAO_BRIGHTNESS:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
@@ -1253,6 +1294,54 @@ void RefreshSpecularEdgeControls(HWND hDlg)
     EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SPECULAR_EDGE), enabled);
 }
 
+void RefreshSSSControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    CheckDlgButton(hDlg, IDC_CHECK_SSS, g_bSSS ? BST_CHECKED : BST_UNCHECKED);
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_sssIntensity);
+    SetDlgItemText(hDlg, IDC_EDIT_SSS_INTENSITY, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_SSS_INTENSITY,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(SSSIntensityToSliderValue(g_sssIntensity)));
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_sssColor.r);
+    SetDlgItemText(hDlg, IDC_EDIT_SSS_COLOR_R, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_SSS_COLOR_R,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(SSSColorToSliderValue(g_sssColor.r)));
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_sssColor.g);
+    SetDlgItemText(hDlg, IDC_EDIT_SSS_COLOR_G, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_SSS_COLOR_G,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(SSSColorToSliderValue(g_sssColor.g)));
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_sssColor.b);
+    SetDlgItemText(hDlg, IDC_EDIT_SSS_COLOR_B, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_SSS_COLOR_B,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(SSSColorToSliderValue(g_sssColor.b)));
+
+    const BOOL enabled = g_bSSS ? TRUE : FALSE;
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SSS_INTENSITY), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SSS_INTENSITY), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SSS_COLOR_R), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SSS_COLOR_R), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SSS_COLOR_G), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SSS_COLOR_G), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SSS_COLOR_B), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SSS_COLOR_B), enabled);
+}
+
 void RefreshSSAOBrightnessControls(HWND hDlg)
 {
     wchar_t buffer[32];
@@ -1532,6 +1621,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshShadowDarknessControls(hDlg);
     RefreshSpecularIntensityControls(hDlg);
     RefreshSpecularEdgeControls(hDlg);
+    RefreshSSSControls(hDlg);
     RefreshSSAOBrightnessControls(hDlg);
     RefreshSSAOSampleRadiusControls(hDlg);
     RefreshSSAOSaturationBoostControls(hDlg);
@@ -1624,6 +1714,26 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_SPECULAR_EDGE, TBM_SETRANGEMAX, FALSE, SPECULAR_EDGE_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SPECULAR_EDGE, TBM_SETTICFREQ, 2, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SPECULAR_EDGE, TBM_SETPAGESIZE, 0, 2);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_INTENSITY, TBM_SETRANGEMIN, FALSE, SSS_INTENSITY_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_INTENSITY, TBM_SETRANGEMAX, FALSE, SSS_INTENSITY_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_INTENSITY, TBM_SETTICFREQ, 4, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_INTENSITY, TBM_SETPAGESIZE, 0, 4);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_COLOR_R, TBM_SETRANGEMIN, FALSE, SSS_COLOR_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_COLOR_R, TBM_SETRANGEMAX, FALSE, SSS_COLOR_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_COLOR_R, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_COLOR_R, TBM_SETPAGESIZE, 0, 2);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_COLOR_G, TBM_SETRANGEMIN, FALSE, SSS_COLOR_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_COLOR_G, TBM_SETRANGEMAX, FALSE, SSS_COLOR_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_COLOR_G, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_COLOR_G, TBM_SETPAGESIZE, 0, 2);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_COLOR_B, TBM_SETRANGEMIN, FALSE, SSS_COLOR_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_COLOR_B, TBM_SETRANGEMAX, FALSE, SSS_COLOR_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_COLOR_B, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_COLOR_B, TBM_SETPAGESIZE, 0, 2);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BRIGHTNESS, TBM_SETRANGEMIN, FALSE, SSAO_BRIGHTNESS_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BRIGHTNESS, TBM_SETRANGEMAX, FALSE, SSAO_BRIGHTNESS_SLIDER_MAX);
@@ -2216,6 +2326,42 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSS_INTENSITY))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_sssIntensity = SliderValueToSSSIntensity(sliderValue);
+            ApplySSSIntensity();
+            RefreshSSSControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSS_COLOR_R))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_sssColor.r = SliderValueToSSSColor(sliderValue);
+            ApplySSSColor();
+            RefreshSSSControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSS_COLOR_G))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_sssColor.g = SliderValueToSSSColor(sliderValue);
+            ApplySSSColor();
+            RefreshSSSControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSS_COLOR_B))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_sssColor.b = SliderValueToSSSColor(sliderValue);
+            ApplySSSColor();
+            RefreshSSSControls(hDlg);
+            return TRUE;
+        }
+
         if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSAO_BRIGHTNESS))
         {
             const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
@@ -2530,6 +2676,14 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_bFXAA = (IsDlgButtonChecked(hDlg, IDC_CHECK_FXAA) == BST_CHECKED);
             g_Render.SetPostEffectFXAA(g_bFXAA);
             RefreshFXAAControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_SSS)
+        {
+            g_bSSS = (IsDlgButtonChecked(hDlg, IDC_CHECK_SSS) == BST_CHECKED);
+            ApplySSS();
+            RefreshSSSControls(hDlg);
             return TRUE;
         }
 

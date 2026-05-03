@@ -9,6 +9,11 @@ MaskedGaussianMaskPath,
 GaussianSampleSize,101
 FXAAEnable,0
 FXAAQuality,4
+SSSEnable,0
+SSSIntensity,1.0
+SSSColorR,1.0
+SSSColorG,1.0
+SSSColorB,0.5
 FogIntensity,20.0
 ShadowIntensity,0.25
 ShadowCoverage,0.05

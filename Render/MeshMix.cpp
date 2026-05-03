@@ -400,6 +400,21 @@ void MeshMix::SetSpecularEdge(const float edge)
     m_param.specularEdge = edge;
 }
 
+void MeshMix::SetSSS(const bool enabled)
+{
+    m_param.sss = enabled;
+}
+
+void MeshMix::SetSSSIntensity(const float intensity)
+{
+    m_param.sssIntensity = intensity;
+}
+
+void MeshMix::SetSSSColor(const DWORD color)
+{
+    m_param.sssColor = color;
+}
+
 void MeshMix::SetRotY(const float rotY)
 {
     m_rotate.y = rotY;
