@@ -357,6 +357,12 @@ void MeshMix::ModifyMeshForNormalMapping(LPD3DXMESH& pMesh)
         return;
     }
 
+    if (m_param.smooth)
+    {
+        hr = D3DXComputeNormals(pCloned, adj.data());
+        assert(SUCCEEDED(hr));
+    }
+
     // UV情報がないメッシュファイルを読み込むと、ここでエラー
     assert(SUCCEEDED(hr));
 

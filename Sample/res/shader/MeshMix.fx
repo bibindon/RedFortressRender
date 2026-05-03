@@ -382,7 +382,8 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
         float thickness = tex2D(g_thicknessSampler, thicknessUV).r;
         float sigmaT = max(g_sssIntensity, 0.001f);
         float sssBlend = saturate(exp(-sigmaT * thickness));
-        finalColor = lerp(finalColor, g_sssColor.rgb, sssBlend);
+        float3 sssColor = albedo * g_sssColor.rgb;
+        finalColor += sssColor * sssBlend;
     }
 
     outColor = saturate(float4(finalColor, 1.f));
