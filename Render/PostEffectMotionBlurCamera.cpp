@@ -1,6 +1,7 @@
 ﻿#include "PostEffectMotionBlurCamera.h"
 
 #include <algorithm>
+#include <cmath>
 
 #include "Camera.h"
 
@@ -12,6 +13,24 @@ namespace
 int ClampMotionBlurQuality(const int quality)
 {
     return (std::max)(1, (std::min)(quality, 8));
+}
+
+float ClampUnit(const float value)
+{
+    return (std::max)(-1.0f, (std::min)(value, 1.0f));
+}
+
+D3DXVECTOR3 GetCameraDirection(const D3DXVECTOR3& eye, const D3DXVECTOR3& lookAt)
+{
+    D3DXVECTOR3 direction = lookAt - eye;
+    const float length = D3DXVec3Length(&direction);
+    if (length <= 0.0001f)
+    {
+        return D3DXVECTOR3(0.0f, 0.0f, 1.0f);
+    }
+
+    D3DXVec3Normalize(&direction, &direction);
+    return direction;
 }
 }
 
@@ -54,6 +73,13 @@ void PostEffectMotionBlurCamera::CreateTexture()
 LPDIRECT3DTEXTURE9 PostEffectMotionBlurCamera::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                                                     LPDIRECT3DTEXTURE9 depthTexture)
 {
+    const D3DXMATRIX currentViewProj = Camera::GetViewMatrix() * Camera::GetProjMatrix();
+    if (!ShouldApplyMotionBlur(currentViewProj))
+    {
+        UpdateFrameMatrices();
+        return renderTarget;
+    }
+
     DrawFullscreenQuad(renderTarget, depthTexture, m_texWork);
     UpdateFrameMatrices();
     return m_texWork;
@@ -62,6 +88,8 @@ LPDIRECT3DTEXTURE9 PostEffectMotionBlurCamera::Draw(LPDIRECT3DTEXTURE9 renderTar
 void PostEffectMotionBlurCamera::UpdateFrameMatrices()
 {
     m_prevViewProj = Camera::GetViewMatrix() * Camera::GetProjMatrix();
+    m_prevEye = Camera::GetEyePos();
+    m_prevLookAt = Camera::GetLookAtPos();
     m_hasPrevViewProj = true;
 }
 
@@ -73,6 +101,35 @@ void PostEffectMotionBlurCamera::SetQuality(const int quality)
 int PostEffectMotionBlurCamera::GetQuality() const
 {
     return m_quality;
+}
+
+bool PostEffectMotionBlurCamera::ShouldApplyMotionBlur(const D3DXMATRIX& currentViewProj)
+{
+    if (!m_hasPrevViewProj)
+    {
+        m_prevViewProj = currentViewProj;
+        return false;
+    }
+
+    const D3DXVECTOR3 currentEye = Camera::GetEyePos();
+    const D3DXVECTOR3 currentLookAt = Camera::GetLookAtPos();
+
+    D3DXVECTOR3 lookAtMotion = currentLookAt - m_prevLookAt;
+    const float lookAtMotionLength = D3DXVec3Length(&lookAtMotion);
+    const D3DXVECTOR3 prevEyeOffset = m_prevEye - m_prevLookAt;
+    const D3DXVECTOR3 currentEyeOffset = currentEye - currentLookAt;
+    const float distanceMotion = fabsf(D3DXVec3Length(&currentEyeOffset) - D3DXVec3Length(&prevEyeOffset));
+
+    const D3DXVECTOR3 prevDirection = GetCameraDirection(m_prevEye, m_prevLookAt);
+    const D3DXVECTOR3 currentDirection = GetCameraDirection(currentEye, currentLookAt);
+    const float directionDot = ClampUnit(D3DXVec3Dot(&prevDirection, &currentDirection));
+    const float rotationMotion = acosf(directionDot);
+
+    static const float kMotionBlurTranslationThreshold = 0.001f;
+    static const float kMotionBlurRotationThreshold = 0.01f;
+    return (lookAtMotionLength > kMotionBlurTranslationThreshold) ||
+           (distanceMotion > kMotionBlurTranslationThreshold) ||
+           (rotationMotion > kMotionBlurRotationThreshold);
 }
 
 void PostEffectMotionBlurCamera::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
@@ -98,9 +155,9 @@ void PostEffectMotionBlurCamera::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource
                                 static_cast<float>(Common::ScreenW()),
                                 static_cast<float>(Common::ScreenH()));
 
-    const float blurScale = 0.5f + static_cast<float>(m_quality) * 0.25f;
-    const float maxBlurPixels = 4.0f + static_cast<float>(m_quality) * 4.0f;
-    const int sampleCount = 2 + m_quality * 2;
+    const float blurScale = 1.0f;
+    const float maxBlurPixels = static_cast<float>(m_quality) * 6.0f;
+    const int sampleCount = (std::min)(21, 5 + m_quality * 2);
 
     m_d3dEffect->SetTexture("texture1", texSource);
     m_d3dEffect->SetTexture("depthTexture", depthTexture);
@@ -109,6 +166,7 @@ void PostEffectMotionBlurCamera::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource
     m_d3dEffect->SetFloat("g_fBlurScale", blurScale);
     m_d3dEffect->SetFloat("g_fMaxBlurPixels", maxBlurPixels);
     m_d3dEffect->SetInt("g_iSampleCount", sampleCount);
+    m_d3dEffect->SetInt("g_iMotionBlurEnabled", 1);
     m_d3dEffect->SetVector("g_vTexelSize", &texelSize);
     m_d3dEffect->SetFloat("g_fNear", Camera::GetNear());
     m_d3dEffect->SetFloat("g_fFar", Camera::GetFar());

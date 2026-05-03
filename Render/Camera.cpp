@@ -153,6 +153,6 @@ float NSRender::Camera::GetNear()
 
 float NSRender::Camera::GetFar()
 {
-    return 1000.0f;
+    return 30'000.0f;
 }
 

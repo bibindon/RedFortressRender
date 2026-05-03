@@ -1,11 +1,12 @@
 float4x4 g_matInvCurrentViewProj;
 float4x4 g_matPrevViewProj;
-float g_fBlurScale = 1.5f;
-float g_fMaxBlurPixels = 20.0f;
-int g_iSampleCount = 10;
+float g_fBlurScale = 1.0f;
+float g_fMaxBlurPixels = 24.0f;
+int g_iSampleCount = 21;
+int g_iMotionBlurEnabled = 1;
 float4 g_vTexelSize = { 1.0f / 1600.0f, 1.0f / 900.0f, 1600.0f, 900.0f };
 float g_fNear = 0.1f;
-float g_fFar = 1000.0f;
+float g_fFar = 30000.0f;
 
 texture texture1;
 sampler colorSampler = sampler_state
@@ -89,13 +90,13 @@ float2 GetVelocity(float2 uv, float linearDepth)
 float4 SampleMotionBlur(float2 uv, float2 velocity)
 {
     float4 accumColor = 0.0f;
-    int sampleCount = clamp(g_iSampleCount, 2, 18);
+    int sampleCount = clamp(g_iSampleCount, 2, 21);
 
     [loop]
-    for (int i = 0; i < 18; ++i)
+    for (int i = 0; i < 21; ++i)
     {
-        float t = (float)i / (float)(sampleCount - 1);
-        float2 sampleUv = uv - velocity * t;
+        float t = ((float)i / (float)(sampleCount - 1)) * 2.0f - 1.0f;
+        float2 sampleUv = saturate(uv - velocity * t);
         float active = (i < sampleCount) ? 1.0f : 0.0f;
         accumColor += tex2D(colorSampler, sampleUv) * active;
     }
@@ -106,9 +107,25 @@ float4 SampleMotionBlur(float2 uv, float2 velocity)
 void PixelShader1(in float2 inTexCoord : TEXCOORD0,
                   out float4 outColor  : COLOR0)
 {
-    float linearDepth = tex2D(depthSampler, inTexCoord).a;
-    float2 velocity = GetVelocity(inTexCoord, linearDepth);
-    outColor = SampleMotionBlur(inTexCoord, velocity);
+    float2 sampleUv = saturate(inTexCoord + g_vTexelSize.xy * 0.5f);
+    float linearDepth = tex2D(depthSampler, sampleUv).a;
+    float2 velocity = GetVelocity(sampleUv, linearDepth);
+    float4 finalColor = (g_iMotionBlurEnabled == 0) ?
+                        tex2D(colorSampler, sampleUv) :
+                        SampleMotionBlur(sampleUv, velocity);
+
+    if (false)
+    {
+        float2 pixelCoord = floor(sampleUv * g_vTexelSize.zw);
+        float gridX = fmod(pixelCoord.x, 5.0f);
+        float gridY = fmod(pixelCoord.y, 5.0f);
+        if (gridX == 0.0f || gridY == 0.0f)
+        {
+            finalColor = float4(0.0f, 1.0f, 0.0f, 1.0f);
+        }
+    }
+
+    outColor = finalColor;
 }
 
 technique Technique1
