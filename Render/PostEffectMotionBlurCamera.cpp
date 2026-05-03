@@ -33,17 +33,35 @@ D3DXVECTOR3 GetCameraDirection(const D3DXVECTOR3& eye, const D3DXVECTOR3& lookAt
     return direction;
 }
 
-D3DXVECTOR3 LerpDirection(const D3DXVECTOR3& from, const D3DXVECTOR3& to, const float t)
+float NormalizeAngle(const float angle)
 {
-    D3DXVECTOR3 result = from + (to - from) * t;
-    const float length = D3DXVec3Length(&result);
-    if (length <= 0.0001f)
+    float normalized = angle;
+    while (normalized > D3DX_PI)
     {
-        return to;
+        normalized -= D3DX_PI * 2.0f;
     }
 
-    D3DXVec3Normalize(&result, &result);
-    return result;
+    while (normalized < -D3DX_PI)
+    {
+        normalized += D3DX_PI * 2.0f;
+    }
+
+    return normalized;
+}
+
+void GetYawPitchFromDirection(const D3DXVECTOR3& direction, float& yaw, float& pitch)
+{
+    yaw = atan2f(direction.x, direction.z);
+    pitch = asinf(ClampUnit(-direction.y));
+}
+
+D3DXVECTOR3 GetDirectionFromYawPitch(const float yaw, const float pitch)
+{
+    D3DXVECTOR3 direction(cosf(pitch) * sinf(yaw),
+                          -sinf(pitch),
+                          cosf(pitch) * cosf(yaw));
+    D3DXVec3Normalize(&direction, &direction);
+    return direction;
 }
 }
 
@@ -139,8 +157,15 @@ bool PostEffectMotionBlurCamera::ShouldApplyMotionBlur(const D3DXMATRIX& current
 
     const D3DXVECTOR3 prevDirection = GetCameraDirection(m_prevEye, m_prevLookAt);
     const D3DXVECTOR3 currentDirection = GetCameraDirection(currentEye, currentLookAt);
-    const float directionDot = ClampUnit(D3DXVec3Dot(&prevDirection, &currentDirection));
-    const float rotationMotion = acosf(directionDot);
+    float prevYaw = 0.0f;
+    float prevPitch = 0.0f;
+    float currentYaw = 0.0f;
+    float currentPitch = 0.0f;
+    GetYawPitchFromDirection(prevDirection, prevYaw, prevPitch);
+    GetYawPitchFromDirection(currentDirection, currentYaw, currentPitch);
+    const float yawMotion = NormalizeAngle(currentYaw - prevYaw);
+    const float pitchMotion = currentPitch - prevPitch;
+    const float rotationMotion = (std::max)(fabsf(yawMotion), fabsf(pitchMotion));
 
     static const float kMotionBlurTranslationThreshold = 0.001f;
     static const float kMotionBlurRotationThreshold = 0.01f;
@@ -180,8 +205,15 @@ void PostEffectMotionBlurCamera::UpdateMotionBlurPrevViewProj()
 
     const D3DXVECTOR3 prevDirection = GetCameraDirection(m_prevEye, m_prevLookAt);
     const D3DXVECTOR3 currentDirection = GetCameraDirection(currentEye, currentLookAt);
-    const float directionDot = ClampUnit(D3DXVec3Dot(&prevDirection, &currentDirection));
-    const float rotationMotion = acosf(directionDot);
+    float prevYaw = 0.0f;
+    float prevPitch = 0.0f;
+    float currentYaw = 0.0f;
+    float currentPitch = 0.0f;
+    GetYawPitchFromDirection(prevDirection, prevYaw, prevPitch);
+    GetYawPitchFromDirection(currentDirection, currentYaw, currentPitch);
+    const float yawMotion = NormalizeAngle(currentYaw - prevYaw);
+    const float pitchMotion = currentPitch - prevPitch;
+    const float rotationMotion = (std::max)(fabsf(yawMotion), fabsf(pitchMotion));
 
     static const float kMotionBlurTranslationThreshold = 0.001f;
     static const float kMotionBlurRotationThreshold = 0.01f;
@@ -195,8 +227,10 @@ void PostEffectMotionBlurCamera::UpdateMotionBlurPrevViewProj()
 
     const D3DXVECTOR3 prevTargetForBlur = currentLookAt - targetMotion * motionScale;
     const float prevDistanceForBlur = currentDistance - distanceMotion * motionScale;
+    const float prevYawForBlur = currentYaw - yawMotion * motionScale;
+    const float prevPitchForBlur = currentPitch - pitchMotion * motionScale;
     const D3DXVECTOR3 prevDirectionForBlur = hasRotationMotion ?
-        LerpDirection(currentDirection, prevDirection, motionScale) :
+        GetDirectionFromYawPitch(prevYawForBlur, prevPitchForBlur) :
         currentDirection;
     const D3DXVECTOR3 prevEyeForBlur = prevTargetForBlur - prevDirectionForBlur * prevDistanceForBlur;
     const D3DXVECTOR3 up(0.0f, 1.0f, 0.0f);
