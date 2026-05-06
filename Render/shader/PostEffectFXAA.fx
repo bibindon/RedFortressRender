@@ -88,7 +88,13 @@ void PixelShader1(in float4 inPosition    : POSITION,
 
     int selectedMode = MODE_NONE;
 
-    if (!isCenterDark && maxLuma - minLuma > edgeThreshold)
+    bool isTopBrightBottomDark = false;
+    bool isTopDarkBottomBright = false;
+    bool isLeftBrightRightDark = false;
+    bool isLeftDarkRightBright = false;
+    bool isEdgeCandidate = false;
+
+    if (maxLuma - minLuma > edgeThreshold)
     {
         int bestScore = topScore;
         selectedMode = MODE_TOP_DARK;
@@ -117,11 +123,11 @@ void PixelShader1(in float4 inPosition    : POSITION,
         }
     }
 
-    bool isTopBrightBottomDark = (selectedMode == MODE_BOTTOM_DARK);
-    bool isTopDarkBottomBright = (selectedMode == MODE_TOP_DARK);
-    bool isLeftBrightRightDark = (selectedMode == MODE_RIGHT_DARK);
-    bool isLeftDarkRightBright = (selectedMode == MODE_LEFT_DARK);
-    bool isEdgeCandidate = isTopBrightBottomDark || isTopDarkBottomBright || isLeftBrightRightDark || isLeftDarkRightBright;
+    isTopBrightBottomDark = (!isCenterDark && selectedMode == MODE_BOTTOM_DARK);
+    isTopDarkBottomBright = (isCenterDark && selectedMode == MODE_TOP_DARK);
+    isLeftBrightRightDark = (!isCenterDark && selectedMode == MODE_RIGHT_DARK);
+    isLeftDarkRightBright = (isCenterDark && selectedMode == MODE_LEFT_DARK);
+    isEdgeCandidate = isTopBrightBottomDark || isTopDarkBottomBright || isLeftBrightRightDark || isLeftDarkRightBright;
 
     if (!isEdgeCandidate)
     {
@@ -307,7 +313,7 @@ void PixelShader1(in float4 inPosition    : POSITION,
     }
     else if (isTopDarkBottomBright)
     {
-        aaColor = lerp(downColor, upColor, t);
+        aaColor = lerp(centerColor, downColor, t);
     }
     else if (isLeftBrightRightDark)
     {
@@ -315,7 +321,7 @@ void PixelShader1(in float4 inPosition    : POSITION,
     }
     else if (isLeftDarkRightBright)
     {
-        aaColor = lerp(rightColor, leftColor, t);
+        aaColor = lerp(centerColor, rightColor, t);
     }
 
     outColor = float4(aaColor, 1.0f);
