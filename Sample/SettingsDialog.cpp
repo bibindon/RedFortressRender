@@ -1225,6 +1225,7 @@ void RefreshPointLightControls(HWND hDlg)
     wchar_t buffer[32];
     const bool isLineLight = (g_pointLightShape == NSRender::PointLightShape::Line);
     const bool isSquareLight = (g_pointLightShape == NSRender::PointLightShape::Square);
+    const bool usesRotation = isLineLight || isSquareLight;
 
     std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_pointLightColor.r);
     SetDlgItemText(hDlg, IDC_EDIT_POINT_LIGHT_COLOR_R, buffer);
@@ -1281,6 +1282,17 @@ void RefreshPointLightControls(HWND hDlg)
     {
         IDC_STATIC_POINT_LIGHT_LINE_LENGTH_LABEL,
         IDC_EDIT_POINT_LIGHT_LINE_LENGTH,
+    };
+
+    for (const int controlId : lineControlIds)
+    {
+        HWND control = GetDlgItem(hDlg, controlId);
+        ShowWindow(control, isLineLight ? SW_SHOW : SW_HIDE);
+        EnableWindow(control, isLineLight ? TRUE : FALSE);
+    }
+
+    const int rotationControlIds[] =
+    {
         IDC_STATIC_POINT_LIGHT_ROT_X_LABEL,
         IDC_EDIT_POINT_LIGHT_ROT_X,
         IDC_STATIC_POINT_LIGHT_ROT_Y_LABEL,
@@ -1289,11 +1301,11 @@ void RefreshPointLightControls(HWND hDlg)
         IDC_EDIT_POINT_LIGHT_ROT_Z,
     };
 
-    for (const int controlId : lineControlIds)
+    for (const int controlId : rotationControlIds)
     {
         HWND control = GetDlgItem(hDlg, controlId);
-        ShowWindow(control, isLineLight ? SW_SHOW : SW_HIDE);
-        EnableWindow(control, isLineLight ? TRUE : FALSE);
+        ShowWindow(control, usesRotation ? SW_SHOW : SW_HIDE);
+        EnableWindow(control, usesRotation ? TRUE : FALSE);
     }
 
     const int squareControlIds[] =

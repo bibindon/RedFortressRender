@@ -219,9 +219,11 @@ float3 ClosestPointOnPointLightShape(float3 lightPos,
     {
         float halfWidth = max(lightSquareWidth * 0.5f, 0.0f);
         float halfHeight = max(lightSquareHeight * 0.5f, 0.0f);
-        float x = clamp(delta.x, -halfWidth, halfWidth);
-        float z = clamp(delta.z, -halfHeight, halfHeight);
-        return lightPos + float3(x, 0.0f, z);
+        float3 squareAxisX = normalize(RotateVectorXYZ(float3(1.0f, 0.0f, 0.0f), lightRotation));
+        float3 squareAxisZ = normalize(RotateVectorXYZ(float3(0.0f, 0.0f, 1.0f), lightRotation));
+        float projectedX = clamp(dot(delta, squareAxisX), -halfWidth, halfWidth);
+        float projectedZ = clamp(dot(delta, squareAxisZ), -halfHeight, halfHeight);
+        return lightPos + (squareAxisX * projectedX) + (squareAxisZ * projectedZ);
     }
 
     if (lightShape < 3.5f)
