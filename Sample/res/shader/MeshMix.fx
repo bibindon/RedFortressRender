@@ -528,12 +528,17 @@ void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
 {
     outColor = float4(0, 0, 0, 0);
 
+    float3 normal = normalize(inNormalWorld);
+    float3 lightDir = normalize(g_lightDir.xyz);
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
-    float3 reflectWorld = reflect(-cameraDir, normalize(inNormalWorld));
+    float3 halfVector = normalize(lightDir + cameraDir);
+    float3 reflectWorld = reflect(-cameraDir, normal);
 
     float cubeLod = g_cubeMappingGauss * 7.0f;
     float3 cubeColor = texCUBElod(g_cubeMapSampler, float4(reflectWorld, cubeLod)).rgb;
-    outColor = float4(cubeColor, saturate(g_cubeMappingRate));
+    float NdotH = saturate(dot(normal, halfVector));
+    float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_specularColor.xyz * g_lightColor.rgb;
+    outColor = float4(cubeColor + specular, saturate(g_cubeMappingRate));
 }
 
 //-------------------------------------------------------------
@@ -551,24 +556,17 @@ void PixelShaderGlass(in float4 inPosition     : POSITION,
     outColor = float4(0, 0, 0, 0);
 
     float3 normal = normalize(inNormalWorld);
-    
-    float3 normalInTangent = float3(0, 0, 0);
-    normalInTangent.x = tex2D(g_normalMapSampler, inTexCoord).r * 2.0 - 1.0;
-    normalInTangent.y = tex2D(g_normalMapSampler, inTexCoord).g * 2.0 - 1.0;
-    normalInTangent.z = tex2D(g_normalMapSampler, inTexCoord).b * 2.0 - 1.0;
-    normalInTangent.x *= -1;
-    normalInTangent = normalize(normalInTangent);
-
-    // TBN（Tangent, Binormal, Normal）でワールドへ
-    float3x3 tangentToWorld = float3x3(-inTangent, -inBinorm, normal);
-    float3 normalInWorld = normalize(mul(normalInTangent, tangentToWorld));
+    float3 lightDir = normalize(g_lightDir.xyz);
     
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
-    float3 refractWorld = refract(-cameraDir, normalize(inNormalWorld), 1.f / 1.5f);
+    float3 halfVector = normalize(lightDir + cameraDir);
+    float3 refractWorld = refract(-cameraDir, normal, 1.f / 1.5f);
     float cubeLod = g_cubeMappingGauss * 7.0f;
     float3 cubeColor = texCUBElod(g_cubeMapSampler, float4(refractWorld, cubeLod)).rgb;
+    float NdotH = saturate(dot(normal, halfVector));
+    float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_specularColor.xyz * g_lightColor.rgb;
 
-    outColor = float4(cubeColor, saturate(g_cubeMappingRate));
+    outColor = float4(cubeColor + specular, saturate(g_cubeMappingRate));
 }
 
 //-------------------------------------------------------------
