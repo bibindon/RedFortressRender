@@ -46,6 +46,12 @@ public:
 
     static float GetBrightness();
     static void SetBrightness(const float brightness);
+
+    static D3DXCOLOR GetAmbientColor();
+    static void SetAmbientColor(const D3DXCOLOR& color);
+
+    static float GetAmbientBrightness();
+    static void SetAmbientBrightness(const float brightness);
     
     // ひとまず10個くらいまで
     static void AddPointLight(const D3DXVECTOR3& pos,
@@ -66,6 +72,8 @@ private:
     static D3DXVECTOR4 m_lightDir;
     static float m_Brightness;
     static D3DXCOLOR m_color;
+    static float m_ambientBrightness;
+    static D3DXCOLOR m_ambientColor;
 
     static std::deque<PointLightInfo> m_pointLightList;
 };

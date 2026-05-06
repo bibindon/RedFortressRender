@@ -1063,10 +1063,21 @@ void MeshMixManager::Render()
     HRESULT hResult = E_FAIL;
 
     D3DXVECTOR4 normal = Light::GetLightDir();
+    D3DXVECTOR4 lightColor = D3DXVECTOR4(Light::GetLightColor());
+    D3DXVECTOR4 ambientColor = D3DXVECTOR4(Light::GetAmbientColor());
     hResult = sharedEffect->SetVector("g_lightDir", &normal);
     assert(hResult == S_OK);
 
+    hResult = sharedEffect->SetVector("g_lightColor", &lightColor);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetVector("g_ambient", &ambientColor);
+    assert(hResult == S_OK);
+
     hResult = sharedEffect->SetFloat("g_fSunLightIntensity", Light::GetBrightness());
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetFloat("g_fAmbientIntensity", Light::GetAmbientBrightness());
     assert(hResult == S_OK);
 
     D3DXMATRIX matWorld{ };

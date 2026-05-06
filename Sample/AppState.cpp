@@ -57,6 +57,9 @@ float g_heightFogMax = -5.0f;
 float g_heightFogDistanceStart = 0.0f;
 float g_heightFogDistanceMax = 20.0f;
 float g_sunLightIntensity = 1.0f;
+D3DXCOLOR g_sunLightColor = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
+float g_ambientLightIntensity = 1.0f;
+D3DXCOLOR g_ambientLightColor = D3DXCOLOR(0.2f, 0.2f, 0.2f, 1.0f);
 float g_shadowIntensity = 0.5f;
 float g_shadowCoverage = 0.5f;
 float g_shadowSaturationBoost = 0.35f;
@@ -136,6 +139,21 @@ float ClampHeightFogDistance(const float distance)
 float ClampSunLightIntensity(const float intensity)
 {
     return (std::max)(SUN_LIGHT_INTENSITY_MIN, (std::min)(intensity, SUN_LIGHT_INTENSITY_MAX));
+}
+
+float ClampSunLightColor(const float value)
+{
+    return (std::max)(SUN_LIGHT_COLOR_MIN, (std::min)(value, SUN_LIGHT_COLOR_MAX));
+}
+
+float ClampAmbientLightIntensity(const float intensity)
+{
+    return (std::max)(AMBIENT_LIGHT_INTENSITY_MIN, (std::min)(intensity, AMBIENT_LIGHT_INTENSITY_MAX));
+}
+
+float ClampAmbientLightColor(const float value)
+{
+    return (std::max)(AMBIENT_LIGHT_COLOR_MIN, (std::min)(value, AMBIENT_LIGHT_COLOR_MAX));
 }
 
 float ClampShadowIntensity(const float intensity)
@@ -827,6 +845,28 @@ void ApplySunLightIntensity()
     g_Render.SetLightBrightness(g_sunLightIntensity);
 }
 
+void ApplySunLightColor()
+{
+    g_sunLightColor.r = ClampSunLightColor(g_sunLightColor.r);
+    g_sunLightColor.g = ClampSunLightColor(g_sunLightColor.g);
+    g_sunLightColor.b = ClampSunLightColor(g_sunLightColor.b);
+    g_Render.SetLightColor(g_sunLightColor);
+}
+
+void ApplyAmbientLightIntensity()
+{
+    g_ambientLightIntensity = ClampAmbientLightIntensity(g_ambientLightIntensity);
+    g_Render.SetAmbientLightBrightness(g_ambientLightIntensity);
+}
+
+void ApplyAmbientLightColor()
+{
+    g_ambientLightColor.r = ClampAmbientLightColor(g_ambientLightColor.r);
+    g_ambientLightColor.g = ClampAmbientLightColor(g_ambientLightColor.g);
+    g_ambientLightColor.b = ClampAmbientLightColor(g_ambientLightColor.b);
+    g_Render.SetAmbientLightColor(g_ambientLightColor);
+}
+
 void ApplyShadowIntensity()
 {
     g_shadowIntensity = ClampShadowIntensity(g_shadowIntensity);
@@ -1118,6 +1158,26 @@ int SunLightIntensityToSliderValue(const float intensity)
 float SliderValueToSunLightIntensity(const int sliderValue)
 {
     return ClampSunLightIntensity(static_cast<float>(sliderValue) * SUN_LIGHT_INTENSITY_STEP);
+}
+
+int SunLightColorToSliderValue(const float value)
+{
+    return static_cast<int>(std::lround(ClampSunLightColor(value) / SUN_LIGHT_COLOR_STEP));
+}
+
+float SliderValueToSunLightColor(const int sliderValue)
+{
+    return ClampSunLightColor(static_cast<float>(sliderValue) * SUN_LIGHT_COLOR_STEP);
+}
+
+int AmbientLightIntensityToSliderValue(const float intensity)
+{
+    return static_cast<int>(std::lround(ClampAmbientLightIntensity(intensity) / AMBIENT_LIGHT_INTENSITY_STEP));
+}
+
+float SliderValueToAmbientLightIntensity(const int sliderValue)
+{
+    return ClampAmbientLightIntensity(static_cast<float>(sliderValue) * AMBIENT_LIGHT_INTENSITY_STEP);
 }
 
 int ShadowIntensityToSliderValue(const float intensity)
@@ -1948,6 +2008,34 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"SunLightIntensity")
             {
                 g_sunLightIntensity = std::stof(value);
+            }
+            else if (key == L"SunLightColorR")
+            {
+                g_sunLightColor.r = std::stof(value);
+            }
+            else if (key == L"SunLightColorG")
+            {
+                g_sunLightColor.g = std::stof(value);
+            }
+            else if (key == L"SunLightColorB")
+            {
+                g_sunLightColor.b = std::stof(value);
+            }
+            else if (key == L"AmbientLightIntensity")
+            {
+                g_ambientLightIntensity = std::stof(value);
+            }
+            else if (key == L"AmbientLightColorR")
+            {
+                g_ambientLightColor.r = std::stof(value);
+            }
+            else if (key == L"AmbientLightColorG")
+            {
+                g_ambientLightColor.g = std::stof(value);
+            }
+            else if (key == L"AmbientLightColorB")
+            {
+                g_ambientLightColor.b = std::stof(value);
             }
             else if (key == L"ShadowIntensity")
             {

@@ -7,9 +7,11 @@ namespace NSRender
 
 D3DXVECTOR4 Light::m_lightDir { 1.0f, 1.0f, 0.0f, 0.0f };
 float Light::m_Brightness = 1.0f;
+float Light::m_ambientBrightness = 1.0f;
 
 std::deque<PointLightInfo> Light::m_pointLightList;
 D3DXCOLOR Light::m_color = D3DXCOLOR(1.f, 1.f, 1.f, 1.f);
+D3DXCOLOR Light::m_ambientColor = D3DXCOLOR(0.2f, 0.2f, 0.2f, 1.f);
 
 D3DXVECTOR4 Light::GetLightDir()
 {
@@ -39,6 +41,26 @@ float Light::GetBrightness()
 void Light::SetBrightness(const float brightness)
 {
     m_Brightness = brightness;
+}
+
+D3DXCOLOR Light::GetAmbientColor()
+{
+    return m_ambientColor;
+}
+
+void Light::SetAmbientColor(const D3DXCOLOR& color)
+{
+    m_ambientColor = color;
+}
+
+float Light::GetAmbientBrightness()
+{
+    return m_ambientBrightness;
+}
+
+void Light::SetAmbientBrightness(const float brightness)
+{
+    m_ambientBrightness = brightness;
 }
 
 void Light::AddPointLight(const D3DXVECTOR3& pos,

@@ -473,12 +473,23 @@ void MeshMix::Render()
     // TODO LightNormalとLightDirでは方向が逆になる。間違っている
     //--------------------------------------------------------
     D3DXVECTOR4 normal = Light::GetLightDir();
+    D3DXVECTOR4 lightColor = D3DXVECTOR4(Light::GetLightColor());
+    D3DXVECTOR4 ambientColor = D3DXVECTOR4(Light::GetAmbientColor());
 
     // 文字列で指定すると遅くなるらしい
     hResult = m_D3DEffect->SetVector("g_lightDir", &normal);
     assert(hResult == S_OK);
 
+    hResult = m_D3DEffect->SetVector("g_lightColor", &lightColor);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetVector("g_ambient", &ambientColor);
+    assert(hResult == S_OK);
+
     hResult = m_D3DEffect->SetFloat("g_fSunLightIntensity", Light::GetBrightness());
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetFloat("g_fAmbientIntensity", Light::GetAmbientBrightness());
     assert(hResult == S_OK);
 
     //--------------------------------------------------------

@@ -2,7 +2,9 @@ float4 g_lightDir = { 0.3f, 1.0f, 0.5f, 0.0f };
 float4 g_cameraPos = { 10.0f, 5.0f, 10.0f, 1.0f };
 
 float4 g_ambient = { 0.2f, 0.2f, 0.2f, 1.0f };
+float g_fAmbientIntensity = 1.0f;
 float4 g_diffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
+float4 g_lightColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 float4 g_specularColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 float g_fSunLightIntensity = 1.0f;
@@ -124,13 +126,15 @@ void PixelShader1(in  float3 inPosWorld    : TEXCOORD0,
         shadowAlbedo = IncreaseSaturation(albedo, saturationAmount);
     }
 
-    float3 ambient = g_ambient.rgb * albedo;
+    float3 ambient = g_ambient.rgb * g_fAmbientIntensity * albedo;
     float3 lambert = shadowAlbedo
                    * (1.0f - ((1.0f - NdotL) * g_fShadowDarkness))
+                   * g_lightColor.rgb
                    * g_fSunLightIntensity;
     float3 specular = pow(NdotH, g_specularPower)
                     * g_specularIntensity
-                    * g_specularColor.rgb;
+                    * g_specularColor.rgb
+                    * g_lightColor.rgb;
 
     outColor = saturate(float4(ambient + lambert + specular,
                                textureColor.a * g_diffuse.a));

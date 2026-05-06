@@ -9,7 +9,9 @@ float4 g_lightPos = { -10.f, 10.f, -10.f, 0.0f };
 float4 g_cameraPos = { 10.f, 5.f, 10.f, 0.0f };
 
 float4 g_ambient = { 0.2f, 0.2f, 0.2f, 1.0f };
+float g_fAmbientIntensity = 1.0f;
 float4 g_diffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
+float4 g_lightColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 float4 g_specularColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 float2 g_screenSize = { 1600.0f, 900.0f };
@@ -460,9 +462,12 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
         shadowAlbedo = IncreaseSaturation(albedo, saturationAmount);
     }
 
-    lambert = shadowAlbedo * (1.0f - ((1.0f - NdotL) * g_fShadowDarkness)) * g_fSunLightIntensity;
+    lambert = shadowAlbedo
+            * (1.0f - ((1.0f - NdotL) * g_fShadowDarkness))
+            * g_lightColor.rgb
+            * g_fSunLightIntensity;
 
-    float3 ambient = float3(0.2, 0.2, 0.2) * albedo;
+    float3 ambient = g_ambient.rgb * g_fAmbientIntensity * albedo;
 
     // 陰の彩度を上げる
     // 要らないかもしれない
@@ -484,7 +489,7 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
         }
     }
 
-    float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_specularColor.xyz;
+    float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_specularColor.xyz * g_lightColor.rgb;
 
     float3 finalColor = ambient.rgb + lambert + specular;
 

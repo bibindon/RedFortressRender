@@ -26,6 +26,12 @@ constexpr int HEIGHT_FOG_DISTANCE_SLIDER_MIN = 0;
 constexpr int HEIGHT_FOG_DISTANCE_SLIDER_MAX = static_cast<int>((HEIGHT_FOG_DISTANCE_MAX - HEIGHT_FOG_DISTANCE_MIN) / HEIGHT_FOG_DISTANCE_STEP);
 constexpr int SUN_LIGHT_INTENSITY_SLIDER_MIN = 0;
 constexpr int SUN_LIGHT_INTENSITY_SLIDER_MAX = static_cast<int>(SUN_LIGHT_INTENSITY_MAX / SUN_LIGHT_INTENSITY_STEP);
+constexpr int SUN_LIGHT_COLOR_SLIDER_MIN = 0;
+constexpr int SUN_LIGHT_COLOR_SLIDER_MAX = static_cast<int>(SUN_LIGHT_COLOR_MAX / SUN_LIGHT_COLOR_STEP);
+constexpr int AMBIENT_LIGHT_INTENSITY_SLIDER_MIN = 0;
+constexpr int AMBIENT_LIGHT_INTENSITY_SLIDER_MAX = static_cast<int>(AMBIENT_LIGHT_INTENSITY_MAX / AMBIENT_LIGHT_INTENSITY_STEP);
+constexpr int AMBIENT_LIGHT_COLOR_SLIDER_MIN = 0;
+constexpr int AMBIENT_LIGHT_COLOR_SLIDER_MAX = static_cast<int>(AMBIENT_LIGHT_COLOR_MAX / AMBIENT_LIGHT_COLOR_STEP);
 constexpr int SHADOW_SLIDER_MIN = 0;
 constexpr int SHADOW_SLIDER_MAX = static_cast<int>(SHADOW_INTENSITY_MAX / SHADOW_INTENSITY_STEP);
 constexpr int SHADOW_COVERAGE_SLIDER_MIN = 0;
@@ -109,6 +115,8 @@ void RefreshHeightFogMaxControls(HWND hDlg);
 void RefreshHeightFogDistanceStartControls(HWND hDlg);
 void RefreshHeightFogDistanceMaxControls(HWND hDlg);
 void RefreshSunLightIntensityControls(HWND hDlg);
+void RefreshSunLightColorControls(HWND hDlg);
+void RefreshAmbientLightControls(HWND hDlg);
 void RefreshShadowControls(HWND hDlg);
 void RefreshShadowSaturationBoostControls(HWND hDlg);
 void RefreshShadowCoverageControls(HWND hDlg);
@@ -250,6 +258,13 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_HEIGHT_FOG_DISTANCE_START,
         IDC_EDIT_HEIGHT_FOG_DISTANCE_MAX,
         IDC_EDIT_SUN_LIGHT_INTENSITY,
+        IDC_EDIT_SUN_LIGHT_COLOR_R,
+        IDC_EDIT_SUN_LIGHT_COLOR_G,
+        IDC_EDIT_SUN_LIGHT_COLOR_B,
+        IDC_EDIT_AMBIENT_LIGHT_INTENSITY,
+        IDC_EDIT_AMBIENT_LIGHT_COLOR_R,
+        IDC_EDIT_AMBIENT_LIGHT_COLOR_G,
+        IDC_EDIT_AMBIENT_LIGHT_COLOR_B,
         IDC_EDIT_SHADOW_INTENSITY,
         IDC_EDIT_SHADOW_SATURATION_BOOST,
         IDC_EDIT_SHADOW_COVERAGE,
@@ -421,6 +436,62 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
             ApplySunLightIntensity();
         }
         RefreshSunLightIntensityControls(hDlg);
+        return true;
+    case IDC_EDIT_SUN_LIGHT_COLOR_R:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_sunLightColor.r = floatValue;
+            ApplySunLightColor();
+        }
+        RefreshSunLightColorControls(hDlg);
+        return true;
+    case IDC_EDIT_SUN_LIGHT_COLOR_G:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_sunLightColor.g = floatValue;
+            ApplySunLightColor();
+        }
+        RefreshSunLightColorControls(hDlg);
+        return true;
+    case IDC_EDIT_SUN_LIGHT_COLOR_B:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_sunLightColor.b = floatValue;
+            ApplySunLightColor();
+        }
+        RefreshSunLightColorControls(hDlg);
+        return true;
+    case IDC_EDIT_AMBIENT_LIGHT_INTENSITY:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_ambientLightIntensity = floatValue;
+            ApplyAmbientLightIntensity();
+        }
+        RefreshAmbientLightControls(hDlg);
+        return true;
+    case IDC_EDIT_AMBIENT_LIGHT_COLOR_R:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_ambientLightColor.r = floatValue;
+            ApplyAmbientLightColor();
+        }
+        RefreshAmbientLightControls(hDlg);
+        return true;
+    case IDC_EDIT_AMBIENT_LIGHT_COLOR_G:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_ambientLightColor.g = floatValue;
+            ApplyAmbientLightColor();
+        }
+        RefreshAmbientLightControls(hDlg);
+        return true;
+    case IDC_EDIT_AMBIENT_LIGHT_COLOR_B:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_ambientLightColor.b = floatValue;
+            ApplyAmbientLightColor();
+        }
+        RefreshAmbientLightControls(hDlg);
         return true;
     case IDC_EDIT_SHADOW_INTENSITY:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
@@ -1442,6 +1513,70 @@ void RefreshSunLightIntensityControls(HWND hDlg)
                        static_cast<LPARAM>(SunLightIntensityToSliderValue(g_sunLightIntensity)));
 }
 
+void RefreshSunLightColorControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_sunLightColor.r);
+    SetDlgItemText(hDlg, IDC_EDIT_SUN_LIGHT_COLOR_R, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_SUN_LIGHT_COLOR_R,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(SunLightColorToSliderValue(g_sunLightColor.r)));
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_sunLightColor.g);
+    SetDlgItemText(hDlg, IDC_EDIT_SUN_LIGHT_COLOR_G, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_SUN_LIGHT_COLOR_G,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(SunLightColorToSliderValue(g_sunLightColor.g)));
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_sunLightColor.b);
+    SetDlgItemText(hDlg, IDC_EDIT_SUN_LIGHT_COLOR_B, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_SUN_LIGHT_COLOR_B,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(SunLightColorToSliderValue(g_sunLightColor.b)));
+}
+
+void RefreshAmbientLightControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_ambientLightIntensity);
+    SetDlgItemText(hDlg, IDC_EDIT_AMBIENT_LIGHT_INTENSITY, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_AMBIENT_LIGHT_INTENSITY,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(AmbientLightIntensityToSliderValue(g_ambientLightIntensity)));
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_ambientLightColor.r);
+    SetDlgItemText(hDlg, IDC_EDIT_AMBIENT_LIGHT_COLOR_R, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_AMBIENT_LIGHT_COLOR_R,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(SunLightColorToSliderValue(g_ambientLightColor.r)));
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_ambientLightColor.g);
+    SetDlgItemText(hDlg, IDC_EDIT_AMBIENT_LIGHT_COLOR_G, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_AMBIENT_LIGHT_COLOR_G,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(SunLightColorToSliderValue(g_ambientLightColor.g)));
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_ambientLightColor.b);
+    SetDlgItemText(hDlg, IDC_EDIT_AMBIENT_LIGHT_COLOR_B, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_AMBIENT_LIGHT_COLOR_B,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(SunLightColorToSliderValue(g_ambientLightColor.b)));
+}
+
 void RefreshShadowSaturationBoostControls(HWND hDlg)
 {
     wchar_t buffer[32];
@@ -1866,6 +2001,8 @@ void RefreshAllControls(HWND hDlg)
     RefreshFogControls(hDlg);
     RefreshHeightFogControls(hDlg);
     RefreshSunLightIntensityControls(hDlg);
+    RefreshSunLightColorControls(hDlg);
+    RefreshAmbientLightControls(hDlg);
     RefreshShadowControls(hDlg);
     RefreshShadowCoverageControls(hDlg);
     RefreshShadowSaturationBoostControls(hDlg);
@@ -1932,6 +2069,41 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_SUN_LIGHT_INTENSITY, TBM_SETRANGEMAX, FALSE, SUN_LIGHT_INTENSITY_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SUN_LIGHT_INTENSITY, TBM_SETTICFREQ, 5, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SUN_LIGHT_INTENSITY, TBM_SETPAGESIZE, 0, 5);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SUN_LIGHT_COLOR_R, TBM_SETRANGEMIN, FALSE, SUN_LIGHT_COLOR_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SUN_LIGHT_COLOR_R, TBM_SETRANGEMAX, FALSE, SUN_LIGHT_COLOR_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SUN_LIGHT_COLOR_R, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SUN_LIGHT_COLOR_R, TBM_SETPAGESIZE, 0, 2);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SUN_LIGHT_COLOR_G, TBM_SETRANGEMIN, FALSE, SUN_LIGHT_COLOR_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SUN_LIGHT_COLOR_G, TBM_SETRANGEMAX, FALSE, SUN_LIGHT_COLOR_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SUN_LIGHT_COLOR_G, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SUN_LIGHT_COLOR_G, TBM_SETPAGESIZE, 0, 2);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SUN_LIGHT_COLOR_B, TBM_SETRANGEMIN, FALSE, SUN_LIGHT_COLOR_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SUN_LIGHT_COLOR_B, TBM_SETRANGEMAX, FALSE, SUN_LIGHT_COLOR_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SUN_LIGHT_COLOR_B, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SUN_LIGHT_COLOR_B, TBM_SETPAGESIZE, 0, 2);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_AMBIENT_LIGHT_INTENSITY, TBM_SETRANGEMIN, FALSE, AMBIENT_LIGHT_INTENSITY_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_AMBIENT_LIGHT_INTENSITY, TBM_SETRANGEMAX, FALSE, AMBIENT_LIGHT_INTENSITY_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_AMBIENT_LIGHT_INTENSITY, TBM_SETTICFREQ, 5, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_AMBIENT_LIGHT_INTENSITY, TBM_SETPAGESIZE, 0, 5);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_AMBIENT_LIGHT_COLOR_R, TBM_SETRANGEMIN, FALSE, AMBIENT_LIGHT_COLOR_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_AMBIENT_LIGHT_COLOR_R, TBM_SETRANGEMAX, FALSE, AMBIENT_LIGHT_COLOR_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_AMBIENT_LIGHT_COLOR_R, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_AMBIENT_LIGHT_COLOR_R, TBM_SETPAGESIZE, 0, 2);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_AMBIENT_LIGHT_COLOR_G, TBM_SETRANGEMIN, FALSE, AMBIENT_LIGHT_COLOR_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_AMBIENT_LIGHT_COLOR_G, TBM_SETRANGEMAX, FALSE, AMBIENT_LIGHT_COLOR_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_AMBIENT_LIGHT_COLOR_G, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_AMBIENT_LIGHT_COLOR_G, TBM_SETPAGESIZE, 0, 2);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_AMBIENT_LIGHT_COLOR_B, TBM_SETRANGEMIN, FALSE, AMBIENT_LIGHT_COLOR_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_AMBIENT_LIGHT_COLOR_B, TBM_SETRANGEMAX, FALSE, AMBIENT_LIGHT_COLOR_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_AMBIENT_LIGHT_COLOR_B, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_AMBIENT_LIGHT_COLOR_B, TBM_SETPAGESIZE, 0, 2);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_INTENSITY, TBM_SETRANGEMIN, FALSE, SHADOW_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_INTENSITY, TBM_SETRANGEMAX, FALSE, SHADOW_SLIDER_MAX);
@@ -2541,6 +2713,69 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_sunLightIntensity = SliderValueToSunLightIntensity(sliderValue);
             ApplySunLightIntensity();
             RefreshSunLightIntensityControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SUN_LIGHT_COLOR_R))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_sunLightColor.r = SliderValueToSunLightColor(sliderValue);
+            ApplySunLightColor();
+            RefreshSunLightColorControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SUN_LIGHT_COLOR_G))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_sunLightColor.g = SliderValueToSunLightColor(sliderValue);
+            ApplySunLightColor();
+            RefreshSunLightColorControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SUN_LIGHT_COLOR_B))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_sunLightColor.b = SliderValueToSunLightColor(sliderValue);
+            ApplySunLightColor();
+            RefreshSunLightColorControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_AMBIENT_LIGHT_INTENSITY))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_ambientLightIntensity = SliderValueToAmbientLightIntensity(sliderValue);
+            ApplyAmbientLightIntensity();
+            RefreshAmbientLightControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_AMBIENT_LIGHT_COLOR_R))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_ambientLightColor.r = SliderValueToSunLightColor(sliderValue);
+            ApplyAmbientLightColor();
+            RefreshAmbientLightControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_AMBIENT_LIGHT_COLOR_G))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_ambientLightColor.g = SliderValueToSunLightColor(sliderValue);
+            ApplyAmbientLightColor();
+            RefreshAmbientLightControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_AMBIENT_LIGHT_COLOR_B))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_ambientLightColor.b = SliderValueToSunLightColor(sliderValue);
+            ApplyAmbientLightColor();
+            RefreshAmbientLightControls(hDlg);
             return TRUE;
         }
 

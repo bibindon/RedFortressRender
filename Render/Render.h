@@ -283,7 +283,10 @@ public:
 
     // 平行光源がある方角
     void SetLightDir(const D3DXVECTOR3& dir);
+    void SetLightColor(const D3DXCOLOR& color);
     void SetLightBrightness(const float brightness);
+    void SetAmbientLightColor(const D3DXCOLOR& color);
+    void SetAmbientLightBrightness(const float brightness);
     void SetMeshMixSSS(const bool enabled);
     void SetMeshMixSSSIntensity(const float intensity);
     void SetMeshMixSSSColor(const DWORD color);

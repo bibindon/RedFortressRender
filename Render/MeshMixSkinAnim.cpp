@@ -133,8 +133,13 @@ void MeshMixSkinAnim::Render()
     }
 
     const D3DXVECTOR4 lightDir = Light::GetLightDir();
+    const D3DXVECTOR4 lightColor = D3DXVECTOR4(Light::GetLightColor());
+    const D3DXVECTOR4 ambientColor = D3DXVECTOR4(Light::GetAmbientColor());
     m_D3DEffect->SetVector("g_lightDir", &lightDir);
+    m_D3DEffect->SetVector("g_lightColor", &lightColor);
+    m_D3DEffect->SetVector("g_ambient", &ambientColor);
     m_D3DEffect->SetFloat("g_fSunLightIntensity", Light::GetBrightness());
+    m_D3DEffect->SetFloat("g_fAmbientIntensity", Light::GetAmbientBrightness());
 
     const D3DXVECTOR4 cameraPos = D3DXVECTOR4(Camera::GetEyePos(), 1.0f);
     m_D3DEffect->SetVector("g_cameraPos", &cameraPos);
