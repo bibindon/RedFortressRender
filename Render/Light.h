@@ -9,12 +9,24 @@
 namespace NSRender
 {
 
+enum class PointLightShape : int
+{
+    Point = 0,
+    Line = 1,
+    Square = 2,
+    Cube = 3,
+    Sphere = 4
+};
+
 struct PointLightInfo
 {
     D3DXVECTOR3 m_pos = D3DXVECTOR3(0.f, 0.f, 0.f);
     D3DXCOLOR m_color = D3DXCOLOR(1.f, 1.f, 1.f, 1.f);
 
     float m_brightness = 1.f;
+    PointLightShape m_shape = PointLightShape::Point;
+    float m_lineLength = 12.0f;
+    D3DXVECTOR3 m_rotation = D3DXVECTOR3(0.f, 0.f, 0.f);
 };
 
 class Light
@@ -36,7 +48,10 @@ public:
     // ひとまず10個くらいまで
     static void AddPointLight(const D3DXVECTOR3& pos,
                               const D3DXCOLOR& color,
-                              const float brightness);
+                              const float brightness,
+                              const PointLightShape shape = PointLightShape::Point,
+                              const float lineLength = 12.0f,
+                              const D3DXVECTOR3& rotation = D3DXVECTOR3(0.f, 0.f, 0.f));
     static bool RemovePointLight(size_t index);
 
     static std::deque<PointLightInfo> GetPointLightList();

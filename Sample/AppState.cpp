@@ -80,6 +80,9 @@ float g_starBurstThreshold = 2.8f;
 float g_modelLoadScale = 1.0f;
 D3DXCOLOR g_pointLightColor = D3DXCOLOR(1.0f, 0.35f, 0.1f, 1.0f);
 float g_pointLightBrightness = 1.0f;
+NSRender::PointLightShape g_pointLightShape = NSRender::PointLightShape::Point;
+float g_pointLightLineLength = 12.0f;
+D3DXVECTOR3 g_pointLightRotationDegrees = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 int g_gaussianSampleSize = 101;
 int g_fxaaQuality = 4;
 int g_motionBlurCameraQuality = 4;
@@ -241,6 +244,17 @@ float ClampPointLightColor(const float value)
 float ClampPointLightBrightness(const float brightness)
 {
     return (std::max)(POINT_LIGHT_BRIGHTNESS_MIN, (std::min)(brightness, POINT_LIGHT_BRIGHTNESS_MAX));
+}
+
+float ClampPointLightLineLength(const float lineLength)
+{
+    return (std::max)(POINT_LIGHT_LINE_LENGTH_MIN, (std::min)(lineLength, POINT_LIGHT_LINE_LENGTH_MAX));
+}
+
+float ClampPointLightRotationDegrees(const float degrees)
+{
+    return (std::max)(POINT_LIGHT_ROTATION_MIN_DEGREES,
+                      (std::min)(degrees, POINT_LIGHT_ROTATION_MAX_DEGREES));
 }
 
 std::wstring Trim(const std::wstring& text)
@@ -963,6 +977,30 @@ void ApplyPointLightColor()
 void ApplyPointLightBrightness()
 {
     g_pointLightBrightness = ClampPointLightBrightness(g_pointLightBrightness);
+}
+
+void ApplyPointLightShape()
+{
+    switch (g_pointLightShape)
+    {
+    case NSRender::PointLightShape::Point:
+    case NSRender::PointLightShape::Line:
+    case NSRender::PointLightShape::Square:
+    case NSRender::PointLightShape::Cube:
+    case NSRender::PointLightShape::Sphere:
+        break;
+    default:
+        g_pointLightShape = NSRender::PointLightShape::Point;
+        break;
+    }
+}
+
+void ApplyPointLightLineSettings()
+{
+    g_pointLightLineLength = ClampPointLightLineLength(g_pointLightLineLength);
+    g_pointLightRotationDegrees.x = ClampPointLightRotationDegrees(g_pointLightRotationDegrees.x);
+    g_pointLightRotationDegrees.y = ClampPointLightRotationDegrees(g_pointLightRotationDegrees.y);
+    g_pointLightRotationDegrees.z = ClampPointLightRotationDegrees(g_pointLightRotationDegrees.z);
 }
 
 void ApplyGaussianSampleSize()
@@ -1813,7 +1851,18 @@ void AddPointLightAtLookAt()
 {
     ApplyPointLightColor();
     ApplyPointLightBrightness();
-    g_Render.AddPointLight(g_Render.GetLookAtPos(), g_pointLightBrightness, g_pointLightColor);
+    ApplyPointLightShape();
+    ApplyPointLightLineSettings();
+
+    const D3DXVECTOR3 rotationRadians(D3DXToRadian(g_pointLightRotationDegrees.x),
+                                      D3DXToRadian(g_pointLightRotationDegrees.y),
+                                      D3DXToRadian(g_pointLightRotationDegrees.z));
+    g_Render.AddPointLight(g_Render.GetLookAtPos(),
+                           g_pointLightBrightness,
+                           g_pointLightColor,
+                           g_pointLightShape,
+                           g_pointLightLineLength,
+                           rotationRadians);
     RefreshSettingsDialogState();
 }
 

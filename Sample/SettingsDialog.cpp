@@ -86,7 +86,7 @@ constexpr int GODRAY_VIRTUAL_PROXIMITY_SLIDER_MIN = 0;
 constexpr int GODRAY_VIRTUAL_PROXIMITY_SLIDER_MAX = static_cast<int>(GODRAY_VIRTUAL_PROXIMITY_MAX / GODRAY_VIRTUAL_PROXIMITY_STEP);
 constexpr int GODRAY_POS_SLIDER_MIN = static_cast<int>(GODRAY_LIGHT_POS_MIN / GODRAY_LIGHT_POS_STEP);
 constexpr int GODRAY_POS_SLIDER_MAX = static_cast<int>(GODRAY_LIGHT_POS_MAX / GODRAY_LIGHT_POS_STEP);
-constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 1122;
+constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 1134;
 constexpr int SETTINGS_DIALOG_WHEEL_STEP_PX = 36;
 constexpr UINT ID_POPUP_EXPORT_BINARY = 60001;
 constexpr UINT ID_POPUP_REMOVE_MODEL = 60002;
@@ -127,6 +127,77 @@ void RefreshStarBurstThresholdControls(HWND hDlg);
 void RefreshModelLoadScaleControls(HWND hDlg);
 void RefreshPointLightControls(HWND hDlg);
 void RefreshGodRayControls(HWND hDlg);
+
+const wchar_t* PointLightShapeToDisplayString(const NSRender::PointLightShape shape)
+{
+    switch (shape)
+    {
+    case NSRender::PointLightShape::Point:
+        return L"Point";
+    case NSRender::PointLightShape::Line:
+        return L"Line";
+    case NSRender::PointLightShape::Square:
+        return L"Square";
+    case NSRender::PointLightShape::Cube:
+        return L"Cube";
+    case NSRender::PointLightShape::Sphere:
+        return L"Sphere";
+    default:
+        return L"Point";
+    }
+}
+
+int PointLightShapeToComboIndex(const NSRender::PointLightShape shape)
+{
+    switch (shape)
+    {
+    case NSRender::PointLightShape::Point:
+        return 0;
+    case NSRender::PointLightShape::Line:
+        return 1;
+    case NSRender::PointLightShape::Square:
+        return 2;
+    case NSRender::PointLightShape::Cube:
+        return 3;
+    case NSRender::PointLightShape::Sphere:
+        return 4;
+    default:
+        return 0;
+    }
+}
+
+NSRender::PointLightShape ComboIndexToPointLightShape(const int comboIndex)
+{
+    switch (comboIndex)
+    {
+    case 1:
+        return NSRender::PointLightShape::Line;
+    case 2:
+        return NSRender::PointLightShape::Square;
+    case 3:
+        return NSRender::PointLightShape::Cube;
+    case 4:
+        return NSRender::PointLightShape::Sphere;
+    default:
+        return NSRender::PointLightShape::Point;
+    }
+}
+
+void PopulatePointLightTypeCombo(HWND hDlg)
+{
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_POINT_LIGHT_TYPE);
+    if (combo == NULL)
+    {
+        return;
+    }
+
+    SendMessage(combo, CB_RESETCONTENT, 0, 0);
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Point"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Line"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Square"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Cube"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Sphere"));
+}
 
 bool TryParseEditFloat(HWND hDlg, const int controlId, float& value)
 {
@@ -202,6 +273,10 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_POINT_LIGHT_COLOR_G,
         IDC_EDIT_POINT_LIGHT_COLOR_B,
         IDC_EDIT_POINT_LIGHT_BRIGHTNESS,
+        IDC_EDIT_POINT_LIGHT_LINE_LENGTH,
+        IDC_EDIT_POINT_LIGHT_ROT_X,
+        IDC_EDIT_POINT_LIGHT_ROT_Y,
+        IDC_EDIT_POINT_LIGHT_ROT_Z,
         IDC_EDIT_GODRAY_COLOR_R,
         IDC_EDIT_GODRAY_COLOR_G,
         IDC_EDIT_GODRAY_COLOR_B,
@@ -526,6 +601,38 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
         {
             g_pointLightBrightness = floatValue;
             ApplyPointLightBrightness();
+        }
+        RefreshPointLightControls(hDlg);
+        return true;
+    case IDC_EDIT_POINT_LIGHT_LINE_LENGTH:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_pointLightLineLength = floatValue;
+            ApplyPointLightLineSettings();
+        }
+        RefreshPointLightControls(hDlg);
+        return true;
+    case IDC_EDIT_POINT_LIGHT_ROT_X:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_pointLightRotationDegrees.x = floatValue;
+            ApplyPointLightLineSettings();
+        }
+        RefreshPointLightControls(hDlg);
+        return true;
+    case IDC_EDIT_POINT_LIGHT_ROT_Y:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_pointLightRotationDegrees.y = floatValue;
+            ApplyPointLightLineSettings();
+        }
+        RefreshPointLightControls(hDlg);
+        return true;
+    case IDC_EDIT_POINT_LIGHT_ROT_Z:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_pointLightRotationDegrees.z = floatValue;
+            ApplyPointLightLineSettings();
         }
         RefreshPointLightControls(hDlg);
         return true;
@@ -1009,17 +1116,21 @@ void InitializePointLightListView(HWND hDlg)
     LVCOLUMN column { };
     column.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
 
-    column.cx = 96;
+    column.cx = 86;
     column.pszText = const_cast<LPWSTR>(L"Pos");
     ListView_InsertColumn(listView, 0, &column);
 
-    column.cx = 96;
-    column.pszText = const_cast<LPWSTR>(L"Color");
+    column.cx = 56;
+    column.pszText = const_cast<LPWSTR>(L"Type");
     ListView_InsertColumn(listView, 1, &column);
 
-    column.cx = 64;
-    column.pszText = const_cast<LPWSTR>(L"Brightness");
+    column.cx = 84;
+    column.pszText = const_cast<LPWSTR>(L"Color");
     ListView_InsertColumn(listView, 2, &column);
+
+    column.cx = 54;
+    column.pszText = const_cast<LPWSTR>(L"Brightness");
+    ListView_InsertColumn(listView, 3, &column);
 }
 
 void RefreshLoadedModelListView(HWND hDlg)
@@ -1076,21 +1187,25 @@ void RefreshPointLightListView(HWND hDlg)
         item.pszText = const_cast<LPWSTR>(posText.c_str());
         ListView_InsertItem(listView, &item);
 
+        std::wstring typeText = PointLightShapeToDisplayString(pointLight.m_shape);
+        ListView_SetItemText(listView, i, 1, const_cast<LPWSTR>(typeText.c_str()));
+
         std::wstring colorText = FormatPointLightColor(pointLight.m_color);
-        ListView_SetItemText(listView, i, 1, const_cast<LPWSTR>(colorText.c_str()));
+        ListView_SetItemText(listView, i, 2, const_cast<LPWSTR>(colorText.c_str()));
 
         wchar_t brightnessBuffer[32];
         std::swprintf(brightnessBuffer,
                       sizeof(brightnessBuffer) / sizeof(brightnessBuffer[0]),
                       L"%.2f",
                       pointLight.m_brightness);
-        ListView_SetItemText(listView, i, 2, brightnessBuffer);
+        ListView_SetItemText(listView, i, 3, brightnessBuffer);
     }
 }
 
 void RefreshPointLightControls(HWND hDlg)
 {
     wchar_t buffer[32];
+    const bool isLineLight = (g_pointLightShape == NSRender::PointLightShape::Line);
 
     std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_pointLightColor.r);
     SetDlgItemText(hDlg, IDC_EDIT_POINT_LIGHT_COLOR_R, buffer);
@@ -1123,6 +1238,38 @@ void RefreshPointLightControls(HWND hDlg)
                        TBM_SETPOS,
                        TRUE,
                        static_cast<LPARAM>(PointLightBrightnessToSliderValue(g_pointLightBrightness)));
+
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_POINT_LIGHT_TYPE);
+    if (combo != NULL)
+    {
+        SendMessage(combo, CB_SETCURSEL, PointLightShapeToComboIndex(g_pointLightShape), 0);
+    }
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_pointLightLineLength);
+    SetDlgItemText(hDlg, IDC_EDIT_POINT_LIGHT_LINE_LENGTH, buffer);
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_pointLightRotationDegrees.x);
+    SetDlgItemText(hDlg, IDC_EDIT_POINT_LIGHT_ROT_X, buffer);
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_pointLightRotationDegrees.y);
+    SetDlgItemText(hDlg, IDC_EDIT_POINT_LIGHT_ROT_Y, buffer);
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_pointLightRotationDegrees.z);
+    SetDlgItemText(hDlg, IDC_EDIT_POINT_LIGHT_ROT_Z, buffer);
+
+    const int lineControlIds[] =
+    {
+        IDC_STATIC_POINT_LIGHT_LINE_LENGTH_LABEL,
+        IDC_EDIT_POINT_LIGHT_LINE_LENGTH,
+        IDC_STATIC_POINT_LIGHT_ROT_X_LABEL,
+        IDC_EDIT_POINT_LIGHT_ROT_X,
+        IDC_STATIC_POINT_LIGHT_ROT_Y_LABEL,
+        IDC_EDIT_POINT_LIGHT_ROT_Y,
+        IDC_STATIC_POINT_LIGHT_ROT_Z_LABEL,
+        IDC_EDIT_POINT_LIGHT_ROT_Z,
+    };
+
+    for (const int controlId : lineControlIds)
+    {
+        EnableWindow(GetDlgItem(hDlg, controlId), isLineLight ? TRUE : FALSE);
+    }
 }
 
 void RefreshFogControls(HWND hDlg)
@@ -2077,6 +2224,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         InitializeEditableNumericFields(hDlg);
         InitializeTrackbars(hDlg);
         PopulateResolutionCombo(hDlg);
+        PopulatePointLightTypeCombo(hDlg);
         InitializeLoadedModelListView(hDlg);
         InitializePointLightListView(hDlg);
         RefreshAllControls(hDlg);
@@ -2641,6 +2789,16 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         if (commandId == IDC_BUTTON_ADD_POINT_LIGHT)
         {
             AddPointLightAtLookAt();
+            RefreshPointLightControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_COMBO_POINT_LIGHT_TYPE && HIWORD(wParam) == CBN_SELCHANGE)
+        {
+            HWND combo = reinterpret_cast<HWND>(lParam);
+            const int index = static_cast<int>(SendMessage(combo, CB_GETCURSEL, 0, 0));
+            g_pointLightShape = ComboIndexToPointLightShape(index);
+            ApplyPointLightShape();
             RefreshPointLightControls(hDlg);
             return TRUE;
         }

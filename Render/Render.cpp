@@ -1829,9 +1829,14 @@ void Render::SetLightBrightness(const float brightness)
     Light::SetBrightness(brightness);
 }
 
-void Render::AddPointLight(const D3DXVECTOR3& pos, const float brightness, const D3DXCOLOR color)
+void Render::AddPointLight(const D3DXVECTOR3& pos,
+                           const float brightness,
+                           const D3DXCOLOR color,
+                           const PointLightShape shape,
+                           const float lineLength,
+                           const D3DXVECTOR3& rotation)
 {
-    Light::AddPointLight(pos, color, brightness);
+    Light::AddPointLight(pos, color, brightness, shape, lineLength, rotation);
 }
 
 void Render::RotateCamera(const D3DXVECTOR3& rot)

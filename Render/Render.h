@@ -47,6 +47,7 @@
 #include "PostEffectFXAA.h"
 
 #include "WindowManager.h"
+#include "Light.h"
 #include "PostEffectZShadow.h"
 #include "GBuffer.h"
 #include "PostEffectFog.h"
@@ -287,7 +288,12 @@ public:
     void SetMeshMixSSSIntensity(const float intensity);
     void SetMeshMixSSSColor(const DWORD color);
 
-    void AddPointLight(const D3DXVECTOR3& pos, const float brightness, const D3DXCOLOR color);
+    void AddPointLight(const D3DXVECTOR3& pos,
+                       const float brightness,
+                       const D3DXCOLOR color,
+                       const PointLightShape shape = PointLightShape::Point,
+                       const float lineLength = 12.0f,
+                       const D3DXVECTOR3& rotation = D3DXVECTOR3(0.f, 0.f, 0.f));
 
 private:
 

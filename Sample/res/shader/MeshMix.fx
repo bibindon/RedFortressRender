@@ -157,7 +157,84 @@ float g_swayHeight = 3.0f;
 //---------------------------------------------------------
 float3 g_pointLightPos[16];
 float  g_pointLightBrightness[16];
+float  g_pointLightShape[16];
+float  g_pointLightLineLength[16];
+float4 g_pointLightRotation[16];
 float3 g_pointLightColor[16];
+
+static const float POINT_LIGHT_SQUARE_HALF_SIZE = 5.0f;
+static const float POINT_LIGHT_CUBE_HALF_SIZE = 4.0f;
+static const float POINT_LIGHT_SPHERE_RADIUS = 5.0f;
+
+float3 RotateVectorXYZ(float3 inputVector, float3 rotation)
+{
+    float sinX = sin(rotation.x);
+    float cosX = cos(rotation.x);
+    float sinY = sin(rotation.y);
+    float cosY = cos(rotation.y);
+    float sinZ = sin(rotation.z);
+    float cosZ = cos(rotation.z);
+
+    float3 rotated = inputVector;
+
+    rotated = float3(rotated.x,
+                     rotated.y * cosX - rotated.z * sinX,
+                     rotated.y * sinX + rotated.z * cosX);
+
+    rotated = float3(rotated.x * cosY + rotated.z * sinY,
+                     rotated.y,
+                     -rotated.x * sinY + rotated.z * cosY);
+
+    rotated = float3(rotated.x * cosZ - rotated.y * sinZ,
+                     rotated.x * sinZ + rotated.y * cosZ,
+                     rotated.z);
+
+    return rotated;
+}
+
+float3 ClosestPointOnPointLightShape(float3 lightPos,
+                                     float lightShape,
+                                     float lightLineLength,
+                                     float3 lightRotation,
+                                     float3 worldPos)
+{
+    float3 delta = worldPos - lightPos;
+
+    if (lightShape < 0.5f)
+    {
+        return lightPos;
+    }
+
+    if (lightShape < 1.5f)
+    {
+        float halfLength = max(lightLineLength * 0.5f, 0.0f);
+        float3 lineAxis = normalize(RotateVectorXYZ(float3(1.0f, 0.0f, 0.0f), lightRotation));
+        float projected = clamp(dot(delta, lineAxis), -halfLength, halfLength);
+        return lightPos + (lineAxis * projected);
+    }
+
+    if (lightShape < 2.5f)
+    {
+        float x = clamp(delta.x, -POINT_LIGHT_SQUARE_HALF_SIZE, POINT_LIGHT_SQUARE_HALF_SIZE);
+        float z = clamp(delta.z, -POINT_LIGHT_SQUARE_HALF_SIZE, POINT_LIGHT_SQUARE_HALF_SIZE);
+        return lightPos + float3(x, 0.0f, z);
+    }
+
+    if (lightShape < 3.5f)
+    {
+        return lightPos + clamp(delta,
+                                float3(-POINT_LIGHT_CUBE_HALF_SIZE, -POINT_LIGHT_CUBE_HALF_SIZE, -POINT_LIGHT_CUBE_HALF_SIZE),
+                                float3( POINT_LIGHT_CUBE_HALF_SIZE,  POINT_LIGHT_CUBE_HALF_SIZE,  POINT_LIGHT_CUBE_HALF_SIZE));
+    }
+
+    float distanceToCenter = length(delta);
+    if (distanceToCenter <= POINT_LIGHT_SPHERE_RADIUS || distanceToCenter <= 1e-6f)
+    {
+        return worldPos;
+    }
+
+    return lightPos + (delta / distanceToCenter) * POINT_LIGHT_SPHERE_RADIUS;
+}
 
 //---------------------------------------------------------
 // 頂点シェーダー
@@ -522,7 +599,12 @@ void PixelShaderPointLight(in  float4 inPosition            : POSITION,
             continue;
         }
 
-        float3 Lvec   = g_pointLightPos[i] - inPosWorld;
+        float3 lightSurfacePos = ClosestPointOnPointLightShape(g_pointLightPos[i],
+                                                               g_pointLightShape[i],
+                                                               g_pointLightLineLength[i],
+                                                               g_pointLightRotation[i].xyz,
+                                                               inPosWorld);
+        float3 Lvec   = lightSurfacePos - inPosWorld;
         float  dist   = length(Lvec);
         float3 L      = Lvec / max(dist, 1e-6);
 
