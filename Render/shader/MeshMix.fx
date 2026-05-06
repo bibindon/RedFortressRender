@@ -165,7 +165,6 @@ float3 g_pointLightColor[16];
 static const float POINT_LIGHT_SQUARE_HALF_SIZE = 5.0f;
 static const float POINT_LIGHT_CUBE_HALF_SIZE = 4.0f;
 static const float POINT_LIGHT_SPHERE_RADIUS = 5.0f;
-
 float3 RotateVectorXYZ(float3 inputVector, float3 rotation)
 {
     float sinX = sin(rotation.x);
@@ -234,6 +233,35 @@ float3 ClosestPointOnPointLightShape(float3 lightPos,
     }
 
     return lightPos + (delta / distanceToCenter) * POINT_LIGHT_SPHERE_RADIUS;
+}
+
+void AccumulateSingleLightSample(float3 samplePos,
+                                 float sampleBrightness,
+                                 float3 lightColor,
+                                 float3 worldPos,
+                                 float3 normal,
+                                 float3 cameraDirWS,
+                                 out float3 accumContribution,
+                                 out float diffContribution)
+{
+    float3 Lvec = samplePos - worldPos;
+    float dist = length(Lvec);
+    float3 L = Lvec / max(dist, 1e-6);
+
+    float NdotL = saturate(dot(normal, L));
+    float3 H = normalize(L + cameraDirWS);
+    float NdotH = saturate(dot(normal, H));
+    float atten = saturate(1.0 / max(dist, 1e-6));
+
+    float diff = sampleBrightness * atten * NdotL;
+    float spec = 0.0f;
+    if (g_specularIntensity > 0.0f)
+    {
+        spec = pow(NdotH, g_specularPower) * g_specularIntensity * sampleBrightness * atten;
+    }
+
+    accumContribution = lightColor * (diff + spec);
+    diffContribution = diff;
 }
 
 //---------------------------------------------------------
@@ -604,31 +632,18 @@ void PixelShaderPointLight(in  float4 inPosition            : POSITION,
                                                                g_pointLightLineLength[i],
                                                                g_pointLightRotation[i].xyz,
                                                                inPosWorld);
-        float3 Lvec   = lightSurfacePos - inPosWorld;
-        float  dist   = length(Lvec);
-        float3 L      = Lvec / max(dist, 1e-6);
-
-        float  NdotL  = saturate(dot(N, L));
-        float3 H      = normalize(L + cameraDirWS);
-        float  NdotH  = saturate(dot(N, H));
-
-        // 減衰：簡易 1/dist （元の式を尊重）
-        float  atten  = saturate(1.0 / max(dist, 1e-6));
-
-        float  diff   = g_pointLightBrightness[i] * atten * NdotL;
-
-        float  spec   = 0.0f;
-        if (g_specularIntensity > 0.0f)
-        {
-            spec = pow(NdotH, g_specularPower) * g_specularIntensity
-                 * g_pointLightBrightness[i] * atten;
-        }
-
-        // ★ RGB に「色 × 強度」を加算
-        accum += g_pointLightColor[i] * diff;
-        accum += g_pointLightColor[i] * spec;
-
-        diffSum += diff;
+        float3 sampleAccum = 0.0f;
+        float sampleDiff = 0.0f;
+        AccumulateSingleLightSample(lightSurfacePos,
+                                    g_pointLightBrightness[i],
+                                    g_pointLightColor[i],
+                                    inPosWorld,
+                                    N,
+                                    cameraDirWS,
+                                    sampleAccum,
+                                    sampleDiff);
+        accum += sampleAccum;
+        diffSum += sampleDiff;
     }
 
     // HDR蓄積：ここでクランプしない

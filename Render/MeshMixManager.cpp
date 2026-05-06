@@ -19,6 +19,11 @@ namespace
 {
 using TextureCache = std::unordered_map<std::wstring, LPDIRECT3DBASETEXTURE9>;
 
+float PointLightShapeToShaderValue(const PointLightShape shape)
+{
+    return static_cast<float>(static_cast<int>(shape));
+}
+
 TextureCache& GetTextureCache()
 {
     static TextureCache textureCache;
@@ -1182,9 +1187,13 @@ void MeshMixManager::Render()
 
         D3DXVECTOR4 pos[16];
         float brightness[16] { };
+        float shape[16] { };
+        float lineLength[16] { };
+        D3DXVECTOR4 rotation[16];
         D3DXVECTOR4 color[16];
 
         ZeroMemory(pos, sizeof(pos));
+        ZeroMemory(rotation, sizeof(rotation));
         ZeroMemory(color, sizeof(color));
 
         for (int i = 0; i < 16; ++i)
@@ -1195,6 +1204,11 @@ void MeshMixManager::Render()
                 pos[i].y = pointLightList.at(i).m_pos.y;
                 pos[i].z = pointLightList.at(i).m_pos.z;
                 brightness[i] = pointLightList.at(i).m_brightness;
+                shape[i] = PointLightShapeToShaderValue(pointLightList.at(i).m_shape);
+                lineLength[i] = pointLightList.at(i).m_lineLength;
+                rotation[i].x = pointLightList.at(i).m_rotation.x;
+                rotation[i].y = pointLightList.at(i).m_rotation.y;
+                rotation[i].z = pointLightList.at(i).m_rotation.z;
                 color[i].x = pointLightList.at(i).m_color.r;
                 color[i].y = pointLightList.at(i).m_color.g;
                 color[i].z = pointLightList.at(i).m_color.b;
@@ -1205,6 +1219,15 @@ void MeshMixManager::Render()
         assert(hResult == S_OK);
 
         hResult = sharedEffect->SetFloatArray("g_pointLightBrightness", brightness, 16);
+        assert(hResult == S_OK);
+
+        hResult = sharedEffect->SetFloatArray("g_pointLightShape", shape, 16);
+        assert(hResult == S_OK);
+
+        hResult = sharedEffect->SetFloatArray("g_pointLightLineLength", lineLength, 16);
+        assert(hResult == S_OK);
+
+        hResult = sharedEffect->SetVectorArray("g_pointLightRotation", rotation, 16);
         assert(hResult == S_OK);
 
         hResult = sharedEffect->SetVectorArray("g_pointLightColor", color, 16);
