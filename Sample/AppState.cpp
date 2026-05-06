@@ -82,6 +82,8 @@ D3DXCOLOR g_pointLightColor = D3DXCOLOR(1.0f, 0.35f, 0.1f, 1.0f);
 float g_pointLightBrightness = 1.0f;
 NSRender::PointLightShape g_pointLightShape = NSRender::PointLightShape::Point;
 float g_pointLightLineLength = 12.0f;
+float g_pointLightSquareWidth = 10.0f;
+float g_pointLightSquareHeight = 10.0f;
 D3DXVECTOR3 g_pointLightRotationDegrees = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 int g_gaussianSampleSize = 101;
 int g_fxaaQuality = 4;
@@ -249,6 +251,11 @@ float ClampPointLightBrightness(const float brightness)
 float ClampPointLightLineLength(const float lineLength)
 {
     return (std::max)(POINT_LIGHT_LINE_LENGTH_MIN, (std::min)(lineLength, POINT_LIGHT_LINE_LENGTH_MAX));
+}
+
+float ClampPointLightSquareSize(const float size)
+{
+    return (std::max)(POINT_LIGHT_SQUARE_SIZE_MIN, (std::min)(size, POINT_LIGHT_SQUARE_SIZE_MAX));
 }
 
 float ClampPointLightRotationDegrees(const float degrees)
@@ -1001,6 +1008,12 @@ void ApplyPointLightLineSettings()
     g_pointLightRotationDegrees.x = ClampPointLightRotationDegrees(g_pointLightRotationDegrees.x);
     g_pointLightRotationDegrees.y = ClampPointLightRotationDegrees(g_pointLightRotationDegrees.y);
     g_pointLightRotationDegrees.z = ClampPointLightRotationDegrees(g_pointLightRotationDegrees.z);
+}
+
+void ApplyPointLightSquareSettings()
+{
+    g_pointLightSquareWidth = ClampPointLightSquareSize(g_pointLightSquareWidth);
+    g_pointLightSquareHeight = ClampPointLightSquareSize(g_pointLightSquareHeight);
 }
 
 void ApplyGaussianSampleSize()
@@ -1853,6 +1866,7 @@ void AddPointLightAtLookAt()
     ApplyPointLightBrightness();
     ApplyPointLightShape();
     ApplyPointLightLineSettings();
+    ApplyPointLightSquareSettings();
 
     const D3DXVECTOR3 rotationRadians(D3DXToRadian(g_pointLightRotationDegrees.x),
                                       D3DXToRadian(g_pointLightRotationDegrees.y),
@@ -1862,6 +1876,8 @@ void AddPointLightAtLookAt()
                            g_pointLightColor,
                            g_pointLightShape,
                            g_pointLightLineLength,
+                           g_pointLightSquareWidth,
+                           g_pointLightSquareHeight,
                            rotationRadians);
     RefreshSettingsDialogState();
 }

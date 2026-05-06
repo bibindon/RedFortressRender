@@ -274,6 +274,8 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_POINT_LIGHT_COLOR_B,
         IDC_EDIT_POINT_LIGHT_BRIGHTNESS,
         IDC_EDIT_POINT_LIGHT_LINE_LENGTH,
+        IDC_EDIT_POINT_LIGHT_SQUARE_WIDTH,
+        IDC_EDIT_POINT_LIGHT_SQUARE_HEIGHT,
         IDC_EDIT_POINT_LIGHT_ROT_X,
         IDC_EDIT_POINT_LIGHT_ROT_Y,
         IDC_EDIT_POINT_LIGHT_ROT_Z,
@@ -609,6 +611,22 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
         {
             g_pointLightLineLength = floatValue;
             ApplyPointLightLineSettings();
+        }
+        RefreshPointLightControls(hDlg);
+        return true;
+    case IDC_EDIT_POINT_LIGHT_SQUARE_WIDTH:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_pointLightSquareWidth = floatValue;
+            ApplyPointLightSquareSettings();
+        }
+        RefreshPointLightControls(hDlg);
+        return true;
+    case IDC_EDIT_POINT_LIGHT_SQUARE_HEIGHT:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_pointLightSquareHeight = floatValue;
+            ApplyPointLightSquareSettings();
         }
         RefreshPointLightControls(hDlg);
         return true;
@@ -1206,6 +1224,7 @@ void RefreshPointLightControls(HWND hDlg)
 {
     wchar_t buffer[32];
     const bool isLineLight = (g_pointLightShape == NSRender::PointLightShape::Line);
+    const bool isSquareLight = (g_pointLightShape == NSRender::PointLightShape::Square);
 
     std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_pointLightColor.r);
     SetDlgItemText(hDlg, IDC_EDIT_POINT_LIGHT_COLOR_R, buffer);
@@ -1247,6 +1266,10 @@ void RefreshPointLightControls(HWND hDlg)
 
     std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_pointLightLineLength);
     SetDlgItemText(hDlg, IDC_EDIT_POINT_LIGHT_LINE_LENGTH, buffer);
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_pointLightSquareWidth);
+    SetDlgItemText(hDlg, IDC_EDIT_POINT_LIGHT_SQUARE_WIDTH, buffer);
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_pointLightSquareHeight);
+    SetDlgItemText(hDlg, IDC_EDIT_POINT_LIGHT_SQUARE_HEIGHT, buffer);
     std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_pointLightRotationDegrees.x);
     SetDlgItemText(hDlg, IDC_EDIT_POINT_LIGHT_ROT_X, buffer);
     std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_pointLightRotationDegrees.y);
@@ -1268,7 +1291,24 @@ void RefreshPointLightControls(HWND hDlg)
 
     for (const int controlId : lineControlIds)
     {
-        EnableWindow(GetDlgItem(hDlg, controlId), isLineLight ? TRUE : FALSE);
+        HWND control = GetDlgItem(hDlg, controlId);
+        ShowWindow(control, isLineLight ? SW_SHOW : SW_HIDE);
+        EnableWindow(control, isLineLight ? TRUE : FALSE);
+    }
+
+    const int squareControlIds[] =
+    {
+        IDC_STATIC_POINT_LIGHT_SQUARE_WIDTH_LABEL,
+        IDC_EDIT_POINT_LIGHT_SQUARE_WIDTH,
+        IDC_STATIC_POINT_LIGHT_SQUARE_HEIGHT_LABEL,
+        IDC_EDIT_POINT_LIGHT_SQUARE_HEIGHT,
+    };
+
+    for (const int controlId : squareControlIds)
+    {
+        HWND control = GetDlgItem(hDlg, controlId);
+        ShowWindow(control, isSquareLight ? SW_SHOW : SW_HIDE);
+        EnableWindow(control, isSquareLight ? TRUE : FALSE);
     }
 }
 

@@ -26,6 +26,8 @@ struct PointLightInfo
     float m_brightness = 1.f;
     PointLightShape m_shape = PointLightShape::Point;
     float m_lineLength = 12.0f;
+    float m_squareWidth = 10.0f;
+    float m_squareHeight = 10.0f;
     D3DXVECTOR3 m_rotation = D3DXVECTOR3(0.f, 0.f, 0.f);
 };
 
@@ -51,6 +53,8 @@ public:
                               const float brightness,
                               const PointLightShape shape = PointLightShape::Point,
                               const float lineLength = 12.0f,
+                              const float squareWidth = 10.0f,
+                              const float squareHeight = 10.0f,
                               const D3DXVECTOR3& rotation = D3DXVECTOR3(0.f, 0.f, 0.f));
     static bool RemovePointLight(size_t index);
 

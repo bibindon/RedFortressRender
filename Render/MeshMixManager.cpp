@@ -1189,6 +1189,8 @@ void MeshMixManager::Render()
         float brightness[16] { };
         float shape[16] { };
         float lineLength[16] { };
+        float squareWidth[16] { };
+        float squareHeight[16] { };
         D3DXVECTOR4 rotation[16];
         D3DXVECTOR4 color[16];
 
@@ -1206,6 +1208,8 @@ void MeshMixManager::Render()
                 brightness[i] = pointLightList.at(i).m_brightness;
                 shape[i] = PointLightShapeToShaderValue(pointLightList.at(i).m_shape);
                 lineLength[i] = pointLightList.at(i).m_lineLength;
+                squareWidth[i] = pointLightList.at(i).m_squareWidth;
+                squareHeight[i] = pointLightList.at(i).m_squareHeight;
                 rotation[i].x = pointLightList.at(i).m_rotation.x;
                 rotation[i].y = pointLightList.at(i).m_rotation.y;
                 rotation[i].z = pointLightList.at(i).m_rotation.z;
@@ -1225,6 +1229,12 @@ void MeshMixManager::Render()
         assert(hResult == S_OK);
 
         hResult = sharedEffect->SetFloatArray("g_pointLightLineLength", lineLength, 16);
+        assert(hResult == S_OK);
+
+        hResult = sharedEffect->SetFloatArray("g_pointLightSquareWidth", squareWidth, 16);
+        assert(hResult == S_OK);
+
+        hResult = sharedEffect->SetFloatArray("g_pointLightSquareHeight", squareHeight, 16);
         assert(hResult == S_OK);
 
         hResult = sharedEffect->SetVectorArray("g_pointLightRotation", rotation, 16);

@@ -159,10 +159,11 @@ float3 g_pointLightPos[16];
 float  g_pointLightBrightness[16];
 float  g_pointLightShape[16];
 float  g_pointLightLineLength[16];
+float  g_pointLightSquareWidth[16];
+float  g_pointLightSquareHeight[16];
 float4 g_pointLightRotation[16];
 float3 g_pointLightColor[16];
 
-static const float POINT_LIGHT_SQUARE_HALF_SIZE = 5.0f;
 static const float POINT_LIGHT_CUBE_HALF_SIZE = 4.0f;
 static const float POINT_LIGHT_SPHERE_RADIUS = 5.0f;
 float3 RotateVectorXYZ(float3 inputVector, float3 rotation)
@@ -194,6 +195,8 @@ float3 RotateVectorXYZ(float3 inputVector, float3 rotation)
 float3 ClosestPointOnPointLightShape(float3 lightPos,
                                      float lightShape,
                                      float lightLineLength,
+                                     float lightSquareWidth,
+                                     float lightSquareHeight,
                                      float3 lightRotation,
                                      float3 worldPos)
 {
@@ -214,8 +217,10 @@ float3 ClosestPointOnPointLightShape(float3 lightPos,
 
     if (lightShape < 2.5f)
     {
-        float x = clamp(delta.x, -POINT_LIGHT_SQUARE_HALF_SIZE, POINT_LIGHT_SQUARE_HALF_SIZE);
-        float z = clamp(delta.z, -POINT_LIGHT_SQUARE_HALF_SIZE, POINT_LIGHT_SQUARE_HALF_SIZE);
+        float halfWidth = max(lightSquareWidth * 0.5f, 0.0f);
+        float halfHeight = max(lightSquareHeight * 0.5f, 0.0f);
+        float x = clamp(delta.x, -halfWidth, halfWidth);
+        float z = clamp(delta.z, -halfHeight, halfHeight);
         return lightPos + float3(x, 0.0f, z);
     }
 
@@ -630,6 +635,8 @@ void PixelShaderPointLight(in  float4 inPosition            : POSITION,
         float3 lightSurfacePos = ClosestPointOnPointLightShape(g_pointLightPos[i],
                                                                g_pointLightShape[i],
                                                                g_pointLightLineLength[i],
+                                                               g_pointLightSquareWidth[i],
+                                                               g_pointLightSquareHeight[i],
                                                                g_pointLightRotation[i].xyz,
                                                                inPosWorld);
         float3 sampleAccum = 0.0f;

@@ -46,6 +46,8 @@ void Light::AddPointLight(const D3DXVECTOR3& pos,
                           const float brightness,
                           const PointLightShape shape,
                           const float lineLength,
+                          const float squareWidth,
+                          const float squareHeight,
                           const D3DXVECTOR3& rotation)
 {
     PointLightInfo pointLightInfo;
@@ -55,6 +57,8 @@ void Light::AddPointLight(const D3DXVECTOR3& pos,
     pointLightInfo.m_brightness = brightness;
     pointLightInfo.m_shape = shape;
     pointLightInfo.m_lineLength = lineLength;
+    pointLightInfo.m_squareWidth = squareWidth;
+    pointLightInfo.m_squareHeight = squareHeight;
     pointLightInfo.m_rotation = rotation;
 
     m_pointLightList.push_back(pointLightInfo);
