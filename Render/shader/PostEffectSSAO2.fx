@@ -121,26 +121,6 @@ float GetViewDepth(float2 uv)
     return linearZ * (g_fFar - g_fNear) + g_fNear;
 }
 
-float2 GetFixedDiskSample(const int index)
-{
-    if (index == 0) return float2(0.1250f, 0.0000f);
-    if (index == 1) return float2(-0.1591f, 0.1458f);
-    if (index == 2) return float2(0.0244f, -0.2784f);
-    if (index == 3) return float2(0.2126f, 0.2772f);
-    if (index == 4) return float2(-0.3927f, -0.0693f);
-    if (index == 5) return float2(0.3827f, -0.2432f);
-    if (index == 6) return float2(-0.1202f, 0.4845f);
-    if (index == 7) return float2(-0.2561f, -0.4811f);
-    if (index == 8) return float2(0.5664f, 0.1174f);
-    if (index == 9) return float2(-0.5749f, 0.2208f);
-    if (index == 10) return float2(0.2375f, -0.6229f);
-    if (index == 11) return float2(0.1455f, 0.6856f);
-    if (index == 12) return float2(-0.7124f, -0.2317f);
-    if (index == 13) return float2(0.6904f, -0.3484f);
-    if (index == 14) return float2(-0.3810f, 0.7253f);
-    return float2(-0.0287f, -0.8745f);
-}
-
 float2 ProjectViewPositionToTexCoord(float3 viewPosition)
 {
     float4 clip = mul(float4(viewPosition, 1.0f), g_matProj);
@@ -155,36 +135,43 @@ float3 IncreaseSaturation(float3 color, float amount)
     return saturate(lerp(luminance.xxx, color, amount));
 }
 
-float ComputeOcclusionSample(float2 baseUv,
-                             float currentDepth,
-                             float3 currentNormal,
-                             float3 currentViewPosition,
-                             float3 tangent,
-                             float3 bitangent,
-                             float sampleDistance,
-                             float index)
+float2 ComputeOcclusionSample(float2 baseUv,
+                              float currentDepth,
+                              float3 currentNormal,
+                              float3 currentViewPosition,
+                              float3 tangent,
+                              float3 bitangent,
+                              float sampleDistance,
+                              float index)
 {
-    const int sampleIndex = clamp((int)index, 0, 15);
-    float2 disk = GetFixedDiskSample(sampleIndex);
-    float hemisphereLift = sqrt(saturate(1.0f - dot(disk, disk)));
-    float3 sampleDirection = normalize(tangent * disk.x + bitangent * disk.y + currentNormal * hemisphereLift);
+    const float kSampleCount = 16.0f;
+    float distanceScale = 1.0f;
+    if (kSampleCount > 1.0f)
+    {
+        float fixedDistanceU = saturate(index / (kSampleCount - 1.0f));
+        distanceScale = fixedDistanceU * fixedDistanceU * fixedDistanceU;
+    }
 
-    float3 sampleViewPosition = currentViewPosition + currentNormal * (sampleDistance * 0.05f) + sampleDirection * sampleDistance;
+    float normalizedDepth = saturate((currentDepth - g_fNear) / max(g_fFar - g_fNear, 0.0001f));
+    distanceScale += 0.1f * normalizedDepth;
+
+    float sampleDistanceScaled = sampleDistance * distanceScale;
+    float3 sampleViewPosition = currentViewPosition + currentNormal * sampleDistanceScaled;
     if (sampleViewPosition.z <= 0.0f)
     {
-        return 0.0f;
+        return float2(0.0f, 0.0f);
     }
 
     float2 sampleUv = ProjectViewPositionToTexCoord(sampleViewPosition);
     if (sampleUv.x < 0.0f || sampleUv.x > 1.0f || sampleUv.y < 0.0f || sampleUv.y > 1.0f)
     {
-        return 0.0f;
+        return float2(0.0f, 0.0f);
     }
 
     float sampleDepth = GetViewDepth(sampleUv);
     if (sampleDepth >= g_fFar)
     {
-        return 0.0f;
+        return float2(0.0f, 0.0f);
     }
 
     float expectedDepth = sampleViewPosition.z;
@@ -197,11 +184,10 @@ float ComputeOcclusionSample(float2 baseUv,
     float backDepthWithMargin = adjustedSampleDepth + sampleThickness + g_depthCompareThreshold;
     if (frontDepthWithMargin <= currentDepth && currentDepth <= backDepthWithMargin)
     {
-        float distanceAttenuation = 1.0f - saturate(abs(sampleDepth - currentDepth) / max(sampleDistance, 0.001f));
-        return distanceAttenuation * distanceAttenuation;
+        return float2(1.0f, 1.0f);
     }
 
-    return 0.0f;
+    return float2(0.0f, 1.0f);
 }
 
 float4 PS_AO2(VS_OUT i) : COLOR0
@@ -220,24 +206,30 @@ float4 PS_AO2(VS_OUT i) : COLOR0
     float3 bitangent = cross(currentNormal, tangent);
 
     const int kSampleCount = 16;
-    float occlusion = 0.0f;
+    float occlusionCount = 0.0f;
+    float validSampleCount = 0.0f;
 
     [unroll]
     for (int sampleIndex = 0; sampleIndex < kSampleCount; ++sampleIndex)
     {
-        occlusion += ComputeOcclusionSample(i.uv,
-                                            currentDepth,
-                                            currentNormal,
-                                            currentViewPosition,
-                                            tangent,
-                                            bitangent,
-                                            g_sampleRadius,
-                                            (float)sampleIndex);
+        float2 occlusionSample = ComputeOcclusionSample(i.uv,
+                                                        currentDepth,
+                                                        currentNormal,
+                                                        currentViewPosition,
+                                                        tangent,
+                                                        bitangent,
+                                                        g_sampleRadius,
+                                                        (float)sampleIndex);
+        occlusionCount += occlusionSample.x;
+        validSampleCount += occlusionSample.y;
     }
 
-    float occlusionRate = occlusion / (float)kSampleCount;
-    float ao = saturate(1.0f - occlusionRate);
-    ao = max(0.2f, ao);
+    float ao = 1.0f;
+    if (validSampleCount > 0.0f)
+    {
+        float occlusionRate = occlusionCount / validSampleCount;
+        ao = saturate(1.0f - occlusionRate);
+    }
     return float4(ao, ao, ao, 1.0f);
 }
 
