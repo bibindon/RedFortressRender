@@ -199,6 +199,16 @@ void Render::ApplySettings()
         }
     }
 
+    const auto ssao2BlurEnable = m_settings.find(L"SSAO2BlurEnable");
+    if (ssao2BlurEnable != m_settings.end())
+    {
+        bool enabled = true;
+        if (TryParseBoolSetting(ssao2BlurEnable->second, enabled))
+        {
+            SetPostEffectSSAO2Blur(enabled);
+        }
+    }
+
     const auto fogEnable = m_settings.find(L"FogEnable");
     if (fogEnable != m_settings.end())
     {
@@ -1675,6 +1685,11 @@ void Render::SetPostEffectSSAO(const bool arg)
 void Render::SetPostEffectSSAOMode(const SSAOMode mode)
 {
     m_postEffectSSAOMode = mode;
+}
+
+void Render::SetPostEffectSSAO2Blur(const bool arg)
+{
+    m_postEffectSSAO2.SetBlurEnabled(arg);
 }
 
 void Render::SetPostEffectSSAOBrightness(const float brightness)

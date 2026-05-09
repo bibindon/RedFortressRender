@@ -250,6 +250,7 @@ public:
     void SetPostEffectDepthBufferShadowCompositeTapCount(const int tapCount);
     void SetPostEffectSSAO(const bool arg);
     void SetPostEffectSSAOMode(const SSAOMode mode);
+    void SetPostEffectSSAO2Blur(const bool arg);
     void SetPostEffectSSAOBrightness(const float brightness);
     void SetPostEffectSSAOSaturationBoost(const float saturationBoost);
     void SetPostEffectSSAOSampleRadius(const float sampleRadius);

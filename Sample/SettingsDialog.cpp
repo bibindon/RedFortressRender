@@ -131,6 +131,7 @@ void RefreshSSAOBrightnessControls(HWND hDlg);
 void RefreshSSAOSampleRadiusControls(HWND hDlg);
 void RefreshSSAOSaturationBoostControls(HWND hDlg);
 void RefreshSSAOModeControls(HWND hDlg);
+void RefreshSSAO2BlurControls(HWND hDlg);
 void RefreshBloomThresholdControls(HWND hDlg);
 void RefreshStarBurstThresholdControls(HWND hDlg);
 void RefreshModelLoadScaleControls(HWND hDlg);
@@ -1818,6 +1819,12 @@ void RefreshSSAOModeControls(HWND hDlg)
     }
 }
 
+void RefreshSSAO2BlurControls(HWND hDlg)
+{
+    CheckDlgButton(hDlg, IDC_CHECK_SSAO2_BLUR, g_bSSAO2Blur ? BST_CHECKED : BST_UNCHECKED);
+    EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SSAO2_BLUR), g_ssaoMode == SampleSSAOMode::SSAO2);
+}
+
 void RefreshBloom(HWND hDlg)
 {
     CheckDlgButton(hDlg, IDC_CHECK_BLOOM, g_bBloom ? BST_CHECKED : BST_UNCHECKED);
@@ -2019,6 +2026,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshDepthBufferShadow(hDlg);
     RefreshSSAO(hDlg);
     RefreshSSAOModeControls(hDlg);
+    RefreshSSAO2BlurControls(hDlg);
     RefreshBloom(hDlg);
     RefreshDepthOfField(hDlg);
     RefreshStarBurst(hDlg);
@@ -3122,6 +3130,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_ssaoMode = (index == 1) ? SampleSSAOMode::SSAO2 : SampleSSAOMode::Legacy;
             ApplySSAOMode();
             RefreshSSAOModeControls(hDlg);
+            RefreshSSAO2BlurControls(hDlg);
             return TRUE;
         }
 
@@ -3205,6 +3214,14 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_bSSAO = (IsDlgButtonChecked(hDlg, IDC_CHECK_SSAO) == BST_CHECKED);
             g_Render.SetPostEffectSSAO(g_bSSAO);
             RefreshSSAO(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_SSAO2_BLUR)
+        {
+            g_bSSAO2Blur = (IsDlgButtonChecked(hDlg, IDC_CHECK_SSAO2_BLUR) == BST_CHECKED);
+            ApplySSAO2Blur();
+            RefreshSSAO2BlurControls(hDlg);
             return TRUE;
         }
 

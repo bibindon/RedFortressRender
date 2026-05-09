@@ -21,6 +21,7 @@ public:
     void SetBrightness(const float brightness);
     void SetSaturationBoost(const float saturationBoost);
     void SetSampleRadius(const float sampleRadius);
+    void SetBlurEnabled(const bool enabled);
 
     void OnDeviceLost();
     void OnDeviceReset();
@@ -30,6 +31,7 @@ private:
     float m_brightness = 1.0f;
     float m_saturationBoost = 0.30f;
     float m_sampleRadius = 4.0f;
+    bool m_blurEnabled = true;
 
     LPD3DXEFFECT m_fxSSAO2 = NULL;
 

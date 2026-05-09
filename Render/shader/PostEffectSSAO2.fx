@@ -228,82 +228,89 @@ float4 PS_AO2(VS_OUT i) : COLOR0
     return float4(ao, ao, ao, 1.0f);
 }
 
-float GaussianW(int k, float sigma)
+float ComputeDepthAwareBlurWeight(float centerDepth, float sampleDepth)
 {
-    float fk = (float)k;
-    float denom = 2.0f * sigma * sigma;
-    return exp(-(fk * fk) / denom);
-}
-
-float ComputeBlurWeight(float2 centerUv, float2 sampleUv, float baseWeight)
-{
-    float centerDepth = GetViewDepth(centerUv);
-    float sampleDepth = GetViewDepth(sampleUv);
-    if (abs(sampleDepth - centerDepth) > max(0.03f, centerDepth * 0.08f))
+    if (centerDepth >= g_fFar || sampleDepth >= g_fFar)
     {
         return 0.0f;
     }
 
-    float3 centerNormal = GetViewNormal(centerUv);
-    float3 sampleNormal = GetViewNormal(sampleUv);
+    float depthDifferenceMeters = abs(sampleDepth - centerDepth);
+    float depthToleranceMeters = max(0.01f, centerDepth * 0.08f);
+    float normalizedDifference = depthDifferenceMeters / depthToleranceMeters;
+    if (normalizedDifference >= 1.0f)
+    {
+        return 0.0f;
+    }
+
+    float closeness = 1.0f - normalizedDifference;
+    return closeness * closeness;
+}
+
+float ComputeNormalAwareBlurWeight(float3 centerNormal, float3 sampleNormal)
+{
     float normalAlignment = dot(centerNormal, sampleNormal);
     if (normalAlignment <= 0.55f)
     {
         return 0.0f;
     }
 
-    return baseWeight * normalAlignment;
+    float normalizedDifference = saturate((1.0f - normalAlignment) / 0.45f);
+    float closeness = 1.0f - normalizedDifference;
+    return closeness * closeness;
 }
 
-float4 PS_BlurH(VS_OUT i) : COLOR0
+float ComputeBlurSampleWeight(float baseWeight,
+                              float centerDepth,
+                              float sampleDepth,
+                              float3 centerNormal,
+                              float3 sampleNormal)
 {
-    const int R = 6;
-    const float sigma = 3.0f;
-    float sumAO = tex2D(sampAO, i.uv).r;
-    float sumW = 1.0f;
-
-    [unroll]
-    for (int k = 1; k <= R; ++k)
-    {
-        float baseWeight = GaussianW(k, sigma);
-        float2 uvL = i.uv - float2(g_invSize.x * k, 0.0f);
-        float2 uvR = i.uv + float2(g_invSize.x * k, 0.0f);
-
-        float wL = ComputeBlurWeight(i.uv, uvL, baseWeight);
-        float wR = ComputeBlurWeight(i.uv, uvR, baseWeight);
-
-        sumAO += tex2D(sampAO, uvL).r * wL;
-        sumAO += tex2D(sampAO, uvR).r * wR;
-        sumW += wL + wR;
-    }
-
-    float ao = sumAO / max(sumW, 1e-6f);
-    return float4(ao, ao, ao, 1.0f);
+    float depthWeight = ComputeDepthAwareBlurWeight(centerDepth, sampleDepth);
+    float normalWeight = ComputeNormalAwareBlurWeight(centerNormal, sampleNormal);
+    return baseWeight * depthWeight * normalWeight;
 }
 
-float4 PS_BlurV(VS_OUT i) : COLOR0
+float4 PS_Blur21x21(VS_OUT i) : COLOR0
 {
-    const int R = 6;
-    const float sigma = 3.0f;
-    float sumAO = tex2D(sampAO, i.uv).r;
-    float sumW = 1.0f;
+    float2 texelSize = g_invSize;
+    float centerDepth = GetViewDepth(i.uv);
+    float3 centerNormal = GetViewNormal(i.uv);
+    float blurredValue = 0.0f;
+    float weightSum = 0.0f;
 
-    [unroll]
-    for (int k = 1; k <= R; ++k)
+    [loop]
+    for (int y = -10; y <= 10; ++y)
     {
-        float baseWeight = GaussianW(k, sigma);
-        float2 uvU = i.uv - float2(0.0f, g_invSize.y * k);
-        float2 uvD = i.uv + float2(0.0f, g_invSize.y * k);
+        [loop]
+        for (int x = -10; x <= 10; ++x)
+        {
+            if (x == 0 && y == 0)
+            {
+                continue;
+            }
 
-        float wU = ComputeBlurWeight(i.uv, uvU, baseWeight);
-        float wD = ComputeBlurWeight(i.uv, uvD, baseWeight);
+            float2 sampleUv = i.uv + float2((float)x * texelSize.x,
+                                            (float)y * texelSize.y);
+            sampleUv = saturate(sampleUv);
 
-        sumAO += tex2D(sampAO, uvU).r * wU;
-        sumAO += tex2D(sampAO, uvD).r * wD;
-        sumW += wU + wD;
+            float sampleDepth = GetViewDepth(sampleUv);
+            float3 sampleNormal = GetViewNormal(sampleUv);
+            float weight = ComputeBlurSampleWeight(1.0f,
+                                                   centerDepth,
+                                                   sampleDepth,
+                                                   centerNormal,
+                                                   sampleNormal);
+            blurredValue += tex2D(sampAO, sampleUv).r * weight;
+            weightSum += weight;
+        }
     }
 
-    float ao = sumAO / max(sumW, 1e-6f);
+    float ao = 1.0f;
+    if (weightSum > 0.0f)
+    {
+        ao = blurredValue / weightSum;
+    }
     return float4(ao, ao, ao, 1.0f);
 }
 
@@ -328,23 +335,13 @@ technique TechniqueAO2_Create
     }
 }
 
-technique TechniqueAO2_BlurH
+technique TechniqueAO2_Blur21x21
 {
     pass P0
     {
         CullMode = NONE;
         VertexShader = compile vs_3_0 VS_Fullscreen();
-        PixelShader = compile ps_3_0 PS_BlurH();
-    }
-}
-
-technique TechniqueAO2_BlurV
-{
-    pass P0
-    {
-        CullMode = NONE;
-        VertexShader = compile vs_3_0 VS_Fullscreen();
-        PixelShader = compile ps_3_0 PS_BlurV();
+        PixelShader = compile ps_3_0 PS_Blur21x21();
     }
 }
 

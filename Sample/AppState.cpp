@@ -45,6 +45,7 @@ int g_motionBlurCameraSampleCount = 13;
 bool g_bDepthBufferShadow = true;
 bool g_bSSAO = true;
 SampleSSAOMode g_ssaoMode = SampleSSAOMode::Legacy;
+bool g_bSSAO2Blur = true;
 bool g_bFog = true;
 bool g_bHeightFog = true;
 bool g_bSaturateFilter = false;
@@ -785,6 +786,7 @@ void ApplyPostEffectToggleSettings()
     g_Render.SetPostEffectDepthBufferShadow(g_bDepthBufferShadow);
     g_Render.SetPostEffectSSAO(g_bSSAO);
     ApplySSAOMode();
+    ApplySSAO2Blur();
     g_Render.SetPostEffectFog(g_bFog);
     g_Render.SetPostEffectHeightFog(g_bHeightFog);
     g_Render.SetPostEffectSaturateEnable(g_bSaturateFilter);
@@ -923,6 +925,11 @@ void ApplySSAOMode()
                                   ? NSRender::SSAOMode::SSAO2
                                   : NSRender::SSAOMode::Legacy;
     g_Render.SetPostEffectSSAOMode(mode);
+}
+
+void ApplySSAO2Blur()
+{
+    g_Render.SetPostEffectSSAO2Blur(g_bSSAO2Blur);
 }
 
 void ApplyHalfLambertShadowSaturation()
@@ -2092,6 +2099,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
                 g_ssaoMode = (modeValue == L"1" || modeValue == L"ssao2" || modeValue == L"new")
                            ? SampleSSAOMode::SSAO2
                            : SampleSSAOMode::Legacy;
+            }
+            else if (key == L"SSAO2BlurEnable")
+            {
+                g_bSSAO2Blur = (std::stoi(value) != 0);
             }
             else if (key == L"HalfLambertShadowSaturation")
             {

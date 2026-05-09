@@ -32,6 +32,7 @@ ShadowCompositeTapCount,3
 ,
 SSAOEnable,1
 SSAOMode,SSAO2
+SSAO2BlurEnable,1
 SSAOBrightness,1.0
 SSAOSampleRadius,4.0
 SSAOSaturationBoost,1.00

@@ -70,6 +70,7 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO2::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     LPDIRECT3DSURFACE9 surfAO = NULL;
     LPDIRECT3DSURFACE9 surfAOTemp = NULL;
     LPDIRECT3DSURFACE9 surfRenderTarget = NULL;
+    LPDIRECT3DTEXTURE9 aoTextureForComposite = m_rtAoTex;
 
     m_rtAoTex->GetSurfaceLevel(0, &surfAO);
     m_rtAoTempTex->GetSurfaceLevel(0, &surfAOTemp);
@@ -81,15 +82,15 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO2::Draw(LPDIRECT3DTEXTURE9 renderTarget,
 
     m_fxSSAO2->SetMatrix("g_matView", &matrixView);
     m_fxSSAO2->SetMatrix("g_matProj", &matrixProj);
-    m_fxSSAO2->SetFloat("g_fNear", 0.1f);
-    m_fxSSAO2->SetFloat("g_fFar", 15.f);
+    m_fxSSAO2->SetFloat("g_fNear", Camera::GetNear());
+    m_fxSSAO2->SetFloat("g_fFar", Camera::GetFar());
     m_fxSSAO2->SetFloat("g_posRange", PostEffectSSAO::Z_RANGE);
     m_fxSSAO2->SetFloatArray("g_invSize", reinterpret_cast<FLOAT*>(&invSize), 2);
     m_fxSSAO2->SetTexture("texZ", texRenderTargetZ);
     m_fxSSAO2->SetTexture("texPos", texRenderTargetPos);
     m_fxSSAO2->SetTexture("texNormal", texRenderTargetNormal);
     m_fxSSAO2->SetTexture("texThickness", texRenderTargetThickness);
-    m_fxSSAO2->SetFloat("g_sampleRadius", 1.0);
+    m_fxSSAO2->SetFloat("g_sampleRadius", m_sampleRadius);
     m_fxSSAO2->SetFloat("g_depthCompareThreshold", 0.0f);
     m_fxSSAO2->SetFloat("g_depthBiasScale", 1.0f);
     m_fxSSAO2->SetFloat("g_normalBiasScale", 1.0f);
@@ -101,30 +102,24 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO2::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_fxSSAO2->EndPass();
     m_fxSSAO2->End();
 
-    Common::D3DDevice()->SetRenderTarget(0, surfAOTemp);
-    Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(255, 255, 255, 255), 1.0f, 0);
-    m_fxSSAO2->SetTexture("texAO", m_rtAoTex);
-    m_fxSSAO2->SetTechnique("TechniqueAO2_BlurH");
-    m_fxSSAO2->Begin(NULL, 0);
-    m_fxSSAO2->BeginPass(0);
-    DrawFullscreenQuad();
-    m_fxSSAO2->EndPass();
-    m_fxSSAO2->End();
-
-    Common::D3DDevice()->SetRenderTarget(0, surfAO);
-    Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(255, 255, 255, 255), 1.0f, 0);
-    m_fxSSAO2->SetTexture("texAO", m_rtAoTempTex);
-    m_fxSSAO2->SetTechnique("TechniqueAO2_BlurV");
-    m_fxSSAO2->Begin(NULL, 0);
-    m_fxSSAO2->BeginPass(0);
-    DrawFullscreenQuad();
-    m_fxSSAO2->EndPass();
-    m_fxSSAO2->End();
+    if (m_blurEnabled)
+    {
+        Common::D3DDevice()->SetRenderTarget(0, surfAOTemp);
+        Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(255, 255, 255, 255), 1.0f, 0);
+        m_fxSSAO2->SetTexture("texAO", m_rtAoTex);
+        m_fxSSAO2->SetTechnique("TechniqueAO2_Blur21x21");
+        m_fxSSAO2->Begin(NULL, 0);
+        m_fxSSAO2->BeginPass(0);
+        DrawFullscreenQuad();
+        m_fxSSAO2->EndPass();
+        m_fxSSAO2->End();
+        aoTextureForComposite = m_rtAoTempTex;
+    }
 
     Common::D3DDevice()->SetRenderTarget(0, surfAOTemp);
     Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 0, 255), 1.0f, 0);
     m_fxSSAO2->SetTexture("texColor", renderTarget);
-    m_fxSSAO2->SetTexture("texAO", m_rtAoTex);
+    m_fxSSAO2->SetTexture("texAO", aoTextureForComposite);
     m_fxSSAO2->SetFloat("g_aoBrightness", m_brightness);
     m_fxSSAO2->SetFloat("g_aoSaturationBoost", m_saturationBoost);
     m_fxSSAO2->SetTechnique("TechniqueAO2_Composite");
@@ -182,6 +177,11 @@ void PostEffectSSAO2::SetSaturationBoost(const float saturationBoost)
 void PostEffectSSAO2::SetSampleRadius(const float sampleRadius)
 {
     m_sampleRadius = sampleRadius;
+}
+
+void PostEffectSSAO2::SetBlurEnabled(const bool enabled)
+{
+    m_blurEnabled = enabled;
 }
 
 void PostEffectSSAO2::OnDeviceLost()
