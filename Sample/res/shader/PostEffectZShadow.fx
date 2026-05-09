@@ -357,7 +357,7 @@ void PS_Composite(in float4 inPos     : POSITION,
     float2 pixelCoord = floor(uv / float2(g_compositeTexelW, g_compositeTexelH));
     float4 vBaseColor = tex2D(samplerBase, uv);
     float4 vCenterShadowColor = tex2D(samplerShadow, uv);
-    float centerDepth = tex2D(samplerSceneDepth, uv).a;
+    float centerDepth = tex2D(samplerSceneDepth, uv).r;
     float3 centerNormal = DecodeWorldNormal(tex2D(samplerSceneNormal, uv).rgb);
 
     float4 vShadowColorSum = 0.0f;
@@ -382,7 +382,7 @@ void PS_Composite(in float4 inPos     : POSITION,
                 continue;
             }
 
-            float sampleDepth = tex2D(samplerSceneDepth, sampleUv).a;
+            float sampleDepth = tex2D(samplerSceneDepth, sampleUv).r;
             if (abs(sampleDepth - centerDepth) > g_edgeDepthThreshold)
             {
                 continue;

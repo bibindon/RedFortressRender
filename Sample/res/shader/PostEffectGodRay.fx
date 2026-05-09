@@ -85,7 +85,7 @@ VS_OUT VS(VS_IN i)
 
 float4 PS_OcclusionMask(VS_OUT i) : COLOR
 {
-    float pixelZ = tex2D(g_ZSampler, i.uv).a;
+    float pixelZ = tex2D(g_ZSampler, i.uv).r;
     float mask = (pixelZ > 0.0f && pixelZ < g_LightViewZ) ? 0.0f : 1.0f;
     return float4(mask, mask, mask, 1.0f);
 }

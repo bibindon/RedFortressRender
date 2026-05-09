@@ -125,9 +125,7 @@ void PS_GBuffer(VS_OUTPUT inputData,
     float linearZ = (inputData.viewSpaceZ - g_fNear) / (g_fFar - g_fNear);
     linearZ = saturate(linearZ);
 
-    float zVisual = linearZ;
-
-    outRT0 = float4(zVisual, zVisual, zVisual, linearZ);
+    outRT0 = float4(linearZ, 0.0f, 0.0f, 1.0f);
 
     float3 normalized = inputData.positionWorld / g_posRange;
     float3 world01 = normalized * 0.5f + 0.5f;
@@ -144,7 +142,7 @@ void PS_GBuffer(VS_OUTPUT inputData,
 void PS_GBufferBackFace(VS_OUTPUT inputData,
                         out float4 outRT0 : COLOR0)
 {
-    float frontLinearZ = tex2D(sampFrontDepth, inputData.screenUV).a;
+    float frontLinearZ = tex2D(sampFrontDepth, inputData.screenUV).r;
     float frontViewZ = frontLinearZ * (g_fFar - g_fNear) + g_fNear;
     float thickness = max(inputData.viewSpaceZ - frontViewZ, 0.0f);
     outRT0 = float4(thickness, thickness, thickness, thickness);

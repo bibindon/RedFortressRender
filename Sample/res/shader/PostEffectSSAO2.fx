@@ -117,7 +117,7 @@ float3 GetViewNormal(float2 uv)
 
 float GetViewDepth(float2 uv)
 {
-    float linearZ = tex2D(sampZ, uv).a;
+    float linearZ = tex2D(sampZ, uv).r;
     return linearZ * (g_fFar - g_fNear) + g_fNear;
 }
 

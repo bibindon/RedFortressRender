@@ -23,7 +23,7 @@ float g_edgeZ = 0.006f; // linear-Z guard near edges
 float g_originPush = 0.05f; // small lift along +Nv (x g_aoStepWorld)
 
 // ========= Textures / Samplers =========
-texture texZ; // RT1: A = linear Z
+texture texZ; // RT1: R = linear Z
 texture texPos; // RT2: WorldPos encoded 0..1 with g_posRange
 texture texNormal; // RT3: World normal encoded 0..1
 texture texAO; // AO buffer (for composite)
@@ -141,7 +141,7 @@ Basis BuildBasis(float2 uv)
 {
     Basis o;
 
-    float zC = tex2D(sampZ, uv).a;
+    float zC = tex2D(sampZ, uv).r;
     float3 pC = DecodeWorldPos(tex2D(sampPos, uv).rgb);
     float2 dx = float2(g_invSize.x, 0.0f) * 2;
     float2 dy = float2(0.0f, g_invSize.y) * 2;
@@ -151,10 +151,10 @@ Basis BuildBasis(float2 uv)
     float3 pU = DecodeWorldPos(tex2D(sampPos, uv - dy).rgb);
     float3 pD = DecodeWorldPos(tex2D(sampPos, uv + dy).rgb);
 
-    float zR = tex2D(sampZ, uv + dx).a;
-    float zL = tex2D(sampZ, uv - dx).a;
-    float zU = tex2D(sampZ, uv - dy).a;
-    float zD = tex2D(sampZ, uv + dy).a;
+    float zR = tex2D(sampZ, uv + dx).r;
+    float zL = tex2D(sampZ, uv - dx).r;
+    float zU = tex2D(sampZ, uv - dy).r;
+    float zD = tex2D(sampZ, uv + dy).r;
 
     // --- “輪郭かつ遠側を採るか” をレンジで判定 ---
     float dzX = abs(zR - zL);
@@ -271,8 +271,8 @@ float4 PS_AO(VS_OUT i) : COLOR0
             continue;
 
         // Edge guard: sample is valid if it's near the FAR side OR the center depth
-        float zImg = tex2D(sampZ, suv).a;
-        float zCtr = tex2D(sampZ, i.uv).a;
+        float zImg = tex2D(sampZ, suv).r;
+        float zCtr = tex2D(sampZ, i.uv).r;
         if (abs(zImg - zRef) > g_edgeZ && abs(zImg - zCtr) > g_edgeZ)
             continue;
 
@@ -352,7 +352,7 @@ float GaussianW(int k, float sigma)
 float4 PS_BlurH(VS_OUT i) : COLOR0
 {
     const int R = 20; // 13 taps (±6 + center): SM3.0で安全
-    float centerZ = tex2D(sampZ, i.uv).a;
+    float centerZ = tex2D(sampZ, i.uv).r;
     float centerAO = tex2D(sampAO, i.uv).r;
 
     float2 stepUV = float2(g_invSize.x, 0.0f);
@@ -368,8 +368,8 @@ float4 PS_BlurH(VS_OUT i) : COLOR0
         float2 uvL = i.uv - stepUV * k;
         float2 uvR = i.uv + stepUV * k;
 
-        float zL = tex2D(sampZ, uvL).a;
-        float zR = tex2D(sampZ, uvR).a;
+        float zL = tex2D(sampZ, uvL).r;
+        float zR = tex2D(sampZ, uvR).r;
 
         if (abs(zL - centerZ) <= g_depthReject)
         {
@@ -392,7 +392,7 @@ float4 PS_BlurH(VS_OUT i) : COLOR0
 float4 PS_BlurV(VS_OUT i) : COLOR0
 {
     const int R = 20; // 13 taps
-    float centerZ = tex2D(sampZ, i.uv).a;
+    float centerZ = tex2D(sampZ, i.uv).r;
     float centerAO = tex2D(sampAO, i.uv).r;
 
     float2 stepUV = float2(0.0f, g_invSize.y);
@@ -408,8 +408,8 @@ float4 PS_BlurV(VS_OUT i) : COLOR0
         float2 uvD = i.uv + stepUV * k;
         float2 uvU = i.uv - stepUV * k;
 
-        float zD = tex2D(sampZ, uvD).a;
-        float zU = tex2D(sampZ, uvU).a;
+        float zD = tex2D(sampZ, uvD).r;
+        float zU = tex2D(sampZ, uvU).r;
 
         if (abs(zD - centerZ) <= g_depthReject)
         {
