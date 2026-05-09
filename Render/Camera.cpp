@@ -12,6 +12,8 @@ const D3DXVECTOR3 NSRender::Camera::UPWARD (0.0f, 1.0f, 0.0f);
 D3DXVECTOR3 NSRender::Camera::m_eyePos(0.f, 1.f, -2.f);
 D3DXVECTOR3 NSRender::Camera::m_lookAtPos(0.0f, 0.0f, 0.0f);
 float NSRender::Camera::m_viewAngle = (D3DX_PI / 4);
+float NSRender::Camera::m_nearPlane = 0.1f;
+float NSRender::Camera::m_farPlane = 30'000.0f;
 
 // m_radian == D3DX_PI * 3 / 2の時（270度の時）カメラは正面を向く
 float NSRender::Camera::m_radian = D3DX_PI * 3 / 2;
@@ -37,8 +39,8 @@ D3DXMATRIX NSRender::Camera::GetProjMatrix()
     D3DXMatrixPerspectiveFovLH(&projection_matrix,
                                m_viewAngle,
                                static_cast<float>(1920) / 1080, /* TODO */
-                               0.1f,
-                               30'000.0f);
+                               m_nearPlane,
+                               m_farPlane);
 
     return projection_matrix;
 }
@@ -146,13 +148,29 @@ void NSRender::Camera::SetHouseMode(const bool arg)
     m_houseMode = arg;
 }
 
+void NSRender::Camera::SetNear(const float nearPlane)
+{
+    m_nearPlane = nearPlane;
+}
+
+void NSRender::Camera::SetFar(const float farPlane)
+{
+    m_farPlane = farPlane;
+}
+
+void NSRender::Camera::SetClipPlanes(const float nearPlane, const float farPlane)
+{
+    m_nearPlane = nearPlane;
+    m_farPlane = farPlane;
+}
+
 float NSRender::Camera::GetNear()
 {
-    return 0.1f;
+    return m_nearPlane;
 }
 
 float NSRender::Camera::GetFar()
 {
-    return 30'000.0f;
+    return m_farPlane;
 }
 

@@ -16,6 +16,7 @@ class GBuffer : public IDeviceResettable
 public:
 
     void Initialize();
+    void SetDepthRange(const float nearPlane, const float farPlane);
 
     void Draw(const std::deque<MeshMixManager>& meshList,
               const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList,
@@ -37,6 +38,8 @@ private:
     LPDIRECT3DTEXTURE9 m_texRenderTargetThickness = NULL;
 
     LPD3DXEFFECT m_fxGBuffer = NULL;
+    float m_nearPlane = 0.1f;
+    float m_farPlane = 30'000.0f;
 
     void CreateRawResource();
 };

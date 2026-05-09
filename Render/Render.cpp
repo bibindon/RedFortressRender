@@ -164,6 +164,52 @@ void Render::LoadSettingsCsv(const std::wstring& settingsCsvPath)
 
 void Render::ApplySettings()
 {
+    const auto cameraNear = m_settings.find(L"CameraNear");
+    const auto cameraFar = m_settings.find(L"CameraFar");
+    if (cameraNear != m_settings.end() || cameraFar != m_settings.end())
+    {
+        float nearPlane = Camera::GetNear();
+        float farPlane = Camera::GetFar();
+        try
+        {
+            if (cameraNear != m_settings.end())
+            {
+                nearPlane = std::stof(cameraNear->second);
+            }
+            if (cameraFar != m_settings.end())
+            {
+                farPlane = std::stof(cameraFar->second);
+            }
+            SetCameraClipPlanes(nearPlane, farPlane);
+        }
+        catch (...)
+        {
+        }
+    }
+
+    const auto gbufferNear = m_settings.find(L"GBufferNear");
+    const auto gbufferFar = m_settings.find(L"GBufferFar");
+    if (gbufferNear != m_settings.end() || gbufferFar != m_settings.end())
+    {
+        float nearPlane = 0.1f;
+        float farPlane = 30'000.0f;
+        try
+        {
+            if (gbufferNear != m_settings.end())
+            {
+                nearPlane = std::stof(gbufferNear->second);
+            }
+            if (gbufferFar != m_settings.end())
+            {
+                farPlane = std::stof(gbufferFar->second);
+            }
+            SetGBufferClipPlanes(nearPlane, farPlane);
+        }
+        catch (...)
+        {
+        }
+    }
+
     const auto depthBufferShadowEnable = m_settings.find(L"DepthBufferShadowEnable");
     if (depthBufferShadowEnable != m_settings.end())
     {
@@ -1472,6 +1518,16 @@ void Render::MoveCamera(const D3DXVECTOR3& pos)
 
     auto lookAtPos = Camera::GetLookAtPos();
     Camera::SetLookAtPos(lookAtPos + pos);
+}
+
+void Render::SetCameraClipPlanes(const float nearPlane, const float farPlane)
+{
+    Camera::SetClipPlanes(nearPlane, farPlane);
+}
+
+void Render::SetGBufferClipPlanes(const float nearPlane, const float farPlane)
+{
+    m_GBuffer.SetDepthRange(nearPlane, farPlane);
 }
 
 D3DXVECTOR3 Render::GetLookAtPos()

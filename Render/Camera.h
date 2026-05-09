@@ -38,6 +38,9 @@ public:
     static int MOVE_COUNT_MAX;
     static void SetHouseMode(const bool arg);
 
+    static void SetNear(const float nearPlane);
+    static void SetFar(const float farPlane);
+    static void SetClipPlanes(const float nearPlane, const float farPlane);
     static float GetNear();
     static float GetFar();
 
@@ -47,6 +50,8 @@ private:
     static D3DXVECTOR3 m_eyePos;
     static D3DXVECTOR3 m_lookAtPos;
     static float m_viewAngle;
+    static float m_nearPlane;
+    static float m_farPlane;
     static float m_radian;
     static float m_y;
     static bool m_sleepMode;

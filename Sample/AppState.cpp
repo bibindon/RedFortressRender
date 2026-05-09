@@ -52,7 +52,7 @@ bool g_bSaturateFilter = false;
 bool g_bBloom = false;
 NSRender::DepthOfFieldMode g_depthOfFieldMode = NSRender::DepthOfFieldMode::Disabled;
 bool g_bStarBurst = false;
-float g_fogIntensity = 2.0f;
+float g_fogIntensity = 1.0f;
 float g_heightFogIntensity = 0.3f;
 float g_heightFogStart = 0.0f;
 float g_heightFogMax = -5.0f;
@@ -67,6 +67,10 @@ float g_shadowCoverage = 0.5f;
 float g_shadowSaturationBoost = 0.35f;
 float g_ssaoBrightness = 3.5f;
 float g_ssaoSampleRadius = 4.0f;
+float g_cameraNearPlane = 0.1f;
+float g_cameraFarPlane = 30'000.0f;
+float g_gbufferNearPlane = 0.1f;
+float g_gbufferFarPlane = 30'000.0f;
 float g_ssaoSaturationBoost = 0.30f;
 float g_halfLambertShadowSaturation = 1.0f;
 float g_shadowDarkness = 0.3f;
@@ -181,6 +185,26 @@ float ClampSSAOBrightness(const float brightness)
 float ClampSSAOSampleRadius(const float sampleRadius)
 {
     return (std::max)(SSAO_SAMPLE_RADIUS_MIN, (std::min)(sampleRadius, SSAO_SAMPLE_RADIUS_MAX));
+}
+
+float ClampCameraNearPlane(const float nearPlane)
+{
+    return (std::max)(CAMERA_NEAR_MIN, (std::min)(nearPlane, CAMERA_NEAR_MAX));
+}
+
+float ClampCameraFarPlane(const float farPlane)
+{
+    return (std::max)(CAMERA_FAR_MIN, (std::min)(farPlane, CAMERA_FAR_MAX));
+}
+
+float ClampGBufferNearPlane(const float nearPlane)
+{
+    return (std::max)(GBUFFER_NEAR_MIN, (std::min)(nearPlane, GBUFFER_NEAR_MAX));
+}
+
+float ClampGBufferFarPlane(const float farPlane)
+{
+    return (std::max)(GBUFFER_FAR_MIN, (std::min)(farPlane, GBUFFER_FAR_MAX));
 }
 
 float ClampSSAOSaturationBoost(const float boost)
@@ -911,6 +935,28 @@ void ApplySSAOSampleRadius()
 {
     g_ssaoSampleRadius = ClampSSAOSampleRadius(g_ssaoSampleRadius);
     g_Render.SetPostEffectSSAOSampleRadius(g_ssaoSampleRadius);
+}
+
+void ApplyCameraClipPlanes()
+{
+    g_cameraNearPlane = ClampCameraNearPlane(g_cameraNearPlane);
+    g_cameraFarPlane = ClampCameraFarPlane(g_cameraFarPlane);
+    if (g_cameraFarPlane <= g_cameraNearPlane)
+    {
+        g_cameraFarPlane = g_cameraNearPlane + 0.01f;
+    }
+    g_Render.SetCameraClipPlanes(g_cameraNearPlane, g_cameraFarPlane);
+}
+
+void ApplyGBufferClipPlanes()
+{
+    g_gbufferNearPlane = ClampGBufferNearPlane(g_gbufferNearPlane);
+    g_gbufferFarPlane = ClampGBufferFarPlane(g_gbufferFarPlane);
+    if (g_gbufferFarPlane <= g_gbufferNearPlane)
+    {
+        g_gbufferFarPlane = g_gbufferNearPlane + 0.01f;
+    }
+    g_Render.SetGBufferClipPlanes(g_gbufferNearPlane, g_gbufferFarPlane);
 }
 
 void ApplySSAOSaturationBoost()
@@ -2069,6 +2115,22 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"SSAOSampleRadius")
             {
                 g_ssaoSampleRadius = std::stof(value);
+            }
+            else if (key == L"CameraNear")
+            {
+                g_cameraNearPlane = std::stof(value);
+            }
+            else if (key == L"CameraFar")
+            {
+                g_cameraFarPlane = std::stof(value);
+            }
+            else if (key == L"GBufferNear")
+            {
+                g_gbufferNearPlane = std::stof(value);
+            }
+            else if (key == L"GBufferFar")
+            {
+                g_gbufferFarPlane = std::stof(value);
             }
             else if (key == L"ShadowBlurTapCount")
             {

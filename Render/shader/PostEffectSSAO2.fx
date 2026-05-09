@@ -2,9 +2,9 @@ float4x4 g_matView;
 float4x4 g_matProj;
 
 float g_fNear = 0.1f;
-float g_fFar = 15.0f;
+float g_fFar = 50.0f;
 float2 g_invSize;
-float g_posRange = 15.0f;
+float g_posRange = 50.0f;
 float g_sampleRadius = 1.0f;
 float g_aoBrightness = 1.0f;
 float g_aoSaturationBoost = 0.30f;

@@ -30,6 +30,12 @@ void GBuffer::Initialize()
     Common::AddDeviceLostResource(this);
 }
 
+void GBuffer::SetDepthRange(const float nearPlane, const float farPlane)
+{
+    m_nearPlane = nearPlane;
+    m_farPlane = farPlane;
+}
+
 void GBuffer::CreateRawResource()
 {
     HRESULT hResult = E_FAIL;
@@ -121,8 +127,8 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
 
     m_fxGBuffer->SetMatrix("g_matView",  &mView);
     m_fxGBuffer->SetMatrix("g_matProj",  &mProj);
-    m_fxGBuffer->SetFloat("g_fNear", Camera::GetNear());
-    m_fxGBuffer->SetFloat("g_fFar",  Camera::GetFar());
+    m_fxGBuffer->SetFloat("g_fNear", m_nearPlane);
+    m_fxGBuffer->SetFloat("g_fFar",  m_farPlane);
     m_fxGBuffer->SetFloat("g_posRange", PostEffectSSAO::Z_RANGE);
 
     for (auto& mesh : meshList)

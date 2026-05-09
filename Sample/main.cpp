@@ -153,6 +153,8 @@ void InitializeSampleScene(HWND hWnd)
     ApplyShadowSaturationBoost();
     ApplyShadowPcfTapCount();
     ApplyShadowCompositeTapCount();
+    ApplyCameraClipPlanes();
+    ApplyGBufferClipPlanes();
     ApplySSAOBrightness();
     ApplySSAOSampleRadius();
     ApplySSAOSaturationBoost();

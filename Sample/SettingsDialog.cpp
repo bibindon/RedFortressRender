@@ -92,7 +92,7 @@ constexpr int GODRAY_VIRTUAL_PROXIMITY_SLIDER_MIN = 0;
 constexpr int GODRAY_VIRTUAL_PROXIMITY_SLIDER_MAX = static_cast<int>(GODRAY_VIRTUAL_PROXIMITY_MAX / GODRAY_VIRTUAL_PROXIMITY_STEP);
 constexpr int GODRAY_POS_SLIDER_MIN = static_cast<int>(GODRAY_LIGHT_POS_MIN / GODRAY_LIGHT_POS_STEP);
 constexpr int GODRAY_POS_SLIDER_MAX = static_cast<int>(GODRAY_LIGHT_POS_MAX / GODRAY_LIGHT_POS_STEP);
-constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 1218;
+constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 1298;
 constexpr int SETTINGS_DIALOG_WHEEL_STEP_PX = 36;
 constexpr UINT ID_POPUP_EXPORT_BINARY = 60001;
 constexpr UINT ID_POPUP_REMOVE_MODEL = 60002;
@@ -129,6 +129,8 @@ void RefreshSpecularEdgeControls(HWND hDlg);
 void RefreshSSSControls(HWND hDlg);
 void RefreshSSAOBrightnessControls(HWND hDlg);
 void RefreshSSAOSampleRadiusControls(HWND hDlg);
+void RefreshCameraClipPlaneControls(HWND hDlg);
+void RefreshGBufferClipPlaneControls(HWND hDlg);
 void RefreshSSAOSaturationBoostControls(HWND hDlg);
 void RefreshSSAOModeControls(HWND hDlg);
 void RefreshSSAO2BlurControls(HWND hDlg);
@@ -295,6 +297,10 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_SSS_COLOR_B,
         IDC_EDIT_SSAO_BRIGHTNESS,
         IDC_EDIT_SSAO_SAMPLE_RADIUS,
+        IDC_EDIT_CAMERA_NEAR,
+        IDC_EDIT_CAMERA_FAR,
+        IDC_EDIT_GBUFFER_NEAR,
+        IDC_EDIT_GBUFFER_FAR,
         IDC_EDIT_SSAO_SATURATION_BOOST,
         IDC_EDIT_BLOOM_THRESHOLD,
         IDC_EDIT_STARBURST_THRESHOLD,
@@ -627,6 +633,38 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
             ApplySSAOSampleRadius();
         }
         RefreshSSAOSampleRadiusControls(hDlg);
+        return true;
+    case IDC_EDIT_CAMERA_NEAR:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_cameraNearPlane = floatValue;
+            ApplyCameraClipPlanes();
+        }
+        RefreshCameraClipPlaneControls(hDlg);
+        return true;
+    case IDC_EDIT_CAMERA_FAR:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_cameraFarPlane = floatValue;
+            ApplyCameraClipPlanes();
+        }
+        RefreshCameraClipPlaneControls(hDlg);
+        return true;
+    case IDC_EDIT_GBUFFER_NEAR:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_gbufferNearPlane = floatValue;
+            ApplyGBufferClipPlanes();
+        }
+        RefreshGBufferClipPlaneControls(hDlg);
+        return true;
+    case IDC_EDIT_GBUFFER_FAR:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_gbufferFarPlane = floatValue;
+            ApplyGBufferClipPlanes();
+        }
+        RefreshGBufferClipPlaneControls(hDlg);
         return true;
     case IDC_EDIT_SSAO_SATURATION_BOOST:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
@@ -1740,6 +1778,24 @@ void RefreshSSAOSampleRadiusControls(HWND hDlg)
                        static_cast<LPARAM>(SSAOSampleRadiusToSliderValue(g_ssaoSampleRadius)));
 }
 
+void RefreshCameraClipPlaneControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.3f", g_cameraNearPlane);
+    SetDlgItemText(hDlg, IDC_EDIT_CAMERA_NEAR, buffer);
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_cameraFarPlane);
+    SetDlgItemText(hDlg, IDC_EDIT_CAMERA_FAR, buffer);
+}
+
+void RefreshGBufferClipPlaneControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.3f", g_gbufferNearPlane);
+    SetDlgItemText(hDlg, IDC_EDIT_GBUFFER_NEAR, buffer);
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_gbufferFarPlane);
+    SetDlgItemText(hDlg, IDC_EDIT_GBUFFER_FAR, buffer);
+}
+
 void RefreshSSAOSaturationBoostControls(HWND hDlg)
 {
     wchar_t buffer[32];
@@ -2045,6 +2101,8 @@ void RefreshAllControls(HWND hDlg)
     RefreshSSSControls(hDlg);
     RefreshSSAOBrightnessControls(hDlg);
     RefreshSSAOSampleRadiusControls(hDlg);
+    RefreshCameraClipPlaneControls(hDlg);
+    RefreshGBufferClipPlaneControls(hDlg);
     RefreshSSAOSaturationBoostControls(hDlg);
     RefreshBloomThresholdControls(hDlg);
     RefreshDepthOfFieldControls(hDlg);
