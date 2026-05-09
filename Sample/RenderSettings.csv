@@ -9,7 +9,7 @@ MaskedGaussianMaskPath,
 FXAAEnable,0
 FXAAQuality,4
 ,
-MotionBlurCameraEnable,1
+MotionBlurCameraEnable,0
 MotionBlurCameraQuality,4
 MotionBlurCameraMaxBlurPixels,24
 MotionBlurCameraSampleCount,13
@@ -32,7 +32,7 @@ ShadowCompositeTapCount,3
 ,
 SSAOEnable,1
 SSAOMode,SSAO2
-SSAO2BlurEnable,1
+SSAO2BlurEnable,0
 SSAOBrightness,1.0
 SSAOSampleRadius,4.0
 SSAOSaturationBoost,1.00
