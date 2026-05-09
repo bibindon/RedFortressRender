@@ -71,10 +71,12 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO2::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     LPDIRECT3DSURFACE9 surfAOTemp = NULL;
     LPDIRECT3DSURFACE9 surfRenderTarget = NULL;
     LPDIRECT3DTEXTURE9 aoTextureForComposite = m_rtAoTex;
+    LPDIRECT3DSURFACE9 surfComposite = NULL;
 
     m_rtAoTex->GetSurfaceLevel(0, &surfAO);
     m_rtAoTempTex->GetSurfaceLevel(0, &surfAOTemp);
     renderTarget->GetSurfaceLevel(0, &surfRenderTarget);
+    surfComposite = surfAOTemp;
 
     Common::D3DDevice()->SetRenderTarget(0, surfAO);
     Common::D3DDevice()->SetRenderTarget(1, NULL);
@@ -116,9 +118,10 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO2::Draw(LPDIRECT3DTEXTURE9 renderTarget,
         m_fxSSAO2->EndPass();
         m_fxSSAO2->End();
         aoTextureForComposite = m_rtAoTempTex;
+        surfComposite = surfAO;
     }
 
-    Common::D3DDevice()->SetRenderTarget(0, surfAOTemp);
+    Common::D3DDevice()->SetRenderTarget(0, surfComposite);
     Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 0, 255), 1.0f, 0);
     m_fxSSAO2->SetTexture("texColor", renderTarget);
     m_fxSSAO2->SetTexture("texAO", aoTextureForComposite);
@@ -130,8 +133,7 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO2::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     DrawFullscreenQuad();
     m_fxSSAO2->EndPass();
     m_fxSSAO2->End();
-
-    Common::D3DDevice()->StretchRect(surfAOTemp, NULL, surfRenderTarget, NULL, D3DTEXF_NONE);
+    Common::D3DDevice()->StretchRect(surfComposite, NULL, surfRenderTarget, NULL, D3DTEXF_NONE);
     Common::D3DDevice()->SetRenderTarget(0, oldRt0);
 
     SAFE_RELEASE(surfAO);
