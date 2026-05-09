@@ -35,11 +35,26 @@ float4 PS_Copy(float2 uv : TEXCOORD0) : COLOR0
     return tex2D(SrcSamp, uv);
 }
 
+float4 PS_CopySingleChannel(float2 uv : TEXCOORD0) : COLOR0
+{
+    float value = tex2D(SrcSamp, uv).r;
+    return float4(value, value, value, 1.0f);
+}
+
 technique Copy
 {
     pass p0
     {
         VertexShader = compile vs_2_0 VS_Copy();
         PixelShader = compile ps_2_0 PS_Copy();
+    }
+}
+
+technique CopySingleChannel
+{
+    pass p0
+    {
+        VertexShader = compile vs_2_0 VS_Copy();
+        PixelShader = compile ps_2_0 PS_CopySingleChannel();
     }
 }

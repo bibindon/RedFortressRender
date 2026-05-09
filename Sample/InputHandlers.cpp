@@ -8,6 +8,14 @@
 
 namespace
 {
+void ToggleDebugGBufferView(const NSRender::DebugGBufferView view)
+{
+    g_debugGBufferView = (g_debugGBufferView == view)
+                       ? NSRender::DebugGBufferView::None
+                       : view;
+    g_Render.SetDebugGBufferView(g_debugGBufferView);
+}
+
 void SetMovementFlag(const WPARAM key, const bool value)
 {
     if (key == 'W')
@@ -177,8 +185,25 @@ bool HandleSampleKeyDown(HWND hWnd, const WPARAM wParam)
 
     if (wParam == VK_F3)
     {
-        g_bDebugWorldPosOverlay = !g_bDebugWorldPosOverlay;
-        g_Render.SetDebugWorldPosOverlay(g_bDebugWorldPosOverlay);
+        ToggleDebugGBufferView(NSRender::DebugGBufferView::WorldPos);
+        return true;
+    }
+
+    if (wParam == VK_F4)
+    {
+        ToggleDebugGBufferView(NSRender::DebugGBufferView::Normal);
+        return true;
+    }
+
+    if (wParam == VK_F5)
+    {
+        ToggleDebugGBufferView(NSRender::DebugGBufferView::Depth);
+        return true;
+    }
+
+    if (wParam == VK_F6)
+    {
+        ToggleDebugGBufferView(NSRender::DebugGBufferView::Thickness);
         return true;
     }
 

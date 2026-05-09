@@ -64,6 +64,15 @@ enum class SSAOMode
     SSAO2 = 1,
 };
 
+enum class DebugGBufferView
+{
+    None = 0,
+    WorldPos = 1,
+    Normal = 2,
+    Depth = 3,
+    Thickness = 4,
+};
+
 class Render : public IDeviceResettable
 {
 
@@ -288,7 +297,7 @@ public:
     void SetPostEffectGodRayVirtualProximityStrength(const float arg);
     void SetPostEffectGodRayOcclusionFalloff(const float arg);
     void SetPostEffectGodRayLightColor(const D3DXVECTOR3& color);
-    void SetDebugWorldPosOverlay(const bool enabled);
+    void SetDebugGBufferView(const DebugGBufferView view);
 
     void SetShowFPS(const bool arg);
 
@@ -421,7 +430,7 @@ private:
     DepthOfFieldMode m_postEffectDepthOfFieldMode = DepthOfFieldMode::Disabled;
     bool m_postEffectStarBurstEnabled = false;
     bool m_postEffectGodRayEnabled = false;
-    bool m_debugWorldPosOverlayEnabled = false;
+    DebugGBufferView m_debugGBufferView = DebugGBufferView::None;
     bool m_meshMixSaturateShadowEnabled = false;
     float m_meshMixSaturateShadowIntensity = 0.2f;
     float m_meshMixShadowDarkness = 1.0f;

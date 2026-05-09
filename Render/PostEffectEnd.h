@@ -14,6 +14,7 @@ public:
     void Finalize();
 
     void Draw(LPDIRECT3DTEXTURE9 renderTarget);
+    void DrawSingleChannel(LPDIRECT3DTEXTURE9 renderTarget);
     void DrawOverlay(LPDIRECT3DTEXTURE9 renderTarget,
                      const int x,
                      const int y,

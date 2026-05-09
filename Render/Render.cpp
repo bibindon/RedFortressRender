@@ -1005,13 +1005,23 @@ void Render::Draw()
     }
 
     // g_pRenderTargetの内容を画面に転送
-    if (m_debugWorldPosOverlayEnabled)
+    switch (m_debugGBufferView)
     {
+    case DebugGBufferView::WorldPos:
         m_postEffectEnd.Draw(pTexTempPos);
-    }
-    else
-    {
+        break;
+    case DebugGBufferView::Normal:
+        m_postEffectEnd.Draw(pTexTempNoral);
+        break;
+    case DebugGBufferView::Depth:
+        m_postEffectEnd.DrawSingleChannel(pTexTempZ);
+        break;
+    case DebugGBufferView::Thickness:
+        m_postEffectEnd.DrawSingleChannel(pTexTempThickness);
+        break;
+    default:
         m_postEffectEnd.Draw(pTempTexture);
+        break;
     }
 
     // 文字と画像は彩度フィルタの影響を受けないようにする
@@ -1945,9 +1955,9 @@ void Render::SetPostEffectGodRayLightColor(const D3DXVECTOR3& color)
     m_postEffectGodRay.SetLightColor(color);
 }
 
-void Render::SetDebugWorldPosOverlay(const bool enabled)
+void Render::SetDebugGBufferView(const DebugGBufferView view)
 {
-    m_debugWorldPosOverlayEnabled = enabled;
+    m_debugGBufferView = view;
 }
 
 void Render::SetShowFPS(const bool arg)

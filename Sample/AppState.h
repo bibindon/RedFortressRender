@@ -214,7 +214,7 @@ extern bool g_bSaturateFilter;
 extern bool g_bBloom;
 extern NSRender::DepthOfFieldMode g_depthOfFieldMode;
 extern bool g_bStarBurst;
-extern bool g_bDebugWorldPosOverlay;
+extern NSRender::DebugGBufferView g_debugGBufferView;
 extern bool g_bShowOverlay;
 extern float g_fogIntensity;
 extern float g_heightFogIntensity;

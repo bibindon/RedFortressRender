@@ -44,6 +44,26 @@ void PostEffectEnd::Draw(LPDIRECT3DTEXTURE9 renderTarget)
     Common::D3DDevice()->EndScene();
 }
 
+void PostEffectEnd::DrawSingleChannel(LPDIRECT3DTEXTURE9 renderTarget)
+{
+    LPDIRECT3DSURFACE9 pBackBuffer = NULL;
+    Common::D3DDevice()->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
+    Common::D3DDevice()->SetRenderTarget(0, pBackBuffer);
+    SAFE_RELEASE(pBackBuffer);
+
+    Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
+    Common::D3DDevice()->BeginScene();
+
+    DrawScreenQuad(renderTarget,
+                   -0.5f,
+                   -0.5f,
+                   -0.5f + static_cast<float>(Common::ScreenW()),
+                   -0.5f + static_cast<float>(Common::ScreenH()),
+                   "CopySingleChannel");
+
+    Common::D3DDevice()->EndScene();
+}
+
 void PostEffectEnd::DrawOverlay(LPDIRECT3DTEXTURE9 renderTarget,
                                 const int x,
                                 const int y,
