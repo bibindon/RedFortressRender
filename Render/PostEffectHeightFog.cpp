@@ -42,7 +42,7 @@ LPDIRECT3DTEXTURE9 PostEffectHeightFog::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_d3dEffect->SetFloat("g_HeightMax", m_maxHeight);
     m_d3dEffect->SetFloat("g_DistanceStart", m_distanceStart);
     m_d3dEffect->SetFloat("g_DistanceMax", m_distanceMax);
-    m_d3dEffect->SetFloat("g_PosRange", 50.0f);
+    m_d3dEffect->SetFloat("g_PosRange", m_positionRange);
     const D3DXVECTOR3 eye = Camera::GetEyePos();
     const D3DXVECTOR4 cameraPos(eye.x, eye.y, eye.z, 1.0f);
     m_d3dEffect->SetVector("g_CameraPos", &cameraPos);
@@ -87,6 +87,11 @@ void PostEffectHeightFog::SetDistanceMax(const float distanceMax)
 void PostEffectHeightFog::SetFogColor(const D3DXCOLOR& color)
 {
     m_fogColor = D3DXVECTOR4(color.r, color.g, color.b, color.a);
+}
+
+void PostEffectHeightFog::SetPositionRange(const float positionRange)
+{
+    m_positionRange = (positionRange > 1.0f) ? positionRange : 1.0f;
 }
 
 void PostEffectHeightFog::OnDeviceLost()

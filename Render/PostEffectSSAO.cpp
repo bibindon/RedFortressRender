@@ -1,6 +1,7 @@
 ﻿#include "PostEffectSSAO.h"
 
 #include "Camera.h"
+#include "GBuffer.h"
 
 namespace NSRender
 {
@@ -92,7 +93,7 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_fxSSAO->SetMatrix("g_matProj",  &matrixProj);
     m_fxSSAO->SetFloat("g_fNear", m_nearPlane);
     m_fxSSAO->SetFloat("g_fFar",  m_farPlane);
-    m_fxSSAO->SetFloat("g_posRange", 50.0f);
+    m_fxSSAO->SetFloat("g_posRange", m_positionRange);
     m_fxSSAO->SetFloatArray("g_invSize", (FLOAT*)&invSize, 2);
 
     m_fxSSAO->SetTexture("texZ",   m_texRenderTargetZ);
@@ -223,6 +224,7 @@ void PostEffectSSAO::SetDepthRange(const float nearPlane, const float farPlane)
 {
     m_nearPlane = nearPlane;
     m_farPlane = farPlane;
+    m_positionRange = GBuffer::ComputePositionRange(nearPlane, farPlane);
 }
 
 void PostEffectSSAO::OnDeviceLost()

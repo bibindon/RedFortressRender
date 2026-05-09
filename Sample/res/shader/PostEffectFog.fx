@@ -48,6 +48,7 @@ float4 g_FogColor        = float4(0.32, 0.38, 0.86, 1.0);
 float  g_IntensityZ      = 0.02;   // 距離密度
 float  g_IntensityHeight = 0.00;   // 高さ密度
 float  g_HeightStart     = 0.00;   // この高さより下で濃くなる
+float  g_PosRange        = 1000.0;
 
 bool   g_EnableZ         = true;
 bool   g_EnableHeight    = false;
@@ -66,7 +67,8 @@ float FogAmountAt(float2 uv)
 
     if (g_EnableHeight)
     {
-        float3 wp = tex2D(sPos, uv).xyz;
+        float3 wp01 = tex2D(sPos, uv).xyz;
+        float3 wp = (wp01 * 2.0 - 1.0) * g_PosRange;
         float hDelta = max(0.0, g_HeightStart - wp.y);
         float trans = exp(-g_IntensityHeight * hDelta);
         fogH = 1.0 - trans;

@@ -15,6 +15,8 @@ class GBuffer : public IDeviceResettable
 
 public:
 
+    static float ComputePositionRange(const float nearPlane, const float farPlane);
+
     void Initialize();
     void SetDepthRange(const float nearPlane, const float farPlane);
 
@@ -40,6 +42,7 @@ private:
     LPD3DXEFFECT m_fxGBuffer = NULL;
     float m_nearPlane = 0.1f;
     float m_farPlane = 30'000.0f;
+    float m_positionRange = 30'000.0f;
 
     void CreateRawResource();
 };

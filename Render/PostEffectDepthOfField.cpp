@@ -4,15 +4,9 @@
 #include <cfloat>
 
 #include "Camera.h"
-#include "PostEffectSSAO.h"
 
 namespace NSRender
 {
-
-namespace
-{
-constexpr float POSITION_RANGE = PostEffectSSAO::Z_RANGE;
-}
 
 void PostEffectDepthOfField::Initialize()
 {
@@ -57,7 +51,7 @@ LPDIRECT3DTEXTURE9 PostEffectDepthOfField::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_d3dEffect->SetFloat("g_maxBlurDistanceMeters", m_maxBlurDistance);
     m_d3dEffect->SetFloat("g_focusBandHalfWidthMeters", m_focusBandHalfWidth);
     m_d3dEffect->SetFloat("g_blurRadiusPixels", m_blurRadiusPixels);
-    m_d3dEffect->SetFloat("g_positionRange", POSITION_RANGE);
+    m_d3dEffect->SetFloat("g_positionRange", m_positionRange);
     m_d3dEffect->SetFloat("g_dofBlend", m_blend);
 
     DrawFullscreenQuad(renderTarget, texRenderTargetPos, m_texWork, "Technique1");
@@ -99,6 +93,11 @@ void PostEffectDepthOfField::SetAutoActivationDistance(float autoActivationDista
 void PostEffectDepthOfField::SetBlend(float blend)
 {
     m_blend = (std::max)(0.0f, (std::min)(blend, 1.0f));
+}
+
+void PostEffectDepthOfField::SetPositionRange(float positionRange)
+{
+    m_positionRange = (std::max)(1.0f, positionRange);
 }
 
 float PostEffectDepthOfField::GetBlend() const
@@ -267,9 +266,9 @@ float PostEffectDepthOfField::MeasureCenterNearestDistance(LPDIRECT3DTEXTURE9 te
                 continue;
             }
 
-            const D3DXVECTOR3 worldPos(((decodedPosition[0] * 2.0f) - 1.0f) * POSITION_RANGE,
-                                       ((decodedPosition[1] * 2.0f) - 1.0f) * POSITION_RANGE,
-                                       ((decodedPosition[2] * 2.0f) - 1.0f) * POSITION_RANGE);
+            const D3DXVECTOR3 worldPos(((decodedPosition[0] * 2.0f) - 1.0f) * m_positionRange,
+                                       ((decodedPosition[1] * 2.0f) - 1.0f) * m_positionRange,
+                                       ((decodedPosition[2] * 2.0f) - 1.0f) * m_positionRange);
             const D3DXVECTOR3 toObject = worldPos - cameraPos;
             nearestDistance = (std::min)(nearestDistance, D3DXVec3Length(&toObject));
         }

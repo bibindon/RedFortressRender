@@ -29,6 +29,7 @@ public:
     void SetBlurRadiusPixels(float blurRadiusPixels);
     void SetAutoActivationDistance(float autoActivationDistance);
     void SetBlend(float blend);
+    void SetPositionRange(float positionRange);
     float GetBlend() const;
     void UpdateAutoBlend(LPDIRECT3DTEXTURE9 texRenderTargetPos);
 
@@ -59,6 +60,7 @@ private:
     float m_focusBandHalfWidth = 2.0f;
     float m_blurRadiusPixels = 1.0f;
     float m_blend = 1.0f;
+    float m_positionRange = 30'000.0f;
     float m_autoActivationDistance = 10.0f;
     float m_autoCenterRadiusNdc = 0.35f;
     float m_autoBlendSpeed = 2.5f;

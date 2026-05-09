@@ -23,6 +23,7 @@ public:
 
     void SetIntensityHeight(const float arg);
     void SetHeightStart(const float arg);
+    void SetPositionRange(const float positionRange);
 
     void SetFogColor(const D3DXCOLOR& color);
 
@@ -49,6 +50,7 @@ private:
     float m_intensityHeight = 0.3f;
 
     float m_heightStart= 0.0f;
+    float m_positionRange = 30'000.0f;
     D3DXVECTOR4 m_fogColor = D3DXVECTOR4(0, 0, 0, 0);
 
 };

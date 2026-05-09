@@ -36,6 +36,7 @@ private:
     float m_sampleRadius = 4.0f;
     float m_nearPlane = 0.1f;
     float m_farPlane = 30'000.0f;
+    float m_positionRange = 30'000.0f;
 
     LPD3DXEFFECT m_fxSSAO = NULL;
 

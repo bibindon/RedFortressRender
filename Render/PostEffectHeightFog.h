@@ -24,6 +24,7 @@ public:
     void SetDistanceStart(const float distanceStart);
     void SetDistanceMax(const float distanceMax);
     void SetFogColor(const D3DXCOLOR& color);
+    void SetPositionRange(const float positionRange);
 
     void OnDeviceLost() override;
     void OnDeviceReset() override;
@@ -47,6 +48,7 @@ private:
     float m_maxHeight = -5.0f;
     float m_distanceStart = 0.0f;
     float m_distanceMax = 20.0f;
+    float m_positionRange = 30'000.0f;
     D3DXVECTOR4 m_fogColor = D3DXVECTOR4(0.72f, 0.78f, 0.86f, 1.0f);
 };
 

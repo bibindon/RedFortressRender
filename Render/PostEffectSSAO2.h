@@ -35,6 +35,7 @@ private:
     bool m_blurEnabled = true;
     float m_nearPlane = 0.1f;
     float m_farPlane = 30'000.0f;
+    float m_positionRange = 30'000.0f;
 
     LPD3DXEFFECT m_fxSSAO2 = NULL;
 

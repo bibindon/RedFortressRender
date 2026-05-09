@@ -1,6 +1,9 @@
 ﻿
 #include "GBuffer.h"
 
+#include <algorithm>
+#include <cmath>
+
 #include "Common.h"
 #include "Camera.h"
 #include "MeshMixSkinAnim.h"
@@ -9,6 +12,13 @@
 
 namespace NSRender
 {
+
+float GBuffer::ComputePositionRange(const float nearPlane, const float farPlane)
+{
+    const float absoluteNear = fabsf(nearPlane);
+    const float absoluteFar = fabsf(farPlane);
+    return (std::max)(1.0f, (std::max)(absoluteNear, absoluteFar));
+}
 
 void GBuffer::Initialize()
 {
@@ -34,6 +44,7 @@ void GBuffer::SetDepthRange(const float nearPlane, const float farPlane)
 {
     m_nearPlane = nearPlane;
     m_farPlane = farPlane;
+    m_positionRange = ComputePositionRange(nearPlane, farPlane);
 }
 
 void GBuffer::CreateRawResource()
@@ -129,7 +140,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     m_fxGBuffer->SetMatrix("g_matProj",  &mProj);
     m_fxGBuffer->SetFloat("g_fNear", m_nearPlane);
     m_fxGBuffer->SetFloat("g_fFar",  m_farPlane);
-    m_fxGBuffer->SetFloat("g_posRange", PostEffectSSAO::Z_RANGE);
+    m_fxGBuffer->SetFloat("g_posRange", m_positionRange);
 
     for (auto& mesh : meshList)
     {
