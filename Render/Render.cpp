@@ -1005,10 +1005,13 @@ void Render::Draw()
     }
 
     // g_pRenderTargetの内容を画面に転送
-    m_postEffectEnd.Draw(pTempTexture);
     if (m_debugWorldPosOverlayEnabled)
     {
-        m_postEffectEnd.DrawOverlay(pTexTempPos, 10, 10, 256, 256);
+        m_postEffectEnd.Draw(pTexTempPos);
+    }
+    else
+    {
+        m_postEffectEnd.Draw(pTempTexture);
     }
 
     // 文字と画像は彩度フィルタの影響を受けないようにする
