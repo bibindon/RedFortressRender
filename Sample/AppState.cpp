@@ -44,6 +44,7 @@ float g_motionBlurCameraMaxBlurPixels = 24.0f;
 int g_motionBlurCameraSampleCount = 13;
 bool g_bDepthBufferShadow = true;
 bool g_bSSAO = true;
+SampleSSAOMode g_ssaoMode = SampleSSAOMode::Legacy;
 bool g_bFog = true;
 bool g_bHeightFog = true;
 bool g_bSaturateFilter = false;
@@ -783,6 +784,7 @@ void ApplyPostEffectToggleSettings()
 {
     g_Render.SetPostEffectDepthBufferShadow(g_bDepthBufferShadow);
     g_Render.SetPostEffectSSAO(g_bSSAO);
+    ApplySSAOMode();
     g_Render.SetPostEffectFog(g_bFog);
     g_Render.SetPostEffectHeightFog(g_bHeightFog);
     g_Render.SetPostEffectSaturateEnable(g_bSaturateFilter);
@@ -913,6 +915,14 @@ void ApplySSAOSaturationBoost()
 {
     g_ssaoSaturationBoost = ClampSSAOSaturationBoost(g_ssaoSaturationBoost);
     g_Render.SetPostEffectSSAOSaturationBoost(g_ssaoSaturationBoost);
+}
+
+void ApplySSAOMode()
+{
+    const NSRender::SSAOMode mode = (g_ssaoMode == SampleSSAOMode::SSAO2)
+                                  ? NSRender::SSAOMode::SSAO2
+                                  : NSRender::SSAOMode::Legacy;
+    g_Render.SetPostEffectSSAOMode(mode);
 }
 
 void ApplyHalfLambertShadowSaturation()
@@ -2074,6 +2084,14 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"SSAOSaturationBoost")
             {
                 g_ssaoSaturationBoost = std::stof(value);
+            }
+            else if (key == L"SSAOMode")
+            {
+                std::wstring modeValue = value;
+                std::transform(modeValue.begin(), modeValue.end(), modeValue.begin(), towlower);
+                g_ssaoMode = (modeValue == L"1" || modeValue == L"ssao2" || modeValue == L"new")
+                           ? SampleSSAOMode::SSAO2
+                           : SampleSSAOMode::Legacy;
             }
             else if (key == L"HalfLambertShadowSaturation")
             {

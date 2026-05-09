@@ -130,6 +130,7 @@ void RefreshSSSControls(HWND hDlg);
 void RefreshSSAOBrightnessControls(HWND hDlg);
 void RefreshSSAOSampleRadiusControls(HWND hDlg);
 void RefreshSSAOSaturationBoostControls(HWND hDlg);
+void RefreshSSAOModeControls(HWND hDlg);
 void RefreshBloomThresholdControls(HWND hDlg);
 void RefreshStarBurstThresholdControls(HWND hDlg);
 void RefreshModelLoadScaleControls(HWND hDlg);
@@ -205,6 +206,19 @@ void PopulatePointLightTypeCombo(HWND hDlg)
     SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Square"));
     SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Cube"));
     SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Sphere"));
+}
+
+void PopulateSSAOModeCombo(HWND hDlg)
+{
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_SSAO_MODE);
+    if (combo == NULL)
+    {
+        return;
+    }
+
+    SendMessage(combo, CB_RESETCONTENT, 0, 0);
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Legacy"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"SSAO2"));
 }
 
 bool TryParseEditFloat(HWND hDlg, const int controlId, float& value)
@@ -1795,6 +1809,15 @@ void RefreshSSAO(HWND hDlg)
     CheckDlgButton(hDlg, IDC_CHECK_SSAO, g_bSSAO ? BST_CHECKED : BST_UNCHECKED);
 }
 
+void RefreshSSAOModeControls(HWND hDlg)
+{
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_SSAO_MODE);
+    if (combo != NULL)
+    {
+        SendMessage(combo, CB_SETCURSEL, g_ssaoMode == SampleSSAOMode::SSAO2 ? 1 : 0, 0);
+    }
+}
+
 void RefreshBloom(HWND hDlg)
 {
     CheckDlgButton(hDlg, IDC_CHECK_BLOOM, g_bBloom ? BST_CHECKED : BST_UNCHECKED);
@@ -1995,6 +2018,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshRemoteDesktop(hDlg);
     RefreshDepthBufferShadow(hDlg);
     RefreshSSAO(hDlg);
+    RefreshSSAOModeControls(hDlg);
     RefreshBloom(hDlg);
     RefreshDepthOfField(hDlg);
     RefreshStarBurst(hDlg);
@@ -2449,6 +2473,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         InitializeTrackbars(hDlg);
         PopulateResolutionCombo(hDlg);
         PopulatePointLightTypeCombo(hDlg);
+        PopulateSSAOModeCombo(hDlg);
         InitializeLoadedModelListView(hDlg);
         InitializePointLightListView(hDlg);
         RefreshAllControls(hDlg);
@@ -3087,6 +3112,16 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_pointLightShape = ComboIndexToPointLightShape(index);
             ApplyPointLightShape();
             RefreshPointLightControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_COMBO_SSAO_MODE && HIWORD(wParam) == CBN_SELCHANGE)
+        {
+            HWND combo = reinterpret_cast<HWND>(lParam);
+            const int index = static_cast<int>(SendMessage(combo, CB_GETCURSEL, 0, 0));
+            g_ssaoMode = (index == 1) ? SampleSSAOMode::SSAO2 : SampleSSAOMode::Legacy;
+            ApplySSAOMode();
+            RefreshSSAOModeControls(hDlg);
             return TRUE;
         }
 

@@ -158,6 +158,12 @@ enum class MixMeshShaderMode
     NormalMapping,
 };
 
+enum class SampleSSAOMode
+{
+    Legacy = 0,
+    SSAO2 = 1,
+};
+
 extern bool g_bClose;
 extern NSRender::Render g_Render;
 extern int g_fontId;
@@ -189,6 +195,7 @@ extern float g_motionBlurCameraMaxBlurPixels;
 extern int g_motionBlurCameraSampleCount;
 extern bool g_bDepthBufferShadow;
 extern bool g_bSSAO;
+extern SampleSSAOMode g_ssaoMode;
 extern bool g_bFog;
 extern bool g_bHeightFog;
 extern bool g_bSaturateFilter;
@@ -285,6 +292,7 @@ void ApplyShadowCompositeTapCount();
 void ApplySSAOBrightness();
 void ApplySSAOSampleRadius();
 void ApplySSAOSaturationBoost();
+void ApplySSAOMode();
 void ApplyHalfLambertShadowSaturation();
 void ApplyShadowDarkness();
 void ApplySpecularIntensity();

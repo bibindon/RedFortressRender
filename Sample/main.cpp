@@ -156,6 +156,7 @@ void InitializeSampleScene(HWND hWnd)
     ApplySSAOBrightness();
     ApplySSAOSampleRadius();
     ApplySSAOSaturationBoost();
+    ApplySSAOMode();
     ApplyHalfLambertShadowSaturation();
     ApplyShadowDarkness();
     ApplySpecularIntensity();

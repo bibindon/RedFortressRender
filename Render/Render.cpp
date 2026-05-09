@@ -11,8 +11,10 @@
 #include <d3dx9.h>
 #include <string>
 #include <tchar.h>
+#include <algorithm>
 #include <cassert>
 #include <crtdbg.h>
+#include <cwctype>
 #include <vector>
 
 #include "Common.h"
@@ -179,6 +181,21 @@ void Render::ApplySettings()
         if (TryParseBoolSetting(ssaoEnable->second, enabled))
         {
             SetPostEffectSSAO(enabled);
+        }
+    }
+
+    const auto ssaoMode = m_settings.find(L"SSAOMode");
+    if (ssaoMode != m_settings.end())
+    {
+        std::wstring modeValue = ssaoMode->second;
+        std::transform(modeValue.begin(), modeValue.end(), modeValue.begin(), towlower);
+        if (modeValue == L"1" || modeValue == L"ssao2" || modeValue == L"new")
+        {
+            SetPostEffectSSAOMode(SSAOMode::SSAO2);
+        }
+        else
+        {
+            SetPostEffectSSAOMode(SSAOMode::Legacy);
         }
     }
 
@@ -744,6 +761,7 @@ void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
 
     // SSAO
     m_postEffectSSAO.Initialize();
+    m_postEffectSSAO2.Initialize();
 
     // 霧
     m_postEffectFog.Initialize();
@@ -827,7 +845,18 @@ void Render::Draw()
 
     if (m_postEffectSSAOEnabled)
     {
-        pTempTexture = m_postEffectSSAO.Draw(pTempTexture, pTexTempZ, pTexTempPos, pTexTempNoral);
+        if (m_postEffectSSAOMode == SSAOMode::SSAO2)
+        {
+            pTempTexture = m_postEffectSSAO2.Draw(pTempTexture,
+                                                  pTexTempZ,
+                                                  pTexTempPos,
+                                                  pTexTempNoral,
+                                                  pTexTempThickness);
+        }
+        else
+        {
+            pTempTexture = m_postEffectSSAO.Draw(pTempTexture, pTexTempZ, pTexTempPos, pTexTempNoral);
+        }
     }
 
     if (m_postEffectFogZEnabled)
@@ -1643,19 +1672,27 @@ void Render::SetPostEffectSSAO(const bool arg)
     m_postEffectSSAOEnabled = arg;
 }
 
+void Render::SetPostEffectSSAOMode(const SSAOMode mode)
+{
+    m_postEffectSSAOMode = mode;
+}
+
 void Render::SetPostEffectSSAOBrightness(const float brightness)
 {
     m_postEffectSSAO.SetBrightness(brightness);
+    m_postEffectSSAO2.SetBrightness(brightness);
 }
 
 void Render::SetPostEffectSSAOSaturationBoost(const float saturationBoost)
 {
     m_postEffectSSAO.SetSaturationBoost(saturationBoost);
+    m_postEffectSSAO2.SetSaturationBoost(saturationBoost);
 }
 
 void Render::SetPostEffectSSAOSampleRadius(const float sampleRadius)
 {
     m_postEffectSSAO.SetSampleRadius(sampleRadius);
+    m_postEffectSSAO2.SetSampleRadius(sampleRadius);
 }
 
 void Render::SetPostEffectFog(const bool arg)

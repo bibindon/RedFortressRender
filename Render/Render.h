@@ -42,6 +42,7 @@
 #include "PostEffectStarBurst.h"
 #include "PostEffectEnd.h"
 #include "PostEffectSSAO.h"
+#include "PostEffectSSAO2.h"
 #include "PostEffectDepthOfField.h"
 #include "PostEffectHeightFog.h"
 #include "PostEffectFXAA.h"
@@ -56,6 +57,12 @@
 
 namespace NSRender
 {
+
+enum class SSAOMode
+{
+    Legacy = 0,
+    SSAO2 = 1,
+};
 
 class Render : public IDeviceResettable
 {
@@ -242,6 +249,7 @@ public:
     void SetPostEffectDepthBufferShadowPcfTapCount(const int tapCount);
     void SetPostEffectDepthBufferShadowCompositeTapCount(const int tapCount);
     void SetPostEffectSSAO(const bool arg);
+    void SetPostEffectSSAOMode(const SSAOMode mode);
     void SetPostEffectSSAOBrightness(const float brightness);
     void SetPostEffectSSAOSaturationBoost(const float saturationBoost);
     void SetPostEffectSSAOSampleRadius(const float sampleRadius);
@@ -347,6 +355,7 @@ private:
 
     // SSAO用
     PostEffectSSAO m_postEffectSSAO;
+    PostEffectSSAO2 m_postEffectSSAO2;
 
     // 霧
     PostEffectFog m_postEffectFog;
@@ -400,6 +409,7 @@ private:
     bool m_postEffectMotionBlurCameraEnabled = false;
     bool m_postEffectZShadowEnabled = true;
     bool m_postEffectSSAOEnabled = true;
+    SSAOMode m_postEffectSSAOMode = SSAOMode::Legacy;
     bool m_postEffectFogZEnabled = true;
     bool m_postEffectFogHeightEnabled = false;
     bool m_postEffectBloomEnabled = false;

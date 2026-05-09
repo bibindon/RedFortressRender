@@ -93,6 +93,9 @@
     <ClCompile Include="PostEffectSSAO.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="PostEffectSSAO2.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="PostEffectZShadow.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -216,6 +219,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="PostEffectSSAO.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="PostEffectSSAO2.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="PostEffectZShadow.h">
@@ -363,6 +369,9 @@
     </FxCompile>
     <FxCompile Include="shader\MeshSSS.fx">
       <Filter>シェーダー\Trial</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\PostEffectSSAO2.fx">
+      <Filter>シェーダー</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

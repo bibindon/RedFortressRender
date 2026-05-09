@@ -59,6 +59,7 @@
     <ClCompile Include="PostEffectMaskedGauss.cpp" />
     <ClCompile Include="PostEffectSaturate.cpp" />
     <ClCompile Include="PostEffectSSAO.cpp" />
+    <ClCompile Include="PostEffectSSAO2.cpp" />
     <ClCompile Include="PostEffectStarBurst.cpp" />
     <ClCompile Include="PtrManager.cpp" />
     <ClCompile Include="Render.cpp" />
@@ -102,6 +103,7 @@
     <ClInclude Include="PostEffectMaskedGauss.h" />
     <ClInclude Include="PostEffectSaturate.h" />
     <ClInclude Include="PostEffectSSAO.h" />
+    <ClInclude Include="PostEffectSSAO2.h" />
     <ClInclude Include="PostEffectStarBurst.h" />
     <ClInclude Include="PtrManager.h" />
     <ClInclude Include="Render.h" />
@@ -172,6 +174,7 @@
     <FxCompile Include="shader\PostEffectFXAA.fx" />
     <FxCompile Include="shader\PostEffectHeightFog.fx" />
     <FxCompile Include="shader\PostEffectMotionBlurCamera.fx" />
+    <FxCompile Include="shader\PostEffectSSAO2.fx" />
     <FxCompile Include="shader\PostEffectZShadow.fx" />
     <FxCompile Include="shader\PostEffectEnd.fx">
       <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableOptimizations>
