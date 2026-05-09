@@ -69,6 +69,7 @@ float g_shadowCoverage = 0.5f;
 float g_shadowSaturationBoost = 0.35f;
 float g_ssaoBrightness = 3.5f;
 float g_ssao2ShadowStrength = 1.0f;
+float g_ssao2ShadowSaturationBoost = 0.30f;
 int g_ssao2SampleCount = 16;
 float g_ssaoSampleRadius = 4.0f;
 float g_cameraNearPlane = 0.1f;
@@ -190,6 +191,12 @@ float ClampSSAO2ShadowStrength(const float shadowStrength)
 {
     return (std::max)(SSAO2_SHADOW_STRENGTH_MIN,
                       (std::min)(shadowStrength, SSAO2_SHADOW_STRENGTH_MAX));
+}
+
+float ClampSSAO2ShadowSaturationBoost(const float boost)
+{
+    return (std::max)(SSAO2_SHADOW_SATURATION_BOOST_MIN,
+                      (std::min)(boost, SSAO2_SHADOW_SATURATION_BOOST_MAX));
 }
 
 int ClampSSAO2SampleCount(const int sampleCount)
@@ -952,6 +959,12 @@ void ApplySSAO2ShadowStrength()
     g_Render.SetPostEffectSSAO2ShadowStrength(g_ssao2ShadowStrength);
 }
 
+void ApplySSAO2ShadowSaturationBoost()
+{
+    g_ssao2ShadowSaturationBoost = ClampSSAO2ShadowSaturationBoost(g_ssao2ShadowSaturationBoost);
+    g_Render.SetPostEffectSSAO2SaturationBoost(g_ssao2ShadowSaturationBoost);
+}
+
 void ApplySSAO2SampleCount()
 {
     g_ssao2SampleCount = ClampSSAO2SampleCount(g_ssao2SampleCount);
@@ -1333,6 +1346,16 @@ int SSAO2ShadowStrengthToSliderValue(const float shadowStrength)
 float SliderValueToSSAO2ShadowStrength(const int sliderValue)
 {
     return ClampSSAO2ShadowStrength(static_cast<float>(sliderValue) * SSAO2_SHADOW_STRENGTH_STEP);
+}
+
+int SSAO2ShadowSaturationBoostToSliderValue(const float boost)
+{
+    return static_cast<int>(std::lround(ClampSSAO2ShadowSaturationBoost(boost) / SSAO2_SHADOW_SATURATION_BOOST_STEP));
+}
+
+float SliderValueToSSAO2ShadowSaturationBoost(const int sliderValue)
+{
+    return ClampSSAO2ShadowSaturationBoost(static_cast<float>(sliderValue) * SSAO2_SHADOW_SATURATION_BOOST_STEP);
 }
 
 int SSAO2SampleCountToSliderValue(const int sampleCount)
@@ -2171,6 +2194,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"SSAO2ShadowStrength")
             {
                 g_ssao2ShadowStrength = std::stof(value);
+            }
+            else if (key == L"SSAO2ShadowSaturationBoost")
+            {
+                g_ssao2ShadowSaturationBoost = std::stof(value);
             }
             else if (key == L"SSAO2SampleCount")
             {

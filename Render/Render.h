@@ -264,6 +264,7 @@ public:
     void SetPostEffectSSAO2Blur(const bool arg);
     void SetPostEffectSSAOBrightness(const float brightness);
     void SetPostEffectSSAO2ShadowStrength(const float shadowStrength);
+    void SetPostEffectSSAO2SaturationBoost(const float saturationBoost);
     void SetPostEffectSSAO2SampleCount(const int sampleCount);
     void SetPostEffectSSAO2DepthScaledSampleDistance(const bool enabled);
     void SetPostEffectSSAOSaturationBoost(const float saturationBoost);
