@@ -46,6 +46,7 @@ bool g_bDepthBufferShadow = true;
 bool g_bSSAO = true;
 SampleSSAOMode g_ssaoMode = SampleSSAOMode::Legacy;
 bool g_bSSAO2Blur = false;
+bool g_bSSAO2DepthScaledSampleDistance = false;
 bool g_bFog = true;
 bool g_bHeightFog = true;
 bool g_bSaturateFilter = false;
@@ -68,6 +69,7 @@ float g_shadowCoverage = 0.5f;
 float g_shadowSaturationBoost = 0.35f;
 float g_ssaoBrightness = 3.5f;
 float g_ssao2ShadowStrength = 1.0f;
+int g_ssao2SampleCount = 16;
 float g_ssaoSampleRadius = 4.0f;
 float g_cameraNearPlane = 0.1f;
 float g_cameraFarPlane = 30'000.0f;
@@ -188,6 +190,11 @@ float ClampSSAO2ShadowStrength(const float shadowStrength)
 {
     return (std::max)(SSAO2_SHADOW_STRENGTH_MIN,
                       (std::min)(shadowStrength, SSAO2_SHADOW_STRENGTH_MAX));
+}
+
+int ClampSSAO2SampleCount(const int sampleCount)
+{
+    return (std::max)(SSAO2_SAMPLE_COUNT_MIN, (std::min)(sampleCount, SSAO2_SAMPLE_COUNT_MAX));
 }
 
 float ClampSSAOSampleRadius(const float sampleRadius)
@@ -945,6 +952,17 @@ void ApplySSAO2ShadowStrength()
     g_Render.SetPostEffectSSAO2ShadowStrength(g_ssao2ShadowStrength);
 }
 
+void ApplySSAO2SampleCount()
+{
+    g_ssao2SampleCount = ClampSSAO2SampleCount(g_ssao2SampleCount);
+    g_Render.SetPostEffectSSAO2SampleCount(g_ssao2SampleCount);
+}
+
+void ApplySSAO2DepthScaledSampleDistance()
+{
+    g_Render.SetPostEffectSSAO2DepthScaledSampleDistance(g_bSSAO2DepthScaledSampleDistance);
+}
+
 void ApplySSAOSampleRadius()
 {
     g_ssaoSampleRadius = ClampSSAOSampleRadius(g_ssaoSampleRadius);
@@ -1315,6 +1333,16 @@ int SSAO2ShadowStrengthToSliderValue(const float shadowStrength)
 float SliderValueToSSAO2ShadowStrength(const int sliderValue)
 {
     return ClampSSAO2ShadowStrength(static_cast<float>(sliderValue) * SSAO2_SHADOW_STRENGTH_STEP);
+}
+
+int SSAO2SampleCountToSliderValue(const int sampleCount)
+{
+    return ClampSSAO2SampleCount(sampleCount);
+}
+
+int SliderValueToSSAO2SampleCount(const int sliderValue)
+{
+    return ClampSSAO2SampleCount(sliderValue);
 }
 
 int SSAOSampleRadiusToSliderValue(const float sampleRadius)
@@ -2143,6 +2171,14 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"SSAO2ShadowStrength")
             {
                 g_ssao2ShadowStrength = std::stof(value);
+            }
+            else if (key == L"SSAO2SampleCount")
+            {
+                g_ssao2SampleCount = std::stoi(value);
+            }
+            else if (key == L"SSAO2DepthScaledSampleDistanceEnable")
+            {
+                g_bSSAO2DepthScaledSampleDistance = (std::stoi(value) != 0);
             }
             else if (key == L"CameraNear")
             {

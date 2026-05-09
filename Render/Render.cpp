@@ -255,6 +255,16 @@ void Render::ApplySettings()
         }
     }
 
+    const auto ssao2DepthScaledSampleDistanceEnable = m_settings.find(L"SSAO2DepthScaledSampleDistanceEnable");
+    if (ssao2DepthScaledSampleDistanceEnable != m_settings.end())
+    {
+        bool enabled = false;
+        if (TryParseBoolSetting(ssao2DepthScaledSampleDistanceEnable->second, enabled))
+        {
+            SetPostEffectSSAO2DepthScaledSampleDistance(enabled);
+        }
+    }
+
     const auto fogEnable = m_settings.find(L"FogEnable");
     if (fogEnable != m_settings.end())
     {
@@ -634,6 +644,23 @@ void Render::ApplySettings()
     else
     {
         SetPostEffectSSAO2ShadowStrength(1.0f);
+    }
+
+    const auto ssao2SampleCount = m_settings.find(L"SSAO2SampleCount");
+    if (ssao2SampleCount != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectSSAO2SampleCount(std::stoi(ssao2SampleCount->second));
+        }
+        catch (...)
+        {
+            SetPostEffectSSAO2SampleCount(16);
+        }
+    }
+    else
+    {
+        SetPostEffectSSAO2SampleCount(16);
     }
 
     const auto shadowSaturationBoost = m_settings.find(L"ShadowSaturationBoost");
@@ -1796,6 +1823,17 @@ void Render::SetPostEffectSSAOBrightness(const float brightness)
 void Render::SetPostEffectSSAO2ShadowStrength(const float shadowStrength)
 {
     m_postEffectSSAO2.SetShadowStrength(shadowStrength);
+}
+
+void Render::SetPostEffectSSAO2SampleCount(const int sampleCount)
+{
+    const int normalizedSampleCount = (std::max)(1, (std::min)(sampleCount, 64));
+    m_postEffectSSAO2.SetSampleCount(normalizedSampleCount);
+}
+
+void Render::SetPostEffectSSAO2DepthScaledSampleDistance(const bool enabled)
+{
+    m_postEffectSSAO2.SetDepthScaledSampleDistanceEnabled(enabled);
 }
 
 void Render::SetPostEffectSSAOSaturationBoost(const float saturationBoost)

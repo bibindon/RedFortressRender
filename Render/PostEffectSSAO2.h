@@ -21,6 +21,8 @@ public:
     void SetShadowStrength(const float shadowStrength);
     void SetSaturationBoost(const float saturationBoost);
     void SetSampleRadius(const float sampleRadius);
+    void SetSampleCount(const int sampleCount);
+    void SetDepthScaledSampleDistanceEnabled(const bool enabled);
     void SetBlurEnabled(const bool enabled);
     void SetDepthRange(const float nearPlane, const float farPlane);
 
@@ -32,6 +34,8 @@ private:
     float m_shadowStrength = 1.0f;
     float m_saturationBoost = 0.30f;
     float m_sampleRadius = 4.0f;
+    int m_sampleCount = 16;
+    bool m_depthScaledSampleDistanceEnabled = false;
     bool m_blurEnabled = true;
     float m_nearPlane = 0.1f;
     float m_farPlane = 30'000.0f;

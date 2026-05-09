@@ -157,6 +157,8 @@ void InitializeSampleScene(HWND hWnd)
     ApplyGBufferClipPlanes();
     ApplySSAOBrightness();
     ApplySSAO2ShadowStrength();
+    ApplySSAO2SampleCount();
+    ApplySSAO2DepthScaledSampleDistance();
     ApplySSAOSampleRadius();
     ApplySSAOSaturationBoost();
     ApplySSAOMode();

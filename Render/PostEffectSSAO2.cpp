@@ -91,6 +91,8 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO2::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_fxSSAO2->SetTexture("texNormal", texRenderTargetNormal);
     m_fxSSAO2->SetTexture("texThickness", texRenderTargetThickness);
     m_fxSSAO2->SetFloat("g_sampleRadius", m_sampleRadius);
+    m_fxSSAO2->SetInt("g_sampleCount", m_sampleCount);
+    m_fxSSAO2->SetBool("g_enableDepthScaledSampleDistance", m_depthScaledSampleDistanceEnabled);
     m_fxSSAO2->SetFloat("g_depthCompareThreshold", 0.0f);
     m_fxSSAO2->SetFloat("g_depthBiasScale", 1.0f);
     m_fxSSAO2->SetFloat("g_normalBiasScale", 1.0f);
@@ -177,6 +179,16 @@ void PostEffectSSAO2::SetSaturationBoost(const float saturationBoost)
 void PostEffectSSAO2::SetSampleRadius(const float sampleRadius)
 {
     m_sampleRadius = sampleRadius;
+}
+
+void PostEffectSSAO2::SetSampleCount(const int sampleCount)
+{
+    m_sampleCount = (std::max)(1, (std::min)(sampleCount, 64));
+}
+
+void PostEffectSSAO2::SetDepthScaledSampleDistanceEnabled(const bool enabled)
+{
+    m_depthScaledSampleDistanceEnabled = enabled;
 }
 
 void PostEffectSSAO2::SetBlurEnabled(const bool enabled)
