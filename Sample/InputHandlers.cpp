@@ -175,6 +175,13 @@ bool HandleSampleKeyDown(HWND hWnd, const WPARAM wParam)
         return true;
     }
 
+    if (wParam == VK_F3)
+    {
+        g_bDebugWorldPosOverlay = !g_bDebugWorldPosOverlay;
+        g_Render.SetDebugWorldPosOverlay(g_bDebugWorldPosOverlay);
+        return true;
+    }
+
     if (wParam == VK_ESCAPE)
     {
         if (g_bMouseLookEnabled)

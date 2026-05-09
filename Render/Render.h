@@ -288,6 +288,7 @@ public:
     void SetPostEffectGodRayVirtualProximityStrength(const float arg);
     void SetPostEffectGodRayOcclusionFalloff(const float arg);
     void SetPostEffectGodRayLightColor(const D3DXVECTOR3& color);
+    void SetDebugWorldPosOverlay(const bool enabled);
 
     void SetShowFPS(const bool arg);
 
@@ -420,6 +421,7 @@ private:
     DepthOfFieldMode m_postEffectDepthOfFieldMode = DepthOfFieldMode::Disabled;
     bool m_postEffectStarBurstEnabled = false;
     bool m_postEffectGodRayEnabled = false;
+    bool m_debugWorldPosOverlayEnabled = false;
     bool m_meshMixSaturateShadowEnabled = false;
     float m_meshMixSaturateShadowIntensity = 0.2f;
     float m_meshMixShadowDarkness = 1.0f;

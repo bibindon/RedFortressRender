@@ -14,6 +14,11 @@ public:
     void Finalize();
 
     void Draw(LPDIRECT3DTEXTURE9 renderTarget);
+    void DrawOverlay(LPDIRECT3DTEXTURE9 renderTarget,
+                     const int x,
+                     const int y,
+                     const int width,
+                     const int height);
 
     void OnDeviceLost() override;
     void OnDeviceReset() override;
@@ -24,6 +29,12 @@ private:
 
     void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
                             const std::string& technique);
+    void DrawScreenQuad(LPDIRECT3DTEXTURE9 texTarget,
+                        const float left,
+                        const float top,
+                        const float right,
+                        const float bottom,
+                        const std::string& technique);
 
     struct ScreenVertex
     {

@@ -1006,6 +1006,10 @@ void Render::Draw()
 
     // g_pRenderTargetの内容を画面に転送
     m_postEffectEnd.Draw(pTempTexture);
+    if (m_debugWorldPosOverlayEnabled)
+    {
+        m_postEffectEnd.DrawOverlay(pTexTempPos, 10, 10, 256, 256);
+    }
 
     // 文字と画像は彩度フィルタの影響を受けないようにする
     Draw2D();
@@ -1936,6 +1940,11 @@ void Render::SetPostEffectGodRayOcclusionFalloff(const float arg)
 void Render::SetPostEffectGodRayLightColor(const D3DXVECTOR3& color)
 {
     m_postEffectGodRay.SetLightColor(color);
+}
+
+void Render::SetDebugWorldPosOverlay(const bool enabled)
+{
+    m_debugWorldPosOverlayEnabled = enabled;
 }
 
 void Render::SetShowFPS(const bool arg)

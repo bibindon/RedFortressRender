@@ -52,6 +52,7 @@ bool g_bSaturateFilter = false;
 bool g_bBloom = false;
 NSRender::DepthOfFieldMode g_depthOfFieldMode = NSRender::DepthOfFieldMode::Disabled;
 bool g_bStarBurst = false;
+bool g_bDebugWorldPosOverlay = false;
 float g_fogIntensity = 1.0f;
 float g_heightFogIntensity = 0.3f;
 float g_heightFogStart = 0.0f;
@@ -2414,6 +2415,7 @@ void DrawSampleOverlay()
     text += L"Esc : Mouse look ON/OFF\n";
     text += L"F1 : Settings dialog\n";
     text += L"F2 : Toggle overlay\n"; // F2キーの説明を追加
+    text += L"F3 : WorldPos debug\n";
     text += L"\n";
     text += L"8 : Window mode\n";
     text += L"9 : Borderless mode\n";
