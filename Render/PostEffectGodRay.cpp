@@ -71,8 +71,8 @@ LPDIRECT3DTEXTURE9 PostEffectGodRay::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                             m_lightPosWorld.z,
                             1.0f);
     D3DXVec4Transform(&lightClip, &lightWorld4, &matView);
-    float lightViewZ = (lightClip.z - Camera::GetNear()) /
-                       (Camera::GetFar() - Camera::GetNear());
+    float lightViewZ = (lightClip.z - m_depthNearPlane) /
+                       (m_depthFarPlane - m_depthNearPlane);
     lightViewZ = max(0.0f, min(1.0f, lightViewZ));
 
     D3DXVECTOR4 lightProj;
@@ -111,6 +111,16 @@ LPDIRECT3DTEXTURE9 PostEffectGodRay::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     DrawFullscreenQuad(m_texResult, "GodRay");
 
     return m_texResult;
+}
+
+void PostEffectGodRay::SetDepthRange(const float nearPlane, const float farPlane)
+{
+    m_depthNearPlane = nearPlane;
+    m_depthFarPlane = farPlane;
+    if (m_depthFarPlane <= m_depthNearPlane)
+    {
+        m_depthFarPlane = m_depthNearPlane + 0.01f;
+    }
 }
 
 void PostEffectGodRay::BlurOcclusionTexture()

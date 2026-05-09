@@ -25,6 +25,7 @@ public:
     void SetLightColor(const D3DXVECTOR3& c)  { m_lightColor = c; }
     void SetReverseSampling(const bool arg)   { m_reverseSampling = arg; }
     void SetVirtualProximityStrength(const float arg) { m_virtualProximityStrength = arg; }
+    void SetDepthRange(const float nearPlane, const float farPlane);
 
     void OnDeviceLost();
     void OnDeviceReset();
@@ -56,6 +57,8 @@ private:
     D3DXVECTOR3 m_lightColor      = D3DXVECTOR3(1.0f, 0.9f, 0.8f);
     bool        m_reverseSampling = false;
     float       m_virtualProximityStrength = 1.5f;
+    float       m_depthNearPlane = 0.1f;
+    float       m_depthFarPlane = 30'000.0f;
 };
 
 }

@@ -1614,6 +1614,7 @@ void Render::SetGBufferClipPlanes(const float nearPlane, const float farPlane)
     m_postEffectSSAO.SetDepthRange(nearPlane, farPlane);
     m_postEffectSSAO2.SetDepthRange(nearPlane, farPlane);
     m_postEffectFog.SetDepthDecodeRange(nearPlane, farPlane);
+    m_postEffectGodRay.SetDepthRange(nearPlane, farPlane);
 }
 
 D3DXVECTOR3 Render::GetLookAtPos()
