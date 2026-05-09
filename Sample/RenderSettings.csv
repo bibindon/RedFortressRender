@@ -27,7 +27,7 @@ SSSColorB,0.5
 FogEnable,1
 FogIntensity,1.0
 ,
-DepthBufferShadowEnable,1
+DepthBufferShadowEnable,0
 ShadowIntensity,0.25
 ShadowCoverage,0.05
 ShadowSaturationBoost,1.0
@@ -38,6 +38,7 @@ SSAOEnable,1
 SSAOMode,SSAO2
 SSAO2BlurEnable,0
 SSAOBrightness,0.25
+SSAO2ShadowStrength,1.0
 SSAOSampleRadius,1.0
 SSAOSaturationBoost,0.00
 ,
@@ -75,3 +76,9 @@ GodRayVirtualProximityStrength,1.5
 GodRayLightPosX,10.0
 GodRayLightPosY,10.0
 GodRayLightPosZ,10.0
+
+CameraNear,0.1
+CameraFar,30.0
+GBufferNear,0.1
+GBufferFar,30.0
+

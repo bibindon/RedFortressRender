@@ -254,6 +254,7 @@ public:
     void SetPostEffectSSAOMode(const SSAOMode mode);
     void SetPostEffectSSAO2Blur(const bool arg);
     void SetPostEffectSSAOBrightness(const float brightness);
+    void SetPostEffectSSAO2ShadowStrength(const float shadowStrength);
     void SetPostEffectSSAOSaturationBoost(const float saturationBoost);
     void SetPostEffectSSAOSampleRadius(const float sampleRadius);
     void SetPostEffectFog(const bool arg);

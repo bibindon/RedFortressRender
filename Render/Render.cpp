@@ -619,6 +619,23 @@ void Render::ApplySettings()
         SetPostEffectSSAOBrightness(1.0f);
     }
 
+    const auto ssao2ShadowStrength = m_settings.find(L"SSAO2ShadowStrength");
+    if (ssao2ShadowStrength != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectSSAO2ShadowStrength(std::stof(ssao2ShadowStrength->second));
+        }
+        catch (...)
+        {
+            SetPostEffectSSAO2ShadowStrength(1.0f);
+        }
+    }
+    else
+    {
+        SetPostEffectSSAO2ShadowStrength(1.0f);
+    }
+
     const auto shadowSaturationBoost = m_settings.find(L"ShadowSaturationBoost");
     if (shadowSaturationBoost != m_settings.end())
     {
@@ -1753,7 +1770,11 @@ void Render::SetPostEffectSSAO2Blur(const bool arg)
 void Render::SetPostEffectSSAOBrightness(const float brightness)
 {
     m_postEffectSSAO.SetBrightness(brightness);
-    m_postEffectSSAO2.SetBrightness(brightness);
+}
+
+void Render::SetPostEffectSSAO2ShadowStrength(const float shadowStrength)
+{
+    m_postEffectSSAO2.SetShadowStrength(shadowStrength);
 }
 
 void Render::SetPostEffectSSAOSaturationBoost(const float saturationBoost)

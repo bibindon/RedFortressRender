@@ -18,7 +18,7 @@ public:
                             LPDIRECT3DTEXTURE9 texRenderTargetNormal,
                             LPDIRECT3DTEXTURE9 texRenderTargetThickness);
 
-    void SetBrightness(const float brightness);
+    void SetShadowStrength(const float shadowStrength);
     void SetSaturationBoost(const float saturationBoost);
     void SetSampleRadius(const float sampleRadius);
     void SetBlurEnabled(const bool enabled);
@@ -29,7 +29,7 @@ public:
 
 private:
 
-    float m_brightness = 1.0f;
+    float m_shadowStrength = 1.0f;
     float m_saturationBoost = 0.30f;
     float m_sampleRadius = 4.0f;
     bool m_blurEnabled = true;

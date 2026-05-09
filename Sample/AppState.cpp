@@ -66,6 +66,7 @@ float g_shadowIntensity = 0.5f;
 float g_shadowCoverage = 0.5f;
 float g_shadowSaturationBoost = 0.35f;
 float g_ssaoBrightness = 3.5f;
+float g_ssao2ShadowStrength = 1.0f;
 float g_ssaoSampleRadius = 4.0f;
 float g_cameraNearPlane = 0.1f;
 float g_cameraFarPlane = 30'000.0f;
@@ -180,6 +181,12 @@ float ClampShadowSaturationBoost(const float boost)
 float ClampSSAOBrightness(const float brightness)
 {
     return (std::max)(SSAO_BRIGHTNESS_MIN, (std::min)(brightness, SSAO_BRIGHTNESS_MAX));
+}
+
+float ClampSSAO2ShadowStrength(const float shadowStrength)
+{
+    return (std::max)(SSAO2_SHADOW_STRENGTH_MIN,
+                      (std::min)(shadowStrength, SSAO2_SHADOW_STRENGTH_MAX));
 }
 
 float ClampSSAOSampleRadius(const float sampleRadius)
@@ -931,6 +938,12 @@ void ApplySSAOBrightness()
     g_Render.SetPostEffectSSAOBrightness(g_ssaoBrightness);
 }
 
+void ApplySSAO2ShadowStrength()
+{
+    g_ssao2ShadowStrength = ClampSSAO2ShadowStrength(g_ssao2ShadowStrength);
+    g_Render.SetPostEffectSSAO2ShadowStrength(g_ssao2ShadowStrength);
+}
+
 void ApplySSAOSampleRadius()
 {
     g_ssaoSampleRadius = ClampSSAOSampleRadius(g_ssaoSampleRadius);
@@ -1291,6 +1304,16 @@ int SSAOBrightnessToSliderValue(const float brightness)
 float SliderValueToSSAOBrightness(const int sliderValue)
 {
     return ClampSSAOBrightness(SSAO_BRIGHTNESS_MIN + static_cast<float>(sliderValue) * SSAO_BRIGHTNESS_STEP);
+}
+
+int SSAO2ShadowStrengthToSliderValue(const float shadowStrength)
+{
+    return static_cast<int>(std::lround(ClampSSAO2ShadowStrength(shadowStrength) / SSAO2_SHADOW_STRENGTH_STEP));
+}
+
+float SliderValueToSSAO2ShadowStrength(const int sliderValue)
+{
+    return ClampSSAO2ShadowStrength(static_cast<float>(sliderValue) * SSAO2_SHADOW_STRENGTH_STEP);
 }
 
 int SSAOSampleRadiusToSliderValue(const float sampleRadius)
@@ -2115,6 +2138,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"SSAOSampleRadius")
             {
                 g_ssaoSampleRadius = std::stof(value);
+            }
+            else if (key == L"SSAO2ShadowStrength")
+            {
+                g_ssao2ShadowStrength = std::stof(value);
             }
             else if (key == L"CameraNear")
             {

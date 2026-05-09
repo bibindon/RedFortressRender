@@ -120,7 +120,7 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO2::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 0, 255), 1.0f, 0);
     m_fxSSAO2->SetTexture("texColor", renderTarget);
     m_fxSSAO2->SetTexture("texAO", aoTextureForComposite);
-    m_fxSSAO2->SetFloat("g_aoBrightness", m_brightness);
+    m_fxSSAO2->SetFloat("g_shadowStrength", m_shadowStrength);
     m_fxSSAO2->SetFloat("g_aoSaturationBoost", m_saturationBoost);
     m_fxSSAO2->SetTechnique("TechniqueAO2_Composite");
     m_fxSSAO2->Begin(NULL, 0);
@@ -164,9 +164,9 @@ void PostEffectSSAO2::DrawFullscreenQuad()
     SAFE_RELEASE(vertexDecl);
 }
 
-void PostEffectSSAO2::SetBrightness(const float brightness)
+void PostEffectSSAO2::SetShadowStrength(const float shadowStrength)
 {
-    m_brightness = brightness;
+    m_shadowStrength = shadowStrength;
 }
 
 void PostEffectSSAO2::SetSaturationBoost(const float saturationBoost)

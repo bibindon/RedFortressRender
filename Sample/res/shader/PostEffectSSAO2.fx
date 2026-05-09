@@ -6,7 +6,7 @@ float g_fFar = 50.0f;
 float2 g_invSize;
 float g_posRange = 50.0f;
 float g_sampleRadius = 1.0f;
-float g_aoBrightness = 1.0f;
+float g_shadowStrength = 1.0f;
 float g_aoSaturationBoost = 0.30f;
 float g_depthCompareThreshold = 0.00f;
 float g_depthBiasScale = 1.0f;
@@ -121,9 +121,24 @@ float GetViewDepth(float2 uv)
     return linearZ * (g_fFar - g_fNear) + g_fNear;
 }
 
-float Random01(float2 seed)
+float2 GetFixedDiskSample(const int index)
 {
-    return frac(sin(dot(seed, float2(12.9898f, 78.233f))) * 43758.5453f);
+    if (index == 0) return float2(0.1250f, 0.0000f);
+    if (index == 1) return float2(-0.1591f, 0.1458f);
+    if (index == 2) return float2(0.0244f, -0.2784f);
+    if (index == 3) return float2(0.2126f, 0.2772f);
+    if (index == 4) return float2(-0.3927f, -0.0693f);
+    if (index == 5) return float2(0.3827f, -0.2432f);
+    if (index == 6) return float2(-0.1202f, 0.4845f);
+    if (index == 7) return float2(-0.2561f, -0.4811f);
+    if (index == 8) return float2(0.5664f, 0.1174f);
+    if (index == 9) return float2(-0.5749f, 0.2208f);
+    if (index == 10) return float2(0.2375f, -0.6229f);
+    if (index == 11) return float2(0.1455f, 0.6856f);
+    if (index == 12) return float2(-0.7124f, -0.2317f);
+    if (index == 13) return float2(0.6904f, -0.3484f);
+    if (index == 14) return float2(-0.3810f, 0.7253f);
+    return float2(-0.0287f, -0.8745f);
 }
 
 float2 ProjectViewPositionToTexCoord(float3 viewPosition)
@@ -149,10 +164,8 @@ float ComputeOcclusionSample(float2 baseUv,
                              float sampleDistance,
                              float index)
 {
-    float randomAngle = Random01(baseUv * 32768.0f + index.xx) * 6.2831853f;
-    float radial = (index + 0.5f) / 16.0f;
-    float radiusScale = radial * radial;
-    float2 disk = float2(cos(randomAngle), sin(randomAngle)) * radiusScale;
+    const int sampleIndex = clamp((int)index, 0, 15);
+    float2 disk = GetFixedDiskSample(sampleIndex);
     float hemisphereLift = sqrt(saturate(1.0f - dot(disk, disk)));
     float3 sampleDirection = normalize(tangent * disk.x + bitangent * disk.y + currentNormal * hemisphereLift);
 
@@ -318,7 +331,7 @@ float4 PS_Composite(VS_OUT i) : COLOR0
 {
     float3 color = tex2D(sampColor, i.uv).rgb;
     float ao = tex2D(sampAO, i.uv).r;
-    float aoAdjusted = pow(saturate(ao), 1.0f / max(g_aoBrightness, 0.0001f));
+    float aoAdjusted = saturate(1.0f - (1.0f - saturate(ao)) * g_shadowStrength);
     float shadowPresence = saturate(1.0f - ao);
     float3 shadedColor = color * aoAdjusted;
     float saturationAmount = lerp(1.0f, 1.0f + g_aoSaturationBoost, shadowPresence);
