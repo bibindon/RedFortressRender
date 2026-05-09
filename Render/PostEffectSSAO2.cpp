@@ -82,8 +82,8 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO2::Draw(LPDIRECT3DTEXTURE9 renderTarget,
 
     m_fxSSAO2->SetMatrix("g_matView", &matrixView);
     m_fxSSAO2->SetMatrix("g_matProj", &matrixProj);
-    m_fxSSAO2->SetFloat("g_fNear", Camera::GetNear());
-    m_fxSSAO2->SetFloat("g_fFar", Camera::GetFar());
+    m_fxSSAO2->SetFloat("g_fNear", m_nearPlane);
+    m_fxSSAO2->SetFloat("g_fFar", m_farPlane);
     m_fxSSAO2->SetFloat("g_posRange", PostEffectSSAO::Z_RANGE);
     m_fxSSAO2->SetFloatArray("g_invSize", reinterpret_cast<FLOAT*>(&invSize), 2);
     m_fxSSAO2->SetTexture("texZ", texRenderTargetZ);
@@ -182,6 +182,12 @@ void PostEffectSSAO2::SetSampleRadius(const float sampleRadius)
 void PostEffectSSAO2::SetBlurEnabled(const bool enabled)
 {
     m_blurEnabled = enabled;
+}
+
+void PostEffectSSAO2::SetDepthRange(const float nearPlane, const float farPlane)
+{
+    m_nearPlane = nearPlane;
+    m_farPlane = farPlane;
 }
 
 void PostEffectSSAO2::OnDeviceLost()

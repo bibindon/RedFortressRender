@@ -22,6 +22,7 @@ public:
     void SetSaturationBoost(const float saturationBoost);
     void SetSampleRadius(const float sampleRadius);
     void SetBlurEnabled(const bool enabled);
+    void SetDepthRange(const float nearPlane, const float farPlane);
 
     void OnDeviceLost();
     void OnDeviceReset();
@@ -32,6 +33,8 @@ private:
     float m_saturationBoost = 0.30f;
     float m_sampleRadius = 4.0f;
     bool m_blurEnabled = true;
+    float m_nearPlane = 0.1f;
+    float m_farPlane = 30'000.0f;
 
     LPD3DXEFFECT m_fxSSAO2 = NULL;
 
