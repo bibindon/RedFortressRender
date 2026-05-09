@@ -4,7 +4,6 @@ float4x4 g_matProj;
 float g_fNear = 0.1f;
 float g_fFar = 50.0f;
 float2 g_invSize;
-float g_posRange = 50.0f;
 float g_sampleRadius = 1.0f;
 float g_shadowStrength = 1.0f;
 float g_aoSaturationBoost = 0.30f;
@@ -13,7 +12,6 @@ float g_depthBiasScale = 1.0f;
 float g_normalBiasScale = 1.0f;
 
 texture texZ;
-texture texPos;
 texture texNormal;
 texture texThickness;
 texture texAO;
@@ -22,16 +20,6 @@ texture texColor;
 sampler sampZ = sampler_state
 {
     Texture = (texZ);
-    MinFilter = POINT;
-    MagFilter = POINT;
-    MipFilter = NONE;
-    AddressU = CLAMP;
-    AddressV = CLAMP;
-};
-
-sampler sampPos = sampler_state
-{
-    Texture = (texPos);
     MinFilter = POINT;
     MagFilter = POINT;
     MipFilter = NONE;
@@ -85,17 +73,14 @@ struct VS_OUT
     float2 uv : TEXCOORD0;
 };
 
+float GetViewDepth(float2 uv);
+
 VS_OUT VS_Fullscreen(float4 p : POSITION, float2 uv : TEXCOORD0)
 {
     VS_OUT o;
     o.pos = p;
     o.uv = uv + 0.5f * g_invSize;
     return o;
-}
-
-float3 DecodeWorldPos(float3 enc)
-{
-    return (enc * 2.0f - 1.0f) * g_posRange;
 }
 
 float3 DecodeWorldNormal(float3 enc)
@@ -105,8 +90,12 @@ float3 DecodeWorldNormal(float3 enc)
 
 float3 GetViewPosition(float2 uv)
 {
-    float3 worldPos = DecodeWorldPos(tex2D(sampPos, uv).rgb);
-    return mul(float4(worldPos, 1.0f), g_matView).xyz;
+    float viewDepth = GetViewDepth(uv);
+    float2 ndc = float2(uv.x * 2.0f - 1.0f,
+                        1.0f - uv.y * 2.0f);
+    return float3(ndc.x * viewDepth / g_matProj._11,
+                  ndc.y * viewDepth / g_matProj._22,
+                  viewDepth);
 }
 
 float3 GetViewNormal(float2 uv)
