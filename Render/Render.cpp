@@ -1584,6 +1584,9 @@ void Render::MoveCamera(const D3DXVECTOR3& pos)
 void Render::SetCameraClipPlanes(const float nearPlane, const float farPlane)
 {
     Camera::SetClipPlanes(nearPlane, farPlane);
+    const float positionRange = GBuffer::ComputePositionRange(nearPlane, farPlane);
+    m_postEffectFog.SetFogDepthRange(nearPlane, farPlane);
+    m_postEffectHeightFog.SetPositionRange(positionRange);
 }
 
 void Render::SetGBufferClipPlanes(const float nearPlane, const float farPlane)
@@ -1592,8 +1595,7 @@ void Render::SetGBufferClipPlanes(const float nearPlane, const float farPlane)
     m_GBuffer.SetDepthRange(nearPlane, farPlane);
     m_postEffectSSAO.SetDepthRange(nearPlane, farPlane);
     m_postEffectSSAO2.SetDepthRange(nearPlane, farPlane);
-    m_postEffectFog.SetPositionRange(positionRange);
-    m_postEffectHeightFog.SetPositionRange(positionRange);
+    m_postEffectFog.SetDepthDecodeRange(nearPlane, farPlane);
     m_postEffectDepthOfField.SetPositionRange(positionRange);
 }
 

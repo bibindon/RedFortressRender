@@ -1,14 +1,11 @@
-
 // ------------------------------------------------------------
 // PostEffectFog.fx  (DX9 ps_3_0)
-//   ・Z距離ベースの指数霧
-//   ・高さ霧（HeightStart より下で濃くなる簡易モデル）
-//   ・合成は “加算” ： fogAmount = saturate( fogZ + fogH )
-//   ・最終色 = lerp(Scene, FogColor, fogAmount)
-//   ・前提：Zテクスチャは「線形距離」が格納されている
+//   - Exponential fog based on decoded linear depth
+//   - Optional height fog blended additively
+//   - Final color = lerp(Scene, FogColor, fogAmount)
 // ------------------------------------------------------------
 
-float2  g_TexelSize;
+float2 g_TexelSize;
 
 texture g_SrcTex;
 sampler2D sSrc = sampler_state
@@ -21,7 +18,7 @@ sampler2D sSrc = sampler_state
     AddressV = CLAMP;
 };
 
-texture g_ZTex;   // Rに線形距離
+texture g_ZTex;
 sampler2D sZ = sampler_state
 {
     Texture = <g_ZTex>;
@@ -32,7 +29,7 @@ sampler2D sZ = sampler_state
     AddressV = CLAMP;
 };
 
-texture g_PosTex; // world-space position (xyz)
+texture g_PosTex;
 sampler2D sPos = sampler_state
 {
     Texture = <g_PosTex>;
@@ -43,15 +40,18 @@ sampler2D sPos = sampler_state
     AddressV = CLAMP;
 };
 
-// Parameters
-float4 g_FogColor        = float4(0.32, 0.38, 0.86, 1.0);
-float  g_IntensityZ      = 0.02;   // 距離密度
-float  g_IntensityHeight = 0.00;   // 高さ密度
-float  g_HeightStart     = 0.00;   // この高さより下で濃くなる
-float  g_PosRange        = 1000.0;
+float4 g_FogColor = float4(0.32, 0.38, 0.86, 1.0);
+float g_IntensityZ = 0.02;
+float g_IntensityHeight = 0.00;
+float g_HeightStart = 0.00;
+float g_PosRange = 1000.0;
+float g_DepthDecodeNear = 0.1;
+float g_DepthDecodeFar = 30000.0;
+float g_FogNear = 0.1;
+float g_FogFar = 30000.0;
 
-bool   g_EnableZ         = true;
-bool   g_EnableHeight    = false;
+bool g_EnableZ = true;
+bool g_EnableHeight = false;
 
 float FogAmountAt(float2 uv)
 {
@@ -60,8 +60,10 @@ float FogAmountAt(float2 uv)
 
     if (g_EnableZ)
     {
-        float d = tex2D(sZ, uv).r;               // 線形距離前提
-        float trans = exp(-g_IntensityZ * d);
+        float encodedDepth = tex2D(sZ, uv).r;
+        float decodedDepth = lerp(g_DepthDecodeNear, g_DepthDecodeFar, saturate(encodedDepth));
+        float fogDepth = saturate((decodedDepth - g_FogNear) / max(g_FogFar - g_FogNear, 0.0001));
+        float trans = exp(-g_IntensityZ * fogDepth);
         fogZ = 1.0 - trans;
     }
 
@@ -74,7 +76,7 @@ float FogAmountAt(float2 uv)
         fogH = 1.0 - trans;
     }
 
-    return saturate(fogZ + fogH);                 // ご要望どおり「加算」
+    return saturate(fogZ + fogH);
 }
 
 struct PS_IN
@@ -84,18 +86,9 @@ struct PS_IN
 
 float4 PS_Fog(PS_IN i) : COLOR0
 {
-    // 中心UV（半テクセル補正は入力ごとに個別に）
-    float2 uv= i.uv + g_TexelSize;
-
+    float2 uv = i.uv + g_TexelSize;
     float3 scene = tex2D(sSrc, uv).rgb;
-
-    // 1px ステップ = 2 * HalfPixel
-    float2 stepZ   = g_TexelSize * 2.0;
-    float2 stepPos = g_TexelSize * 2.0;
-
-    // 中心フォグ
     float fog = FogAmountAt(uv);
-
     float3 outColor = lerp(scene, g_FogColor.rgb, saturate(fog));
     return float4(outColor, 1.0);
 }

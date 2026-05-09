@@ -59,6 +59,10 @@ LPDIRECT3DTEXTURE9 PostEffectFog::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_d3dEffect->SetFloat("g_IntensityHeight", m_intensityHeight);
     m_d3dEffect->SetFloat("g_HeightStart", m_heightStart);
     m_d3dEffect->SetFloat("g_PosRange", m_positionRange);
+    m_d3dEffect->SetFloat("g_DepthDecodeNear", m_depthDecodeNear);
+    m_d3dEffect->SetFloat("g_DepthDecodeFar", m_depthDecodeFar);
+    m_d3dEffect->SetFloat("g_FogNear", m_fogNear);
+    m_d3dEffect->SetFloat("g_FogFar", m_fogFar);
 
     // 霧色（必要なら setter を後で追加してください）
     D3DXVECTOR4 fogColor(0.72f, 0.78f, 0.86f, 1.0f);
@@ -98,6 +102,18 @@ void PostEffectFog::SetHeightStart(const float arg)
 void PostEffectFog::SetPositionRange(const float positionRange)
 {
     m_positionRange = (positionRange > 1.0f) ? positionRange : 1.0f;
+}
+
+void PostEffectFog::SetDepthDecodeRange(const float nearPlane, const float farPlane)
+{
+    m_depthDecodeNear = nearPlane;
+    m_depthDecodeFar = farPlane;
+}
+
+void PostEffectFog::SetFogDepthRange(const float nearPlane, const float farPlane)
+{
+    m_fogNear = nearPlane;
+    m_fogFar = farPlane;
 }
 
 void PostEffectFog::SetFogColor(const D3DXCOLOR& color)

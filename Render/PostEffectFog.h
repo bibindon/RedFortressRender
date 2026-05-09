@@ -24,6 +24,8 @@ public:
     void SetIntensityHeight(const float arg);
     void SetHeightStart(const float arg);
     void SetPositionRange(const float positionRange);
+    void SetDepthDecodeRange(const float nearPlane, const float farPlane);
+    void SetFogDepthRange(const float nearPlane, const float farPlane);
 
     void SetFogColor(const D3DXCOLOR& color);
 
@@ -51,6 +53,10 @@ private:
 
     float m_heightStart= 0.0f;
     float m_positionRange = 30'000.0f;
+    float m_depthDecodeNear = 0.1f;
+    float m_depthDecodeFar = 30'000.0f;
+    float m_fogNear = 0.1f;
+    float m_fogFar = 30'000.0f;
     D3DXVECTOR4 m_fogColor = D3DXVECTOR4(0, 0, 0, 0);
 
 };
