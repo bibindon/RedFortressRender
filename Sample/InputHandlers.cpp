@@ -6,10 +6,16 @@
 #include "AppState.h"
 #include "SettingsDialog.h"
 
+// このファイルはサンプル用ショートカットと移動キー割り当ての定義を持つ。
+// main.cpp のメッセージ処理から呼ばれるが、
+// 実際の「何を起こすか」はここへ集約して操作体系を見通しやすくしている。
+
 namespace
 {
 void ToggleDebugGBufferView(const NSRender::DebugGBufferView view)
 {
+    // 同じデバッグビューをもう一度押したときは解除し、
+    // 一つのキーで ON/OFF を切り替えられるようにする。
     g_debugGBufferView = (g_debugGBufferView == view)
                        ? NSRender::DebugGBufferView::None
                        : view;
@@ -50,6 +56,8 @@ void AddSimpleMeshAtLookAt(const std::wstring& filePath,
                            const bool usePOM = false,
                            const bool usePointLight = false)
 {
+    // 生成位置はカメラ位置そのものではなく LookAt 先を使い、
+    // 「見ている対象の近くへ置く」操作感になるようにしている。
     auto pos = g_Render.GetLookAtPos();
     D3DXVECTOR3 forward = g_Render.GetCameraRotate();
     D3DXVec3Normalize(&forward, &forward);
@@ -162,12 +170,16 @@ void AddOrClearText(const bool shift)
 
 bool HandleSampleKeyUp(const WPARAM wParam)
 {
+    // 押しっぱなし移動はフラグ管理なので、
+    // キーを離したタイミングでは対応フラグを落とすだけにする。
     SetMovementFlag(wParam, false);
     return true;
 }
 
 bool HandleSampleKeyDown(HWND hWnd, const WPARAM wParam)
 {
+    // 同じキーでも Shift/Ctrl 組み合わせで役割が変わるため、
+    // まず修飾キー状態を確定してから分岐している。
     bool shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
     bool control = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
 

@@ -13,6 +13,12 @@
 
 #include "SettingsDialog.h"
 
+// このファイルは AppState のうち、
+// 状態保持、カメラ制御、モデル管理、CSV 読み込みなど土台寄りの実装を担当する。
+// 描画設定の Apply / Slider 変換は AppStateRendering.cpp へ分離している。
+
+// グローバル変数群はサンプル全体の実行時状態そのもの。
+// スコープは広いが、入力・UI・描画が同じ値を直接共有できるようにしている。
 bool g_bClose = false;
 NSRender::Render g_Render;
 int g_fontId = 0;
@@ -122,6 +128,8 @@ int g_godRayEffectiveMarkerMeshId = -1;
 
 namespace
 {
+// clamp / normalize 補助関数は、
+// CSV や UI から入る値を安全な範囲へ収めるための共通基盤。
 float ClampSaturateLevel(const float level)
 {
     return (std::max)(SATURATE_MIN, (std::min)(level, SATURATE_MAX));
@@ -693,6 +701,8 @@ bool ExportMeshBinary(const std::wstring& inputPath, const std::wstring& outputP
 
 void UpdateCameraMoveByKeyboard()
 {
+    // 押下フラグを毎フレームここで集計し、最終的な移動ベクトルを作る。
+    // 入力イベント時に直接座標を動かさないことで、移動速度をフレーム単位で揃えやすい。
     if (!g_bMoveForward && !g_bMoveBackward && !g_bMoveLeft && !g_bMoveRight && !g_bMoveUp && !g_bMoveDown)
     {
         return;
@@ -747,6 +757,8 @@ void UpdateCameraMoveByKeyboard()
 
 void MoveCameraAwayFromLookAtByWheel(const short wheelDelta)
 {
+    // ホイールは LookAt を維持したまま視点だけを前後させ、
+    // ズームに近い操作感を出している。
     if (wheelDelta == 0)
     {
         return;
@@ -803,6 +815,8 @@ void ShowMouseCursor()
 
 void EnableMouseLook(HWND hWnd)
 {
+    // マウスルック有効時はカーソル非表示に加え、
+    // ローカル環境ではウィンドウ内へカーソルを閉じ込めて視点操作を安定させる。
     if (g_bMouseLookEnabled)
     {
         return;
@@ -847,6 +861,8 @@ void RegisterLoadedModel(const std::wstring& type,
                          const float scale,
                          const int renderId)
 {
+    // 描画オブジェクト追加と同時に一覧へ登録し、
+    // SettingsDialog のリスト表示と Render 側の実体を対応付ける。
     LoadedModelInfo info;
     info.m_type = type;
     info.m_path = path;
@@ -950,6 +966,8 @@ void SpawnMeshAtLookAt(const std::wstring& filePath)
 
 void SpawnMeshMixAtLookAt(const std::wstring& filePath)
 {
+    // MeshMix は現在選択中の shader mode に応じて
+    // POM / NormalMapping の切り替えを伴って生成される。
     if (filePath.empty())
     {
         return;
@@ -1128,6 +1146,8 @@ bool ExportLoadedModelAsBinaryX(const size_t modelIndex, const std::wstring& out
 
 void AddPointLightAtLookAt()
 {
+    // ダイアログで編集中の色・形状・サイズをそのままテンプレートとして使い、
+    // 「今見えている設定で次のライトを置く」流れにしている。
     ApplyPointLightColor();
     ApplyPointLightBrightness();
     ApplyPointLightShape();
@@ -1150,6 +1170,8 @@ void AddPointLightAtLookAt()
 
 void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
 {
+    // CSV 読み込みは簡易な永続化手段で、
+    // サンプル起動時に主要な描画設定をまとめて復元する。
     if (settingsCsvPath.empty())
     {
         return;

@@ -12,6 +12,10 @@
 
 #pragma comment(lib, "comctl32.lib")
 
+// SettingsDialog.cpp はダイアログの制御本体。
+// 値の見た目を同期する処理は SettingsDialogRefresh.cpp へ分離し、
+// こちらには初期化、入力確定、スクロール、メッセージ処理を残している。
+
 void RefreshDepthOfFieldControls(HWND hDlg);
 void RefreshDepthOfFieldMaxBlurControls(HWND hDlg);
 void RefreshDepthOfFieldAutoActivationControls(HWND hDlg);
@@ -64,6 +68,8 @@ void RefreshGodRayControls(HWND hDlg);
 
 namespace
 {
+// スライダー範囲定数は AppState 側の step / min / max と対になる。
+// UI 初期化時に「どこまで動かせるか」をここで定義している。
 constexpr int SATURATE_SLIDER_MIN = 0;
 constexpr int SATURATE_SLIDER_MAX = static_cast<int>(SATURATE_MAX / SATURATE_STEP);
 constexpr int FOG_SLIDER_MIN = 0;
@@ -245,6 +251,8 @@ void PopulateSSAOModeCombo(HWND hDlg)
 
 bool TryParseEditFloat(HWND hDlg, const int controlId, float& value)
 {
+    // Edit ボックスは文字列入力なので、
+    // 数値化に失敗した場合は呼び出し側が元の表示へ戻せるよう false を返す。
     wchar_t buffer[64] { };
     GetDlgItemText(hDlg, controlId, buffer, static_cast<int>(sizeof(buffer) / sizeof(buffer[0])));
 
@@ -1392,6 +1400,8 @@ void RefreshPointLightListView(HWND hDlg)
 
 void RefreshAllControls(HWND hDlg)
 {
+    // ダイアログ全体再同期の入口。
+    // CSV 読み込み直後や設定の一括反映後に、個別更新漏れなく UI をそろえる。
     RefreshSaturateControls(hDlg);
     RefreshSelectedMeshPaths(hDlg);
     RefreshMixMeshShaderMode(hDlg);
@@ -1863,6 +1873,8 @@ void ToggleSettingsDialog(HWND hWnd)
 
 void RefreshSettingsDialogState()
 {
+    // ダイアログがまだ生成されていないタイミングでも安全に呼べるようにし、
+    // 呼び出し側が表示状態を毎回気にしなくて済むようにしている。
     if (g_hSettingsDialog != NULL)
     {
         RefreshAllControls(g_hSettingsDialog);
@@ -1871,6 +1883,8 @@ void RefreshSettingsDialogState()
 
 INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    // Windows メッセージを直接処理するため分岐は長いが、
+    // 実際には「初期化」「スクロール」「各コントロール操作」の三系統に分かれる。
     switch (msg)
     {
     case WM_INITDIALOG:

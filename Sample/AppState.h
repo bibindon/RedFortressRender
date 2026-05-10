@@ -6,6 +6,10 @@
 #include <vector>
 #include <windows.h>
 
+// AppState.h はサンプル全体で共有する実行時状態と、
+// その状態を Render や UI へ反映する操作関数をまとめた中心ヘッダ。
+// 入力、ダイアログ、メインループが同じ値を参照する前提になっている。
+
 constexpr int WINDOW_SIZE_W = 1600;
 constexpr int WINDOW_SIZE_H = 900;
 constexpr float MOUSE_CAMERA_SENSITIVITY = 0.005f;
@@ -180,6 +184,9 @@ enum class SampleSSAOMode
     SSAO2 = 1,
 };
 
+// ここから下の extern 変数群は「現在のサンプル状態そのもの」を表す。
+// 描画設定、入力状態、生成済みモデル一覧までを共有し、
+// 各 subsystem が同じ情報源を読む設計にしている。
 extern bool g_bClose;
 extern NSRender::Render g_Render;
 extern int g_fontId;
@@ -288,6 +295,8 @@ extern D3DXVECTOR3 g_godRayLightPos;
 extern int g_godRaySourceMarkerMeshId;
 extern int g_godRayEffectiveMarkerMeshId;
 
+// カメラ・マウス関連の補助関数。
+// 生入力を実際の視点移動へ変換する役割を持つ。
 void UpdateCameraMoveByKeyboard();
 void MoveCameraAwayFromLookAtByWheel(short wheelDelta);
 POINT GetClientCenter(HWND hWnd);
@@ -297,6 +306,9 @@ void ShowMouseCursor();
 void EnableMouseLook(HWND hWnd);
 void DisableMouseLook();
 
+// Apply 系関数は AppState に蓄えた値を Render 側の実設定へ反映する。
+// UI で値を書き換えただけでは描画内容は変わらないため、
+// 変更確定時にこれらを呼ぶ前提になっている。
 void ApplySaturateLevel();
 void ApplyPostEffectToggleSettings();
 void ApplyMaskedGaussianMaskPath();
@@ -353,6 +365,9 @@ void ApplyMotionBlurCameraSettings();
 void ApplyResolution();
 void ApplyWindowMode();
 void InitializeRemoteDesktopDefault();
+
+// Slider 変換関数は整数スライダー値と内部 float/int 値の往復を担当する。
+// step 幅や clamp の知識を UI 実装から分離するためにまとめている。
 int SaturateLevelToSliderValue(float level);
 float SliderValueToSaturateLevel(int sliderValue);
 int SunLightColorToSliderValue(float value);
@@ -440,6 +455,9 @@ int GodRayVirtualProximityStrengthToSliderValue(float intensity);
 float SliderValueToGodRayVirtualProximityStrength(int sliderValue);
 int GodRayLightPosToSliderValue(float pos);
 float SliderValueToGodRayLightPos(int sliderValue);
+
+// シーンやアセット管理系の関数群。
+// 入力ショートカットや設定ダイアログから呼ばれ、描画オブジェクト実体を増減させる。
 void RegisterLoadedModel(const std::wstring& type,
                          const std::wstring& path,
                          const D3DXVECTOR3& pos,
@@ -459,5 +477,7 @@ bool ExportLoadedModelAsBinaryX(size_t modelIndex, const std::wstring& outputPat
 void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath);
 void AddPointLightAtLookAt();
 
+// Overlay / 補助描画系。
+// Render の 2D 描画を利用してサンプル用の情報表示を行う。
 void DrawSampleOverlay();
 void UpdateDirectionalLight();

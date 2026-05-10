@@ -1,4 +1,4 @@
-#include "SettingsDialog.h"
+﻿#include "SettingsDialog.h"
 
 #include <commctrl.h>
 #include <cwchar>
@@ -7,6 +7,7 @@
 #include "../Render/Light.h"
 #include "resource.h"
 
+// 縺薙・繝輔ぃ繧､繝ｫ縺ｯ縲瑚ｨｭ螳壼､繧・UI 縺ｸ蜿肴丐縺吶ｋ蜃ｦ逅・阪□縺代ｒ縺ｾ縺ｨ繧√※縺・ｋ縲・// 蛟､縺ｮ螟画峩遒ｺ螳壹ｄ WM_COMMAND 縺ｮ蛻・ｲ舌・ SettingsDialog.cpp 蛛ｴ縺ｫ谿九＠縲・// 縺薙％縺ｧ縺ｯ迴ｾ蝨ｨ縺ｮ AppState 繧定ｦ九※蜷・さ繝ｳ繝医Ο繝ｼ繝ｫ縺ｮ陦ｨ遉ｺ迥ｶ諷九ｒ蜷梧悄縺吶ｋ縲・
 void RefreshHeightFogIntensityControls(HWND hDlg);
 void RefreshHeightFogStartControls(HWND hDlg);
 void RefreshHeightFogMaxControls(HWND hDlg);
@@ -42,7 +43,8 @@ void RefreshPointLightControls(HWND hDlg)
     const bool isSquareLight = (g_pointLightShape == NSRender::PointLightShape::Square);
     const bool usesRotation = isLineLight || isSquareLight;
 
-    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_pointLightColor.r);
+    // 濶ｲ縺ｨ譏弱ｋ縺輔・縲梧焚蛟､蜈･蜉帶ｬ・阪→縲後せ繝ｩ繧､繝繝ｼ縲阪・荳｡譁ｹ繧貞酔縺伜､縺ｸ縺昴ｍ縺医ｋ縲・    // 迚・婿縺縺第峩譁ｰ縺吶ｋ縺ｨ縲∝､夜Κ隕∝屏縺ｧ蛟､縺悟､峨ｏ縺｣縺溘→縺阪↓ UI 陦ｨ遉ｺ縺碁｣溘＞驕輔▲縺ｦ縺励∪縺・・    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_pointLightColor.r);
+    // 濶ｲ縺ｨ譏弱ｋ縺輔・謨ｰ蛟､蜈･蜉帶ｬ・→繧ｹ繝ｩ繧､繝繝ｼ縺ｮ荳｡譁ｹ繧貞酔縺伜､縺ｸ縺昴ｍ縺医ｋ縲・    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_pointLightColor.r);
     SetDlgItemText(hDlg, IDC_EDIT_POINT_LIGHT_COLOR_R, buffer);
     SendDlgItemMessage(hDlg,
                        IDC_SLIDER_POINT_LIGHT_COLOR_R,
@@ -93,6 +95,7 @@ void RefreshPointLightControls(HWND hDlg)
     std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_pointLightRotationDegrees.z);
     SetDlgItemText(hDlg, IDC_EDIT_POINT_LIGHT_ROT_Z, buffer);
 
+    // ライト形状ごとに必要な入力項目だけを表示する。
     const int lineControlIds[] =
     {
         IDC_STATIC_POINT_LIGHT_LINE_LENGTH_LABEL,
@@ -153,7 +156,6 @@ void RefreshFogControls(HWND hDlg)
 
 void RefreshHeightFogControls(HWND hDlg)
 {
-    CheckDlgButton(hDlg, IDC_CHECK_HEIGHT_FOG, g_bHeightFog ? BST_CHECKED : BST_UNCHECKED);
     RefreshHeightFogIntensityControls(hDlg);
     RefreshHeightFogStartControls(hDlg);
     RefreshHeightFogMaxControls(hDlg);
@@ -372,6 +374,7 @@ void RefreshSpecularIntensityControls(HWND hDlg)
                    IDC_CHECK_SPECULAR_INTENSITY_OVERRIDE,
                    g_bUseSpecularIntensityOverride ? BST_CHECKED : BST_UNCHECKED);
 
+    // Override が無効な間は値を編集できないようにする。
     const BOOL enabled = g_bUseSpecularIntensityOverride ? TRUE : FALSE;
     EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SPECULAR_INTENSITY), enabled);
     EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SPECULAR_INTENSITY), enabled);
@@ -455,6 +458,8 @@ void RefreshSSAOBrightnessControls(HWND hDlg)
                        TBM_SETPOS,
                        TRUE,
                        static_cast<LPARAM>(SSAOBrightnessToSliderValue(g_ssaoBrightness)));
+
+    // Legacy SSAO 専用項目は SSAO2 選択中に無効化する。
     const BOOL enabled = (g_ssaoMode != SampleSSAOMode::SSAO2);
     EnableWindow(GetDlgItem(hDlg, IDC_STATIC_SSAO_BRIGHTNESS_LABEL), enabled);
     EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SSAO_BRIGHTNESS), enabled);
@@ -639,6 +644,7 @@ void RefreshBloom(HWND hDlg)
 
 void RefreshDepthOfField(HWND hDlg)
 {
+    // DOF は OFF / ON / AutoNear の 3 状態をラジオボタンで同期する。
     CheckDlgButton(hDlg,
                    IDC_RADIO_DEPTH_OF_FIELD_OFF,
                    g_depthOfFieldMode == NSRender::DepthOfFieldMode::Disabled ? BST_CHECKED : BST_UNCHECKED);
@@ -741,6 +747,7 @@ void RefreshMotionBlurCameraControls(HWND hDlg)
                        TRUE,
                        static_cast<LPARAM>(MotionBlurCameraSampleCountToSliderValue(g_motionBlurCameraSampleCount)));
 
+    // Motion Blur が OFF の間は関連入力をまとめて無効化する。
     const BOOL enabled = g_bMotionBlurCamera ? TRUE : FALSE;
     EnableWindow(GetDlgItem(hDlg, IDC_EDIT_MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS), enabled);
     EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS), enabled);
@@ -774,7 +781,6 @@ void RefreshShadowCompositeTapControls(HWND hDlg)
 
 void RefreshGodRayControls(HWND hDlg)
 {
-    CheckDlgButton(hDlg, IDC_CHECK_GODRAY, g_bGodRay ? BST_CHECKED : BST_UNCHECKED);
 
     wchar_t buffer[32];
 
@@ -818,3 +824,4 @@ void RefreshGodRayControls(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_POS_Z, TBM_SETPOS, TRUE,
                        static_cast<LPARAM>(GodRayLightPosToSliderValue(g_godRayLightPos.z)));
 }
+

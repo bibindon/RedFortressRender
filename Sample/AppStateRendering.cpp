@@ -1,4 +1,4 @@
-#include "AppState.h"
+﻿#include "AppState.h"
 
 #include <algorithm>
 #include <cmath>
@@ -323,7 +323,7 @@ void ApplySaturateLevel()
 
 void ApplyPostEffectToggleSettings()
 {
-    g_Render.SetPostEffectDepthBufferShadow(g_bDepthBufferShadow);
+    // ON/OFF 邉ｻ繝昴せ繝医お繝輔ぉ繧ｯ繝医・逶ｸ莠偵↓髢｢騾｣縺吶ｋ繧ゅ・縺悟､壹＞縺溘ａ縲・    // 襍ｷ蜍慕峩蠕後ｄ險ｭ螳壼・驕ｩ逕ｨ譎ゅ↓縺ｾ縺ｨ繧√※蜿肴丐縺ｧ縺阪ｋ蜈･蜿｣繧堤畑諢上＠縺ｦ縺・ｋ縲・    g_Render.SetPostEffectDepthBufferShadow(g_bDepthBufferShadow);
     g_Render.SetPostEffectSSAO(g_bSSAO);
     ApplySSAOMode();
     ApplySSAO2Blur();
@@ -478,7 +478,7 @@ void ApplySSAOSampleRadius()
 
 void ApplyCameraClipPlanes()
 {
-    g_cameraNearPlane = ClampCameraNearPlane(g_cameraNearPlane);
+    // near / far 縺ｮ鬆・ｺ上′蟠ｩ繧後ｋ縺ｨ謠冗判遐ｴ邯ｻ縺ｫ縺､縺ｪ縺後ｋ縺ｮ縺ｧ縲・    // clamp 蠕後↓繧る未菫よｧ繧定｣懈ｭ｣縺励※螳牙・蛛ｴ縺ｸ蛟偵＠縺ｦ縺・ｋ縲・    g_cameraNearPlane = ClampCameraNearPlane(g_cameraNearPlane);
     g_cameraFarPlane = ClampCameraFarPlane(g_cameraFarPlane);
     if (g_cameraFarPlane <= g_cameraNearPlane)
     {
@@ -703,6 +703,7 @@ void InitializeRemoteDesktopDefault()
 
 int SaturateLevelToSliderValue(const float level)
 {
+    // ダイアログは整数スライダーしか扱えないため、内部値を step 単位へ変換する。
     return static_cast<int>(std::lround(ClampSaturateLevel(level) / SATURATE_STEP));
 }
 
@@ -1076,7 +1077,7 @@ int SliderValueToMotionBlurCameraSampleCount(const int sliderValue)
 
 void ApplyGodRay()
 {
-    g_Render.SetPostEffectGodRay(g_bGodRay);
+    // GodRay 縺ｯ謠冗判繝輔Λ繧ｰ縺縺代〒縺ｪ縺上ョ繝舌ャ繧ｰ逕ｨ繝槭・繧ｫ繝ｼ縺ｮ蠅玲ｸ帙ｂ莨ｴ縺・◆繧√・    // 譛牙柑蛹悶・辟｡蜉ｹ蛹悶・蜑ｯ菴懃畑繧偵％縺ｮ髢｢謨ｰ縺ｸ髢峨§霎ｼ繧√※縺・ｋ縲・    g_Render.SetPostEffectGodRay(g_bGodRay);
 
     if (g_bGodRay)
     {
@@ -1193,3 +1194,4 @@ float SliderValueToGodRayLightPos(const int sliderValue)
 {
     return (std::max)(GODRAY_LIGHT_POS_MIN, (std::min)(static_cast<float>(sliderValue) * GODRAY_LIGHT_POS_STEP, GODRAY_LIGHT_POS_MAX));
 }
+

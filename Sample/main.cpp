@@ -137,6 +137,7 @@ void InitializeSampleScene(HWND hWnd)
                                                  false);
     RegisterLoadedModel(L"MeshMixManager", L"..\\..\\Sample\\plateField.x", D3DXVECTOR3(0.0f, 0.0f, 0.0f), 1.0f, plateFieldId);
 
+    // CSV から読み込んだ描画設定をレンダラーへまとめて反映する
     ApplySaturateLevel();
     ApplyFogIntensity();
     ApplyHeightFogIntensity();
