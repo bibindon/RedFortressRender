@@ -128,18 +128,16 @@ float4 PS(in float2 uv : TEXCOORD0) : COLOR0
         return baseColor;
     }
 
-    float4 sumColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
-    float weightSum = 0.0f;
+    float4 sumColor = baseColor;
+    float weightSum = 1.0f;
 
-    const int maxHalfSize = 5;
-
-    [unroll]
-    for (int y = -maxHalfSize; y <= maxHalfSize; ++y)
+    [loop]
+    for (int y = -blurHalfSize; y <= blurHalfSize; ++y)
     {
-        [unroll]
-        for (int x = -maxHalfSize; x <= maxHalfSize; ++x)
+        [loop]
+        for (int x = -blurHalfSize; x <= blurHalfSize; ++x)
         {
-            if (x < -blurHalfSize || x > blurHalfSize || y < -blurHalfSize || y > blurHalfSize)
+            if (x == 0 && y == 0)
             {
                 continue;
             }
@@ -147,14 +145,7 @@ float4 PS(in float2 uv : TEXCOORD0) : COLOR0
             float2 offset = float2((float)x, (float)y) * g_TexelSize * g_blurRadiusPixels;
             float2 tapUv = sampleUv + offset;
 
-            float tapValid = 0.0f;
-            float tapDistanceMeters = GetDistanceMeters(tapUv, tapValid);
-            if (tapValid <= 0.0f)
-            {
-                continue;
-            }
-
-            sumColor += tex2D(colorSampler, tapUv);
+            sumColor += tex2Dlod(colorSampler, float4(tapUv, 0.0f, 0.0f));
             weightSum += 1.0f;
         }
     }
