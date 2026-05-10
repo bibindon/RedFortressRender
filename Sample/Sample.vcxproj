@@ -249,9 +249,11 @@ exit /B %ERRORLEVEL%</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AppState.cpp" />
+    <ClCompile Include="AppStateRendering.cpp" />
     <ClCompile Include="InputHandlers.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="SettingsDialog.cpp" />
+    <ClCompile Include="SettingsDialogRefresh.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppState.h" />
