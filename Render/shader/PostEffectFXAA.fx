@@ -10,7 +10,7 @@ sampler textureSampler = sampler_state
 };
 
 float2 g_TexelSize;
-float g_EdgeThreshold = 0.02f;
+float g_EdgeThreshold = 0.2f;
 int g_SearchRadius = 4;
 static const int MAX_SEARCH_RADIUS = 8;
 

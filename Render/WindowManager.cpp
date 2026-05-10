@@ -202,7 +202,7 @@ void WindowManager::UpdateWindowPlacement(const eWindowMode mode, const int widt
         const RECT rect = BuildCenteredWindowRect(m_hWnd, width, height);
         SetWindowLongPtr(m_hWnd,
                          GWL_STYLE,
-                         WS_OVERLAPPEDWINDOW & ~(WS_MAXIMIZEBOX | WS_THICKFRAME) | WS_VISIBLE);
+                         WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME | WS_VISIBLE);
         SetWindowPos(m_hWnd,
                      HWND_TOP,
                      rect.left,
