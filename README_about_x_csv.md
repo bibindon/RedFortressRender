@@ -1,221 +1,180 @@
-# メッシュCSVファイルについて
+﻿# `.x` と同名の `.csv` について
 
-メッシュファイル（`.x`）と同じディレクトリに、同じ名前の `.csv` ファイルを置くことで、メッシュの描画設定を指定できます。
+`MeshMix` 系で `.x` ファイルを読むとき、同じ場所に同名の `.csv` があれば追加設定として読み込む。
 
-例: `aaa.x` に対して `aaa.csv` を用意する
+例:
 
-CSVファイルが存在しない場合はエラーにはならず、デフォルト設定で描画されます。
+- `Sample\sphereEnv.x`
+- `Sample\sphereEnv.csv`
 
----
+この CSV は `Render\MeshMixManager.cpp` で読む。
+キー名と値は小文字化して比較されるため、実質的に大文字小文字は区別されない。
 
-## フォーマット
+## 書式
 
-各行に `キー,値` の形式で記述します。
+1 行につき `キー,値` である。
 
 ```csv
-MeshType,POM
+meshtype,envmapping
 smooth,y
+shadow,n
 ```
 
-キー名と値は大文字小文字を区別しません。
+bool 系は次の値が使える。
 
----
+- `true` 扱い: `y`, `yes`, `true`, `1`
+- `false` 扱い: `n`, `no`, `false`, `0`
 
-## パラメータ一覧
+## キー一覧
 
-### MeshType
+### meshtype
 
-メッシュの描画タイプを指定します。
+メッシュの描画系統を切り替える。
 
-| 値 | 説明 |
+| 値 | 内容 |
 |---|---|
-| `POM` | Parallax Occlusion Mapping を使用する |
-| `NormalMapping` | Normal Mapping を使用する |
-| `EnvMapping` | 環境マッピング（キューブマッピング）を使用する |
-| `None` | 特殊な描画なし（デフォルト） |
+| `pom` | Parallax Occlusion Mapping |
+| `normalmapping` | Normal Mapping |
+| `envmapping` | 環境マッピング |
+| `glass` | ガラス表現 |
+| `emit` | 発光表現 |
 
----
+未指定時は通常の `MeshMix` として扱われる。
 
 ### smooth
 
-法線を滑らかに補間するかどうかを指定します。
+スムーズ法線を使うかどうかを指定する。
 
-| 値 | 説明 |
+| 値 | 内容 |
 |---|---|
-| `y` | スムージングを有効にする |
-| `n` | スムージングを無効にする |
+| `y` | 有効 |
+| `n` | 無効 |
 
-補足:
-`POM` の場合は形状破綻を避けるため、通常の `smooth,y` よりも面境界を強く残す設定になります。
+### sss / sssintensity / ssscolor
 
----
-
-### sss
-
-サブサーフェイススキャッタリングを有効にするかどうかを指定します。
-
-| 値 | 説明 |
-|---|---|
-| `y` | SSSを有効にする |
-| `n` | SSSを無効にする |
-
-### sssIntensity
-
-SSSの強さを指定します。
+SSS 風表現の設定である。
 
 ```csv
-sssIntensity,1.0
+sss,y
+sssintensity,32.0
+ssscolor,255,255,255
 ```
 
-### sssColor
+- `ssscolor` は `R,G,B` の 0 から 255 である
 
-SSSで透けて見える色を `R,G,B` で指定します（各値は `0` から `255`）。
+### sway / swayintensity
+
+草木のような左右の揺れ表現である。
 
 ```csv
-sssColor,0,255,127
+sway,y
+swayintensity,0.5
 ```
 
----
+### wave / waveintensity
 
-### sway
-
-草などを風でそよがせる揺れエフェクトを有効にするかどうかを指定します。
-
-| 値 | 説明 |
-|---|---|
-| `y` | 揺れを有効にする |
-| `n` | 揺れを無効にする |
-
-### swayIntensity
-
-揺れの強さを指定します。
+波打ち表現である。
 
 ```csv
-swayIntensity,1.0
+wave,y
+waveintensity,0.2
 ```
 
----
+### litbypointlight
 
-### wave
+ポイントライトの影響を受けるかどうかを指定する。
 
-海面のような波エフェクトを有効にするかどうかを指定します。
-
-| 値 | 説明 |
+| 値 | 内容 |
 |---|---|
-| `y` | 波を有効にする |
-| `n` | 波を無効にする |
+| `y` | 受ける |
+| `n` | 受けない |
 
-### waveIntensity
+### shadow / zshadow
 
-波の強さを指定します。
+Depth Buffer Shadow の対象にするかどうかを指定する。
+`shadow` と `zshadow` は同じ意味である。
 
-```csv
-waveIntensity,1.0
-```
-
----
-
-### litByPointLight
-
-ポイントライトによる照明を受けるかどうかを指定します。
-
-| 値 | 説明 |
+| 値 | 内容 |
 |---|---|
-| `y` | ポイントライトの影響を受ける |
-| `n` | ポイントライトの影響を受けない |
+| `y` | 対象にする |
+| `n` | 対象から外す |
 
----
+### lambertshadow
 
-### cubeMappingRate
+半ランバート影を使うかどうかを指定する。
 
-`EnvMapping` のときに、環境マップをどれくらい混ぜるかを指定します。
-
-`0.0` から `1.0` の範囲で指定します。
-
-| 値 | 説明 |
+| 値 | 内容 |
 |---|---|
-| `0.0` | 環境マップを表示しない |
-| `1.0` | 環境マップを100%表示する |
-
-```csv
-cubeMappingRate,0.35
-```
-
----
-
-### cubeMappingGauss
-
-`EnvMapping` のときに、環境マップをどれくらいぼかして表示するかを指定します。
-
-`0.0` から `1.0` の範囲で指定します。
-
-| 値 | 説明 |
-|---|---|
-| `0.0` | ぼかさない |
-| `1.0` | 強くぼかす |
-
-```csv
-cubeMappingGauss,0.6
-```
-
----
+| `y` | 有効 |
+| `n` | 無効 |
 
 ### ssao
 
-SSAO の対象にするかどうかを指定します。
+SSAO の対象にするかどうかを指定する。
 
-| 値 | 説明 |
+| 値 | 内容 |
 |---|---|
-| `y` | SSAO の対象にする |
-| `n` | SSAO の対象にしない |
-
----
-
-### shadow
-
-深度バッファシャドウの対象にするかどうかを指定します。
-
-| 値 | 説明 |
-|---|---|
-| `y` | 深度バッファシャドウの対象にする |
-| `n` | 深度バッファシャドウの対象にしない |
-
-`zshadow` というキー名でも同じ意味で指定できます。
-
----
-
-### lambertShadow
-
-ランバート拡散による陰を出すかどうかを指定します。
-
-| 値 | 説明 |
-|---|---|
-| `y` | 通常どおり陰を出す |
-| `n` | ランバートの陰を出さない |
-
----
+| `y` | 対象にする |
+| `n` | 対象から外す |
 
 ### collision
 
-衝突判定の対象とするかどうかを指定します。
+当たり判定用として使うかどうかを指定する。
 
-| 値 | 説明 |
+| 値 | 内容 |
 |---|---|
-| `y` | 衝突判定を有効にする |
-| `n` | 衝突判定を無効にする |
+| `y` | 有効 |
+| `n` | 無効 |
 
----
+### cubemappingrate / cubemappinggauss
 
-## 記述例
+環境マッピングやガラス表現で使う係数である。
+どちらも 0.0 から 1.0 にクランプされる。
 
 ```csv
-MeshType,EnvMapping
-smooth,y
-cubeMappingRate,1.0
-cubeMappingGauss,0.2
-litByPointLight,y
-ssao,n
-shadow,y
-lambertShadow,y
-collision,n
+cubemappingrate,1.0
+cubemappinggauss,0.2
 ```
+
+- `cubemappingrate`
+  反射の乗り方を指定する
+- `cubemappinggauss`
+  反射のぼかし量を指定する
+
+## 実例
+
+### 環境マッピング
+
+```csv
+meshtype,envmapping
+smooth,n
+cubemappingrate,1.0
+cubemappinggauss,0.0
+ssao,n
+shadow,n
+```
+
+### ガラス
+
+```csv
+meshtype,glass
+smooth,n
+cubemappingrate,1.0
+cubemappinggauss,0.0
+```
+
+### SSS
+
+```csv
+meshtype,none
+smooth,y
+sss,y
+sssintensity,32.0
+ssscolor,255,255,255
+```
+
+## 補足
+
+- `.csv` がなくても `.x` は読み込める
+- `.csv` は `MeshMix` 系の追加設定なので、通常メッシュ系 API では使われない
+- キーを増やしたら `Render\MeshMixManager.cpp` とこの README を一緒に更新すること
