@@ -30,16 +30,13 @@ LPDIRECT3DTEXTURE9 PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource)
         return renderSource;
     }
 
-    // ƒeƒNƒZƒ‹ƒTƒCƒYiƒuƒ‰[‚ÅŽg—pj
     float texelSize[2] = { 1.0f / Common::ScreenW(), 1.0f / Common::ScreenH() };
     m_d3dEffect->SetFloatArray("g_TexelSize", texelSize, 2);
     m_d3dEffect->SetFloat("g_Threshold", m_threshold);
 
-    // (2) BrightPass : “ü—Í=m_renderTarget, o—Í=g_pBrightTex2
     SetRTFromTex(m_texBright);
     DrawFullscreenQuad(renderSource, "BrightPass");
 
-    // (3a) 0‹ ƒuƒ‰[ : “ü—Í=m_texBright, o—Í=g_pBlurTexH2
     SetRTFromTex(m_texBlurH);
     {
         float dir[4] = { 1.0f, 0.0f, 0, 0 };
@@ -51,7 +48,6 @@ LPDIRECT3DTEXTURE9 PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource)
     SetRTFromTex(m_texBlurH2);
     DrawFullscreenQuad(m_texBlurH, "Blur");
 
-    // (3b) 60‹ ƒuƒ‰[ : “ü—Í=m_texBright, o—Í=g_pBlurTexV2
     SetRTFromTex(m_texBlurV);
     {
         float dir[4] = { 0.5f, 0.8660254f, 0, 0 };
@@ -63,7 +59,6 @@ LPDIRECT3DTEXTURE9 PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource)
     SetRTFromTex(m_texBlurV2);
     DrawFullscreenQuad(m_texBlurV, "Blur");
 
-    // (3c) 120‹ ƒuƒ‰[ : “ü—Í=m_texBright, o—Í=g_pBlurTexD
     SetRTFromTex(m_texBlurD);
     {
         float dir[4] = { -0.5f, 0.8660254f, 0, 0 };
@@ -75,12 +70,11 @@ LPDIRECT3DTEXTURE9 PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource)
     SetRTFromTex(m_texBlurD2);
     DrawFullscreenQuad(m_texBlurD, "Blur");
 
-    // (4) ‡¬ : (SceneTex2 + 0‹ + 60‹ + 120‹) ¨ g_pSceneTex3
     SetRTFromTex(m_texPostEffectBack1);
     m_d3dEffect->SetTexture("g_SceneTex", renderSource);
     m_d3dEffect->SetTexture("g_BlurTexH", m_texBlurH2);
     m_d3dEffect->SetTexture("g_BlurTexV", m_texBlurV2);
-    m_d3dEffect->SetTexture("g_BlurTex60", m_texBlurD2); // Combine ‚Í3Ž²‚ð‰ÁŽZ
+    m_d3dEffect->SetTexture("g_BlurTex60", m_texBlurD2);
     DrawFullscreenQuad(NULL, "Combine");
 
     return m_texPostEffectBack1;
@@ -89,9 +83,9 @@ LPDIRECT3DTEXTURE9 PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource)
 void PostEffectStarBurst::SetRTFromTex(LPDIRECT3DTEXTURE9 tex)
 {
     LPDIRECT3DSURFACE9 rt = NULL;
-    tex->GetSurfaceLevel(0, &rt);                 // AddRef Ï‚Ý‚Å•Ô‚é
-    Common::D3DDevice()->SetRenderTarget(0, rt);         // Device ‘¤‚ªŽQÆ‚ð•ÛŽ
-    SAFE_RELEASE(rt);                             // ‘¦Release‚ÅOK
+    tex->GetSurfaceLevel(0, &rt);
+    Common::D3DDevice()->SetRenderTarget(0, rt);
+    SAFE_RELEASE(rt);
 }
 
 void PostEffectStarBurst::Finalize()
@@ -201,7 +195,7 @@ void PostEffectStarBurst::CreateTexture()
                       Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
+                      D3DFMT_R8G8B8,
                       D3DPOOL_DEFAULT,
                       &m_texPostEffectBack1);
 
@@ -210,17 +204,16 @@ void PostEffectStarBurst::CreateTexture()
                       Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
+                      D3DFMT_R8G8B8,
                       D3DPOOL_DEFAULT,
                       &m_texBright);
 
-    // 0‹i…•½j
     D3DXCreateTexture(Common::D3DDevice(),
                       Common::ScreenW(),
                       Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
+                      D3DFMT_R8G8B8,
                       D3DPOOL_DEFAULT,
                       &m_texBlurH);
 
@@ -229,17 +222,16 @@ void PostEffectStarBurst::CreateTexture()
                       Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
+                      D3DFMT_R8G8B8,
                       D3DPOOL_DEFAULT,
                       &m_texBlurH2);
 
-    // 60‹
     D3DXCreateTexture(Common::D3DDevice(),
                       Common::ScreenW(),
                       Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
+                      D3DFMT_R8G8B8,
                       D3DPOOL_DEFAULT,
                       &m_texBlurV);
 
@@ -248,17 +240,16 @@ void PostEffectStarBurst::CreateTexture()
                       Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
+                      D3DFMT_R8G8B8,
                       D3DPOOL_DEFAULT,
                       &m_texBlurV2);
 
-    // 120‹iš’Ç‰Áj
     D3DXCreateTexture(Common::D3DDevice(),
                       Common::ScreenW(),
                       Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
+                      D3DFMT_R8G8B8,
                       D3DPOOL_DEFAULT,
                       &m_texBlurD);
 
@@ -267,7 +258,7 @@ void PostEffectStarBurst::CreateTexture()
                       Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
+                      D3DFMT_R8G8B8,
                       D3DPOOL_DEFAULT,
                       &m_texBlurD2);
 }

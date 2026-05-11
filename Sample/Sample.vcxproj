@@ -119,7 +119,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <MultiProcFXC>false</MultiProcFXC>
+    <MultiProcFXC>true</MultiProcFXC>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -196,6 +196,8 @@
     </FxCompile>
     <FxCompile>
       <ShaderModel>2.0</ShaderModel>
+      <DisableOptimizations>false</DisableOptimizations>
+      <EnableDebuggingInformation>false</EnableDebuggingInformation>
     </FxCompile>
     <PreBuildEvent>
       <Command>robocopy "$(SolutionDir)Render\shader" "$(SolutionDir)Sample\res\shader" *.fx /S /R:0 /W:0 &gt;nul

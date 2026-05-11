@@ -30,7 +30,7 @@ void PostEffectSaturate::CreateTexture()
                       Common::ScreenH(),
                       1,
                       D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
+                      D3DFMT_R8G8B8,
                       D3DPOOL_DEFAULT,
                       &m_texWork);
 }
