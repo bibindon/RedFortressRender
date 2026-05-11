@@ -41,7 +41,6 @@
 #include "PostEffectBloom.h"
 #include "PostEffectStarBurst.h"
 #include "PostEffectEnd.h"
-#include "PostEffectSSAO.h"
 #include "PostEffectSSAO2.h"
 #include "PostEffectDepthOfField.h"
 #include "PostEffectHeightFog.h"
@@ -57,12 +56,6 @@
 
 namespace NSRender
 {
-
-enum class SSAOMode
-{
-    Legacy = 0,
-    SSAO2 = 1,
-};
 
 enum class DebugGBufferView
 {
@@ -263,16 +256,13 @@ public:
     void SetPostEffectDepthBufferShadowCoverage(const float coverage);
     void SetPostEffectDepthBufferShadowPcfTapCount(const int tapCount);
     void SetPostEffectDepthBufferShadowCompositeTapCount(const int tapCount);
-    void SetPostEffectSSAO(const bool arg);
-    void SetPostEffectSSAOMode(const SSAOMode mode);
+    void SetPostEffectSSAO2(const bool arg);
     void SetPostEffectSSAO2Blur(const bool arg);
-    void SetPostEffectSSAOBrightness(const float brightness);
     void SetPostEffectSSAO2ShadowStrength(const float shadowStrength);
     void SetPostEffectSSAO2SaturationBoost(const float saturationBoost);
     void SetPostEffectSSAO2SampleCount(const int sampleCount);
     void SetPostEffectSSAO2DepthScaledSampleDistance(const bool enabled);
-    void SetPostEffectSSAOSaturationBoost(const float saturationBoost);
-    void SetPostEffectSSAOSampleRadius(const float sampleRadius);
+    void SetPostEffectSSAO2SampleRadius(const float sampleRadius);
     void SetPostEffectFog(const bool arg);
     void SetPostEffectFogIntensity(const float intensity);
     void SetPostEffectHeightFog(const bool arg);
@@ -374,8 +364,7 @@ private:
     // 深度バッファシャドウ
     PostEffectZShadow m_postEffectZShadow;
 
-    // SSAO用
-    PostEffectSSAO m_postEffectSSAO;
+    // SSAO2
     PostEffectSSAO2 m_postEffectSSAO2;
 
     // 霧
@@ -429,8 +418,7 @@ private:
     bool m_postEffectFXAAEnabled = false;
     bool m_postEffectMotionBlurCameraEnabled = false;
     bool m_postEffectZShadowEnabled = true;
-    bool m_postEffectSSAOEnabled = true;
-    SSAOMode m_postEffectSSAOMode = SSAOMode::Legacy;
+    bool m_postEffectSSAO2Enabled = true;
     bool m_postEffectFogZEnabled = true;
     bool m_postEffectFogHeightEnabled = false;
     bool m_postEffectBloomEnabled = false;

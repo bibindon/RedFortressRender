@@ -90,9 +90,6 @@
     <ClCompile Include="WindowManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="PostEffectSSAO.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="PostEffectSSAO2.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -218,9 +215,6 @@
     <ClInclude Include="WindowManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="PostEffectSSAO.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="PostEffectSSAO2.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -320,9 +314,6 @@
       <Filter>シェーダー</Filter>
     </FxCompile>
     <FxCompile Include="shader\GBuffer.fx">
-      <Filter>シェーダー</Filter>
-    </FxCompile>
-    <FxCompile Include="shader\PostEffectSSAO.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
     <FxCompile Include="shader\PostEffectZShadow.fx">

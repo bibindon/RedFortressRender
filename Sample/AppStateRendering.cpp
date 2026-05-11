@@ -68,11 +68,6 @@ float ClampShadowSaturationBoost(const float boost)
     return (std::max)(SHADOW_SATURATION_BOOST_MIN, (std::min)(boost, SHADOW_SATURATION_BOOST_MAX));
 }
 
-float ClampSSAOBrightness(const float brightness)
-{
-    return (std::max)(SSAO_BRIGHTNESS_MIN, (std::min)(brightness, SSAO_BRIGHTNESS_MAX));
-}
-
 float ClampSSAO2ShadowStrength(const float shadowStrength)
 {
     return (std::max)(SSAO2_SHADOW_STRENGTH_MIN,
@@ -90,9 +85,9 @@ int ClampSSAO2SampleCount(const int sampleCount)
     return (std::max)(SSAO2_SAMPLE_COUNT_MIN, (std::min)(sampleCount, SSAO2_SAMPLE_COUNT_MAX));
 }
 
-float ClampSSAOSampleRadius(const float sampleRadius)
+float ClampSSAO2SampleRadius(const float sampleRadius)
 {
-    return (std::max)(SSAO_SAMPLE_RADIUS_MIN, (std::min)(sampleRadius, SSAO_SAMPLE_RADIUS_MAX));
+    return (std::max)(SSAO2_SAMPLE_RADIUS_MIN, (std::min)(sampleRadius, SSAO2_SAMPLE_RADIUS_MAX));
 }
 
 float ClampCameraNearPlane(const float nearPlane)
@@ -113,11 +108,6 @@ float ClampGBufferNearPlane(const float nearPlane)
 float ClampGBufferFarPlane(const float farPlane)
 {
     return (std::max)(GBUFFER_FAR_MIN, (std::min)(farPlane, GBUFFER_FAR_MAX));
-}
-
-float ClampSSAOSaturationBoost(const float boost)
-{
-    return (std::max)(SSAO_SATURATION_BOOST_MIN, (std::min)(boost, SSAO_SATURATION_BOOST_MAX));
 }
 
 float ClampHalfLambertShadowSaturation(const float boost)
@@ -323,8 +313,7 @@ void ApplySaturateLevel()
 
 void ApplyPostEffectToggleSettings()
 {
-    g_Render.SetPostEffectSSAO(g_bSSAO);
-    ApplySSAOMode();
+    g_Render.SetPostEffectSSAO2(g_bSSAO2);
     ApplySSAO2Blur();
     g_Render.SetPostEffectFog(g_bFog);
     g_Render.SetPostEffectHeightFog(g_bHeightFog);
@@ -440,12 +429,6 @@ void ApplyShadowCompositeTapCount()
     g_Render.SetPostEffectDepthBufferShadowCompositeTapCount(g_shadowCompositeTapCount);
 }
 
-void ApplySSAOBrightness()
-{
-    g_ssaoBrightness = ClampSSAOBrightness(g_ssaoBrightness);
-    g_Render.SetPostEffectSSAOBrightness(g_ssaoBrightness);
-}
-
 void ApplySSAO2ShadowStrength()
 {
     g_ssao2ShadowStrength = ClampSSAO2ShadowStrength(g_ssao2ShadowStrength);
@@ -469,10 +452,10 @@ void ApplySSAO2DepthScaledSampleDistance()
     g_Render.SetPostEffectSSAO2DepthScaledSampleDistance(g_bSSAO2DepthScaledSampleDistance);
 }
 
-void ApplySSAOSampleRadius()
+void ApplySSAO2SampleRadius()
 {
-    g_ssaoSampleRadius = ClampSSAOSampleRadius(g_ssaoSampleRadius);
-    g_Render.SetPostEffectSSAOSampleRadius(g_ssaoSampleRadius);
+    g_ssao2SampleRadius = ClampSSAO2SampleRadius(g_ssao2SampleRadius);
+    g_Render.SetPostEffectSSAO2SampleRadius(g_ssao2SampleRadius);
 }
 
 void ApplyCameraClipPlanes()
@@ -494,22 +477,6 @@ void ApplyGBufferClipPlanes()
         g_gbufferFarPlane = g_gbufferNearPlane + 0.01f;
     }
     g_Render.SetGBufferClipPlanes(g_gbufferNearPlane, g_gbufferFarPlane);
-}
-
-void ApplySSAOSaturationBoost()
-{
-    g_ssaoSaturationBoost = ClampSSAOSaturationBoost(g_ssaoSaturationBoost);
-    g_Render.SetPostEffectSSAOSaturationBoost(g_ssaoSaturationBoost);
-}
-
-void ApplySSAOMode()
-{
-    NSRender::SSAOMode mode = NSRender::SSAOMode::Legacy;
-    if (g_ssaoMode == SampleSSAOMode::SSAO2)
-    {
-        mode = NSRender::SSAOMode::SSAO2;
-    }
-    g_Render.SetPostEffectSSAOMode(mode);
 }
 
 void ApplySSAO2Blur()
@@ -822,16 +789,6 @@ int SliderValueToShadowTapCount(const int sliderValue)
     return NormalizeShadowBlurTapCountLocal((sliderValue * 2) + 1);
 }
 
-int SSAOBrightnessToSliderValue(const float brightness)
-{
-    return static_cast<int>(std::lround((ClampSSAOBrightness(brightness) - SSAO_BRIGHTNESS_MIN) / SSAO_BRIGHTNESS_STEP));
-}
-
-float SliderValueToSSAOBrightness(const int sliderValue)
-{
-    return ClampSSAOBrightness(SSAO_BRIGHTNESS_MIN + static_cast<float>(sliderValue) * SSAO_BRIGHTNESS_STEP);
-}
-
 int SSAO2ShadowStrengthToSliderValue(const float shadowStrength)
 {
     return static_cast<int>(std::lround(ClampSSAO2ShadowStrength(shadowStrength) / SSAO2_SHADOW_STRENGTH_STEP));
@@ -862,24 +819,14 @@ int SliderValueToSSAO2SampleCount(const int sliderValue)
     return ClampSSAO2SampleCount(sliderValue);
 }
 
-int SSAOSampleRadiusToSliderValue(const float sampleRadius)
+int SSAO2SampleRadiusToSliderValue(const float sampleRadius)
 {
-    return static_cast<int>(std::lround((ClampSSAOSampleRadius(sampleRadius) - SSAO_SAMPLE_RADIUS_MIN) / SSAO_SAMPLE_RADIUS_STEP));
+    return static_cast<int>(std::lround((ClampSSAO2SampleRadius(sampleRadius) - SSAO2_SAMPLE_RADIUS_MIN) / SSAO2_SAMPLE_RADIUS_STEP));
 }
 
-float SliderValueToSSAOSampleRadius(const int sliderValue)
+float SliderValueToSSAO2SampleRadius(const int sliderValue)
 {
-    return ClampSSAOSampleRadius(SSAO_SAMPLE_RADIUS_MIN + static_cast<float>(sliderValue) * SSAO_SAMPLE_RADIUS_STEP);
-}
-
-int SSAOSaturationBoostToSliderValue(const float boost)
-{
-    return static_cast<int>(std::lround(ClampSSAOSaturationBoost(boost) / SSAO_SATURATION_BOOST_STEP));
-}
-
-float SliderValueToSSAOSaturationBoost(const int sliderValue)
-{
-    return ClampSSAOSaturationBoost(static_cast<float>(sliderValue) * SSAO_SATURATION_BOOST_STEP);
+    return ClampSSAO2SampleRadius(SSAO2_SAMPLE_RADIUS_MIN + static_cast<float>(sliderValue) * SSAO2_SAMPLE_RADIUS_STEP);
 }
 
 int HalfLambertShadowSaturationToSliderValue(const float boost)

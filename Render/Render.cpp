@@ -227,28 +227,13 @@ void Render::ApplySettings()
         }
     }
 
-    const auto ssaoEnable = m_settings.find(L"SSAOEnable");
-    if (ssaoEnable != m_settings.end())
+    const auto ssao2Enable = m_settings.find(L"SSAO2Enable");
+    if (ssao2Enable != m_settings.end())
     {
         bool enabled = true;
-        if (TryParseBoolSetting(ssaoEnable->second, enabled))
+        if (TryParseBoolSetting(ssao2Enable->second, enabled))
         {
-            SetPostEffectSSAO(enabled);
-        }
-    }
-
-    const auto ssaoMode = m_settings.find(L"SSAOMode");
-    if (ssaoMode != m_settings.end())
-    {
-        std::wstring modeValue = ssaoMode->second;
-        std::transform(modeValue.begin(), modeValue.end(), modeValue.begin(), towlower);
-        if (modeValue == L"1" || modeValue == L"ssao2" || modeValue == L"new")
-        {
-            SetPostEffectSSAOMode(SSAOMode::SSAO2);
-        }
-        else
-        {
-            SetPostEffectSSAOMode(SSAOMode::Legacy);
+            SetPostEffectSSAO2(enabled);
         }
     }
 
@@ -619,23 +604,6 @@ void Render::ApplySettings()
         SetPostEffectDepthBufferShadowIntensity(0.5f);
     }
 
-    const auto ssaoBrightness = m_settings.find(L"SSAOBrightness");
-    if (ssaoBrightness != m_settings.end())
-    {
-        try
-        {
-            SetPostEffectSSAOBrightness(std::stof(ssaoBrightness->second));
-        }
-        catch (...)
-        {
-            SetPostEffectSSAOBrightness(1.0f);
-        }
-    }
-    else
-    {
-        SetPostEffectSSAOBrightness(1.0f);
-    }
-
     const auto ssao2ShadowStrength = m_settings.find(L"SSAO2ShadowStrength");
     if (ssao2ShadowStrength != m_settings.end())
     {
@@ -704,38 +672,21 @@ void Render::ApplySettings()
         SetPostEffectDepthBufferShadowSaturationBoost(0.35f);
     }
 
-    const auto ssaoSaturationBoost = m_settings.find(L"SSAOSaturationBoost");
-    if (ssaoSaturationBoost != m_settings.end())
+    const auto ssao2SampleRadius = m_settings.find(L"SSAO2SampleRadius");
+    if (ssao2SampleRadius != m_settings.end())
     {
         try
         {
-            SetPostEffectSSAOSaturationBoost(std::stof(ssaoSaturationBoost->second));
+            SetPostEffectSSAO2SampleRadius(std::stof(ssao2SampleRadius->second));
         }
         catch (...)
         {
-            SetPostEffectSSAOSaturationBoost(0.30f);
+            SetPostEffectSSAO2SampleRadius(4.0f);
         }
     }
     else
     {
-        SetPostEffectSSAOSaturationBoost(0.30f);
-    }
-
-    const auto ssaoSampleRadius = m_settings.find(L"SSAOSampleRadius");
-    if (ssaoSampleRadius != m_settings.end())
-    {
-        try
-        {
-            SetPostEffectSSAOSampleRadius(std::stof(ssaoSampleRadius->second));
-        }
-        catch (...)
-        {
-            SetPostEffectSSAOSampleRadius(4.0f);
-        }
-    }
-    else
-    {
-        SetPostEffectSSAOSampleRadius(4.0f);
+        SetPostEffectSSAO2SampleRadius(4.0f);
     }
 
     const auto bloomEnable = m_settings.find(L"BloomEnable");
@@ -883,8 +834,7 @@ void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
     // 深度バッファシャドウ
     m_postEffectZShadow.Initialize();
 
-    // SSAO
-    m_postEffectSSAO.Initialize();
+    // SSAO2
     m_postEffectSSAO2.Initialize();
 
     // 霧
@@ -967,20 +917,13 @@ void Render::Draw()
                                                 m_meshMixSkinAnimList);
     }
 
-    if (m_postEffectSSAOEnabled)
+    if (m_postEffectSSAO2Enabled)
     {
-        if (m_postEffectSSAOMode == SSAOMode::SSAO2)
-        {
-            pTempTexture = m_postEffectSSAO2.Draw(pTempTexture,
-                                                  pTexTempZ,
-                                                  pTexTempPos,
-                                                  pTexTempNoral,
-                                                  pTexTempThickness);
-        }
-        else
-        {
-            pTempTexture = m_postEffectSSAO.Draw(pTempTexture, pTexTempZ, pTexTempPos, pTexTempNoral);
-        }
+        pTempTexture = m_postEffectSSAO2.Draw(pTempTexture,
+                                              pTexTempZ,
+                                              pTexTempPos,
+                                              pTexTempNoral,
+                                              pTexTempThickness);
     }
 
     if (m_postEffectFogZEnabled)
@@ -1617,7 +1560,6 @@ void Render::SetGBufferClipPlanes(const float nearPlane, const float farPlane)
 {
     const float positionRange = GBuffer::ComputePositionRange(nearPlane, farPlane);
     m_GBuffer.SetDepthRange(nearPlane, farPlane);
-    m_postEffectSSAO.SetDepthRange(nearPlane, farPlane);
     m_postEffectSSAO2.SetDepthRange(nearPlane, farPlane);
     m_postEffectFog.SetDepthDecodeRange(nearPlane, farPlane);
     m_postEffectGodRay.SetDepthRange(nearPlane, farPlane);
@@ -1827,24 +1769,14 @@ void Render::SetPostEffectDepthBufferShadowCompositeTapCount(const int tapCount)
     m_postEffectZShadow.SetCompositeTapCount(tapCount);
 }
 
-void Render::SetPostEffectSSAO(const bool arg)
+void Render::SetPostEffectSSAO2(const bool arg)
 {
-    m_postEffectSSAOEnabled = arg;
-}
-
-void Render::SetPostEffectSSAOMode(const SSAOMode mode)
-{
-    m_postEffectSSAOMode = mode;
+    m_postEffectSSAO2Enabled = arg;
 }
 
 void Render::SetPostEffectSSAO2Blur(const bool arg)
 {
     m_postEffectSSAO2.SetBlurEnabled(arg);
-}
-
-void Render::SetPostEffectSSAOBrightness(const float brightness)
-{
-    m_postEffectSSAO.SetBrightness(brightness);
 }
 
 void Render::SetPostEffectSSAO2ShadowStrength(const float shadowStrength)
@@ -1868,14 +1800,8 @@ void Render::SetPostEffectSSAO2DepthScaledSampleDistance(const bool enabled)
     m_postEffectSSAO2.SetDepthScaledSampleDistanceEnabled(enabled);
 }
 
-void Render::SetPostEffectSSAOSaturationBoost(const float saturationBoost)
+void Render::SetPostEffectSSAO2SampleRadius(const float sampleRadius)
 {
-    m_postEffectSSAO.SetSaturationBoost(saturationBoost);
-}
-
-void Render::SetPostEffectSSAOSampleRadius(const float sampleRadius)
-{
-    m_postEffectSSAO.SetSampleRadius(sampleRadius);
     m_postEffectSSAO2.SetSampleRadius(sampleRadius);
 }
 

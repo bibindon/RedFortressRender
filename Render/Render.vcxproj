@@ -58,7 +58,6 @@
     <ClCompile Include="PostEffectGauss.cpp" />
     <ClCompile Include="PostEffectMaskedGauss.cpp" />
     <ClCompile Include="PostEffectSaturate.cpp" />
-    <ClCompile Include="PostEffectSSAO.cpp" />
     <ClCompile Include="PostEffectSSAO2.cpp" />
     <ClCompile Include="PostEffectStarBurst.cpp" />
     <ClCompile Include="PtrManager.cpp" />
@@ -102,7 +101,6 @@
     <ClInclude Include="PostEffectGauss.h" />
     <ClInclude Include="PostEffectMaskedGauss.h" />
     <ClInclude Include="PostEffectSaturate.h" />
-    <ClInclude Include="PostEffectSSAO.h" />
     <ClInclude Include="PostEffectSSAO2.h" />
     <ClInclude Include="PostEffectStarBurst.h" />
     <ClInclude Include="PtrManager.h" />
@@ -214,10 +212,6 @@
       <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</EnableDebuggingInformation>
     </FxCompile>
     <FxCompile Include="shader\MeshSmooth.fx">
-      <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableOptimizations>
-      <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</EnableDebuggingInformation>
-    </FxCompile>
-    <FxCompile Include="shader\PostEffectSSAO.fx">
       <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableOptimizations>
       <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</EnableDebuggingInformation>
     </FxCompile>

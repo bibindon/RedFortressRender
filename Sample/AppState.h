@@ -51,9 +51,6 @@ constexpr float SHADOW_COVERAGE_STEP = 0.05f;
 constexpr float SHADOW_SATURATION_BOOST_MIN = 0.0f;
 constexpr float SHADOW_SATURATION_BOOST_MAX = 1.0f;
 constexpr float SHADOW_SATURATION_BOOST_STEP = 0.05f;
-constexpr float SSAO_BRIGHTNESS_MIN = 0.25f;
-constexpr float SSAO_BRIGHTNESS_MAX = 4.0f;
-constexpr float SSAO_BRIGHTNESS_STEP = 0.05f;
 constexpr float SSAO2_SHADOW_STRENGTH_MIN = 0.0f;
 constexpr float SSAO2_SHADOW_STRENGTH_MAX = 4.0f;
 constexpr float SSAO2_SHADOW_STRENGTH_STEP = 0.05f;
@@ -62,9 +59,9 @@ constexpr float SSAO2_SHADOW_SATURATION_BOOST_MAX = 5.0f;
 constexpr float SSAO2_SHADOW_SATURATION_BOOST_STEP = 0.05f;
 constexpr int SSAO2_SAMPLE_COUNT_MIN = 1;
 constexpr int SSAO2_SAMPLE_COUNT_MAX = 64;
-constexpr float SSAO_SAMPLE_RADIUS_MIN = 0.05f;
-constexpr float SSAO_SAMPLE_RADIUS_MAX = 10.0f;
-constexpr float SSAO_SAMPLE_RADIUS_STEP = 0.05f;
+constexpr float SSAO2_SAMPLE_RADIUS_MIN = 0.05f;
+constexpr float SSAO2_SAMPLE_RADIUS_MAX = 10.0f;
+constexpr float SSAO2_SAMPLE_RADIUS_STEP = 0.05f;
 constexpr float CAMERA_NEAR_MIN = 0.01f;
 constexpr float CAMERA_NEAR_MAX = 1000.0f;
 constexpr float CAMERA_FAR_MIN = 1.0f;
@@ -73,9 +70,6 @@ constexpr float GBUFFER_NEAR_MIN = 0.01f;
 constexpr float GBUFFER_NEAR_MAX = 1000.0f;
 constexpr float GBUFFER_FAR_MIN = 1.0f;
 constexpr float GBUFFER_FAR_MAX = 30000.0f;
-constexpr float SSAO_SATURATION_BOOST_MIN = 0.0f;
-constexpr float SSAO_SATURATION_BOOST_MAX = 1.0f;
-constexpr float SSAO_SATURATION_BOOST_STEP = 0.05f;
 constexpr float HALF_LAMBERT_SHADOW_SATURATION_MIN = 0.0f;
 constexpr float HALF_LAMBERT_SHADOW_SATURATION_MAX = 10.0f;
 constexpr float HALF_LAMBERT_SHADOW_SATURATION_STEP = 0.05f;
@@ -178,12 +172,6 @@ enum class MixMeshShaderMode
     NormalMapping,
 };
 
-enum class SampleSSAOMode
-{
-    Legacy = 0,
-    SSAO2 = 1,
-};
-
 // ここから下の extern 変数群は「現在のサンプル状態そのもの」を表す。
 // 描画設定、入力状態、生成済みモデル一覧までを共有し、
 // 各 subsystem が同じ情報源を読む設計にしている。
@@ -217,8 +205,7 @@ extern bool g_bMotionBlurCamera;
 extern float g_motionBlurCameraMaxBlurPixels;
 extern int g_motionBlurCameraSampleCount;
 extern bool g_bDepthBufferShadow;
-extern bool g_bSSAO;
-extern SampleSSAOMode g_ssaoMode;
+extern bool g_bSSAO2;
 extern bool g_bSSAO2Blur;
 extern bool g_bSSAO2DepthScaledSampleDistance;
 extern bool g_bFog;
@@ -242,16 +229,14 @@ extern D3DXCOLOR g_ambientLightColor;
 extern float g_shadowIntensity;
 extern float g_shadowCoverage;
 extern float g_shadowSaturationBoost;
-extern float g_ssaoBrightness;
 extern float g_ssao2ShadowStrength;
 extern float g_ssao2ShadowSaturationBoost;
 extern int g_ssao2SampleCount;
-extern float g_ssaoSampleRadius;
+extern float g_ssao2SampleRadius;
 extern float g_cameraNearPlane;
 extern float g_cameraFarPlane;
 extern float g_gbufferNearPlane;
 extern float g_gbufferFarPlane;
-extern float g_ssaoSaturationBoost;
 extern float g_halfLambertShadowSaturation;
 extern float g_shadowDarkness;
 extern float g_specularIntensity;
@@ -327,16 +312,13 @@ void ApplyShadowCoverage();
 void ApplyShadowSaturationBoost();
 void ApplyShadowPcfTapCount();
 void ApplyShadowCompositeTapCount();
-void ApplySSAOBrightness();
 void ApplySSAO2ShadowStrength();
 void ApplySSAO2ShadowSaturationBoost();
 void ApplySSAO2SampleCount();
 void ApplySSAO2DepthScaledSampleDistance();
-void ApplySSAOSampleRadius();
+void ApplySSAO2SampleRadius();
 void ApplyCameraClipPlanes();
 void ApplyGBufferClipPlanes();
-void ApplySSAOSaturationBoost();
-void ApplySSAOMode();
 void ApplySSAO2Blur();
 void ApplyHalfLambertShadowSaturation();
 void ApplyShadowDarkness();
@@ -392,18 +374,14 @@ int ShadowSaturationBoostToSliderValue(float boost);
 float SliderValueToShadowSaturationBoost(int sliderValue);
 int ShadowTapCountToSliderValue(int tapCount);
 int SliderValueToShadowTapCount(int sliderValue);
-int SSAOBrightnessToSliderValue(float brightness);
-float SliderValueToSSAOBrightness(int sliderValue);
 int SSAO2ShadowStrengthToSliderValue(float shadowStrength);
 float SliderValueToSSAO2ShadowStrength(int sliderValue);
 int SSAO2ShadowSaturationBoostToSliderValue(float boost);
 float SliderValueToSSAO2ShadowSaturationBoost(int sliderValue);
 int SSAO2SampleCountToSliderValue(int sampleCount);
 int SliderValueToSSAO2SampleCount(int sliderValue);
-int SSAOSampleRadiusToSliderValue(float sampleRadius);
-float SliderValueToSSAOSampleRadius(int sliderValue);
-int SSAOSaturationBoostToSliderValue(float boost);
-float SliderValueToSSAOSaturationBoost(int sliderValue);
+int SSAO2SampleRadiusToSliderValue(float sampleRadius);
+float SliderValueToSSAO2SampleRadius(int sliderValue);
 int HalfLambertShadowSaturationToSliderValue(float boost);
 float SliderValueToHalfLambertShadowSaturation(int sliderValue);
 int ShadowDarknessToSliderValue(float darkness);

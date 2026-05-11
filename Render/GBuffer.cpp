@@ -8,8 +8,6 @@
 #include "Camera.h"
 #include "MeshMixSkinAnim.h"
 
-#include "PostEffectSSAO.h"
-
 namespace NSRender
 {
 

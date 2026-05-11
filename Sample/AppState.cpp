@@ -49,8 +49,7 @@ bool g_bMotionBlurCamera = false;
 float g_motionBlurCameraMaxBlurPixels = 24.0f;
 int g_motionBlurCameraSampleCount = 13;
 bool g_bDepthBufferShadow = true;
-bool g_bSSAO = true;
-SampleSSAOMode g_ssaoMode = SampleSSAOMode::Legacy;
+bool g_bSSAO2 = true;
 bool g_bSSAO2Blur = false;
 bool g_bSSAO2DepthScaledSampleDistance = false;
 bool g_bFog = true;
@@ -73,16 +72,14 @@ D3DXCOLOR g_ambientLightColor = D3DXCOLOR(0.2f, 0.2f, 0.2f, 1.0f);
 float g_shadowIntensity = 0.5f;
 float g_shadowCoverage = 0.5f;
 float g_shadowSaturationBoost = 0.35f;
-float g_ssaoBrightness = 3.5f;
 float g_ssao2ShadowStrength = 1.0f;
 float g_ssao2ShadowSaturationBoost = 0.30f;
 int g_ssao2SampleCount = 16;
-float g_ssaoSampleRadius = 4.0f;
+float g_ssao2SampleRadius = 4.0f;
 float g_cameraNearPlane = 0.1f;
 float g_cameraFarPlane = 30'000.0f;
 float g_gbufferNearPlane = 0.1f;
 float g_gbufferFarPlane = 30'000.0f;
-float g_ssaoSaturationBoost = 0.30f;
 float g_halfLambertShadowSaturation = 1.0f;
 float g_shadowDarkness = 0.3f;
 float g_specularIntensity = 0.1f;
@@ -190,11 +187,6 @@ float ClampShadowSaturationBoost(const float boost)
     return (std::max)(SHADOW_SATURATION_BOOST_MIN, (std::min)(boost, SHADOW_SATURATION_BOOST_MAX));
 }
 
-float ClampSSAOBrightness(const float brightness)
-{
-    return (std::max)(SSAO_BRIGHTNESS_MIN, (std::min)(brightness, SSAO_BRIGHTNESS_MAX));
-}
-
 float ClampSSAO2ShadowStrength(const float shadowStrength)
 {
     return (std::max)(SSAO2_SHADOW_STRENGTH_MIN,
@@ -212,9 +204,9 @@ int ClampSSAO2SampleCount(const int sampleCount)
     return (std::max)(SSAO2_SAMPLE_COUNT_MIN, (std::min)(sampleCount, SSAO2_SAMPLE_COUNT_MAX));
 }
 
-float ClampSSAOSampleRadius(const float sampleRadius)
+float ClampSSAO2SampleRadius(const float sampleRadius)
 {
-    return (std::max)(SSAO_SAMPLE_RADIUS_MIN, (std::min)(sampleRadius, SSAO_SAMPLE_RADIUS_MAX));
+    return (std::max)(SSAO2_SAMPLE_RADIUS_MIN, (std::min)(sampleRadius, SSAO2_SAMPLE_RADIUS_MAX));
 }
 
 float ClampCameraNearPlane(const float nearPlane)
@@ -235,11 +227,6 @@ float ClampGBufferNearPlane(const float nearPlane)
 float ClampGBufferFarPlane(const float farPlane)
 {
     return (std::max)(GBUFFER_FAR_MIN, (std::min)(farPlane, GBUFFER_FAR_MAX));
-}
-
-float ClampSSAOSaturationBoost(const float boost)
-{
-    return (std::max)(SSAO_SATURATION_BOOST_MIN, (std::min)(boost, SSAO_SATURATION_BOOST_MAX));
 }
 
 float ClampHalfLambertShadowSaturation(const float boost)
@@ -1283,14 +1270,6 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_shadowCoverage = std::stof(value);
             }
-            else if (key == L"SSAOBrightness")
-            {
-                g_ssaoBrightness = std::stof(value);
-            }
-            else if (key == L"SSAOSampleRadius")
-            {
-                g_ssaoSampleRadius = std::stof(value);
-            }
             else if (key == L"SSAO2ShadowStrength")
             {
                 g_ssao2ShadowStrength = std::stof(value);
@@ -1302,6 +1281,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"SSAO2SampleCount")
             {
                 g_ssao2SampleCount = std::stoi(value);
+            }
+            else if (key == L"SSAO2SampleRadius")
+            {
+                g_ssao2SampleRadius = std::stof(value);
             }
             else if (key == L"SSAO2DepthScaledSampleDistanceEnable")
             {
@@ -1340,23 +1323,6 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"ShadowSaturationBoost")
             {
                 g_shadowSaturationBoost = std::stof(value);
-            }
-            else if (key == L"SSAOSaturationBoost")
-            {
-                g_ssaoSaturationBoost = std::stof(value);
-            }
-            else if (key == L"SSAOMode")
-            {
-                std::wstring modeValue = value;
-                std::transform(modeValue.begin(), modeValue.end(), modeValue.begin(), towlower);
-                if (modeValue == L"1" || modeValue == L"ssao2" || modeValue == L"new")
-                {
-                    g_ssaoMode = SampleSSAOMode::SSAO2;
-                }
-                else
-                {
-                    g_ssaoMode = SampleSSAOMode::Legacy;
-                }
             }
             else if (key == L"SSAO2BlurEnable")
             {
@@ -1414,9 +1380,9 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_bDepthBufferShadow = (std::stoi(value) != 0);
             }
-            else if (key == L"SSAOEnable")
+            else if (key == L"SSAO2Enable")
             {
-                g_bSSAO = (std::stoi(value) != 0);
+                g_bSSAO2 = (std::stoi(value) != 0);
             }
             else if (key == L"FogEnable")
             {
@@ -1594,14 +1560,11 @@ void ApplyAllSampleSettings()
     ApplyShadowCompositeTapCount();
     ApplyCameraClipPlanes();
     ApplyGBufferClipPlanes();
-    ApplySSAOBrightness();
     ApplySSAO2ShadowStrength();
     ApplySSAO2ShadowSaturationBoost();
     ApplySSAO2SampleCount();
     ApplySSAO2DepthScaledSampleDistance();
-    ApplySSAOSampleRadius();
-    ApplySSAOSaturationBoost();
-    ApplySSAOMode();
+    ApplySSAO2SampleRadius();
     ApplySSAO2Blur();
     ApplyHalfLambertShadowSaturation();
     ApplyShadowDarkness();
@@ -1700,7 +1663,7 @@ void DrawSampleOverlay()
     text += L"u : Depth of field mode\n";
     text += L"Shift + b : StarBurst ON/OFF\n";
     text += L"h : Depth buffer shadow ON/OFF\n";
-    text += L"j : SSAO ON/OFF\n";
+    text += L"j : SSAO2 ON/OFF\n";
     text += L"v : Fog ON/OFF\n";
     text += L"Shift + f : FPS ON/OFF\n";
     text += L"\n";

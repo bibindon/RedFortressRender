@@ -492,24 +492,6 @@ void RefreshSSSControls(HWND hDlg)
     EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SSS_COLOR_B), enabled);
 }
 
-void RefreshSSAOBrightnessControls(HWND hDlg)
-{
-    wchar_t buffer[32];
-    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_ssaoBrightness);
-    SetDlgItemText(hDlg, IDC_EDIT_SSAO_BRIGHTNESS, buffer);
-    SendDlgItemMessage(hDlg,
-                       IDC_SLIDER_SSAO_BRIGHTNESS,
-                       TBM_SETPOS,
-                       TRUE,
-                       static_cast<LPARAM>(SSAOBrightnessToSliderValue(g_ssaoBrightness)));
-
-    // Legacy SSAO 専用項目は SSAO2 選択中に無効化する。
-    const BOOL enabled = (g_ssaoMode != SampleSSAOMode::SSAO2);
-    EnableWindow(GetDlgItem(hDlg, IDC_STATIC_SSAO_BRIGHTNESS_LABEL), enabled);
-    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SSAO_BRIGHTNESS), enabled);
-    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SSAO_BRIGHTNESS), enabled);
-}
-
 void RefreshSSAO2ShadowStrengthControls(HWND hDlg)
 {
     wchar_t buffer[32];
@@ -520,7 +502,7 @@ void RefreshSSAO2ShadowStrengthControls(HWND hDlg)
                        TBM_SETPOS,
                        TRUE,
                        static_cast<LPARAM>(SSAO2ShadowStrengthToSliderValue(g_ssao2ShadowStrength)));
-    const BOOL enabled = (g_ssaoMode == SampleSSAOMode::SSAO2);
+    const BOOL enabled = g_bSSAO2;
     EnableWindow(GetDlgItem(hDlg, IDC_STATIC_SSAO2_SHADOW_STRENGTH_LABEL), enabled);
     EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SSAO2_SHADOW_STRENGTH), enabled);
     EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SSAO2_SHADOW_STRENGTH), enabled);
@@ -536,7 +518,7 @@ void RefreshSSAO2ShadowSaturationControls(HWND hDlg)
                        TBM_SETPOS,
                        TRUE,
                        static_cast<LPARAM>(SSAO2ShadowSaturationBoostToSliderValue(g_ssao2ShadowSaturationBoost)));
-    const BOOL enabled = (g_ssaoMode == SampleSSAOMode::SSAO2);
+    const BOOL enabled = g_bSSAO2;
     EnableWindow(GetDlgItem(hDlg, IDC_STATIC_SSAO2_SHADOW_SATURATION_LABEL), enabled);
     EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SSAO2_SHADOW_SATURATION), enabled);
     EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SSAO2_SHADOW_SATURATION), enabled);
@@ -552,7 +534,7 @@ void RefreshSSAO2SampleCountControls(HWND hDlg)
                        TBM_SETPOS,
                        TRUE,
                        static_cast<LPARAM>(SSAO2SampleCountToSliderValue(g_ssao2SampleCount)));
-    const BOOL enabled = (g_ssaoMode == SampleSSAOMode::SSAO2);
+    const BOOL enabled = g_bSSAO2;
     EnableWindow(GetDlgItem(hDlg, IDC_STATIC_SSAO2_SAMPLE_COUNT_LABEL), enabled);
     EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SSAO2_SAMPLE_COUNT), enabled);
     EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SSAO2_SAMPLE_COUNT), enabled);
@@ -566,19 +548,23 @@ void RefreshSSAO2DepthScaledSampleDistanceControls(HWND hDlg)
         checkState = BST_CHECKED;
     }
     CheckDlgButton(hDlg, IDC_CHECK_SSAO2_DEPTH_SCALED_SAMPLE_DISTANCE, checkState);
-    EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SSAO2_DEPTH_SCALED_SAMPLE_DISTANCE), g_ssaoMode == SampleSSAOMode::SSAO2);
+    EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SSAO2_DEPTH_SCALED_SAMPLE_DISTANCE), g_bSSAO2);
 }
 
-void RefreshSSAOSampleRadiusControls(HWND hDlg)
+void RefreshSSAO2SampleRadiusControls(HWND hDlg)
 {
     wchar_t buffer[32];
-    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_ssaoSampleRadius);
-    SetDlgItemText(hDlg, IDC_EDIT_SSAO_SAMPLE_RADIUS, buffer);
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_ssao2SampleRadius);
+    SetDlgItemText(hDlg, IDC_EDIT_SSAO2_SAMPLE_RADIUS, buffer);
     SendDlgItemMessage(hDlg,
-                       IDC_SLIDER_SSAO_SAMPLE_RADIUS,
+                       IDC_SLIDER_SSAO2_SAMPLE_RADIUS,
                        TBM_SETPOS,
                        TRUE,
-                       static_cast<LPARAM>(SSAOSampleRadiusToSliderValue(g_ssaoSampleRadius)));
+                       static_cast<LPARAM>(SSAO2SampleRadiusToSliderValue(g_ssao2SampleRadius)));
+    const BOOL enabled = g_bSSAO2;
+    EnableWindow(GetDlgItem(hDlg, IDC_STATIC_SSAO2_SAMPLE_RADIUS_LABEL), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SSAO2_SAMPLE_RADIUS), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SSAO2_SAMPLE_RADIUS), enabled);
 }
 
 void RefreshCameraClipPlaneControls(HWND hDlg)
@@ -597,18 +583,6 @@ void RefreshGBufferClipPlaneControls(HWND hDlg)
     SetDlgItemText(hDlg, IDC_EDIT_GBUFFER_NEAR, buffer);
     std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_gbufferFarPlane);
     SetDlgItemText(hDlg, IDC_EDIT_GBUFFER_FAR, buffer);
-}
-
-void RefreshSSAOSaturationBoostControls(HWND hDlg)
-{
-    wchar_t buffer[32];
-    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_ssaoSaturationBoost);
-    SetDlgItemText(hDlg, IDC_EDIT_SSAO_SATURATION_BOOST, buffer);
-    SendDlgItemMessage(hDlg,
-                       IDC_SLIDER_SSAO_SATURATION_BOOST,
-                       TBM_SETPOS,
-                       TRUE,
-                       static_cast<LPARAM>(SSAOSaturationBoostToSliderValue(g_ssaoSaturationBoost)));
 }
 
 void RefreshBloomThresholdControls(HWND hDlg)
@@ -677,28 +651,14 @@ void RefreshDepthBufferShadow(HWND hDlg)
     CheckDlgButton(hDlg, IDC_CHECK_DEPTH_BUFFER_SHADOW, checkState);
 }
 
-void RefreshSSAO(HWND hDlg)
+void RefreshSSAO2(HWND hDlg)
 {
     UINT checkState = BST_UNCHECKED;
-    if (g_bSSAO)
+    if (g_bSSAO2)
     {
         checkState = BST_CHECKED;
     }
-    CheckDlgButton(hDlg, IDC_CHECK_SSAO, checkState);
-}
-
-void RefreshSSAOModeControls(HWND hDlg)
-{
-    HWND combo = GetDlgItem(hDlg, IDC_COMBO_SSAO_MODE);
-    if (combo != NULL)
-    {
-        int selectedIndex = 0;
-        if (g_ssaoMode == SampleSSAOMode::SSAO2)
-        {
-            selectedIndex = 1;
-        }
-        SendMessage(combo, CB_SETCURSEL, selectedIndex, 0);
-    }
+    CheckDlgButton(hDlg, IDC_CHECK_SSAO2, checkState);
 }
 
 void RefreshSSAO2BlurControls(HWND hDlg)
@@ -709,7 +669,7 @@ void RefreshSSAO2BlurControls(HWND hDlg)
         checkState = BST_CHECKED;
     }
     CheckDlgButton(hDlg, IDC_CHECK_SSAO2_BLUR, checkState);
-    EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SSAO2_BLUR), g_ssaoMode == SampleSSAOMode::SSAO2);
+    EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SSAO2_BLUR), g_bSSAO2);
 }
 
 void RefreshBloom(HWND hDlg)

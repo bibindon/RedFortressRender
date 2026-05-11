@@ -102,9 +102,6 @@
     <FxCompile Include="..\Render\shader\GBuffer.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
-    <FxCompile Include="..\Render\shader\PostEffectSSAO.fx">
-      <Filter>リソース ファイル</Filter>
-    </FxCompile>
     <FxCompile Include="..\Render\shader\PostEffectZShadow.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>

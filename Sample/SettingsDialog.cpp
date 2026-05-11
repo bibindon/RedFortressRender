@@ -42,21 +42,18 @@ void RefreshShadowDarknessControls(HWND hDlg);
 void RefreshSpecularIntensityControls(HWND hDlg);
 void RefreshSpecularEdgeControls(HWND hDlg);
 void RefreshSSSControls(HWND hDlg);
-void RefreshSSAOBrightnessControls(HWND hDlg);
+void RefreshSSAO2(HWND hDlg);
 void RefreshSSAO2ShadowStrengthControls(HWND hDlg);
 void RefreshSSAO2ShadowSaturationControls(HWND hDlg);
 void RefreshSSAO2SampleCountControls(HWND hDlg);
 void RefreshSSAO2DepthScaledSampleDistanceControls(HWND hDlg);
-void RefreshSSAOSampleRadiusControls(HWND hDlg);
+void RefreshSSAO2SampleRadiusControls(HWND hDlg);
 void RefreshCameraClipPlaneControls(HWND hDlg);
 void RefreshGBufferClipPlaneControls(HWND hDlg);
-void RefreshSSAOSaturationBoostControls(HWND hDlg);
-void RefreshSSAOModeControls(HWND hDlg);
 void RefreshSSAO2BlurControls(HWND hDlg);
 void RefreshAnimateLight(HWND hDlg);
 void RefreshRemoteDesktop(HWND hDlg);
 void RefreshDepthBufferShadow(HWND hDlg);
-void RefreshSSAO(HWND hDlg);
 void RefreshBloom(HWND hDlg);
 void RefreshDepthOfField(HWND hDlg);
 void RefreshStarBurst(HWND hDlg);
@@ -106,8 +103,6 @@ constexpr int SSS_INTENSITY_SLIDER_MIN = 0;
 constexpr int SSS_INTENSITY_SLIDER_MAX = static_cast<int>(SSS_INTENSITY_MAX / SSS_INTENSITY_STEP);
 constexpr int SSS_COLOR_SLIDER_MIN = 0;
 constexpr int SSS_COLOR_SLIDER_MAX = static_cast<int>(SSS_COLOR_MAX / SSS_COLOR_STEP);
-constexpr int SSAO_BRIGHTNESS_SLIDER_MIN = 0;
-constexpr int SSAO_BRIGHTNESS_SLIDER_MAX = static_cast<int>((SSAO_BRIGHTNESS_MAX - SSAO_BRIGHTNESS_MIN) / SSAO_BRIGHTNESS_STEP);
 constexpr int SSAO2_SHADOW_STRENGTH_SLIDER_MIN = 0;
 constexpr int SSAO2_SHADOW_STRENGTH_SLIDER_MAX = static_cast<int>(SSAO2_SHADOW_STRENGTH_MAX / SSAO2_SHADOW_STRENGTH_STEP);
 constexpr int SSAO2_SHADOW_SATURATION_SLIDER_MIN = 0;
@@ -115,10 +110,8 @@ constexpr int SSAO2_SHADOW_SATURATION_SLIDER_MAX =
     static_cast<int>(SSAO2_SHADOW_SATURATION_BOOST_MAX / SSAO2_SHADOW_SATURATION_BOOST_STEP);
 constexpr int SSAO2_SAMPLE_COUNT_SLIDER_MIN = SSAO2_SAMPLE_COUNT_MIN;
 constexpr int SSAO2_SAMPLE_COUNT_SLIDER_MAX = SSAO2_SAMPLE_COUNT_MAX;
-constexpr int SSAO_SAMPLE_RADIUS_SLIDER_MIN = 0;
-constexpr int SSAO_SAMPLE_RADIUS_SLIDER_MAX = static_cast<int>((SSAO_SAMPLE_RADIUS_MAX - SSAO_SAMPLE_RADIUS_MIN) / SSAO_SAMPLE_RADIUS_STEP);
-constexpr int SSAO_SATURATION_BOOST_SLIDER_MIN = 0;
-constexpr int SSAO_SATURATION_BOOST_SLIDER_MAX = static_cast<int>(SSAO_SATURATION_BOOST_MAX / SSAO_SATURATION_BOOST_STEP);
+constexpr int SSAO2_SAMPLE_RADIUS_SLIDER_MIN = 0;
+constexpr int SSAO2_SAMPLE_RADIUS_SLIDER_MAX = static_cast<int>((SSAO2_SAMPLE_RADIUS_MAX - SSAO2_SAMPLE_RADIUS_MIN) / SSAO2_SAMPLE_RADIUS_STEP);
 constexpr int BLOOM_THRESHOLD_SLIDER_MIN = 0;
 constexpr int BLOOM_THRESHOLD_SLIDER_MAX = static_cast<int>(BLOOM_THRESHOLD_MAX / BLOOM_THRESHOLD_STEP);
 constexpr int DOF_FOCAL_DISTANCE_SLIDER_MIN = 0;
@@ -236,19 +229,6 @@ void PopulatePointLightTypeCombo(HWND hDlg)
     SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Sphere"));
 }
 
-void PopulateSSAOModeCombo(HWND hDlg)
-{
-    HWND combo = GetDlgItem(hDlg, IDC_COMBO_SSAO_MODE);
-    if (combo == NULL)
-    {
-        return;
-    }
-
-    SendMessage(combo, CB_RESETCONTENT, 0, 0);
-    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Legacy"));
-    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"SSAO2"));
-}
-
 bool TryParseEditFloat(HWND hDlg, const int controlId, float& value)
 {
     // Edit ボックスは文字列入力なので、
@@ -322,16 +302,14 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_SSS_COLOR_R,
         IDC_EDIT_SSS_COLOR_G,
         IDC_EDIT_SSS_COLOR_B,
-        IDC_EDIT_SSAO_BRIGHTNESS,
         IDC_EDIT_SSAO2_SHADOW_STRENGTH,
         IDC_EDIT_SSAO2_SHADOW_SATURATION,
         IDC_EDIT_SSAO2_SAMPLE_COUNT,
-        IDC_EDIT_SSAO_SAMPLE_RADIUS,
+        IDC_EDIT_SSAO2_SAMPLE_RADIUS,
         IDC_EDIT_CAMERA_NEAR,
         IDC_EDIT_CAMERA_FAR,
         IDC_EDIT_GBUFFER_NEAR,
         IDC_EDIT_GBUFFER_FAR,
-        IDC_EDIT_SSAO_SATURATION_BOOST,
         IDC_EDIT_BLOOM_THRESHOLD,
         IDC_EDIT_STARBURST_THRESHOLD,
         IDC_EDIT_MODEL_LOAD_SCALE,
@@ -648,14 +626,6 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
         }
         RefreshSSSControls(hDlg);
         return true;
-    case IDC_EDIT_SSAO_BRIGHTNESS:
-        if (TryParseEditFloat(hDlg, commandId, floatValue))
-        {
-            g_ssaoBrightness = floatValue;
-            ApplySSAOBrightness();
-        }
-        RefreshSSAOBrightnessControls(hDlg);
-        return true;
     case IDC_EDIT_SSAO2_SHADOW_STRENGTH:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
         {
@@ -680,13 +650,13 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
         }
         RefreshSSAO2SampleCountControls(hDlg);
         return true;
-    case IDC_EDIT_SSAO_SAMPLE_RADIUS:
+    case IDC_EDIT_SSAO2_SAMPLE_RADIUS:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
         {
-            g_ssaoSampleRadius = floatValue;
-            ApplySSAOSampleRadius();
+            g_ssao2SampleRadius = floatValue;
+            ApplySSAO2SampleRadius();
         }
-        RefreshSSAOSampleRadiusControls(hDlg);
+        RefreshSSAO2SampleRadiusControls(hDlg);
         return true;
     case IDC_EDIT_CAMERA_NEAR:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
@@ -719,14 +689,6 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
             ApplyGBufferClipPlanes();
         }
         RefreshGBufferClipPlaneControls(hDlg);
-        return true;
-    case IDC_EDIT_SSAO_SATURATION_BOOST:
-        if (TryParseEditFloat(hDlg, commandId, floatValue))
-        {
-            g_ssaoSaturationBoost = floatValue;
-            ApplySSAOSaturationBoost();
-        }
-        RefreshSSAOSaturationBoostControls(hDlg);
         return true;
     case IDC_EDIT_BLOOM_THRESHOLD:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
@@ -1438,8 +1400,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshAnimateLight(hDlg);
     RefreshRemoteDesktop(hDlg);
     RefreshDepthBufferShadow(hDlg);
-    RefreshSSAO(hDlg);
-    RefreshSSAOModeControls(hDlg);
+    RefreshSSAO2(hDlg);
     RefreshSSAO2BlurControls(hDlg);
     RefreshSSAO2ShadowStrengthControls(hDlg);
     RefreshSSAO2ShadowSaturationControls(hDlg);
@@ -1461,11 +1422,15 @@ void RefreshAllControls(HWND hDlg)
     RefreshSpecularIntensityControls(hDlg);
     RefreshSpecularEdgeControls(hDlg);
     RefreshSSSControls(hDlg);
-    RefreshSSAOBrightnessControls(hDlg);
-    RefreshSSAOSampleRadiusControls(hDlg);
+    RefreshSSAO2(hDlg);
+    RefreshSSAO2SampleRadiusControls(hDlg);
     RefreshCameraClipPlaneControls(hDlg);
     RefreshGBufferClipPlaneControls(hDlg);
-    RefreshSSAOSaturationBoostControls(hDlg);
+    RefreshSSAO2BlurControls(hDlg);
+    RefreshSSAO2ShadowStrengthControls(hDlg);
+    RefreshSSAO2ShadowSaturationControls(hDlg);
+    RefreshSSAO2SampleCountControls(hDlg);
+    RefreshSSAO2DepthScaledSampleDistanceControls(hDlg);
     RefreshBloomThresholdControls(hDlg);
     RefreshDepthOfFieldControls(hDlg);
     RefreshDepthOfFieldMaxBlurControls(hDlg);
@@ -1612,11 +1577,6 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_COLOR_B, TBM_SETTICFREQ, 2, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_COLOR_B, TBM_SETPAGESIZE, 0, 2);
 
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BRIGHTNESS, TBM_SETRANGEMIN, FALSE, SSAO_BRIGHTNESS_SLIDER_MIN);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BRIGHTNESS, TBM_SETRANGEMAX, FALSE, SSAO_BRIGHTNESS_SLIDER_MAX);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BRIGHTNESS, TBM_SETTICFREQ, 5, 0);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BRIGHTNESS, TBM_SETPAGESIZE, 0, 5);
-
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SHADOW_STRENGTH, TBM_SETRANGEMIN, FALSE, SSAO2_SHADOW_STRENGTH_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SHADOW_STRENGTH, TBM_SETRANGEMAX, FALSE, SSAO2_SHADOW_STRENGTH_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SHADOW_STRENGTH, TBM_SETTICFREQ, 5, 0);
@@ -1632,15 +1592,10 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SAMPLE_COUNT, TBM_SETTICFREQ, 4, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SAMPLE_COUNT, TBM_SETPAGESIZE, 0, 4);
 
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS, TBM_SETRANGEMIN, FALSE, SSAO_SAMPLE_RADIUS_SLIDER_MIN);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS, TBM_SETRANGEMAX, FALSE, SSAO_SAMPLE_RADIUS_SLIDER_MAX);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS, TBM_SETTICFREQ, 10, 0);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS, TBM_SETPAGESIZE, 0, 10);
-
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SATURATION_BOOST, TBM_SETRANGEMIN, FALSE, SSAO_SATURATION_BOOST_SLIDER_MIN);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SATURATION_BOOST, TBM_SETRANGEMAX, FALSE, SSAO_SATURATION_BOOST_SLIDER_MAX);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SATURATION_BOOST, TBM_SETTICFREQ, 2, 0);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SATURATION_BOOST, TBM_SETPAGESIZE, 0, 2);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SAMPLE_RADIUS, TBM_SETRANGEMIN, FALSE, SSAO2_SAMPLE_RADIUS_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SAMPLE_RADIUS, TBM_SETRANGEMAX, FALSE, SSAO2_SAMPLE_RADIUS_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SAMPLE_RADIUS, TBM_SETTICFREQ, 10, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SAMPLE_RADIUS, TBM_SETPAGESIZE, 0, 10);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETRANGEMIN, FALSE, BLOOM_THRESHOLD_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETRANGEMAX, FALSE, BLOOM_THRESHOLD_SLIDER_MAX);
@@ -1933,7 +1888,6 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         InitializeTrackbars(hDlg);
         PopulateResolutionCombo(hDlg);
         PopulatePointLightTypeCombo(hDlg);
-        PopulateSSAOModeCombo(hDlg);
         InitializeLoadedModelListView(hDlg);
         InitializePointLightListView(hDlg);
         RefreshAllControls(hDlg);
@@ -2363,15 +2317,6 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
-        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSAO_BRIGHTNESS))
-        {
-            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
-            g_ssaoBrightness = SliderValueToSSAOBrightness(sliderValue);
-            ApplySSAOBrightness();
-            RefreshSSAOBrightnessControls(hDlg);
-            return TRUE;
-        }
-
         if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSAO2_SHADOW_STRENGTH))
         {
             const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
@@ -2399,21 +2344,12 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
-        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS))
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSAO2_SAMPLE_RADIUS))
         {
             const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
-            g_ssaoSampleRadius = SliderValueToSSAOSampleRadius(sliderValue);
-            ApplySSAOSampleRadius();
-            RefreshSSAOSampleRadiusControls(hDlg);
-            return TRUE;
-        }
-
-        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSAO_SATURATION_BOOST))
-        {
-            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
-            g_ssaoSaturationBoost = SliderValueToSSAOSaturationBoost(sliderValue);
-            ApplySSAOSaturationBoost();
-            RefreshSSAOSaturationBoostControls(hDlg);
+            g_ssao2SampleRadius = SliderValueToSSAO2SampleRadius(sliderValue);
+            ApplySSAO2SampleRadius();
+            RefreshSSAO2SampleRadiusControls(hDlg);
             return TRUE;
         }
 
@@ -2602,29 +2538,6 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
-        if (commandId == IDC_COMBO_SSAO_MODE && HIWORD(wParam) == CBN_SELCHANGE)
-        {
-            HWND combo = reinterpret_cast<HWND>(lParam);
-            const int index = static_cast<int>(SendMessage(combo, CB_GETCURSEL, 0, 0));
-            if (index == 1)
-            {
-                g_ssaoMode = SampleSSAOMode::SSAO2;
-            }
-            else
-            {
-                g_ssaoMode = SampleSSAOMode::Legacy;
-            }
-            ApplySSAOMode();
-            RefreshSSAOModeControls(hDlg);
-            RefreshSSAO2BlurControls(hDlg);
-            RefreshSSAO2ShadowStrengthControls(hDlg);
-            RefreshSSAO2ShadowSaturationControls(hDlg);
-            RefreshSSAO2SampleCountControls(hDlg);
-            RefreshSSAO2DepthScaledSampleDistanceControls(hDlg);
-            RefreshSSAOBrightnessControls(hDlg);
-            return TRUE;
-        }
-
         if (commandId == IDC_RADIO_MIX_MESH_NONE)
         {
             g_mixMeshShaderMode = MixMeshShaderMode::None;
@@ -2700,11 +2613,17 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
-        if (commandId == IDC_CHECK_SSAO)
+        if (commandId == IDC_CHECK_SSAO2)
         {
-            g_bSSAO = (IsDlgButtonChecked(hDlg, IDC_CHECK_SSAO) == BST_CHECKED);
-            g_Render.SetPostEffectSSAO(g_bSSAO);
-            RefreshSSAO(hDlg);
+            g_bSSAO2 = (IsDlgButtonChecked(hDlg, IDC_CHECK_SSAO2) == BST_CHECKED);
+            g_Render.SetPostEffectSSAO2(g_bSSAO2);
+            RefreshSSAO2(hDlg);
+            RefreshSSAO2BlurControls(hDlg);
+            RefreshSSAO2ShadowStrengthControls(hDlg);
+            RefreshSSAO2ShadowSaturationControls(hDlg);
+            RefreshSSAO2SampleCountControls(hDlg);
+            RefreshSSAO2SampleRadiusControls(hDlg);
+            RefreshSSAO2DepthScaledSampleDistanceControls(hDlg);
             return TRUE;
         }
 
