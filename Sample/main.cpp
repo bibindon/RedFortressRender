@@ -120,22 +120,22 @@ void InitializeSampleScene(HWND hWnd)
     g_Render.Initialize(hWnd, L"RenderSettings.csv");
     g_Render.SetCamera(D3DXVECTOR3(0.0f, 1.7f, -2.0f), D3DXVECTOR3(0.0f, 1.5f, 0.0f));
     g_fontId = g_Render.SetUpFont(L"BIZ UDゴシック", 20, D3DCOLOR_RGBA(255, 255, 255, 255));
-    const int cubeNormalInverseId = g_Render.AddMeshMix(L"..\\..\\Sample\\cubeNormalInverse.x",
+    const int cubeNormalInverseId = g_Render.AddMeshMix(L"..\\..\\Sample\\res\\model2\\cubeNormalInverse.x",
                                                         D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                                                         D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                                                         1.0f,
                                                         100.0f,
                                                         false,
                                                         false);
-    RegisterLoadedModel(L"MeshMixManager", L"..\\..\\Sample\\cubeNormalInverse.x", D3DXVECTOR3(0.0f, 0.0f, 0.0f), 1.0f, cubeNormalInverseId);
-    const int plateFieldId = g_Render.AddMeshMix(L"..\\..\\Sample\\plateField.x",
+    RegisterLoadedModel(L"MeshMixManager", L"..\\..\\Sample\\res\\model2\\cubeNormalInverse.x", D3DXVECTOR3(0.0f, 0.0f, 0.0f), 1.0f, cubeNormalInverseId);
+    const int plateFieldId = g_Render.AddMeshMix(L"..\\..\\Sample\\res\\model2\\plateField.x",
                                                  D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                                                  D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                                                  1.0f,
                                                  100.0f,
                                                  false,
                                                  false);
-    RegisterLoadedModel(L"MeshMixManager", L"..\\..\\Sample\\plateField.x", D3DXVECTOR3(0.0f, 0.0f, 0.0f), 1.0f, plateFieldId);
+    RegisterLoadedModel(L"MeshMixManager", L"..\\..\\Sample\\res\\model2\\plateField.x", D3DXVECTOR3(0.0f, 0.0f, 0.0f), 1.0f, plateFieldId);
 
     ApplyAllSampleSettings();
 }

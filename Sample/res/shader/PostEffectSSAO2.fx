@@ -1,3 +1,6 @@
+// SSAO2 shader.
+// 法線から直交基底を作る入口を if で明示している。
+
 float4x4 g_matView;
 float4x4 g_matProj;
 
@@ -372,5 +375,3 @@ technique TechniqueAO2_Composite
         PixelShader = compile ps_3_0 PS_Composite();
     }
 }
-// SSAO2 shader.
-// 法線から直交基底を作る入口を if で明示している。

@@ -1,3 +1,6 @@
+// God ray shader.
+// 逆サンプリング時は画面端までの到達距離を明示的に計算する。
+
 // God ray post effect.
 //
 // Pass1: build a screen-space occlusion mask from the GBuffer depth.
@@ -248,5 +251,3 @@ technique GodRay
         PixelShader = compile ps_3_0 PS_GodRay();
     }
 }
-// God ray shader.
-// 逆サンプリング時は画面端までの到達距離を明示的に計算する。

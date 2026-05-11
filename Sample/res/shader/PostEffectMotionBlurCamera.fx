@@ -146,5 +146,4 @@ technique Technique1
         PixelShader = compile ps_3_0 PixelShader1();
     }
 }
-// Camera motion blur shader.
-// サンプル数や ON/OFF 分岐を if で明示して、挙動を追いやすくする。
+

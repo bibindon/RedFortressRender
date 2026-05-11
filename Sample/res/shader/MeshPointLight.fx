@@ -1,5 +1,5 @@
-// simple.fx — Physically-based diffuse (Lambert × 1/r^2) + soft core/edge
-// D3D9 / ps_3_0。最小構成＆調整用パラメータあり。
+// Point light accumulation shader.
+// 各ライトを順に評価し、ループ回数は active フラグで抑制する。
 
 float4x4 g_matWorldViewProj;
 float4x4 g_matWorld;
@@ -104,5 +104,3 @@ technique Technique1
         PixelShader = compile ps_3_0 PS();
     }
 }
-// Point light accumulation shader.
-// 各ライトを順に評価し、ループ回数は active フラグで抑制する。

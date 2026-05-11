@@ -1,4 +1,6 @@
 
+// Legacy SSAO shader.
+// 深度差に応じた近傍採用ロジックを if に展開して、法線復元の分岐を追いやすくする。
 
 
 // ========= Globals =========
@@ -502,5 +504,3 @@ technique TechniqueAO_BlurV
     }
 }
 
-// Legacy SSAO shader.
-// 深度差に応じた近傍採用ロジックを if に展開して、法線復元の分岐を追いやすくする。

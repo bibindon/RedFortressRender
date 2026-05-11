@@ -268,7 +268,7 @@ bool IsWeekdayBusinessHours()
     return isWeekday && isBusinessHours;
 }
 
-static const std::wstring GODRAY_MARKER_PATH = L"..\\..\\Sample\\cube.x";
+static const std::wstring GODRAY_MARKER_PATH = L"..\\..\\Sample\\res\\model2\\cube.x";
 
 D3DXVECTOR3 GetEffectiveGodRayLightPos()
 {

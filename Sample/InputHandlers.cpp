@@ -98,12 +98,12 @@ void AddNormalMappedMeshAtLookAt()
     D3DXVec3Normalize(&forward, &forward);
 
     const float yaw = atan2f(forward.x, forward.z);
-    const int renderId = g_Render.AddMeshNormalMapping(L"cubeNormalMap.x",
-                                                       L"normalMap.png",
+    const int renderId = g_Render.AddMeshNormalMapping(L"..\\..\\Sample\\res\\model2\\cubeNormal.x",
+                                                       L"..\\..\\Sample\\res\\model2\\normalMap.png",
                                                        pos,
                                                        D3DXVECTOR3(0, yaw, 0.0f),
                                                        1.0f);
-    RegisterLoadedModel(L"MeshNormalMap", L"cubeNormalMap.x", pos, 1.0f, renderId);
+    RegisterLoadedModel(L"MeshNormalMap", L"..\\..\\Sample\\res\\model2\\cubeNormal.x", pos, 1.0f, renderId);
 }
 
 void AddSkinAnimMeshAtLookAt()
@@ -128,12 +128,12 @@ void AddAnimMeshAtLookAt()
     D3DXVec3Normalize(&forward, &forward);
 
     const float yaw = atan2f(forward.x, forward.z);
-    const int renderId = g_Render.AddAnimMesh(L"enemyOrangeCube.x",
+    const int renderId = g_Render.AddAnimMesh(L"..\\..\\Sample\\res\\model2\\enemyOrangeCube.x",
                                               pos,
                                               D3DXVECTOR3(0, yaw, 0.0f),
                                               1.0f,
                                               CreateDefaultAnimSetMap());
-    RegisterLoadedModel(L"AnimMesh", L"enemyOrangeCube.x", pos, 1.0f, renderId);
+    RegisterLoadedModel(L"AnimMesh", L"..\\..\\Sample\\res\\model2\\enemyOrangeCube.x", pos, 1.0f, renderId);
 }
 
 void AddImageOrPointLight(const bool shift, const bool control)
@@ -151,7 +151,7 @@ void AddImageOrPointLight(const bool shift, const bool control)
     }
 
     ImageInfo imageInfo;
-    imageInfo.m_imageName = L"cursor.png";
+    imageInfo.m_imageName = L"..\\..\\Sample\\res\\2D_image\\cursor.png";
     imageInfo.m_rect.left = std::abs(std::rand()) % 1300;
     imageInfo.m_rect.top = std::abs(std::rand()) % 700;
     g_imageInfoList.push_back(imageInfo);
@@ -258,19 +258,19 @@ bool HandleSampleKeyDown(HWND hWnd, const WPARAM wParam)
 
     if (wParam == 'M' && !shift && !control)
     {
-        SpawnMeshMixAtLookAt(L"..\\..\\Sample\\monkey.blend.x");
+        SpawnMeshMixAtLookAt(L"..\\..\\Sample\\res\\model2\\monkey.blend.x");
     }
     else if (wParam == 'M' && shift && control)
     {
-        AddSimpleMeshAtLookAt(L"cube.x", 1.0f);
+        AddSimpleMeshAtLookAt(L"..\\..\\Sample\\res\\model2\\cube.x", 1.0f);
     }
     else if (wParam == 'M' && shift && !control)
     {
-        AddSimpleMeshAtLookAt(L"cubePOM.blend.x", 1.0f, false, true);
+        AddSimpleMeshAtLookAt(L"..\\..\\Sample\\res\\model2\\cubePOM.blend.x", 1.0f, false, true);
     }
     else if (wParam == 'M' && !shift && control)
     {
-        AddSimpleMeshAtLookAt(L"monkey.blend.x", 1.0f, true);
+        AddSimpleMeshAtLookAt(L"..\\..\\Sample\\res\\model2\\monkey.blend.x", 1.0f, true);
     }
 
     if (wParam == 'N' && shift && !control)
@@ -293,13 +293,13 @@ bool HandleSampleKeyDown(HWND hWnd, const WPARAM wParam)
         D3DXVECTOR3 forward = g_Render.GetCameraRotate();
         D3DXVec3Normalize(&forward, &forward);
         const float yaw = atan2f(forward.x, forward.z);
-        const int renderId = g_Render.AddMeshInstansing(L"cube.x", pos, D3DXVECTOR3(0, yaw, 0.0f), 1.0f);
-        RegisterLoadedModel(L"Instancing", L"cube.x", pos, 1.0f, renderId);
+        const int renderId = g_Render.AddMeshInstansing(L"..\\..\\Sample\\res\\model2\\cube.x", pos, D3DXVECTOR3(0, yaw, 0.0f), 1.0f);
+        RegisterLoadedModel(L"Instancing", L"..\\..\\Sample\\res\\model2\\cube.x", pos, 1.0f, renderId);
     }
 
     if (wParam == 'O')
     {
-        AddSimpleMeshAtLookAt(L"cube.x", 1.0f, false, false, true);
+        AddSimpleMeshAtLookAt(L"..\\..\\Sample\\res\\model2\\cube.x", 1.0f, false, false, true);
     }
 
     if (!shift && !control)
