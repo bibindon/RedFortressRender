@@ -1655,6 +1655,10 @@ void Render::SetPostEffectSaturate(const float level)
     {
         EnsurePostEffectSaturateInitialized();
     }
+    else
+    {
+        m_postEffectSaturate.Finalize();
+    }
 }
 
 void Render::SetPostEffectSaturateEnable(const bool arg)
@@ -1664,6 +1668,10 @@ void Render::SetPostEffectSaturateEnable(const bool arg)
     {
         EnsurePostEffectSaturateInitialized();
     }
+    else
+    {
+        m_postEffectSaturate.Finalize();
+    }
 }
 
 void Render::SetPostEffectGaussianFilter(const bool arg)
@@ -1672,6 +1680,10 @@ void Render::SetPostEffectGaussianFilter(const bool arg)
     if (m_postEffectGaussEnabled)
     {
         EnsurePostEffectGaussInitialized();
+    }
+    else
+    {
+        m_postEffectGauss.Finalize();
     }
 }
 
@@ -1688,6 +1700,10 @@ void Render::SetPostEffectMaskedGaussianFilter(const bool arg)
     if (m_postEffectMaskedGaussEnabled)
     {
         EnsurePostEffectMaskedGaussInitialized();
+    }
+    else
+    {
+        m_postEffectMaskedGauss.Finalize();
     }
 }
 
@@ -1710,6 +1726,10 @@ void Render::SetPostEffectFXAA(const bool arg)
     {
         EnsurePostEffectFXAAInitialized();
     }
+    else
+    {
+        m_postEffectFXAA.Finalize();
+    }
 }
 
 void Render::SetPostEffectFXAAQuality(const int quality)
@@ -1724,6 +1744,10 @@ void Render::SetPostEffectMotionBlurCamera(const bool arg)
     if (m_postEffectMotionBlurCameraEnabled)
     {
         EnsurePostEffectMotionBlurCameraInitialized();
+    }
+    else
+    {
+        m_postEffectMotionBlurCamera.Finalize();
     }
 }
 
@@ -1753,6 +1777,10 @@ void Render::SetPostEffectDepthBufferShadow(const bool arg)
     if (m_postEffectZShadowEnabled)
     {
         EnsurePostEffectZShadowInitialized();
+    }
+    else
+    {
+        m_postEffectZShadow.Finalize();
     }
 }
 
@@ -1853,6 +1881,10 @@ void Render::SetPostEffectSSAO2(const bool arg)
     {
         EnsurePostEffectSSAO2Initialized();
     }
+    else
+    {
+        m_postEffectSSAO2.Finalize();
+    }
 }
 
 void Render::SetPostEffectSSAO2Blur(const bool arg)
@@ -1893,6 +1925,10 @@ void Render::SetPostEffectFog(const bool arg)
     {
         EnsurePostEffectFogInitialized();
     }
+    else
+    {
+        m_postEffectFog.Finalize();
+    }
 }
 
 void Render::SetPostEffectFogIntensity(const float intensity)
@@ -1906,6 +1942,10 @@ void Render::SetPostEffectHeightFog(const bool arg)
     if (m_postEffectFogHeightEnabled)
     {
         EnsurePostEffectHeightFogInitialized();
+    }
+    else
+    {
+        m_postEffectHeightFog.Finalize();
     }
 }
 
@@ -1956,6 +1996,10 @@ void Render::SetPostEffectBloom(const bool arg)
     {
         EnsurePostEffectBloomInitialized();
     }
+    else
+    {
+        m_PostEffectBloom.Finalize();
+    }
 }
 
 void Render::SetPostEffectBloomThreshold(const float threshold)
@@ -1985,6 +2029,7 @@ void Render::SetPostEffectDepthOfFieldMode(const DepthOfFieldMode mode)
     if (mode == DepthOfFieldMode::Disabled)
     {
         m_postEffectDepthOfField.SetBlend(0.0f);
+        m_postEffectDepthOfField.Finalize();
     }
     else if (mode == DepthOfFieldMode::Enabled)
     {
@@ -2014,6 +2059,10 @@ void Render::SetPostEffectStarBurst(const bool arg)
     {
         EnsurePostEffectStarBurstInitialized();
     }
+    else
+    {
+        m_postEffectStarBurst.Finalize();
+    }
 }
 
 void Render::SetPostEffectStarBurstThreshold(const float threshold)
@@ -2027,6 +2076,10 @@ void Render::SetPostEffectGodRay(const bool arg)
     if (m_postEffectGodRayEnabled)
     {
         EnsurePostEffectGodRayInitialized();
+    }
+    else
+    {
+        m_postEffectGodRay.Finalize();
     }
 }
 
