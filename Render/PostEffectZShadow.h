@@ -60,9 +60,12 @@ private:
     LPDIRECT3DTEXTURE9 g_texRenderTargetLightZ = NULL;
     LPDIRECT3DTEXTURE9 g_texRenderTargetLightZHalf = NULL;
     LPDIRECT3DTEXTURE9 g_texRenderTargetShadow = NULL;
+    LPDIRECT3DTEXTURE9 g_texRenderTargetShadowHalf = NULL;
     
     LPDIRECT3DSURFACE9 g_surfaceLightZStensil = NULL;
     LPDIRECT3DSURFACE9 g_surfaceLightZStensilHalf = NULL;
+    LPDIRECT3DSURFACE9 g_surfaceShadowStensil = NULL;
+    LPDIRECT3DSURFACE9 g_surfaceShadowStensilHalf = NULL;
     LPDIRECT3DSURFACE9 oldRT0 = NULL;
     LPDIRECT3DSURFACE9 oldZ = NULL;
     
@@ -98,6 +101,8 @@ private:
     void CreateRawResource();
     LPDIRECT3DTEXTURE9 GetActiveLightZTexture() const;
     LPDIRECT3DSURFACE9 GetActiveLightZDepthStencil() const;
+    LPDIRECT3DTEXTURE9 GetActiveShadowTexture() const;
+    LPDIRECT3DSURFACE9 GetActiveShadowDepthStencil() const;
 };
 
 }
