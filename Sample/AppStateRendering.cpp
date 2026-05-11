@@ -1029,6 +1029,7 @@ int SliderValueToMotionBlurCameraSampleCount(const int sliderValue)
 
 void ApplyGodRay()
 {
+    g_Render.SetPostEffectGodRay(g_bGodRay);
 
     if (g_bGodRay)
     {
