@@ -151,7 +151,7 @@ void AddImageOrPointLight(const bool shift, const bool control)
     }
 
     ImageInfo imageInfo;
-    imageInfo.m_imageName = L"..\\..\\Sample\\res\\2D_image\\cursor.png";
+    imageInfo.m_imageName = L"..\\Sample\\res\\2D_image\\cursor.png";
     imageInfo.m_rect.left = std::abs(std::rand()) % 1300;
     imageInfo.m_rect.top = std::abs(std::rand()) % 700;
     g_imageInfoList.push_back(imageInfo);
