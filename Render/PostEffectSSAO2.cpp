@@ -69,15 +69,16 @@ void PostEffectSSAO2::CreateResources()
     assert(SUCCEEDED(hResult));
 }
 
-LPDIRECT3DTEXTURE9 PostEffectSSAO2::Draw(LPDIRECT3DTEXTURE9 renderTarget,
-                                         LPDIRECT3DTEXTURE9 texRenderTargetZ,
-                                         LPDIRECT3DTEXTURE9 texRenderTargetPos,
-                                         LPDIRECT3DTEXTURE9 texRenderTargetNormal,
-                                         LPDIRECT3DTEXTURE9 texRenderTargetThickness)
+void PostEffectSSAO2::Draw(LPDIRECT3DTEXTURE9 renderTarget,
+                           LPDIRECT3DTEXTURE9 texTarget,
+                           LPDIRECT3DTEXTURE9 texRenderTargetZ,
+                           LPDIRECT3DTEXTURE9 texRenderTargetPos,
+                           LPDIRECT3DTEXTURE9 texRenderTargetNormal,
+                           LPDIRECT3DTEXTURE9 texRenderTargetThickness)
 {
     if (!m_isInitialized || m_fxSSAO2 == NULL)
     {
-        return renderTarget;
+        return;
     }
 
     D3DSURFACE_DESC descZ = { };
@@ -99,7 +100,7 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO2::Draw(LPDIRECT3DTEXTURE9 renderTarget,
 
     m_rtAoTex->GetSurfaceLevel(0, &surfAO);
     m_rtAoTempTex->GetSurfaceLevel(0, &surfAOTemp);
-    renderTarget->GetSurfaceLevel(0, &surfRenderTarget);
+    texTarget->GetSurfaceLevel(0, &surfRenderTarget);
     surfComposite = surfAOTemp;
 
     Common::D3DDevice()->SetRenderTarget(0, surfAO);
@@ -165,7 +166,6 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO2::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     SAFE_RELEASE(surfRenderTarget);
     SAFE_RELEASE(oldRt0);
 
-    return renderTarget;
 }
 
 void PostEffectSSAO2::DrawFullscreenQuad()

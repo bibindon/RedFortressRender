@@ -17,11 +17,12 @@ public:
     void Initialize();
     void Finalize();
 
-    LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget,
-                            LPDIRECT3DTEXTURE9 sceneDepthTexture,
-                            LPDIRECT3DTEXTURE9 sceneNormalTexture,
-                            const std::deque<MeshMixManager>& meshMixList,
-                            const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList);
+    void Draw(LPDIRECT3DTEXTURE9 texSource,
+              LPDIRECT3DTEXTURE9 texTarget,
+              LPDIRECT3DTEXTURE9 sceneDepthTexture,
+              LPDIRECT3DTEXTURE9 sceneNormalTexture,
+              const std::deque<MeshMixManager>& meshMixList,
+              const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList);
 
     void SetShadowIntensity(const float intensity);
     void SetShadowSaturationBoost(const float saturationBoost);
@@ -56,7 +57,6 @@ private:
 
     LPDIRECT3DTEXTURE9 g_texRenderTargetLightZ = NULL;
     LPDIRECT3DTEXTURE9 g_texRenderTargetShadow = NULL;
-    LPDIRECT3DTEXTURE9 g_texComposite = NULL;
     
     LPDIRECT3DSURFACE9 g_surfaceLightZStensil = NULL;
     LPDIRECT3DSURFACE9 oldRT0 = NULL;
@@ -89,6 +89,7 @@ private:
     const std::vector<MeshMixSkinAnim*>* m_pSkinAnimMeshList = nullptr;
     LPDIRECT3DTEXTURE9 m_sceneDepthTexture = NULL;
     LPDIRECT3DTEXTURE9 m_sceneNormalTexture = NULL;
+    LPDIRECT3DTEXTURE9 m_texCompositeTarget = NULL;
 
     void CreateRawResource();
 };

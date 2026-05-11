@@ -10,7 +10,8 @@ class PostEffectMaskedGauss : public IDeviceResettable
 public:
 
     void Initialize();
-    LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget);
+    void Draw(LPDIRECT3DTEXTURE9 texSource,
+              LPDIRECT3DTEXTURE9 texTarget);
     void Finalize();
 
     void SetSampleSize(const int sampleSize);

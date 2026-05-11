@@ -12,7 +12,8 @@ class PostEffectBloom : public IDeviceResettable
 public:
 
     void Initialize();
-    LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget);
+    void Draw(LPDIRECT3DTEXTURE9 texSource,
+              LPDIRECT3DTEXTURE9 texTarget);
     void Finalize();
 
     void SetThreshold(const float arg);
@@ -33,7 +34,6 @@ private:
     LPDIRECT3DTEXTURE9 m_texBlurH2 = NULL;
     LPDIRECT3DTEXTURE9 m_texBlurV = NULL;
     LPDIRECT3DTEXTURE9 m_texBlurV2 = NULL;
-    LPDIRECT3DTEXTURE9 m_renderTarget = NULL;
 
     void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
                             const std::string& technique);

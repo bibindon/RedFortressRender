@@ -12,7 +12,8 @@ class PostEffectStarBurst : public IDeviceResettable
 public:
 
     void Initialize();
-    LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget);
+    void Draw(LPDIRECT3DTEXTURE9 texSource,
+              LPDIRECT3DTEXTURE9 texTarget);
     void Finalize();
 
     void SetThreshold(const float arg);
@@ -28,7 +29,6 @@ private:
     bool m_isInitialized = false;
     bool m_isRegisteredForDeviceReset = false;
 
-    LPDIRECT3DTEXTURE9 m_texPostEffectBack1 = NULL;
     LPDIRECT3DTEXTURE9 m_texBright = NULL;
     LPDIRECT3DTEXTURE9 m_texBlurH = NULL;
     LPDIRECT3DTEXTURE9 m_texBlurV = NULL;

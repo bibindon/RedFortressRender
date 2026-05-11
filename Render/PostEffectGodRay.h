@@ -12,8 +12,9 @@ class PostEffectGodRay : public IDeviceResettable
 public:
 
     void Initialize();
-    LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget,
-                            LPDIRECT3DTEXTURE9 texZ);
+    void Draw(LPDIRECT3DTEXTURE9 texSource,
+              LPDIRECT3DTEXTURE9 texZ,
+              LPDIRECT3DTEXTURE9 texTarget);
     void Finalize();
 
     // ゴッドレイ用光源のワールド座標
@@ -50,7 +51,6 @@ private:
     LPDIRECT3DTEXTURE9  m_texOcclusion   = NULL;
     LPDIRECT3DTEXTURE9  m_texBlurTemp    = NULL;
     LPDIRECT3DTEXTURE9  m_texOcclusionBlurred = NULL;
-    LPDIRECT3DTEXTURE9  m_texResult      = NULL;
 
     D3DXVECTOR3 m_lightPosWorld   = D3DXVECTOR3(0.0f, 50.0f, 0.0f);
     float       m_rayLength       = 1.0f;

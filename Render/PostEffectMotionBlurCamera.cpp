@@ -95,7 +95,6 @@ void PostEffectMotionBlurCamera::Initialize()
     D3DXMatrixIdentity(&m_prevViewProj);
     D3DXMatrixIdentity(&m_motionBlurPrevViewProj);
     m_prevFrameTick = GetTickCount64();
-    CreateTexture();
     if (!m_isRegisteredForDeviceReset)
     {
         Common::AddDeviceLostResource(this);
@@ -111,30 +110,20 @@ void PostEffectMotionBlurCamera::Finalize()
         Common::RemoveDeviceLostResource(this);
         m_isRegisteredForDeviceReset = false;
     }
-    SAFE_RELEASE(m_texWork);
     SAFE_RELEASE(m_d3dEffect);
     m_isInitialized = false;
 }
 
-void PostEffectMotionBlurCamera::CreateTexture()
+void PostEffectMotionBlurCamera::Draw(LPDIRECT3DTEXTURE9 renderTarget,
+                                      LPDIRECT3DTEXTURE9 depthTexture,
+                                      LPDIRECT3DTEXTURE9 texTarget,
+                                      bool& applied)
 {
-    HRESULT hResult = D3DXCreateTexture(Common::D3DDevice(),
-                                        Common::ScreenW(),
-                                        Common::ScreenH(),
-                                        1,
-                                        D3DUSAGE_RENDERTARGET,
-                                        D3DFMT_A16B16G16R16F,
-                                        D3DPOOL_DEFAULT,
-                                        &m_texWork);
-    assert(SUCCEEDED(hResult));
-}
+    applied = false;
 
-LPDIRECT3DTEXTURE9 PostEffectMotionBlurCamera::Draw(LPDIRECT3DTEXTURE9 renderTarget,
-                                                    LPDIRECT3DTEXTURE9 depthTexture)
-{
     if (!m_isInitialized || m_d3dEffect == NULL)
     {
-        return renderTarget;
+        return;
     }
 
     const D3DXMATRIX currentViewProj = Camera::GetViewMatrix() * Camera::GetProjMatrix();
@@ -142,13 +131,13 @@ LPDIRECT3DTEXTURE9 PostEffectMotionBlurCamera::Draw(LPDIRECT3DTEXTURE9 renderTar
     if (!ShouldApplyMotionBlur(currentViewProj))
     {
         UpdateFrameMatrices();
-        return renderTarget;
+        return;
     }
 
     UpdateMotionBlurPrevViewProj();
-    DrawFullscreenQuad(renderTarget, depthTexture, m_texWork);
+    DrawFullscreenQuad(renderTarget, depthTexture, texTarget);
     UpdateFrameMatrices();
-    return m_texWork;
+    applied = true;
 }
 
 void PostEffectMotionBlurCamera::UpdateFrameMatrices()
@@ -403,7 +392,6 @@ void PostEffectMotionBlurCamera::OnDeviceLost()
     }
 
     m_d3dEffect->OnLostDevice();
-    SAFE_RELEASE(m_texWork);
 }
 
 void PostEffectMotionBlurCamera::OnDeviceReset()
@@ -414,7 +402,6 @@ void PostEffectMotionBlurCamera::OnDeviceReset()
     }
 
     m_d3dEffect->OnResetDevice();
-    CreateTexture();
 }
 
 }

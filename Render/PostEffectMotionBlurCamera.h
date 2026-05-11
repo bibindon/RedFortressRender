@@ -13,8 +13,10 @@ public:
     void Initialize();
     void Finalize();
 
-    LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget,
-                            LPDIRECT3DTEXTURE9 depthTexture);
+    void Draw(LPDIRECT3DTEXTURE9 texSource,
+              LPDIRECT3DTEXTURE9 depthTexture,
+              LPDIRECT3DTEXTURE9 texTarget,
+              bool& applied);
     void UpdateFrameMatrices();
 
     void SetQuality(const int quality);
@@ -32,7 +34,6 @@ private:
     LPD3DXEFFECT m_d3dEffect = NULL;
     bool m_isInitialized = false;
     bool m_isRegisteredForDeviceReset = false;
-    LPDIRECT3DTEXTURE9 m_texWork = NULL;
     D3DXMATRIX m_prevViewProj { };
     D3DXMATRIX m_motionBlurPrevViewProj { };
     D3DXVECTOR3 m_prevEye { };
@@ -45,7 +46,6 @@ private:
     float m_maxBlurPixels = 24.0f;
     int m_sampleCount = 13;
 
-    void CreateTexture();
     bool ShouldApplyMotionBlur(const D3DXMATRIX& currentViewProj);
     float UpdateFrameMotionScale();
     void UpdateMotionBlurPrevViewProj();

@@ -18,8 +18,9 @@ public:
 
     void Initialize();
 
-    LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget,
-                            LPDIRECT3DTEXTURE9 texRenderTargetPos);
+    void Draw(LPDIRECT3DTEXTURE9 texSource,
+              LPDIRECT3DTEXTURE9 texRenderTargetPos,
+              LPDIRECT3DTEXTURE9 texTarget);
 
     void Finalize();
 
@@ -54,7 +55,6 @@ private:
     LPD3DXEFFECT m_d3dEffect = NULL;
     bool m_isInitialized = false;
     bool m_isRegisteredForDeviceReset = false;
-    LPDIRECT3DTEXTURE9 m_texWork = NULL;
     LPDIRECT3DSURFACE9 m_surfacePositionReadback = NULL;
 
     float m_focalDistance = 8.0f;

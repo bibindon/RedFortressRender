@@ -52,15 +52,6 @@ void PostEffectBloom::CreateTexture()
                       D3DUSAGE_RENDERTARGET,
                       D3DFMT_A16B16G16R16F,
                       D3DPOOL_DEFAULT,
-                      &m_renderTarget);
-
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
-                      D3DPOOL_DEFAULT,
                       &m_texBlurH);
 
     D3DXCreateTexture(Common::D3DDevice(),
@@ -91,11 +82,12 @@ void PostEffectBloom::CreateTexture()
                       &m_texBlurV2);
 }
 
-LPDIRECT3DTEXTURE9 PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource)
+void PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource,
+                           LPDIRECT3DTEXTURE9 renderTarget)
 {
     if (!m_isInitialized || m_d3dEffect == NULL)
     {
-        return renderSource;
+        return;
     }
 
     m_d3dEffect->SetInt("g_sampleSize", 101);
@@ -144,16 +136,14 @@ LPDIRECT3DTEXTURE9 PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource)
     }
 
     // ------------------------------------------------------------
-    // (4) Combine : (renderSource + m_texBlurV) → m_renderTarget
+    // (4) Combine : (renderSource + m_texBlurV) → renderTarget
     // ------------------------------------------------------------
     {
         m_d3dEffect->SetTexture("g_SceneTex", renderSource);
         m_d3dEffect->SetTexture("g_BlurTex", m_texBlurV2);
 
-        DrawFullscreenQuad(m_renderTarget, "Combine");
+        DrawFullscreenQuad(renderTarget, "Combine");
     }
-
-    return m_renderTarget;
 }
 
 void PostEffectBloom::Finalize()
@@ -168,7 +158,6 @@ void PostEffectBloom::Finalize()
     SAFE_RELEASE(m_texBlurH2);
     SAFE_RELEASE(m_texBlurV);
     SAFE_RELEASE(m_texBlurV2);
-    SAFE_RELEASE(m_renderTarget);
     SAFE_RELEASE(m_d3dEffect);
     m_isInitialized = false;
 }
@@ -261,7 +250,6 @@ void PostEffectBloom::OnDeviceLost()
     SAFE_RELEASE(m_texBlurH2);
     SAFE_RELEASE(m_texBlurV);
     SAFE_RELEASE(m_texBlurV2);
-    SAFE_RELEASE(m_renderTarget);
 }
 
 void PostEffectBloom::OnDeviceReset()

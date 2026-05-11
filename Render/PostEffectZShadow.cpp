@@ -98,20 +98,21 @@ void PostEffectZShadow::Finalize()
 
     SAFE_RELEASE(g_texRenderTargetLightZ);
     SAFE_RELEASE(g_texRenderTargetShadow);
-    SAFE_RELEASE(g_texComposite);
     SAFE_RELEASE(g_surfaceLightZStensil);
     SAFE_RELEASE(g_pQuadDecl);
 
     m_isInitialized = false;
 }
 
-LPDIRECT3DTEXTURE9 PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
-                                           LPDIRECT3DTEXTURE9 sceneDepthTexture,
-                                           LPDIRECT3DTEXTURE9 sceneNormalTexture,
-                                           const std::deque<MeshMixManager>& meshMixList,
-                                           const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList)
+void PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
+                             LPDIRECT3DTEXTURE9 texTarget,
+                             LPDIRECT3DTEXTURE9 sceneDepthTexture,
+                             LPDIRECT3DTEXTURE9 sceneNormalTexture,
+                             const std::deque<MeshMixManager>& meshMixList,
+                             const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList)
 {
     g_texTemp = renderTarget;
+    m_texCompositeTarget = texTarget;
     m_pMeshList = &meshMixList;
     m_pSkinAnimMeshList = &meshMixSkinAnimList;
     m_sceneDepthTexture = sceneDepthTexture;
@@ -125,8 +126,7 @@ LPDIRECT3DTEXTURE9 PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_pSkinAnimMeshList = nullptr;
     m_sceneDepthTexture = NULL;
     m_sceneNormalTexture = NULL;
-
-    return g_texComposite;
+    m_texCompositeTarget = NULL;
 }
 
 void PostEffectZShadow::RenderTechnique1()
@@ -469,14 +469,14 @@ void PostEffectZShadow::RenderTechnique3()
     LPDIRECT3DSURFACE9 prevRT = NULL;
     Common::D3DDevice()->GetRenderTarget(0, &prevRT);
 
-    // ★ 合成先RT（g_texComposite）へ切り替え
+    // ★ 合成先RT（m_texCompositeTarget）へ切り替え
     LPDIRECT3DSURFACE9 rtComp = NULL;
-    g_texComposite->GetSurfaceLevel(0, &rtComp);
+    m_texCompositeTarget->GetSurfaceLevel(0, &rtComp);
     Common::D3DDevice()->SetRenderTarget(0, rtComp);
 
     // ★ 合成先サイズのビューポートを設定
     D3DSURFACE_DESC descComp{};
-    g_texComposite->GetLevelDesc(0, &descComp);
+    m_texCompositeTarget->GetLevelDesc(0, &descComp);
     D3DVIEWPORT9 vp{};
     vp.X = 0; vp.Y = 0; vp.Width = descComp.Width; vp.Height = descComp.Height;
     vp.MinZ = 0.0f; vp.MaxZ = 1.0f;
@@ -649,7 +649,6 @@ void PostEffectZShadow::OnDeviceLost()
     SAFE_RELEASE(g_texRenderTargetLightZ);
     SAFE_RELEASE(g_surfaceLightZStensil);
     SAFE_RELEASE(g_texRenderTargetShadow);
-    SAFE_RELEASE(g_texComposite);
     SAFE_RELEASE(g_pQuadDecl);
 }
 
@@ -701,16 +700,6 @@ void PostEffectZShadow::CreateRawResource()
                                 D3DFMT_A16B16G16R16F,
                                 D3DPOOL_DEFAULT,
                                 &g_texRenderTargetShadow);
-    assert(hResult == S_OK);
-
-    hResult = D3DXCreateTexture(Common::D3DDevice(),
-                                        Common::ScreenW(),
-                                        Common::ScreenH(),
-                                        1,
-                                        D3DUSAGE_RENDERTARGET,
-                                        D3DFMT_A16B16G16R16F,
-                                        D3DPOOL_DEFAULT,
-                                        &g_texComposite);
     assert(hResult == S_OK);
 
     D3DVERTEXELEMENT9 elems[] =

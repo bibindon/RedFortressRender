@@ -36,16 +36,17 @@ void PostEffectMaskedGauss::Initialize()
     m_isInitialized = true;
 }
 
-LPDIRECT3DTEXTURE9 PostEffectMaskedGauss::Draw(LPDIRECT3DTEXTURE9 renderTarget)
+void PostEffectMaskedGauss::Draw(LPDIRECT3DTEXTURE9 renderTarget,
+                                 LPDIRECT3DTEXTURE9 texTarget)
 {
     if (!m_isInitialized || m_d3dEffect == nullptr)
     {
-        return renderTarget;
+        return;
     }
 
-    if (renderTarget == nullptr || m_texMask == nullptr)
+    if (renderTarget == nullptr || texTarget == nullptr || m_texMask == nullptr)
     {
-        return renderTarget;
+        return;
     }
 
     m_d3dEffect->SetBool("g_bFilterON", TRUE);
@@ -55,9 +56,7 @@ LPDIRECT3DTEXTURE9 PostEffectMaskedGauss::Draw(LPDIRECT3DTEXTURE9 renderTarget)
     DrawFullscreenQuad(m_texBlurWork, m_texBlurResult, "GaussianH");
     DrawFullscreenQuad(m_texBlurResult, m_texBlurWork, "GaussianV");
     DrawFullscreenQuad(m_texBlurWork, m_texBlurResult, "GaussianV");
-    DrawCompositeQuad(m_texBlurResult, renderTarget, m_texBlurWork);
-
-    return m_texBlurWork;
+    DrawCompositeQuad(m_texBlurResult, renderTarget, texTarget);
 }
 
 void PostEffectMaskedGauss::Finalize()

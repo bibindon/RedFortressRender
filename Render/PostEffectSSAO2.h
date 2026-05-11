@@ -12,11 +12,12 @@ public:
     void Initialize();
     void Finalize();
 
-    LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget,
-                            LPDIRECT3DTEXTURE9 texRenderTargetZ,
-                            LPDIRECT3DTEXTURE9 texRenderTargetPos,
-                            LPDIRECT3DTEXTURE9 texRenderTargetNormal,
-                            LPDIRECT3DTEXTURE9 texRenderTargetThickness);
+    void Draw(LPDIRECT3DTEXTURE9 texSource,
+              LPDIRECT3DTEXTURE9 texTarget,
+              LPDIRECT3DTEXTURE9 texRenderTargetZ,
+              LPDIRECT3DTEXTURE9 texRenderTargetPos,
+              LPDIRECT3DTEXTURE9 texRenderTargetNormal,
+              LPDIRECT3DTEXTURE9 texRenderTargetThickness);
 
     void SetShadowStrength(const float shadowStrength);
     void SetSaturationBoost(const float saturationBoost);

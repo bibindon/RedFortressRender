@@ -59,22 +59,15 @@ void PostEffectGodRay::CreateTexture()
                       D3DPOOL_DEFAULT,
                       &m_texOcclusionBlurred);
 
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
-                      D3DPOOL_DEFAULT,
-                      &m_texResult);
 }
 
-LPDIRECT3DTEXTURE9 PostEffectGodRay::Draw(LPDIRECT3DTEXTURE9 renderTarget,
-                                          LPDIRECT3DTEXTURE9 texZ)
+void PostEffectGodRay::Draw(LPDIRECT3DTEXTURE9 renderTarget,
+                            LPDIRECT3DTEXTURE9 texZ,
+                            LPDIRECT3DTEXTURE9 texTarget)
 {
     if (!m_isInitialized || m_d3dEffect == NULL)
     {
-        return renderTarget;
+        return;
     }
 
     D3DXMATRIX matView = Camera::GetViewMatrix();
@@ -127,9 +120,7 @@ LPDIRECT3DTEXTURE9 PostEffectGodRay::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_d3dEffect->SetFloat("g_RayIntensity", m_rayIntensity * lightVisible);
     m_d3dEffect->SetFloat("g_VirtualProximityStrength", m_virtualProximityStrength);
     m_d3dEffect->SetFloat("g_OcclusionFalloff", m_occlusionFalloff);
-    DrawFullscreenQuad(m_texResult, "GodRay");
-
-    return m_texResult;
+    DrawFullscreenQuad(texTarget, "GodRay");
 }
 
 void PostEffectGodRay::SetDepthRange(const float nearPlane, const float farPlane)
@@ -212,7 +203,6 @@ void PostEffectGodRay::Finalize()
     SAFE_RELEASE(m_texOcclusion);
     SAFE_RELEASE(m_texBlurTemp);
     SAFE_RELEASE(m_texOcclusionBlurred);
-    SAFE_RELEASE(m_texResult);
     m_isInitialized = false;
 }
 
@@ -227,7 +217,6 @@ void PostEffectGodRay::OnDeviceLost()
     SAFE_RELEASE(m_texOcclusion);
     SAFE_RELEASE(m_texBlurTemp);
     SAFE_RELEASE(m_texOcclusionBlurred);
-    SAFE_RELEASE(m_texResult);
 }
 
 void PostEffectGodRay::OnDeviceReset()

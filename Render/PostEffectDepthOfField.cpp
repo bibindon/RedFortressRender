@@ -25,16 +25,6 @@ void PostEffectDepthOfField::Initialize()
                                           NULL);
     assert(SUCCEEDED(hr));
 
-    hr = D3DXCreateTexture(Common::D3DDevice(),
-                           Common::ScreenW(),
-                           Common::ScreenH(),
-                           1,
-                           D3DUSAGE_RENDERTARGET,
-                           D3DFMT_A16B16G16R16F,
-                           D3DPOOL_DEFAULT,
-                           &m_texWork);
-    assert(SUCCEEDED(hr));
-
     CreateReadbackSurface();
 
     if (!m_isRegisteredForDeviceReset)
@@ -46,17 +36,18 @@ void PostEffectDepthOfField::Initialize()
     m_isInitialized = true;
 }
 
-LPDIRECT3DTEXTURE9 PostEffectDepthOfField::Draw(LPDIRECT3DTEXTURE9 renderTarget,
-                                                LPDIRECT3DTEXTURE9 texRenderTargetPos)
+void PostEffectDepthOfField::Draw(LPDIRECT3DTEXTURE9 renderTarget,
+                                  LPDIRECT3DTEXTURE9 texRenderTargetPos,
+                                  LPDIRECT3DTEXTURE9 texTarget)
 {
     if (!m_isInitialized || m_d3dEffect == NULL)
     {
-        return renderTarget;
+        return;
     }
 
-    if (renderTarget == NULL || texRenderTargetPos == NULL)
+    if (renderTarget == NULL || texRenderTargetPos == NULL || texTarget == NULL)
     {
-        return renderTarget;
+        return;
     }
 
     const D3DXVECTOR3 cameraPos = Camera::GetEyePos();
@@ -70,8 +61,7 @@ LPDIRECT3DTEXTURE9 PostEffectDepthOfField::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_d3dEffect->SetFloat("g_positionRange", m_positionRange);
     m_d3dEffect->SetFloat("g_dofBlend", m_blend);
 
-    DrawFullscreenQuad(renderTarget, texRenderTargetPos, m_texWork, "Technique1");
-    return m_texWork;
+    DrawFullscreenQuad(renderTarget, texRenderTargetPos, texTarget, "Technique1");
 }
 
 void PostEffectDepthOfField::Finalize()
@@ -82,7 +72,6 @@ void PostEffectDepthOfField::Finalize()
         m_isRegisteredForDeviceReset = false;
     }
     SAFE_RELEASE(m_surfacePositionReadback);
-    SAFE_RELEASE(m_texWork);
     SAFE_RELEASE(m_d3dEffect);
     m_isInitialized = false;
 }
@@ -167,7 +156,6 @@ void PostEffectDepthOfField::OnDeviceLost()
         m_d3dEffect->OnLostDevice();
     }
 
-    SAFE_RELEASE(m_texWork);
     SAFE_RELEASE(m_surfacePositionReadback);
 }
 
@@ -182,16 +170,6 @@ void PostEffectDepthOfField::OnDeviceReset()
     {
         m_d3dEffect->OnResetDevice();
     }
-
-    HRESULT hr = D3DXCreateTexture(Common::D3DDevice(),
-                                   Common::ScreenW(),
-                                   Common::ScreenH(),
-                                   1,
-                                   D3DUSAGE_RENDERTARGET,
-                                   D3DFMT_A16B16G16R16F,
-                                   D3DPOOL_DEFAULT,
-                                   &m_texWork);
-    assert(SUCCEEDED(hr));
 
     CreateReadbackSurface();
 }

@@ -880,21 +880,25 @@ void Render::Draw()
     if (m_postEffectZShadowEnabled)
     {
         EnsurePostEffectZShadowInitialized();
-        pTempTexture = m_postEffectZShadow.Draw(pTempTexture,
-                                                pTexTempZ,
-                                                pTexTempNoral,
-                                                m_meshMixList,
-                                                m_meshMixSkinAnimList);
+        m_postEffectZShadow.Draw(pTempTexture,
+                                 pWorkTexture,
+                                 pTexTempZ,
+                                 pTexTempNoral,
+                                 m_meshMixList,
+                                 m_meshMixSkinAnimList);
+        SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
     if (m_postEffectSSAO2Enabled)
     {
         EnsurePostEffectSSAO2Initialized();
-        pTempTexture = m_postEffectSSAO2.Draw(pTempTexture,
-                                              pTexTempZ,
-                                              pTexTempPos,
-                                              pTexTempNoral,
-                                              pTexTempThickness);
+        m_postEffectSSAO2.Draw(pTempTexture,
+                               pWorkTexture,
+                               pTexTempZ,
+                               pTexTempPos,
+                               pTexTempNoral,
+                               pTexTempThickness);
+        SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
     if (m_postEffectFogZEnabled)
@@ -927,7 +931,8 @@ void Render::Draw()
     {
         EnsurePostEffectDepthOfFieldInitialized();
         m_postEffectDepthOfField.SetBlend(1.0f);
-        pTempTexture = m_postEffectDepthOfField.Draw(pTempTexture, pTexTempPos);
+        m_postEffectDepthOfField.Draw(pTempTexture, pTexTempPos, pWorkTexture);
+        SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
     else if (m_postEffectDepthOfFieldMode == DepthOfFieldMode::AutoNear)
     {
@@ -935,26 +940,30 @@ void Render::Draw()
         m_postEffectDepthOfField.UpdateAutoBlend(pTexTempPos);
         if (m_postEffectDepthOfField.GetBlend() > 0.001f)
         {
-            pTempTexture = m_postEffectDepthOfField.Draw(pTempTexture, pTexTempPos);
+            m_postEffectDepthOfField.Draw(pTempTexture, pTexTempPos, pWorkTexture);
+            SwapPostEffectBuffers(pTempTexture, pWorkTexture);
         }
     }
 
     if (m_postEffectBloomEnabled)
     {
         EnsurePostEffectBloomInitialized();
-        pTempTexture = m_PostEffectBloom.Draw(pTempTexture);
+        m_PostEffectBloom.Draw(pTempTexture, pWorkTexture);
+        SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
     if (m_postEffectStarBurstEnabled)
     {
         EnsurePostEffectStarBurstInitialized();
-        pTempTexture = m_postEffectStarBurst.Draw(pTempTexture);
+        m_postEffectStarBurst.Draw(pTempTexture, pWorkTexture);
+        SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
     if (m_postEffectGodRayEnabled)
     {
         EnsurePostEffectGodRayInitialized();
-        pTempTexture = m_postEffectGodRay.Draw(pTempTexture, pTexTempZ);
+        m_postEffectGodRay.Draw(pTempTexture, pTexTempZ, pWorkTexture);
+        SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
     if (m_postEffectGaussEnabled)
@@ -969,13 +978,19 @@ void Render::Draw()
     if (m_postEffectMaskedGaussEnabled)
     {
         EnsurePostEffectMaskedGaussInitialized();
-        pTempTexture = m_postEffectMaskedGauss.Draw(pTempTexture);
+        m_postEffectMaskedGauss.Draw(pTempTexture, pWorkTexture);
+        SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
     if (m_postEffectMotionBlurCameraEnabled)
     {
         EnsurePostEffectMotionBlurCameraInitialized();
-        pTempTexture = m_postEffectMotionBlurCamera.Draw(pTempTexture, pTexTempZ);
+        bool motionBlurApplied = false;
+        m_postEffectMotionBlurCamera.Draw(pTempTexture, pTexTempZ, pWorkTexture, motionBlurApplied);
+        if (motionBlurApplied)
+        {
+            SwapPostEffectBuffers(pTempTexture, pWorkTexture);
+        }
     }
     else
     {

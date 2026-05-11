@@ -33,11 +33,12 @@ void PostEffectStarBurst::Initialize()
     m_isInitialized = true;
 }
 
-LPDIRECT3DTEXTURE9 PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource)
+void PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource,
+                               LPDIRECT3DTEXTURE9 renderTarget)
 {
     if (m_d3dEffect == NULL)
     {
-        return renderSource;
+        return;
     }
 
     float texelSize[2] = { 1.0f / Common::ScreenW(), 1.0f / Common::ScreenH() };
@@ -80,14 +81,12 @@ LPDIRECT3DTEXTURE9 PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource)
     SetRTFromTex(m_texBlurD2);
     DrawFullscreenQuad(m_texBlurD, "Blur");
 
-    SetRTFromTex(m_texPostEffectBack1);
+    SetRTFromTex(renderTarget);
     m_d3dEffect->SetTexture("g_SceneTex", renderSource);
     m_d3dEffect->SetTexture("g_BlurTexH", m_texBlurH2);
     m_d3dEffect->SetTexture("g_BlurTexV", m_texBlurV2);
     m_d3dEffect->SetTexture("g_BlurTex60", m_texBlurD2);
     DrawFullscreenQuad(NULL, "Combine");
-
-    return m_texPostEffectBack1;
 }
 
 void PostEffectStarBurst::SetRTFromTex(LPDIRECT3DTEXTURE9 tex)
@@ -106,7 +105,6 @@ void PostEffectStarBurst::Finalize()
         m_isRegisteredForDeviceReset = false;
     }
     SAFE_RELEASE(m_d3dEffect);
-    SAFE_RELEASE(m_texPostEffectBack1);
     SAFE_RELEASE(m_texBright);
     SAFE_RELEASE(m_texBlurH);
     SAFE_RELEASE(m_texBlurV);
@@ -200,7 +198,6 @@ void PostEffectStarBurst::OnDeviceLost()
     }
 
     m_d3dEffect->OnLostDevice();
-    SAFE_RELEASE(m_texPostEffectBack1);
     SAFE_RELEASE(m_texBright);
     SAFE_RELEASE(m_texBlurH);
     SAFE_RELEASE(m_texBlurV);
@@ -223,15 +220,6 @@ void PostEffectStarBurst::OnDeviceReset()
 
 void PostEffectStarBurst::CreateTexture()
 {
-
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
-                      D3DPOOL_DEFAULT,
-                      &m_texPostEffectBack1);
 
     D3DXCreateTexture(Common::D3DDevice(),
                       Common::ScreenW(),
