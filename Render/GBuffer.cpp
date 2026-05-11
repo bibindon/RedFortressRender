@@ -56,6 +56,7 @@ void GBuffer::CreateRawResource()
                                 1,
                                 D3DUSAGE_RENDERTARGET,
                                 D3DFMT_R32F,
+                                //D3DFMT_R16F,
                                 D3DPOOL_DEFAULT,
                                 &m_texRenderTargetZ);
     assert(hResult == S_OK);
@@ -67,6 +68,7 @@ void GBuffer::CreateRawResource()
                                 1,
                                 D3DUSAGE_RENDERTARGET,
                                 D3DFMT_A16B16G16R16F,
+                                //D3DFMT_A8R8G8B8,
                                 D3DPOOL_DEFAULT,
                                 &m_texRenderTargetPos);
     assert(hResult == S_OK);
@@ -77,6 +79,7 @@ void GBuffer::CreateRawResource()
                                 1,
                                 D3DUSAGE_RENDERTARGET,
                                 D3DFMT_A16B16G16R16F,
+                                //D3DFMT_A8R8G8B8,
                                 D3DPOOL_DEFAULT,
                                 &m_texRenderTargetNormal);
     assert(hResult == S_OK);
@@ -88,6 +91,7 @@ void GBuffer::CreateRawResource()
                                 1,
                                 D3DUSAGE_RENDERTARGET,
                                 D3DFMT_A16B16G16R16F,
+                                //D3DFMT_A8R8G8B8,
                                 D3DPOOL_DEFAULT,
                                 &m_texRenderTargetThickness);
     assert(hResult == S_OK);
