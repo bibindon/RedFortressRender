@@ -1058,6 +1058,12 @@ void MeshMixManager::SetSpecularIntensity(const float intensity)
 void MeshMixManager::SetSharedThicknessTexture(LPDIRECT3DTEXTURE9 texture)
 {
     GetSharedThicknessTexture() = texture;
+
+    LPD3DXEFFECT sharedEffect = GetSharedEffect();
+    if (sharedEffect != nullptr)
+    {
+        sharedEffect->SetTexture("g_texThickness", texture);
+    }
 }
 
 void MeshMixManager::SetSpecularIntensityOverrideEnabled(const bool enabled)

@@ -1610,6 +1610,7 @@ void Render::SetGBufferEnable(const bool enabled)
 
     if (!m_gBufferEnabled)
     {
+        MeshMixManager::SetSharedThicknessTexture(NULL);
         m_GBuffer.Finalize();
     }
 }
