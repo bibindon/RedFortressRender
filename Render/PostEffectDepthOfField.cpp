@@ -108,7 +108,11 @@ float PostEffectDepthOfField::GetBlend() const
 void PostEffectDepthOfField::UpdateAutoBlend(LPDIRECT3DTEXTURE9 texRenderTargetPos)
 {
     const float nearestDistance = MeasureCenterNearestDistance(texRenderTargetPos);
-    const float targetBlend = (nearestDistance < m_autoActivationDistance) ? 1.0f : 0.0f;
+    float targetBlend = 0.0f;
+    if (nearestDistance < m_autoActivationDistance)
+    {
+        targetBlend = 1.0f;
+    }
 
     const DWORD currentTick = GetTickCount();
     float deltaTime = 0.0f;

@@ -52,8 +52,18 @@ LPDIRECT3DTEXTURE9 PostEffectFog::Draw(LPDIRECT3DTEXTURE9 renderTarget,
 
     // エフェクトパラメータ設定
     // 霧の強度等
-    m_d3dEffect->SetBool("g_EnableZ", enableZ ? TRUE : FALSE);
-    m_d3dEffect->SetBool("g_EnableHeight", enableHeight ? TRUE : FALSE);
+    BOOL enableZBool = FALSE;
+    if (enableZ)
+    {
+        enableZBool = TRUE;
+    }
+    BOOL enableHeightBool = FALSE;
+    if (enableHeight)
+    {
+        enableHeightBool = TRUE;
+    }
+    m_d3dEffect->SetBool("g_EnableZ", enableZBool);
+    m_d3dEffect->SetBool("g_EnableHeight", enableHeightBool);
 
     m_d3dEffect->SetFloat("g_IntensityZ", m_intensityZ);
     m_d3dEffect->SetFloat("g_IntensityHeight", m_intensityHeight);
@@ -101,7 +111,11 @@ void PostEffectFog::SetHeightStart(const float arg)
 
 void PostEffectFog::SetPositionRange(const float positionRange)
 {
-    m_positionRange = (positionRange > 1.0f) ? positionRange : 1.0f;
+    m_positionRange = 1.0f;
+    if (positionRange > 1.0f)
+    {
+        m_positionRange = positionRange;
+    }
 }
 
 void PostEffectFog::SetDepthDecodeRange(const float nearPlane, const float farPlane)

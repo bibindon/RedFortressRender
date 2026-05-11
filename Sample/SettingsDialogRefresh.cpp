@@ -105,8 +105,15 @@ void RefreshPointLightControls(HWND hDlg)
     for (const int controlId : lineControlIds)
     {
         HWND control = GetDlgItem(hDlg, controlId);
-        ShowWindow(control, isLineLight ? SW_SHOW : SW_HIDE);
-        EnableWindow(control, isLineLight ? TRUE : FALSE);
+        int showMode = SW_HIDE;
+        BOOL enabled = FALSE;
+        if (isLineLight)
+        {
+            showMode = SW_SHOW;
+            enabled = TRUE;
+        }
+        ShowWindow(control, showMode);
+        EnableWindow(control, enabled);
     }
 
     const int rotationControlIds[] =
@@ -122,8 +129,15 @@ void RefreshPointLightControls(HWND hDlg)
     for (const int controlId : rotationControlIds)
     {
         HWND control = GetDlgItem(hDlg, controlId);
-        ShowWindow(control, usesRotation ? SW_SHOW : SW_HIDE);
-        EnableWindow(control, usesRotation ? TRUE : FALSE);
+        int showMode = SW_HIDE;
+        BOOL enabled = FALSE;
+        if (usesRotation)
+        {
+            showMode = SW_SHOW;
+            enabled = TRUE;
+        }
+        ShowWindow(control, showMode);
+        EnableWindow(control, enabled);
     }
 
     const int squareControlIds[] =
@@ -137,8 +151,15 @@ void RefreshPointLightControls(HWND hDlg)
     for (const int controlId : squareControlIds)
     {
         HWND control = GetDlgItem(hDlg, controlId);
-        ShowWindow(control, isSquareLight ? SW_SHOW : SW_HIDE);
-        EnableWindow(control, isSquareLight ? TRUE : FALSE);
+        int showMode = SW_HIDE;
+        BOOL enabled = FALSE;
+        if (isSquareLight)
+        {
+            showMode = SW_SHOW;
+            enabled = TRUE;
+        }
+        ShowWindow(control, showMode);
+        EnableWindow(control, enabled);
     }
 }
 
@@ -370,12 +391,19 @@ void RefreshSpecularIntensityControls(HWND hDlg)
                        TRUE,
                        static_cast<LPARAM>(SpecularIntensityToSliderValue(g_specularIntensity)));
 
-    CheckDlgButton(hDlg,
-                   IDC_CHECK_SPECULAR_INTENSITY_OVERRIDE,
-                   g_bUseSpecularIntensityOverride ? BST_CHECKED : BST_UNCHECKED);
+    UINT checkState = BST_UNCHECKED;
+    if (g_bUseSpecularIntensityOverride)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_SPECULAR_INTENSITY_OVERRIDE, checkState);
 
     // Override が無効な間は値を編集できないようにする。
-    const BOOL enabled = g_bUseSpecularIntensityOverride ? TRUE : FALSE;
+    BOOL enabled = FALSE;
+    if (g_bUseSpecularIntensityOverride)
+    {
+        enabled = TRUE;
+    }
     EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SPECULAR_INTENSITY), enabled);
     EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SPECULAR_INTENSITY), enabled);
 }
@@ -391,11 +419,18 @@ void RefreshSpecularEdgeControls(HWND hDlg)
                        TRUE,
                        static_cast<LPARAM>(SpecularEdgeToSliderValue(g_specularEdge)));
 
-    CheckDlgButton(hDlg,
-                   IDC_CHECK_SPECULAR_EDGE_OVERRIDE,
-                   g_bUseSpecularEdgeOverride ? BST_CHECKED : BST_UNCHECKED);
+    UINT checkState = BST_UNCHECKED;
+    if (g_bUseSpecularEdgeOverride)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_SPECULAR_EDGE_OVERRIDE, checkState);
 
-    const BOOL enabled = g_bUseSpecularEdgeOverride ? TRUE : FALSE;
+    BOOL enabled = FALSE;
+    if (g_bUseSpecularEdgeOverride)
+    {
+        enabled = TRUE;
+    }
     EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SPECULAR_EDGE), enabled);
     EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SPECULAR_EDGE), enabled);
 }
@@ -403,7 +438,12 @@ void RefreshSpecularEdgeControls(HWND hDlg)
 void RefreshSSSControls(HWND hDlg)
 {
     wchar_t buffer[32];
-    CheckDlgButton(hDlg, IDC_CHECK_SSS, g_bSSS ? BST_CHECKED : BST_UNCHECKED);
+    UINT checkState = BST_UNCHECKED;
+    if (g_bSSS)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_SSS, checkState);
 
     std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_sssIntensity);
     SetDlgItemText(hDlg, IDC_EDIT_SSS_INTENSITY, buffer);
@@ -437,7 +477,11 @@ void RefreshSSSControls(HWND hDlg)
                        TRUE,
                        static_cast<LPARAM>(SSSColorToSliderValue(g_sssColor.b)));
 
-    const BOOL enabled = g_bSSS ? TRUE : FALSE;
+    BOOL enabled = FALSE;
+    if (g_bSSS)
+    {
+        enabled = TRUE;
+    }
     EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SSS_INTENSITY), enabled);
     EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SSS_INTENSITY), enabled);
     EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SSS_COLOR_R), enabled);
@@ -516,9 +560,12 @@ void RefreshSSAO2SampleCountControls(HWND hDlg)
 
 void RefreshSSAO2DepthScaledSampleDistanceControls(HWND hDlg)
 {
-    CheckDlgButton(hDlg,
-                   IDC_CHECK_SSAO2_DEPTH_SCALED_SAMPLE_DISTANCE,
-                   g_bSSAO2DepthScaledSampleDistance ? BST_CHECKED : BST_UNCHECKED);
+    UINT checkState = BST_UNCHECKED;
+    if (g_bSSAO2DepthScaledSampleDistance)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_SSAO2_DEPTH_SCALED_SAMPLE_DISTANCE, checkState);
     EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SSAO2_DEPTH_SCALED_SAMPLE_DISTANCE), g_ssaoMode == SampleSSAOMode::SSAO2);
 }
 
@@ -602,24 +649,42 @@ void RefreshModelLoadScaleControls(HWND hDlg)
 
 void RefreshAnimateLight(HWND hDlg)
 {
-    CheckDlgButton(hDlg, IDC_CHECK_ANIMATE_LIGHT, g_bAnimateLight ? BST_CHECKED : BST_UNCHECKED);
+    UINT checkState = BST_UNCHECKED;
+    if (g_bAnimateLight)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_ANIMATE_LIGHT, checkState);
 }
 
 void RefreshRemoteDesktop(HWND hDlg)
 {
-    CheckDlgButton(hDlg, IDC_CHECK_REMOTE_DESKTOP, g_bRemoteDesktop ? BST_CHECKED : BST_UNCHECKED);
+    UINT checkState = BST_UNCHECKED;
+    if (g_bRemoteDesktop)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_REMOTE_DESKTOP, checkState);
 }
 
 void RefreshDepthBufferShadow(HWND hDlg)
 {
-    CheckDlgButton(hDlg,
-                   IDC_CHECK_DEPTH_BUFFER_SHADOW,
-                   g_bDepthBufferShadow ? BST_CHECKED : BST_UNCHECKED);
+    UINT checkState = BST_UNCHECKED;
+    if (g_bDepthBufferShadow)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_DEPTH_BUFFER_SHADOW, checkState);
 }
 
 void RefreshSSAO(HWND hDlg)
 {
-    CheckDlgButton(hDlg, IDC_CHECK_SSAO, g_bSSAO ? BST_CHECKED : BST_UNCHECKED);
+    UINT checkState = BST_UNCHECKED;
+    if (g_bSSAO)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_SSAO, checkState);
 }
 
 void RefreshSSAOModeControls(HWND hDlg)
@@ -627,33 +692,59 @@ void RefreshSSAOModeControls(HWND hDlg)
     HWND combo = GetDlgItem(hDlg, IDC_COMBO_SSAO_MODE);
     if (combo != NULL)
     {
-        SendMessage(combo, CB_SETCURSEL, g_ssaoMode == SampleSSAOMode::SSAO2 ? 1 : 0, 0);
+        int selectedIndex = 0;
+        if (g_ssaoMode == SampleSSAOMode::SSAO2)
+        {
+            selectedIndex = 1;
+        }
+        SendMessage(combo, CB_SETCURSEL, selectedIndex, 0);
     }
 }
 
 void RefreshSSAO2BlurControls(HWND hDlg)
 {
-    CheckDlgButton(hDlg, IDC_CHECK_SSAO2_BLUR, g_bSSAO2Blur ? BST_CHECKED : BST_UNCHECKED);
+    UINT checkState = BST_UNCHECKED;
+    if (g_bSSAO2Blur)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_SSAO2_BLUR, checkState);
     EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SSAO2_BLUR), g_ssaoMode == SampleSSAOMode::SSAO2);
 }
 
 void RefreshBloom(HWND hDlg)
 {
-    CheckDlgButton(hDlg, IDC_CHECK_BLOOM, g_bBloom ? BST_CHECKED : BST_UNCHECKED);
+    UINT checkState = BST_UNCHECKED;
+    if (g_bBloom)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_BLOOM, checkState);
 }
 
 void RefreshDepthOfField(HWND hDlg)
 {
     // DOF は OFF / ON / AutoNear の 3 状態をラジオボタンで同期する。
-    CheckDlgButton(hDlg,
-                   IDC_RADIO_DEPTH_OF_FIELD_OFF,
-                   g_depthOfFieldMode == NSRender::DepthOfFieldMode::Disabled ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hDlg,
-                   IDC_RADIO_DEPTH_OF_FIELD_ON,
-                   g_depthOfFieldMode == NSRender::DepthOfFieldMode::Enabled ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hDlg,
-                   IDC_RADIO_DEPTH_OF_FIELD_AUTO,
-                   g_depthOfFieldMode == NSRender::DepthOfFieldMode::AutoNear ? BST_CHECKED : BST_UNCHECKED);
+    UINT dofOffState = BST_UNCHECKED;
+    if (g_depthOfFieldMode == NSRender::DepthOfFieldMode::Disabled)
+    {
+        dofOffState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_RADIO_DEPTH_OF_FIELD_OFF, dofOffState);
+
+    UINT dofOnState = BST_UNCHECKED;
+    if (g_depthOfFieldMode == NSRender::DepthOfFieldMode::Enabled)
+    {
+        dofOnState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_RADIO_DEPTH_OF_FIELD_ON, dofOnState);
+
+    UINT dofAutoState = BST_UNCHECKED;
+    if (g_depthOfFieldMode == NSRender::DepthOfFieldMode::AutoNear)
+    {
+        dofAutoState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_RADIO_DEPTH_OF_FIELD_AUTO, dofAutoState);
 }
 
 void RefreshDepthOfFieldControls(HWND hDlg)
@@ -694,13 +785,29 @@ void RefreshDepthOfFieldAutoActivationControls(HWND hDlg)
 
 void RefreshStarBurst(HWND hDlg)
 {
-    CheckDlgButton(hDlg, IDC_CHECK_STARBURST, g_bStarBurst ? BST_CHECKED : BST_UNCHECKED);
+    UINT checkState = BST_UNCHECKED;
+    if (g_bStarBurst)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_STARBURST, checkState);
 }
 
 void RefreshGaussianControls(HWND hDlg)
 {
-    CheckDlgButton(hDlg, IDC_CHECK_GAUSSIAN_FILTER, g_bGaussianFilter ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hDlg, IDC_CHECK_MASKED_GAUSSIAN_FILTER, g_bMaskedGaussianFilter ? BST_CHECKED : BST_UNCHECKED);
+    UINT gaussianState = BST_UNCHECKED;
+    if (g_bGaussianFilter)
+    {
+        gaussianState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_GAUSSIAN_FILTER, gaussianState);
+
+    UINT maskedGaussianState = BST_UNCHECKED;
+    if (g_bMaskedGaussianFilter)
+    {
+        maskedGaussianState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_MASKED_GAUSSIAN_FILTER, maskedGaussianState);
 
     wchar_t buffer[32];
     std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%d", g_gaussianSampleSize);
@@ -714,7 +821,12 @@ void RefreshGaussianControls(HWND hDlg)
 
 void RefreshFXAAControls(HWND hDlg)
 {
-    CheckDlgButton(hDlg, IDC_CHECK_FXAA, g_bFXAA ? BST_CHECKED : BST_UNCHECKED);
+    UINT checkState = BST_UNCHECKED;
+    if (g_bFXAA)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_FXAA, checkState);
 
     wchar_t buffer[32];
     std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%d", g_fxaaQuality);
@@ -728,7 +840,12 @@ void RefreshFXAAControls(HWND hDlg)
 
 void RefreshMotionBlurCameraControls(HWND hDlg)
 {
-    CheckDlgButton(hDlg, IDC_CHECK_MOTION_BLUR_CAMERA, g_bMotionBlurCamera ? BST_CHECKED : BST_UNCHECKED);
+    UINT checkState = BST_UNCHECKED;
+    if (g_bMotionBlurCamera)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_MOTION_BLUR_CAMERA, checkState);
 
     wchar_t buffer[32];
     std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.0f", g_motionBlurCameraMaxBlurPixels);
@@ -748,7 +865,11 @@ void RefreshMotionBlurCameraControls(HWND hDlg)
                        static_cast<LPARAM>(MotionBlurCameraSampleCountToSliderValue(g_motionBlurCameraSampleCount)));
 
     // Motion Blur が OFF の間は関連入力をまとめて無効化する。
-    const BOOL enabled = g_bMotionBlurCamera ? TRUE : FALSE;
+    BOOL enabled = FALSE;
+    if (g_bMotionBlurCamera)
+    {
+        enabled = TRUE;
+    }
     EnableWindow(GetDlgItem(hDlg, IDC_EDIT_MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS), enabled);
     EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS), enabled);
     EnableWindow(GetDlgItem(hDlg, IDC_EDIT_MOTION_BLUR_CAMERA_SAMPLE_COUNT), enabled);

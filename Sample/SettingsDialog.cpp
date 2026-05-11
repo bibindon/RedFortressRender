@@ -1047,15 +1047,30 @@ void RefreshSelectedMeshPaths(HWND hDlg)
 
 void RefreshMixMeshShaderMode(HWND hDlg)
 {
+    UINT noneState = BST_UNCHECKED;
+    if (g_mixMeshShaderMode == MixMeshShaderMode::None)
+    {
+        noneState = BST_CHECKED;
+    }
     CheckDlgButton(hDlg,
                    IDC_RADIO_MIX_MESH_NONE,
-                   (g_mixMeshShaderMode == MixMeshShaderMode::None) ? BST_CHECKED : BST_UNCHECKED);
+                   noneState);
+    UINT pomState = BST_UNCHECKED;
+    if (g_mixMeshShaderMode == MixMeshShaderMode::ParallaxOcclusionMapping)
+    {
+        pomState = BST_CHECKED;
+    }
     CheckDlgButton(hDlg,
                    IDC_RADIO_MIX_MESH_POM,
-                   (g_mixMeshShaderMode == MixMeshShaderMode::ParallaxOcclusionMapping) ? BST_CHECKED : BST_UNCHECKED);
+                   pomState);
+    UINT normalMapState = BST_UNCHECKED;
+    if (g_mixMeshShaderMode == MixMeshShaderMode::NormalMapping)
+    {
+        normalMapState = BST_CHECKED;
+    }
     CheckDlgButton(hDlg,
                    IDC_RADIO_MIX_MESH_NORMAL_MAP,
-                   (g_mixMeshShaderMode == MixMeshShaderMode::NormalMapping) ? BST_CHECKED : BST_UNCHECKED);
+                   normalMapState);
 }
 
 void RefreshResolutionControls(HWND hDlg)
@@ -1077,15 +1092,26 @@ void RefreshResolutionControls(HWND hDlg)
         }
     }
 
-    CheckDlgButton(hDlg,
-                   IDC_RADIO_WINDOW_MODE_WINDOW,
-                   (g_windowMode == NSRender::eWindowMode::WINDOW) ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hDlg,
-                   IDC_RADIO_WINDOW_MODE_BORDERLESS,
-                   (g_windowMode == NSRender::eWindowMode::BORDERLESS) ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hDlg,
-                   IDC_RADIO_WINDOW_MODE_FULLSCREEN,
-                   (g_windowMode == NSRender::eWindowMode::FULLSCREEN) ? BST_CHECKED : BST_UNCHECKED);
+    UINT windowState = BST_UNCHECKED;
+    if (g_windowMode == NSRender::eWindowMode::WINDOW)
+    {
+        windowState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_RADIO_WINDOW_MODE_WINDOW, windowState);
+
+    UINT borderlessState = BST_UNCHECKED;
+    if (g_windowMode == NSRender::eWindowMode::BORDERLESS)
+    {
+        borderlessState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_RADIO_WINDOW_MODE_BORDERLESS, borderlessState);
+
+    UINT fullscreenState = BST_UNCHECKED;
+    if (g_windowMode == NSRender::eWindowMode::FULLSCREEN)
+    {
+        fullscreenState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_RADIO_WINDOW_MODE_FULLSCREEN, fullscreenState);
 }
 
 void PopulateResolutionCombo(HWND hDlg)
@@ -1734,6 +1760,19 @@ void InitializeTrackbars(HWND hDlg)
 
 bool HandleOpenMeshCommand(HWND hDlg, const WORD commandId)
 {
+    if (commandId == IDC_BUTTON_LOAD_RENDER_SETTINGS)
+    {
+        std::wstring selectedPath;
+        if (ShowOpenFileDialog(hDlg,
+                               L"CSV Files (*.csv)\0*.csv\0All Files (*.*)\0*.*\0",
+                               selectedPath,
+                               L"csv"))
+        {
+            ReloadRenderSettingsFromCsv(selectedPath);
+        }
+        return true;
+    }
+
     if (commandId == IDC_BUTTON_OPEN_MIX_MESH)
     {
         if (ShowOpenFileDialog(hDlg,
@@ -2567,7 +2606,14 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         {
             HWND combo = reinterpret_cast<HWND>(lParam);
             const int index = static_cast<int>(SendMessage(combo, CB_GETCURSEL, 0, 0));
-            g_ssaoMode = (index == 1) ? SampleSSAOMode::SSAO2 : SampleSSAOMode::Legacy;
+            if (index == 1)
+            {
+                g_ssaoMode = SampleSSAOMode::SSAO2;
+            }
+            else
+            {
+                g_ssaoMode = SampleSSAOMode::Legacy;
+            }
             ApplySSAOMode();
             RefreshSSAOModeControls(hDlg);
             RefreshSSAO2BlurControls(hDlg);

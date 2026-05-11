@@ -143,7 +143,12 @@ void MeshMixSkinAnim::Render()
 
     const D3DXVECTOR4 cameraPos = D3DXVECTOR4(Camera::GetEyePos(), 1.0f);
     m_D3DEffect->SetVector("g_cameraPos", &cameraPos);
-    m_D3DEffect->SetBool("g_bSaturateShadow", m_param.saturateShadow ? TRUE : FALSE);
+    BOOL useSaturateShadow = FALSE;
+    if (m_param.saturateShadow)
+    {
+        useSaturateShadow = TRUE;
+    }
+    m_D3DEffect->SetBool("g_bSaturateShadow", useSaturateShadow);
     m_D3DEffect->SetFloat("g_fSaturateShadowIntensity", m_param.saturateShadowIntensity);
     m_D3DEffect->SetFloat("g_fShadowDarkness", m_param.shadowDarkness);
     m_D3DEffect->SetFloat("g_specularIntensity", m_param.specularIntensity);
@@ -313,14 +318,18 @@ void MeshMixSkinAnim::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBas
                             material.Diffuse.a);
         m_D3DEffect->SetVector("g_diffuse", &diffuse);
 
-        const float specularIntensity = m_param.specularIntensityOverrideEnabled
-            ? m_param.specularIntensity
-            : GetMaterialSpecularIntensity(material);
+        float specularIntensity = GetMaterialSpecularIntensity(material);
+        if (m_param.specularIntensityOverrideEnabled)
+        {
+            specularIntensity = m_param.specularIntensity;
+        }
         m_D3DEffect->SetFloat("g_specularIntensity", specularIntensity);
 
-        const float specularPower = m_param.specularEdgeOverrideEnabled
-            ? ConvertSpecularEdgeToShaderPower(m_param.specularEdge)
-            : ConvertXMaterialPowerToShaderPower(material.Power);
+        float specularPower = ConvertXMaterialPowerToShaderPower(material.Power);
+        if (m_param.specularEdgeOverrideEnabled)
+        {
+            specularPower = ConvertSpecularEdgeToShaderPower(m_param.specularEdge);
+        }
         m_D3DEffect->SetFloat("g_specularPower", specularPower);
 
         if (materialIndex < container->m_textureList.size())

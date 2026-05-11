@@ -270,6 +270,7 @@ exit /B %ERRORLEVEL%</Command>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\README_about_sample_x.md" />
     <None Include="packages.config" />
     <None Include="RenderSettings.csv" />
   </ItemGroup>

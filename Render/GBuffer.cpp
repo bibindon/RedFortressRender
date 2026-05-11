@@ -181,7 +181,11 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
 
         // subset ごとに描画
         LPD3DXMESH d3dMesh = mesh.GetD3DMesh();
-        const DWORD subsetCount = (mesh.GetSubsetCount() > 0) ? mesh.GetSubsetCount() : 1;
+        DWORD subsetCount = 1;
+        if (mesh.GetSubsetCount() > 0)
+        {
+            subsetCount = mesh.GetSubsetCount();
+        }
         for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
         {
             d3dMesh->DrawSubset(subsetIndex);
@@ -263,7 +267,11 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         m_fxGBuffer->BeginPass(0);
 
         LPD3DXMESH d3dMesh = mesh.GetD3DMesh();
-        const DWORD subsetCount = (mesh.GetSubsetCount() > 0) ? mesh.GetSubsetCount() : 1;
+        DWORD subsetCount = 1;
+        if (mesh.GetSubsetCount() > 0)
+        {
+            subsetCount = mesh.GetSubsetCount();
+        }
         for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
         {
             d3dMesh->DrawSubset(subsetIndex);

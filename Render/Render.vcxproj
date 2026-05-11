@@ -245,6 +245,9 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\README.md" />
+    <None Include="..\README_about_library_csv.md" />
+    <None Include="..\README_about_x_csv.md" />
     <None Include="packages.config" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

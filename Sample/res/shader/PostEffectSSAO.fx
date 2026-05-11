@@ -163,12 +163,53 @@ Basis BuildBasis(float2 uv)
     bool adoptFarY = (dzY >= g_farAdoptMinZ) && (dzY <= g_farAdoptMaxZ);
 
     // 法線用の差分：軸ごとにレンジ内なら FAR 側、そうでなければセンターに近い側
-    float3 vx = adoptFarX
-              ? ((zR > zL) ? (pR - pC) : (pC - pL))
-              : ((abs(zR - zC) <= abs(zL - zC)) ? (pR - pC) : (pC - pL));
-    float3 vy = adoptFarY
-              ? ((zD > zU) ? (pD - pC) : (pC - pU))
-              : ((abs(zD - zC) <= abs(zU - zC)) ? (pD - pC) : (pC - pU));
+    float3 vx = pC - pL;
+    if (adoptFarX)
+    {
+        if (zR > zL)
+        {
+            vx = pR - pC;
+        }
+        else
+        {
+            vx = pC - pL;
+        }
+    }
+    else
+    {
+        if (abs(zR - zC) <= abs(zL - zC))
+        {
+            vx = pR - pC;
+        }
+        else
+        {
+            vx = pC - pL;
+        }
+    }
+
+    float3 vy = pC - pU;
+    if (adoptFarY)
+    {
+        if (zD > zU)
+        {
+            vy = pD - pC;
+        }
+        else
+        {
+            vy = pC - pU;
+        }
+    }
+    else
+    {
+        if (abs(zD - zC) <= abs(zU - zC))
+        {
+            vy = pD - pC;
+        }
+        else
+        {
+            vy = pC - pU;
+        }
+    }
 
     float3 Nw = DecodeWorldNormal(tex2D(sampNormal, uv).rgb);
     float3 Nv = normalize(mul(float4(Nw, 0), g_matView).xyz);
@@ -179,7 +220,11 @@ Basis BuildBasis(float2 uv)
     if (adoptFarX)
     {
         float zX = max(zR, zL);
-        float3 pX = (zR > zL) ? pR : pL;
+        float3 pX = pL;
+        if (zR > zL)
+        {
+            pX = pR;
+        }
         if (zX > zFarN)
         {
             zFarN = zX;
@@ -189,7 +234,11 @@ Basis BuildBasis(float2 uv)
     if (adoptFarY)
     {
         float zY = max(zD, zU);
-        float3 pY = (zD > zU) ? pD : pU;
+        float3 pY = pU;
+        if (zD > zU)
+        {
+            pY = pD;
+        }
         if (zY > zFarN)
         {
             zFarN = zY;
@@ -198,7 +247,7 @@ Basis BuildBasis(float2 uv)
     }
 
     // 参照Z（zRef）は従来どおり“遠い側”を使って明るいハロを防止（ここはレンジ外でもOK）
-    const float kEdge = 0.004f; // 以前の kEdge（シルエット検出） ? 必要なら 0.003～0.006
+    const float kEdge = 0.004f; // 以前のシルエット検出用しきい値。必要なら 0.003～0.006 を試す。
     float zRef = zC;
     float3 pRef = pC;
     if (abs(zR - zL) > kEdge)
@@ -244,7 +293,11 @@ float4 PS_AO(VS_OUT i) : COLOR0
     float zRef = b.zRef;
 
     // TBN
-    float3 up = (abs(Nv.z) < 0.999f) ? float3(0, 0, 1) : float3(0, 1, 0);
+    float3 up = float3(0, 1, 0);
+    if (abs(Nv.z) < 0.999f)
+    {
+        up = float3(0, 0, 1);
+    }
     float3 T = normalize(cross(up, Nv));
     float3 B = cross(Nv, T);
 
@@ -339,7 +392,7 @@ technique TechniqueAO_Composite
 }
 
 // === Bilateral-like separable blur (depth-guided) ===
-float g_sigmaPx = 3.0f; // 推奨: 2.0?3.5
+float g_sigmaPx = 3.0f; // 推奨値は 2.0 から 3.5 付近。
 float g_depthReject = 0.0001f;
 
 float GaussianW(int k, float sigma)
@@ -449,3 +502,5 @@ technique TechniqueAO_BlurV
     }
 }
 
+// Legacy SSAO shader.
+// 深度差に応じた近傍採用ロジックを if に展開して、法線復元の分岐を追いやすくする。

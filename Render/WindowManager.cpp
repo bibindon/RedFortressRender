@@ -179,7 +179,11 @@ D3DPRESENT_PARAMETERS WindowManager::CreatePresentParameters(const eWindowMode m
 
     d3dpp.Windowed = (mode != eWindowMode::FULLSCREEN);
     d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-    d3dpp.BackBufferFormat = (mode == eWindowMode::FULLSCREEN) ? D3DFMT_A8R8G8B8 : D3DFMT_UNKNOWN;
+    d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
+    if (mode == eWindowMode::FULLSCREEN)
+    {
+        d3dpp.BackBufferFormat = D3DFMT_A8R8G8B8;
+    }
     d3dpp.BackBufferCount = 1;
     d3dpp.BackBufferWidth = width;
     d3dpp.BackBufferHeight = height;

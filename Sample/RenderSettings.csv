@@ -34,7 +34,7 @@ ShadowSaturationBoost,1.0
 ShadowPcfTapCount,3
 ShadowCompositeTapCount,3
 ,
-SSAOEnable,1
+SSAOEnable,0
 SSAOMode,SSAO2
 SSAO2BlurEnable,1
 SSAO2DepthScaledSampleDistanceEnable,0

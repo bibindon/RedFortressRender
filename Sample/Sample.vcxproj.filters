@@ -39,6 +39,7 @@
     <None Include="RenderSettings.csv">
       <Filter>リソース ファイル</Filter>
     </None>
+    <None Include="..\README_about_sample_x.md" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\Render\shader\MeshMix.fx">
@@ -119,8 +120,10 @@
     <FxCompile Include="..\Render\shader\PostEffectMotionBlurCamera.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
-    <FxCompile Include="..\Render\shader\PostEffectDepthOfField.fx" />
     <FxCompile Include="..\Render\shader\PostEffectSSAO2.fx">
+      <Filter>リソース ファイル</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Render\shader\PostEffectDepthOfField.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
   </ItemGroup>

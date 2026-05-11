@@ -1,3 +1,6 @@
+// SSAO2 shader.
+// 法線から直交基底を作る入口を if で明示している。
+
 float4x4 g_matView;
 float4x4 g_matProj;
 
@@ -205,7 +208,11 @@ float4 PS_AO2(VS_OUT i) : COLOR0
     float3 currentViewPosition = GetViewPosition(i.uv);
     float3 currentNormal = GetViewNormal(i.uv);
 
-    float3 up = (abs(currentNormal.z) < 0.999f) ? float3(0.0f, 0.0f, 1.0f) : float3(0.0f, 1.0f, 0.0f);
+    float3 up = float3(0.0f, 1.0f, 0.0f);
+    if (abs(currentNormal.z) < 0.999f)
+    {
+        up = float3(0.0f, 0.0f, 1.0f);
+    }
     float3 tangent = normalize(cross(up, currentNormal));
     float3 bitangent = cross(currentNormal, tangent);
 

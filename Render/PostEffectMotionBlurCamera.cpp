@@ -255,15 +255,24 @@ void PostEffectMotionBlurCamera::UpdateMotionBlurPrevViewProj()
         (fabsf(distanceMotion) > kMotionBlurTranslationThreshold);
     const bool hasRotationMotion = (rotationMotion > kMotionBlurRotationThreshold);
 
-    m_motionBlurScaleThisFrame = hasTranslationMotion ? 1.0f : kRotationOnlyBlurScale;
+    if (hasTranslationMotion)
+    {
+        m_motionBlurScaleThisFrame = 1.0f;
+    }
+    else
+    {
+        m_motionBlurScaleThisFrame = kRotationOnlyBlurScale;
+    }
 
     const D3DXVECTOR3 prevTargetForBlur = currentLookAt - targetMotion * motionScale;
     const float prevDistanceForBlur = currentDistance - distanceMotion * motionScale;
     const float prevYawForBlur = currentYaw - yawMotion * motionScale;
     const float prevPitchForBlur = currentPitch - pitchMotion * motionScale;
-    const D3DXVECTOR3 prevDirectionForBlur = hasRotationMotion ?
-        GetDirectionFromYawPitch(prevYawForBlur, prevPitchForBlur) :
-        currentDirection;
+    D3DXVECTOR3 prevDirectionForBlur = currentDirection;
+    if (hasRotationMotion)
+    {
+        prevDirectionForBlur = GetDirectionFromYawPitch(prevYawForBlur, prevPitchForBlur);
+    }
     const D3DXVECTOR3 prevEyeForBlur = prevTargetForBlur - prevDirectionForBlur * prevDistanceForBlur;
     const D3DXVECTOR3 up(0.0f, 1.0f, 0.0f);
 

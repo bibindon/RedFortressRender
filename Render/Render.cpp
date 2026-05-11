@@ -162,6 +162,13 @@ void Render::LoadSettingsCsv(const std::wstring& settingsCsvPath)
     }
 }
 
+void Render::ReloadSettingsCsv(const std::wstring& settingsCsvPath)
+{
+    // CSV の再読み込みも初期化時と同じ setter 経路を通して反映する。
+    LoadSettingsCsv(settingsCsvPath);
+    ApplySettings();
+}
+
 void Render::ApplySettings()
 {
     const auto cameraNear = m_settings.find(L"CameraNear");
@@ -1940,7 +1947,14 @@ void Render::SetPostEffectBloomThreshold(const float threshold)
 
 void Render::SetPostEffectDepthOfField(const bool arg)
 {
-    SetPostEffectDepthOfFieldMode(arg ? DepthOfFieldMode::Enabled : DepthOfFieldMode::Disabled);
+    if (arg)
+    {
+        SetPostEffectDepthOfFieldMode(DepthOfFieldMode::Enabled);
+    }
+    else
+    {
+        SetPostEffectDepthOfFieldMode(DepthOfFieldMode::Disabled);
+    }
 }
 
 void Render::SetPostEffectDepthOfFieldMode(const DepthOfFieldMode mode)

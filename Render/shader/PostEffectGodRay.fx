@@ -1,3 +1,6 @@
+// God ray shader.
+// 逆サンプリング時は画面端までの到達距離を明示的に計算する。
+
 // God ray post effect.
 //
 // Pass1: build a screen-space occlusion mask from the GBuffer depth.
@@ -86,7 +89,11 @@ VS_OUT VS(VS_IN i)
 float4 PS_OcclusionMask(VS_OUT i) : COLOR
 {
     float pixelZ = tex2D(g_ZSampler, i.uv).r;
-    float mask = (pixelZ > 0.0f && pixelZ < g_LightViewZ) ? 0.0f : 1.0f;
+    float mask = 1.0f;
+    if (pixelZ > 0.0f && pixelZ < g_LightViewZ)
+    {
+        mask = 0.0f;
+    }
     return float4(mask, mask, mask, 1.0f);
 }
 
@@ -127,12 +134,28 @@ float4 PS_GodRay(VS_OUT i) : COLOR
         float rayToEdge = 1.0f;
         if (abs(dir.x) > 0.000001f)
         {
-            float tx = (dir.x > 0.0f) ? ((1.0f - i.uv.x) / dir.x) : ((0.0f - i.uv.x) / dir.x);
+            float tx = 0.0f;
+            if (dir.x > 0.0f)
+            {
+                tx = (1.0f - i.uv.x) / dir.x;
+            }
+            else
+            {
+                tx = (0.0f - i.uv.x) / dir.x;
+            }
             rayToEdge = tx;
         }
         if (abs(dir.y) > 0.000001f)
         {
-            float ty = (dir.y > 0.0f) ? ((1.0f - i.uv.y) / dir.y) : ((0.0f - i.uv.y) / dir.y);
+            float ty = 0.0f;
+            if (dir.y > 0.0f)
+            {
+                ty = (1.0f - i.uv.y) / dir.y;
+            }
+            else
+            {
+                ty = (0.0f - i.uv.y) / dir.y;
+            }
             rayToEdge = min(rayToEdge, ty);
         }
         rayToEdge = max(rayToEdge, 0.0f);

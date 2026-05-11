@@ -323,7 +323,6 @@ void ApplySaturateLevel()
 
 void ApplyPostEffectToggleSettings()
 {
-    // ON/OFF 邉ｻ繝昴せ繝医お繝輔ぉ繧ｯ繝医・逶ｸ莠偵↓髢｢騾｣縺吶ｋ繧ゅ・縺悟､壹＞縺溘ａ縲・    // 襍ｷ蜍慕峩蠕後ｄ險ｭ螳壼・驕ｩ逕ｨ譎ゅ↓縺ｾ縺ｨ繧√※蜿肴丐縺ｧ縺阪ｋ蜈･蜿｣繧堤畑諢上＠縺ｦ縺・ｋ縲・    g_Render.SetPostEffectDepthBufferShadow(g_bDepthBufferShadow);
     g_Render.SetPostEffectSSAO(g_bSSAO);
     ApplySSAOMode();
     ApplySSAO2Blur();
@@ -478,7 +477,6 @@ void ApplySSAOSampleRadius()
 
 void ApplyCameraClipPlanes()
 {
-    // near / far 縺ｮ鬆・ｺ上′蟠ｩ繧後ｋ縺ｨ謠冗判遐ｴ邯ｻ縺ｫ縺､縺ｪ縺後ｋ縺ｮ縺ｧ縲・    // clamp 蠕後↓繧る未菫よｧ繧定｣懈ｭ｣縺励※螳牙・蛛ｴ縺ｸ蛟偵＠縺ｦ縺・ｋ縲・    g_cameraNearPlane = ClampCameraNearPlane(g_cameraNearPlane);
     g_cameraFarPlane = ClampCameraFarPlane(g_cameraFarPlane);
     if (g_cameraFarPlane <= g_cameraNearPlane)
     {
@@ -506,9 +504,11 @@ void ApplySSAOSaturationBoost()
 
 void ApplySSAOMode()
 {
-    const NSRender::SSAOMode mode = (g_ssaoMode == SampleSSAOMode::SSAO2)
-                                  ? NSRender::SSAOMode::SSAO2
-                                  : NSRender::SSAOMode::Legacy;
+    NSRender::SSAOMode mode = NSRender::SSAOMode::Legacy;
+    if (g_ssaoMode == SampleSSAOMode::SSAO2)
+    {
+        mode = NSRender::SSAOMode::SSAO2;
+    }
     g_Render.SetPostEffectSSAOMode(mode);
 }
 
@@ -1077,7 +1077,6 @@ int SliderValueToMotionBlurCameraSampleCount(const int sliderValue)
 
 void ApplyGodRay()
 {
-    // GodRay 縺ｯ謠冗判繝輔Λ繧ｰ縺縺代〒縺ｪ縺上ョ繝舌ャ繧ｰ逕ｨ繝槭・繧ｫ繝ｼ縺ｮ蠅玲ｸ帙ｂ莨ｴ縺・◆繧√・    // 譛牙柑蛹悶・辟｡蜉ｹ蛹悶・蜑ｯ菴懃畑繧偵％縺ｮ髢｢謨ｰ縺ｸ髢峨§霎ｼ繧√※縺・ｋ縲・    g_Render.SetPostEffectGodRay(g_bGodRay);
 
     if (g_bGodRay)
     {
@@ -1132,8 +1131,12 @@ void ApplyGodRayVirtualProximityStrength()
 void ApplyGodRayLightPos()
 {
     const bool useVirtualLight = IsGodRayLightBehindCamera();
-    g_Render.SetPostEffectGodRayLightPos(useVirtualLight ? GetEffectiveGodRayLightPos()
-                                                         : g_godRayLightPos);
+    D3DXVECTOR3 lightPos = g_godRayLightPos;
+    if (useVirtualLight)
+    {
+        lightPos = GetEffectiveGodRayLightPos();
+    }
+    g_Render.SetPostEffectGodRayLightPos(lightPos);
     g_Render.SetPostEffectGodRayReverseSampling(useVirtualLight);
 
     if (g_godRaySourceMarkerMeshId != -1)

@@ -67,17 +67,50 @@ void PixelShader1(in float4 inPosition    : POSITION,
     float darkThreshold = (minLuma + maxLuma) * 0.5f;
 
     bool isCenterDark = (centerLuma < darkThreshold);
-    int dark1 = (upLeftLuma    < darkThreshold) ? 1 : 0;
-    int dark2 = (upLuma        < darkThreshold) ? 1 : 0;
-    int dark3 = (upRightLuma   < darkThreshold) ? 1 : 0;
-    int dark4 = (leftLuma      < darkThreshold) ? 1 : 0;
-    int dark7 = (downLeftLuma  < darkThreshold) ? 1 : 0;
-    int dark8 = (downLuma      < darkThreshold) ? 1 : 0;
-    int dark9 = (downRightLuma < darkThreshold) ? 1 : 0;
+    int dark1 = 0;
+    if (upLeftLuma < darkThreshold)
+    {
+        dark1 = 1;
+    }
+    int dark2 = 0;
+    if (upLuma < darkThreshold)
+    {
+        dark2 = 1;
+    }
+    int dark3 = 0;
+    if (upRightLuma < darkThreshold)
+    {
+        dark3 = 1;
+    }
+    int dark4 = 0;
+    if (leftLuma < darkThreshold)
+    {
+        dark4 = 1;
+    }
+    int dark7 = 0;
+    if (downLeftLuma < darkThreshold)
+    {
+        dark7 = 1;
+    }
+    int dark8 = 0;
+    if (downLuma < darkThreshold)
+    {
+        dark8 = 1;
+    }
+    int dark9 = 0;
+    if (downRightLuma < darkThreshold)
+    {
+        dark9 = 1;
+    }
 
     int topScore = dark1 + dark2 + dark3;
     int bottomScore = dark7 + dark8 + dark9;
-    int rightScore = dark3 + ((rightLuma < darkThreshold) ? 1 : 0) + dark9;
+    int rightDark = 0;
+    if (rightLuma < darkThreshold)
+    {
+        rightDark = 1;
+    }
+    int rightScore = dark3 + rightDark + dark9;
     int leftScore = dark1 + dark4 + dark7;
 
     static const int MODE_NONE = 0;
@@ -156,9 +189,15 @@ void PixelShader1(in float4 inPosition    : POSITION,
             break;
         }
 
-        float2 cellUv = uv + (useHorizontalSearch
-            ? float2(-g_TexelSize.x * (float)step, 0.0f)
-            : float2(0.0f, -g_TexelSize.y * (float)step));
+        float2 cellUv = uv;
+        if (useHorizontalSearch)
+        {
+            cellUv += float2(-g_TexelSize.x * (float)step, 0.0f);
+        }
+        else
+        {
+            cellUv += float2(0.0f, -g_TexelSize.y * (float)step);
+        }
 
         float3 cellUpColor    = tex2D(textureSampler, cellUv + float2(0.0f, -g_TexelSize.y)).rgb;
         float3 cellDownColor  = tex2D(textureSampler, cellUv + float2(0.0f,  g_TexelSize.y)).rgb;
@@ -206,9 +245,15 @@ void PixelShader1(in float4 inPosition    : POSITION,
             break;
         }
 
-        float2 cellUv = uv + (useHorizontalSearch
-            ? float2(g_TexelSize.x * (float)step2, 0.0f)
-            : float2(0.0f, g_TexelSize.y * (float)step2));
+        float2 cellUv = uv;
+        if (useHorizontalSearch)
+        {
+            cellUv += float2(g_TexelSize.x * (float)step2, 0.0f);
+        }
+        else
+        {
+            cellUv += float2(0.0f, g_TexelSize.y * (float)step2);
+        }
 
         float3 cellUpColor    = tex2D(textureSampler, cellUv + float2(0.0f, -g_TexelSize.y)).rgb;
         float3 cellDownColor  = tex2D(textureSampler, cellUv + float2(0.0f,  g_TexelSize.y)).rgb;
@@ -338,3 +383,5 @@ technique Technique1
     }
 }
 
+// FXAA post effect shader.
+// エッジ探索の分岐は if で明示し、境界判定の意図を追いやすくする。

@@ -673,15 +673,21 @@ bool ExportMeshBinary(const std::wstring& inputPath, const std::wstring& outputP
         return false;
     }
 
-    const DWORD* adjacency = (adjacencyBuffer != nullptr)
-        ? static_cast<const DWORD*>(adjacencyBuffer->GetBufferPointer())
-        : nullptr;
-    const D3DXMATERIAL* materials = (materialBuffer != nullptr)
-        ? static_cast<const D3DXMATERIAL*>(materialBuffer->GetBufferPointer())
-        : nullptr;
-    const D3DXEFFECTINSTANCE* effects = (effectBuffer != nullptr)
-        ? static_cast<const D3DXEFFECTINSTANCE*>(effectBuffer->GetBufferPointer())
-        : nullptr;
+    const DWORD* adjacency = nullptr;
+    if (adjacencyBuffer != nullptr)
+    {
+        adjacency = static_cast<const DWORD*>(adjacencyBuffer->GetBufferPointer());
+    }
+    const D3DXMATERIAL* materials = nullptr;
+    if (materialBuffer != nullptr)
+    {
+        materials = static_cast<const D3DXMATERIAL*>(materialBuffer->GetBufferPointer());
+    }
+    const D3DXEFFECTINSTANCE* effects = nullptr;
+    if (effectBuffer != nullptr)
+    {
+        effects = static_cast<const D3DXEFFECTINSTANCE*>(effectBuffer->GetBufferPointer());
+    }
 
     const HRESULT saveResult = D3DXSaveMeshToXW(outputPath.c_str(),
                                                 mesh,
@@ -751,7 +757,11 @@ void UpdateCameraMoveByKeyboard()
     D3DXVec3Normalize(&move, &move);
 
     const bool shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
-    const float speed = shift ? (0.2f * 3.0f / 3.0f) : (0.2f / 3.0f);
+    float speed = (0.2f / 3.0f);
+    if (shift)
+    {
+        speed = (0.2f * 3.0f / 3.0f);
+    }
     g_Render.MoveCamera(move * speed);
 }
 
@@ -1339,9 +1349,14 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 std::wstring modeValue = value;
                 std::transform(modeValue.begin(), modeValue.end(), modeValue.begin(), towlower);
-                g_ssaoMode = (modeValue == L"1" || modeValue == L"ssao2" || modeValue == L"new")
-                           ? SampleSSAOMode::SSAO2
-                           : SampleSSAOMode::Legacy;
+                if (modeValue == L"1" || modeValue == L"ssao2" || modeValue == L"new")
+                {
+                    g_ssaoMode = SampleSSAOMode::SSAO2;
+                }
+                else
+                {
+                    g_ssaoMode = SampleSSAOMode::Legacy;
+                }
             }
             else if (key == L"SSAO2BlurEnable")
             {
@@ -1485,9 +1500,14 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             }
             else if (key == L"DepthOfFieldEnable")
             {
-                g_depthOfFieldMode = (std::stoi(value) != 0)
-                    ? NSRender::DepthOfFieldMode::Enabled
-                    : NSRender::DepthOfFieldMode::Disabled;
+                if (std::stoi(value) != 0)
+                {
+                    g_depthOfFieldMode = NSRender::DepthOfFieldMode::Enabled;
+                }
+                else
+                {
+                    g_depthOfFieldMode = NSRender::DepthOfFieldMode::Disabled;
+                }
             }
             else if (key == L"DepthOfFieldMode")
             {
@@ -1550,6 +1570,85 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
         {
         }
     }
+}
+
+void ApplyAllSampleSettings()
+{
+    // 起動直後と CSV 再読込後で同じ反映順を共有し、
+    // サンプル側の保持値と Render 側の実設定を確実に一致させる。
+    ApplySaturateLevel();
+    ApplyFogIntensity();
+    ApplyHeightFogIntensity();
+    ApplyHeightFogStart();
+    ApplyHeightFogMax();
+    ApplyHeightFogDistanceStart();
+    ApplyHeightFogDistanceMax();
+    ApplySunLightIntensity();
+    ApplySunLightColor();
+    ApplyAmbientLightIntensity();
+    ApplyAmbientLightColor();
+    ApplyShadowIntensity();
+    ApplyShadowCoverage();
+    ApplyShadowSaturationBoost();
+    ApplyShadowPcfTapCount();
+    ApplyShadowCompositeTapCount();
+    ApplyCameraClipPlanes();
+    ApplyGBufferClipPlanes();
+    ApplySSAOBrightness();
+    ApplySSAO2ShadowStrength();
+    ApplySSAO2ShadowSaturationBoost();
+    ApplySSAO2SampleCount();
+    ApplySSAO2DepthScaledSampleDistance();
+    ApplySSAOSampleRadius();
+    ApplySSAOSaturationBoost();
+    ApplySSAOMode();
+    ApplySSAO2Blur();
+    ApplyHalfLambertShadowSaturation();
+    ApplyShadowDarkness();
+    ApplySpecularIntensity();
+    ApplySpecularIntensityOverride();
+    ApplySpecularEdge();
+    ApplySpecularEdgeOverride();
+    ApplySSSIntensity();
+    ApplySSSColor();
+    ApplySSS();
+    ApplyBloomThreshold();
+    ApplyDepthOfFieldMode();
+    ApplyDepthOfFieldFocalDistance();
+    ApplyDepthOfFieldMaxBlurDistance();
+    ApplyDepthOfFieldAutoActivationDistance();
+    ApplyStarBurstThreshold();
+    ApplyModelLoadScale();
+    ApplyGaussianSampleSize();
+    ApplyFXAAQuality();
+    ApplyMotionBlurCameraSettings();
+    ApplyMaskedGaussianMaskPath();
+    ApplyPostEffectToggleSettings();
+    ApplyGodRayLightColor();
+    ApplyGodRayIntensity();
+    ApplyGodRayVirtualProximityStrength();
+    ApplyGodRayLightPos();
+    ApplyGodRay();
+}
+
+bool ReloadRenderSettingsFromCsv(const std::wstring& settingsCsvPath)
+{
+    if (settingsCsvPath.empty())
+    {
+        return false;
+    }
+
+    const DWORD attributes = GetFileAttributesW(settingsCsvPath.c_str());
+    if (attributes == INVALID_FILE_ATTRIBUTES || (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
+    {
+        return false;
+    }
+
+    LoadSampleSettingsFromCsv(settingsCsvPath);
+    g_Render.ReloadSettingsCsv(settingsCsvPath);
+    ApplyAllSampleSettings();
+    RefreshSettingsDialogState();
+    return true;
 }
 
 bool g_bShowOverlay = true; // グローバル変数

@@ -91,7 +91,11 @@ void PostEffectHeightFog::SetFogColor(const D3DXCOLOR& color)
 
 void PostEffectHeightFog::SetPositionRange(const float positionRange)
 {
-    m_positionRange = (positionRange > 1.0f) ? positionRange : 1.0f;
+    m_positionRange = 1.0f;
+    if (positionRange > 1.0f)
+    {
+        m_positionRange = positionRange;
+    }
 }
 
 void PostEffectHeightFog::OnDeviceLost()

@@ -737,7 +737,14 @@ void MeshMixManager::InitializeInternal()
     DWORD subsetCount = 0;
     hResult = m_D3DMesh->GetAttributeTable(nullptr, &subsetCount);
     assert(SUCCEEDED(hResult));
-    m_subsetCount = (subsetCount > 0) ? subsetCount : m_materialCount;
+    if (subsetCount > 0)
+    {
+        m_subsetCount = subsetCount;
+    }
+    else
+    {
+        m_subsetCount = m_materialCount;
+    }
 
     D3DXMATERIAL* materialList = static_cast<D3DXMATERIAL*>(materialBuffer->GetBufferPointer());
 
@@ -781,13 +788,21 @@ void MeshMixManager::InitializeInternal()
             assert(hResult == S_OK);
         }
 
-        const std::wstring lowerExtRole = (textureFileName.find_last_of(L'.') != std::wstring::npos)
-            ? ToLowerString(textureFileName.substr(textureFileName.find_last_of(L'.') + 1))
-            : L"";
+        std::wstring lowerExtRole = L"";
+        if (textureFileName.find_last_of(L'.') != std::wstring::npos)
+        {
+            lowerExtRole = ToLowerString(textureFileName.substr(textureFileName.find_last_of(L'.') + 1));
+        }
         const bool isCubeByEnvMapping =
             ((csvParam.meshType == eMeshType::EnvMapping || csvParam.meshType == eMeshType::Glass) &&
              lowerExtRole == L"dds");
-        const eMeshTextureRole textureRole = isCubeByEnvMapping ? eMeshTextureRole::Cube : ClassifyTextureRole(textureFileName);
+        // 共有ローダでも単体版と同じ命名規約を使い、
+        // ディフューズ以外の補助テクスチャを自動判定する。
+        eMeshTextureRole textureRole = ClassifyTextureRole(textureFileName);
+        if (isCubeByEnvMapping)
+        {
+            textureRole = eMeshTextureRole::Cube;
+        }
         if (textureRole == eMeshTextureRole::Normal)
         {
             if (m_texNormalMap == nullptr)
@@ -912,7 +927,13 @@ void MeshMixManager::ModifyMeshForNormalMapping(LPD3DXMESH& pMesh)
         options += D3DXTANGENT_CALCULATE_NORMALS;
     }
 
-    const float normalEdgeThreshold = m_param.parallaxOcclusionMapping ? 0.999f : 0.0f;
+    // ノーマルマップ使用時は接線計算の破綻を避けるため、
+    // 法線の角度差に少し余裕を持たせる。
+    float normalEdgeThreshold = 0.0f;
+    if (m_param.parallaxOcclusionMapping)
+    {
+        normalEdgeThreshold = 0.999f;
+    }
 
     hr = D3DXComputeTangentFrameEx(pCloned,
                                    D3DDECLUSAGE_TEXCOORD, 0,
@@ -1140,13 +1161,28 @@ void MeshMixManager::Render()
     hResult = sharedEffect->SetTexture("g_texThickness", GetSharedThicknessTexture());
     assert(hResult == S_OK);
 
-    hResult = sharedEffect->SetBool("g_bPOM", m_param.parallaxOcclusionMapping ? TRUE : FALSE);
+    BOOL usePom = FALSE;
+    if (m_param.parallaxOcclusionMapping)
+    {
+        usePom = TRUE;
+    }
+    hResult = sharedEffect->SetBool("g_bPOM", usePom);
     assert(hResult == S_OK);
 
-    hResult = sharedEffect->SetBool("g_bNormalMapping", m_param.normalMapping ? TRUE : FALSE);
+    BOOL useNormalMapping = FALSE;
+    if (m_param.normalMapping)
+    {
+        useNormalMapping = TRUE;
+    }
+    hResult = sharedEffect->SetBool("g_bNormalMapping", useNormalMapping);
     assert(hResult == S_OK);
 
-    hResult = sharedEffect->SetBool("g_bSSS", m_param.sss ? TRUE : FALSE);
+    BOOL useSss = FALSE;
+    if (m_param.sss)
+    {
+        useSss = TRUE;
+    }
+    hResult = sharedEffect->SetBool("g_bSSS", useSss);
     assert(hResult == S_OK);
 
     hResult = sharedEffect->SetFloat("g_sssIntensity", m_param.sssIntensity);
@@ -1160,7 +1196,12 @@ void MeshMixManager::Render()
     hResult = sharedEffect->SetVector("g_sssColor", &sssColor);
     assert(hResult == S_OK);
 
-    hResult = sharedEffect->SetBool("g_bSaturateShadow", m_param.saturateShadow ? TRUE : FALSE);
+    BOOL useSaturateShadow = FALSE;
+    if (m_param.saturateShadow)
+    {
+        useSaturateShadow = TRUE;
+    }
+    hResult = sharedEffect->SetBool("g_bSaturateShadow", useSaturateShadow);
     assert(hResult == S_OK);
 
     hResult = sharedEffect->SetFloat("g_fSaturateShadowIntensity", m_param.saturateShadowIntensity);
@@ -1288,7 +1329,11 @@ void MeshMixManager::DrawAllSubsets(LPD3DXEFFECT sharedEffect, const UINT passIn
     HRESULT hResult = sharedEffect->BeginPass(passIndex);
     assert(hResult == S_OK);
 
-    const DWORD subsetCount = (m_subsetCount > 0) ? m_subsetCount : 1;
+    DWORD subsetCount = 1;
+    if (m_subsetCount > 0)
+    {
+        subsetCount = m_subsetCount;
+    }
     for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
     {
         const D3DXVECTOR4 diffuse = GetSubsetDiffuse(subsetIndex);

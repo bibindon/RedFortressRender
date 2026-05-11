@@ -78,6 +78,10 @@ class Render : public IDeviceResettable
 
 public:
 
+    // 初期化後に CSV 設定だけを読み直したい場合のための関数。
+    // Sample の設定ダイアログから後読込するときにも使う。
+    void ReloadSettingsCsv(const std::wstring& settingsCsvPath);
+
     void Initialize(HWND hWnd, const std::wstring& settingsCsvPath = L"");
     void Finalize();
     void Draw();

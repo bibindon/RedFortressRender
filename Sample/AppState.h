@@ -475,6 +475,8 @@ bool ShowOpenFileDialog(HWND hWnd, const wchar_t* filter, std::wstring& selected
 bool ShowSaveBinaryXFileDialog(HWND hWnd, const std::wstring& sourcePath, std::wstring& selectedPath);
 bool ExportLoadedModelAsBinaryX(size_t modelIndex, const std::wstring& outputPath);
 void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath);
+void ApplyAllSampleSettings();
+bool ReloadRenderSettingsFromCsv(const std::wstring& settingsCsvPath);
 void AddPointLightAtLookAt();
 
 // Overlay / 補助描画系。

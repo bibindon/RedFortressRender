@@ -1,4 +1,4 @@
-#include "MeshPointLight.h"
+ï»¿#include "MeshPointLight.h"
 
 #include "Camera.h"
 
@@ -43,7 +43,7 @@ void MeshPointLight::Initialize(const std::wstring& filename,
     assert(hResult == S_OK);
 
     {
-        // ‚È‚ß‚ç‚©‚Èƒ‰ƒCƒeƒBƒ“ƒO‚Ì‚½‚ß‚É–@üî•ñ‚ðŒvŽZ‚µ‚È‚¨‚·
+        // ãªã‚ã‚‰ã‹ãªãƒ©ã‚¤ãƒ†ã‚£ãƒ³ã‚°ã®ãŸã‚ã«æ³•ç·šæƒ…å ±ã‚’è¨ˆç®—ã—ãªãŠã™
 
         DWORD fvf = m_D3DMesh->GetFVF();
         if ((fvf & D3DFVF_NORMAL) == 0)
@@ -59,7 +59,7 @@ void MeshPointLight::Initialize(const std::wstring& filename,
 
         std::vector<DWORD> adj(m_D3DMesh->GetNumFaces() * 3);
 
-        // ‚µ‚«‚¢’l‚Íƒ‚ƒfƒ‹‚É‡‚í‚¹‚Ä
+        // ã—ãã„å€¤ã¯ãƒ¢ãƒ‡ãƒ«ã«åˆã‚ã›ã¦
         m_D3DMesh->GenerateAdjacency(1e-6f, adj.data());
 
         HRESULT hr = D3DXComputeNormals(m_D3DMesh, adj.data());
@@ -137,11 +137,11 @@ void MeshPointLight::Draw()
     D3DXVECTOR4 lightPos2(lightPos.x, lightPos.y, lightPos.z, 0.f);
 
     {
-        // ===== ƒ‰ƒCƒg10ŒÂ‚ðƒŠƒ“ƒOó‚É”z’u =====
+        // ===== ãƒ©ã‚¤ãƒˆ10å€‹ã‚’ãƒªãƒ³ã‚°çŠ¶ã«é…ç½® =====
 
         // TODO
-        // “K“–‚Éƒ|ƒCƒ“ƒgƒ‰ƒCƒg‚ð’u‚­‚Ì‚Å‚Í‚È‚­A
-        // LightƒNƒ‰ƒX‚©‚çŽæ“¾‚µ‚Ä”z’u‚Å‚«‚È‚¢‚Æ‚¢‚¯‚È‚¢
+        // é©å½“ã«ãƒã‚¤ãƒ³ãƒˆãƒ©ã‚¤ãƒˆã‚’ç½®ãã®ã§ã¯ãªãã€
+        // Lightã‚¯ãƒ©ã‚¹ã‹ã‚‰å–å¾—ã—ã¦é…ç½®ã§ããªã„ã¨ã„ã‘ãªã„
 
         PointLight lights[10];
         const float R = 50.0f;
@@ -150,12 +150,26 @@ void MeshPointLight::Draw()
             float ang = (D3DX_PI * 2.0f / 10.0f) * i + f * 0.2f;
             lights[i].pos = D3DXVECTOR3(R * cosf(ang), 101.0f, R * sinf(ang));
             lights[i].range = 400.0f;
-            // RGB ‚ð„‰ñ‚³‚¹‚Ä•ª‚©‚è‚â‚·‚­
-            lights[i].color = D3DXVECTOR3((i % 3) == 0 ? 1.0f : 0.2f,
-                                          (i % 3) == 1 ? 1.0f : 0.2f,
-                                          (i % 3) == 2 ? 1.0f : 0.2f);
+            // RGB ã‚’å·¡å›žã•ã›ã¦åˆ†ã‹ã‚Šã‚„ã™ã
+            float colorR = 0.2f;
+            if ((i % 3) == 0)
+            {
+                colorR = 1.0f;
+            }
+            float colorG = 0.2f;
+            if ((i % 3) == 1)
+            {
+                colorG = 1.0f;
+            }
+            float colorB = 0.2f;
+            if ((i % 3) == 2)
+            {
+                colorB = 1.0f;
+            }
+            lights[i].color = D3DXVECTOR3(colorR, colorG, colorB);
             lights[i].pad = 0.0f;
         }
+        // æœªä½¿ç”¨ãƒ©ã‚¤ãƒˆæž ã‚‚æ¯Žå›žä¸Šæ›¸ãã—ã¦ã€å‰ãƒ•ãƒ¬ãƒ¼ãƒ ã®å€¤ãŒæ®‹ã‚‰ãªã„ã‚ˆã†ã«ã™ã‚‹ã€‚
         m_D3DEffect->SetInt("g_numLights", 10);
         m_D3DEffect->SetValue("g_pointLights", lights, sizeof(lights));
 

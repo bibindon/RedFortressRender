@@ -1,5 +1,5 @@
-// simple.fx — Physically-based diffuse (Lambert × 1/r^2) + soft core/edge
-// D3D9 / ps_3_0。最小構成＆調整用パラメータあり。
+// Point light accumulation shader.
+// 各ライトを順に評価し、ループ回数は active フラグで抑制する。
 
 float4x4 g_matWorldViewProj;
 float4x4 g_matWorld;
@@ -63,7 +63,11 @@ void PS(in float3 inWorldPos : TEXCOORD0,
     [unroll]
     for (int i = 0; i < MAX_LIGHTS; ++i)
     {
-        float enabled = (i < g_numLights) ? 1.0 : 0.0;
+        float enabled = 0.0;
+        if (i < g_numLights)
+        {
+            enabled = 1.0;
+        }
 
         float3 Lvec = g_pointLights[i].pos - inWorldPos;
 

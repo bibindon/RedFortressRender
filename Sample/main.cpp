@@ -137,58 +137,7 @@ void InitializeSampleScene(HWND hWnd)
                                                  false);
     RegisterLoadedModel(L"MeshMixManager", L"..\\..\\Sample\\plateField.x", D3DXVECTOR3(0.0f, 0.0f, 0.0f), 1.0f, plateFieldId);
 
-    // CSV から読み込んだ描画設定をレンダラーへまとめて反映する
-    ApplySaturateLevel();
-    ApplyFogIntensity();
-    ApplyHeightFogIntensity();
-    ApplyHeightFogStart();
-    ApplyHeightFogMax();
-    ApplyHeightFogDistanceStart();
-    ApplyHeightFogDistanceMax();
-    ApplySunLightIntensity();
-    ApplySunLightColor();
-    ApplyAmbientLightIntensity();
-    ApplyAmbientLightColor();
-    ApplyShadowIntensity();
-    ApplyShadowCoverage();
-    ApplyShadowSaturationBoost();
-    ApplyShadowPcfTapCount();
-    ApplyShadowCompositeTapCount();
-    ApplyCameraClipPlanes();
-    ApplyGBufferClipPlanes();
-    ApplySSAOBrightness();
-    ApplySSAO2ShadowStrength();
-    ApplySSAO2ShadowSaturationBoost();
-    ApplySSAO2SampleCount();
-    ApplySSAO2DepthScaledSampleDistance();
-    ApplySSAOSampleRadius();
-    ApplySSAOSaturationBoost();
-    ApplySSAOMode();
-    ApplyHalfLambertShadowSaturation();
-    ApplyShadowDarkness();
-    ApplySpecularIntensity();
-    ApplySpecularIntensityOverride();
-    ApplySpecularEdge();
-    ApplySpecularEdgeOverride();
-    ApplySSSIntensity();
-    ApplySSSColor();
-    ApplySSS();
-    ApplyBloomThreshold();
-    ApplyDepthOfFieldFocalDistance();
-    ApplyDepthOfFieldMaxBlurDistance();
-    ApplyDepthOfFieldAutoActivationDistance();
-    ApplyStarBurstThreshold();
-    ApplyModelLoadScale();
-    ApplyGaussianSampleSize();
-    ApplyFXAAQuality();
-    ApplyMotionBlurCameraSettings();
-    ApplyMaskedGaussianMaskPath();
-    ApplyPostEffectToggleSettings();
-    ApplyGodRayLightColor();
-    ApplyGodRayIntensity();
-    ApplyGodRayVirtualProximityStrength();
-    ApplyGodRayLightPos();
-    ApplyGodRay();
+    ApplyAllSampleSettings();
 }
 
 void TickAndRenderFrame()
@@ -341,7 +290,12 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
         if (LOWORD(lParam) == HTCLIENT)
         {
-            SetCursor(g_bMouseLookEnabled ? NULL : LoadCursor(NULL, IDC_ARROW));
+            HCURSOR cursor = LoadCursor(NULL, IDC_ARROW);
+            if (g_bMouseLookEnabled)
+            {
+                cursor = NULL;
+            }
+            SetCursor(cursor);
             return TRUE;
         }
 

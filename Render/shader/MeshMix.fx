@@ -386,8 +386,7 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float3 halfVector = normalize(lightDir + cameraDir);
 
-    // ?
-    // どこかで必要なはず
+    // 接線空間へ変換済みの光ベクトルはここで正規化して使う。
     invLightTS = normalize(invLightTS);
 
     //----------------------------------------------------

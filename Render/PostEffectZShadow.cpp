@@ -230,7 +230,11 @@ void PostEffectZShadow::RenderTechnique1()
 
         // subset ごとに描画
         LPD3DXMESH d3dMesh = mesh.GetD3DMesh();
-        const DWORD subsetCount = (mesh.GetSubsetCount() > 0) ? mesh.GetSubsetCount() : 1;
+        DWORD subsetCount = 1;
+        if (mesh.GetSubsetCount() > 0)
+        {
+            subsetCount = mesh.GetSubsetCount();
+        }
         for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
         {
             d3dMesh->DrawSubset(subsetIndex);
@@ -388,7 +392,11 @@ void PostEffectZShadow::RenderTechnique2()
         hr = g_fxDepthBufferShadow->CommitChanges();
         assert(hr == S_OK);
 
-        const DWORD subsetCount = (mesh.GetSubsetCount() > 0) ? mesh.GetSubsetCount() : 1;
+        DWORD subsetCount = 1;
+        if (mesh.GetSubsetCount() > 0)
+        {
+            subsetCount = mesh.GetSubsetCount();
+        }
         for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
         {
             hr = mesh.GetD3DMesh()->DrawSubset(subsetIndex);

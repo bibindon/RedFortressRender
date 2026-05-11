@@ -98,8 +98,14 @@ float4 SampleMotionBlur(float2 uv, float2 velocity)
     {
         float t = ((float)i / (float)(sampleCount - 1)) * 2.0f - 1.0f;
         float2 sampleUv = saturate(uv - velocity * t);
-        float active = (i < sampleCount) ? 1.0f : 0.0f;
-        accumColor += tex2D(colorSampler, sampleUv) * active;
+        float active = 0.0f;
+        if (i < sampleCount)
+        {
+            active = 1.0f;
+        }
+        // 可変サンプル数ループ内では勾配ベースの tex2D が警告対象になるため、
+        // MIP 0 を明示した LOD サンプリングで安定させる。
+        accumColor += tex2Dlod(colorSampler, float4(sampleUv, 0.0f, 0.0f)) * active;
     }
 
     return accumColor / (float)sampleCount;
@@ -111,9 +117,11 @@ void PixelShader1(in float2 inTexCoord : TEXCOORD0,
     float2 sampleUv = saturate(inTexCoord + g_vTexelSize.xy * 0.5f);
     float linearDepth = tex2D(depthSampler, sampleUv).r;
     float2 velocity = GetVelocity(sampleUv, linearDepth);
-    float4 finalColor = (g_iMotionBlurEnabled == 0) ?
-                        tex2D(colorSampler, sampleUv) :
-                        SampleMotionBlur(sampleUv, velocity);
+    float4 finalColor = tex2D(colorSampler, sampleUv);
+    if (g_iMotionBlurEnabled != 0)
+    {
+        finalColor = SampleMotionBlur(sampleUv, velocity);
+    }
 
     if (g_iDebugGridEnabled != 0)
     {
@@ -138,3 +146,5 @@ technique Technique1
         PixelShader = compile ps_3_0 PixelShader1();
     }
 }
+// Camera motion blur shader.
+// サンプル数や ON/OFF 分岐を if で明示して、挙動を追いやすくする。

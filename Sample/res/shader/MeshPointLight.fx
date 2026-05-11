@@ -63,7 +63,11 @@ void PS(in float3 inWorldPos : TEXCOORD0,
     [unroll]
     for (int i = 0; i < MAX_LIGHTS; ++i)
     {
-        float enabled = (i < g_numLights) ? 1.0 : 0.0;
+        float enabled = 0.0;
+        if (i < g_numLights)
+        {
+            enabled = 1.0;
+        }
 
         float3 Lvec = g_pointLights[i].pos - inWorldPos;
 
@@ -100,3 +104,5 @@ technique Technique1
         PixelShader = compile ps_3_0 PS();
     }
 }
+// Point light accumulation shader.
+// 各ライトを順に評価し、ループ回数は active フラグで抑制する。

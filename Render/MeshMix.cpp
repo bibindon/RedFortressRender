@@ -208,7 +208,14 @@ void MeshMix::Initialize()
     DWORD subsetCount = 0;
     hResult = m_D3DMesh->GetAttributeTable(nullptr, &subsetCount);
     assert(SUCCEEDED(hResult));
-    m_subsetCount = (subsetCount > 0) ? subsetCount : m_materialCount;
+    if (subsetCount > 0)
+    {
+        m_subsetCount = subsetCount;
+    }
+    else
+    {
+        m_subsetCount = m_materialCount;
+    }
 
     //--------------------------------------------------------
     // マテリアル情報の読み込み
@@ -254,6 +261,8 @@ void MeshMix::Initialize()
             assert(hResult == S_OK);
         }
 
+        // ファイル名規約からテクスチャ用途を推定し、
+        // 各スロットへ自動で振り分ける。
         const eMeshTextureRole textureRole = ClassifyTextureRole(textureFileName);
         if (textureRole == eMeshTextureRole::Normal)
         {
@@ -339,7 +348,13 @@ void MeshMix::ModifyMeshForNormalMapping(LPD3DXMESH& pMesh)
     }
 
     // POM では面境界の平滑化をかなり抑え、通常の smooth では広めに法線を共有する。
-    const float normalEdgeThreshold = m_param.parallaxOcclusionMapping ? 0.999f : 0.0f;
+    // 法線のつながりが急に切れる境界ではタンジェント空間が不安定になりやすいため、
+    // ノーマルマップ時だけ頂点法線の分割を許容する閾値を上げる。
+    float normalEdgeThreshold = 0.0f;
+    if (m_param.parallaxOcclusionMapping)
+    {
+        normalEdgeThreshold = 0.999f;
+    }
 
     // 正しいシグネチャ順で 16 引数を渡す
     hr = D3DXComputeTangentFrameEx(pCloned,                   // pMesh
@@ -568,13 +583,28 @@ void MeshMix::Render()
     hResult = m_D3DEffect->SetTexture("g_texHeightMap", m_texHeightMap);
     assert(hResult == S_OK);
 
-    hResult = m_D3DEffect->SetBool("g_bPOM", m_param.parallaxOcclusionMapping ? TRUE : FALSE);
+    BOOL usePom = FALSE;
+    if (m_param.parallaxOcclusionMapping)
+    {
+        usePom = TRUE;
+    }
+    hResult = m_D3DEffect->SetBool("g_bPOM", usePom);
     assert(hResult == S_OK);
 
-    hResult = m_D3DEffect->SetBool("g_bNormalMapping", m_param.normalMapping ? TRUE : FALSE);
+    BOOL useNormalMapping = FALSE;
+    if (m_param.normalMapping)
+    {
+        useNormalMapping = TRUE;
+    }
+    hResult = m_D3DEffect->SetBool("g_bNormalMapping", useNormalMapping);
     assert(hResult == S_OK);
 
-    hResult = m_D3DEffect->SetBool("g_bSaturateShadow", m_param.saturateShadow ? TRUE : FALSE);
+    BOOL useSaturateShadow = FALSE;
+    if (m_param.saturateShadow)
+    {
+        useSaturateShadow = TRUE;
+    }
+    hResult = m_D3DEffect->SetBool("g_bSaturateShadow", useSaturateShadow);
     assert(hResult == S_OK);
 
     hResult = m_D3DEffect->SetFloat("g_fSaturateShadowIntensity", m_param.saturateShadowIntensity);
@@ -688,7 +718,11 @@ void MeshMix::Render()
         hResult = m_D3DEffect->BeginPass(passIndex);
         assert(hResult == S_OK);
 
-        const DWORD subsetCount = (m_subsetCount > 0) ? m_subsetCount : 1;
+        DWORD subsetCount = 1;
+        if (m_subsetCount > 0)
+        {
+            subsetCount = m_subsetCount;
+        }
         for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
         {
             const D3DXVECTOR4 diffuse = GetSubsetDiffuse(subsetIndex);
