@@ -7,7 +7,9 @@
 #include "../Render/Light.h"
 #include "resource.h"
 
-// 縺薙・繝輔ぃ繧､繝ｫ縺ｯ縲瑚ｨｭ螳壼､繧・UI 縺ｸ蜿肴丐縺吶ｋ蜃ｦ逅・阪□縺代ｒ縺ｾ縺ｨ繧√※縺・ｋ縲・// 蛟､縺ｮ螟画峩遒ｺ螳壹ｄ WM_COMMAND 縺ｮ蛻・ｲ舌・ SettingsDialog.cpp 蛛ｴ縺ｫ谿九＠縲・// 縺薙％縺ｧ縺ｯ迴ｾ蝨ｨ縺ｮ AppState 繧定ｦ九※蜷・さ繝ｳ繝医Ο繝ｼ繝ｫ縺ｮ陦ｨ遉ｺ迥ｶ諷九ｒ蜷梧悄縺吶ｋ縲・
+// このファイルは設定ダイアログの表示更新だけを担当する。
+// 値の確定処理や WM_COMMAND の分岐は SettingsDialog.cpp 側にまとめ、
+// ここでは AppState に保持している現在値を UI へ反映する。
 void RefreshHeightFogIntensityControls(HWND hDlg);
 void RefreshHeightFogStartControls(HWND hDlg);
 void RefreshHeightFogMaxControls(HWND hDlg);
@@ -43,8 +45,8 @@ void RefreshPointLightControls(HWND hDlg)
     const bool isSquareLight = (g_pointLightShape == NSRender::PointLightShape::Square);
     const bool usesRotation = isLineLight || isSquareLight;
 
-    // 濶ｲ縺ｨ譏弱ｋ縺輔・縲梧焚蛟､蜈･蜉帶ｬ・阪→縲後せ繝ｩ繧､繝繝ｼ縲阪・荳｡譁ｹ繧貞酔縺伜､縺ｸ縺昴ｍ縺医ｋ縲・    // 迚・婿縺縺第峩譁ｰ縺吶ｋ縺ｨ縲∝､夜Κ隕∝屏縺ｧ蛟､縺悟､峨ｏ縺｣縺溘→縺阪↓ UI 陦ｨ遉ｺ縺碁｣溘＞驕輔▲縺ｦ縺励∪縺・・    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_pointLightColor.r);
-    // 濶ｲ縺ｨ譏弱ｋ縺輔・謨ｰ蛟､蜈･蜉帶ｬ・→繧ｹ繝ｩ繧､繝繝ｼ縺ｮ荳｡譁ｹ繧貞酔縺伜､縺ｸ縺昴ｍ縺医ｋ縲・    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_pointLightColor.r);
+    // 色と強度は常に最新の実行時状態を表示する。
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_pointLightColor.r);
     SetDlgItemText(hDlg, IDC_EDIT_POINT_LIGHT_COLOR_R, buffer);
     SendDlgItemMessage(hDlg,
                        IDC_SLIDER_POINT_LIGHT_COLOR_R,
