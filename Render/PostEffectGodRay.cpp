@@ -100,6 +100,22 @@ void PostEffectGodRay::Draw(LPDIRECT3DTEXTURE9 renderTarget,
         lightVisible = 1.0f;
     }
 
+    float sideAttenuation = 1.0f;
+    D3DXVECTOR3 cameraForward = Camera::GetLookAtPos() - Camera::GetEyePos();
+    D3DXVECTOR3 toLight = m_lightPosWorld - Camera::GetEyePos();
+    if (D3DXVec3LengthSq(&cameraForward) > 0.000001f &&
+        D3DXVec3LengthSq(&toLight) > 0.000001f)
+    {
+        D3DXVec3Normalize(&cameraForward, &cameraForward);
+        D3DXVec3Normalize(&toLight, &toLight);
+
+        float alignment = fabsf(D3DXVec3Dot(&cameraForward, &toLight));
+        const float attenuationStart = 0.15f;
+        const float attenuationEnd = 0.45f;
+        sideAttenuation = (alignment - attenuationStart) / (attenuationEnd - attenuationStart);
+        sideAttenuation = max(0.0f, min(1.0f, sideAttenuation));
+    }
+
     m_d3dEffect->SetTexture("g_ZTex", texZ);
     m_d3dEffect->SetFloat("g_LightViewZ", lightViewZ);
     DrawFullscreenQuad(m_texOcclusion, "OcclusionMask");
@@ -120,7 +136,7 @@ void PostEffectGodRay::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_d3dEffect->SetFloatArray("g_LightColor", lightColor3, 3);
     m_d3dEffect->SetFloat("g_ReverseSampling", reverseSampling);
     m_d3dEffect->SetFloat("g_RayLength", m_rayLength);
-    m_d3dEffect->SetFloat("g_RayIntensity", m_rayIntensity * lightVisible);
+    m_d3dEffect->SetFloat("g_RayIntensity", m_rayIntensity * lightVisible * sideAttenuation);
     m_d3dEffect->SetFloat("g_VirtualProximityStrength", m_virtualProximityStrength);
     m_d3dEffect->SetFloat("g_OcclusionFalloff", m_occlusionFalloff);
     DrawFullscreenQuad(texTarget, "GodRay");
