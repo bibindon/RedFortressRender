@@ -241,6 +241,21 @@ int ShadowTexSizeDivisorToComboIndex(const int scaleDivisor)
         return 1;
     }
 
+    if (scaleDivisor == 4)
+    {
+        return 2;
+    }
+
+    if (scaleDivisor == 8)
+    {
+        return 3;
+    }
+
+    if (scaleDivisor == 16)
+    {
+        return 4;
+    }
+
     return 0;
 }
 
@@ -249,6 +264,21 @@ int ComboIndexToShadowTexSizeDivisor(const int comboIndex)
     if (comboIndex == 1)
     {
         return 2;
+    }
+
+    if (comboIndex == 2)
+    {
+        return 4;
+    }
+
+    if (comboIndex == 3)
+    {
+        return 8;
+    }
+
+    if (comboIndex == 4)
+    {
+        return 16;
     }
 
     return 1;
@@ -265,6 +295,9 @@ void PopulateZShadowTexSizeCombo(HWND hDlg)
     SendMessage(combo, CB_RESETCONTENT, 0, 0);
     SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/1"));
     SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/2"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/4"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/8"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/16"));
     SendMessage(combo, CB_SETCURSEL,
                 static_cast<WPARAM>(ShadowTexSizeDivisorToComboIndex(g_zShadowTexSizeDivisor)),
                 0);

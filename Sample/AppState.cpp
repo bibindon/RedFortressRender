@@ -1586,6 +1586,18 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
                 {
                     g_zShadowTexSizeDivisor = 2;
                 }
+                else if (value == L"1/4")
+                {
+                    g_zShadowTexSizeDivisor = 4;
+                }
+                else if (value == L"1/8")
+                {
+                    g_zShadowTexSizeDivisor = 8;
+                }
+                else if (value == L"1/16")
+                {
+                    g_zShadowTexSizeDivisor = 16;
+                }
                 else
                 {
                     g_zShadowTexSizeDivisor = 1;

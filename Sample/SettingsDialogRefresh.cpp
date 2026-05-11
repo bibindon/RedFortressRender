@@ -710,6 +710,18 @@ void RefreshZShadowTexSizeControls(HWND hDlg)
     {
         comboIndex = 1;
     }
+    else if (g_zShadowTexSizeDivisor == 4)
+    {
+        comboIndex = 2;
+    }
+    else if (g_zShadowTexSizeDivisor == 8)
+    {
+        comboIndex = 3;
+    }
+    else if (g_zShadowTexSizeDivisor == 16)
+    {
+        comboIndex = 4;
+    }
 
     SendMessage(combo, CB_SETCURSEL, static_cast<WPARAM>(comboIndex), 0);
 }

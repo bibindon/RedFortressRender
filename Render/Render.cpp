@@ -244,6 +244,18 @@ void Render::ApplySettings()
         {
             SetPostEffectDepthBufferShadowTexSizeDivisor(2);
         }
+        else if (zShadowTexSize->second == L"1/4")
+        {
+            SetPostEffectDepthBufferShadowTexSizeDivisor(4);
+        }
+        else if (zShadowTexSize->second == L"1/8")
+        {
+            SetPostEffectDepthBufferShadowTexSizeDivisor(8);
+        }
+        else if (zShadowTexSize->second == L"1/16")
+        {
+            SetPostEffectDepthBufferShadowTexSizeDivisor(16);
+        }
         else
         {
             SetPostEffectDepthBufferShadowTexSizeDivisor(1);

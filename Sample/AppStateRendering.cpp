@@ -431,7 +431,10 @@ void ApplyShadowCompositeTapCount()
 
 void ApplyZShadowTexSize()
 {
-    if (g_zShadowTexSizeDivisor != 2)
+    if (g_zShadowTexSizeDivisor != 2 &&
+        g_zShadowTexSizeDivisor != 4 &&
+        g_zShadowTexSizeDivisor != 8 &&
+        g_zShadowTexSizeDivisor != 16)
     {
         g_zShadowTexSizeDivisor = 1;
     }
