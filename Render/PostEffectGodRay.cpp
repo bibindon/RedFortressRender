@@ -1,5 +1,7 @@
 ﻿#include "PostEffectGodRay.h"
 
+#include "Util.h"
+
 namespace NSRender
 {
 
@@ -10,8 +12,9 @@ void PostEffectGodRay::Initialize()
         return;
     }
 
+    const std::wstring effectPath = Util::GetExeDir() + L"PostEffectGodRay.cso";
     HRESULT hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                               L"../x64/Debug/PostEffectGodRay.cso",
+                                               effectPath.c_str(),
                                                NULL,
                                                NULL,
                                                D3DXSHADER_DEBUG,

@@ -5,6 +5,8 @@
 
 #include "Camera.h"
 
+#include "Util.h"
+
 namespace NSRender
 {
 
@@ -82,8 +84,9 @@ void PostEffectMotionBlurCamera::Initialize()
         return;
     }
 
+    const std::wstring effectPath = Util::GetExeDir() + L"PostEffectMotionBlurCamera.cso";
     HRESULT hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                               L"../x64/Debug/PostEffectMotionBlurCamera.cso",
+                                               effectPath.c_str(),
                                                NULL,
                                                NULL,
                                                D3DXSHADER_DEBUG,

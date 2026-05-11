@@ -1,5 +1,7 @@
 ﻿#include "PostEffectSaturate.h"
 
+#include "Util.h"
+
 namespace NSRender
 {
 
@@ -12,9 +14,9 @@ void PostEffectSaturate::Initialize()
 
     HRESULT hResult = E_FAIL;
 
+    const std::wstring effectPath = Util::GetExeDir() + L"PostEffectSaturate.cso";
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                       //L"res\\shader\\PostEffectSaturate.fx",
-                                       L"../x64/Debug/PostEffectSaturate.cso",
+                                       effectPath.c_str(),
                                        NULL,
                                        NULL,
                                        D3DXSHADER_DEBUG,

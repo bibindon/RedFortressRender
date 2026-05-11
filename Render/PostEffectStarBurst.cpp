@@ -1,5 +1,7 @@
 ﻿#include "PostEffectStarBurst.h"
 
+#include "Util.h"
+
 namespace NSRender
 {
 
@@ -12,9 +14,9 @@ void PostEffectStarBurst::Initialize()
 
     HRESULT hResult = E_FAIL;
 
+    const std::wstring effectPath = Util::GetExeDir() + L"PostEffectStarBurst.cso";
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                       //L"res\\shader\\PostEffectStarBurst.fx",
-                                       L"../x64/Debug/PostEffectStarBurst.cso",
+                                       effectPath.c_str(),
                                        NULL,
                                        NULL,
                                        D3DXSHADER_DEBUG,

@@ -5,6 +5,8 @@
 
 #include "Camera.h"
 
+#include "Util.h"
+
 namespace NSRender
 {
 
@@ -15,8 +17,9 @@ void PostEffectDepthOfField::Initialize()
         return;
     }
 
+    const std::wstring effectPath = Util::GetExeDir() + L"PostEffectDepthOfField.cso";
     HRESULT hr = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                          L"../x64/Debug/PostEffectDepthOfField.cso",
+                                          effectPath.c_str(),
                                           NULL,
                                           NULL,
                                           D3DXSHADER_DEBUG,

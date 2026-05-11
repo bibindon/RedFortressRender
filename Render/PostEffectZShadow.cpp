@@ -3,6 +3,8 @@
 #include "Camera.h"
 #include "MeshMixSkinAnim.h"
 
+#include "Util.h"
+
 namespace NSRender
 {
 namespace
@@ -65,8 +67,9 @@ void PostEffectZShadow::Initialize()
 
     HRESULT hResult = E_FAIL;
 
+    const std::wstring effectPath = Util::GetExeDir() + L"PostEffectZShadow.cso";
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                       L"../x64/Debug/PostEffectZShadow.cso",
+                                       effectPath.c_str(),
                                        NULL,
                                        NULL,
                                        D3DXSHADER_DEBUG,

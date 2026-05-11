@@ -1,5 +1,7 @@
 ﻿#include "PostEffectBloom.h"
 
+#include "Util.h"
+
 namespace NSRender
 {
 
@@ -12,9 +14,9 @@ void PostEffectBloom::Initialize()
 
     HRESULT hResult = E_FAIL;
 
+    const std::wstring effectPath = Util::GetExeDir() + L"PostEffectBloom.cso";
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                       //L"res\\shader\\PostEffectBloom.fx",
-                                       L"../x64/Debug/PostEffectBloom.cso",
+                                       effectPath.c_str(),
                                        NULL,
                                        NULL,
                                        D3DXSHADER_DEBUG,

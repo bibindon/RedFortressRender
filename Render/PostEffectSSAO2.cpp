@@ -3,6 +3,8 @@
 #include "Camera.h"
 #include "GBuffer.h"
 
+#include "Util.h"
+
 namespace NSRender
 {
 
@@ -13,9 +15,9 @@ void PostEffectSSAO2::Initialize()
         return;
     }
 
+    const std::wstring effectPath = Util::GetExeDir() + L"PostEffectSSAO2.cso";
     HRESULT hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                               // L"..\\..\\Render\\shader\\PostEffectSSAO2.fx",
-                                               L"..\\x64\\Debug\\PostEffectSSAO2.cso",
+                                               effectPath.c_str(),
                                                NULL,
                                                NULL,
                                                D3DXSHADER_DEBUG,

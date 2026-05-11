@@ -1,4 +1,4 @@
-#include "PostEffectMaskedGauss.h"
+﻿#include "PostEffectMaskedGauss.h"
 
 #include <Shlwapi.h>
 
@@ -16,8 +16,9 @@ void PostEffectMaskedGauss::Initialize()
         return;
     }
 
+    const std::wstring effectPath = Util::GetExeDir() + L"PostEffectMaskedGaussian.cso";
     HRESULT hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                               L"../x64/Debug/PostEffectMaskedGaussian.cso",
+                                               effectPath.c_str(),
                                                nullptr,
                                                nullptr,
                                                D3DXSHADER_DEBUG,

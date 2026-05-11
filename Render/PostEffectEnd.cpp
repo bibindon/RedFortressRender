@@ -1,5 +1,7 @@
 ﻿#include "PostEffectEnd.h"
 
+#include "Util.h"
+
 namespace NSRender
 {
 
@@ -7,8 +9,9 @@ void PostEffectEnd::Initialize()
 {
     HRESULT hResult = E_FAIL;
 
+    const std::wstring effectPath = Util::GetExeDir() + L"PostEffectEnd.cso";
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                       L"../x64/Debug/PostEffectEnd.cso",
+                                       effectPath.c_str(),
                                        NULL,
                                        NULL,
                                        D3DXSHADER_DEBUG,

@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include "Util.h"
+
 namespace NSRender
 {
 
@@ -20,8 +22,9 @@ void PostEffectFXAA::Initialize()
         return;
     }
 
+    const std::wstring effectPath = Util::GetExeDir() + L"PostEffectFXAA.cso";
     HRESULT hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                               L"../x64/Debug/PostEffectFXAA.cso",
+                                               effectPath.c_str(),
                                                NULL,
                                                NULL,
                                                D3DXSHADER_DEBUG,

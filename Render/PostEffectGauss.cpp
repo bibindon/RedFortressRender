@@ -1,6 +1,8 @@
 ﻿#include "PostEffectGauss.h"
 #include "PostEffectBloom.h"
 
+#include "Util.h"
+
 namespace NSRender
 {
 
@@ -13,9 +15,9 @@ void PostEffectGauss::Initialize()
 
     HRESULT hResult = E_FAIL;
 
+    const std::wstring effectPath = Util::GetExeDir() + L"PostEffectGaussian.cso";
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                       //L"res\\shader\\PostEffectGaussian.fx",
-                                       L"../x64/Debug/PostEffectGaussian.cso",
+                                       effectPath.c_str(),
                                        NULL,
                                        NULL,
                                        NULL,

@@ -8,6 +8,8 @@
 #include "Camera.h"
 #include "MeshMixSkinAnim.h"
 
+#include "Util.h"
+
 namespace NSRender
 {
 
@@ -27,9 +29,9 @@ void GBuffer::Initialize()
 
     HRESULT hResult = E_FAIL;
 
+    const std::wstring effectPath = Util::GetExeDir() + L"GBuffer.cso";
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                  //L"res/shader/GBuffer.fx",
-                                  L"../x64/Debug/GBuffer.cso",
+                                  effectPath.c_str(),
                                   NULL,
                                   NULL,
                                   D3DXSHADER_DEBUG,
