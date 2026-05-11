@@ -471,6 +471,17 @@ void ApplySSAO2SampleRadius()
     g_Render.SetPostEffectSSAO2SampleRadius(g_ssao2SampleRadius);
 }
 
+void ApplySSAO2TexSize()
+{
+    if (g_ssao2TexSizeDivisor != 2 &&
+        g_ssao2TexSizeDivisor != 4)
+    {
+        g_ssao2TexSizeDivisor = 1;
+    }
+
+    g_Render.SetPostEffectSSAO2TexSizeDivisor(g_ssao2TexSizeDivisor);
+}
+
 void ApplyCameraClipPlanes()
 {
     g_cameraFarPlane = ClampCameraFarPlane(g_cameraFarPlane);

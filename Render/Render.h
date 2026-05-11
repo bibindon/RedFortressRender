@@ -265,6 +265,7 @@ public:
     void SetPostEffectSSAO2SampleCount(const int sampleCount);
     void SetPostEffectSSAO2DepthScaledSampleDistance(const bool enabled);
     void SetPostEffectSSAO2SampleRadius(const float sampleRadius);
+    void SetPostEffectSSAO2TexSizeDivisor(const int scaleDivisor);
     void SetPostEffectFog(const bool arg);
     void SetPostEffectFogIntensity(const float intensity);
     void SetPostEffectHeightFog(const bool arg);

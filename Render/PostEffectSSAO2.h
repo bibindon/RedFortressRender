@@ -26,6 +26,7 @@ public:
     void SetDepthScaledSampleDistanceEnabled(const bool enabled);
     void SetBlurEnabled(const bool enabled);
     void SetDepthRange(const float nearPlane, const float farPlane);
+    void SetTextureScaleDivisor(const int scaleDivisor);
 
     void OnDeviceLost();
     void OnDeviceReset();
@@ -38,6 +39,7 @@ private:
     int m_sampleCount = 16;
     bool m_depthScaledSampleDistanceEnabled = false;
     bool m_blurEnabled = true;
+    int m_textureScaleDivisor = 1;
     float m_nearPlane = 0.1f;
     float m_farPlane = 30'000.0f;
     float m_positionRange = 30'000.0f;
@@ -61,6 +63,8 @@ private:
 
     void DrawFullscreenQuad();
     void CreateResources();
+    int NormalizeTextureScaleDivisor(const int scaleDivisor) const;
+    UINT ComputeTextureSize(const int screenSize) const;
 };
 
 }

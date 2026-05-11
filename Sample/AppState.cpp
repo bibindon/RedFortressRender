@@ -109,6 +109,7 @@ int g_motionBlurCameraQuality = 4;
 int g_shadowPcfTapCount = 11;
 int g_shadowCompositeTapCount = 11;
 int g_zShadowTexSizeDivisor = 1;
+int g_ssao2TexSizeDivisor = 1;
 int g_sunId = 0;
 int g_resolutionWidth = WINDOW_SIZE_W;
 int g_resolutionHeight = WINDOW_SIZE_H;
@@ -1546,6 +1547,21 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_bSSAO2DepthScaledSampleDistance = (std::stoi(value) != 0);
             }
+            else if (key == L"SSAO2TexSize")
+            {
+                if (value == L"1/2")
+                {
+                    g_ssao2TexSizeDivisor = 2;
+                }
+                else if (value == L"1/4")
+                {
+                    g_ssao2TexSizeDivisor = 4;
+                }
+                else
+                {
+                    g_ssao2TexSizeDivisor = 1;
+                }
+            }
             else if (key == L"CameraNear")
             {
                 g_cameraNearPlane = std::stof(value);
@@ -1850,6 +1866,7 @@ void ApplyAllSampleSettings()
     ApplySSAO2SampleCount();
     ApplySSAO2DepthScaledSampleDistance();
     ApplySSAO2SampleRadius();
+    ApplySSAO2TexSize();
     ApplySSAO2Blur();
     ApplyHalfLambertShadowSaturation();
     ApplyShadowDarkness();

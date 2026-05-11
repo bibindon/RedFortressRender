@@ -37,6 +37,7 @@ ShadowCompositeTapCount,3
 SSAO2Enable,0
 SSAO2BlurEnable,0
 SSAO2DepthScaledSampleDistanceEnable,0
+SSAO2TexSize,1/1
 SSAO2ShadowStrength,1.0
 SSAO2ShadowSaturationBoost,0.30
 SSAO2SampleCount,16

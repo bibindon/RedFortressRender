@@ -50,9 +50,12 @@ void PostEffectSSAO2::Finalize()
 
 void PostEffectSSAO2::CreateResources()
 {
+    const UINT textureWidth = ComputeTextureSize(Common::ScreenW());
+    const UINT textureHeight = ComputeTextureSize(Common::ScreenH());
+
     HRESULT hResult = D3DXCreateTexture(Common::D3DDevice(),
-                                        Common::ScreenW(),
-                                        Common::ScreenH(),
+                                        textureWidth,
+                                        textureHeight,
                                         1,
                                         D3DUSAGE_RENDERTARGET,
                                         D3DFMT_A16B16G16R16F,
@@ -61,8 +64,8 @@ void PostEffectSSAO2::CreateResources()
     assert(SUCCEEDED(hResult));
 
     hResult = D3DXCreateTexture(Common::D3DDevice(),
-                                Common::ScreenW(),
-                                Common::ScreenH(),
+                                textureWidth,
+                                textureHeight,
                                 1,
                                 D3DUSAGE_RENDERTARGET,
                                 D3DFMT_A16B16G16R16F,
@@ -85,8 +88,11 @@ void PostEffectSSAO2::Draw(LPDIRECT3DTEXTURE9 renderTarget,
 
     D3DSURFACE_DESC descZ = { };
     texRenderTargetZ->GetLevelDesc(0, &descZ);
-    D3DXVECTOR2 invSize(1.0f / static_cast<float>(descZ.Width),
-                        1.0f / static_cast<float>(descZ.Height));
+
+    D3DSURFACE_DESC descAO = { };
+    m_rtAoTex->GetLevelDesc(0, &descAO);
+    D3DXVECTOR2 invSize(1.0f / static_cast<float>(descAO.Width),
+                        1.0f / static_cast<float>(descAO.Height));
 
     D3DXMATRIX matrixView = Camera::GetViewMatrix();
     D3DXMATRIX matrixProj = Camera::GetProjMatrix();
@@ -94,18 +100,28 @@ void PostEffectSSAO2::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     LPDIRECT3DSURFACE9 oldRt0 = NULL;
     Common::D3DDevice()->GetRenderTarget(0, &oldRt0);
 
+    D3DVIEWPORT9 oldViewport { };
+    Common::D3DDevice()->GetViewport(&oldViewport);
+
+    D3DVIEWPORT9 aoViewport { };
+    aoViewport.X = 0;
+    aoViewport.Y = 0;
+    aoViewport.Width = descAO.Width;
+    aoViewport.Height = descAO.Height;
+    aoViewport.MinZ = 0.0f;
+    aoViewport.MaxZ = 1.0f;
+
     LPDIRECT3DSURFACE9 surfAO = NULL;
     LPDIRECT3DSURFACE9 surfAOTemp = NULL;
     LPDIRECT3DSURFACE9 surfRenderTarget = NULL;
     LPDIRECT3DTEXTURE9 aoTextureForComposite = m_rtAoTex;
-    LPDIRECT3DSURFACE9 surfComposite = NULL;
 
     m_rtAoTex->GetSurfaceLevel(0, &surfAO);
     m_rtAoTempTex->GetSurfaceLevel(0, &surfAOTemp);
     texTarget->GetSurfaceLevel(0, &surfRenderTarget);
-    surfComposite = surfAOTemp;
 
     Common::D3DDevice()->SetRenderTarget(0, surfAO);
+    Common::D3DDevice()->SetViewport(&aoViewport);
     Common::D3DDevice()->SetRenderTarget(1, NULL);
     Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DCOLOR_RGBA(255, 255, 255, 255), 1.0f, 0);
 
@@ -145,11 +161,25 @@ void PostEffectSSAO2::Draw(LPDIRECT3DTEXTURE9 renderTarget,
         m_fxSSAO2->EndPass();
         m_fxSSAO2->End();
         aoTextureForComposite = m_rtAoTempTex;
-        surfComposite = surfAO;
     }
 
-    Common::D3DDevice()->SetRenderTarget(0, surfComposite);
+    D3DSURFACE_DESC descTarget = { };
+    texTarget->GetLevelDesc(0, &descTarget);
+    D3DVIEWPORT9 targetViewport { };
+    targetViewport.X = 0;
+    targetViewport.Y = 0;
+    targetViewport.Width = descTarget.Width;
+    targetViewport.Height = descTarget.Height;
+    targetViewport.MinZ = 0.0f;
+    targetViewport.MaxZ = 1.0f;
+
+    D3DXVECTOR2 targetInvSize(1.0f / static_cast<float>(descTarget.Width),
+                              1.0f / static_cast<float>(descTarget.Height));
+
+    Common::D3DDevice()->SetRenderTarget(0, surfRenderTarget);
+    Common::D3DDevice()->SetViewport(&targetViewport);
     Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 0, 255), 1.0f, 0);
+    m_fxSSAO2->SetFloatArray("g_invSize", reinterpret_cast<FLOAT*>(&targetInvSize), 2);
     m_fxSSAO2->SetTexture("texColor", renderTarget);
     m_fxSSAO2->SetTexture("texAO", aoTextureForComposite);
     m_fxSSAO2->SetFloat("g_shadowStrength", m_shadowStrength);
@@ -160,8 +190,8 @@ void PostEffectSSAO2::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     DrawFullscreenQuad();
     m_fxSSAO2->EndPass();
     m_fxSSAO2->End();
-    Common::D3DDevice()->StretchRect(surfComposite, NULL, surfRenderTarget, NULL, D3DTEXF_NONE);
     Common::D3DDevice()->SetRenderTarget(0, oldRt0);
+    Common::D3DDevice()->SetViewport(&oldViewport);
 
     SAFE_RELEASE(surfAO);
     SAFE_RELEASE(surfAOTemp);
@@ -224,11 +254,48 @@ void PostEffectSSAO2::SetBlurEnabled(const bool enabled)
     m_blurEnabled = enabled;
 }
 
+void PostEffectSSAO2::SetTextureScaleDivisor(const int scaleDivisor)
+{
+    const int normalizedDivisor = NormalizeTextureScaleDivisor(scaleDivisor);
+    if (m_textureScaleDivisor == normalizedDivisor)
+    {
+        return;
+    }
+
+    m_textureScaleDivisor = normalizedDivisor;
+    if (m_isInitialized)
+    {
+        SAFE_RELEASE(m_rtAoTex);
+        SAFE_RELEASE(m_rtAoTempTex);
+        CreateResources();
+    }
+}
+
 void PostEffectSSAO2::SetDepthRange(const float nearPlane, const float farPlane)
 {
     m_nearPlane = nearPlane;
     m_farPlane = farPlane;
     m_positionRange = GBuffer::ComputePositionRange(nearPlane, farPlane);
+}
+
+int PostEffectSSAO2::NormalizeTextureScaleDivisor(const int scaleDivisor) const
+{
+    if (scaleDivisor == 2)
+    {
+        return 2;
+    }
+
+    if (scaleDivisor == 4)
+    {
+        return 4;
+    }
+
+    return 1;
+}
+
+UINT PostEffectSSAO2::ComputeTextureSize(const int screenSize) const
+{
+    return static_cast<UINT>((std::max)(1, screenSize / m_textureScaleDivisor));
 }
 
 void PostEffectSSAO2::OnDeviceLost()

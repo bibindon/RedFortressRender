@@ -292,6 +292,23 @@ void Render::ApplySettings()
         }
     }
 
+    const auto ssao2TexSize = m_settings.find(L"SSAO2TexSize");
+    if (ssao2TexSize != m_settings.end())
+    {
+        if (ssao2TexSize->second == L"1/2")
+        {
+            SetPostEffectSSAO2TexSizeDivisor(2);
+        }
+        else if (ssao2TexSize->second == L"1/4")
+        {
+            SetPostEffectSSAO2TexSizeDivisor(4);
+        }
+        else
+        {
+            SetPostEffectSSAO2TexSizeDivisor(1);
+        }
+    }
+
     const auto fogEnable = m_settings.find(L"FogEnable");
     if (fogEnable != m_settings.end())
     {
@@ -2142,6 +2159,11 @@ void Render::SetPostEffectSSAO2DepthScaledSampleDistance(const bool enabled)
 void Render::SetPostEffectSSAO2SampleRadius(const float sampleRadius)
 {
     m_postEffectSSAO2.SetSampleRadius(sampleRadius);
+}
+
+void Render::SetPostEffectSSAO2TexSizeDivisor(const int scaleDivisor)
+{
+    m_postEffectSSAO2.SetTextureScaleDivisor(scaleDivisor);
 }
 
 void Render::SetPostEffectFog(const bool arg)

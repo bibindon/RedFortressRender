@@ -618,6 +618,29 @@ void RefreshSSAO2SampleRadiusControls(HWND hDlg)
     EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SSAO2_SAMPLE_RADIUS), enabled);
 }
 
+void RefreshSSAO2TexSizeControls(HWND hDlg)
+{
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_SSAO2_TEX_SIZE);
+    if (combo == NULL)
+    {
+        return;
+    }
+
+    int comboIndex = 0;
+    if (g_ssao2TexSizeDivisor == 2)
+    {
+        comboIndex = 1;
+    }
+    else if (g_ssao2TexSizeDivisor == 4)
+    {
+        comboIndex = 2;
+    }
+
+    SendMessage(combo, CB_SETCURSEL, static_cast<WPARAM>(comboIndex), 0);
+    EnableWindow(GetDlgItem(hDlg, IDC_STATIC_SSAO2_TEX_SIZE_LABEL), g_bSSAO2);
+    EnableWindow(combo, g_bSSAO2);
+}
+
 void RefreshCameraClipPlaneControls(HWND hDlg)
 {
     wchar_t buffer[32];

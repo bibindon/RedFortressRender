@@ -57,6 +57,7 @@ void RefreshSSAO2BlurControls(HWND hDlg);
 void RefreshAnimateLight(HWND hDlg);
 void RefreshRemoteDesktop(HWND hDlg);
 void RefreshZShadowTexSizeControls(HWND hDlg);
+void RefreshSSAO2TexSizeControls(HWND hDlg);
 void RefreshDepthBufferShadow(HWND hDlg);
 void RefreshBloom(HWND hDlg);
 void RefreshDepthOfField(HWND hDlg);
@@ -300,6 +301,53 @@ void PopulateZShadowTexSizeCombo(HWND hDlg)
     SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/16"));
     SendMessage(combo, CB_SETCURSEL,
                 static_cast<WPARAM>(ShadowTexSizeDivisorToComboIndex(g_zShadowTexSizeDivisor)),
+                0);
+}
+
+int SSAO2TexSizeDivisorToComboIndex(const int scaleDivisor)
+{
+    if (scaleDivisor == 2)
+    {
+        return 1;
+    }
+
+    if (scaleDivisor == 4)
+    {
+        return 2;
+    }
+
+    return 0;
+}
+
+int ComboIndexToSSAO2TexSizeDivisor(const int comboIndex)
+{
+    if (comboIndex == 1)
+    {
+        return 2;
+    }
+
+    if (comboIndex == 2)
+    {
+        return 4;
+    }
+
+    return 1;
+}
+
+void PopulateSSAO2TexSizeCombo(HWND hDlg)
+{
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_SSAO2_TEX_SIZE);
+    if (combo == NULL)
+    {
+        return;
+    }
+
+    SendMessage(combo, CB_RESETCONTENT, 0, 0);
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/1"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/2"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/4"));
+    SendMessage(combo, CB_SETCURSEL,
+                static_cast<WPARAM>(SSAO2TexSizeDivisorToComboIndex(g_ssao2TexSizeDivisor)),
                 0);
 }
 
@@ -1499,6 +1547,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshSSAO2ShadowSaturationControls(hDlg);
     RefreshSSAO2SampleCountControls(hDlg);
     RefreshSSAO2DepthScaledSampleDistanceControls(hDlg);
+    RefreshSSAO2TexSizeControls(hDlg);
     RefreshBloom(hDlg);
     RefreshDepthOfField(hDlg);
     RefreshStarBurst(hDlg);
@@ -1527,6 +1576,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshSSAO2ShadowSaturationControls(hDlg);
     RefreshSSAO2SampleCountControls(hDlg);
     RefreshSSAO2DepthScaledSampleDistanceControls(hDlg);
+    RefreshSSAO2TexSizeControls(hDlg);
     RefreshBloomThresholdControls(hDlg);
     RefreshDepthOfFieldControls(hDlg);
     RefreshDepthOfFieldMaxBlurControls(hDlg);
@@ -2019,6 +2069,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         PopulateResolutionCombo(hDlg);
         PopulatePointLightTypeCombo(hDlg);
         PopulateZShadowTexSizeCombo(hDlg);
+        PopulateSSAO2TexSizeCombo(hDlg);
         InitializeLoadedModelListView(hDlg);
         InitializePointLightListView(hDlg);
         RefreshAllControls(hDlg);
@@ -2774,6 +2825,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             RefreshSSAO2SampleCountControls(hDlg);
             RefreshSSAO2SampleRadiusControls(hDlg);
             RefreshSSAO2DepthScaledSampleDistanceControls(hDlg);
+            RefreshSSAO2TexSizeControls(hDlg);
             return TRUE;
         }
 
@@ -2791,6 +2843,16 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
                 (IsDlgButtonChecked(hDlg, IDC_CHECK_SSAO2_DEPTH_SCALED_SAMPLE_DISTANCE) == BST_CHECKED);
             ApplySSAO2DepthScaledSampleDistance();
             RefreshSSAO2DepthScaledSampleDistanceControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_COMBO_SSAO2_TEX_SIZE && HIWORD(wParam) == CBN_SELCHANGE)
+        {
+            HWND combo = reinterpret_cast<HWND>(lParam);
+            const int index = static_cast<int>(SendMessage(combo, CB_GETCURSEL, 0, 0));
+            g_ssao2TexSizeDivisor = ComboIndexToSSAO2TexSizeDivisor(index);
+            ApplySSAO2TexSize();
+            RefreshSSAO2TexSizeControls(hDlg);
             return TRUE;
         }
 
