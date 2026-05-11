@@ -30,6 +30,8 @@ public:
 private:
 
     LPD3DXEFFECT m_d3dEffect = NULL;
+    bool m_isInitialized = false;
+    bool m_isRegisteredForDeviceReset = false;
     LPDIRECT3DTEXTURE9 m_texWork = NULL;
     D3DXMATRIX m_prevViewProj { };
     D3DXMATRIX m_motionBlurPrevViewProj { };

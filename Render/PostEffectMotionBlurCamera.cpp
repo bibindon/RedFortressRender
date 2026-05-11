@@ -77,6 +77,11 @@ D3DXVECTOR3 GetDirectionFromYawPitch(const float yaw, const float pitch)
 
 void PostEffectMotionBlurCamera::Initialize()
 {
+    if (m_isInitialized)
+    {
+        return;
+    }
+
     HRESULT hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
                                                L"../x64/Debug/PostEffectMotionBlurCamera.cso",
                                                NULL,
@@ -91,13 +96,24 @@ void PostEffectMotionBlurCamera::Initialize()
     D3DXMatrixIdentity(&m_motionBlurPrevViewProj);
     m_prevFrameTick = GetTickCount64();
     CreateTexture();
-    Common::AddDeviceLostResource(this);
+    if (!m_isRegisteredForDeviceReset)
+    {
+        Common::AddDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = true;
+    }
+    m_isInitialized = true;
 }
 
 void PostEffectMotionBlurCamera::Finalize()
 {
+    if (m_isRegisteredForDeviceReset)
+    {
+        Common::RemoveDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = false;
+    }
     SAFE_RELEASE(m_texWork);
     SAFE_RELEASE(m_d3dEffect);
+    m_isInitialized = false;
 }
 
 void PostEffectMotionBlurCamera::CreateTexture()
@@ -116,6 +132,11 @@ void PostEffectMotionBlurCamera::CreateTexture()
 LPDIRECT3DTEXTURE9 PostEffectMotionBlurCamera::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                                                     LPDIRECT3DTEXTURE9 depthTexture)
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return renderTarget;
+    }
+
     const D3DXMATRIX currentViewProj = Camera::GetViewMatrix() * Camera::GetProjMatrix();
     m_frameMotionScale = UpdateFrameMotionScale();
     if (!ShouldApplyMotionBlur(currentViewProj))
@@ -376,12 +397,22 @@ void PostEffectMotionBlurCamera::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource
 
 void PostEffectMotionBlurCamera::OnDeviceLost()
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return;
+    }
+
     m_d3dEffect->OnLostDevice();
     SAFE_RELEASE(m_texWork);
 }
 
 void PostEffectMotionBlurCamera::OnDeviceReset()
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return;
+    }
+
     m_d3dEffect->OnResetDevice();
     CreateTexture();
 }

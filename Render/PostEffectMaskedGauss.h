@@ -22,6 +22,8 @@ public:
 private:
 
     LPD3DXEFFECT m_d3dEffect = nullptr;
+    bool m_isInitialized = false;
+    bool m_isRegisteredForDeviceReset = false;
     LPDIRECT3DTEXTURE9 m_texBlurWork = nullptr;
     LPDIRECT3DTEXTURE9 m_texBlurResult = nullptr;
     LPDIRECT3DTEXTURE9 m_texMask = nullptr;

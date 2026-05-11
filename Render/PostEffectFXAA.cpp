@@ -15,6 +15,11 @@ int ClampFXAAQuality(const int quality)
 
 void PostEffectFXAA::Initialize()
 {
+    if (m_isInitialized)
+    {
+        return;
+    }
+
     HRESULT hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
                                                L"../x64/Debug/PostEffectFXAA.cso",
                                                NULL,
@@ -26,13 +31,24 @@ void PostEffectFXAA::Initialize()
     assert(SUCCEEDED(hResult));
 
     CreateTexture();
-    Common::AddDeviceLostResource(this);
+    if (!m_isRegisteredForDeviceReset)
+    {
+        Common::AddDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = true;
+    }
+    m_isInitialized = true;
 }
 
 void PostEffectFXAA::Finalize()
 {
+    if (m_isRegisteredForDeviceReset)
+    {
+        Common::RemoveDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = false;
+    }
     SAFE_RELEASE(m_texWork);
     SAFE_RELEASE(m_d3dEffect);
+    m_isInitialized = false;
 }
 
 void PostEffectFXAA::CreateTexture()
@@ -50,6 +66,11 @@ void PostEffectFXAA::CreateTexture()
 
 LPDIRECT3DTEXTURE9 PostEffectFXAA::Draw(LPDIRECT3DTEXTURE9 renderTarget)
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return renderTarget;
+    }
+
     m_d3dEffect->SetTexture("texture1", renderTarget);
 
     float texelSize[2] =
@@ -137,12 +158,22 @@ void PostEffectFXAA::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
 
 void PostEffectFXAA::OnDeviceLost()
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return;
+    }
+
     m_d3dEffect->OnLostDevice();
     SAFE_RELEASE(m_texWork);
 }
 
 void PostEffectFXAA::OnDeviceReset()
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return;
+    }
+
     m_d3dEffect->OnResetDevice();
     CreateTexture();
 }

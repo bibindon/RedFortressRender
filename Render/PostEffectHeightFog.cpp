@@ -6,6 +6,11 @@ namespace NSRender
 
 void PostEffectHeightFog::Initialize()
 {
+    if (m_isInitialized)
+    {
+        return;
+    }
+
     HRESULT hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
                                                L"../x64/Debug/PostEffectHeightFog.cso",
                                                nullptr,
@@ -26,12 +31,23 @@ void PostEffectHeightFog::Initialize()
                                 &m_texWork);
     assert(SUCCEEDED(hResult));
 
-    Common::AddDeviceLostResource(this);
+    if (!m_isRegisteredForDeviceReset)
+    {
+        Common::AddDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = true;
+    }
+
+    m_isInitialized = true;
 }
 
 LPDIRECT3DTEXTURE9 PostEffectHeightFog::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                                              LPDIRECT3DTEXTURE9 texRenderTargetPos)
 {
+    if (!m_isInitialized || m_d3dEffect == nullptr)
+    {
+        return renderTarget;
+    }
+
     if (renderTarget == nullptr || texRenderTargetPos == nullptr)
     {
         return renderTarget;
@@ -55,8 +71,14 @@ LPDIRECT3DTEXTURE9 PostEffectHeightFog::Draw(LPDIRECT3DTEXTURE9 renderTarget,
 
 void PostEffectHeightFog::Finalize()
 {
+    if (m_isRegisteredForDeviceReset)
+    {
+        Common::RemoveDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = false;
+    }
     SAFE_RELEASE(m_texWork);
     SAFE_RELEASE(m_d3dEffect);
+    m_isInitialized = false;
 }
 
 void PostEffectHeightFog::SetIntensity(const float intensity)
@@ -100,6 +122,11 @@ void PostEffectHeightFog::SetPositionRange(const float positionRange)
 
 void PostEffectHeightFog::OnDeviceLost()
 {
+    if (!m_isInitialized || m_d3dEffect == nullptr)
+    {
+        return;
+    }
+
     if (m_d3dEffect != nullptr)
     {
         m_d3dEffect->OnLostDevice();
@@ -109,6 +136,11 @@ void PostEffectHeightFog::OnDeviceLost()
 
 void PostEffectHeightFog::OnDeviceReset()
 {
+    if (!m_isInitialized || m_d3dEffect == nullptr)
+    {
+        return;
+    }
+
     if (m_d3dEffect != nullptr)
     {
         m_d3dEffect->OnResetDevice();

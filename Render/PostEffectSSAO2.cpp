@@ -8,6 +8,11 @@ namespace NSRender
 
 void PostEffectSSAO2::Initialize()
 {
+    if (m_isInitialized)
+    {
+        return;
+    }
+
     HRESULT hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
                                                // L"..\\..\\Render\\shader\\PostEffectSSAO2.fx",
                                                L"..\\x64\\Debug\\PostEffectSSAO2.cso",
@@ -20,11 +25,25 @@ void PostEffectSSAO2::Initialize()
     assert(SUCCEEDED(hResult));
 
     CreateResources();
-    Common::AddDeviceLostResource(this);
+    if (!m_isRegisteredForDeviceReset)
+    {
+        Common::AddDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = true;
+    }
+    m_isInitialized = true;
 }
 
 void PostEffectSSAO2::Finalize()
 {
+    if (m_isRegisteredForDeviceReset)
+    {
+        Common::RemoveDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = false;
+    }
+    SAFE_RELEASE(m_rtAoTex);
+    SAFE_RELEASE(m_rtAoTempTex);
+    SAFE_RELEASE(m_fxSSAO2);
+    m_isInitialized = false;
 }
 
 void PostEffectSSAO2::CreateResources()
@@ -56,6 +75,11 @@ LPDIRECT3DTEXTURE9 PostEffectSSAO2::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                                          LPDIRECT3DTEXTURE9 texRenderTargetNormal,
                                          LPDIRECT3DTEXTURE9 texRenderTargetThickness)
 {
+    if (!m_isInitialized || m_fxSSAO2 == NULL)
+    {
+        return renderTarget;
+    }
+
     D3DSURFACE_DESC descZ = { };
     texRenderTargetZ->GetLevelDesc(0, &descZ);
     D3DXVECTOR2 invSize(1.0f / static_cast<float>(descZ.Width),
@@ -207,6 +231,11 @@ void PostEffectSSAO2::SetDepthRange(const float nearPlane, const float farPlane)
 
 void PostEffectSSAO2::OnDeviceLost()
 {
+    if (!m_isInitialized || m_fxSSAO2 == NULL)
+    {
+        return;
+    }
+
     if (m_fxSSAO2 != NULL)
     {
         m_fxSSAO2->OnLostDevice();
@@ -217,6 +246,11 @@ void PostEffectSSAO2::OnDeviceLost()
 
 void PostEffectSSAO2::OnDeviceReset()
 {
+    if (!m_isInitialized || m_fxSSAO2 == NULL)
+    {
+        return;
+    }
+
     if (m_fxSSAO2 != NULL)
     {
         m_fxSSAO2->OnResetDevice();

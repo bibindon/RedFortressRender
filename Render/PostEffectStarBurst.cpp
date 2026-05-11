@@ -5,6 +5,11 @@ namespace NSRender
 
 void PostEffectStarBurst::Initialize()
 {
+    if (m_isInitialized)
+    {
+        return;
+    }
+
     HRESULT hResult = E_FAIL;
 
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
@@ -20,7 +25,12 @@ void PostEffectStarBurst::Initialize()
 
     CreateTexture();
 
-    Common::AddDeviceLostResource(this);
+    if (!m_isRegisteredForDeviceReset)
+    {
+        Common::AddDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = true;
+    }
+    m_isInitialized = true;
 }
 
 LPDIRECT3DTEXTURE9 PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource)
@@ -90,7 +100,21 @@ void PostEffectStarBurst::SetRTFromTex(LPDIRECT3DTEXTURE9 tex)
 
 void PostEffectStarBurst::Finalize()
 {
+    if (m_isRegisteredForDeviceReset)
+    {
+        Common::RemoveDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = false;
+    }
     SAFE_RELEASE(m_d3dEffect);
+    SAFE_RELEASE(m_texPostEffectBack1);
+    SAFE_RELEASE(m_texBright);
+    SAFE_RELEASE(m_texBlurH);
+    SAFE_RELEASE(m_texBlurV);
+    SAFE_RELEASE(m_texBlurD);
+    SAFE_RELEASE(m_texBlurH2);
+    SAFE_RELEASE(m_texBlurV2);
+    SAFE_RELEASE(m_texBlurD2);
+    m_isInitialized = false;
 }
 
 void PostEffectStarBurst::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
@@ -170,6 +194,11 @@ void PostEffectStarBurst::SetSize(const float arg)
 
 void PostEffectStarBurst::OnDeviceLost()
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return;
+    }
+
     m_d3dEffect->OnLostDevice();
     SAFE_RELEASE(m_texPostEffectBack1);
     SAFE_RELEASE(m_texBright);
@@ -183,6 +212,11 @@ void PostEffectStarBurst::OnDeviceLost()
 
 void PostEffectStarBurst::OnDeviceReset()
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return;
+    }
+
     m_d3dEffect->OnResetDevice();
     CreateTexture();
 }

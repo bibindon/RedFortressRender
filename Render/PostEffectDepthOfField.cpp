@@ -10,6 +10,11 @@ namespace NSRender
 
 void PostEffectDepthOfField::Initialize()
 {
+    if (m_isInitialized)
+    {
+        return;
+    }
+
     HRESULT hr = D3DXCreateEffectFromFile(Common::D3DDevice(),
                                           L"../x64/Debug/PostEffectDepthOfField.cso",
                                           NULL,
@@ -32,12 +37,23 @@ void PostEffectDepthOfField::Initialize()
 
     CreateReadbackSurface();
 
-    Common::AddDeviceLostResource(this);
+    if (!m_isRegisteredForDeviceReset)
+    {
+        Common::AddDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = true;
+    }
+
+    m_isInitialized = true;
 }
 
 LPDIRECT3DTEXTURE9 PostEffectDepthOfField::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                                                 LPDIRECT3DTEXTURE9 texRenderTargetPos)
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return renderTarget;
+    }
+
     if (renderTarget == NULL || texRenderTargetPos == NULL)
     {
         return renderTarget;
@@ -60,9 +76,15 @@ LPDIRECT3DTEXTURE9 PostEffectDepthOfField::Draw(LPDIRECT3DTEXTURE9 renderTarget,
 
 void PostEffectDepthOfField::Finalize()
 {
+    if (m_isRegisteredForDeviceReset)
+    {
+        Common::RemoveDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = false;
+    }
     SAFE_RELEASE(m_surfacePositionReadback);
     SAFE_RELEASE(m_texWork);
     SAFE_RELEASE(m_d3dEffect);
+    m_isInitialized = false;
 }
 
 void PostEffectDepthOfField::SetFocalDistance(float focalDistance)
@@ -135,6 +157,11 @@ void PostEffectDepthOfField::UpdateAutoBlend(LPDIRECT3DTEXTURE9 texRenderTargetP
 
 void PostEffectDepthOfField::OnDeviceLost()
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return;
+    }
+
     if (m_d3dEffect != NULL)
     {
         m_d3dEffect->OnLostDevice();
@@ -146,6 +173,11 @@ void PostEffectDepthOfField::OnDeviceLost()
 
 void PostEffectDepthOfField::OnDeviceReset()
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return;
+    }
+
     if (m_d3dEffect != NULL)
     {
         m_d3dEffect->OnResetDevice();

@@ -6,6 +6,11 @@ namespace NSRender
 
 void PostEffectFog::Initialize()
 {
+    if (m_isInitialized)
+    {
+        return;
+    }
+
     HRESULT hResult = E_FAIL;
 
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
@@ -30,7 +35,13 @@ void PostEffectFog::Initialize()
 
     m_d3dEffect->SetVector("g_FogColor", &m_fogColor);
 
-    Common::AddDeviceLostResource(this);
+    if (!m_isRegisteredForDeviceReset)
+    {
+        Common::AddDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = true;
+    }
+
+    m_isInitialized = true;
 }
 
 LPDIRECT3DTEXTURE9 PostEffectFog::Draw(LPDIRECT3DTEXTURE9 renderTarget,
@@ -39,6 +50,11 @@ LPDIRECT3DTEXTURE9 PostEffectFog::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                                        const bool enableZ,
                                        const bool enableHeight)
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return renderTarget;
+    }
+
     // 入力チェック（必要テクスチャが無ければパススルー）
     if (enableZ && texRenderTargetZ == NULL)
     {
@@ -90,8 +106,14 @@ LPDIRECT3DTEXTURE9 PostEffectFog::Draw(LPDIRECT3DTEXTURE9 renderTarget,
 
 void PostEffectFog::Finalize()
 {
+    if (m_isRegisteredForDeviceReset)
+    {
+        Common::RemoveDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = false;
+    }
     SAFE_RELEASE(m_texWork);
     SAFE_RELEASE(m_d3dEffect);
+    m_isInitialized = false;
 }
 
 void PostEffectFog::SetIntensityZ(const float arg)
@@ -201,12 +223,22 @@ void PostEffectFog::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
 
 void PostEffectFog::OnDeviceLost()
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return;
+    }
+
     m_d3dEffect->OnLostDevice();
     SAFE_RELEASE(m_texWork);
 }
 
 void PostEffectFog::OnDeviceReset()
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return;
+    }
+
     m_d3dEffect->OnResetDevice();
 
     D3DXCreateTexture(Common::D3DDevice(),

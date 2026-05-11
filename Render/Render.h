@@ -402,7 +402,19 @@ private:
     void Draw2D();
     void LoadSettingsCsv(const std::wstring& settingsCsvPath);
     void ApplySettings();
+    void EnsurePostEffectSaturateInitialized();
+    void EnsurePostEffectGaussInitialized();
+    void EnsurePostEffectMaskedGaussInitialized();
+    void EnsurePostEffectFXAAInitialized();
+    void EnsurePostEffectMotionBlurCameraInitialized();
     void EnsurePostEffectZShadowInitialized();
+    void EnsurePostEffectSSAO2Initialized();
+    void EnsurePostEffectFogInitialized();
+    void EnsurePostEffectHeightFogInitialized();
+    void EnsurePostEffectBloomInitialized();
+    void EnsurePostEffectDepthOfFieldInitialized();
+    void EnsurePostEffectStarBurstInitialized();
+    void EnsurePostEffectGodRayInitialized();
     static std::wstring Trim(const std::wstring& text);
     static int NormalizeGaussianSampleSize(const int sampleSize);
 

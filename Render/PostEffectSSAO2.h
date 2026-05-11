@@ -42,6 +42,8 @@ private:
     float m_positionRange = 30'000.0f;
 
     LPD3DXEFFECT m_fxSSAO2 = NULL;
+    bool m_isInitialized = false;
+    bool m_isRegisteredForDeviceReset = false;
 
     LPDIRECT3DTEXTURE9 m_rtAoTex = NULL;
     LPDIRECT3DTEXTURE9 m_rtAoTempTex = NULL;

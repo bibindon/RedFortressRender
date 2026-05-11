@@ -5,6 +5,11 @@ namespace NSRender
 
 void PostEffectGodRay::Initialize()
 {
+    if (m_isInitialized)
+    {
+        return;
+    }
+
     HRESULT hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
                                                L"../x64/Debug/PostEffectGodRay.cso",
                                                NULL,
@@ -17,7 +22,12 @@ void PostEffectGodRay::Initialize()
 
     CreateTexture();
 
-    Common::AddDeviceLostResource(this);
+    if (!m_isRegisteredForDeviceReset)
+    {
+        Common::AddDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = true;
+    }
+    m_isInitialized = true;
 }
 
 void PostEffectGodRay::CreateTexture()
@@ -62,6 +72,11 @@ void PostEffectGodRay::CreateTexture()
 LPDIRECT3DTEXTURE9 PostEffectGodRay::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                                           LPDIRECT3DTEXTURE9 texZ)
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return renderTarget;
+    }
+
     D3DXMATRIX matView = Camera::GetViewMatrix();
     D3DXMATRIX matProj = Camera::GetProjMatrix();
 
@@ -188,15 +203,26 @@ void PostEffectGodRay::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
 
 void PostEffectGodRay::Finalize()
 {
+    if (m_isRegisteredForDeviceReset)
+    {
+        Common::RemoveDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = false;
+    }
     SAFE_RELEASE(m_d3dEffect);
     SAFE_RELEASE(m_texOcclusion);
     SAFE_RELEASE(m_texBlurTemp);
     SAFE_RELEASE(m_texOcclusionBlurred);
     SAFE_RELEASE(m_texResult);
+    m_isInitialized = false;
 }
 
 void PostEffectGodRay::OnDeviceLost()
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return;
+    }
+
     m_d3dEffect->OnLostDevice();
     SAFE_RELEASE(m_texOcclusion);
     SAFE_RELEASE(m_texBlurTemp);
@@ -206,6 +232,11 @@ void PostEffectGodRay::OnDeviceLost()
 
 void PostEffectGodRay::OnDeviceReset()
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return;
+    }
+
     m_d3dEffect->OnResetDevice();
     CreateTexture();
 }

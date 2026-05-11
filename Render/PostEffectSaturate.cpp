@@ -5,6 +5,11 @@ namespace NSRender
 
 void PostEffectSaturate::Initialize()
 {
+    if (m_isInitialized)
+    {
+        return;
+    }
+
     HRESULT hResult = E_FAIL;
 
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
@@ -20,7 +25,13 @@ void PostEffectSaturate::Initialize()
 
     CreateTexture();
 
-    Common::AddDeviceLostResource(this);
+    if (!m_isRegisteredForDeviceReset)
+    {
+        Common::AddDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = true;
+    }
+
+    m_isInitialized = true;
 }
 
 void PostEffectSaturate::CreateTexture()
@@ -37,12 +48,23 @@ void PostEffectSaturate::CreateTexture()
 
 void PostEffectSaturate::Finalize()
 {
+    if (m_isRegisteredForDeviceReset)
+    {
+        Common::RemoveDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = false;
+    }
     SAFE_RELEASE(m_texWork);
     SAFE_RELEASE(m_d3dEffect);
+    m_isInitialized = false;
 }
 
 LPDIRECT3DTEXTURE9 PostEffectSaturate::Draw(LPDIRECT3DTEXTURE9 renderTarget)
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return renderTarget;
+    }
+
     m_d3dEffect->SetFloat("g_level", m_saturateLevel);
 
     m_d3dEffect->SetTexture("texture1", renderTarget);
@@ -124,12 +146,22 @@ void PostEffectSaturate::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
 
 void PostEffectSaturate::OnDeviceLost()
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return;
+    }
+
     m_d3dEffect->OnLostDevice();
     SAFE_RELEASE(m_texWork);
 }
 
 void PostEffectSaturate::OnDeviceReset()
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return;
+    }
+
     m_d3dEffect->OnResetDevice();
     CreateTexture();
 }

@@ -831,34 +831,7 @@ void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
 
     m_GBuffer.Initialize();
 
-    // SSAO2
-    m_postEffectSSAO2.Initialize();
-
-    // 霧
-    m_postEffectFog.Initialize();
-    m_postEffectHeightFog.Initialize();
-
-    // 彩度フィルター
-    m_postEffectSaturate.Initialize();
-
-    // ガウスフィルター
-    m_postEffectGauss.Initialize();
-    m_postEffectMaskedGauss.Initialize();
-    m_postEffectFXAA.Initialize();
-    m_postEffectMotionBlurCamera.Initialize();
     ApplySettings();
-
-    // ブルーム
-    m_PostEffectBloom.Initialize();
-
-    // 被写界深度
-    m_postEffectDepthOfField.Initialize();
-
-    // スターバースト
-    m_postEffectStarBurst.Initialize();
-
-    // ゴッドレイ
-    m_postEffectGodRay.Initialize();
 
     // 画面転送
     m_postEffectEnd.Initialize();
@@ -917,6 +890,7 @@ void Render::Draw()
 
     if (m_postEffectSSAO2Enabled)
     {
+        EnsurePostEffectSSAO2Initialized();
         pTempTexture = m_postEffectSSAO2.Draw(pTempTexture,
                                               pTexTempZ,
                                               pTexTempPos,
@@ -926,6 +900,7 @@ void Render::Draw()
 
     if (m_postEffectFogZEnabled)
     {
+        EnsurePostEffectFogInitialized();
         pTempTexture = m_postEffectFog.Draw(pTempTexture,
                                             pTexTempZ,
                                             pTexTempPos,
@@ -935,21 +910,25 @@ void Render::Draw()
 
     if (m_postEffectFogHeightEnabled)
     {
+        EnsurePostEffectHeightFogInitialized();
         pTempTexture = m_postEffectHeightFog.Draw(pTempTexture, pTexTempPos);
     }
 
     if (m_postEffectSaturateEnabled)
     {
+        EnsurePostEffectSaturateInitialized();
         pTempTexture = m_postEffectSaturate.Draw(pTempTexture);
     }
 
     if (m_postEffectDepthOfFieldMode == DepthOfFieldMode::Enabled)
     {
+        EnsurePostEffectDepthOfFieldInitialized();
         m_postEffectDepthOfField.SetBlend(1.0f);
         pTempTexture = m_postEffectDepthOfField.Draw(pTempTexture, pTexTempPos);
     }
     else if (m_postEffectDepthOfFieldMode == DepthOfFieldMode::AutoNear)
     {
+        EnsurePostEffectDepthOfFieldInitialized();
         m_postEffectDepthOfField.UpdateAutoBlend(pTexTempPos);
         if (m_postEffectDepthOfField.GetBlend() > 0.001f)
         {
@@ -959,31 +938,37 @@ void Render::Draw()
 
     if (m_postEffectBloomEnabled)
     {
+        EnsurePostEffectBloomInitialized();
         pTempTexture = m_PostEffectBloom.Draw(pTempTexture);
     }
 
     if (m_postEffectStarBurstEnabled)
     {
+        EnsurePostEffectStarBurstInitialized();
         pTempTexture = m_postEffectStarBurst.Draw(pTempTexture);
     }
 
     if (m_postEffectGodRayEnabled)
     {
+        EnsurePostEffectGodRayInitialized();
         pTempTexture = m_postEffectGodRay.Draw(pTempTexture, pTexTempZ);
     }
 
     if (m_postEffectGaussEnabled)
     {
+        EnsurePostEffectGaussInitialized();
         pTempTexture = m_postEffectGauss.Draw(pTempTexture);
     }
 
     if (m_postEffectMaskedGaussEnabled)
     {
+        EnsurePostEffectMaskedGaussInitialized();
         pTempTexture = m_postEffectMaskedGauss.Draw(pTempTexture);
     }
 
     if (m_postEffectMotionBlurCameraEnabled)
     {
+        EnsurePostEffectMotionBlurCameraInitialized();
         pTempTexture = m_postEffectMotionBlurCamera.Draw(pTempTexture, pTexTempZ);
     }
     else
@@ -993,6 +978,7 @@ void Render::Draw()
 
     if (m_postEffectFXAAEnabled)
     {
+        EnsurePostEffectFXAAInitialized();
         pTempTexture = m_postEffectFXAA.Draw(pTempTexture);
     }
 
@@ -1665,16 +1651,28 @@ void Render::SetPostEffectSaturate(const float level)
 {
     m_postEffectSaturateEnabled = (level < 0.9999f || level > 1.0001f);
     m_postEffectSaturate.SetPostEffectSaturate(level);
+    if (m_postEffectSaturateEnabled)
+    {
+        EnsurePostEffectSaturateInitialized();
+    }
 }
 
 void Render::SetPostEffectSaturateEnable(const bool arg)
 {
     m_postEffectSaturateEnabled = arg;
+    if (m_postEffectSaturateEnabled)
+    {
+        EnsurePostEffectSaturateInitialized();
+    }
 }
 
 void Render::SetPostEffectGaussianFilter(const bool arg)
 {
     m_postEffectGaussEnabled = arg;
+    if (m_postEffectGaussEnabled)
+    {
+        EnsurePostEffectGaussInitialized();
+    }
 }
 
 void Render::SetPostEffectGaussianSampleSize(const int sampleSize)
@@ -1687,6 +1685,10 @@ void Render::SetPostEffectGaussianSampleSize(const int sampleSize)
 void Render::SetPostEffectMaskedGaussianFilter(const bool arg)
 {
     m_postEffectMaskedGaussEnabled = arg;
+    if (m_postEffectMaskedGaussEnabled)
+    {
+        EnsurePostEffectMaskedGaussInitialized();
+    }
 }
 
 void Render::SetPostEffectMaskedGaussianSampleSize(const int sampleSize)
@@ -1704,6 +1706,10 @@ void Render::SetPostEffectMaskedGaussianMaskPath(const std::wstring& maskPath)
 void Render::SetPostEffectFXAA(const bool arg)
 {
     m_postEffectFXAAEnabled = arg;
+    if (m_postEffectFXAAEnabled)
+    {
+        EnsurePostEffectFXAAInitialized();
+    }
 }
 
 void Render::SetPostEffectFXAAQuality(const int quality)
@@ -1715,6 +1721,10 @@ void Render::SetPostEffectFXAAQuality(const int quality)
 void Render::SetPostEffectMotionBlurCamera(const bool arg)
 {
     m_postEffectMotionBlurCameraEnabled = arg;
+    if (m_postEffectMotionBlurCameraEnabled)
+    {
+        EnsurePostEffectMotionBlurCameraInitialized();
+    }
 }
 
 void Render::SetPostEffectMotionBlurCameraQuality(const int quality)
@@ -1771,14 +1781,78 @@ void Render::SetPostEffectDepthBufferShadowCompositeTapCount(const int tapCount)
     m_postEffectZShadow.SetCompositeTapCount(tapCount);
 }
 
+void Render::EnsurePostEffectSaturateInitialized()
+{
+    m_postEffectSaturate.Initialize();
+}
+
+void Render::EnsurePostEffectGaussInitialized()
+{
+    m_postEffectGauss.Initialize();
+}
+
+void Render::EnsurePostEffectMaskedGaussInitialized()
+{
+    m_postEffectMaskedGauss.Initialize();
+}
+
+void Render::EnsurePostEffectFXAAInitialized()
+{
+    m_postEffectFXAA.Initialize();
+}
+
+void Render::EnsurePostEffectMotionBlurCameraInitialized()
+{
+    m_postEffectMotionBlurCamera.Initialize();
+}
+
 void Render::EnsurePostEffectZShadowInitialized()
 {
     m_postEffectZShadow.Initialize();
 }
 
+void Render::EnsurePostEffectSSAO2Initialized()
+{
+    m_postEffectSSAO2.Initialize();
+}
+
+void Render::EnsurePostEffectFogInitialized()
+{
+    m_postEffectFog.Initialize();
+}
+
+void Render::EnsurePostEffectHeightFogInitialized()
+{
+    m_postEffectHeightFog.Initialize();
+}
+
+void Render::EnsurePostEffectBloomInitialized()
+{
+    m_PostEffectBloom.Initialize();
+}
+
+void Render::EnsurePostEffectDepthOfFieldInitialized()
+{
+    m_postEffectDepthOfField.Initialize();
+}
+
+void Render::EnsurePostEffectStarBurstInitialized()
+{
+    m_postEffectStarBurst.Initialize();
+}
+
+void Render::EnsurePostEffectGodRayInitialized()
+{
+    m_postEffectGodRay.Initialize();
+}
+
 void Render::SetPostEffectSSAO2(const bool arg)
 {
     m_postEffectSSAO2Enabled = arg;
+    if (m_postEffectSSAO2Enabled)
+    {
+        EnsurePostEffectSSAO2Initialized();
+    }
 }
 
 void Render::SetPostEffectSSAO2Blur(const bool arg)
@@ -1815,6 +1889,10 @@ void Render::SetPostEffectSSAO2SampleRadius(const float sampleRadius)
 void Render::SetPostEffectFog(const bool arg)
 {
     m_postEffectFogZEnabled = arg;
+    if (m_postEffectFogZEnabled)
+    {
+        EnsurePostEffectFogInitialized();
+    }
 }
 
 void Render::SetPostEffectFogIntensity(const float intensity)
@@ -1825,6 +1903,10 @@ void Render::SetPostEffectFogIntensity(const float intensity)
 void Render::SetPostEffectHeightFog(const bool arg)
 {
     m_postEffectFogHeightEnabled = arg;
+    if (m_postEffectFogHeightEnabled)
+    {
+        EnsurePostEffectHeightFogInitialized();
+    }
 }
 
 void Render::SetPostEffectHeightFogIntensity(const float intensity)
@@ -1870,6 +1952,10 @@ void Render::SetPostEffectFogHeightStart(const float start)
 void Render::SetPostEffectBloom(const bool arg)
 {
     m_postEffectBloomEnabled = arg;
+    if (m_postEffectBloomEnabled)
+    {
+        EnsurePostEffectBloomInitialized();
+    }
 }
 
 void Render::SetPostEffectBloomThreshold(const float threshold)
@@ -1892,6 +1978,10 @@ void Render::SetPostEffectDepthOfField(const bool arg)
 void Render::SetPostEffectDepthOfFieldMode(const DepthOfFieldMode mode)
 {
     m_postEffectDepthOfFieldMode = mode;
+    if (mode != DepthOfFieldMode::Disabled)
+    {
+        EnsurePostEffectDepthOfFieldInitialized();
+    }
     if (mode == DepthOfFieldMode::Disabled)
     {
         m_postEffectDepthOfField.SetBlend(0.0f);
@@ -1920,6 +2010,10 @@ void Render::SetPostEffectDepthOfFieldAutoActivationDistance(const float distanc
 void Render::SetPostEffectStarBurst(const bool arg)
 {
     m_postEffectStarBurstEnabled = arg;
+    if (m_postEffectStarBurstEnabled)
+    {
+        EnsurePostEffectStarBurstInitialized();
+    }
 }
 
 void Render::SetPostEffectStarBurstThreshold(const float threshold)
@@ -1930,6 +2024,10 @@ void Render::SetPostEffectStarBurstThreshold(const float threshold)
 void Render::SetPostEffectGodRay(const bool arg)
 {
     m_postEffectGodRayEnabled = arg;
+    if (m_postEffectGodRayEnabled)
+    {
+        EnsurePostEffectGodRayInitialized();
+    }
 }
 
 void Render::SetPostEffectGodRayLightPos(const D3DXVECTOR3& pos)

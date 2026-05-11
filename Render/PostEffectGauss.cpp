@@ -6,6 +6,11 @@ namespace NSRender
 
 void PostEffectGauss::Initialize()
 {
+    if (m_isInitialized)
+    {
+        return;
+    }
+
     HRESULT hResult = E_FAIL;
 
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
@@ -27,11 +32,21 @@ void PostEffectGauss::Initialize()
                       D3DFMT_A16B16G16R16F,
                       D3DPOOL_DEFAULT,
                       &m_texWork);
-    Common::AddDeviceLostResource(this);
+    if (!m_isRegisteredForDeviceReset)
+    {
+        Common::AddDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = true;
+    }
+    m_isInitialized = true;
 }
 
 LPDIRECT3DTEXTURE9 PostEffectGauss::Draw(LPDIRECT3DTEXTURE9 renderTarget)
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return renderTarget;
+    }
+
     m_d3dEffect->SetBool("g_bFilterON", TRUE);
     m_d3dEffect->SetInt("g_sampleSize", m_sampleSize);
 
@@ -45,8 +60,14 @@ LPDIRECT3DTEXTURE9 PostEffectGauss::Draw(LPDIRECT3DTEXTURE9 renderTarget)
 
 void PostEffectGauss::Finalize()
 {
+    if (m_isRegisteredForDeviceReset)
+    {
+        Common::RemoveDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = false;
+    }
     SAFE_RELEASE(m_texWork);
     SAFE_RELEASE(m_d3dEffect);
+    m_isInitialized = false;
 }
 
 void PostEffectGauss::SetSampleSize(const int sampleSize)
@@ -126,12 +147,22 @@ void PostEffectGauss::SetIntensity(const float arg)
 
 void PostEffectGauss::OnDeviceLost()
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return;
+    }
+
     m_d3dEffect->OnLostDevice();
     SAFE_RELEASE(m_texWork);
 }
 
 void PostEffectGauss::OnDeviceReset()
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return;
+    }
+
     m_d3dEffect->OnResetDevice();
 
     D3DXCreateTexture(Common::D3DDevice(),

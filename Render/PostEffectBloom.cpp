@@ -5,6 +5,11 @@ namespace NSRender
 
 void PostEffectBloom::Initialize()
 {
+    if (m_isInitialized)
+    {
+        return;
+    }
+
     HRESULT hResult = E_FAIL;
 
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
@@ -20,7 +25,13 @@ void PostEffectBloom::Initialize()
 
     CreateTexture();
 
-    Common::AddDeviceLostResource(this);
+    if (!m_isRegisteredForDeviceReset)
+    {
+        Common::AddDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = true;
+    }
+
+    m_isInitialized = true;
 }
 
 void PostEffectBloom::CreateTexture()
@@ -82,6 +93,11 @@ void PostEffectBloom::CreateTexture()
 
 LPDIRECT3DTEXTURE9 PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource)
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return renderSource;
+    }
+
     m_d3dEffect->SetInt("g_sampleSize", 101);
     m_d3dEffect->SetFloat("g_Threshold", m_threshold);
 
@@ -142,8 +158,19 @@ LPDIRECT3DTEXTURE9 PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource)
 
 void PostEffectBloom::Finalize()
 {
+    if (m_isRegisteredForDeviceReset)
+    {
+        Common::RemoveDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = false;
+    }
     SAFE_RELEASE(m_texBright);
+    SAFE_RELEASE(m_texBlurH);
+    SAFE_RELEASE(m_texBlurH2);
+    SAFE_RELEASE(m_texBlurV);
+    SAFE_RELEASE(m_texBlurV2);
+    SAFE_RELEASE(m_renderTarget);
     SAFE_RELEASE(m_d3dEffect);
+    m_isInitialized = false;
 }
 
 void PostEffectBloom::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
@@ -223,6 +250,11 @@ void PostEffectBloom::SetSize(const float arg)
 
 void PostEffectBloom::OnDeviceLost()
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return;
+    }
+
     m_d3dEffect->OnLostDevice();
     SAFE_RELEASE(m_texBright);
     SAFE_RELEASE(m_texBlurH);
@@ -234,6 +266,11 @@ void PostEffectBloom::OnDeviceLost()
 
 void PostEffectBloom::OnDeviceReset()
 {
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return;
+    }
+
     m_d3dEffect->OnResetDevice();
     CreateTexture();
 }

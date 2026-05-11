@@ -11,6 +11,11 @@ namespace NSRender
 
 void PostEffectMaskedGauss::Initialize()
 {
+    if (m_isInitialized)
+    {
+        return;
+    }
+
     HRESULT hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
                                                L"../x64/Debug/PostEffectMaskedGaussian.cso",
                                                nullptr,
@@ -23,11 +28,21 @@ void PostEffectMaskedGauss::Initialize()
 
     CreateWorkTextures();
     LoadMaskTexture();
-    Common::AddDeviceLostResource(this);
+    if (!m_isRegisteredForDeviceReset)
+    {
+        Common::AddDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = true;
+    }
+    m_isInitialized = true;
 }
 
 LPDIRECT3DTEXTURE9 PostEffectMaskedGauss::Draw(LPDIRECT3DTEXTURE9 renderTarget)
 {
+    if (!m_isInitialized || m_d3dEffect == nullptr)
+    {
+        return renderTarget;
+    }
+
     if (renderTarget == nullptr || m_texMask == nullptr)
     {
         return renderTarget;
@@ -47,9 +62,15 @@ LPDIRECT3DTEXTURE9 PostEffectMaskedGauss::Draw(LPDIRECT3DTEXTURE9 renderTarget)
 
 void PostEffectMaskedGauss::Finalize()
 {
+    if (m_isRegisteredForDeviceReset)
+    {
+        Common::RemoveDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = false;
+    }
     SAFE_RELEASE(m_texMask);
     ReleaseWorkTextures();
     SAFE_RELEASE(m_d3dEffect);
+    m_isInitialized = false;
 }
 
 void PostEffectMaskedGauss::SetSampleSize(const int sampleSize)
@@ -60,11 +81,19 @@ void PostEffectMaskedGauss::SetSampleSize(const int sampleSize)
 void PostEffectMaskedGauss::SetMaskPath(const std::wstring& maskPath)
 {
     m_maskPath = maskPath;
-    LoadMaskTexture();
+    if (m_isInitialized)
+    {
+        LoadMaskTexture();
+    }
 }
 
 void PostEffectMaskedGauss::OnDeviceLost()
 {
+    if (!m_isInitialized || m_d3dEffect == nullptr)
+    {
+        return;
+    }
+
     if (m_d3dEffect != nullptr)
     {
         m_d3dEffect->OnLostDevice();
@@ -74,6 +103,11 @@ void PostEffectMaskedGauss::OnDeviceLost()
 
 void PostEffectMaskedGauss::OnDeviceReset()
 {
+    if (!m_isInitialized || m_d3dEffect == nullptr)
+    {
+        return;
+    }
+
     if (m_d3dEffect != nullptr)
     {
         m_d3dEffect->OnResetDevice();
