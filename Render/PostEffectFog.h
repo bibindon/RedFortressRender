@@ -12,11 +12,12 @@ public:
 
     void Initialize();
 
-    LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget,
-                            LPDIRECT3DTEXTURE9 texRenderTargetZ,
-                            LPDIRECT3DTEXTURE9 texRenderTargetPos,
-                            const bool enableZ,
-                            const bool enableHeight);
+    void Draw(LPDIRECT3DTEXTURE9& texSource,
+              LPDIRECT3DTEXTURE9& texTarget,
+              LPDIRECT3DTEXTURE9 texRenderTargetZ,
+              LPDIRECT3DTEXTURE9 texRenderTargetPos,
+              const bool enableZ,
+              const bool enableHeight);
     void Finalize();
 
     void SetIntensityZ(const float arg);
@@ -37,8 +38,6 @@ private:
     LPD3DXEFFECT m_d3dEffect = NULL;
     bool m_isInitialized = false;
     bool m_isRegisteredForDeviceReset = false;
-
-    LPDIRECT3DTEXTURE9 m_texWork = NULL;
 
     void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
                             LPDIRECT3DTEXTURE9 texTarget,

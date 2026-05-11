@@ -23,8 +23,6 @@ void PostEffectSaturate::Initialize()
                                        NULL);
     assert(SUCCEEDED(hResult));
 
-    CreateTexture();
-
     if (!m_isRegisteredForDeviceReset)
     {
         Common::AddDeviceLostResource(this);
@@ -34,18 +32,6 @@ void PostEffectSaturate::Initialize()
     m_isInitialized = true;
 }
 
-void PostEffectSaturate::CreateTexture()
-{
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
-                      D3DPOOL_DEFAULT,
-                      &m_texWork);
-}
-
 void PostEffectSaturate::Finalize()
 {
     if (m_isRegisteredForDeviceReset)
@@ -53,25 +39,24 @@ void PostEffectSaturate::Finalize()
         Common::RemoveDeviceLostResource(this);
         m_isRegisteredForDeviceReset = false;
     }
-    SAFE_RELEASE(m_texWork);
     SAFE_RELEASE(m_d3dEffect);
     m_isInitialized = false;
 }
 
-LPDIRECT3DTEXTURE9 PostEffectSaturate::Draw(LPDIRECT3DTEXTURE9 renderTarget)
+void PostEffectSaturate::Draw(LPDIRECT3DTEXTURE9& texSource,
+                              LPDIRECT3DTEXTURE9& texTarget)
 {
     if (!m_isInitialized || m_d3dEffect == NULL)
     {
-        return renderTarget;
+        return;
     }
 
     m_d3dEffect->SetFloat("g_level", m_saturateLevel);
+    DrawFullscreenQuad(texSource, texTarget, "Technique1");
 
-    m_d3dEffect->SetTexture("texture1", renderTarget);
-
-    DrawFullscreenQuad(m_texWork, "Technique1");
-
-    return m_texWork;
+    LPDIRECT3DTEXTURE9 temp = texSource;
+    texSource = texTarget;
+    texTarget = temp;
 }
 
 void PostEffectSaturate::SetPostEffectSaturate(const float level)
@@ -84,7 +69,8 @@ float PostEffectSaturate::GetPostEffectSaturate() const
     return m_saturateLevel;
 }
 
-void PostEffectSaturate::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
+void PostEffectSaturate::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
+                                            LPDIRECT3DTEXTURE9 texTarget,
                                             const std::string& technique)
 {
     LPDIRECT3DSURFACE9 pSceneRT = NULL;
@@ -95,6 +81,7 @@ void PostEffectSaturate::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
     Common::D3DDevice()->SetVertexShader(NULL);
 
     m_d3dEffect->SetTechnique(technique.c_str());
+    m_d3dEffect->SetTexture("texture1", texSource);
 
     ScreenVertex quad[4] { };
 
@@ -152,7 +139,6 @@ void PostEffectSaturate::OnDeviceLost()
     }
 
     m_d3dEffect->OnLostDevice();
-    SAFE_RELEASE(m_texWork);
 }
 
 void PostEffectSaturate::OnDeviceReset()
@@ -163,7 +149,6 @@ void PostEffectSaturate::OnDeviceReset()
     }
 
     m_d3dEffect->OnResetDevice();
-    CreateTexture();
 }
 
 }

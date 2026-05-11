@@ -30,7 +30,6 @@ void PostEffectFXAA::Initialize()
                                                NULL);
     assert(SUCCEEDED(hResult));
 
-    CreateTexture();
     if (!m_isRegisteredForDeviceReset)
     {
         Common::AddDeviceLostResource(this);
@@ -46,32 +45,17 @@ void PostEffectFXAA::Finalize()
         Common::RemoveDeviceLostResource(this);
         m_isRegisteredForDeviceReset = false;
     }
-    SAFE_RELEASE(m_texWork);
     SAFE_RELEASE(m_d3dEffect);
     m_isInitialized = false;
 }
 
-void PostEffectFXAA::CreateTexture()
-{
-    HRESULT hResult = D3DXCreateTexture(Common::D3DDevice(),
-                                        Common::ScreenW(),
-                                        Common::ScreenH(),
-                                        1,
-                                        D3DUSAGE_RENDERTARGET,
-                                        D3DFMT_A16B16G16R16F,
-                                        D3DPOOL_DEFAULT,
-                                        &m_texWork);
-    assert(SUCCEEDED(hResult));
-}
-
-LPDIRECT3DTEXTURE9 PostEffectFXAA::Draw(LPDIRECT3DTEXTURE9 renderTarget)
+void PostEffectFXAA::Draw(LPDIRECT3DTEXTURE9& texSource,
+                          LPDIRECT3DTEXTURE9& texTarget)
 {
     if (!m_isInitialized || m_d3dEffect == NULL)
     {
-        return renderTarget;
+        return;
     }
-
-    m_d3dEffect->SetTexture("texture1", renderTarget);
 
     float texelSize[2] =
     {
@@ -81,8 +65,11 @@ LPDIRECT3DTEXTURE9 PostEffectFXAA::Draw(LPDIRECT3DTEXTURE9 renderTarget)
     m_d3dEffect->SetFloatArray("g_TexelSize", texelSize, 2);
     m_d3dEffect->SetInt("g_SearchRadius", m_quality);
 
-    DrawFullscreenQuad(renderTarget, m_texWork, "Technique1");
-    return m_texWork;
+    DrawFullscreenQuad(texSource, texTarget, "Technique1");
+
+    LPDIRECT3DTEXTURE9 temp = texSource;
+    texSource = texTarget;
+    texTarget = temp;
 }
 
 void PostEffectFXAA::SetQuality(const int quality)
@@ -164,7 +151,6 @@ void PostEffectFXAA::OnDeviceLost()
     }
 
     m_d3dEffect->OnLostDevice();
-    SAFE_RELEASE(m_texWork);
 }
 
 void PostEffectFXAA::OnDeviceReset()
@@ -175,7 +161,6 @@ void PostEffectFXAA::OnDeviceReset()
     }
 
     m_d3dEffect->OnResetDevice();
-    CreateTexture();
 }
 
 }

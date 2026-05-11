@@ -21,16 +21,6 @@ void PostEffectHeightFog::Initialize()
                                                nullptr);
     assert(SUCCEEDED(hResult));
 
-    hResult = D3DXCreateTexture(Common::D3DDevice(),
-                                Common::ScreenW(),
-                                Common::ScreenH(),
-                                1,
-                                D3DUSAGE_RENDERTARGET,
-                                D3DFMT_A16B16G16R16F,
-                                D3DPOOL_DEFAULT,
-                                &m_texWork);
-    assert(SUCCEEDED(hResult));
-
     if (!m_isRegisteredForDeviceReset)
     {
         Common::AddDeviceLostResource(this);
@@ -40,17 +30,18 @@ void PostEffectHeightFog::Initialize()
     m_isInitialized = true;
 }
 
-LPDIRECT3DTEXTURE9 PostEffectHeightFog::Draw(LPDIRECT3DTEXTURE9 renderTarget,
-                                             LPDIRECT3DTEXTURE9 texRenderTargetPos)
+void PostEffectHeightFog::Draw(LPDIRECT3DTEXTURE9& texSource,
+                               LPDIRECT3DTEXTURE9& texTarget,
+                               LPDIRECT3DTEXTURE9 texRenderTargetPos)
 {
     if (!m_isInitialized || m_d3dEffect == nullptr)
     {
-        return renderTarget;
+        return;
     }
 
-    if (renderTarget == nullptr || texRenderTargetPos == nullptr)
+    if (texSource == nullptr || texTarget == nullptr || texRenderTargetPos == nullptr)
     {
-        return renderTarget;
+        return;
     }
 
     m_d3dEffect->SetFloat("g_IntensityHeight", m_intensity);
@@ -65,8 +56,11 @@ LPDIRECT3DTEXTURE9 PostEffectHeightFog::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_d3dEffect->SetVector("g_FogColor", &m_fogColor);
     m_d3dEffect->SetTexture("g_PosTex", texRenderTargetPos);
 
-    DrawFullscreenQuad(renderTarget, m_texWork, "TechHeightFog");
-    return m_texWork;
+    DrawFullscreenQuad(texSource, texTarget, "TechHeightFog");
+
+    LPDIRECT3DTEXTURE9 temp = texSource;
+    texSource = texTarget;
+    texTarget = temp;
 }
 
 void PostEffectHeightFog::Finalize()
@@ -76,7 +70,6 @@ void PostEffectHeightFog::Finalize()
         Common::RemoveDeviceLostResource(this);
         m_isRegisteredForDeviceReset = false;
     }
-    SAFE_RELEASE(m_texWork);
     SAFE_RELEASE(m_d3dEffect);
     m_isInitialized = false;
 }
@@ -131,7 +124,6 @@ void PostEffectHeightFog::OnDeviceLost()
     {
         m_d3dEffect->OnLostDevice();
     }
-    SAFE_RELEASE(m_texWork);
 }
 
 void PostEffectHeightFog::OnDeviceReset()
@@ -145,16 +137,6 @@ void PostEffectHeightFog::OnDeviceReset()
     {
         m_d3dEffect->OnResetDevice();
     }
-
-    const HRESULT hResult = D3DXCreateTexture(Common::D3DDevice(),
-                                              Common::ScreenW(),
-                                              Common::ScreenH(),
-                                              1,
-                                              D3DUSAGE_RENDERTARGET,
-                                              D3DFMT_A16B16G16R16F,
-                                              D3DPOOL_DEFAULT,
-                                              &m_texWork);
-    assert(SUCCEEDED(hResult));
 }
 
 void PostEffectHeightFog::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,

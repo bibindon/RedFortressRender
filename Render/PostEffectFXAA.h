@@ -13,7 +13,8 @@ public:
     void Initialize();
     void Finalize();
 
-    LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget);
+    void Draw(LPDIRECT3DTEXTURE9& texSource,
+              LPDIRECT3DTEXTURE9& texTarget);
 
     void SetQuality(const int quality);
     int GetQuality() const;
@@ -26,10 +27,8 @@ private:
     LPD3DXEFFECT m_d3dEffect = NULL;
     bool m_isInitialized = false;
     bool m_isRegisteredForDeviceReset = false;
-    LPDIRECT3DTEXTURE9 m_texWork = NULL;
     int m_quality = 4;
 
-    void CreateTexture();
     void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
                             LPDIRECT3DTEXTURE9 texTarget,
                             const std::string& technique);

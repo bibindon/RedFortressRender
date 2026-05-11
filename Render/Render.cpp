@@ -871,14 +871,11 @@ void Render::Draw()
 
     //---------------------------------------------------------------
     // ポストエフェクト
-    // m_pRenderTarget1やm_pRenderTarget2に代入しないこと
-    //
-    // TODO ポストエフェクトが作成したテクスチャを戻り値として返している。非常に問題がある。
+    // 共通の HDR 作業バッファ 2 枚を ping-pong して使う。
     //---------------------------------------------------------------
 
-    LPDIRECT3DTEXTURE9 pTempTexture = NULL;
-
-    pTempTexture = m_pRenderTarget1;
+    LPDIRECT3DTEXTURE9 pTempTexture = m_pRenderTarget1;
+    LPDIRECT3DTEXTURE9 pWorkTexture = m_pRenderTarget2;
 
     if (m_postEffectZShadowEnabled)
     {
@@ -903,23 +900,24 @@ void Render::Draw()
     if (m_postEffectFogZEnabled)
     {
         EnsurePostEffectFogInitialized();
-        pTempTexture = m_postEffectFog.Draw(pTempTexture,
-                                            pTexTempZ,
-                                            pTexTempPos,
-                                            m_postEffectFogZEnabled,
-                                            false);
+        m_postEffectFog.Draw(pTempTexture,
+                             pWorkTexture,
+                             pTexTempZ,
+                             pTexTempPos,
+                             m_postEffectFogZEnabled,
+                             false);
     }
 
     if (m_postEffectFogHeightEnabled)
     {
         EnsurePostEffectHeightFogInitialized();
-        pTempTexture = m_postEffectHeightFog.Draw(pTempTexture, pTexTempPos);
+        m_postEffectHeightFog.Draw(pTempTexture, pWorkTexture, pTexTempPos);
     }
 
     if (m_postEffectSaturateEnabled)
     {
         EnsurePostEffectSaturateInitialized();
-        pTempTexture = m_postEffectSaturate.Draw(pTempTexture);
+        m_postEffectSaturate.Draw(pTempTexture, pWorkTexture);
     }
 
     if (m_postEffectDepthOfFieldMode == DepthOfFieldMode::Enabled)
@@ -959,7 +957,7 @@ void Render::Draw()
     if (m_postEffectGaussEnabled)
     {
         EnsurePostEffectGaussInitialized();
-        pTempTexture = m_postEffectGauss.Draw(pTempTexture);
+        m_postEffectGauss.Draw(pTempTexture, pWorkTexture);
     }
 
     if (m_postEffectMaskedGaussEnabled)
@@ -981,7 +979,7 @@ void Render::Draw()
     if (m_postEffectFXAAEnabled)
     {
         EnsurePostEffectFXAAInitialized();
-        pTempTexture = m_postEffectFXAA.Draw(pTempTexture);
+        m_postEffectFXAA.Draw(pTempTexture, pWorkTexture);
     }
 
     // g_pRenderTargetの内容を画面に転送
@@ -2473,7 +2471,7 @@ void Render::CreateTexture()
                            Common::ScreenH(),
                            1,
                            D3DUSAGE_RENDERTARGET,
-                           D3DFMT_A8R8G8B8,
+                           D3DFMT_A16B16G16R16F,
                            D3DPOOL_DEFAULT,
                            &m_pRenderTarget2);
     assert(hr == S_OK);

@@ -14,8 +14,9 @@ public:
 
     void Initialize();
 
-    LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget,
-                            LPDIRECT3DTEXTURE9 texRenderTargetPos);
+    void Draw(LPDIRECT3DTEXTURE9& texSource,
+              LPDIRECT3DTEXTURE9& texTarget,
+              LPDIRECT3DTEXTURE9 texRenderTargetPos);
     void Finalize();
 
     void SetIntensity(const float intensity);
@@ -44,7 +45,6 @@ private:
     LPD3DXEFFECT m_d3dEffect = nullptr;
     bool m_isInitialized = false;
     bool m_isRegisteredForDeviceReset = false;
-    LPDIRECT3DTEXTURE9 m_texWork = nullptr;
     float m_intensity = 0.3f;
     float m_startHeight = 0.0f;
     float m_maxHeight = -5.0f;

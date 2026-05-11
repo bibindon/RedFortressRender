@@ -11,7 +11,8 @@ class PostEffectGauss : public IDeviceResettable
 public:
 
     void Initialize();
-    LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget);
+    void Draw(LPDIRECT3DTEXTURE9& texSource,
+              LPDIRECT3DTEXTURE9& texTarget);
     void Finalize();
 
     void SetSampleSize(const int sampleSize);
@@ -28,8 +29,6 @@ private:
     LPD3DXEFFECT m_d3dEffect = NULL;
     bool m_isInitialized = false;
     bool m_isRegisteredForDeviceReset = false;
-
-    LPDIRECT3DTEXTURE9 m_texWork = NULL;
 
     void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
                             LPDIRECT3DTEXTURE9 texTarget,

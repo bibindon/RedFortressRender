@@ -23,15 +23,6 @@ void PostEffectGauss::Initialize()
                                        &m_d3dEffect,
                                        NULL);
     assert(SUCCEEDED(hResult));
-
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
-                      D3DPOOL_DEFAULT,
-                      &m_texWork);
     if (!m_isRegisteredForDeviceReset)
     {
         Common::AddDeviceLostResource(this);
@@ -40,22 +31,26 @@ void PostEffectGauss::Initialize()
     m_isInitialized = true;
 }
 
-LPDIRECT3DTEXTURE9 PostEffectGauss::Draw(LPDIRECT3DTEXTURE9 renderTarget)
+void PostEffectGauss::Draw(LPDIRECT3DTEXTURE9& texSource,
+                           LPDIRECT3DTEXTURE9& texTarget)
 {
     if (!m_isInitialized || m_d3dEffect == NULL)
     {
-        return renderTarget;
+        return;
     }
 
     m_d3dEffect->SetBool("g_bFilterON", TRUE);
     m_d3dEffect->SetInt("g_sampleSize", m_sampleSize);
 
-    DrawFullscreenQuad(renderTarget,    m_texWork,      "GaussianH");
-    DrawFullscreenQuad(m_texWork,       renderTarget,   "GaussianH");
-    DrawFullscreenQuad(renderTarget,    m_texWork,      "GaussianV");
-    DrawFullscreenQuad(m_texWork,       renderTarget,   "GaussianV");
+    DrawFullscreenQuad(texSource, texTarget, "GaussianH");
+    LPDIRECT3DTEXTURE9 temp = texSource;
+    texSource = texTarget;
+    texTarget = temp;
 
-    return renderTarget;
+    DrawFullscreenQuad(texSource, texTarget, "GaussianV");
+    temp = texSource;
+    texSource = texTarget;
+    texTarget = temp;
 }
 
 void PostEffectGauss::Finalize()
@@ -65,7 +60,6 @@ void PostEffectGauss::Finalize()
         Common::RemoveDeviceLostResource(this);
         m_isRegisteredForDeviceReset = false;
     }
-    SAFE_RELEASE(m_texWork);
     SAFE_RELEASE(m_d3dEffect);
     m_isInitialized = false;
 }
@@ -153,7 +147,6 @@ void PostEffectGauss::OnDeviceLost()
     }
 
     m_d3dEffect->OnLostDevice();
-    SAFE_RELEASE(m_texWork);
 }
 
 void PostEffectGauss::OnDeviceReset()
@@ -164,15 +157,6 @@ void PostEffectGauss::OnDeviceReset()
     }
 
     m_d3dEffect->OnResetDevice();
-
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
-                      D3DPOOL_DEFAULT,
-                      &m_texWork);
 }
 
 }

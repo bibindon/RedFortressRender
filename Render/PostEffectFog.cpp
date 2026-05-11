@@ -24,15 +24,6 @@ void PostEffectFog::Initialize()
                                        NULL);
     assert(SUCCEEDED(hResult));
 
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
-                      D3DPOOL_DEFAULT,
-                      &m_texWork);
-
     m_d3dEffect->SetVector("g_FogColor", &m_fogColor);
 
     if (!m_isRegisteredForDeviceReset)
@@ -44,26 +35,27 @@ void PostEffectFog::Initialize()
     m_isInitialized = true;
 }
 
-LPDIRECT3DTEXTURE9 PostEffectFog::Draw(LPDIRECT3DTEXTURE9 renderTarget,
-                                       LPDIRECT3DTEXTURE9 texRenderTargetZ,
-                                       LPDIRECT3DTEXTURE9 texRenderTargetPos,
-                                       const bool enableZ,
-                                       const bool enableHeight)
+void PostEffectFog::Draw(LPDIRECT3DTEXTURE9& texSource,
+                         LPDIRECT3DTEXTURE9& texTarget,
+                         LPDIRECT3DTEXTURE9 texRenderTargetZ,
+                         LPDIRECT3DTEXTURE9 texRenderTargetPos,
+                         const bool enableZ,
+                         const bool enableHeight)
 {
     if (!m_isInitialized || m_d3dEffect == NULL)
     {
-        return renderTarget;
+        return;
     }
 
     // 入力チェック（必要テクスチャが無ければパススルー）
     if (enableZ && texRenderTargetZ == NULL)
     {
-        return renderTarget;
+        return;
     }
 
     if (enableHeight && texRenderTargetPos == NULL)
     {
-        return renderTarget;
+        return;
     }
 
     // エフェクトパラメータ設定
@@ -99,9 +91,11 @@ LPDIRECT3DTEXTURE9 PostEffectFog::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_d3dEffect->SetTexture("g_PosTex", texRenderTargetPos);
 
     // フルスクリーンクアッドで描画
-    DrawFullscreenQuad(renderTarget, m_texWork, "TechFog");
+    DrawFullscreenQuad(texSource, texTarget, "TechFog");
 
-    return m_texWork;
+    LPDIRECT3DTEXTURE9 temp = texSource;
+    texSource = texTarget;
+    texTarget = temp;
 }
 
 void PostEffectFog::Finalize()
@@ -111,7 +105,6 @@ void PostEffectFog::Finalize()
         Common::RemoveDeviceLostResource(this);
         m_isRegisteredForDeviceReset = false;
     }
-    SAFE_RELEASE(m_texWork);
     SAFE_RELEASE(m_d3dEffect);
     m_isInitialized = false;
 }
@@ -229,7 +222,6 @@ void PostEffectFog::OnDeviceLost()
     }
 
     m_d3dEffect->OnLostDevice();
-    SAFE_RELEASE(m_texWork);
 }
 
 void PostEffectFog::OnDeviceReset()
@@ -240,15 +232,6 @@ void PostEffectFog::OnDeviceReset()
     }
 
     m_d3dEffect->OnResetDevice();
-
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
-                      D3DPOOL_DEFAULT,
-                      &m_texWork);
 }
 
 }

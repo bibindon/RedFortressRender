@@ -13,7 +13,8 @@ public:
     void Initialize();
     void Finalize();
 
-    LPDIRECT3DTEXTURE9 Draw(LPDIRECT3DTEXTURE9 renderTarget);
+    void Draw(LPDIRECT3DTEXTURE9& texSource,
+              LPDIRECT3DTEXTURE9& texTarget);
 
     void SetPostEffectSaturate(const float arg);
     float GetPostEffectSaturate() const;
@@ -27,9 +28,8 @@ private:
     bool m_isInitialized = false;
     bool m_isRegisteredForDeviceReset = false;
 
-    LPDIRECT3DTEXTURE9 m_texWork = NULL;
-
-    void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
+    void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
+                            LPDIRECT3DTEXTURE9 texTarget,
                             const std::string& technique);
 
     struct ScreenVertex
@@ -44,8 +44,6 @@ private:
     };
 
     float m_saturateLevel = 1.0f;
-
-    void CreateTexture();
 };
 
 }
