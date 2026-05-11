@@ -1801,6 +1801,40 @@ bool HandleOpenMeshCommand(HWND hDlg, const WORD commandId)
         return true;
     }
 
+    if (commandId == IDC_BUTTON_LOAD_XFILELIST)
+    {
+        std::wstring selectedPath;
+        if (ShowOpenFileDialog(hDlg,
+                               L"CSV Files (*.csv)\0*.csv\0All Files (*.*)\0*.*\0",
+                               selectedPath,
+                               L"csv"))
+        {
+            int loadedCount = 0;
+            int skippedCount = 0;
+            if (!LoadXFileListFromCsv(selectedPath, &loadedCount, &skippedCount))
+            {
+                MessageBoxW(hDlg,
+                            L"XFileList.csv から X ファイルを読み込めなかった。",
+                            L"XFileList",
+                            MB_OK | MB_ICONWARNING);
+            }
+            else if (skippedCount > 0)
+            {
+                wchar_t buffer[128] { };
+                std::swprintf(buffer,
+                              sizeof(buffer) / sizeof(buffer[0]),
+                              L"%d 件読み込み、%d 件をスキップした。",
+                              loadedCount,
+                              skippedCount);
+                MessageBoxW(hDlg,
+                            buffer,
+                            L"XFileList",
+                            MB_OK | MB_ICONINFORMATION);
+            }
+        }
+        return true;
+    }
+
     return false;
 }
 }

@@ -273,6 +273,7 @@ exit /B %ERRORLEVEL%</Command>
     <None Include="..\README_about_sample_x.md" />
     <None Include="packages.config" />
     <None Include="RenderSettings.csv" />
+    <None Include="XFileList.csv" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\Render\shader\AnimMeshShader.fx" />

@@ -604,6 +604,153 @@ bool ResolveExistingModelPath(const std::wstring& sourcePath, std::wstring& reso
     return true;
 }
 
+bool IsAbsolutePath(const std::wstring& path)
+{
+    if (path.size() >= 2 && path[1] == L':')
+    {
+        return true;
+    }
+
+    if (path.size() >= 2 && path[0] == L'\\' && path[1] == L'\\')
+    {
+        return true;
+    }
+
+    if (!path.empty() && (path[0] == L'\\' || path[0] == L'/'))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+std::wstring GetParentDirectoryPath(const std::wstring& filePath)
+{
+    wchar_t fullPath[MAX_PATH] { };
+    const DWORD length = GetFullPathNameW(filePath.c_str(),
+                                          static_cast<DWORD>(_countof(fullPath)),
+                                          fullPath,
+                                          nullptr);
+    if (length == 0 || length >= _countof(fullPath))
+    {
+        return L"";
+    }
+
+    std::wstring directoryPath = fullPath;
+    const std::size_t slashPos = directoryPath.find_last_of(L"\\/");
+    if (slashPos == std::wstring::npos)
+    {
+        return L"";
+    }
+
+    directoryPath.erase(slashPos);
+    return directoryPath;
+}
+
+std::wstring Unquote(const std::wstring& text)
+{
+    if (text.size() >= 2 && text.front() == L'"' && text.back() == L'"')
+    {
+        return text.substr(1, text.size() - 2);
+    }
+
+    return text;
+}
+
+bool ResolvePathFromCsvEntry(const std::wstring& csvDirectoryPath,
+                             const std::wstring& sourcePath,
+                             std::wstring& resolvedPath)
+{
+    std::wstring trimmedPath = Unquote(Trim(sourcePath));
+    if (trimmedPath.empty())
+    {
+        return false;
+    }
+
+    std::wstring candidatePath = trimmedPath;
+    if (!IsAbsolutePath(candidatePath) && !csvDirectoryPath.empty())
+    {
+        candidatePath = csvDirectoryPath + L"\\" + candidatePath;
+    }
+
+    return ResolveExistingModelPath(candidatePath, resolvedPath);
+}
+
+std::vector<std::wstring> SplitCsvLine(const std::wstring& line)
+{
+    std::vector<std::wstring> fields;
+    std::wstring currentField;
+    bool inQuotes = false;
+
+    for (std::size_t i = 0; i < line.size(); ++i)
+    {
+        const wchar_t ch = line[i];
+        if (ch == L'"')
+        {
+            if (inQuotes && (i + 1) < line.size() && line[i + 1] == L'"')
+            {
+                currentField += L'"';
+                ++i;
+            }
+            else
+            {
+                inQuotes = !inQuotes;
+            }
+            continue;
+        }
+
+        if (ch == L',' && !inQuotes)
+        {
+            fields.push_back(currentField);
+            currentField.clear();
+            continue;
+        }
+
+        currentField += ch;
+    }
+
+    fields.push_back(currentField);
+    return fields;
+}
+
+bool SpawnMeshAtTransform(const std::wstring& filePath,
+                          const D3DXVECTOR3& pos,
+                          const float yawDegrees)
+{
+    if (filePath.empty())
+    {
+        return false;
+    }
+
+    const D3DXVECTOR3 rotationRadians(0.0f, D3DXToRadian(yawDegrees), 0.0f);
+    const int renderId = g_Render.AddMesh(filePath, pos, rotationRadians, g_modelLoadScale, 1.0f);
+    RegisterLoadedModel(L"Mesh", filePath, pos, g_modelLoadScale, renderId);
+    return true;
+}
+
+bool SpawnMeshMixAtTransform(const std::wstring& filePath,
+                             const D3DXVECTOR3& pos,
+                             const float yawDegrees)
+{
+    if (filePath.empty())
+    {
+        return false;
+    }
+
+    const D3DXVECTOR3 rotationRadians(0.0f, D3DXToRadian(yawDegrees), 0.0f);
+    const bool usePOM = (g_mixMeshShaderMode == MixMeshShaderMode::ParallaxOcclusionMapping);
+    const bool useNormalMapping = (g_mixMeshShaderMode == MixMeshShaderMode::NormalMapping);
+    const int renderId = g_Render.AddMeshMix(filePath,
+                                             pos,
+                                             rotationRadians,
+                                             g_modelLoadScale,
+                                             1.0f,
+                                             usePOM,
+                                             useNormalMapping);
+    RegisterLoadedModel(L"MeshMixManager", filePath, pos, g_modelLoadScale, renderId);
+    return true;
+}
+
 bool ExportXHierarchyBinary(const std::wstring& inputPath, const std::wstring& outputPath)
 {
     ExportXHierarchyAllocator allocator;
@@ -957,8 +1104,7 @@ void SpawnMeshAtLookAt(const std::wstring& filePath)
     D3DXVec3Normalize(&forward, &forward);
 
     const float yaw = atan2f(forward.x, forward.z);
-    const int renderId = g_Render.AddMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), g_modelLoadScale, 1.0f);
-    RegisterLoadedModel(L"Mesh", filePath, pos, g_modelLoadScale, renderId);
+    SpawnMeshAtTransform(filePath, pos, D3DXToDegree(yaw));
 }
 
 void SpawnMeshMixAtLookAt(const std::wstring& filePath)
@@ -975,16 +1121,7 @@ void SpawnMeshMixAtLookAt(const std::wstring& filePath)
     D3DXVec3Normalize(&forward, &forward);
 
     const float yaw = atan2f(forward.x, forward.z);
-    const bool usePOM = (g_mixMeshShaderMode == MixMeshShaderMode::ParallaxOcclusionMapping);
-    const bool useNormalMapping = (g_mixMeshShaderMode == MixMeshShaderMode::NormalMapping);
-    const int renderId = g_Render.AddMeshMix(filePath,
-                                             pos,
-                                             D3DXVECTOR3(0, yaw, 0.0f),
-                                             g_modelLoadScale,
-                                             1.0f,
-                                             usePOM,
-                                             useNormalMapping);
-    RegisterLoadedModel(L"MeshMixManager", filePath, pos, g_modelLoadScale, renderId);
+    SpawnMeshMixAtTransform(filePath, pos, D3DXToDegree(yaw));
 }
 
 NSRender::AnimSetMap CreateDefaultAnimSetMap()
@@ -1139,6 +1276,88 @@ bool ExportLoadedModelAsBinaryX(const size_t modelIndex, const std::wstring& out
     }
 
     return ExportMeshBinary(inputPath, outputPath);
+}
+
+bool LoadXFileListFromCsv(const std::wstring& csvPath, int* loadedCount, int* skippedCount)
+{
+    if (loadedCount != nullptr)
+    {
+        *loadedCount = 0;
+    }
+
+    if (skippedCount != nullptr)
+    {
+        *skippedCount = 0;
+    }
+
+    if (csvPath.empty())
+    {
+        return false;
+    }
+
+    std::wifstream file(csvPath);
+    if (!file)
+    {
+        return false;
+    }
+
+    const std::wstring csvDirectoryPath = GetParentDirectoryPath(csvPath);
+    int localLoadedCount = 0;
+    int localSkippedCount = 0;
+    std::wstring line;
+    while (std::getline(file, line))
+    {
+        const std::wstring trimmedLine = Trim(line);
+        if (trimmedLine.empty() || trimmedLine.front() == L'#')
+        {
+            continue;
+        }
+
+        const std::vector<std::wstring> fields = SplitCsvLine(trimmedLine);
+        if (fields.size() < 5)
+        {
+            ++localSkippedCount;
+            continue;
+        }
+
+        try
+        {
+            std::wstring resolvedPath;
+            if (!ResolvePathFromCsvEntry(csvDirectoryPath, fields[0], resolvedPath))
+            {
+                ++localSkippedCount;
+                continue;
+            }
+
+            const float x = std::stof(Trim(fields[1]));
+            const float y = std::stof(Trim(fields[2]));
+            const float z = std::stof(Trim(fields[3]));
+            const float yawDegrees = std::stof(Trim(fields[4]));
+            if (!SpawnMeshMixAtTransform(resolvedPath, D3DXVECTOR3(x, y, z), yawDegrees))
+            {
+                ++localSkippedCount;
+                continue;
+            }
+
+            ++localLoadedCount;
+        }
+        catch (...)
+        {
+            ++localSkippedCount;
+        }
+    }
+
+    if (loadedCount != nullptr)
+    {
+        *loadedCount = localLoadedCount;
+    }
+
+    if (skippedCount != nullptr)
+    {
+        *skippedCount = localSkippedCount;
+    }
+
+    return localLoadedCount > 0;
 }
 
 void AddPointLightAtLookAt()

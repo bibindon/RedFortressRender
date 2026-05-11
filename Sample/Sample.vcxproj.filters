@@ -39,6 +39,9 @@
     <None Include="RenderSettings.csv">
       <Filter>リソース ファイル</Filter>
     </None>
+    <None Include="XFileList.csv">
+      <Filter>リソース ファイル</Filter>
+    </None>
     <None Include="..\README_about_sample_x.md" />
   </ItemGroup>
   <ItemGroup>

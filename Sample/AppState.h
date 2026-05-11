@@ -452,6 +452,7 @@ NSRender::AnimSetMap CreateDefaultAnimSetMap();
 bool ShowOpenFileDialog(HWND hWnd, const wchar_t* filter, std::wstring& selectedPath, const wchar_t* defaultExt = L"x");
 bool ShowSaveBinaryXFileDialog(HWND hWnd, const std::wstring& sourcePath, std::wstring& selectedPath);
 bool ExportLoadedModelAsBinaryX(size_t modelIndex, const std::wstring& outputPath);
+bool LoadXFileListFromCsv(const std::wstring& csvPath, int* loadedCount = nullptr, int* skippedCount = nullptr);
 void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath);
 void ApplyAllSampleSettings();
 bool ReloadRenderSettingsFromCsv(const std::wstring& settingsCsvPath);

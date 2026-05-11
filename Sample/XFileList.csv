@@ -1,0 +1,6 @@
+# path, x, y, z, yawDegrees
+res\model2\monkey.blend.x, 0, 0, 0, 0
+res\model2\monkey.blend.x, 8, 0, 0, 45
+res\model2\monkey.blend.x, -8, 0, 0, -45
+res\model2\monkey.blend.x, 0, 0, 8, 90
+res\model2\monkey.blend.x, 0, 0, -8, 180
