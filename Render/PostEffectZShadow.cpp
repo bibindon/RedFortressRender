@@ -58,6 +58,11 @@ float CoverageToViewSize(const float coverage)
 
 void PostEffectZShadow::Initialize()
 {
+    if (m_isInitialized)
+    {
+        return;
+    }
+
     HRESULT hResult = E_FAIL;
 
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
@@ -72,16 +77,32 @@ void PostEffectZShadow::Initialize()
 
     CreateRawResource();
 
-    Common::AddDeviceLostResource(this);
+    if (!m_isRegisteredForDeviceReset)
+    {
+        Common::AddDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = true;
+    }
+
+    m_isInitialized = true;
 }
 
 void PostEffectZShadow::Finalize()
 {
+    if (m_isRegisteredForDeviceReset)
+    {
+        Common::RemoveDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = false;
+    }
+
     SAFE_RELEASE(g_fxDepthBufferShadow);
 
     SAFE_RELEASE(g_texRenderTargetLightZ);
     SAFE_RELEASE(g_texRenderTargetShadow);
+    SAFE_RELEASE(g_texComposite);
+    SAFE_RELEASE(g_surfaceLightZStensil);
     SAFE_RELEASE(g_pQuadDecl);
+
+    m_isInitialized = false;
 }
 
 LPDIRECT3DTEXTURE9 PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
@@ -618,6 +639,11 @@ void PostEffectZShadow::SetCompositeTapCount(const int tapCount)
 
 void PostEffectZShadow::OnDeviceLost()
 {
+    if (!m_isInitialized || g_fxDepthBufferShadow == NULL)
+    {
+        return;
+    }
+
     g_fxDepthBufferShadow->OnLostDevice();
     SAFE_RELEASE(g_texTemp);
     SAFE_RELEASE(g_texRenderTargetLightZ);
@@ -629,6 +655,11 @@ void PostEffectZShadow::OnDeviceLost()
 
 void PostEffectZShadow::OnDeviceReset()
 {
+    if (!m_isInitialized || g_fxDepthBufferShadow == NULL)
+    {
+        return;
+    }
+
     g_fxDepthBufferShadow->OnResetDevice();
     CreateRawResource();
 }

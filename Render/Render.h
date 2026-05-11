@@ -402,6 +402,7 @@ private:
     void Draw2D();
     void LoadSettingsCsv(const std::wstring& settingsCsvPath);
     void ApplySettings();
+    void EnsurePostEffectZShadowInitialized();
     static std::wstring Trim(const std::wstring& text);
     static int NormalizeGaussianSampleSize(const int sampleSize);
 

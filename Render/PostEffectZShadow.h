@@ -66,6 +66,8 @@ private:
 
 
     void DrawFullscreenQuad();
+    bool m_isInitialized = false;
+    bool m_isRegisteredForDeviceReset = false;
 
     struct QuadVertex
     {

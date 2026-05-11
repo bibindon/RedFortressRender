@@ -831,9 +831,6 @@ void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
 
     m_GBuffer.Initialize();
 
-    // 深度バッファシャドウ
-    m_postEffectZShadow.Initialize();
-
     // SSAO2
     m_postEffectSSAO2.Initialize();
 
@@ -910,6 +907,7 @@ void Render::Draw()
 
     if (m_postEffectZShadowEnabled)
     {
+        EnsurePostEffectZShadowInitialized();
         pTempTexture = m_postEffectZShadow.Draw(pTempTexture,
                                                 pTexTempZ,
                                                 pTexTempNoral,
@@ -1742,6 +1740,10 @@ void Render::SetPostEffectMotionBlurCameraSampleCount(const int sampleCount)
 void Render::SetPostEffectDepthBufferShadow(const bool arg)
 {
     m_postEffectZShadowEnabled = arg;
+    if (m_postEffectZShadowEnabled)
+    {
+        EnsurePostEffectZShadowInitialized();
+    }
 }
 
 void Render::SetPostEffectDepthBufferShadowIntensity(const float intensity)
@@ -1767,6 +1769,11 @@ void Render::SetPostEffectDepthBufferShadowPcfTapCount(const int tapCount)
 void Render::SetPostEffectDepthBufferShadowCompositeTapCount(const int tapCount)
 {
     m_postEffectZShadow.SetCompositeTapCount(tapCount);
+}
+
+void Render::EnsurePostEffectZShadowInitialized()
+{
+    m_postEffectZShadow.Initialize();
 }
 
 void Render::SetPostEffectSSAO2(const bool arg)
