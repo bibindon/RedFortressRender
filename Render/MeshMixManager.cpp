@@ -946,6 +946,11 @@ void MeshMixManager::Finalize()
 
     ReleaseOwnedResources();
     ReleaseSharedEffectRef();
+    if (m_deviceResourceRegistered)
+    {
+        Common::RemoveDeviceLostResource(this);
+        m_deviceResourceRegistered = false;
+    }
     m_bLoaded = false;
 }
 

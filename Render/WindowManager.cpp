@@ -88,7 +88,7 @@ void WindowManager::Initialize(const HWND hWnd)
 void WindowManager::Finalize()
 {
     m_hWnd = NULL;
-    m_pD3D = NULL;
+    SAFE_RELEASE(m_pD3D);
 }
 
 void WindowManager::ChangeResolution(const int W, const int H)

@@ -874,9 +874,119 @@ void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
 
 void Render::Finalize()
 {
+    MeshMixManager::SetSharedThicknessTexture(NULL);
+
+    m_postEffectZShadow.Finalize();
+    m_postEffectSSAO2.Finalize();
+    m_postEffectFog.Finalize();
+    m_postEffectHeightFog.Finalize();
+    m_postEffectSaturate.Finalize();
+    m_postEffectDepthOfField.Finalize();
+    m_PostEffectBloom.Finalize();
+    m_postEffectStarBurst.Finalize();
+    m_postEffectGodRay.Finalize();
+    m_postEffectGauss.Finalize();
+    m_postEffectMaskedGauss.Finalize();
+    m_postEffectMotionBlurCamera.Finalize();
+    m_postEffectFXAA.Finalize();
+    m_postEffectEnd.Finalize();
+
+    for (auto& mesh : m_meshList)
+    {
+        mesh.Finalize();
+    }
+    m_meshList.clear();
+    m_meshEnabledList.clear();
+
+    for (auto& mesh : m_meshSmoothList)
+    {
+        mesh.Finalize();
+    }
+    m_meshSmoothList.clear();
+
+    for (auto& mesh : m_meshSSSLikeList)
+    {
+        mesh.Finalize();
+    }
+    m_meshSSSLikeList.clear();
+
+    for (auto& mesh : m_meshSSSList)
+    {
+        mesh.Finalize();
+    }
+    m_meshSSSList.clear();
+    m_meshSSSEnabledList.clear();
+
+    for (auto& mesh : m_meshPointLightList)
+    {
+        mesh.Finalize();
+    }
+    m_meshPointLightList.clear();
+    m_meshPointLightEnabledList.clear();
+
+    for (auto& mesh : m_meshNormalMapList)
+    {
+        mesh.Finalize();
+    }
+    m_meshNormalMapList.clear();
+    m_meshNormalMapEnabledList.clear();
+
+    for (auto& mesh : m_meshPOMList)
+    {
+        mesh.Finalize();
+    }
+    m_meshPOMList.clear();
+    m_meshPOMEnabledList.clear();
+
+    for (auto& mesh : m_animMeshList)
+    {
+        SAFE_DELETE(mesh);
+    }
+    m_animMeshList.clear();
+
+    for (auto& mesh : m_skinAnimMeshList)
+    {
+        SAFE_DELETE(mesh);
+    }
+    m_skinAnimMeshList.clear();
+
+    for (auto& mesh : m_meshMixSkinAnimList)
+    {
+        SAFE_DELETE(mesh);
+    }
+    m_meshMixSkinAnimList.clear();
+
+    for (auto& mesh : m_meshInstancingMap)
+    {
+        SAFE_DELETE(mesh.second);
+    }
+    m_meshInstancingMap.clear();
+
+    for (auto& mesh : m_meshMixList)
+    {
+        mesh.Finalize();
+    }
+    m_meshMixList.clear();
+
+    for (auto& font : m_fontList)
+    {
+        SAFE_DELETE(font);
+    }
+    m_fontList.clear();
+
+    m_sprite.Finalize();
     m_GBuffer.Finalize();
-    Common::D3DDevice()->Release();
+    SAFE_RELEASE(m_pRenderTarget1);
+    SAFE_RELEASE(m_pRenderTarget2);
+
+    Common::RemoveDeviceLostResource(this);
+
+    LPDIRECT3DDEVICE9 d3dDevice = Common::D3DDevice();
+    SAFE_RELEASE(d3dDevice);
     Common::SetD3DDevice(NULL);
+
+    m_windowManager.Finalize();
+    Common::Finalize();
 }
 
 void Render::Draw()

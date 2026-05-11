@@ -24,6 +24,7 @@ void PostEffectEnd::Initialize()
 
 void PostEffectEnd::Finalize()
 {
+    Common::RemoveDeviceLostResource(this);
     SAFE_RELEASE(m_d3dEffect);
 }
 
