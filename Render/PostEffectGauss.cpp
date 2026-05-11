@@ -31,8 +31,8 @@ void PostEffectGauss::Initialize()
     m_isInitialized = true;
 }
 
-void PostEffectGauss::Draw(LPDIRECT3DTEXTURE9& texSource,
-                           LPDIRECT3DTEXTURE9& texTarget)
+void PostEffectGauss::DrawHorizontal(LPDIRECT3DTEXTURE9 texSource,
+                                     LPDIRECT3DTEXTURE9 texTarget)
 {
     if (!m_isInitialized || m_d3dEffect == NULL)
     {
@@ -41,16 +41,20 @@ void PostEffectGauss::Draw(LPDIRECT3DTEXTURE9& texSource,
 
     m_d3dEffect->SetBool("g_bFilterON", TRUE);
     m_d3dEffect->SetInt("g_sampleSize", m_sampleSize);
-
     DrawFullscreenQuad(texSource, texTarget, "GaussianH");
-    LPDIRECT3DTEXTURE9 temp = texSource;
-    texSource = texTarget;
-    texTarget = temp;
+}
 
+void PostEffectGauss::DrawVertical(LPDIRECT3DTEXTURE9 texSource,
+                                   LPDIRECT3DTEXTURE9 texTarget)
+{
+    if (!m_isInitialized || m_d3dEffect == NULL)
+    {
+        return;
+    }
+
+    m_d3dEffect->SetBool("g_bFilterON", TRUE);
+    m_d3dEffect->SetInt("g_sampleSize", m_sampleSize);
     DrawFullscreenQuad(texSource, texTarget, "GaussianV");
-    temp = texSource;
-    texSource = texTarget;
-    texTarget = temp;
 }
 
 void PostEffectGauss::Finalize()

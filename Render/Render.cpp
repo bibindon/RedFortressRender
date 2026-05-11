@@ -906,18 +906,21 @@ void Render::Draw()
                              pTexTempPos,
                              m_postEffectFogZEnabled,
                              false);
+        SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
     if (m_postEffectFogHeightEnabled)
     {
         EnsurePostEffectHeightFogInitialized();
         m_postEffectHeightFog.Draw(pTempTexture, pWorkTexture, pTexTempPos);
+        SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
     if (m_postEffectSaturateEnabled)
     {
         EnsurePostEffectSaturateInitialized();
         m_postEffectSaturate.Draw(pTempTexture, pWorkTexture);
+        SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
     if (m_postEffectDepthOfFieldMode == DepthOfFieldMode::Enabled)
@@ -957,7 +960,10 @@ void Render::Draw()
     if (m_postEffectGaussEnabled)
     {
         EnsurePostEffectGaussInitialized();
-        m_postEffectGauss.Draw(pTempTexture, pWorkTexture);
+        m_postEffectGauss.DrawHorizontal(pTempTexture, pWorkTexture);
+        SwapPostEffectBuffers(pTempTexture, pWorkTexture);
+        m_postEffectGauss.DrawVertical(pTempTexture, pWorkTexture);
+        SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
     if (m_postEffectMaskedGaussEnabled)
@@ -980,6 +986,7 @@ void Render::Draw()
     {
         EnsurePostEffectFXAAInitialized();
         m_postEffectFXAA.Draw(pTempTexture, pWorkTexture);
+        SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
     // g_pRenderTargetの内容を画面に転送
@@ -1867,6 +1874,14 @@ void Render::EnsurePostEffectStarBurstInitialized()
 void Render::EnsurePostEffectGodRayInitialized()
 {
     m_postEffectGodRay.Initialize();
+}
+
+void Render::SwapPostEffectBuffers(LPDIRECT3DTEXTURE9& texSource,
+                                   LPDIRECT3DTEXTURE9& texTarget)
+{
+    LPDIRECT3DTEXTURE9 temp = texSource;
+    texSource = texTarget;
+    texTarget = temp;
 }
 
 void Render::SetPostEffectSSAO2(const bool arg)

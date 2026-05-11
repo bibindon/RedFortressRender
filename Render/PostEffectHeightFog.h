@@ -14,8 +14,8 @@ public:
 
     void Initialize();
 
-    void Draw(LPDIRECT3DTEXTURE9& texSource,
-              LPDIRECT3DTEXTURE9& texTarget,
+    void Draw(LPDIRECT3DTEXTURE9 texSource,
+              LPDIRECT3DTEXTURE9 texTarget,
               LPDIRECT3DTEXTURE9 texRenderTargetPos);
     void Finalize();
 

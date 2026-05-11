@@ -415,6 +415,8 @@ private:
     void EnsurePostEffectDepthOfFieldInitialized();
     void EnsurePostEffectStarBurstInitialized();
     void EnsurePostEffectGodRayInitialized();
+    static void SwapPostEffectBuffers(LPDIRECT3DTEXTURE9& texSource,
+                                      LPDIRECT3DTEXTURE9& texTarget);
     static std::wstring Trim(const std::wstring& text);
     static int NormalizeGaussianSampleSize(const int sampleSize);
 

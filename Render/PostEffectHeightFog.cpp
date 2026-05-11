@@ -30,8 +30,8 @@ void PostEffectHeightFog::Initialize()
     m_isInitialized = true;
 }
 
-void PostEffectHeightFog::Draw(LPDIRECT3DTEXTURE9& texSource,
-                               LPDIRECT3DTEXTURE9& texTarget,
+void PostEffectHeightFog::Draw(LPDIRECT3DTEXTURE9 texSource,
+                               LPDIRECT3DTEXTURE9 texTarget,
                                LPDIRECT3DTEXTURE9 texRenderTargetPos)
 {
     if (!m_isInitialized || m_d3dEffect == nullptr)
@@ -57,10 +57,6 @@ void PostEffectHeightFog::Draw(LPDIRECT3DTEXTURE9& texSource,
     m_d3dEffect->SetTexture("g_PosTex", texRenderTargetPos);
 
     DrawFullscreenQuad(texSource, texTarget, "TechHeightFog");
-
-    LPDIRECT3DTEXTURE9 temp = texSource;
-    texSource = texTarget;
-    texTarget = temp;
 }
 
 void PostEffectHeightFog::Finalize()

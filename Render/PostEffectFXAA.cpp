@@ -49,8 +49,8 @@ void PostEffectFXAA::Finalize()
     m_isInitialized = false;
 }
 
-void PostEffectFXAA::Draw(LPDIRECT3DTEXTURE9& texSource,
-                          LPDIRECT3DTEXTURE9& texTarget)
+void PostEffectFXAA::Draw(LPDIRECT3DTEXTURE9 texSource,
+                          LPDIRECT3DTEXTURE9 texTarget)
 {
     if (!m_isInitialized || m_d3dEffect == NULL)
     {
@@ -66,10 +66,6 @@ void PostEffectFXAA::Draw(LPDIRECT3DTEXTURE9& texSource,
     m_d3dEffect->SetInt("g_SearchRadius", m_quality);
 
     DrawFullscreenQuad(texSource, texTarget, "Technique1");
-
-    LPDIRECT3DTEXTURE9 temp = texSource;
-    texSource = texTarget;
-    texTarget = temp;
 }
 
 void PostEffectFXAA::SetQuality(const int quality)

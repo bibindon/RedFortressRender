@@ -13,8 +13,8 @@ public:
     void Initialize();
     void Finalize();
 
-    void Draw(LPDIRECT3DTEXTURE9& texSource,
-              LPDIRECT3DTEXTURE9& texTarget);
+    void Draw(LPDIRECT3DTEXTURE9 texSource,
+              LPDIRECT3DTEXTURE9 texTarget);
 
     void SetQuality(const int quality);
     int GetQuality() const;

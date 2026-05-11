@@ -11,8 +11,10 @@ class PostEffectGauss : public IDeviceResettable
 public:
 
     void Initialize();
-    void Draw(LPDIRECT3DTEXTURE9& texSource,
-              LPDIRECT3DTEXTURE9& texTarget);
+    void DrawHorizontal(LPDIRECT3DTEXTURE9 texSource,
+                        LPDIRECT3DTEXTURE9 texTarget);
+    void DrawVertical(LPDIRECT3DTEXTURE9 texSource,
+                      LPDIRECT3DTEXTURE9 texTarget);
     void Finalize();
 
     void SetSampleSize(const int sampleSize);

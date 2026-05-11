@@ -35,8 +35,8 @@ void PostEffectFog::Initialize()
     m_isInitialized = true;
 }
 
-void PostEffectFog::Draw(LPDIRECT3DTEXTURE9& texSource,
-                         LPDIRECT3DTEXTURE9& texTarget,
+void PostEffectFog::Draw(LPDIRECT3DTEXTURE9 texSource,
+                         LPDIRECT3DTEXTURE9 texTarget,
                          LPDIRECT3DTEXTURE9 texRenderTargetZ,
                          LPDIRECT3DTEXTURE9 texRenderTargetPos,
                          const bool enableZ,
@@ -92,10 +92,6 @@ void PostEffectFog::Draw(LPDIRECT3DTEXTURE9& texSource,
 
     // フルスクリーンクアッドで描画
     DrawFullscreenQuad(texSource, texTarget, "TechFog");
-
-    LPDIRECT3DTEXTURE9 temp = texSource;
-    texSource = texTarget;
-    texTarget = temp;
 }
 
 void PostEffectFog::Finalize()
