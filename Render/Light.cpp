@@ -5,7 +5,7 @@
 namespace NSRender
 {
 
-D3DXVECTOR4 Light::m_lightDir { 1.0f, 1.0f, 0.0f, 0.0f };
+D3DXVECTOR4 Light::m_lightDir { 0.8f, 1.0f, 0.0f, 0.0f };
 float Light::m_Brightness = 1.0f;
 float Light::m_ambientBrightness = 1.0f;
 

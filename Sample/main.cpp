@@ -136,7 +136,6 @@ void InitializeSampleScene(HWND hWnd)
                                                  false,
                                                  false);
     RegisterLoadedModel(L"MeshMixManager", L"..\\..\\Sample\\res\\model2\\plateField.x", D3DXVECTOR3(0.0f, 0.0f, 0.0f), 1.0f, plateFieldId);
-
     ApplyAllSampleSettings();
 }
 

@@ -4,7 +4,7 @@ float4x4 g_matViewProj;
 float4x4 g_matWorldViewProj;
 
 float4 g_lightDir = { 0.3f, 1.0f, 0.5f, 0.0f };
-float4 g_lightPos = { -10.f, 10.f, -10.f, 0.0f };
+float4 g_lightPos = { -5.f, 7.f, -10.f, 0.0f };
 
 float4 g_cameraPos = { 10.f, 5.f, 10.f, 0.0f };
 

@@ -148,9 +148,33 @@ HRESULT LoadTextureCached(const std::wstring& texturePath, LPDIRECT3DBASETEXTURE
     }
 
     LPDIRECT3DTEXTURE9 loadedTexture = nullptr;
-    const HRESULT hr = D3DXCreateTextureFromFile(Common::D3DDevice(),
-                                                 texturePath.c_str(),
-                                                 &loadedTexture);
+
+    HRESULT hr = E_FAIL;
+
+    if (true)
+    {
+        hr = D3DXCreateTextureFromFile(Common::D3DDevice(),
+                                       texturePath.c_str(),
+                                       &loadedTexture);
+    }
+    else
+    {
+        hr = D3DXCreateTextureFromFileEx(Common::D3DDevice(),
+                                         texturePath.c_str(),
+                                         D3DX_DEFAULT,
+                                         D3DX_DEFAULT,
+                                         1,
+                                         0,
+                                         D3DFMT_UNKNOWN,
+                                         D3DPOOL_MANAGED,
+                                         D3DX_DEFAULT,
+                                         D3DX_DEFAULT,
+                                         0,
+                                         nullptr,
+                                         nullptr,
+                                         &loadedTexture);
+    }
+    
     if (FAILED(hr))
     {
         return hr;

@@ -1916,7 +1916,7 @@ void UpdateDirectionalLight()
     }
     else
     {
-        lightDir = D3DXVECTOR3(1.0f, 1.0f, -1.0f);
+        lightDir = D3DXVECTOR3(0.6f, 0.7f, -0.9f);
     }
 
     g_Render.SetLightDir(lightDir);
