@@ -22,6 +22,7 @@ void RefreshDepthOfFieldAutoActivationControls(HWND hDlg);
 void RefreshGaussianControls(HWND hDlg);
 void RefreshFXAAControls(HWND hDlg);
 void RefreshMotionBlurCameraControls(HWND hDlg);
+void RefreshFog(HWND hDlg);
 void RefreshFogControls(HWND hDlg);
 void RefreshHeightFogControls(HWND hDlg);
 void RefreshHeightFogIntensityControls(HWND hDlg);
@@ -1409,6 +1410,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshBloom(hDlg);
     RefreshDepthOfField(hDlg);
     RefreshStarBurst(hDlg);
+    RefreshFog(hDlg);
     RefreshFogControls(hDlg);
     RefreshHeightFogControls(hDlg);
     RefreshSunLightIntensityControls(hDlg);
@@ -2683,6 +2685,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_bGaussianFilter = (IsDlgButtonChecked(hDlg, IDC_CHECK_GAUSSIAN_FILTER) == BST_CHECKED);
             g_Render.SetPostEffectGaussianFilter(g_bGaussianFilter);
             RefreshGaussianControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_FOG)
+        {
+            g_bFog = (IsDlgButtonChecked(hDlg, IDC_CHECK_FOG) == BST_CHECKED);
+            g_Render.SetPostEffectFog(g_bFog);
+            RefreshFog(hDlg);
+            RefreshFogControls(hDlg);
             return TRUE;
         }
 

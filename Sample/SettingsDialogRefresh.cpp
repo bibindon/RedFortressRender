@@ -16,6 +16,16 @@ void RefreshHeightFogMaxControls(HWND hDlg);
 void RefreshHeightFogDistanceStartControls(HWND hDlg);
 void RefreshHeightFogDistanceMaxControls(HWND hDlg);
 
+void RefreshFog(HWND hDlg)
+{
+    UINT checkState = BST_UNCHECKED;
+    if (g_bFog)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_FOG, checkState);
+}
+
 namespace
 {
 int PointLightShapeToComboIndex(const NSRender::PointLightShape shape)
@@ -175,6 +185,9 @@ void RefreshFogControls(HWND hDlg)
                        TBM_SETPOS,
                        TRUE,
                        static_cast<LPARAM>(FogIntensityToSliderValue(g_fogIntensity)));
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_FOG_INTENSITY), g_bFog);
+    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_FOG_INTENSITY), g_bFog);
+    EnableWindow(GetDlgItem(hDlg, IDC_STATIC_FOG_INTENSITY_LABEL), g_bFog);
 }
 
 void RefreshHeightFogControls(HWND hDlg)

@@ -1815,7 +1815,6 @@ void Render::SetPostEffectSSAO2SampleRadius(const float sampleRadius)
 void Render::SetPostEffectFog(const bool arg)
 {
     m_postEffectFogZEnabled = arg;
-    m_postEffectFogHeightEnabled = arg;
 }
 
 void Render::SetPostEffectFogIntensity(const float intensity)
