@@ -257,6 +257,7 @@ public:
     void SetPostEffectDepthBufferShadowCoverage(const float coverage);
     void SetPostEffectDepthBufferShadowPcfTapCount(const int tapCount);
     void SetPostEffectDepthBufferShadowCompositeTapCount(const int tapCount);
+    void SetPostEffectDepthBufferShadowTexSizeDivisor(const int scaleDivisor);
     void SetPostEffectSSAO2(const bool arg);
     void SetPostEffectSSAO2Blur(const bool arg);
     void SetPostEffectSSAO2ShadowStrength(const float shadowStrength);

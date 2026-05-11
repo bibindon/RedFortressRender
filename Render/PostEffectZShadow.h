@@ -29,6 +29,7 @@ public:
     void SetCoverage(const float coverage);
     void SetPcfTapCount(const int tapCount);
     void SetCompositeTapCount(const int tapCount);
+    void SetShadowTextureScaleDivisor(const int scaleDivisor);
     void DrawDebugLightDepthOverlay(const int x,
                                     const int y,
                                     const int width,
@@ -50,15 +51,18 @@ private:
     float m_coverage = 0.5f;
     int m_pcfTapCount = 11;
     int m_compositeTapCount = 11;
+    int m_shadowTextureScaleDivisor = 1;
 
     LPD3DXEFFECT g_fxDepthBufferShadow = NULL;
 
     LPDIRECT3DTEXTURE9 g_texTemp = NULL;
 
     LPDIRECT3DTEXTURE9 g_texRenderTargetLightZ = NULL;
+    LPDIRECT3DTEXTURE9 g_texRenderTargetLightZHalf = NULL;
     LPDIRECT3DTEXTURE9 g_texRenderTargetShadow = NULL;
     
     LPDIRECT3DSURFACE9 g_surfaceLightZStensil = NULL;
+    LPDIRECT3DSURFACE9 g_surfaceLightZStensilHalf = NULL;
     LPDIRECT3DSURFACE9 oldRT0 = NULL;
     LPDIRECT3DSURFACE9 oldZ = NULL;
     
@@ -92,6 +96,8 @@ private:
     LPDIRECT3DTEXTURE9 m_texCompositeTarget = NULL;
 
     void CreateRawResource();
+    LPDIRECT3DTEXTURE9 GetActiveLightZTexture() const;
+    LPDIRECT3DSURFACE9 GetActiveLightZDepthStencil() const;
 };
 
 }

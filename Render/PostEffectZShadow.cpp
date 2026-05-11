@@ -100,8 +100,10 @@ void PostEffectZShadow::Finalize()
     SAFE_RELEASE(g_fxDepthBufferShadow);
 
     SAFE_RELEASE(g_texRenderTargetLightZ);
+    SAFE_RELEASE(g_texRenderTargetLightZHalf);
     SAFE_RELEASE(g_texRenderTargetShadow);
     SAFE_RELEASE(g_surfaceLightZStensil);
+    SAFE_RELEASE(g_surfaceLightZStensilHalf);
     SAFE_RELEASE(g_pQuadDecl);
 
     m_isInitialized = false;
@@ -135,6 +137,8 @@ void PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
 void PostEffectZShadow::RenderTechnique1()
 {
     HRESULT hr = E_FAIL;
+    LPDIRECT3DTEXTURE9 activeLightZTexture = GetActiveLightZTexture();
+    LPDIRECT3DSURFACE9 activeLightZDepthStencil = GetActiveLightZDepthStencil();
 
     hr = Common::D3DDevice()->GetRenderTarget(0, &oldRT0);
     assert(hr == S_OK);
@@ -144,19 +148,19 @@ void PostEffectZShadow::RenderTechnique1()
 
     LPDIRECT3DSURFACE9 surfaceLightZ = NULL;
 
-    hr = g_texRenderTargetLightZ->GetSurfaceLevel(0, &surfaceLightZ);
+    hr = activeLightZTexture->GetSurfaceLevel(0, &surfaceLightZ);
     assert(hr == S_OK);
 
     hr = Common::D3DDevice()->SetRenderTarget(0, surfaceLightZ);
     assert(hr == S_OK);
 
-    hr = Common::D3DDevice()->SetDepthStencilSurface(g_surfaceLightZStensil);
+    hr = Common::D3DDevice()->SetDepthStencilSurface(activeLightZDepthStencil);
     assert(hr == S_OK);
 
     // Viewport をテクスチャのサイズに変更
     // これをしないと一部のエリアにしか描画されない
     D3DSURFACE_DESC descLightZ { };
-    hr = g_texRenderTargetLightZ->GetLevelDesc(0, &descLightZ);
+    hr = activeLightZTexture->GetLevelDesc(0, &descLightZ);
     assert(hr == S_OK);
 
     D3DVIEWPORT9 oldViewPort { };
@@ -291,6 +295,7 @@ void PostEffectZShadow::RenderTechnique1()
 void PostEffectZShadow::RenderTechnique2()
 {
     HRESULT hr = E_FAIL;
+    LPDIRECT3DTEXTURE9 activeLightZTexture = GetActiveLightZTexture();
 
     LPDIRECT3DSURFACE9 surfaceShadow= NULL;
     hr = g_texRenderTargetShadow->GetSurfaceLevel(0, &surfaceShadow);
@@ -355,12 +360,12 @@ void PostEffectZShadow::RenderTechnique2()
     hr = g_fxDepthBufferShadow->SetFloat("g_lightFar", fLightFar);
     assert(hr == S_OK);
 
-    hr = g_fxDepthBufferShadow->SetTexture("g_texLightZ", g_texRenderTargetLightZ);
+    hr = g_fxDepthBufferShadow->SetTexture("g_texLightZ", activeLightZTexture);
     assert(hr == S_OK);
 
     D3DSURFACE_DESC descLightZ{};
 
-    hr = g_texRenderTargetLightZ->GetLevelDesc(0, &descLightZ);
+    hr = activeLightZTexture->GetLevelDesc(0, &descLightZ);
     assert(hr == S_OK);
 
     hr = g_fxDepthBufferShadow->SetFloat("g_shadowTexelW", 1.0f / (float)descLightZ.Width);
@@ -526,7 +531,8 @@ void PostEffectZShadow::DrawDebugLightDepthOverlay(const int x,
                                                    const int width,
                                                    const int height)
 {
-    if (g_fxDepthBufferShadow == NULL || g_texRenderTargetLightZ == NULL)
+    LPDIRECT3DTEXTURE9 activeLightZTexture = GetActiveLightZTexture();
+    if (g_fxDepthBufferShadow == NULL || activeLightZTexture == NULL)
     {
         return;
     }
@@ -549,7 +555,7 @@ void PostEffectZShadow::DrawDebugLightDepthOverlay(const int x,
     hr = g_fxDepthBufferShadow->SetTechnique("TechniqueDebugLightZ");
     assert(hr == S_OK);
 
-    hr = g_fxDepthBufferShadow->SetTexture("g_texLightZ", g_texRenderTargetLightZ);
+    hr = g_fxDepthBufferShadow->SetTexture("g_texLightZ", activeLightZTexture);
     assert(hr == S_OK);
 
     UINT passCount = 0;
@@ -641,6 +647,18 @@ void PostEffectZShadow::SetCompositeTapCount(const int tapCount)
     m_compositeTapCount = NormalizeShadowBlurTapCount(tapCount);
 }
 
+void PostEffectZShadow::SetShadowTextureScaleDivisor(const int scaleDivisor)
+{
+    if (scaleDivisor == 2)
+    {
+        m_shadowTextureScaleDivisor = 2;
+    }
+    else
+    {
+        m_shadowTextureScaleDivisor = 1;
+    }
+}
+
 void PostEffectZShadow::OnDeviceLost()
 {
     if (!m_isInitialized || g_fxDepthBufferShadow == NULL)
@@ -651,7 +669,9 @@ void PostEffectZShadow::OnDeviceLost()
     g_fxDepthBufferShadow->OnLostDevice();
     SAFE_RELEASE(g_texTemp);
     SAFE_RELEASE(g_texRenderTargetLightZ);
+    SAFE_RELEASE(g_texRenderTargetLightZHalf);
     SAFE_RELEASE(g_surfaceLightZStensil);
+    SAFE_RELEASE(g_surfaceLightZStensilHalf);
     SAFE_RELEASE(g_texRenderTargetShadow);
     SAFE_RELEASE(g_pQuadDecl);
 }
@@ -697,6 +717,30 @@ void PostEffectZShadow::CreateRawResource()
     assert(hr == S_OK);
 
     hResult = D3DXCreateTexture(Common::D3DDevice(),
+                                (std::max)(1, Common::ScreenW()),
+                                (std::max)(1, Common::ScreenH()),
+                                1,
+                                D3DUSAGE_RENDERTARGET,
+                                D3DFMT_R32F,
+                                D3DPOOL_DEFAULT,
+                                &g_texRenderTargetLightZHalf);
+
+    assert(hResult == S_OK);
+
+    D3DSURFACE_DESC halfDesc{};
+    g_texRenderTargetLightZHalf->GetLevelDesc(0, &halfDesc);
+
+    hr = Common::D3DDevice()->CreateDepthStencilSurface(halfDesc.Width,
+                                                        halfDesc.Height,
+                                                        D3DFMT_D16,
+                                                        D3DMULTISAMPLE_NONE,
+                                                        0,
+                                                        TRUE,
+                                                        &g_surfaceLightZStensilHalf,
+                                                        NULL);
+    assert(hr == S_OK);
+
+    hResult = D3DXCreateTexture(Common::D3DDevice(),
                                 Common::ScreenW(),
                                 Common::ScreenH(),
                                 1,
@@ -715,6 +759,26 @@ void PostEffectZShadow::CreateRawResource()
 
     hResult = Common::D3DDevice()->CreateVertexDeclaration(elems, &g_pQuadDecl);
     assert(hResult == S_OK);
+}
+
+LPDIRECT3DTEXTURE9 PostEffectZShadow::GetActiveLightZTexture() const
+{
+    if (m_shadowTextureScaleDivisor == 2)
+    {
+        return g_texRenderTargetLightZHalf;
+    }
+
+    return g_texRenderTargetLightZ;
+}
+
+LPDIRECT3DSURFACE9 PostEffectZShadow::GetActiveLightZDepthStencil() const
+{
+    if (m_shadowTextureScaleDivisor == 2)
+    {
+        return g_surfaceLightZStensilHalf;
+    }
+
+    return g_surfaceLightZStensil;
 }
 
 }

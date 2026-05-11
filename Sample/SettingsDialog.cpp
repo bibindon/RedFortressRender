@@ -56,6 +56,7 @@ void RefreshGBufferClipPlaneControls(HWND hDlg);
 void RefreshSSAO2BlurControls(HWND hDlg);
 void RefreshAnimateLight(HWND hDlg);
 void RefreshRemoteDesktop(HWND hDlg);
+void RefreshZShadowTexSizeControls(HWND hDlg);
 void RefreshDepthBufferShadow(HWND hDlg);
 void RefreshBloom(HWND hDlg);
 void RefreshDepthOfField(HWND hDlg);
@@ -231,6 +232,42 @@ void PopulatePointLightTypeCombo(HWND hDlg)
     SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Square"));
     SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Cube"));
     SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Sphere"));
+}
+
+int ShadowTexSizeDivisorToComboIndex(const int scaleDivisor)
+{
+    if (scaleDivisor == 2)
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
+int ComboIndexToShadowTexSizeDivisor(const int comboIndex)
+{
+    if (comboIndex == 1)
+    {
+        return 2;
+    }
+
+    return 1;
+}
+
+void PopulateZShadowTexSizeCombo(HWND hDlg)
+{
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_ZSHADOW_TEX_SIZE);
+    if (combo == NULL)
+    {
+        return;
+    }
+
+    SendMessage(combo, CB_RESETCONTENT, 0, 0);
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/1"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/2"));
+    SendMessage(combo, CB_SETCURSEL,
+                static_cast<WPARAM>(ShadowTexSizeDivisorToComboIndex(g_zShadowTexSizeDivisor)),
+                0);
 }
 
 bool TryParseEditFloat(HWND hDlg, const int controlId, float& value)
@@ -1421,6 +1458,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshPointLightControls(hDlg);
     RefreshAnimateLight(hDlg);
     RefreshRemoteDesktop(hDlg);
+    RefreshZShadowTexSizeControls(hDlg);
     RefreshDepthBufferShadow(hDlg);
     RefreshSSAO2(hDlg);
     RefreshSSAO2BlurControls(hDlg);
@@ -1947,6 +1985,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         InitializeTrackbars(hDlg);
         PopulateResolutionCombo(hDlg);
         PopulatePointLightTypeCombo(hDlg);
+        PopulateZShadowTexSizeCombo(hDlg);
         InitializeLoadedModelListView(hDlg);
         InitializePointLightListView(hDlg);
         RefreshAllControls(hDlg);
@@ -2678,6 +2717,16 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_bDepthBufferShadow = (IsDlgButtonChecked(hDlg, IDC_CHECK_DEPTH_BUFFER_SHADOW) == BST_CHECKED);
             g_Render.SetPostEffectDepthBufferShadow(g_bDepthBufferShadow);
             RefreshDepthBufferShadow(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_COMBO_ZSHADOW_TEX_SIZE && HIWORD(wParam) == CBN_SELCHANGE)
+        {
+            HWND combo = reinterpret_cast<HWND>(lParam);
+            const int index = static_cast<int>(SendMessage(combo, CB_GETCURSEL, 0, 0));
+            g_zShadowTexSizeDivisor = ComboIndexToShadowTexSizeDivisor(index);
+            ApplyZShadowTexSize();
+            RefreshZShadowTexSizeControls(hDlg);
             return TRUE;
         }
 

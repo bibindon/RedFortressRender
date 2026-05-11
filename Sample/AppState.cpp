@@ -108,6 +108,7 @@ int g_fxaaQuality = 4;
 int g_motionBlurCameraQuality = 4;
 int g_shadowPcfTapCount = 11;
 int g_shadowCompositeTapCount = 11;
+int g_zShadowTexSizeDivisor = 1;
 int g_sunId = 0;
 int g_resolutionWidth = WINDOW_SIZE_W;
 int g_resolutionHeight = WINDOW_SIZE_H;
@@ -1579,6 +1580,17 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_shadowCompositeTapCount = std::stoi(value);
             }
+            else if (key == L"ZShadowTexSize")
+            {
+                if (value == L"1/2")
+                {
+                    g_zShadowTexSizeDivisor = 2;
+                }
+                else
+                {
+                    g_zShadowTexSizeDivisor = 1;
+                }
+            }
             else if (key == L"ShadowSaturationBoost")
             {
                 g_shadowSaturationBoost = std::stof(value);
@@ -1817,6 +1829,7 @@ void ApplyAllSampleSettings()
     ApplyShadowSaturationBoost();
     ApplyShadowPcfTapCount();
     ApplyShadowCompositeTapCount();
+    ApplyZShadowTexSize();
     ApplyCameraClipPlanes();
     ApplyGBufferEnable();
     ApplyGBufferClipPlanes();

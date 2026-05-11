@@ -429,6 +429,16 @@ void ApplyShadowCompositeTapCount()
     g_Render.SetPostEffectDepthBufferShadowCompositeTapCount(g_shadowCompositeTapCount);
 }
 
+void ApplyZShadowTexSize()
+{
+    if (g_zShadowTexSizeDivisor != 2)
+    {
+        g_zShadowTexSizeDivisor = 1;
+    }
+
+    g_Render.SetPostEffectDepthBufferShadowTexSizeDivisor(g_zShadowTexSizeDivisor);
+}
+
 void ApplySSAO2ShadowStrength()
 {
     g_ssao2ShadowStrength = ClampSSAO2ShadowStrength(g_ssao2ShadowStrength);

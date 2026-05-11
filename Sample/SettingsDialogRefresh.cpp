@@ -697,6 +697,23 @@ void RefreshRemoteDesktop(HWND hDlg)
     CheckDlgButton(hDlg, IDC_CHECK_REMOTE_DESKTOP, checkState);
 }
 
+void RefreshZShadowTexSizeControls(HWND hDlg)
+{
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_ZSHADOW_TEX_SIZE);
+    if (combo == NULL)
+    {
+        return;
+    }
+
+    int comboIndex = 0;
+    if (g_zShadowTexSizeDivisor == 2)
+    {
+        comboIndex = 1;
+    }
+
+    SendMessage(combo, CB_SETCURSEL, static_cast<WPARAM>(comboIndex), 0);
+}
+
 void RefreshDepthBufferShadow(HWND hDlg)
 {
     UINT checkState = BST_UNCHECKED;
@@ -705,6 +722,7 @@ void RefreshDepthBufferShadow(HWND hDlg)
         checkState = BST_CHECKED;
     }
     CheckDlgButton(hDlg, IDC_CHECK_DEPTH_BUFFER_SHADOW, checkState);
+    RefreshZShadowTexSizeControls(hDlg);
 }
 
 void RefreshSSAO2(HWND hDlg)

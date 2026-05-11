@@ -237,6 +237,19 @@ void Render::ApplySettings()
         }
     }
 
+    const auto zShadowTexSize = m_settings.find(L"ZShadowTexSize");
+    if (zShadowTexSize != m_settings.end())
+    {
+        if (zShadowTexSize->second == L"1/2")
+        {
+            SetPostEffectDepthBufferShadowTexSizeDivisor(2);
+        }
+        else
+        {
+            SetPostEffectDepthBufferShadowTexSizeDivisor(1);
+        }
+    }
+
     const auto ssao2Enable = m_settings.find(L"SSAO2Enable");
     if (ssao2Enable != m_settings.end())
     {
@@ -1885,6 +1898,11 @@ void Render::SetPostEffectDepthBufferShadowPcfTapCount(const int tapCount)
 void Render::SetPostEffectDepthBufferShadowCompositeTapCount(const int tapCount)
 {
     m_postEffectZShadow.SetCompositeTapCount(tapCount);
+}
+
+void Render::SetPostEffectDepthBufferShadowTexSizeDivisor(const int scaleDivisor)
+{
+    m_postEffectZShadow.SetShadowTextureScaleDivisor(scaleDivisor);
 }
 
 void Render::EnsurePostEffectSaturateInitialized()
