@@ -24,6 +24,7 @@ void RefreshFXAAControls(HWND hDlg);
 void RefreshMotionBlurCameraControls(HWND hDlg);
 void RefreshFog(HWND hDlg);
 void RefreshFogControls(HWND hDlg);
+void RefreshHeightFog(HWND hDlg);
 void RefreshHeightFogControls(HWND hDlg);
 void RefreshHeightFogIntensityControls(HWND hDlg);
 void RefreshHeightFogStartControls(HWND hDlg);
@@ -158,6 +159,7 @@ constexpr UINT ID_POPUP_REMOVE_POINT_LIGHT = 60003;
 int g_settingsDialogScrollPos = 0;
 
 void RefreshSaturateControls(HWND hDlg);
+void RefreshSaturateFilter(HWND hDlg);
 
 const wchar_t* PointLightShapeToDisplayString(const NSRender::PointLightShape shape)
 {
@@ -996,6 +998,23 @@ void RefreshSaturateControls(HWND hDlg)
                        TBM_SETPOS,
                        TRUE,
                        static_cast<LPARAM>(SaturateLevelToSliderValue(g_saturateLevel)));
+
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SATURATE_LEVEL), g_bSaturateFilter);
+    EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_SATURATE_DOWN), g_bSaturateFilter);
+    EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_SATURATE_UP), g_bSaturateFilter);
+    EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_SATURATE_RESET), g_bSaturateFilter);
+    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SATURATE_LEVEL), g_bSaturateFilter);
+    EnableWindow(GetDlgItem(hDlg, IDC_STATIC_SATURATE_LABEL), g_bSaturateFilter);
+}
+
+void RefreshSaturateFilter(HWND hDlg)
+{
+    UINT checkState = BST_UNCHECKED;
+    if (g_bSaturateFilter)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_SATURATE_FILTER, checkState);
 }
 
 void RefreshSelectedMeshPaths(HWND hDlg)
@@ -1391,6 +1410,7 @@ void RefreshAllControls(HWND hDlg)
 {
     // ダイアログ全体再同期の入口。
     // CSV 読み込み直後や設定の一括反映後に、個別更新漏れなく UI をそろえる。
+    RefreshSaturateFilter(hDlg);
     RefreshSaturateControls(hDlg);
     RefreshSelectedMeshPaths(hDlg);
     RefreshMixMeshShaderMode(hDlg);
@@ -1412,6 +1432,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshStarBurst(hDlg);
     RefreshFog(hDlg);
     RefreshFogControls(hDlg);
+    RefreshHeightFog(hDlg);
     RefreshHeightFogControls(hDlg);
     RefreshSunLightIntensityControls(hDlg);
     RefreshSunLightColorControls(hDlg);
@@ -2538,6 +2559,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
+        if (commandId == IDC_CHECK_SATURATE_FILTER)
+        {
+            g_bSaturateFilter = (IsDlgButtonChecked(hDlg, IDC_CHECK_SATURATE_FILTER) == BST_CHECKED);
+            g_Render.SetPostEffectSaturateEnable(g_bSaturateFilter);
+            RefreshSaturateFilter(hDlg);
+            RefreshSaturateControls(hDlg);
+            return TRUE;
+        }
+
         if (HandleOpenMeshCommand(hDlg, commandId))
         {
             return TRUE;
@@ -2701,6 +2731,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         {
             g_bHeightFog = (IsDlgButtonChecked(hDlg, IDC_CHECK_HEIGHT_FOG) == BST_CHECKED);
             g_Render.SetPostEffectHeightFog(g_bHeightFog);
+            RefreshHeightFog(hDlg);
             RefreshHeightFogControls(hDlg);
             return TRUE;
         }

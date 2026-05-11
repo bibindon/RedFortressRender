@@ -26,6 +26,16 @@ void RefreshFog(HWND hDlg)
     CheckDlgButton(hDlg, IDC_CHECK_FOG, checkState);
 }
 
+void RefreshHeightFog(HWND hDlg)
+{
+    UINT checkState = BST_UNCHECKED;
+    if (g_bHeightFog)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_HEIGHT_FOG, checkState);
+}
+
 namespace
 {
 int PointLightShapeToComboIndex(const NSRender::PointLightShape shape)
@@ -197,6 +207,22 @@ void RefreshHeightFogControls(HWND hDlg)
     RefreshHeightFogMaxControls(hDlg);
     RefreshHeightFogDistanceStartControls(hDlg);
     RefreshHeightFogDistanceMaxControls(hDlg);
+
+    EnableWindow(GetDlgItem(hDlg, IDC_STATIC_HEIGHT_FOG_INTENSITY_LABEL), g_bHeightFog);
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_HEIGHT_FOG_INTENSITY), g_bHeightFog);
+    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_HEIGHT_FOG_INTENSITY), g_bHeightFog);
+    EnableWindow(GetDlgItem(hDlg, IDC_STATIC_HEIGHT_FOG_START_LABEL), g_bHeightFog);
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_HEIGHT_FOG_START), g_bHeightFog);
+    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_HEIGHT_FOG_START), g_bHeightFog);
+    EnableWindow(GetDlgItem(hDlg, IDC_STATIC_HEIGHT_FOG_MAX_LABEL), g_bHeightFog);
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_HEIGHT_FOG_MAX), g_bHeightFog);
+    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_HEIGHT_FOG_MAX), g_bHeightFog);
+    EnableWindow(GetDlgItem(hDlg, IDC_STATIC_HEIGHT_FOG_DISTANCE_START_LABEL), g_bHeightFog);
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_HEIGHT_FOG_DISTANCE_START), g_bHeightFog);
+    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_HEIGHT_FOG_DISTANCE_START), g_bHeightFog);
+    EnableWindow(GetDlgItem(hDlg, IDC_STATIC_HEIGHT_FOG_DISTANCE_MAX_LABEL), g_bHeightFog);
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_HEIGHT_FOG_DISTANCE_MAX), g_bHeightFog);
+    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_HEIGHT_FOG_DISTANCE_MAX), g_bHeightFog);
 }
 
 void RefreshHeightFogIntensityControls(HWND hDlg)

@@ -872,6 +872,8 @@ void Render::Draw()
     //---------------------------------------------------------------
     // ポストエフェクト
     // m_pRenderTarget1やm_pRenderTarget2に代入しないこと
+    //
+    // TODO ポストエフェクトが作成したテクスチャを戻り値として返している。非常に問題がある。
     //---------------------------------------------------------------
 
     LPDIRECT3DTEXTURE9 pTempTexture = NULL;
@@ -1649,15 +1651,10 @@ void Render::DrawImage(const std::wstring& text,
 
 void Render::SetPostEffectSaturate(const float level)
 {
-    m_postEffectSaturateEnabled = (level < 0.9999f || level > 1.0001f);
     m_postEffectSaturate.SetPostEffectSaturate(level);
     if (m_postEffectSaturateEnabled)
     {
         EnsurePostEffectSaturateInitialized();
-    }
-    else
-    {
-        m_postEffectSaturate.Finalize();
     }
 }
 
