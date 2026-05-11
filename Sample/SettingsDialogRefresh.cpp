@@ -36,6 +36,16 @@ void RefreshHeightFog(HWND hDlg)
     CheckDlgButton(hDlg, IDC_CHECK_HEIGHT_FOG, checkState);
 }
 
+void RefreshGBuffer(HWND hDlg)
+{
+    UINT checkState = BST_UNCHECKED;
+    if (g_bGBuffer)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_GBUFFER, checkState);
+}
+
 namespace
 {
 int PointLightShapeToComboIndex(const NSRender::PointLightShape shape)
@@ -624,6 +634,11 @@ void RefreshGBufferClipPlaneControls(HWND hDlg)
     SetDlgItemText(hDlg, IDC_EDIT_GBUFFER_NEAR, buffer);
     std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_gbufferFarPlane);
     SetDlgItemText(hDlg, IDC_EDIT_GBUFFER_FAR, buffer);
+
+    EnableWindow(GetDlgItem(hDlg, IDC_STATIC_GBUFFER_NEAR_LABEL), g_bGBuffer);
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_GBUFFER_NEAR), g_bGBuffer);
+    EnableWindow(GetDlgItem(hDlg, IDC_STATIC_GBUFFER_FAR_LABEL), g_bGBuffer);
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_GBUFFER_FAR), g_bGBuffer);
 }
 
 void RefreshBloomThresholdControls(HWND hDlg)

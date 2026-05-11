@@ -205,6 +205,7 @@ extern bool g_bMotionBlurCamera;
 extern float g_motionBlurCameraMaxBlurPixels;
 extern int g_motionBlurCameraSampleCount;
 extern bool g_bDepthBufferShadow;
+extern bool g_bGBuffer;
 extern bool g_bSSAO2;
 extern bool g_bSSAO2Blur;
 extern bool g_bSSAO2DepthScaledSampleDistance;
@@ -455,6 +456,7 @@ bool ExportLoadedModelAsBinaryX(size_t modelIndex, const std::wstring& outputPat
 bool LoadXFileListFromCsv(const std::wstring& csvPath, int* loadedCount = nullptr, int* skippedCount = nullptr);
 void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath);
 void ApplyAllSampleSettings();
+void ApplyGBufferEnable();
 bool ReloadRenderSettingsFromCsv(const std::wstring& settingsCsvPath);
 void AddPointLightAtLookAt();
 

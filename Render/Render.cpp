@@ -217,6 +217,16 @@ void Render::ApplySettings()
         }
     }
 
+    const auto gbufferEnable = m_settings.find(L"GBufferEnable");
+    if (gbufferEnable != m_settings.end())
+    {
+        bool enabled = true;
+        if (TryParseBoolSetting(gbufferEnable->second, enabled))
+        {
+            SetGBufferEnable(enabled);
+        }
+    }
+
     const auto depthBufferShadowEnable = m_settings.find(L"DepthBufferShadowEnable");
     if (depthBufferShadowEnable != m_settings.end())
     {
@@ -829,8 +839,6 @@ void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
 
     CreateTexture();
 
-    m_GBuffer.Initialize();
-
     ApplySettings();
 
     // 画面転送
@@ -841,6 +849,7 @@ void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
 
 void Render::Finalize()
 {
+    m_GBuffer.Finalize();
     Common::D3DDevice()->Release();
     Common::SetD3DDevice(NULL);
 }
@@ -863,9 +872,16 @@ void Render::Draw()
     LPDIRECT3DTEXTURE9 pTexTempPos = NULL;
     LPDIRECT3DTEXTURE9 pTexTempNoral = NULL;
     LPDIRECT3DTEXTURE9 pTexTempThickness = NULL;
-    m_GBuffer.Draw(m_meshMixList, m_meshMixSkinAnimList, &pTexTempZ, &pTexTempPos, &pTexTempNoral, &pTexTempThickness);
-
-    MeshMixManager::SetSharedThicknessTexture(pTexTempThickness);
+    if (m_gBufferEnabled)
+    {
+        EnsureGBufferInitialized();
+        m_GBuffer.Draw(m_meshMixList, m_meshMixSkinAnimList, &pTexTempZ, &pTexTempPos, &pTexTempNoral, &pTexTempThickness);
+        MeshMixManager::SetSharedThicknessTexture(pTexTempThickness);
+    }
+    else
+    {
+        MeshMixManager::SetSharedThicknessTexture(NULL);
+    }
 
     DrawPass1(true);
 
@@ -877,7 +893,7 @@ void Render::Draw()
     LPDIRECT3DTEXTURE9 pTempTexture = m_pRenderTarget1;
     LPDIRECT3DTEXTURE9 pWorkTexture = m_pRenderTarget2;
 
-    if (m_postEffectZShadowEnabled)
+    if (m_gBufferEnabled && m_postEffectZShadowEnabled)
     {
         EnsurePostEffectZShadowInitialized();
         m_postEffectZShadow.Draw(pTempTexture,
@@ -889,7 +905,7 @@ void Render::Draw()
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
-    if (m_postEffectSSAO2Enabled)
+    if (m_gBufferEnabled && m_postEffectSSAO2Enabled)
     {
         EnsurePostEffectSSAO2Initialized();
         m_postEffectSSAO2.Draw(pTempTexture,
@@ -901,7 +917,7 @@ void Render::Draw()
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
-    if (m_postEffectFogZEnabled)
+    if (m_gBufferEnabled && m_postEffectFogZEnabled)
     {
         EnsurePostEffectFogInitialized();
         m_postEffectFog.Draw(pTempTexture,
@@ -913,28 +929,28 @@ void Render::Draw()
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
-    if (m_postEffectFogHeightEnabled)
+    if (m_gBufferEnabled && m_postEffectFogHeightEnabled)
     {
         EnsurePostEffectHeightFogInitialized();
         m_postEffectHeightFog.Draw(pTempTexture, pWorkTexture, pTexTempPos);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
-    if (m_postEffectSaturateEnabled)
+    if (m_gBufferEnabled && m_postEffectSaturateEnabled)
     {
         EnsurePostEffectSaturateInitialized();
         m_postEffectSaturate.Draw(pTempTexture, pWorkTexture);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
-    if (m_postEffectDepthOfFieldMode == DepthOfFieldMode::Enabled)
+    if (m_gBufferEnabled && m_postEffectDepthOfFieldMode == DepthOfFieldMode::Enabled)
     {
         EnsurePostEffectDepthOfFieldInitialized();
         m_postEffectDepthOfField.SetBlend(1.0f);
         m_postEffectDepthOfField.Draw(pTempTexture, pTexTempPos, pWorkTexture);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
-    else if (m_postEffectDepthOfFieldMode == DepthOfFieldMode::AutoNear)
+    else if (m_gBufferEnabled && m_postEffectDepthOfFieldMode == DepthOfFieldMode::AutoNear)
     {
         EnsurePostEffectDepthOfFieldInitialized();
         m_postEffectDepthOfField.UpdateAutoBlend(pTexTempPos);
@@ -945,28 +961,28 @@ void Render::Draw()
         }
     }
 
-    if (m_postEffectBloomEnabled)
+    if (m_gBufferEnabled && m_postEffectBloomEnabled)
     {
         EnsurePostEffectBloomInitialized();
         m_PostEffectBloom.Draw(pTempTexture, pWorkTexture);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
-    if (m_postEffectStarBurstEnabled)
+    if (m_gBufferEnabled && m_postEffectStarBurstEnabled)
     {
         EnsurePostEffectStarBurstInitialized();
         m_postEffectStarBurst.Draw(pTempTexture, pWorkTexture);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
-    if (m_postEffectGodRayEnabled)
+    if (m_gBufferEnabled && m_postEffectGodRayEnabled)
     {
         EnsurePostEffectGodRayInitialized();
         m_postEffectGodRay.Draw(pTempTexture, pTexTempZ, pWorkTexture);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
-    if (m_postEffectGaussEnabled)
+    if (m_gBufferEnabled && m_postEffectGaussEnabled)
     {
         EnsurePostEffectGaussInitialized();
         m_postEffectGauss.DrawHorizontal(pTempTexture, pWorkTexture);
@@ -975,14 +991,14 @@ void Render::Draw()
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
-    if (m_postEffectMaskedGaussEnabled)
+    if (m_gBufferEnabled && m_postEffectMaskedGaussEnabled)
     {
         EnsurePostEffectMaskedGaussInitialized();
         m_postEffectMaskedGauss.Draw(pTempTexture, pWorkTexture);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
-    if (m_postEffectMotionBlurCameraEnabled)
+    if (m_gBufferEnabled && m_postEffectMotionBlurCameraEnabled)
     {
         EnsurePostEffectMotionBlurCameraInitialized();
         bool motionBlurApplied = false;
@@ -997,7 +1013,7 @@ void Render::Draw()
         m_postEffectMotionBlurCamera.UpdateFrameMatrices();
     }
 
-    if (m_postEffectFXAAEnabled)
+    if (m_gBufferEnabled && m_postEffectFXAAEnabled)
     {
         EnsurePostEffectFXAAInitialized();
         m_postEffectFXAA.Draw(pTempTexture, pWorkTexture);
@@ -1005,23 +1021,30 @@ void Render::Draw()
     }
 
     // g_pRenderTargetの内容を画面に転送
-    switch (m_debugGBufferView)
+    if (m_gBufferEnabled)
     {
-    case DebugGBufferView::WorldPos:
-        m_postEffectEnd.Draw(pTexTempPos);
-        break;
-    case DebugGBufferView::Normal:
-        m_postEffectEnd.Draw(pTexTempNoral);
-        break;
-    case DebugGBufferView::Depth:
-        m_postEffectEnd.DrawSingleChannel(pTexTempZ);
-        break;
-    case DebugGBufferView::Thickness:
-        m_postEffectEnd.DrawSingleChannel(pTexTempThickness);
-        break;
-    default:
+        switch (m_debugGBufferView)
+        {
+        case DebugGBufferView::WorldPos:
+            m_postEffectEnd.Draw(pTexTempPos);
+            break;
+        case DebugGBufferView::Normal:
+            m_postEffectEnd.Draw(pTexTempNoral);
+            break;
+        case DebugGBufferView::Depth:
+            m_postEffectEnd.DrawSingleChannel(pTexTempZ);
+            break;
+        case DebugGBufferView::Thickness:
+            m_postEffectEnd.DrawSingleChannel(pTexTempThickness);
+            break;
+        default:
+            m_postEffectEnd.Draw(pTempTexture);
+            break;
+        }
+    }
+    else
+    {
         m_postEffectEnd.Draw(pTempTexture);
-        break;
     }
 
     // 文字と画像は彩度フィルタの影響を受けないようにする
@@ -1562,6 +1585,16 @@ void Render::SetCameraClipPlanes(const float nearPlane, const float farPlane)
     m_postEffectHeightFog.SetPositionRange(positionRange);
 }
 
+void Render::SetGBufferEnable(const bool enabled)
+{
+    m_gBufferEnabled = enabled;
+
+    if (!m_gBufferEnabled)
+    {
+        m_GBuffer.Finalize();
+    }
+}
+
 void Render::SetGBufferClipPlanes(const float nearPlane, const float farPlane)
 {
     const float positionRange = GBuffer::ComputePositionRange(nearPlane, farPlane);
@@ -1570,6 +1603,14 @@ void Render::SetGBufferClipPlanes(const float nearPlane, const float farPlane)
     m_postEffectFog.SetDepthDecodeRange(nearPlane, farPlane);
     m_postEffectGodRay.SetDepthRange(nearPlane, farPlane);
     m_postEffectDepthOfField.SetPositionRange(positionRange);
+}
+
+void Render::EnsureGBufferInitialized()
+{
+    if (!m_GBuffer.IsInitialized())
+    {
+        m_GBuffer.Initialize();
+    }
 }
 
 D3DXVECTOR3 Render::GetLookAtPos()
@@ -1791,7 +1832,7 @@ void Render::SetPostEffectMotionBlurCameraSampleCount(const int sampleCount)
 void Render::SetPostEffectDepthBufferShadow(const bool arg)
 {
     m_postEffectZShadowEnabled = arg;
-    if (m_postEffectZShadowEnabled)
+    if (m_gBufferEnabled && m_postEffectZShadowEnabled)
     {
         EnsurePostEffectZShadowInitialized();
     }

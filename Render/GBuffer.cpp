@@ -20,6 +20,11 @@ float GBuffer::ComputePositionRange(const float nearPlane, const float farPlane)
 
 void GBuffer::Initialize()
 {
+    if (m_isInitialized)
+    {
+        return;
+    }
+
     HRESULT hResult = E_FAIL;
 
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
@@ -35,7 +40,13 @@ void GBuffer::Initialize()
 
     CreateRawResource();
 
-    Common::AddDeviceLostResource(this);
+    if (!m_isRegisteredForDeviceReset)
+    {
+        Common::AddDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = true;
+    }
+
+    m_isInitialized = true;
 }
 
 void GBuffer::SetDepthRange(const float nearPlane, const float farPlane)
@@ -43,6 +54,11 @@ void GBuffer::SetDepthRange(const float nearPlane, const float farPlane)
     m_nearPlane = nearPlane;
     m_farPlane = farPlane;
     m_positionRange = ComputePositionRange(nearPlane, farPlane);
+}
+
+bool GBuffer::IsInitialized() const
+{
+    return m_isInitialized;
 }
 
 void GBuffer::CreateRawResource()
@@ -305,11 +321,28 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
 
 void GBuffer::Finalize()
 {
+    if (m_isRegisteredForDeviceReset)
+    {
+        Common::RemoveDeviceLostResource(this);
+        m_isRegisteredForDeviceReset = false;
+    }
 
+    SAFE_RELEASE(m_fxGBuffer);
+    SAFE_RELEASE(m_texRenderTargetZ);
+    SAFE_RELEASE(m_texRenderTargetPos);
+    SAFE_RELEASE(m_texRenderTargetNormal);
+    SAFE_RELEASE(m_texRenderTargetThickness);
+
+    m_isInitialized = false;
 }
 
 void GBuffer::OnDeviceLost()
 {
+    if (!m_isInitialized || m_fxGBuffer == NULL)
+    {
+        return;
+    }
+
     m_fxGBuffer->OnLostDevice();
     SAFE_RELEASE(m_texRenderTargetZ);
     SAFE_RELEASE(m_texRenderTargetPos);
@@ -319,6 +352,11 @@ void GBuffer::OnDeviceLost()
 
 void GBuffer::OnDeviceReset()
 {
+    if (!m_isInitialized || m_fxGBuffer == NULL)
+    {
+        return;
+    }
+
     CreateRawResource();
     m_fxGBuffer->OnResetDevice();
 }

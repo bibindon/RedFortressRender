@@ -192,6 +192,7 @@ public:
     void MoveCamera(const D3DXVECTOR3& pos);
     void RotateCamera(const D3DXVECTOR3& rot);
     void SetCameraClipPlanes(const float nearPlane, const float farPlane);
+    void SetGBufferEnable(const bool enabled);
     void SetGBufferClipPlanes(const float nearPlane, const float farPlane);
 
     D3DXVECTOR3 GetLookAtPos();
@@ -402,6 +403,7 @@ private:
     void Draw2D();
     void LoadSettingsCsv(const std::wstring& settingsCsvPath);
     void ApplySettings();
+    void EnsureGBufferInitialized();
     void EnsurePostEffectSaturateInitialized();
     void EnsurePostEffectGaussInitialized();
     void EnsurePostEffectMaskedGaussInitialized();
@@ -432,6 +434,7 @@ private:
     bool m_postEffectMaskedGaussEnabled = false;
     bool m_postEffectFXAAEnabled = false;
     bool m_postEffectMotionBlurCameraEnabled = false;
+    bool m_gBufferEnabled = true;
     bool m_postEffectZShadowEnabled = true;
     bool m_postEffectSSAO2Enabled = true;
     bool m_postEffectFogZEnabled = true;

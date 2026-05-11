@@ -19,6 +19,7 @@ public:
 
     void Initialize();
     void SetDepthRange(const float nearPlane, const float farPlane);
+    bool IsInitialized() const;
 
     void Draw(const std::deque<MeshMixManager>& meshList,
               const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList,
@@ -43,6 +44,8 @@ private:
     float m_nearPlane = 0.1f;
     float m_farPlane = 30'000.0f;
     float m_positionRange = 30'000.0f;
+    bool m_isInitialized = false;
+    bool m_isRegisteredForDeviceReset = false;
 
     void CreateRawResource();
 };

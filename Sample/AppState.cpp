@@ -49,6 +49,7 @@ bool g_bMotionBlurCamera = false;
 float g_motionBlurCameraMaxBlurPixels = 24.0f;
 int g_motionBlurCameraSampleCount = 13;
 bool g_bDepthBufferShadow = true;
+bool g_bGBuffer = true;
 bool g_bSSAO2 = true;
 bool g_bSSAO2Blur = false;
 bool g_bSSAO2DepthScaledSampleDistance = false;
@@ -1525,6 +1526,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_gbufferFarPlane = std::stof(value);
             }
+            else if (key == L"GBufferEnable")
+            {
+                g_bGBuffer = (std::stoi(value) != 0);
+            }
             else if (key == L"ShadowBlurTapCount")
             {
                 const int tapCount = std::stoi(value);
@@ -1778,6 +1783,7 @@ void ApplyAllSampleSettings()
     ApplyShadowPcfTapCount();
     ApplyShadowCompositeTapCount();
     ApplyCameraClipPlanes();
+    ApplyGBufferEnable();
     ApplyGBufferClipPlanes();
     ApplySSAO2ShadowStrength();
     ApplySSAO2ShadowSaturationBoost();

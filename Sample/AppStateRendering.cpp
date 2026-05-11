@@ -468,6 +468,11 @@ void ApplyCameraClipPlanes()
     g_Render.SetCameraClipPlanes(g_cameraNearPlane, g_cameraFarPlane);
 }
 
+void ApplyGBufferEnable()
+{
+    g_Render.SetGBufferEnable(g_bGBuffer);
+}
+
 void ApplyGBufferClipPlanes()
 {
     g_gbufferNearPlane = ClampGBufferNearPlane(g_gbufferNearPlane);

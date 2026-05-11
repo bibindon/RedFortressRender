@@ -26,6 +26,7 @@ void RefreshFog(HWND hDlg);
 void RefreshFogControls(HWND hDlg);
 void RefreshHeightFog(HWND hDlg);
 void RefreshHeightFogControls(HWND hDlg);
+void RefreshGBuffer(HWND hDlg);
 void RefreshHeightFogIntensityControls(HWND hDlg);
 void RefreshHeightFogStartControls(HWND hDlg);
 void RefreshHeightFogMaxControls(HWND hDlg);
@@ -1434,6 +1435,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshFogControls(hDlg);
     RefreshHeightFog(hDlg);
     RefreshHeightFogControls(hDlg);
+    RefreshGBuffer(hDlg);
     RefreshSunLightIntensityControls(hDlg);
     RefreshSunLightColorControls(hDlg);
     RefreshAmbientLightControls(hDlg);
@@ -2715,6 +2717,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_bGaussianFilter = (IsDlgButtonChecked(hDlg, IDC_CHECK_GAUSSIAN_FILTER) == BST_CHECKED);
             g_Render.SetPostEffectGaussianFilter(g_bGaussianFilter);
             RefreshGaussianControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_GBUFFER)
+        {
+            g_bGBuffer = (IsDlgButtonChecked(hDlg, IDC_CHECK_GBUFFER) == BST_CHECKED);
+            ApplyGBufferEnable();
+            RefreshGBuffer(hDlg);
+            RefreshGBufferClipPlaneControls(hDlg);
             return TRUE;
         }
 
