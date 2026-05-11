@@ -37,6 +37,7 @@ public:
     virtual ~MeshOld();
 
     void Initialize();
+    void Finalize();
     void SetPos(const D3DXVECTOR3& pos);
     D3DXVECTOR3 GetPos() const;
     void SetRotY(const float rotY);

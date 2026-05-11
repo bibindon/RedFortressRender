@@ -17,7 +17,13 @@ namespace NSRender
 {
 namespace
 {
-using TextureCache = std::unordered_map<std::wstring, LPDIRECT3DBASETEXTURE9>;
+struct CachedTexture
+{
+    LPDIRECT3DBASETEXTURE9 texture = nullptr;
+    int userCount = 0;
+};
+
+using TextureCache = std::unordered_map<std::wstring, CachedTexture>;
 
 float PointLightShapeToShaderValue(const PointLightShape shape)
 {
@@ -139,9 +145,10 @@ HRESULT LoadTextureCached(const std::wstring& texturePath, LPDIRECT3DBASETEXTURE
     const auto found = textureCache.find(cacheKey);
     if (found != textureCache.end())
     {
-        *texture = found->second;
+        *texture = found->second.texture;
         if (*texture != nullptr)
         {
+            ++found->second.userCount;
             (*texture)->AddRef();
         }
         return S_OK;
@@ -180,7 +187,10 @@ HRESULT LoadTextureCached(const std::wstring& texturePath, LPDIRECT3DBASETEXTURE
         return hr;
     }
 
-    textureCache.emplace(cacheKey, loadedTexture);
+    CachedTexture cachedTexture;
+    cachedTexture.texture = loadedTexture;
+    cachedTexture.userCount = 1;
+    textureCache.emplace(cacheKey, cachedTexture);
     loadedTexture->AddRef();
     *texture = loadedTexture;
     return S_OK;
@@ -200,9 +210,10 @@ HRESULT LoadCubeTextureCached(const std::wstring& texturePath, LPDIRECT3DBASETEX
     const auto found = textureCache.find(cacheKey);
     if (found != textureCache.end())
     {
-        *texture = found->second;
+        *texture = found->second.texture;
         if (*texture != nullptr)
         {
+            ++found->second.userCount;
             (*texture)->AddRef();
         }
         return S_OK;
@@ -217,10 +228,47 @@ HRESULT LoadCubeTextureCached(const std::wstring& texturePath, LPDIRECT3DBASETEX
         return hr;
     }
 
-    textureCache.emplace(cacheKey, loadedTexture);
+    CachedTexture cachedTexture;
+    cachedTexture.texture = loadedTexture;
+    cachedTexture.userCount = 1;
+    textureCache.emplace(cacheKey, cachedTexture);
     loadedTexture->AddRef();
     *texture = loadedTexture;
     return S_OK;
+}
+
+void ReleaseTextureCached(LPDIRECT3DBASETEXTURE9& texture)
+{
+    if (texture == nullptr)
+    {
+        return;
+    }
+
+    TextureCache& textureCache = GetTextureCache();
+    for (auto it = textureCache.begin(); it != textureCache.end(); ++it)
+    {
+        if (it->second.texture != texture)
+        {
+            continue;
+        }
+
+        if (it->second.userCount > 0)
+        {
+            --it->second.userCount;
+        }
+
+        SAFE_RELEASE(texture);
+
+        if (it->second.userCount == 0)
+        {
+            LPDIRECT3DBASETEXTURE9 cachedTexture = it->second.texture;
+            SAFE_RELEASE(cachedTexture);
+            textureCache.erase(it);
+        }
+        return;
+    }
+
+    SAFE_RELEASE(texture);
 }
 
 enum class eMeshTextureRole
@@ -907,16 +955,16 @@ void MeshMixManager::ReleaseOwnedResources()
 
     for (auto& texture : m_vecTexture)
     {
-        SAFE_RELEASE(texture);
+        ReleaseTextureCached(texture);
     }
     m_vecTexture.clear();
     m_vecDiffuse.clear();
     m_vecSpecularIntensity.clear();
     m_vecSpecularPower.clear();
 
-    SAFE_RELEASE(m_texCubeMap);
-    SAFE_RELEASE(m_texNormalMap);
-    SAFE_RELEASE(m_texHeightMap);
+    ReleaseTextureCached(m_texCubeMap);
+    ReleaseTextureCached(m_texNormalMap);
+    ReleaseTextureCached(m_texHeightMap);
 
     m_materialCount = 0;
     m_subsetCount = 0;

@@ -1074,6 +1074,41 @@ bool RemoveLoadedModel(const size_t modelIndex)
         return false;
     }
 
+    bool renderIdsShift = false;
+    if (model.m_type == L"MeshMix" || model.m_type == L"MeshMixManager" ||
+        model.m_type == L"MeshMixSkinAnim" ||
+        model.m_type == L"AnimMesh" ||
+        model.m_type == L"SkinAnimMesh")
+    {
+        renderIdsShift = true;
+    }
+
+    auto usesSameRenderContainer = [&model](const LoadedModelInfo& info)
+    {
+        if (model.m_type == L"MeshMix" || model.m_type == L"MeshMixManager")
+        {
+            return info.m_type == L"MeshMix" || info.m_type == L"MeshMixManager";
+        }
+
+        return info.m_type == model.m_type;
+    };
+
+    if (renderIdsShift)
+    {
+        for (auto& info : g_loadedModelList)
+        {
+            if (!usesSameRenderContainer(info))
+            {
+                continue;
+            }
+
+            if (info.m_renderId > model.m_renderId)
+            {
+                --info.m_renderId;
+            }
+        }
+    }
+
     if (model.m_type == L"Instancing")
     {
         g_loadedModelList.erase(std::remove_if(g_loadedModelList.begin(),

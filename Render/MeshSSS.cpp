@@ -1,4 +1,4 @@
-#include "MeshSSS.h"
+ï»¿#include "MeshSSS.h"
 #include "MeshSSS.h"
 
 #include <cassert>
@@ -25,7 +25,7 @@ MeshSSS::MeshSSS(const std::wstring& xFilename,
 {
 }
 
-// ƒVƒF[ƒ_[ƒtƒ@ƒCƒ‹‚ğw’è‚Å‚«‚éƒRƒ“ƒXƒgƒ‰ƒNƒ^
+// ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒ•ã‚¡ã‚¤ãƒ«ã‚’æŒ‡å®šã§ãã‚‹ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
 MeshSSS::MeshSSS(const std::wstring& shaderName,
            const std::wstring& xFilename,
            const D3DXVECTOR3& position,
@@ -43,6 +43,7 @@ MeshSSS::MeshSSS(const std::wstring& shaderName,
 
 MeshSSS::~MeshSSS()
 {
+    Finalize();
 }
 
 static LPDIRECT3DSURFACE9& OffscreenDepthStorage()
@@ -93,7 +94,7 @@ void MeshSSS::Initialize()
     HRESULT hResult = E_FAIL;
 
     //--------------------------------------------------------
-    // ƒGƒtƒFƒNƒg‚Ìì¬
+    // ã‚¨ãƒ•ã‚§ã‚¯ãƒˆã®ä½œæˆ
     //--------------------------------------------------------
     hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
                                        SHADER_FILENAME.c_str(),
@@ -107,7 +108,7 @@ void MeshSSS::Initialize()
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // Xƒtƒ@ƒCƒ‹‚Ì“Ç‚İ‚İ
+    // Xãƒ•ã‚¡ã‚¤ãƒ«ã®èª­ã¿è¾¼ã¿
     //--------------------------------------------------------
     LPD3DXBUFFER adjacencyBuffer = nullptr;
     LPD3DXBUFFER materialBuffer = nullptr;
@@ -124,7 +125,7 @@ void MeshSSS::Initialize()
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // –@üî•ñ‚ğ‚à‚ÂƒƒbƒVƒ…ƒtƒ@ƒCƒ‹‚É•ÏŠ·
+    // æ³•ç·šæƒ…å ±ã‚’ã‚‚ã¤ãƒ¡ãƒƒã‚·ãƒ¥ãƒ•ã‚¡ã‚¤ãƒ«ã«å¤‰æ›
     //--------------------------------------------------------
     D3DVERTEXELEMENT9 decl[4] { };
 
@@ -168,13 +169,13 @@ void MeshSSS::Initialize()
     DWORD* adjacencyList = (DWORD*)adjacencyBuffer->GetBufferPointer();
 
     //--------------------------------------------------------
-    // –@üî•ñ‚ğÄŒvZ
+    // æ³•ç·šæƒ…å ±ã‚’å†è¨ˆç®—
     //--------------------------------------------------------
     hResult = D3DXComputeNormals(m_D3DMesh, adjacencyList);
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // –Ê‚Æ’¸“_‚ğ•À‚×‘Ö‚¦‚ÄƒƒbƒVƒ…‚ğ¶¬‚µA•`‰æƒpƒtƒH[ƒ}ƒ“ƒX‚ğÅ“K‰»
+    // é¢ã¨é ‚ç‚¹ã‚’ä¸¦ã¹æ›¿ãˆã¦ãƒ¡ãƒƒã‚·ãƒ¥ã‚’ç”Ÿæˆã—ã€æç”»ãƒ‘ãƒ•ã‚©ãƒ¼ãƒãƒ³ã‚¹ã‚’æœ€é©åŒ–
     //--------------------------------------------------------
     hResult = m_D3DMesh->OptimizeInplace(D3DXMESHOPT_COMPACT | D3DXMESHOPT_ATTRSORT | D3DXMESHOPT_VERTEXCACHE,
                                          adjacencyList,
@@ -186,11 +187,11 @@ void MeshSSS::Initialize()
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
-    // ƒ}ƒeƒŠƒAƒ‹î•ñ‚Ì“Ç‚İ‚İ
+    // ãƒãƒ†ãƒªã‚¢ãƒ«æƒ…å ±ã®èª­ã¿è¾¼ã¿
     //--------------------------------------------------------
     D3DXMATERIAL* materialList = (D3DXMATERIAL*)materialBuffer->GetBufferPointer();
 
-    // Xƒtƒ@ƒCƒ‹‚ÌƒfƒBƒŒƒNƒgƒŠ
+    // Xãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª
     std::wstring xFileDir = m_meshName;
     std::size_t lastPos = xFileDir.find_last_of(L"\\");
     xFileDir = xFileDir.substr(0, lastPos + 1);
@@ -198,7 +199,7 @@ void MeshSSS::Initialize()
     for (DWORD i = 0; i < m_materialCount; ++i)
     {
         //--------------------------------------------------------
-        // ŠgU”½ËF‚Ì“Ç‚İ‚İ
+        // æ‹¡æ•£åå°„è‰²ã®èª­ã¿è¾¼ã¿
         //--------------------------------------------------------
         D3DXVECTOR4 diffuce(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -213,7 +214,7 @@ void MeshSSS::Initialize()
         m_vecDiffuse.push_back(diffuce);
 
         //--------------------------------------------------------
-        // ƒeƒNƒXƒ`ƒƒ‚Ì“Ç‚İ‚İ
+        // ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®èª­ã¿è¾¼ã¿
         //--------------------------------------------------------
         if (materialList[i].pTextureFilename != nullptr &&
             strlen(materialList[i].pTextureFilename) != 0)
@@ -258,6 +259,32 @@ void MeshSSS::Initialize()
     Common::AddDeviceLostResource(this);
 
     m_bLoaded = true;
+}
+
+void MeshSSS::Finalize()
+{
+    if (m_bLoaded)
+    {
+        Common::RemoveDeviceLostResource(this);
+    }
+
+    SAFE_RELEASE(m_D3DEffect);
+    SAFE_RELEASE(m_D3DMesh);
+
+    for (auto& texture : m_vecTexture)
+    {
+        SAFE_RELEASE(texture);
+    }
+
+    m_vecTexture.clear();
+    m_vecDiffuse.clear();
+    m_materialCount = 0;
+
+    SAFE_RELEASE(g_rtFrontDepth);
+    SAFE_RELEASE(g_rtBackDepth);
+    ReleaseOffscreenDepth();
+
+    m_bLoaded = false;
 }
 
 void MeshSSS::SetPos(const D3DXVECTOR3& pos)
@@ -334,12 +361,12 @@ void MeshSSS::Render()
 
     Common::D3DDevice()->EndScene();
 
-    // ‹¤—L‚ÌƒIƒtƒXƒNƒŠ[ƒ“—p[“xƒXƒeƒ“ƒVƒ‹‚ğæ“¾
+    // å…±æœ‰ã®ã‚ªãƒ•ã‚¹ã‚¯ãƒªãƒ¼ãƒ³ç”¨æ·±åº¦ã‚¹ãƒ†ãƒ³ã‚·ãƒ«ã‚’å–å¾—
     LPDIRECT3DSURFACE9 dsOffscreen = AcquireOffscreenDepth(Common::ScreenW(), Common::ScreenH());
 
     // --------------------------------------------------------
     // Pass 2 : Fog Front Depth
-    //   Surface ‚Í“s“xæ“¾‚µ‚Äƒ[ƒJƒ‹‚Å•ÛE‰ğ•ú
+    //   Surface ã¯éƒ½åº¦å–å¾—ã—ã¦ãƒ­ãƒ¼ã‚«ãƒ«ã§ä¿æŒãƒ»è§£æ”¾
     // --------------------------------------------------------
     LPDIRECT3DSURFACE9 surfFrontRT = NULL;
     g_rtFrontDepth->GetSurfaceLevel(0, &surfFrontRT);
@@ -396,7 +423,7 @@ void MeshSSS::Render()
 
     // --------------------------------------------------------
     // Pass 4 : Fog Composite
-    //   ƒV[ƒ“‚Ì[“x‚ğg—p‚·‚é‚½‚ßAŒ³‚Ì depthSurfaceScene ‚É–ß‚·
+    //   ã‚·ãƒ¼ãƒ³ã®æ·±åº¦ã‚’ä½¿ç”¨ã™ã‚‹ãŸã‚ã€å…ƒã® depthSurfaceScene ã«æˆ»ã™
     // --------------------------------------------------------
     Common::D3DDevice()->SetRenderTarget(0, backBuffer);
     Common::D3DDevice()->SetDepthStencilSurface(depthSurfaceScene);

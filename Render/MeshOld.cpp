@@ -46,6 +46,7 @@ MeshOld::MeshOld(const std::wstring& shaderName,
 
 MeshOld::~MeshOld()
 {
+    Finalize();
 }
 
 void MeshOld::Initialize()
@@ -198,6 +199,27 @@ void MeshOld::Initialize()
     Common::AddDeviceLostResource(this);
 
     m_bLoaded = true;
+}
+
+void MeshOld::Finalize()
+{
+    if (m_bLoaded)
+    {
+        Common::RemoveDeviceLostResource(this);
+    }
+
+    SAFE_RELEASE(m_D3DEffect);
+    SAFE_RELEASE(m_D3DMesh);
+
+    for (auto& texture : m_vecTexture)
+    {
+        SAFE_RELEASE(texture);
+    }
+
+    m_vecTexture.clear();
+    m_vecDiffuse.clear();
+    m_materialCount = 0;
+    m_bLoaded = false;
 }
 
 void MeshOld::SetPos(const D3DXVECTOR3& pos)

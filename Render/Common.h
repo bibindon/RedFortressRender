@@ -76,7 +76,7 @@ inline void SAFE_RELEASE(T*& p)
         return;
     }
 
-    p->Release();
+    auto refCount = p->Release();
     p = nullptr;
 }
 

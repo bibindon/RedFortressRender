@@ -1092,11 +1092,14 @@ int Render::AddMesh(const std::wstring& filePath,
 
 bool Render::RemoveMesh(const int id)
 {
-    if (id < 0 || id >= static_cast<int>(m_meshEnabledList.size()))
+    if (id < 0 ||
+        id >= static_cast<int>(m_meshEnabledList.size()) ||
+        id >= static_cast<int>(m_meshList.size()))
     {
         return false;
     }
 
+    m_meshList.at(id).Finalize();
     m_meshEnabledList.at(id) = false;
     return true;
 }
@@ -1152,11 +1155,14 @@ int Render::AddMeshSSS(const std::wstring& filePath,
 
 bool Render::RemoveMeshSSS(const int id)
 {
-    if (id < 0 || id >= static_cast<int>(m_meshSSSEnabledList.size()))
+    if (id < 0 ||
+        id >= static_cast<int>(m_meshSSSEnabledList.size()) ||
+        id >= static_cast<int>(m_meshSSSList.size()))
     {
         return false;
     }
 
+    m_meshSSSList.at(id).Finalize();
     m_meshSSSEnabledList.at(id) = false;
     return true;
 }
@@ -1176,11 +1182,14 @@ int Render::AddMeshPointLight(const std::wstring& filePath,
 
 bool Render::RemoveMeshPointLight(const int id)
 {
-    if (id < 0 || id >= static_cast<int>(m_meshPointLightEnabledList.size()))
+    if (id < 0 ||
+        id >= static_cast<int>(m_meshPointLightEnabledList.size()) ||
+        id >= static_cast<int>(m_meshPointLightList.size()))
     {
         return false;
     }
 
+    m_meshPointLightList.at(id).Finalize();
     m_meshPointLightEnabledList.at(id) = false;
     return true;
 }
@@ -1201,11 +1210,14 @@ int Render::AddMeshNormalMapping(const std::wstring& filePath,
 
 bool Render::RemoveMeshNormalMapping(const int id)
 {
-    if (id < 0 || id >= static_cast<int>(m_meshNormalMapEnabledList.size()))
+    if (id < 0 ||
+        id >= static_cast<int>(m_meshNormalMapEnabledList.size()) ||
+        id >= static_cast<int>(m_meshNormalMapList.size()))
     {
         return false;
     }
 
+    m_meshNormalMapList.at(id).Finalize();
     m_meshNormalMapEnabledList.at(id) = false;
     return true;
 }
@@ -1225,11 +1237,14 @@ int Render::AddMeshPOM(const std::wstring& filePath,
 
 bool Render::RemoveMeshPOM(const int id)
 {
-    if (id < 0 || id >= static_cast<int>(m_meshPOMEnabledList.size()))
+    if (id < 0 ||
+        id >= static_cast<int>(m_meshPOMEnabledList.size()) ||
+        id >= static_cast<int>(m_meshPOMList.size()))
     {
         return false;
     }
 
+    m_meshPOMList.at(id).Finalize();
     m_meshPOMEnabledList.at(id) = false;
     return true;
 }
@@ -1253,6 +1268,7 @@ bool Render::RemoveAnimMesh(const int id)
     }
 
     SAFE_DELETE(m_animMeshList.at(id));
+    m_animMeshList.erase(m_animMeshList.begin() + static_cast<std::ptrdiff_t>(id));
     return true;
 }
 
@@ -1275,6 +1291,7 @@ bool Render::RemoveSkinAnimMesh(const int id)
     }
 
     SAFE_DELETE(m_skinAnimMeshList.at(id));
+    m_skinAnimMeshList.erase(m_skinAnimMeshList.begin() + static_cast<std::ptrdiff_t>(id));
     return true;
 }
 
@@ -1345,7 +1362,8 @@ bool Render::RemoveMeshMix(const int id)
         return false;
     }
 
-    m_meshMixList.at(id).SetEnabled(false);
+    m_meshMixList.at(id).Finalize();
+    m_meshMixList.erase(m_meshMixList.begin() + static_cast<std::ptrdiff_t>(id));
     return true;
 }
 
@@ -1402,7 +1420,8 @@ bool Render::RemoveMeshMixSkinAnim(const int id)
         return false;
     }
 
-    m_meshMixSkinAnimList.at(id)->SetEnabled(false);
+    SAFE_DELETE(m_meshMixSkinAnimList.at(id));
+    m_meshMixSkinAnimList.erase(m_meshMixSkinAnimList.begin() + static_cast<std::ptrdiff_t>(id));
     return true;
 }
 

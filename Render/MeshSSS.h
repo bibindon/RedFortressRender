@@ -1,4 +1,4 @@
-
+﻿
 #pragma once
 
 #include <d3d9.h>
@@ -14,7 +14,7 @@
 namespace NSRender
 {
 
-// �T�u�T�[�t�F�C�X�X�L���b�^�����O��\���ł��郁�b�V���N���X
+// サブサーフェイススキャッタリングを表現できるメッシュクラス
 class MeshSSS : public IDeviceResettable
 {
 public:
@@ -25,7 +25,7 @@ public:
          const float,
          const float = -1.f);
 
-    // �V�F�[�_�[�t�@�C�����w��ł���R���X�g���N�^
+    // シェーダーファイルを指定できるコンストラクタ
     MeshSSS(const std::wstring&,
          const std::wstring&,
          const D3DXVECTOR3&,
@@ -36,6 +36,7 @@ public:
     virtual ~MeshSSS();
 
     void Initialize();
+    void Finalize();
     void SetPos(const D3DXVECTOR3& pos);
     D3DXVECTOR3 GetPos() const;
     void SetRotY(const float rotY);
@@ -47,7 +48,7 @@ public:
 
     std::wstring GetMeshName();
 
-    // �𑜓x��E�B���h�E���[�h��ύX�����Ƃ��̂��߂̊֐�
+    // 解像度やウィンドウモードを変更したときのための関数
     void OnDeviceLost();
     void OnDeviceReset();
 
@@ -70,14 +71,14 @@ private:
     D3DXVECTOR3 m_pos = D3DXVECTOR3(0.f, 0.f, 0.f);
     D3DXVECTOR3 m_rotate = D3DXVECTOR3(0.f, 0.f, 0.f);
 
-    // �[�x�̑O�ʁE�w�ʂ��i�[���郌���_�[�^�[�Q�b�g
+    // 深度の前面・背面を格納するレンダーターゲット
     LPDIRECT3DTEXTURE9    g_rtFrontDepth = NULL;
     LPDIRECT3DTEXTURE9    g_rtBackDepth = NULL;
 
     //-------------------------------------------------
-    // ���̕��̂̔��a
-    // �v���C���[�����̔��a�ȓ��ɋ߂Â����炱�̕��̂͏Փ˔���̑ΏۂƂȂ�
-    // -1��������K���Փ˔���̑Ώۂɂ���
+    // この物体の半径
+    // プレイヤーがこの半径以内に近づいたらこの物体は衝突判定の対象となる
+    // -1だったら必ず衝突判定の対象にする
     //-------------------------------------------------
     float m_radius = 0.0f;
 
