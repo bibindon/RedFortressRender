@@ -138,6 +138,7 @@ void PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_fxSSAO->SetFloat("g_sampleRadius", m_sampleRadius);
     m_fxSSAO->SetInt("g_sampleCount", m_sampleCount);
     m_fxSSAO->SetBool("g_enableDepthScaledSampleDistance", m_depthScaledSampleDistanceEnabled);
+    m_fxSSAO->SetInt("g_blurKernelSize", m_blurKernelSize);
     m_fxSSAO->SetFloat("g_depthCompareThreshold", 0.0f);
     m_fxSSAO->SetFloat("g_depthBiasScale", 1.0f);
     m_fxSSAO->SetFloat("g_normalBiasScale", 1.0f);
@@ -154,7 +155,7 @@ void PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
         Common::D3DDevice()->SetRenderTarget(0, surfAOTemp);
         Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(255, 255, 255, 255), 1.0f, 0);
         m_fxSSAO->SetTexture("texAO", m_rtAoTex);
-        m_fxSSAO->SetTechnique("TechniqueAO_Blur21x21");
+        m_fxSSAO->SetTechnique("TechniqueAO_Blur");
         m_fxSSAO->Begin(NULL, 0);
         m_fxSSAO->BeginPass(0);
         DrawFullscreenQuad();
@@ -254,6 +255,11 @@ void PostEffectSSAO::SetBlurEnabled(const bool enabled)
     m_blurEnabled = enabled;
 }
 
+void PostEffectSSAO::SetBlurKernelSize(const int kernelSize)
+{
+    m_blurKernelSize = NormalizeBlurKernelSize(kernelSize);
+}
+
 void PostEffectSSAO::SetTextureScaleDivisor(const int scaleDivisor)
 {
     const int normalizedDivisor = NormalizeTextureScaleDivisor(scaleDivisor);
@@ -276,6 +282,18 @@ void PostEffectSSAO::SetDepthRange(const float nearPlane, const float farPlane)
     m_nearPlane = nearPlane;
     m_farPlane = farPlane;
     m_positionRange = GBuffer::ComputePositionRange(nearPlane, farPlane);
+}
+
+int PostEffectSSAO::NormalizeBlurKernelSize(const int kernelSize) const
+{
+    int normalized = (std::max)(3, (std::min)(kernelSize, 21));
+
+    if ((normalized % 2) == 0)
+    {
+        --normalized;
+    }
+
+    return (std::max)(3, normalized);
 }
 
 int PostEffectSSAO::NormalizeTextureScaleDivisor(const int scaleDivisor) const

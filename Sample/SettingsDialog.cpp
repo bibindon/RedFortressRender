@@ -51,6 +51,7 @@ void RefreshSSAOShadowSaturationControls(HWND hDlg);
 void RefreshSSAOSampleCountControls(HWND hDlg);
 void RefreshSSAODepthScaledSampleDistanceControls(HWND hDlg);
 void RefreshSSAOSampleRadiusControls(HWND hDlg);
+void RefreshSSAOBlurKernelSizeControls(HWND hDlg);
 void RefreshCameraClipPlaneControls(HWND hDlg);
 void RefreshGBufferClipPlaneControls(HWND hDlg);
 void RefreshSSAOBlurControls(HWND hDlg);
@@ -117,6 +118,8 @@ constexpr int SSAO_SAMPLE_COUNT_SLIDER_MIN = SSAO_SAMPLE_COUNT_MIN;
 constexpr int SSAO_SAMPLE_COUNT_SLIDER_MAX = SSAO_SAMPLE_COUNT_MAX;
 constexpr int SSAO_SAMPLE_RADIUS_SLIDER_MIN = 0;
 constexpr int SSAO_SAMPLE_RADIUS_SLIDER_MAX = static_cast<int>((SSAO_SAMPLE_RADIUS_MAX - SSAO_SAMPLE_RADIUS_MIN) / SSAO_SAMPLE_RADIUS_STEP);
+constexpr int SSAO_BLUR_KERNEL_SIZE_SLIDER_MIN = SSAO_BLUR_KERNEL_SIZE_MIN;
+constexpr int SSAO_BLUR_KERNEL_SIZE_SLIDER_MAX = SSAO_BLUR_KERNEL_SIZE_MAX;
 constexpr int BLOOM_THRESHOLD_SLIDER_MIN = 0;
 constexpr int BLOOM_THRESHOLD_SLIDER_MAX = static_cast<int>(BLOOM_THRESHOLD_MAX / BLOOM_THRESHOLD_STEP);
 constexpr int DOF_FOCAL_DISTANCE_SLIDER_MIN = 0;
@@ -428,6 +431,7 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_SSAO_SHADOW_SATURATION,
         IDC_EDIT_SSAO_SAMPLE_COUNT,
         IDC_EDIT_SSAO_SAMPLE_RADIUS,
+        IDC_EDIT_SSAO_BLUR_KERNEL_SIZE,
         IDC_EDIT_CAMERA_NEAR,
         IDC_EDIT_CAMERA_FAR,
         IDC_EDIT_GBUFFER_NEAR,
@@ -779,6 +783,14 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
             ApplySSAOSampleRadius();
         }
         RefreshSSAOSampleRadiusControls(hDlg);
+        return true;
+    case IDC_EDIT_SSAO_BLUR_KERNEL_SIZE:
+        if (TryParseEditInt(hDlg, commandId, intValue))
+        {
+            g_ssaoBlurKernelSize = intValue;
+            ApplySSAOBlurKernelSize();
+        }
+        RefreshSSAOBlurKernelSizeControls(hDlg);
         return true;
     case IDC_EDIT_CAMERA_NEAR:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
@@ -1572,6 +1584,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshCameraClipPlaneControls(hDlg);
     RefreshGBufferClipPlaneControls(hDlg);
     RefreshSSAOBlurControls(hDlg);
+    RefreshSSAOBlurKernelSizeControls(hDlg);
     RefreshSSAOShadowStrengthControls(hDlg);
     RefreshSSAOShadowSaturationControls(hDlg);
     RefreshSSAOSampleCountControls(hDlg);
@@ -1742,6 +1755,11 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS, TBM_SETRANGEMAX, FALSE, SSAO_SAMPLE_RADIUS_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS, TBM_SETTICFREQ, 10, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS, TBM_SETPAGESIZE, 0, 10);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BLUR_KERNEL_SIZE, TBM_SETRANGEMIN, FALSE, SSAO_BLUR_KERNEL_SIZE_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BLUR_KERNEL_SIZE, TBM_SETRANGEMAX, FALSE, SSAO_BLUR_KERNEL_SIZE_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BLUR_KERNEL_SIZE, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BLUR_KERNEL_SIZE, TBM_SETPAGESIZE, 0, 2);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETRANGEMIN, FALSE, BLOOM_THRESHOLD_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETRANGEMAX, FALSE, BLOOM_THRESHOLD_SLIDER_MAX);
@@ -2535,6 +2553,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSAO_BLUR_KERNEL_SIZE))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_ssaoBlurKernelSize = SliderValueToSSAOBlurKernelSize(sliderValue);
+            ApplySSAOBlurKernelSize();
+            RefreshSSAOBlurKernelSizeControls(hDlg);
+            return TRUE;
+        }
+
         if (slider == GetDlgItem(hDlg, IDC_SLIDER_BLOOM_THRESHOLD))
         {
             const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
@@ -2824,6 +2851,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             RefreshSSAOShadowSaturationControls(hDlg);
             RefreshSSAOSampleCountControls(hDlg);
             RefreshSSAOSampleRadiusControls(hDlg);
+            RefreshSSAOBlurKernelSizeControls(hDlg);
             RefreshSSAODepthScaledSampleDistanceControls(hDlg);
             RefreshSSAOTexSizeControls(hDlg);
             return TRUE;
@@ -2834,6 +2862,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_bSSAOBlur = (IsDlgButtonChecked(hDlg, IDC_CHECK_SSAO_BLUR) == BST_CHECKED);
             ApplySSAOBlur();
             RefreshSSAOBlurControls(hDlg);
+            RefreshSSAOBlurKernelSizeControls(hDlg);
             return TRUE;
         }
 

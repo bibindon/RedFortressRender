@@ -741,6 +741,23 @@ void Render::ApplySettings()
         SetPostEffectSSAOSampleRadius(4.0f);
     }
 
+    const auto ssaoBlurKernelSize = m_settings.find(L"SSAOBlurKernelSize");
+    if (ssaoBlurKernelSize != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectSSAOBlurKernelSize(std::stoi(ssaoBlurKernelSize->second));
+        }
+        catch (...)
+        {
+            SetPostEffectSSAOBlurKernelSize(21);
+        }
+    }
+    else
+    {
+        SetPostEffectSSAOBlurKernelSize(21);
+    }
+
     const auto bloomEnable = m_settings.find(L"BloomEnable");
     if (bloomEnable != m_settings.end())
     {
@@ -2159,6 +2176,11 @@ void Render::SetPostEffectSSAODepthScaledSampleDistance(const bool enabled)
 void Render::SetPostEffectSSAOSampleRadius(const float sampleRadius)
 {
     m_postEffectSSAO.SetSampleRadius(sampleRadius);
+}
+
+void Render::SetPostEffectSSAOBlurKernelSize(const int kernelSize)
+{
+    m_postEffectSSAO.SetBlurKernelSize(kernelSize);
 }
 
 void Render::SetPostEffectSSAOTexSizeDivisor(const int scaleDivisor)

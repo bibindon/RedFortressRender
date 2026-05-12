@@ -42,6 +42,7 @@ SSAOShadowStrength,1.0
 SSAOShadowSaturationBoost,0.30
 SSAOSampleCount,16
 SSAOSampleRadius,1.0
+SSAOBlurKernelSize,21
 ,
 SpecularIntensity,0.1
 SpecularIntensityOverride,0

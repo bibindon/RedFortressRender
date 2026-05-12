@@ -265,6 +265,7 @@ public:
     void SetPostEffectSSAOSampleCount(const int sampleCount);
     void SetPostEffectSSAODepthScaledSampleDistance(const bool enabled);
     void SetPostEffectSSAOSampleRadius(const float sampleRadius);
+    void SetPostEffectSSAOBlurKernelSize(const int kernelSize);
     void SetPostEffectSSAOTexSizeDivisor(const int scaleDivisor);
     void SetPostEffectFog(const bool arg);
     void SetPostEffectFogIntensity(const float intensity);

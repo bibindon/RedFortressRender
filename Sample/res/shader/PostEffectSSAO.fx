@@ -10,6 +10,7 @@ float2 g_invSize;
 float g_sampleRadius = 1.0f;
 int g_sampleCount = 16;
 bool g_enableDepthScaledSampleDistance = false;
+int g_blurKernelSize = 21;
 float g_shadowStrength = 1.0f;
 float g_aoSaturationBoost = 0.30f;
 float g_depthCompareThreshold = 0.00f;
@@ -292,13 +293,14 @@ float ComputeBlurSampleWeight(float baseWeight,
     return baseWeight * depthWeight * normalWeight;
 }
 
-float4 PS_Blur21x21(VS_OUT i) : COLOR0
+float4 PS_Blur(VS_OUT i) : COLOR0
 {
     float2 texelSize = g_invSize;
     float centerDepth = GetViewDepth(i.uv);
     float3 centerNormal = GetViewNormal(i.uv);
     float blurredValue = 0.0f;
     float weightSum = 0.0f;
+    int blurRadius = max(1, g_blurKernelSize / 2);
 
     [loop]
     for (int y = -10; y <= 10; ++y)
@@ -306,6 +308,11 @@ float4 PS_Blur21x21(VS_OUT i) : COLOR0
         [loop]
         for (int x = -10; x <= 10; ++x)
         {
+            if (abs(x) > blurRadius || abs(y) > blurRadius)
+            {
+                continue;
+            }
+
             if (x == 0 && y == 0)
             {
                 continue;
@@ -356,13 +363,13 @@ technique TechniqueAO_Create
     }
 }
 
-technique TechniqueAO_Blur21x21
+technique TechniqueAO_Blur
 {
     pass P0
     {
         CullMode = NONE;
         VertexShader = compile vs_3_0 VS_Fullscreen();
-        PixelShader = compile ps_3_0 PS_Blur21x21();
+        PixelShader = compile ps_3_0 PS_Blur();
     }
 }
 

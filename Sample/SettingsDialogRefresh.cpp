@@ -618,6 +618,22 @@ void RefreshSSAOSampleRadiusControls(HWND hDlg)
     EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS), enabled);
 }
 
+void RefreshSSAOBlurKernelSizeControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%d", g_ssaoBlurKernelSize);
+    SetDlgItemText(hDlg, IDC_EDIT_SSAO_BLUR_KERNEL_SIZE, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_SSAO_BLUR_KERNEL_SIZE,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(SSAOBlurKernelSizeToSliderValue(g_ssaoBlurKernelSize)));
+    const BOOL enabled = g_bSSAO && g_bSSAOBlur;
+    EnableWindow(GetDlgItem(hDlg, IDC_STATIC_SSAO_BLUR_KERNEL_SIZE_LABEL), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SSAO_BLUR_KERNEL_SIZE), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SSAO_BLUR_KERNEL_SIZE), enabled);
+}
+
 void RefreshSSAOTexSizeControls(HWND hDlg)
 {
     HWND combo = GetDlgItem(hDlg, IDC_COMBO_SSAO_TEX_SIZE);
@@ -779,6 +795,7 @@ void RefreshSSAOBlurControls(HWND hDlg)
     }
     CheckDlgButton(hDlg, IDC_CHECK_SSAO_BLUR, checkState);
     EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SSAO_BLUR), g_bSSAO);
+    RefreshSSAOBlurKernelSizeControls(hDlg);
 }
 
 void RefreshBloom(HWND hDlg)

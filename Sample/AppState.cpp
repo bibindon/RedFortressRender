@@ -77,6 +77,7 @@ float g_ssaoShadowStrength = 1.0f;
 float g_ssaoShadowSaturationBoost = 0.30f;
 int g_ssaoSampleCount = 16;
 float g_ssaoSampleRadius = 4.0f;
+int g_ssaoBlurKernelSize = 21;
 float g_cameraNearPlane = 0.1f;
 float g_cameraFarPlane = 30'000.0f;
 float g_gbufferNearPlane = 0.1f;
@@ -210,6 +211,19 @@ int ClampSSAOSampleCount(const int sampleCount)
 float ClampSSAOSampleRadius(const float sampleRadius)
 {
     return (std::max)(SSAO_SAMPLE_RADIUS_MIN, (std::min)(sampleRadius, SSAO_SAMPLE_RADIUS_MAX));
+}
+
+int ClampSSAOBlurKernelSize(const int kernelSize)
+{
+    int normalized = (std::max)(SSAO_BLUR_KERNEL_SIZE_MIN,
+                                (std::min)(kernelSize, SSAO_BLUR_KERNEL_SIZE_MAX));
+
+    if ((normalized % 2) == 0)
+    {
+        --normalized;
+    }
+
+    return (std::max)(SSAO_BLUR_KERNEL_SIZE_MIN, normalized);
 }
 
 float ClampCameraNearPlane(const float nearPlane)
@@ -1543,6 +1557,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_ssaoSampleRadius = std::stof(value);
             }
+            else if (key == L"SSAOBlurKernelSize")
+            {
+                g_ssaoBlurKernelSize = std::stoi(value);
+            }
             else if (key == L"SSAODepthScaledSampleDistanceEnable")
             {
                 g_bSSAODepthScaledSampleDistance = (std::stoi(value) != 0);
@@ -1866,6 +1884,7 @@ void ApplyAllSampleSettings()
     ApplySSAOSampleCount();
     ApplySSAODepthScaledSampleDistance();
     ApplySSAOSampleRadius();
+    ApplySSAOBlurKernelSize();
     ApplySSAOTexSize();
     ApplySSAOBlur();
     ApplyHalfLambertShadowSaturation();

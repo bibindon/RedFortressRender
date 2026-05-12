@@ -90,6 +90,19 @@ float ClampSSAOSampleRadius(const float sampleRadius)
     return (std::max)(SSAO_SAMPLE_RADIUS_MIN, (std::min)(sampleRadius, SSAO_SAMPLE_RADIUS_MAX));
 }
 
+int ClampSSAOBlurKernelSize(const int kernelSize)
+{
+    int normalized = (std::max)(SSAO_BLUR_KERNEL_SIZE_MIN,
+                                (std::min)(kernelSize, SSAO_BLUR_KERNEL_SIZE_MAX));
+
+    if ((normalized % 2) == 0)
+    {
+        --normalized;
+    }
+
+    return (std::max)(SSAO_BLUR_KERNEL_SIZE_MIN, normalized);
+}
+
 float ClampCameraNearPlane(const float nearPlane)
 {
     return (std::max)(CAMERA_NEAR_MIN, (std::min)(nearPlane, CAMERA_NEAR_MAX));
@@ -469,6 +482,12 @@ void ApplySSAOSampleRadius()
 {
     g_ssaoSampleRadius = ClampSSAOSampleRadius(g_ssaoSampleRadius);
     g_Render.SetPostEffectSSAOSampleRadius(g_ssaoSampleRadius);
+}
+
+void ApplySSAOBlurKernelSize()
+{
+    g_ssaoBlurKernelSize = ClampSSAOBlurKernelSize(g_ssaoBlurKernelSize);
+    g_Render.SetPostEffectSSAOBlurKernelSize(g_ssaoBlurKernelSize);
 }
 
 void ApplySSAOTexSize()
@@ -856,6 +875,16 @@ int SSAOSampleRadiusToSliderValue(const float sampleRadius)
 float SliderValueToSSAOSampleRadius(const int sliderValue)
 {
     return ClampSSAOSampleRadius(SSAO_SAMPLE_RADIUS_MIN + static_cast<float>(sliderValue) * SSAO_SAMPLE_RADIUS_STEP);
+}
+
+int SSAOBlurKernelSizeToSliderValue(const int kernelSize)
+{
+    return ClampSSAOBlurKernelSize(kernelSize);
+}
+
+int SliderValueToSSAOBlurKernelSize(const int sliderValue)
+{
+    return ClampSSAOBlurKernelSize(sliderValue);
 }
 
 int HalfLambertShadowSaturationToSliderValue(const float boost)
