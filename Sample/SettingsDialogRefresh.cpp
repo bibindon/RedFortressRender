@@ -853,6 +853,17 @@ void RefreshSSGIBlurControls(HWND hDlg)
     RefreshSSGIBlurKernelSizeControls(hDlg);
 }
 
+void RefreshSSGIIndirectLightMaxControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_ssgiIndirectLightMaxContribution);
+    SetDlgItemText(hDlg, IDC_EDIT_SSGI_INDIRECT_LIGHT_MAX, buffer);
+
+    const BOOL enabled = g_bSSGI;
+    EnableWindow(GetDlgItem(hDlg, IDC_STATIC_SSGI_INDIRECT_LIGHT_MAX_LABEL), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SSGI_INDIRECT_LIGHT_MAX), enabled);
+}
+
 void RefreshSSAOBlurControls(HWND hDlg)
 {
     UINT checkState = BST_UNCHECKED;

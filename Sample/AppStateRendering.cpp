@@ -553,6 +553,22 @@ void ApplySSGIBlurKernelSize()
     g_Render.SetPostEffectSSGIBlurKernelSize(g_ssgiBlurKernelSize);
 }
 
+void ApplySSGIIndirectLightMax()
+{
+    float maxContribution = g_ssgiIndirectLightMaxContribution;
+    if (maxContribution < 0.0f)
+    {
+        maxContribution = 0.0f;
+    }
+    if (maxContribution > 1.0f)
+    {
+        maxContribution = 1.0f;
+    }
+    g_ssgiIndirectLightMaxContribution = maxContribution;
+
+    g_Render.SetPostEffectSSGIIndirectLightMaxContribution(maxContribution);
+}
+
 void ApplyCameraClipPlanes()
 {
     g_cameraFarPlane = ClampCameraFarPlane(g_cameraFarPlane);

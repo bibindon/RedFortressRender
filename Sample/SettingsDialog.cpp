@@ -50,6 +50,7 @@ void RefreshSSGI(HWND hDlg);
 void RefreshSSGISampleCountControls(HWND hDlg);
 void RefreshSSGIBlurControls(HWND hDlg);
 void RefreshSSGIBlurKernelSizeControls(HWND hDlg);
+void RefreshSSGIIndirectLightMaxControls(HWND hDlg);
 void RefreshSSAOShadowStrengthControls(HWND hDlg);
 void RefreshSSAOShadowSaturationControls(HWND hDlg);
 void RefreshSSAOSampleCountControls(HWND hDlg);
@@ -521,6 +522,7 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_SSAO_SHADOW_STRENGTH,
         IDC_EDIT_SSAO_SHADOW_SATURATION,
         IDC_EDIT_SSAO_SAMPLE_RADIUS,
+        IDC_EDIT_SSGI_INDIRECT_LIGHT_MAX,
         IDC_EDIT_CAMERA_NEAR,
         IDC_EDIT_CAMERA_FAR,
         IDC_EDIT_GBUFFER_NEAR,
@@ -848,6 +850,14 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
             ApplySSAOSampleRadius();
         }
         RefreshSSAOSampleRadiusControls(hDlg);
+        return true;
+    case IDC_EDIT_SSGI_INDIRECT_LIGHT_MAX:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_ssgiIndirectLightMaxContribution = floatValue;
+            ApplySSGIIndirectLightMax();
+        }
+        RefreshSSGIIndirectLightMaxControls(hDlg);
         return true;
     case IDC_EDIT_CAMERA_NEAR:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
@@ -1615,6 +1625,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshSSGISampleCountControls(hDlg);
     RefreshSSGIBlurControls(hDlg);
     RefreshSSGIBlurKernelSizeControls(hDlg);
+    RefreshSSGIIndirectLightMaxControls(hDlg);
     RefreshSSAOBlurControls(hDlg);
     RefreshSSAOShadowStrengthControls(hDlg);
     RefreshSSAOShadowSaturationControls(hDlg);
@@ -2899,6 +2910,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             RefreshSSGIBlurControls(hDlg);
             RefreshSSGISampleCountControls(hDlg);
             RefreshSSGIBlurKernelSizeControls(hDlg);
+            RefreshSSGIIndirectLightMaxControls(hDlg);
             return TRUE;
         }
 

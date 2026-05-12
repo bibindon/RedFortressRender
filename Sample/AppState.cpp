@@ -82,6 +82,7 @@ float g_ssaoSampleRadius = 4.0f;
 int g_ssaoBlurKernelSize = 21;
 int g_ssgiSampleCount = 16;
 int g_ssgiBlurKernelSize = 21;
+float g_ssgiIndirectLightMaxContribution = 1.0f;
 float g_cameraNearPlane = 0.1f;
 float g_cameraFarPlane = 30'000.0f;
 float g_gbufferNearPlane = 0.1f;
@@ -1693,6 +1694,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_ssgiBlurKernelSize = std::stoi(value);
             }
+            else if (key == L"SSGIIndirectLightMaxContribution")
+            {
+                g_ssgiIndirectLightMaxContribution = std::stof(value);
+            }
             else if (key == L"HalfLambertShadowSaturation")
             {
                 g_halfLambertShadowSaturation = std::stof(value);
@@ -1943,6 +1948,7 @@ void ApplyAllSampleSettings()
     ApplySSGISampleCount();
     ApplySSGIBlurKernelSize();
     ApplySSGIBlur();
+    ApplySSGIIndirectLightMax();
     ApplyHalfLambertShadowSaturation();
     ApplyShadowDarkness();
     ApplySpecularIntensity();
