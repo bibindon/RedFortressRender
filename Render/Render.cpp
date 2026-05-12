@@ -309,6 +309,21 @@ void Render::ApplySettings()
         }
     }
 
+    const auto ssaoCompositeFourTapAverageEnable =
+        m_settings.find(L"SSAOCompositeFourTapAverageEnable");
+    if (ssaoCompositeFourTapAverageEnable != m_settings.end())
+    {
+        bool enabled = false;
+        if (TryParseBoolSetting(ssaoCompositeFourTapAverageEnable->second, enabled))
+        {
+            SetPostEffectSSAOCompositeFourTapAverage(enabled);
+        }
+        else
+        {
+            SetPostEffectSSAOCompositeFourTapAverage(false);
+        }
+    }
+
     const auto fogEnable = m_settings.find(L"FogEnable");
     if (fogEnable != m_settings.end())
     {
@@ -2186,6 +2201,11 @@ void Render::SetPostEffectSSAOBlurKernelSize(const int kernelSize)
 void Render::SetPostEffectSSAOTexSizeDivisor(const int scaleDivisor)
 {
     m_postEffectSSAO.SetTextureScaleDivisor(scaleDivisor);
+}
+
+void Render::SetPostEffectSSAOCompositeFourTapAverage(const bool enabled)
+{
+    m_postEffectSSAO.SetCompositeFourTapAverageEnabled(enabled);
 }
 
 void Render::SetPostEffectFog(const bool arg)

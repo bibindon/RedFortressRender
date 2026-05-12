@@ -52,6 +52,7 @@ void RefreshSSAOSampleCountControls(HWND hDlg);
 void RefreshSSAODepthScaledSampleDistanceControls(HWND hDlg);
 void RefreshSSAOSampleRadiusControls(HWND hDlg);
 void RefreshSSAOBlurKernelSizeControls(HWND hDlg);
+void RefreshSSAOCompositeFourTapAverageControls(HWND hDlg);
 void RefreshCameraClipPlaneControls(HWND hDlg);
 void RefreshGBufferClipPlaneControls(HWND hDlg);
 void RefreshSSAOBlurControls(HWND hDlg);
@@ -1576,6 +1577,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshSSAOSampleCountControls(hDlg);
     RefreshSSAODepthScaledSampleDistanceControls(hDlg);
     RefreshSSAOTexSizeControls(hDlg);
+    RefreshSSAOCompositeFourTapAverageControls(hDlg);
     RefreshBloom(hDlg);
     RefreshDepthOfField(hDlg);
     RefreshStarBurst(hDlg);
@@ -1606,6 +1608,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshSSAOSampleCountControls(hDlg);
     RefreshSSAODepthScaledSampleDistanceControls(hDlg);
     RefreshSSAOTexSizeControls(hDlg);
+    RefreshSSAOCompositeFourTapAverageControls(hDlg);
     RefreshBloomThresholdControls(hDlg);
     RefreshDepthOfFieldControls(hDlg);
     RefreshDepthOfFieldMaxBlurControls(hDlg);
@@ -2838,6 +2841,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             RefreshSSAOBlurKernelSizeControls(hDlg);
             RefreshSSAODepthScaledSampleDistanceControls(hDlg);
             RefreshSSAOTexSizeControls(hDlg);
+            RefreshSSAOCompositeFourTapAverageControls(hDlg);
             return TRUE;
         }
 
@@ -2856,6 +2860,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
                 (IsDlgButtonChecked(hDlg, IDC_CHECK_SSAO_DEPTH_SCALED_SAMPLE_DISTANCE) == BST_CHECKED);
             ApplySSAODepthScaledSampleDistance();
             RefreshSSAODepthScaledSampleDistanceControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_SSAO_COMPOSITE_4TAP_AVERAGE)
+        {
+            g_bSSAOCompositeFourTapAverage =
+                (IsDlgButtonChecked(hDlg, IDC_CHECK_SSAO_COMPOSITE_4TAP_AVERAGE) == BST_CHECKED);
+            ApplySSAOCompositeFourTapAverage();
+            RefreshSSAOCompositeFourTapAverageControls(hDlg);
             return TRUE;
         }
 

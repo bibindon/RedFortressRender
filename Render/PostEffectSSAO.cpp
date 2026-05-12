@@ -175,16 +175,19 @@ void PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
 
     D3DXVECTOR2 targetInvSize(1.0f / static_cast<float>(descTarget.Width),
                               1.0f / static_cast<float>(descTarget.Height));
+    D3DXVECTOR2 aoInvSize(1.0f / static_cast<float>(descAO.Width),
+                          1.0f / static_cast<float>(descAO.Height));
 
     Common::D3DDevice()->SetRenderTarget(0, surfRenderTarget);
     Common::D3DDevice()->SetViewport(&targetViewport);
     Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 0, 255), 1.0f, 0);
     m_fxSSAO->SetFloatArray("g_invSize", reinterpret_cast<FLOAT*>(&targetInvSize), 2);
+    m_fxSSAO->SetFloatArray("g_aoInvSize", reinterpret_cast<FLOAT*>(&aoInvSize), 2);
     m_fxSSAO->SetTexture("texColor", renderTarget);
     m_fxSSAO->SetTexture("texAO", aoTextureForComposite);
     m_fxSSAO->SetFloat("g_shadowStrength", m_shadowStrength);
     m_fxSSAO->SetFloat("g_aoSaturationBoost", m_saturationBoost);
-    m_fxSSAO->SetTechnique("TechniqueAO_Composite");
+    m_fxSSAO->SetTechnique(GetCompositeTechniqueName());
     m_fxSSAO->Begin(NULL, 0);
     m_fxSSAO->BeginPass(0);
     DrawFullscreenQuad();
@@ -274,6 +277,11 @@ void PostEffectSSAO::SetTextureScaleDivisor(const int scaleDivisor)
         SAFE_RELEASE(m_rtAoTempTex);
         CreateResources();
     }
+}
+
+void PostEffectSSAO::SetCompositeFourTapAverageEnabled(const bool enabled)
+{
+    m_compositeFourTapAverageEnabled = enabled;
 }
 
 void PostEffectSSAO::SetDepthRange(const float nearPlane, const float farPlane)
@@ -386,6 +394,16 @@ int PostEffectSSAO::NormalizeTextureScaleDivisor(const int scaleDivisor) const
     }
 
     return 1;
+}
+
+const char* PostEffectSSAO::GetCompositeTechniqueName() const
+{
+    if (m_compositeFourTapAverageEnabled)
+    {
+        return "TechniqueAO_Composite4TapAverage";
+    }
+
+    return "TechniqueAO_Composite";
 }
 
 UINT PostEffectSSAO::ComputeTextureSize(const int screenSize) const

@@ -38,6 +38,7 @@ SSAOEnable,1
 SSAOBlurEnable,0
 SSAODepthScaledSampleDistanceEnable,0
 SSAOTexSize,1/1
+SSAOCompositeFourTapAverageEnable,0
 SSAOShadowStrength,1.0
 SSAOShadowSaturationBoost,0.30
 SSAOSampleCount,16

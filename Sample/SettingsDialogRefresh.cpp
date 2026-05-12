@@ -657,6 +657,18 @@ void RefreshSSAOTexSizeControls(HWND hDlg)
     EnableWindow(combo, g_bSSAO);
 }
 
+void RefreshSSAOCompositeFourTapAverageControls(HWND hDlg)
+{
+    UINT checkState = BST_UNCHECKED;
+    if (g_bSSAOCompositeFourTapAverage)
+    {
+        checkState = BST_CHECKED;
+    }
+
+    CheckDlgButton(hDlg, IDC_CHECK_SSAO_COMPOSITE_4TAP_AVERAGE, checkState);
+    EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SSAO_COMPOSITE_4TAP_AVERAGE), g_bSSAO);
+}
+
 void RefreshCameraClipPlaneControls(HWND hDlg)
 {
     wchar_t buffer[32];

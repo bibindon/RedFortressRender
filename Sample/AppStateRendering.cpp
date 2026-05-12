@@ -528,6 +528,11 @@ void ApplySSAOTexSize()
     g_Render.SetPostEffectSSAOTexSizeDivisor(g_ssaoTexSizeDivisor);
 }
 
+void ApplySSAOCompositeFourTapAverage()
+{
+    g_Render.SetPostEffectSSAOCompositeFourTapAverage(g_bSSAOCompositeFourTapAverage);
+}
+
 void ApplyCameraClipPlanes()
 {
     g_cameraFarPlane = ClampCameraFarPlane(g_cameraFarPlane);

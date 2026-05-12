@@ -7,6 +7,7 @@ float4x4 g_matProj;
 float g_fNear = 0.1f;
 float g_fFar = 50.0f;
 float2 g_invSize;
+float2 g_aoInvSize;
 float g_sampleRadius = 1.0f;
 int g_sampleCount = 16;
 bool g_enableDepthScaledSampleDistance = false;
@@ -647,6 +648,21 @@ float4 PS_Composite(VS_OUT i) : COLOR0
     return float4(IncreaseSaturation(shadedColor, saturationAmount), 1.0f);
 }
 
+float4 PS_Composite4TapAverage(VS_OUT i) : COLOR0
+{
+    float3 color = tex2D(sampColor, i.uv).rgb;
+    float aoCenter = tex2D(sampAO, i.uv).r;
+    float aoRight = tex2D(sampAO, i.uv + float2(g_aoInvSize.x, 0.0f)).r;
+    float aoDown = tex2D(sampAO, i.uv + float2(0.0f, g_aoInvSize.y)).r;
+    float aoDownRight = tex2D(sampAO, i.uv + g_aoInvSize).r;
+    float ao = (aoCenter + aoRight + aoDown + aoDownRight) * 0.25f;
+    float aoAdjusted = saturate(1.0f - (1.0f - saturate(ao)) * g_shadowStrength);
+    float shadowPresence = saturate(1.0f - ao);
+    float3 shadedColor = color * aoAdjusted;
+    float saturationAmount = lerp(1.0f, 1.0f + g_aoSaturationBoost, shadowPresence);
+    return float4(IncreaseSaturation(shadedColor, saturationAmount), 1.0f);
+}
+
 technique TechniqueAO_Create4
 {
     pass P0
@@ -744,5 +760,15 @@ technique TechniqueAO_Composite
         CullMode = NONE;
         VertexShader = compile vs_3_0 VS_Fullscreen();
         PixelShader = compile ps_3_0 PS_Composite();
+    }
+}
+
+technique TechniqueAO_Composite4TapAverage
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS_Fullscreen();
+        PixelShader = compile ps_3_0 PS_Composite4TapAverage();
     }
 }
