@@ -42,7 +42,7 @@ private:
     int m_blurKernelSize = 21;
     int m_textureScaleDivisor = 1;
     float m_nearPlane = 0.1f;
-    float m_farPlane = 30000.0f;
+    float m_farPlane = 30.0f;
     float m_indirectLightStrength = 1.0f;
     float m_indirectLightMaxContribution = 1.0f;
     bool m_useThicknessEnabled = true;

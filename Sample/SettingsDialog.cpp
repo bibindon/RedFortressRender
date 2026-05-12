@@ -50,6 +50,7 @@ void RefreshSSGI(HWND hDlg);
 void RefreshSSGISampleCountControls(HWND hDlg);
 void RefreshSSGIBlurControls(HWND hDlg);
 void RefreshSSGIBlurKernelSizeControls(HWND hDlg);
+void RefreshSSGIIndirectLightControls(HWND hDlg);
 void RefreshSSGIIndirectLightMaxControls(HWND hDlg);
 void RefreshSSAOShadowStrengthControls(HWND hDlg);
 void RefreshSSAOShadowSaturationControls(HWND hDlg);
@@ -156,7 +157,7 @@ constexpr int GODRAY_VIRTUAL_PROXIMITY_SLIDER_MIN = 0;
 constexpr int GODRAY_VIRTUAL_PROXIMITY_SLIDER_MAX = static_cast<int>(GODRAY_VIRTUAL_PROXIMITY_MAX / GODRAY_VIRTUAL_PROXIMITY_STEP);
 constexpr int GODRAY_POS_SLIDER_MIN = static_cast<int>(GODRAY_LIGHT_POS_MIN / GODRAY_LIGHT_POS_STEP);
 constexpr int GODRAY_POS_SLIDER_MAX = static_cast<int>(GODRAY_LIGHT_POS_MAX / GODRAY_LIGHT_POS_STEP);
-constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 1336;
+constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 1350;
 constexpr int SETTINGS_DIALOG_WHEEL_STEP_PX = 36;
 constexpr UINT ID_POPUP_EXPORT_BINARY = 60001;
 constexpr UINT ID_POPUP_REMOVE_MODEL = 60002;
@@ -522,6 +523,7 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_SSAO_SHADOW_STRENGTH,
         IDC_EDIT_SSAO_SHADOW_SATURATION,
         IDC_EDIT_SSAO_SAMPLE_RADIUS,
+        IDC_EDIT_SSGI_INDIRECT_LIGHT,
         IDC_EDIT_SSGI_INDIRECT_LIGHT_MAX,
         IDC_EDIT_CAMERA_NEAR,
         IDC_EDIT_CAMERA_FAR,
@@ -850,6 +852,14 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
             ApplySSAOSampleRadius();
         }
         RefreshSSAOSampleRadiusControls(hDlg);
+        return true;
+    case IDC_EDIT_SSGI_INDIRECT_LIGHT:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_ssgiIndirectLightStrength = floatValue;
+            ApplySSGIIndirectLightStrength();
+        }
+        RefreshSSGIIndirectLightControls(hDlg);
         return true;
     case IDC_EDIT_SSGI_INDIRECT_LIGHT_MAX:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
@@ -1625,6 +1635,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshSSGISampleCountControls(hDlg);
     RefreshSSGIBlurControls(hDlg);
     RefreshSSGIBlurKernelSizeControls(hDlg);
+    RefreshSSGIIndirectLightControls(hDlg);
     RefreshSSGIIndirectLightMaxControls(hDlg);
     RefreshSSAOBlurControls(hDlg);
     RefreshSSAOShadowStrengthControls(hDlg);
@@ -2910,6 +2921,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             RefreshSSGIBlurControls(hDlg);
             RefreshSSGISampleCountControls(hDlg);
             RefreshSSGIBlurKernelSizeControls(hDlg);
+            RefreshSSGIIndirectLightControls(hDlg);
             RefreshSSGIIndirectLightMaxControls(hDlg);
             return TRUE;
         }

@@ -808,6 +808,17 @@ void RefreshSSGI(HWND hDlg)
     CheckDlgButton(hDlg, IDC_CHECK_SSGI, checkState);
 }
 
+void RefreshSSGIIndirectLightControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_ssgiIndirectLightStrength);
+    SetDlgItemText(hDlg, IDC_EDIT_SSGI_INDIRECT_LIGHT, buffer);
+
+    const BOOL enabled = g_bSSGI;
+    EnableWindow(GetDlgItem(hDlg, IDC_STATIC_SSGI_INDIRECT_LIGHT_LABEL), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SSGI_INDIRECT_LIGHT), enabled);
+}
+
 void RefreshSSGISampleCountControls(HWND hDlg)
 {
     HWND combo = GetDlgItem(hDlg, IDC_COMBO_SSGI_SAMPLE_COUNT);

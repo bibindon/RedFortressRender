@@ -553,6 +553,22 @@ void ApplySSGIBlurKernelSize()
     g_Render.SetPostEffectSSGIBlurKernelSize(g_ssgiBlurKernelSize);
 }
 
+void ApplySSGIIndirectLightStrength()
+{
+    float indirectLightStrength = g_ssgiIndirectLightStrength;
+    if (indirectLightStrength < 0.0f)
+    {
+        indirectLightStrength = 0.0f;
+    }
+    if (indirectLightStrength > 5.0f)
+    {
+        indirectLightStrength = 5.0f;
+    }
+    g_ssgiIndirectLightStrength = indirectLightStrength;
+
+    g_Render.SetPostEffectSSGIIndirectLightStrength(indirectLightStrength);
+}
+
 void ApplySSGIIndirectLightMax()
 {
     float maxContribution = g_ssgiIndirectLightMaxContribution;
