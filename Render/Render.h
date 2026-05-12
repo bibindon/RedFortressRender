@@ -42,6 +42,7 @@
 #include "PostEffectStarBurst.h"
 #include "PostEffectEnd.h"
 #include "PostEffectSSAO.h"
+#include "PostEffectSSGI.h"
 #include "PostEffectDepthOfField.h"
 #include "PostEffectHeightFog.h"
 #include "PostEffectFXAA.h"
@@ -268,6 +269,16 @@ public:
     void SetPostEffectSSAOBlurKernelSize(const int kernelSize);
     void SetPostEffectSSAOTexSizeDivisor(const int scaleDivisor);
     void SetPostEffectSSAOCompositeGaussian3x3(const bool enabled);
+    void SetPostEffectSSGI(const bool arg);
+    void SetPostEffectSSGIBlur(const bool arg);
+    void SetPostEffectSSGISampleCount(const int sampleCount);
+    void SetPostEffectSSGIDepthScaledSampleDistance(const bool enabled);
+    void SetPostEffectSSGISampleRadius(const float sampleRadius);
+    void SetPostEffectSSGIBlurKernelSize(const int kernelSize);
+    void SetPostEffectSSGITexSizeDivisor(const int scaleDivisor);
+    void SetPostEffectSSGIIndirectLightStrength(const float strength);
+    void SetPostEffectSSGIIndirectLightMaxContribution(const float maxContribution);
+    void SetPostEffectSSGIUseThickness(const bool enabled);
     void SetPostEffectFog(const bool arg);
     void SetPostEffectFogIntensity(const float intensity);
     void SetPostEffectHeightFog(const bool arg);
@@ -372,6 +383,9 @@ private:
     // SSAO
     PostEffectSSAO m_postEffectSSAO;
 
+    // SSGI
+    PostEffectSSGI m_postEffectSSGI;
+
     // 霧
     PostEffectFog m_postEffectFog;
     PostEffectHeightFog m_postEffectHeightFog;
@@ -415,6 +429,7 @@ private:
     void EnsurePostEffectMotionBlurCameraInitialized();
     void EnsurePostEffectZShadowInitialized();
     void EnsurePostEffectSSAOInitialized();
+    void EnsurePostEffectSSGIInitialized();
     void EnsurePostEffectFogInitialized();
     void EnsurePostEffectHeightFogInitialized();
     void EnsurePostEffectBloomInitialized();
@@ -441,6 +456,7 @@ private:
     bool m_gBufferEnabled = true;
     bool m_postEffectZShadowEnabled = true;
     bool m_postEffectSSAOEnabled = true;
+    bool m_postEffectSSGIEnabled = false;
     bool m_postEffectFogZEnabled = true;
     bool m_postEffectFogHeightEnabled = false;
     bool m_postEffectBloomEnabled = false;

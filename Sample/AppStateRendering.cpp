@@ -354,7 +354,9 @@ void ApplySaturateLevel()
 void ApplyPostEffectToggleSettings()
 {
     g_Render.SetPostEffectSSAO(g_bSSAO);
+    g_Render.SetPostEffectSSGI(g_bSSGI);
     ApplySSAOBlur();
+    ApplySSGIBlur();
     g_Render.SetPostEffectFog(g_bFog);
     g_Render.SetPostEffectHeightFog(g_bHeightFog);
     g_Render.SetPostEffectSaturateEnable(g_bSaturateFilter);
@@ -531,6 +533,24 @@ void ApplySSAOTexSize()
 void ApplySSAOCompositeGaussian3x3()
 {
     g_Render.SetPostEffectSSAOCompositeGaussian3x3(g_bSSAOCompositeGaussian3x3);
+}
+
+void ApplySSGIBlur()
+{
+    g_Render.SetPostEffectSSGIBlur(g_bSSGIBlur);
+}
+
+void ApplySSGISampleCount()
+{
+    g_ssgiSampleCount = ClampSSAOSampleCount(g_ssgiSampleCount);
+    g_Render.SetPostEffectSSGISampleCount(g_ssgiSampleCount);
+}
+
+void ApplySSGIBlurKernelSize()
+{
+    g_ssgiBlurKernelSize =
+        ComboIndexToSSGIBlurKernelSize(SSGIBlurKernelSizeToComboIndex(g_ssgiBlurKernelSize));
+    g_Render.SetPostEffectSSGIBlurKernelSize(g_ssgiBlurKernelSize);
 }
 
 void ApplyCameraClipPlanes()
@@ -986,6 +1006,88 @@ int ComboIndexToSSAOBlurKernelSize(const int comboIndex)
     }
 
     if (comboIndex == 2)
+    {
+        return 11;
+    }
+
+    return 21;
+}
+
+int SSGISampleCountToComboIndex(const int sampleCount)
+{
+    const int normalizedSampleCount = ClampSSAOSampleCount(sampleCount);
+
+    if (normalizedSampleCount == 4)
+    {
+        return 0;
+    }
+
+    if (normalizedSampleCount == 8)
+    {
+        return 1;
+    }
+
+    if (normalizedSampleCount == 16)
+    {
+        return 2;
+    }
+
+    if (normalizedSampleCount == 32)
+    {
+        return 3;
+    }
+
+    return 4;
+}
+
+int ComboIndexToSSGISampleCount(const int comboIndex)
+{
+    if (comboIndex == 0)
+    {
+        return 4;
+    }
+
+    if (comboIndex == 1)
+    {
+        return 8;
+    }
+
+    if (comboIndex == 2)
+    {
+        return 16;
+    }
+
+    if (comboIndex == 3)
+    {
+        return 32;
+    }
+
+    return 64;
+}
+
+int SSGIBlurKernelSizeToComboIndex(const int kernelSize)
+{
+    if (kernelSize <= 8)
+    {
+        return 0;
+    }
+
+    if (kernelSize <= 16)
+    {
+        return 1;
+    }
+
+    return 2;
+}
+
+int ComboIndexToSSGIBlurKernelSize(const int comboIndex)
+{
+    if (comboIndex == 0)
+    {
+        return 5;
+    }
+
+    if (comboIndex == 1)
     {
         return 11;
     }

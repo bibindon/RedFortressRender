@@ -51,7 +51,9 @@ int g_motionBlurCameraSampleCount = 13;
 bool g_bDepthBufferShadow = true;
 bool g_bGBuffer = true;
 bool g_bSSAO = true;
+bool g_bSSGI = false;
 bool g_bSSAOBlur = false;
+bool g_bSSGIBlur = true;
 bool g_bSSAODepthScaledSampleDistance = false;
 bool g_bFog = true;
 bool g_bHeightFog = true;
@@ -78,6 +80,8 @@ float g_ssaoShadowSaturationBoost = 0.30f;
 int g_ssaoSampleCount = 16;
 float g_ssaoSampleRadius = 4.0f;
 int g_ssaoBlurKernelSize = 21;
+int g_ssgiSampleCount = 16;
+int g_ssgiBlurKernelSize = 21;
 float g_cameraNearPlane = 0.1f;
 float g_cameraFarPlane = 30'000.0f;
 float g_gbufferNearPlane = 0.1f;
@@ -1677,6 +1681,18 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_bSSAOBlur = (std::stoi(value) != 0);
             }
+            else if (key == L"SSGIBlurEnable")
+            {
+                g_bSSGIBlur = (std::stoi(value) != 0);
+            }
+            else if (key == L"SSGISampleCount")
+            {
+                g_ssgiSampleCount = std::stoi(value);
+            }
+            else if (key == L"SSGIBlurKernelSize")
+            {
+                g_ssgiBlurKernelSize = std::stoi(value);
+            }
             else if (key == L"HalfLambertShadowSaturation")
             {
                 g_halfLambertShadowSaturation = std::stof(value);
@@ -1732,6 +1748,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"SSAOEnable")
             {
                 g_bSSAO = (std::stoi(value) != 0);
+            }
+            else if (key == L"SSGIEnable")
+            {
+                g_bSSGI = (std::stoi(value) != 0);
             }
             else if (key == L"FogEnable")
             {
@@ -1920,6 +1940,9 @@ void ApplyAllSampleSettings()
     ApplySSAOTexSize();
     ApplySSAOCompositeGaussian3x3();
     ApplySSAOBlur();
+    ApplySSGISampleCount();
+    ApplySSGIBlurKernelSize();
+    ApplySSGIBlur();
     ApplyHalfLambertShadowSaturation();
     ApplyShadowDarkness();
     ApplySpecularIntensity();

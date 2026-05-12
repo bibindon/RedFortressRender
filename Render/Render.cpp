@@ -324,6 +324,64 @@ void Render::ApplySettings()
         }
     }
 
+    const auto ssgiEnable = m_settings.find(L"SSGIEnable");
+    if (ssgiEnable != m_settings.end())
+    {
+        bool enabled = false;
+        if (TryParseBoolSetting(ssgiEnable->second, enabled))
+        {
+            SetPostEffectSSGI(enabled);
+        }
+    }
+
+    const auto ssgiBlurEnable = m_settings.find(L"SSGIBlurEnable");
+    if (ssgiBlurEnable != m_settings.end())
+    {
+        bool enabled = true;
+        if (TryParseBoolSetting(ssgiBlurEnable->second, enabled))
+        {
+            SetPostEffectSSGIBlur(enabled);
+        }
+    }
+
+    const auto ssgiDepthScaledSampleDistanceEnable =
+        m_settings.find(L"SSGIDepthScaledSampleDistanceEnable");
+    if (ssgiDepthScaledSampleDistanceEnable != m_settings.end())
+    {
+        bool enabled = false;
+        if (TryParseBoolSetting(ssgiDepthScaledSampleDistanceEnable->second, enabled))
+        {
+            SetPostEffectSSGIDepthScaledSampleDistance(enabled);
+        }
+    }
+
+    const auto ssgiUseThickness = m_settings.find(L"SSGIUseThickness");
+    if (ssgiUseThickness != m_settings.end())
+    {
+        bool enabled = true;
+        if (TryParseBoolSetting(ssgiUseThickness->second, enabled))
+        {
+            SetPostEffectSSGIUseThickness(enabled);
+        }
+    }
+
+    const auto ssgiTexSize = m_settings.find(L"SSGITexSize");
+    if (ssgiTexSize != m_settings.end())
+    {
+        if (ssgiTexSize->second == L"1/2")
+        {
+            SetPostEffectSSGITexSizeDivisor(2);
+        }
+        else if (ssgiTexSize->second == L"1/4")
+        {
+            SetPostEffectSSGITexSizeDivisor(4);
+        }
+        else
+        {
+            SetPostEffectSSGITexSizeDivisor(1);
+        }
+    }
+
     const auto fogEnable = m_settings.find(L"FogEnable");
     if (fogEnable != m_settings.end())
     {
@@ -756,6 +814,23 @@ void Render::ApplySettings()
         SetPostEffectSSAOSampleRadius(4.0f);
     }
 
+    const auto ssgiSampleRadius = m_settings.find(L"SSGISampleRadius");
+    if (ssgiSampleRadius != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectSSGISampleRadius(std::stof(ssgiSampleRadius->second));
+        }
+        catch (...)
+        {
+            SetPostEffectSSGISampleRadius(1.0f);
+        }
+    }
+    else
+    {
+        SetPostEffectSSGISampleRadius(1.0f);
+    }
+
     const auto ssaoBlurKernelSize = m_settings.find(L"SSAOBlurKernelSize");
     if (ssaoBlurKernelSize != m_settings.end())
     {
@@ -771,6 +846,75 @@ void Render::ApplySettings()
     else
     {
         SetPostEffectSSAOBlurKernelSize(21);
+    }
+
+    const auto ssgiBlurKernelSize = m_settings.find(L"SSGIBlurKernelSize");
+    if (ssgiBlurKernelSize != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectSSGIBlurKernelSize(std::stoi(ssgiBlurKernelSize->second));
+        }
+        catch (...)
+        {
+            SetPostEffectSSGIBlurKernelSize(21);
+        }
+    }
+    else
+    {
+        SetPostEffectSSGIBlurKernelSize(21);
+    }
+
+    const auto ssgiSampleCount = m_settings.find(L"SSGISampleCount");
+    if (ssgiSampleCount != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectSSGISampleCount(std::stoi(ssgiSampleCount->second));
+        }
+        catch (...)
+        {
+            SetPostEffectSSGISampleCount(16);
+        }
+    }
+    else
+    {
+        SetPostEffectSSGISampleCount(16);
+    }
+
+    const auto ssgiIndirectLightStrength = m_settings.find(L"SSGIIndirectLightStrength");
+    if (ssgiIndirectLightStrength != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectSSGIIndirectLightStrength(std::stof(ssgiIndirectLightStrength->second));
+        }
+        catch (...)
+        {
+            SetPostEffectSSGIIndirectLightStrength(1.0f);
+        }
+    }
+    else
+    {
+        SetPostEffectSSGIIndirectLightStrength(1.0f);
+    }
+
+    const auto ssgiIndirectLightMaxContribution =
+        m_settings.find(L"SSGIIndirectLightMaxContribution");
+    if (ssgiIndirectLightMaxContribution != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectSSGIIndirectLightMaxContribution(std::stof(ssgiIndirectLightMaxContribution->second));
+        }
+        catch (...)
+        {
+            SetPostEffectSSGIIndirectLightMaxContribution(1.0f);
+        }
+    }
+    else
+    {
+        SetPostEffectSSGIIndirectLightMaxContribution(1.0f);
     }
 
     const auto bloomEnable = m_settings.find(L"BloomEnable");
@@ -926,6 +1070,7 @@ void Render::Finalize()
     MeshMixManager::SetSharedThicknessTexture(NULL);
 
     m_postEffectZShadow.Finalize();
+    m_postEffectSSGI.Finalize();
     m_postEffectSSAO.Finalize();
     m_postEffectFog.Finalize();
     m_postEffectHeightFog.Finalize();
@@ -1086,6 +1231,18 @@ void Render::Draw()
                                  pTexTempNoral,
                                  m_meshMixList,
                                  m_meshMixSkinAnimList);
+        SwapPostEffectBuffers(pTempTexture, pWorkTexture);
+    }
+
+    if (m_gBufferEnabled && m_postEffectSSGIEnabled)
+    {
+        EnsurePostEffectSSGIInitialized();
+        m_postEffectSSGI.Draw(pTempTexture,
+                              pWorkTexture,
+                              pTexTempZ,
+                              pTexTempPos,
+                              pTexTempNoral,
+                              pTexTempThickness);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
@@ -1803,6 +1960,7 @@ void Render::SetGBufferClipPlanes(const float nearPlane, const float farPlane)
 {
     const float positionRange = GBuffer::ComputePositionRange(nearPlane, farPlane);
     m_GBuffer.SetDepthRange(nearPlane, farPlane);
+    m_postEffectSSGI.SetDepthRange(nearPlane, farPlane);
     m_postEffectSSAO.SetDepthRange(nearPlane, farPlane);
     m_postEffectFog.SetDepthDecodeRange(nearPlane, farPlane);
     m_postEffectGodRay.SetDepthRange(nearPlane, farPlane);
@@ -2111,6 +2269,11 @@ void Render::EnsurePostEffectSSAOInitialized()
     m_postEffectSSAO.Initialize();
 }
 
+void Render::EnsurePostEffectSSGIInitialized()
+{
+    m_postEffectSSGI.Initialize();
+}
+
 void Render::EnsurePostEffectFogInitialized()
 {
     m_postEffectFog.Initialize();
@@ -2206,6 +2369,65 @@ void Render::SetPostEffectSSAOTexSizeDivisor(const int scaleDivisor)
 void Render::SetPostEffectSSAOCompositeGaussian3x3(const bool enabled)
 {
     m_postEffectSSAO.SetCompositeGaussian3x3Enabled(enabled);
+}
+
+void Render::SetPostEffectSSGI(const bool arg)
+{
+    m_postEffectSSGIEnabled = arg;
+    if (m_postEffectSSGIEnabled)
+    {
+        EnsurePostEffectSSGIInitialized();
+    }
+    else
+    {
+        m_postEffectSSGI.Finalize();
+    }
+}
+
+void Render::SetPostEffectSSGIBlur(const bool arg)
+{
+    m_postEffectSSGI.SetBlurEnabled(arg);
+}
+
+void Render::SetPostEffectSSGISampleCount(const int sampleCount)
+{
+    const int normalizedSampleCount = (std::max)(1, (std::min)(sampleCount, 64));
+    m_postEffectSSGI.SetSampleCount(normalizedSampleCount);
+}
+
+void Render::SetPostEffectSSGIDepthScaledSampleDistance(const bool enabled)
+{
+    m_postEffectSSGI.SetDepthScaledSampleDistanceEnabled(enabled);
+}
+
+void Render::SetPostEffectSSGISampleRadius(const float sampleRadius)
+{
+    m_postEffectSSGI.SetSampleRadius(sampleRadius);
+}
+
+void Render::SetPostEffectSSGIBlurKernelSize(const int kernelSize)
+{
+    m_postEffectSSGI.SetBlurKernelSize(kernelSize);
+}
+
+void Render::SetPostEffectSSGITexSizeDivisor(const int scaleDivisor)
+{
+    m_postEffectSSGI.SetTextureScaleDivisor(scaleDivisor);
+}
+
+void Render::SetPostEffectSSGIIndirectLightStrength(const float strength)
+{
+    m_postEffectSSGI.SetIndirectLightStrength(strength);
+}
+
+void Render::SetPostEffectSSGIIndirectLightMaxContribution(const float maxContribution)
+{
+    m_postEffectSSGI.SetIndirectLightMaxContribution(maxContribution);
+}
+
+void Render::SetPostEffectSSGIUseThickness(const bool enabled)
+{
+    m_postEffectSSGI.SetUseThicknessEnabled(enabled);
 }
 
 void Render::SetPostEffectFog(const bool arg)

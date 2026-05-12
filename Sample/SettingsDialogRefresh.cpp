@@ -798,6 +798,61 @@ void RefreshSSAO(HWND hDlg)
     CheckDlgButton(hDlg, IDC_CHECK_SSAO, checkState);
 }
 
+void RefreshSSGI(HWND hDlg)
+{
+    UINT checkState = BST_UNCHECKED;
+    if (g_bSSGI)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_SSGI, checkState);
+}
+
+void RefreshSSGISampleCountControls(HWND hDlg)
+{
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_SSGI_SAMPLE_COUNT);
+    if (combo != NULL)
+    {
+        SendMessage(combo,
+                    CB_SETCURSEL,
+                    static_cast<WPARAM>(SSGISampleCountToComboIndex(g_ssgiSampleCount)),
+                    0);
+    }
+
+    const BOOL enabled = g_bSSGI;
+    EnableWindow(GetDlgItem(hDlg, IDC_STATIC_SSGI_SAMPLE_COUNT_LABEL), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_COMBO_SSGI_SAMPLE_COUNT), enabled);
+}
+
+void RefreshSSGIBlurKernelSizeControls(HWND hDlg)
+{
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_SSGI_BLUR_KERNEL_SIZE);
+    if (combo != NULL)
+    {
+        SendMessage(combo,
+                    CB_SETCURSEL,
+                    static_cast<WPARAM>(SSGIBlurKernelSizeToComboIndex(g_ssgiBlurKernelSize)),
+                    0);
+    }
+
+    const BOOL enabled = g_bSSGI && g_bSSGIBlur;
+    EnableWindow(GetDlgItem(hDlg, IDC_STATIC_SSGI_BLUR_KERNEL_SIZE_LABEL), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_COMBO_SSGI_BLUR_KERNEL_SIZE), enabled);
+}
+
+void RefreshSSGIBlurControls(HWND hDlg)
+{
+    UINT checkState = BST_UNCHECKED;
+    if (g_bSSGIBlur)
+    {
+        checkState = BST_CHECKED;
+    }
+
+    CheckDlgButton(hDlg, IDC_CHECK_SSGI_BLUR, checkState);
+    EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SSGI_BLUR), g_bSSGI);
+    RefreshSSGIBlurKernelSizeControls(hDlg);
+}
+
 void RefreshSSAOBlurControls(HWND hDlg)
 {
     UINT checkState = BST_UNCHECKED;

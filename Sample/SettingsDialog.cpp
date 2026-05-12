@@ -46,6 +46,10 @@ void RefreshSpecularIntensityControls(HWND hDlg);
 void RefreshSpecularEdgeControls(HWND hDlg);
 void RefreshSSSControls(HWND hDlg);
 void RefreshSSAO(HWND hDlg);
+void RefreshSSGI(HWND hDlg);
+void RefreshSSGISampleCountControls(HWND hDlg);
+void RefreshSSGIBlurControls(HWND hDlg);
+void RefreshSSGIBlurKernelSizeControls(HWND hDlg);
 void RefreshSSAOShadowStrengthControls(HWND hDlg);
 void RefreshSSAOShadowSaturationControls(HWND hDlg);
 void RefreshSSAOSampleCountControls(HWND hDlg);
@@ -151,7 +155,7 @@ constexpr int GODRAY_VIRTUAL_PROXIMITY_SLIDER_MIN = 0;
 constexpr int GODRAY_VIRTUAL_PROXIMITY_SLIDER_MAX = static_cast<int>(GODRAY_VIRTUAL_PROXIMITY_MAX / GODRAY_VIRTUAL_PROXIMITY_STEP);
 constexpr int GODRAY_POS_SLIDER_MIN = static_cast<int>(GODRAY_LIGHT_POS_MIN / GODRAY_LIGHT_POS_STEP);
 constexpr int GODRAY_POS_SLIDER_MAX = static_cast<int>(GODRAY_LIGHT_POS_MAX / GODRAY_LIGHT_POS_STEP);
-constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 1322;
+constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 1336;
 constexpr int SETTINGS_DIALOG_WHEEL_STEP_PX = 36;
 constexpr UINT ID_POPUP_EXPORT_BINARY = 60001;
 constexpr UINT ID_POPUP_REMOVE_MODEL = 60002;
@@ -404,6 +408,42 @@ void PopulateSSAOBlurKernelSizeCombo(HWND hDlg)
     SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"21x21"));
     SendMessage(combo, CB_SETCURSEL,
                 static_cast<WPARAM>(SSAOBlurKernelSizeToComboIndex(g_ssaoBlurKernelSize)),
+                0);
+}
+
+void PopulateSSGISampleCountCombo(HWND hDlg)
+{
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_SSGI_SAMPLE_COUNT);
+    if (combo == NULL)
+    {
+        return;
+    }
+
+    SendMessage(combo, CB_RESETCONTENT, 0, 0);
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"4"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"8"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"16"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"32"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"64"));
+    SendMessage(combo, CB_SETCURSEL,
+                static_cast<WPARAM>(SSGISampleCountToComboIndex(g_ssgiSampleCount)),
+                0);
+}
+
+void PopulateSSGIBlurKernelSizeCombo(HWND hDlg)
+{
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_SSGI_BLUR_KERNEL_SIZE);
+    if (combo == NULL)
+    {
+        return;
+    }
+
+    SendMessage(combo, CB_RESETCONTENT, 0, 0);
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"5x5"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"11x11"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"21x21"));
+    SendMessage(combo, CB_SETCURSEL,
+                static_cast<WPARAM>(SSGIBlurKernelSizeToComboIndex(g_ssgiBlurKernelSize)),
                 0);
 }
 
@@ -1571,6 +1611,10 @@ void RefreshAllControls(HWND hDlg)
     RefreshZShadowTexSizeControls(hDlg);
     RefreshDepthBufferShadow(hDlg);
     RefreshSSAO(hDlg);
+    RefreshSSGI(hDlg);
+    RefreshSSGISampleCountControls(hDlg);
+    RefreshSSGIBlurControls(hDlg);
+    RefreshSSGIBlurKernelSizeControls(hDlg);
     RefreshSSAOBlurControls(hDlg);
     RefreshSSAOShadowStrengthControls(hDlg);
     RefreshSSAOShadowSaturationControls(hDlg);
@@ -2091,6 +2135,8 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         PopulateSSAOSampleCountCombo(hDlg);
         PopulateSSAOTexSizeCombo(hDlg);
         PopulateSSAOBlurKernelSizeCombo(hDlg);
+        PopulateSSGISampleCountCombo(hDlg);
+        PopulateSSGIBlurKernelSizeCombo(hDlg);
         InitializeLoadedModelListView(hDlg);
         InitializePointLightListView(hDlg);
         RefreshAllControls(hDlg);
@@ -2845,6 +2891,26 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
+        if (commandId == IDC_CHECK_SSGI)
+        {
+            g_bSSGI = (IsDlgButtonChecked(hDlg, IDC_CHECK_SSGI) == BST_CHECKED);
+            g_Render.SetPostEffectSSGI(g_bSSGI);
+            RefreshSSGI(hDlg);
+            RefreshSSGIBlurControls(hDlg);
+            RefreshSSGISampleCountControls(hDlg);
+            RefreshSSGIBlurKernelSizeControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_SSGI_BLUR)
+        {
+            g_bSSGIBlur = (IsDlgButtonChecked(hDlg, IDC_CHECK_SSGI_BLUR) == BST_CHECKED);
+            ApplySSGIBlur();
+            RefreshSSGIBlurControls(hDlg);
+            RefreshSSGIBlurKernelSizeControls(hDlg);
+            return TRUE;
+        }
+
         if (commandId == IDC_CHECK_SSAO_BLUR)
         {
             g_bSSAOBlur = (IsDlgButtonChecked(hDlg, IDC_CHECK_SSAO_BLUR) == BST_CHECKED);
@@ -2899,6 +2965,26 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_ssaoBlurKernelSize = ComboIndexToSSAOBlurKernelSize(index);
             ApplySSAOBlurKernelSize();
             RefreshSSAOBlurKernelSizeControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_COMBO_SSGI_SAMPLE_COUNT && HIWORD(wParam) == CBN_SELCHANGE)
+        {
+            HWND combo = reinterpret_cast<HWND>(lParam);
+            const int index = static_cast<int>(SendMessage(combo, CB_GETCURSEL, 0, 0));
+            g_ssgiSampleCount = ComboIndexToSSGISampleCount(index);
+            ApplySSGISampleCount();
+            RefreshSSGISampleCountControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_COMBO_SSGI_BLUR_KERNEL_SIZE && HIWORD(wParam) == CBN_SELCHANGE)
+        {
+            HWND combo = reinterpret_cast<HWND>(lParam);
+            const int index = static_cast<int>(SendMessage(combo, CB_GETCURSEL, 0, 0));
+            g_ssgiBlurKernelSize = ComboIndexToSSGIBlurKernelSize(index);
+            ApplySSGIBlurKernelSize();
+            RefreshSSGIBlurKernelSizeControls(hDlg);
             return TRUE;
         }
 

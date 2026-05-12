@@ -104,6 +104,16 @@ Sample 側の一部キーは `std::stoi(value) != 0` で判定しているため
 | `SSAOShadowStrength` | SSAO の影の強さ |
 | `SSAOShadowSaturationBoost` | SSAO の彩度補正 |
 | `SSAOSampleCount` | SSAO サンプル数 |
+| `SSGIEnable` | SSGI ON/OFF |
+| `SSGIBlurEnable` | SSGI のブラー ON/OFF |
+| `SSGIDepthScaledSampleDistanceEnable` | SSGI の深度連動距離 ON/OFF |
+| `SSGIUseThickness` | SSGI で厚みテクスチャを使うか |
+| `SSGITexSize` | SSGI バッファ解像度。`1/1`, `1/2`, `1/4` |
+| `SSGISampleCount` | SSGI サンプル数 |
+| `SSGISampleRadius` | SSGI のサンプル半径 |
+| `SSGIBlurKernelSize` | SSGI ブラーカーネルサイズ |
+| `SSGIIndirectLightStrength` | SSGI の間接光強度 |
+| `SSGIIndirectLightMaxContribution` | SSGI の最大寄与量 |
 
 ### MeshMix の陰影
 
@@ -178,6 +188,15 @@ SSAOSampleRadius,4.0
 SSAOShadowStrength,1.0
 SSAOShadowSaturationBoost,0.30
 SSAOSampleCount,16
+SSGIEnable,1
+SSGIBlurEnable,1
+SSGIDepthScaledSampleDistanceEnable,0
+SSGIUseThickness,1
+SSGISampleCount,16
+SSGISampleRadius,1.0
+SSGIBlurKernelSize,21
+SSGIIndirectLightStrength,1.0
+SSGIIndirectLightMaxContribution,1.0
 
 FogEnable,1
 FogIntensity,1.0
