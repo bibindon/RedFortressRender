@@ -657,16 +657,16 @@ void RefreshSSAOTexSizeControls(HWND hDlg)
     EnableWindow(combo, g_bSSAO);
 }
 
-void RefreshSSAOCompositeFourTapAverageControls(HWND hDlg)
+void RefreshSSAOCompositeGaussian3x3Controls(HWND hDlg)
 {
     UINT checkState = BST_UNCHECKED;
-    if (g_bSSAOCompositeFourTapAverage)
+    if (g_bSSAOCompositeGaussian3x3)
     {
         checkState = BST_CHECKED;
     }
 
-    CheckDlgButton(hDlg, IDC_CHECK_SSAO_COMPOSITE_4TAP_AVERAGE, checkState);
-    EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SSAO_COMPOSITE_4TAP_AVERAGE), g_bSSAO);
+    CheckDlgButton(hDlg, IDC_CHECK_SSAO_COMPOSITE_GAUSSIAN_3X3, checkState);
+    EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SSAO_COMPOSITE_GAUSSIAN_3X3), g_bSSAO);
 }
 
 void RefreshCameraClipPlaneControls(HWND hDlg)

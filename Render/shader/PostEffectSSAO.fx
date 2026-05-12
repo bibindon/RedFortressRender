@@ -648,14 +648,21 @@ float4 PS_Composite(VS_OUT i) : COLOR0
     return float4(IncreaseSaturation(shadedColor, saturationAmount), 1.0f);
 }
 
-float4 PS_Composite4TapAverage(VS_OUT i) : COLOR0
+float4 PS_Composite3x3Gaussian(VS_OUT i) : COLOR0
 {
     float3 color = tex2D(sampColor, i.uv).rgb;
-    float aoCenter = tex2D(sampAO, i.uv).r;
-    float aoRight = tex2D(sampAO, i.uv + float2(g_aoInvSize.x, 0.0f)).r;
-    float aoDown = tex2D(sampAO, i.uv + float2(0.0f, g_aoInvSize.y)).r;
-    float aoDownRight = tex2D(sampAO, i.uv + g_aoInvSize).r;
-    float ao = (aoCenter + aoRight + aoDown + aoDownRight) * 0.25f;
+    float2 texelSize = g_aoInvSize;
+    float ao = 0.0f;
+    ao += tex2D(sampAO, i.uv + float2(-texelSize.x, -texelSize.y)).r * 1.0f;
+    ao += tex2D(sampAO, i.uv + float2(0.0f, -texelSize.y)).r * 2.0f;
+    ao += tex2D(sampAO, i.uv + float2(texelSize.x, -texelSize.y)).r * 1.0f;
+    ao += tex2D(sampAO, i.uv + float2(-texelSize.x, 0.0f)).r * 2.0f;
+    ao += tex2D(sampAO, i.uv).r * 4.0f;
+    ao += tex2D(sampAO, i.uv + float2(texelSize.x, 0.0f)).r * 2.0f;
+    ao += tex2D(sampAO, i.uv + float2(-texelSize.x, texelSize.y)).r * 1.0f;
+    ao += tex2D(sampAO, i.uv + float2(0.0f, texelSize.y)).r * 2.0f;
+    ao += tex2D(sampAO, i.uv + float2(texelSize.x, texelSize.y)).r * 1.0f;
+    ao *= (1.0f / 16.0f);
     float aoAdjusted = saturate(1.0f - (1.0f - saturate(ao)) * g_shadowStrength);
     float shadowPresence = saturate(1.0f - ao);
     float3 shadedColor = color * aoAdjusted;
@@ -763,12 +770,12 @@ technique TechniqueAO_Composite
     }
 }
 
-technique TechniqueAO_Composite4TapAverage
+technique TechniqueAO_Composite3x3Gaussian
 {
     pass P0
     {
         CullMode = NONE;
         VertexShader = compile vs_3_0 VS_Fullscreen();
-        PixelShader = compile ps_3_0 PS_Composite4TapAverage();
+        PixelShader = compile ps_3_0 PS_Composite3x3Gaussian();
     }
 }

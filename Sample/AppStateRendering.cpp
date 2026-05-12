@@ -528,9 +528,9 @@ void ApplySSAOTexSize()
     g_Render.SetPostEffectSSAOTexSizeDivisor(g_ssaoTexSizeDivisor);
 }
 
-void ApplySSAOCompositeFourTapAverage()
+void ApplySSAOCompositeGaussian3x3()
 {
-    g_Render.SetPostEffectSSAOCompositeFourTapAverage(g_bSSAOCompositeFourTapAverage);
+    g_Render.SetPostEffectSSAOCompositeGaussian3x3(g_bSSAOCompositeGaussian3x3);
 }
 
 void ApplyCameraClipPlanes()

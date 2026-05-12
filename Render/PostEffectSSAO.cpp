@@ -279,9 +279,9 @@ void PostEffectSSAO::SetTextureScaleDivisor(const int scaleDivisor)
     }
 }
 
-void PostEffectSSAO::SetCompositeFourTapAverageEnabled(const bool enabled)
+void PostEffectSSAO::SetCompositeGaussian3x3Enabled(const bool enabled)
 {
-    m_compositeFourTapAverageEnabled = enabled;
+    m_compositeGaussian3x3Enabled = enabled;
 }
 
 void PostEffectSSAO::SetDepthRange(const float nearPlane, const float farPlane)
@@ -398,9 +398,9 @@ int PostEffectSSAO::NormalizeTextureScaleDivisor(const int scaleDivisor) const
 
 const char* PostEffectSSAO::GetCompositeTechniqueName() const
 {
-    if (m_compositeFourTapAverageEnabled)
+    if (m_compositeGaussian3x3Enabled)
     {
-        return "TechniqueAO_Composite4TapAverage";
+        return "TechniqueAO_Composite3x3Gaussian";
     }
 
     return "TechniqueAO_Composite";

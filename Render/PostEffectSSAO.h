@@ -28,7 +28,7 @@ public:
     void SetBlurKernelSize(const int kernelSize);
     void SetDepthRange(const float nearPlane, const float farPlane);
     void SetTextureScaleDivisor(const int scaleDivisor);
-    void SetCompositeFourTapAverageEnabled(const bool enabled);
+    void SetCompositeGaussian3x3Enabled(const bool enabled);
 
     void OnDeviceLost();
     void OnDeviceReset();
@@ -43,7 +43,7 @@ private:
     bool m_blurEnabled = true;
     int m_blurKernelSize = 21;
     int m_textureScaleDivisor = 1;
-    bool m_compositeFourTapAverageEnabled = false;
+    bool m_compositeGaussian3x3Enabled = false;
     float m_nearPlane = 0.1f;
     float m_farPlane = 30'000.0f;
     float m_positionRange = 30'000.0f;

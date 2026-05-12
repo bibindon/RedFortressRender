@@ -309,18 +309,18 @@ void Render::ApplySettings()
         }
     }
 
-    const auto ssaoCompositeFourTapAverageEnable =
-        m_settings.find(L"SSAOCompositeFourTapAverageEnable");
-    if (ssaoCompositeFourTapAverageEnable != m_settings.end())
+    const auto ssaoCompositeGaussian3x3Enable =
+        m_settings.find(L"SSAOCompositeGaussian3x3Enable");
+    if (ssaoCompositeGaussian3x3Enable != m_settings.end())
     {
         bool enabled = false;
-        if (TryParseBoolSetting(ssaoCompositeFourTapAverageEnable->second, enabled))
+        if (TryParseBoolSetting(ssaoCompositeGaussian3x3Enable->second, enabled))
         {
-            SetPostEffectSSAOCompositeFourTapAverage(enabled);
+            SetPostEffectSSAOCompositeGaussian3x3(enabled);
         }
         else
         {
-            SetPostEffectSSAOCompositeFourTapAverage(false);
+            SetPostEffectSSAOCompositeGaussian3x3(false);
         }
     }
 
@@ -2203,9 +2203,9 @@ void Render::SetPostEffectSSAOTexSizeDivisor(const int scaleDivisor)
     m_postEffectSSAO.SetTextureScaleDivisor(scaleDivisor);
 }
 
-void Render::SetPostEffectSSAOCompositeFourTapAverage(const bool enabled)
+void Render::SetPostEffectSSAOCompositeGaussian3x3(const bool enabled)
 {
-    m_postEffectSSAO.SetCompositeFourTapAverageEnabled(enabled);
+    m_postEffectSSAO.SetCompositeGaussian3x3Enabled(enabled);
 }
 
 void Render::SetPostEffectFog(const bool arg)

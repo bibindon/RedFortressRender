@@ -52,7 +52,7 @@ void RefreshSSAOSampleCountControls(HWND hDlg);
 void RefreshSSAODepthScaledSampleDistanceControls(HWND hDlg);
 void RefreshSSAOSampleRadiusControls(HWND hDlg);
 void RefreshSSAOBlurKernelSizeControls(HWND hDlg);
-void RefreshSSAOCompositeFourTapAverageControls(HWND hDlg);
+void RefreshSSAOCompositeGaussian3x3Controls(HWND hDlg);
 void RefreshCameraClipPlaneControls(HWND hDlg);
 void RefreshGBufferClipPlaneControls(HWND hDlg);
 void RefreshSSAOBlurControls(HWND hDlg);
@@ -1577,7 +1577,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshSSAOSampleCountControls(hDlg);
     RefreshSSAODepthScaledSampleDistanceControls(hDlg);
     RefreshSSAOTexSizeControls(hDlg);
-    RefreshSSAOCompositeFourTapAverageControls(hDlg);
+    RefreshSSAOCompositeGaussian3x3Controls(hDlg);
     RefreshBloom(hDlg);
     RefreshDepthOfField(hDlg);
     RefreshStarBurst(hDlg);
@@ -1608,7 +1608,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshSSAOSampleCountControls(hDlg);
     RefreshSSAODepthScaledSampleDistanceControls(hDlg);
     RefreshSSAOTexSizeControls(hDlg);
-    RefreshSSAOCompositeFourTapAverageControls(hDlg);
+    RefreshSSAOCompositeGaussian3x3Controls(hDlg);
     RefreshBloomThresholdControls(hDlg);
     RefreshDepthOfFieldControls(hDlg);
     RefreshDepthOfFieldMaxBlurControls(hDlg);
@@ -2841,7 +2841,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             RefreshSSAOBlurKernelSizeControls(hDlg);
             RefreshSSAODepthScaledSampleDistanceControls(hDlg);
             RefreshSSAOTexSizeControls(hDlg);
-            RefreshSSAOCompositeFourTapAverageControls(hDlg);
+            RefreshSSAOCompositeGaussian3x3Controls(hDlg);
             return TRUE;
         }
 
@@ -2863,12 +2863,12 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
-        if (commandId == IDC_CHECK_SSAO_COMPOSITE_4TAP_AVERAGE)
+        if (commandId == IDC_CHECK_SSAO_COMPOSITE_GAUSSIAN_3X3)
         {
-            g_bSSAOCompositeFourTapAverage =
-                (IsDlgButtonChecked(hDlg, IDC_CHECK_SSAO_COMPOSITE_4TAP_AVERAGE) == BST_CHECKED);
-            ApplySSAOCompositeFourTapAverage();
-            RefreshSSAOCompositeFourTapAverageControls(hDlg);
+            g_bSSAOCompositeGaussian3x3 =
+                (IsDlgButtonChecked(hDlg, IDC_CHECK_SSAO_COMPOSITE_GAUSSIAN_3X3) == BST_CHECKED);
+            ApplySSAOCompositeGaussian3x3();
+            RefreshSSAOCompositeGaussian3x3Controls(hDlg);
             return TRUE;
         }
 

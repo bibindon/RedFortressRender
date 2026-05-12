@@ -111,7 +111,7 @@ int g_shadowPcfTapCount = 11;
 int g_shadowCompositeTapCount = 11;
 int g_zShadowTexSizeDivisor = 1;
 int g_ssaoTexSizeDivisor = 1;
-bool g_bSSAOCompositeFourTapAverage = false;
+bool g_bSSAOCompositeGaussian3x3 = false;
 int g_sunId = 0;
 int g_resolutionWidth = WINDOW_SIZE_W;
 int g_resolutionHeight = WINDOW_SIZE_H;
@@ -1608,9 +1608,9 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
                     g_ssaoTexSizeDivisor = 1;
                 }
             }
-            else if (key == L"SSAOCompositeFourTapAverageEnable")
+            else if (key == L"SSAOCompositeGaussian3x3Enable")
             {
-                g_bSSAOCompositeFourTapAverage = (std::stoi(value) != 0);
+                g_bSSAOCompositeGaussian3x3 = (std::stoi(value) != 0);
             }
             else if (key == L"CameraNear")
             {
@@ -1918,7 +1918,7 @@ void ApplyAllSampleSettings()
     ApplySSAOSampleRadius();
     ApplySSAOBlurKernelSize();
     ApplySSAOTexSize();
-    ApplySSAOCompositeFourTapAverage();
+    ApplySSAOCompositeGaussian3x3();
     ApplySSAOBlur();
     ApplyHalfLambertShadowSaturation();
     ApplyShadowDarkness();
