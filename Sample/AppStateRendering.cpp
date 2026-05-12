@@ -854,14 +854,14 @@ float SliderValueToShadowSaturationBoost(const int sliderValue)
     return ClampShadowSaturationBoost(static_cast<float>(sliderValue) * SHADOW_SATURATION_BOOST_STEP);
 }
 
-int ShadowTapCountToSliderValue(const int tapCount)
+int ShadowTapCountToComboIndex(const int tapCount)
 {
     return ((NormalizeShadowBlurTapCountLocal(tapCount) - 1) / 2);
 }
 
-int SliderValueToShadowTapCount(const int sliderValue)
+int ComboIndexToShadowTapCount(const int comboIndex)
 {
-    return NormalizeShadowBlurTapCountLocal((sliderValue * 2) + 1);
+    return NormalizeShadowBlurTapCountLocal((comboIndex * 2) + 1);
 }
 
 int SSAOShadowStrengthToSliderValue(const float shadowStrength)

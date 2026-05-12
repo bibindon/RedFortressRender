@@ -142,8 +142,6 @@ constexpr int MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS_SLIDER_MAX =
     static_cast<int>(MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS_MAX / MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS_STEP);
 constexpr int MOTION_BLUR_CAMERA_SAMPLE_COUNT_SLIDER_MIN = MOTION_BLUR_CAMERA_SAMPLE_COUNT_MIN;
 constexpr int MOTION_BLUR_CAMERA_SAMPLE_COUNT_SLIDER_MAX = MOTION_BLUR_CAMERA_SAMPLE_COUNT_MAX;
-constexpr int SHADOW_BLUR_TAP_SLIDER_MIN = 0;
-constexpr int SHADOW_BLUR_TAP_SLIDER_MAX = (SHADOW_BLUR_TAP_COUNT_MAX - 1) / 2;
 constexpr int GODRAY_COLOR_SLIDER_MIN = 0;
 constexpr int GODRAY_COLOR_SLIDER_MAX = static_cast<int>(GODRAY_LIGHT_COLOR_MAX / GODRAY_LIGHT_COLOR_STEP);
 constexpr int GODRAY_INTENSITY_SLIDER_MIN = 0;
@@ -303,6 +301,27 @@ void PopulateZShadowTexSizeCombo(HWND hDlg)
                 0);
 }
 
+void PopulateShadowTapCountCombo(HWND hDlg, const int controlId, const int tapCount)
+{
+    HWND combo = GetDlgItem(hDlg, controlId);
+    if (combo == NULL)
+    {
+        return;
+    }
+
+    SendMessage(combo, CB_RESETCONTENT, 0, 0);
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"3"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"5"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"7"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"9"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"11"));
+    SendMessage(combo,
+                CB_SETCURSEL,
+                static_cast<WPARAM>(ShadowTapCountToComboIndex(tapCount)),
+                0);
+}
+
 int SSAOTexSizeDivisorToComboIndex(const int scaleDivisor)
 {
     if (scaleDivisor == 2)
@@ -450,8 +469,6 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_SHADOW_INTENSITY,
         IDC_EDIT_SHADOW_SATURATION_BOOST,
         IDC_EDIT_SHADOW_COVERAGE,
-        IDC_EDIT_SHADOW_PCF_TAPS,
-        IDC_EDIT_SHADOW_COMPOSITE_TAPS,
         IDC_EDIT_HALF_LAMBERT_SHADOW_SATURATION,
         IDC_EDIT_SHADOW_DARKNESS,
         IDC_EDIT_SPECULAR_INTENSITY,
@@ -702,22 +719,6 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
             ApplyShadowCoverage();
         }
         RefreshShadowCoverageControls(hDlg);
-        return true;
-    case IDC_EDIT_SHADOW_PCF_TAPS:
-        if (TryParseEditInt(hDlg, commandId, intValue))
-        {
-            g_shadowPcfTapCount = intValue;
-            ApplyShadowPcfTapCount();
-        }
-        RefreshShadowPcfTapControls(hDlg);
-        return true;
-    case IDC_EDIT_SHADOW_COMPOSITE_TAPS:
-        if (TryParseEditInt(hDlg, commandId, intValue))
-        {
-            g_shadowCompositeTapCount = intValue;
-            ApplyShadowCompositeTapCount();
-        }
-        RefreshShadowCompositeTapControls(hDlg);
         return true;
     case IDC_EDIT_HALF_LAMBERT_SHADOW_SATURATION:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
@@ -1835,16 +1836,6 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_SAMPLE_COUNT, TBM_SETTICFREQ, 1, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_SAMPLE_COUNT, TBM_SETPAGESIZE, 0, 1);
 
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_PCF_TAPS, TBM_SETRANGEMIN, FALSE, SHADOW_BLUR_TAP_SLIDER_MIN);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_PCF_TAPS, TBM_SETRANGEMAX, FALSE, SHADOW_BLUR_TAP_SLIDER_MAX);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_PCF_TAPS, TBM_SETTICFREQ, 1, 0);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_PCF_TAPS, TBM_SETPAGESIZE, 0, 1);
-
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_COMPOSITE_TAPS, TBM_SETRANGEMIN, FALSE, SHADOW_BLUR_TAP_SLIDER_MIN);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_COMPOSITE_TAPS, TBM_SETRANGEMAX, FALSE, SHADOW_BLUR_TAP_SLIDER_MAX);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_COMPOSITE_TAPS, TBM_SETTICFREQ, 1, 0);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SHADOW_COMPOSITE_TAPS, TBM_SETPAGESIZE, 0, 1);
-
     SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_R, TBM_SETRANGEMIN, FALSE, GODRAY_COLOR_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_R, TBM_SETRANGEMAX, FALSE, GODRAY_COLOR_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_R, TBM_SETTICFREQ, 5, 0);
@@ -2092,6 +2083,8 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         PopulateResolutionCombo(hDlg);
         PopulatePointLightTypeCombo(hDlg);
         PopulateZShadowTexSizeCombo(hDlg);
+        PopulateShadowTapCountCombo(hDlg, IDC_COMBO_SHADOW_PCF_TAPS, g_shadowPcfTapCount);
+        PopulateShadowTapCountCombo(hDlg, IDC_COMBO_SHADOW_COMPOSITE_TAPS, g_shadowCompositeTapCount);
         PopulateSSAOSampleCountCombo(hDlg);
         PopulateSSAOTexSizeCombo(hDlg);
         PopulateSSAOBlurKernelSizeCombo(hDlg);
@@ -2206,24 +2199,6 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_motionBlurCameraSampleCount = SliderValueToMotionBlurCameraSampleCount(sliderValue);
             ApplyMotionBlurCameraSettings();
             RefreshMotionBlurCameraControls(hDlg);
-            return TRUE;
-        }
-
-        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SHADOW_PCF_TAPS))
-        {
-            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
-            g_shadowPcfTapCount = SliderValueToShadowTapCount(sliderValue);
-            ApplyShadowPcfTapCount();
-            RefreshShadowPcfTapControls(hDlg);
-            return TRUE;
-        }
-
-        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SHADOW_COMPOSITE_TAPS))
-        {
-            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
-            g_shadowCompositeTapCount = SliderValueToShadowTapCount(sliderValue);
-            ApplyShadowCompositeTapCount();
-            RefreshShadowCompositeTapControls(hDlg);
             return TRUE;
         }
 
@@ -2827,6 +2802,26 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_zShadowTexSizeDivisor = ComboIndexToShadowTexSizeDivisor(index);
             ApplyZShadowTexSize();
             RefreshZShadowTexSizeControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_COMBO_SHADOW_PCF_TAPS && HIWORD(wParam) == CBN_SELCHANGE)
+        {
+            HWND combo = reinterpret_cast<HWND>(lParam);
+            const int index = static_cast<int>(SendMessage(combo, CB_GETCURSEL, 0, 0));
+            g_shadowPcfTapCount = ComboIndexToShadowTapCount(index);
+            ApplyShadowPcfTapCount();
+            RefreshShadowPcfTapControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_COMBO_SHADOW_COMPOSITE_TAPS && HIWORD(wParam) == CBN_SELCHANGE)
+        {
+            HWND combo = reinterpret_cast<HWND>(lParam);
+            const int index = static_cast<int>(SendMessage(combo, CB_GETCURSEL, 0, 0));
+            g_shadowCompositeTapCount = ComboIndexToShadowTapCount(index);
+            ApplyShadowCompositeTapCount();
+            RefreshShadowCompositeTapControls(hDlg);
             return TRUE;
         }
 

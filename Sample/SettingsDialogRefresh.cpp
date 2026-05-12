@@ -964,26 +964,26 @@ void RefreshMotionBlurCameraControls(HWND hDlg)
 
 void RefreshShadowPcfTapControls(HWND hDlg)
 {
-    wchar_t buffer[32];
-    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%d", g_shadowPcfTapCount);
-    SetDlgItemText(hDlg, IDC_EDIT_SHADOW_PCF_TAPS, buffer);
-    SendDlgItemMessage(hDlg,
-                       IDC_SLIDER_SHADOW_PCF_TAPS,
-                       TBM_SETPOS,
-                       TRUE,
-                       static_cast<LPARAM>(ShadowTapCountToSliderValue(g_shadowPcfTapCount)));
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_SHADOW_PCF_TAPS);
+    if (combo != NULL)
+    {
+        SendMessage(combo,
+                    CB_SETCURSEL,
+                    static_cast<WPARAM>(ShadowTapCountToComboIndex(g_shadowPcfTapCount)),
+                    0);
+    }
 }
 
 void RefreshShadowCompositeTapControls(HWND hDlg)
 {
-    wchar_t buffer[32];
-    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%d", g_shadowCompositeTapCount);
-    SetDlgItemText(hDlg, IDC_EDIT_SHADOW_COMPOSITE_TAPS, buffer);
-    SendDlgItemMessage(hDlg,
-                       IDC_SLIDER_SHADOW_COMPOSITE_TAPS,
-                       TBM_SETPOS,
-                       TRUE,
-                       static_cast<LPARAM>(ShadowTapCountToSliderValue(g_shadowCompositeTapCount)));
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_SHADOW_COMPOSITE_TAPS);
+    if (combo != NULL)
+    {
+        SendMessage(combo,
+                    CB_SETCURSEL,
+                    static_cast<WPARAM>(ShadowTapCountToComboIndex(g_shadowCompositeTapCount)),
+                    0);
+    }
 }
 
 void RefreshGodRayControls(HWND hDlg)
