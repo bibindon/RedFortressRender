@@ -10,7 +10,6 @@ float2 g_invSize;
 float g_sampleRadius = 1.0f;
 int g_sampleCount = 16;
 bool g_enableDepthScaledSampleDistance = false;
-int g_blurKernelSize = 21;
 float g_shadowStrength = 1.0f;
 float g_aoSaturationBoost = 0.30f;
 float g_depthCompareThreshold = 0.00f;
@@ -293,14 +292,141 @@ float ComputeBlurSampleWeight(float baseWeight,
     return baseWeight * depthWeight * normalWeight;
 }
 
-float4 PS_Blur(VS_OUT i) : COLOR0
+void AccumulateBlurSample(float2 baseUv,
+                          float2 texelSize,
+                          float centerDepth,
+                          float3 centerNormal,
+                          int x,
+                          int y,
+                          inout float blurredValue,
+                          inout float weightSum)
+{
+    float2 sampleUv = baseUv + float2((float)x * texelSize.x,
+                                      (float)y * texelSize.y);
+    sampleUv = saturate(sampleUv);
+
+    float sampleDepth = GetViewDepth(sampleUv);
+    float3 sampleNormal = GetViewNormal(sampleUv);
+    float weight = ComputeBlurSampleWeight(1.0f,
+                                           centerDepth,
+                                           sampleDepth,
+                                           centerNormal,
+                                           sampleNormal);
+    blurredValue += tex2D(sampAO, sampleUv).r * weight;
+    weightSum += weight;
+}
+
+float4 FinalizeBlurResult(float blurredValue, float weightSum)
+{
+    float ao = 1.0f;
+    if (weightSum > 0.0f)
+    {
+        ao = blurredValue / weightSum;
+    }
+
+    return float4(ao, ao, ao, 1.0f);
+}
+
+float4 PS_Blur3x3(VS_OUT i) : COLOR0
 {
     float2 texelSize = g_invSize;
     float centerDepth = GetViewDepth(i.uv);
     float3 centerNormal = GetViewNormal(i.uv);
     float blurredValue = 0.0f;
     float weightSum = 0.0f;
-    int blurRadius = max(1, g_blurKernelSize / 2);
+
+    [loop]
+    for (int y = -1; y <= 1; ++y)
+    {
+        [loop]
+        for (int x = -1; x <= 1; ++x)
+        {
+            if (x != 0 || y != 0)
+            {
+                AccumulateBlurSample(i.uv,
+                                     texelSize,
+                                     centerDepth,
+                                     centerNormal,
+                                     x,
+                                     y,
+                                     blurredValue,
+                                     weightSum);
+            }
+        }
+    }
+
+    return FinalizeBlurResult(blurredValue, weightSum);
+}
+
+float4 PS_Blur5x5(VS_OUT i) : COLOR0
+{
+    float2 texelSize = g_invSize;
+    float centerDepth = GetViewDepth(i.uv);
+    float3 centerNormal = GetViewNormal(i.uv);
+    float blurredValue = 0.0f;
+    float weightSum = 0.0f;
+
+    [loop]
+    for (int y = -2; y <= 2; ++y)
+    {
+        [loop]
+        for (int x = -2; x <= 2; ++x)
+        {
+            if (x != 0 || y != 0)
+            {
+                AccumulateBlurSample(i.uv,
+                                     texelSize,
+                                     centerDepth,
+                                     centerNormal,
+                                     x,
+                                     y,
+                                     blurredValue,
+                                     weightSum);
+            }
+        }
+    }
+
+    return FinalizeBlurResult(blurredValue, weightSum);
+}
+
+float4 PS_Blur11x11(VS_OUT i) : COLOR0
+{
+    float2 texelSize = g_invSize;
+    float centerDepth = GetViewDepth(i.uv);
+    float3 centerNormal = GetViewNormal(i.uv);
+    float blurredValue = 0.0f;
+    float weightSum = 0.0f;
+
+    [loop]
+    for (int y = -5; y <= 5; ++y)
+    {
+        [loop]
+        for (int x = -5; x <= 5; ++x)
+        {
+            if (x != 0 || y != 0)
+            {
+                AccumulateBlurSample(i.uv,
+                                     texelSize,
+                                     centerDepth,
+                                     centerNormal,
+                                     x,
+                                     y,
+                                     blurredValue,
+                                     weightSum);
+            }
+        }
+    }
+
+    return FinalizeBlurResult(blurredValue, weightSum);
+}
+
+float4 PS_Blur21x21(VS_OUT i) : COLOR0
+{
+    float2 texelSize = g_invSize;
+    float centerDepth = GetViewDepth(i.uv);
+    float3 centerNormal = GetViewNormal(i.uv);
+    float blurredValue = 0.0f;
+    float weightSum = 0.0f;
 
     [loop]
     for (int y = -10; y <= 10; ++y)
@@ -308,38 +434,21 @@ float4 PS_Blur(VS_OUT i) : COLOR0
         [loop]
         for (int x = -10; x <= 10; ++x)
         {
-            if (abs(x) > blurRadius || abs(y) > blurRadius)
+            if (x != 0 || y != 0)
             {
-                continue;
+                AccumulateBlurSample(i.uv,
+                                     texelSize,
+                                     centerDepth,
+                                     centerNormal,
+                                     x,
+                                     y,
+                                     blurredValue,
+                                     weightSum);
             }
-
-            if (x == 0 && y == 0)
-            {
-                continue;
-            }
-
-            float2 sampleUv = i.uv + float2((float)x * texelSize.x,
-                                            (float)y * texelSize.y);
-            sampleUv = saturate(sampleUv);
-
-            float sampleDepth = GetViewDepth(sampleUv);
-            float3 sampleNormal = GetViewNormal(sampleUv);
-            float weight = ComputeBlurSampleWeight(1.0f,
-                                                   centerDepth,
-                                                   sampleDepth,
-                                                   centerNormal,
-                                                   sampleNormal);
-            blurredValue += tex2D(sampAO, sampleUv).r * weight;
-            weightSum += weight;
         }
     }
 
-    float ao = 1.0f;
-    if (weightSum > 0.0f)
-    {
-        ao = blurredValue / weightSum;
-    }
-    return float4(ao, ao, ao, 1.0f);
+    return FinalizeBlurResult(blurredValue, weightSum);
 }
 
 float4 PS_Composite(VS_OUT i) : COLOR0
@@ -363,13 +472,43 @@ technique TechniqueAO_Create
     }
 }
 
-technique TechniqueAO_Blur
+technique TechniqueAO_Blur3x3
 {
     pass P0
     {
         CullMode = NONE;
         VertexShader = compile vs_3_0 VS_Fullscreen();
-        PixelShader = compile ps_3_0 PS_Blur();
+        PixelShader = compile ps_3_0 PS_Blur3x3();
+    }
+}
+
+technique TechniqueAO_Blur5x5
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS_Fullscreen();
+        PixelShader = compile ps_3_0 PS_Blur5x5();
+    }
+}
+
+technique TechniqueAO_Blur11x11
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS_Fullscreen();
+        PixelShader = compile ps_3_0 PS_Blur11x11();
+    }
+}
+
+technique TechniqueAO_Blur21x21
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS_Fullscreen();
+        PixelShader = compile ps_3_0 PS_Blur21x21();
     }
 }
 

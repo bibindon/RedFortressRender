@@ -66,6 +66,7 @@ private:
     void DrawFullscreenQuad();
     void CreateResources();
     int NormalizeBlurKernelSize(const int kernelSize) const;
+    const char* GetBlurTechniqueName() const;
     int NormalizeTextureScaleDivisor(const int scaleDivisor) const;
     UINT ComputeTextureSize(const int screenSize) const;
 };

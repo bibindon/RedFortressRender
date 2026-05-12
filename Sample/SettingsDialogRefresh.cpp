@@ -620,18 +620,18 @@ void RefreshSSAOSampleRadiusControls(HWND hDlg)
 
 void RefreshSSAOBlurKernelSizeControls(HWND hDlg)
 {
-    wchar_t buffer[32];
-    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%d", g_ssaoBlurKernelSize);
-    SetDlgItemText(hDlg, IDC_EDIT_SSAO_BLUR_KERNEL_SIZE, buffer);
-    SendDlgItemMessage(hDlg,
-                       IDC_SLIDER_SSAO_BLUR_KERNEL_SIZE,
-                       TBM_SETPOS,
-                       TRUE,
-                       static_cast<LPARAM>(SSAOBlurKernelSizeToSliderValue(g_ssaoBlurKernelSize)));
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_SSAO_BLUR_KERNEL_SIZE);
+    if (combo != NULL)
+    {
+        SendMessage(combo,
+                    CB_SETCURSEL,
+                    static_cast<WPARAM>(SSAOBlurKernelSizeToComboIndex(g_ssaoBlurKernelSize)),
+                    0);
+    }
+
     const BOOL enabled = g_bSSAO && g_bSSAOBlur;
     EnableWindow(GetDlgItem(hDlg, IDC_STATIC_SSAO_BLUR_KERNEL_SIZE_LABEL), enabled);
-    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SSAO_BLUR_KERNEL_SIZE), enabled);
-    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SSAO_BLUR_KERNEL_SIZE), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_COMBO_SSAO_BLUR_KERNEL_SIZE), enabled);
 }
 
 void RefreshSSAOTexSizeControls(HWND hDlg)

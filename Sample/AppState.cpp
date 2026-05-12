@@ -215,15 +215,22 @@ float ClampSSAOSampleRadius(const float sampleRadius)
 
 int ClampSSAOBlurKernelSize(const int kernelSize)
 {
-    int normalized = (std::max)(SSAO_BLUR_KERNEL_SIZE_MIN,
-                                (std::min)(kernelSize, SSAO_BLUR_KERNEL_SIZE_MAX));
-
-    if ((normalized % 2) == 0)
+    if (kernelSize <= 4)
     {
-        --normalized;
+        return 3;
     }
 
-    return (std::max)(SSAO_BLUR_KERNEL_SIZE_MIN, normalized);
+    if (kernelSize <= 8)
+    {
+        return 5;
+    }
+
+    if (kernelSize <= 16)
+    {
+        return 11;
+    }
+
+    return 21;
 }
 
 float ClampCameraNearPlane(const float nearPlane)

@@ -118,8 +118,6 @@ constexpr int SSAO_SAMPLE_COUNT_SLIDER_MIN = SSAO_SAMPLE_COUNT_MIN;
 constexpr int SSAO_SAMPLE_COUNT_SLIDER_MAX = SSAO_SAMPLE_COUNT_MAX;
 constexpr int SSAO_SAMPLE_RADIUS_SLIDER_MIN = 0;
 constexpr int SSAO_SAMPLE_RADIUS_SLIDER_MAX = static_cast<int>((SSAO_SAMPLE_RADIUS_MAX - SSAO_SAMPLE_RADIUS_MIN) / SSAO_SAMPLE_RADIUS_STEP);
-constexpr int SSAO_BLUR_KERNEL_SIZE_SLIDER_MIN = SSAO_BLUR_KERNEL_SIZE_MIN;
-constexpr int SSAO_BLUR_KERNEL_SIZE_SLIDER_MAX = SSAO_BLUR_KERNEL_SIZE_MAX;
 constexpr int BLOOM_THRESHOLD_SLIDER_MIN = 0;
 constexpr int BLOOM_THRESHOLD_SLIDER_MAX = static_cast<int>(BLOOM_THRESHOLD_MAX / BLOOM_THRESHOLD_STEP);
 constexpr int DOF_FOCAL_DISTANCE_SLIDER_MIN = 0;
@@ -354,6 +352,24 @@ void PopulateSSAOTexSizeCombo(HWND hDlg)
                 0);
 }
 
+void PopulateSSAOBlurKernelSizeCombo(HWND hDlg)
+{
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_SSAO_BLUR_KERNEL_SIZE);
+    if (combo == NULL)
+    {
+        return;
+    }
+
+    SendMessage(combo, CB_RESETCONTENT, 0, 0);
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"3x3"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"5x5"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"11x11"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"21x21"));
+    SendMessage(combo, CB_SETCURSEL,
+                static_cast<WPARAM>(SSAOBlurKernelSizeToComboIndex(g_ssaoBlurKernelSize)),
+                0);
+}
+
 bool TryParseEditFloat(HWND hDlg, const int controlId, float& value)
 {
     // Edit ボックスは文字列入力なので、
@@ -431,7 +447,6 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_SSAO_SHADOW_SATURATION,
         IDC_EDIT_SSAO_SAMPLE_COUNT,
         IDC_EDIT_SSAO_SAMPLE_RADIUS,
-        IDC_EDIT_SSAO_BLUR_KERNEL_SIZE,
         IDC_EDIT_CAMERA_NEAR,
         IDC_EDIT_CAMERA_FAR,
         IDC_EDIT_GBUFFER_NEAR,
@@ -783,14 +798,6 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
             ApplySSAOSampleRadius();
         }
         RefreshSSAOSampleRadiusControls(hDlg);
-        return true;
-    case IDC_EDIT_SSAO_BLUR_KERNEL_SIZE:
-        if (TryParseEditInt(hDlg, commandId, intValue))
-        {
-            g_ssaoBlurKernelSize = intValue;
-            ApplySSAOBlurKernelSize();
-        }
-        RefreshSSAOBlurKernelSizeControls(hDlg);
         return true;
     case IDC_EDIT_CAMERA_NEAR:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
@@ -1756,11 +1763,6 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS, TBM_SETTICFREQ, 10, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS, TBM_SETPAGESIZE, 0, 10);
 
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BLUR_KERNEL_SIZE, TBM_SETRANGEMIN, FALSE, SSAO_BLUR_KERNEL_SIZE_SLIDER_MIN);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BLUR_KERNEL_SIZE, TBM_SETRANGEMAX, FALSE, SSAO_BLUR_KERNEL_SIZE_SLIDER_MAX);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BLUR_KERNEL_SIZE, TBM_SETTICFREQ, 2, 0);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_BLUR_KERNEL_SIZE, TBM_SETPAGESIZE, 0, 2);
-
     SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETRANGEMIN, FALSE, BLOOM_THRESHOLD_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETRANGEMAX, FALSE, BLOOM_THRESHOLD_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETTICFREQ, 5, 0);
@@ -2088,6 +2090,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         PopulatePointLightTypeCombo(hDlg);
         PopulateZShadowTexSizeCombo(hDlg);
         PopulateSSAOTexSizeCombo(hDlg);
+        PopulateSSAOBlurKernelSizeCombo(hDlg);
         InitializeLoadedModelListView(hDlg);
         InitializePointLightListView(hDlg);
         RefreshAllControls(hDlg);
@@ -2553,15 +2556,6 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
-        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSAO_BLUR_KERNEL_SIZE))
-        {
-            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
-            g_ssaoBlurKernelSize = SliderValueToSSAOBlurKernelSize(sliderValue);
-            ApplySSAOBlurKernelSize();
-            RefreshSSAOBlurKernelSizeControls(hDlg);
-            return TRUE;
-        }
-
         if (slider == GetDlgItem(hDlg, IDC_SLIDER_BLOOM_THRESHOLD))
         {
             const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
@@ -2882,6 +2876,16 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_ssaoTexSizeDivisor = ComboIndexToSSAOTexSizeDivisor(index);
             ApplySSAOTexSize();
             RefreshSSAOTexSizeControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_COMBO_SSAO_BLUR_KERNEL_SIZE && HIWORD(wParam) == CBN_SELCHANGE)
+        {
+            HWND combo = reinterpret_cast<HWND>(lParam);
+            const int index = static_cast<int>(SendMessage(combo, CB_GETCURSEL, 0, 0));
+            g_ssaoBlurKernelSize = ComboIndexToSSAOBlurKernelSize(index);
+            ApplySSAOBlurKernelSize();
+            RefreshSSAOBlurKernelSizeControls(hDlg);
             return TRUE;
         }
 

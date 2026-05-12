@@ -92,15 +92,22 @@ float ClampSSAOSampleRadius(const float sampleRadius)
 
 int ClampSSAOBlurKernelSize(const int kernelSize)
 {
-    int normalized = (std::max)(SSAO_BLUR_KERNEL_SIZE_MIN,
-                                (std::min)(kernelSize, SSAO_BLUR_KERNEL_SIZE_MAX));
-
-    if ((normalized % 2) == 0)
+    if (kernelSize <= 4)
     {
-        --normalized;
+        return 3;
     }
 
-    return (std::max)(SSAO_BLUR_KERNEL_SIZE_MIN, normalized);
+    if (kernelSize <= 8)
+    {
+        return 5;
+    }
+
+    if (kernelSize <= 16)
+    {
+        return 11;
+    }
+
+    return 21;
 }
 
 float ClampCameraNearPlane(const float nearPlane)
@@ -877,14 +884,46 @@ float SliderValueToSSAOSampleRadius(const int sliderValue)
     return ClampSSAOSampleRadius(SSAO_SAMPLE_RADIUS_MIN + static_cast<float>(sliderValue) * SSAO_SAMPLE_RADIUS_STEP);
 }
 
-int SSAOBlurKernelSizeToSliderValue(const int kernelSize)
+int SSAOBlurKernelSizeToComboIndex(const int kernelSize)
 {
-    return ClampSSAOBlurKernelSize(kernelSize);
+    const int normalizedKernelSize = ClampSSAOBlurKernelSize(kernelSize);
+
+    if (normalizedKernelSize == 3)
+    {
+        return 0;
+    }
+
+    if (normalizedKernelSize == 5)
+    {
+        return 1;
+    }
+
+    if (normalizedKernelSize == 11)
+    {
+        return 2;
+    }
+
+    return 3;
 }
 
-int SliderValueToSSAOBlurKernelSize(const int sliderValue)
+int ComboIndexToSSAOBlurKernelSize(const int comboIndex)
 {
-    return ClampSSAOBlurKernelSize(sliderValue);
+    if (comboIndex == 0)
+    {
+        return 3;
+    }
+
+    if (comboIndex == 1)
+    {
+        return 5;
+    }
+
+    if (comboIndex == 2)
+    {
+        return 11;
+    }
+
+    return 21;
 }
 
 int HalfLambertShadowSaturationToSliderValue(const float boost)
