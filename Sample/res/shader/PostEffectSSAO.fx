@@ -1,4 +1,4 @@
-// SSAO2 shader.
+// SSAO shader.
 // 法線から直交基底を作る入口を if で明示している。
 
 float4x4 g_matView;
@@ -197,7 +197,7 @@ float2 ComputeOcclusionSample(float2 baseUv,
     return float2(0.0f, 1.0f);
 }
 
-float4 PS_AO2(VS_OUT i) : COLOR0
+float4 PS_AO(VS_OUT i) : COLOR0
 {
     float currentDepth = GetViewDepth(i.uv);
     if (currentDepth >= g_fFar)
@@ -346,17 +346,17 @@ float4 PS_Composite(VS_OUT i) : COLOR0
     return float4(IncreaseSaturation(shadedColor, saturationAmount), 1.0f);
 }
 
-technique TechniqueAO2_Create
+technique TechniqueAO_Create
 {
     pass P0
     {
         CullMode = NONE;
         VertexShader = compile vs_3_0 VS_Fullscreen();
-        PixelShader = compile ps_3_0 PS_AO2();
+        PixelShader = compile ps_3_0 PS_AO();
     }
 }
 
-technique TechniqueAO2_Blur21x21
+technique TechniqueAO_Blur21x21
 {
     pass P0
     {
@@ -366,7 +366,7 @@ technique TechniqueAO2_Blur21x21
     }
 }
 
-technique TechniqueAO2_Composite
+technique TechniqueAO_Composite
 {
     pass P0
     {

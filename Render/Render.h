@@ -41,7 +41,7 @@
 #include "PostEffectBloom.h"
 #include "PostEffectStarBurst.h"
 #include "PostEffectEnd.h"
-#include "PostEffectSSAO2.h"
+#include "PostEffectSSAO.h"
 #include "PostEffectDepthOfField.h"
 #include "PostEffectHeightFog.h"
 #include "PostEffectFXAA.h"
@@ -258,14 +258,14 @@ public:
     void SetPostEffectDepthBufferShadowPcfTapCount(const int tapCount);
     void SetPostEffectDepthBufferShadowCompositeTapCount(const int tapCount);
     void SetPostEffectDepthBufferShadowTexSizeDivisor(const int scaleDivisor);
-    void SetPostEffectSSAO2(const bool arg);
-    void SetPostEffectSSAO2Blur(const bool arg);
-    void SetPostEffectSSAO2ShadowStrength(const float shadowStrength);
-    void SetPostEffectSSAO2SaturationBoost(const float saturationBoost);
-    void SetPostEffectSSAO2SampleCount(const int sampleCount);
-    void SetPostEffectSSAO2DepthScaledSampleDistance(const bool enabled);
-    void SetPostEffectSSAO2SampleRadius(const float sampleRadius);
-    void SetPostEffectSSAO2TexSizeDivisor(const int scaleDivisor);
+    void SetPostEffectSSAO(const bool arg);
+    void SetPostEffectSSAOBlur(const bool arg);
+    void SetPostEffectSSAOShadowStrength(const float shadowStrength);
+    void SetPostEffectSSAOSaturationBoost(const float saturationBoost);
+    void SetPostEffectSSAOSampleCount(const int sampleCount);
+    void SetPostEffectSSAODepthScaledSampleDistance(const bool enabled);
+    void SetPostEffectSSAOSampleRadius(const float sampleRadius);
+    void SetPostEffectSSAOTexSizeDivisor(const int scaleDivisor);
     void SetPostEffectFog(const bool arg);
     void SetPostEffectFogIntensity(const float intensity);
     void SetPostEffectHeightFog(const bool arg);
@@ -367,8 +367,8 @@ private:
     // 深度バッファシャドウ
     PostEffectZShadow m_postEffectZShadow;
 
-    // SSAO2
-    PostEffectSSAO2 m_postEffectSSAO2;
+    // SSAO
+    PostEffectSSAO m_postEffectSSAO;
 
     // 霧
     PostEffectFog m_postEffectFog;
@@ -412,7 +412,7 @@ private:
     void EnsurePostEffectFXAAInitialized();
     void EnsurePostEffectMotionBlurCameraInitialized();
     void EnsurePostEffectZShadowInitialized();
-    void EnsurePostEffectSSAO2Initialized();
+    void EnsurePostEffectSSAOInitialized();
     void EnsurePostEffectFogInitialized();
     void EnsurePostEffectHeightFogInitialized();
     void EnsurePostEffectBloomInitialized();
@@ -438,7 +438,7 @@ private:
     bool m_postEffectMotionBlurCameraEnabled = false;
     bool m_gBufferEnabled = true;
     bool m_postEffectZShadowEnabled = true;
-    bool m_postEffectSSAO2Enabled = true;
+    bool m_postEffectSSAOEnabled = true;
     bool m_postEffectFogZEnabled = true;
     bool m_postEffectFogHeightEnabled = false;
     bool m_postEffectBloomEnabled = false;

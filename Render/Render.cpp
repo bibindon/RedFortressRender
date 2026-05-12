@@ -262,50 +262,50 @@ void Render::ApplySettings()
         }
     }
 
-    const auto ssao2Enable = m_settings.find(L"SSAO2Enable");
-    if (ssao2Enable != m_settings.end())
+    const auto ssaoEnable = m_settings.find(L"SSAOEnable");
+    if (ssaoEnable != m_settings.end())
     {
         bool enabled = true;
-        if (TryParseBoolSetting(ssao2Enable->second, enabled))
+        if (TryParseBoolSetting(ssaoEnable->second, enabled))
         {
-            SetPostEffectSSAO2(enabled);
+            SetPostEffectSSAO(enabled);
         }
     }
 
-    const auto ssao2BlurEnable = m_settings.find(L"SSAO2BlurEnable");
-    if (ssao2BlurEnable != m_settings.end())
+    const auto ssaoBlurEnable = m_settings.find(L"SSAOBlurEnable");
+    if (ssaoBlurEnable != m_settings.end())
     {
         bool enabled = true;
-        if (TryParseBoolSetting(ssao2BlurEnable->second, enabled))
+        if (TryParseBoolSetting(ssaoBlurEnable->second, enabled))
         {
-            SetPostEffectSSAO2Blur(enabled);
+            SetPostEffectSSAOBlur(enabled);
         }
     }
 
-    const auto ssao2DepthScaledSampleDistanceEnable = m_settings.find(L"SSAO2DepthScaledSampleDistanceEnable");
-    if (ssao2DepthScaledSampleDistanceEnable != m_settings.end())
+    const auto ssaoDepthScaledSampleDistanceEnable = m_settings.find(L"SSAODepthScaledSampleDistanceEnable");
+    if (ssaoDepthScaledSampleDistanceEnable != m_settings.end())
     {
         bool enabled = false;
-        if (TryParseBoolSetting(ssao2DepthScaledSampleDistanceEnable->second, enabled))
+        if (TryParseBoolSetting(ssaoDepthScaledSampleDistanceEnable->second, enabled))
         {
-            SetPostEffectSSAO2DepthScaledSampleDistance(enabled);
+            SetPostEffectSSAODepthScaledSampleDistance(enabled);
         }
     }
 
-    const auto ssao2TexSize = m_settings.find(L"SSAO2TexSize");
-    if (ssao2TexSize != m_settings.end())
+    const auto ssaoTexSize = m_settings.find(L"SSAOTexSize");
+    if (ssaoTexSize != m_settings.end())
     {
-        if (ssao2TexSize->second == L"1/2")
+        if (ssaoTexSize->second == L"1/2")
         {
-            SetPostEffectSSAO2TexSizeDivisor(2);
+            SetPostEffectSSAOTexSizeDivisor(2);
         }
-        else if (ssao2TexSize->second == L"1/4")
+        else if (ssaoTexSize->second == L"1/4")
         {
-            SetPostEffectSSAO2TexSizeDivisor(4);
+            SetPostEffectSSAOTexSizeDivisor(4);
         }
         else
         {
-            SetPostEffectSSAO2TexSizeDivisor(1);
+            SetPostEffectSSAOTexSizeDivisor(1);
         }
     }
 
@@ -656,55 +656,55 @@ void Render::ApplySettings()
         SetPostEffectDepthBufferShadowIntensity(0.5f);
     }
 
-    const auto ssao2ShadowStrength = m_settings.find(L"SSAO2ShadowStrength");
-    if (ssao2ShadowStrength != m_settings.end())
+    const auto ssaoShadowStrength = m_settings.find(L"SSAOShadowStrength");
+    if (ssaoShadowStrength != m_settings.end())
     {
         try
         {
-            SetPostEffectSSAO2ShadowStrength(std::stof(ssao2ShadowStrength->second));
+            SetPostEffectSSAOShadowStrength(std::stof(ssaoShadowStrength->second));
         }
         catch (...)
         {
-            SetPostEffectSSAO2ShadowStrength(1.0f);
+            SetPostEffectSSAOShadowStrength(1.0f);
         }
     }
     else
     {
-        SetPostEffectSSAO2ShadowStrength(1.0f);
+        SetPostEffectSSAOShadowStrength(1.0f);
     }
 
-    const auto ssao2ShadowSaturationBoost = m_settings.find(L"SSAO2ShadowSaturationBoost");
-    if (ssao2ShadowSaturationBoost != m_settings.end())
+    const auto ssaoShadowSaturationBoost = m_settings.find(L"SSAOShadowSaturationBoost");
+    if (ssaoShadowSaturationBoost != m_settings.end())
     {
         try
         {
-            SetPostEffectSSAO2SaturationBoost(std::stof(ssao2ShadowSaturationBoost->second));
+            SetPostEffectSSAOSaturationBoost(std::stof(ssaoShadowSaturationBoost->second));
         }
         catch (...)
         {
-            SetPostEffectSSAO2SaturationBoost(0.30f);
+            SetPostEffectSSAOSaturationBoost(0.30f);
         }
     }
     else
     {
-        SetPostEffectSSAO2SaturationBoost(0.30f);
+        SetPostEffectSSAOSaturationBoost(0.30f);
     }
 
-    const auto ssao2SampleCount = m_settings.find(L"SSAO2SampleCount");
-    if (ssao2SampleCount != m_settings.end())
+    const auto ssaoSampleCount = m_settings.find(L"SSAOSampleCount");
+    if (ssaoSampleCount != m_settings.end())
     {
         try
         {
-            SetPostEffectSSAO2SampleCount(std::stoi(ssao2SampleCount->second));
+            SetPostEffectSSAOSampleCount(std::stoi(ssaoSampleCount->second));
         }
         catch (...)
         {
-            SetPostEffectSSAO2SampleCount(16);
+            SetPostEffectSSAOSampleCount(16);
         }
     }
     else
     {
-        SetPostEffectSSAO2SampleCount(16);
+        SetPostEffectSSAOSampleCount(16);
     }
 
     const auto shadowSaturationBoost = m_settings.find(L"ShadowSaturationBoost");
@@ -724,21 +724,21 @@ void Render::ApplySettings()
         SetPostEffectDepthBufferShadowSaturationBoost(0.35f);
     }
 
-    const auto ssao2SampleRadius = m_settings.find(L"SSAO2SampleRadius");
-    if (ssao2SampleRadius != m_settings.end())
+    const auto ssaoSampleRadius = m_settings.find(L"SSAOSampleRadius");
+    if (ssaoSampleRadius != m_settings.end())
     {
         try
         {
-            SetPostEffectSSAO2SampleRadius(std::stof(ssao2SampleRadius->second));
+            SetPostEffectSSAOSampleRadius(std::stof(ssaoSampleRadius->second));
         }
         catch (...)
         {
-            SetPostEffectSSAO2SampleRadius(4.0f);
+            SetPostEffectSSAOSampleRadius(4.0f);
         }
     }
     else
     {
-        SetPostEffectSSAO2SampleRadius(4.0f);
+        SetPostEffectSSAOSampleRadius(4.0f);
     }
 
     const auto bloomEnable = m_settings.find(L"BloomEnable");
@@ -894,7 +894,7 @@ void Render::Finalize()
     MeshMixManager::SetSharedThicknessTexture(NULL);
 
     m_postEffectZShadow.Finalize();
-    m_postEffectSSAO2.Finalize();
+    m_postEffectSSAO.Finalize();
     m_postEffectFog.Finalize();
     m_postEffectHeightFog.Finalize();
     m_postEffectSaturate.Finalize();
@@ -1057,10 +1057,10 @@ void Render::Draw()
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
-    if (m_gBufferEnabled && m_postEffectSSAO2Enabled)
+    if (m_gBufferEnabled && m_postEffectSSAOEnabled)
     {
-        EnsurePostEffectSSAO2Initialized();
-        m_postEffectSSAO2.Draw(pTempTexture,
+        EnsurePostEffectSSAOInitialized();
+        m_postEffectSSAO.Draw(pTempTexture,
                                pWorkTexture,
                                pTexTempZ,
                                pTexTempPos,
@@ -1771,7 +1771,7 @@ void Render::SetGBufferClipPlanes(const float nearPlane, const float farPlane)
 {
     const float positionRange = GBuffer::ComputePositionRange(nearPlane, farPlane);
     m_GBuffer.SetDepthRange(nearPlane, farPlane);
-    m_postEffectSSAO2.SetDepthRange(nearPlane, farPlane);
+    m_postEffectSSAO.SetDepthRange(nearPlane, farPlane);
     m_postEffectFog.SetDepthDecodeRange(nearPlane, farPlane);
     m_postEffectGodRay.SetDepthRange(nearPlane, farPlane);
     m_postEffectDepthOfField.SetPositionRange(positionRange);
@@ -2074,9 +2074,9 @@ void Render::EnsurePostEffectZShadowInitialized()
     m_postEffectZShadow.Initialize();
 }
 
-void Render::EnsurePostEffectSSAO2Initialized()
+void Render::EnsurePostEffectSSAOInitialized()
 {
-    m_postEffectSSAO2.Initialize();
+    m_postEffectSSAO.Initialize();
 }
 
 void Render::EnsurePostEffectFogInitialized()
@@ -2117,53 +2117,53 @@ void Render::SwapPostEffectBuffers(LPDIRECT3DTEXTURE9& texSource,
     texTarget = temp;
 }
 
-void Render::SetPostEffectSSAO2(const bool arg)
+void Render::SetPostEffectSSAO(const bool arg)
 {
-    m_postEffectSSAO2Enabled = arg;
-    if (m_postEffectSSAO2Enabled)
+    m_postEffectSSAOEnabled = arg;
+    if (m_postEffectSSAOEnabled)
     {
-        EnsurePostEffectSSAO2Initialized();
+        EnsurePostEffectSSAOInitialized();
     }
     else
     {
-        m_postEffectSSAO2.Finalize();
+        m_postEffectSSAO.Finalize();
     }
 }
 
-void Render::SetPostEffectSSAO2Blur(const bool arg)
+void Render::SetPostEffectSSAOBlur(const bool arg)
 {
-    m_postEffectSSAO2.SetBlurEnabled(arg);
+    m_postEffectSSAO.SetBlurEnabled(arg);
 }
 
-void Render::SetPostEffectSSAO2ShadowStrength(const float shadowStrength)
+void Render::SetPostEffectSSAOShadowStrength(const float shadowStrength)
 {
-    m_postEffectSSAO2.SetShadowStrength(shadowStrength);
+    m_postEffectSSAO.SetShadowStrength(shadowStrength);
 }
 
-void Render::SetPostEffectSSAO2SaturationBoost(const float saturationBoost)
+void Render::SetPostEffectSSAOSaturationBoost(const float saturationBoost)
 {
-    m_postEffectSSAO2.SetSaturationBoost(saturationBoost);
+    m_postEffectSSAO.SetSaturationBoost(saturationBoost);
 }
 
-void Render::SetPostEffectSSAO2SampleCount(const int sampleCount)
+void Render::SetPostEffectSSAOSampleCount(const int sampleCount)
 {
     const int normalizedSampleCount = (std::max)(1, (std::min)(sampleCount, 64));
-    m_postEffectSSAO2.SetSampleCount(normalizedSampleCount);
+    m_postEffectSSAO.SetSampleCount(normalizedSampleCount);
 }
 
-void Render::SetPostEffectSSAO2DepthScaledSampleDistance(const bool enabled)
+void Render::SetPostEffectSSAODepthScaledSampleDistance(const bool enabled)
 {
-    m_postEffectSSAO2.SetDepthScaledSampleDistanceEnabled(enabled);
+    m_postEffectSSAO.SetDepthScaledSampleDistanceEnabled(enabled);
 }
 
-void Render::SetPostEffectSSAO2SampleRadius(const float sampleRadius)
+void Render::SetPostEffectSSAOSampleRadius(const float sampleRadius)
 {
-    m_postEffectSSAO2.SetSampleRadius(sampleRadius);
+    m_postEffectSSAO.SetSampleRadius(sampleRadius);
 }
 
-void Render::SetPostEffectSSAO2TexSizeDivisor(const int scaleDivisor)
+void Render::SetPostEffectSSAOTexSizeDivisor(const int scaleDivisor)
 {
-    m_postEffectSSAO2.SetTextureScaleDivisor(scaleDivisor);
+    m_postEffectSSAO.SetTextureScaleDivisor(scaleDivisor);
 }
 
 void Render::SetPostEffectFog(const bool arg)

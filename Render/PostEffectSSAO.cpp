@@ -1,4 +1,4 @@
-﻿#include "PostEffectSSAO2.h"
+﻿#include "PostEffectSSAO.h"
 
 #include "Camera.h"
 #include "GBuffer.h"
@@ -8,21 +8,21 @@
 namespace NSRender
 {
 
-void PostEffectSSAO2::Initialize()
+void PostEffectSSAO::Initialize()
 {
     if (m_isInitialized)
     {
         return;
     }
 
-    const std::wstring effectPath = Util::GetExeDir() + L"PostEffectSSAO2.cso";
+    const std::wstring effectPath = Util::GetExeDir() + L"PostEffectSSAO.cso";
     HRESULT hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
                                                effectPath.c_str(),
                                                NULL,
                                                NULL,
                                                D3DXSHADER_DEBUG,
                                                NULL,
-                                               &m_fxSSAO2,
+                                               &m_fxSSAO,
                                                NULL);
     assert(SUCCEEDED(hResult));
 
@@ -35,7 +35,7 @@ void PostEffectSSAO2::Initialize()
     m_isInitialized = true;
 }
 
-void PostEffectSSAO2::Finalize()
+void PostEffectSSAO::Finalize()
 {
     if (m_isRegisteredForDeviceReset)
     {
@@ -44,11 +44,11 @@ void PostEffectSSAO2::Finalize()
     }
     SAFE_RELEASE(m_rtAoTex);
     SAFE_RELEASE(m_rtAoTempTex);
-    SAFE_RELEASE(m_fxSSAO2);
+    SAFE_RELEASE(m_fxSSAO);
     m_isInitialized = false;
 }
 
-void PostEffectSSAO2::CreateResources()
+void PostEffectSSAO::CreateResources()
 {
     const UINT textureWidth = ComputeTextureSize(Common::ScreenW());
     const UINT textureHeight = ComputeTextureSize(Common::ScreenH());
@@ -74,14 +74,14 @@ void PostEffectSSAO2::CreateResources()
     assert(SUCCEEDED(hResult));
 }
 
-void PostEffectSSAO2::Draw(LPDIRECT3DTEXTURE9 renderTarget,
+void PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                            LPDIRECT3DTEXTURE9 texTarget,
                            LPDIRECT3DTEXTURE9 texRenderTargetZ,
                            LPDIRECT3DTEXTURE9 texRenderTargetPos,
                            LPDIRECT3DTEXTURE9 texRenderTargetNormal,
                            LPDIRECT3DTEXTURE9 texRenderTargetThickness)
 {
-    if (!m_isInitialized || m_fxSSAO2 == NULL)
+    if (!m_isInitialized || m_fxSSAO == NULL)
     {
         return;
     }
@@ -125,41 +125,41 @@ void PostEffectSSAO2::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     Common::D3DDevice()->SetRenderTarget(1, NULL);
     Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DCOLOR_RGBA(255, 255, 255, 255), 1.0f, 0);
 
-    m_fxSSAO2->SetMatrix("g_matView", &matrixView);
-    m_fxSSAO2->SetMatrix("g_matProj", &matrixProj);
-    m_fxSSAO2->SetFloat("g_fNear", m_nearPlane);
-    m_fxSSAO2->SetFloat("g_fFar", m_farPlane);
-    m_fxSSAO2->SetFloat("g_posRange", m_positionRange);
-    m_fxSSAO2->SetFloatArray("g_invSize", reinterpret_cast<FLOAT*>(&invSize), 2);
-    m_fxSSAO2->SetTexture("texZ", texRenderTargetZ);
-    m_fxSSAO2->SetTexture("texPos", texRenderTargetPos);
-    m_fxSSAO2->SetTexture("texNormal", texRenderTargetNormal);
-    m_fxSSAO2->SetTexture("texThickness", texRenderTargetThickness);
-    m_fxSSAO2->SetFloat("g_sampleRadius", m_sampleRadius);
-    m_fxSSAO2->SetInt("g_sampleCount", m_sampleCount);
-    m_fxSSAO2->SetBool("g_enableDepthScaledSampleDistance", m_depthScaledSampleDistanceEnabled);
-    m_fxSSAO2->SetFloat("g_depthCompareThreshold", 0.0f);
-    m_fxSSAO2->SetFloat("g_depthBiasScale", 1.0f);
-    m_fxSSAO2->SetFloat("g_normalBiasScale", 1.0f);
+    m_fxSSAO->SetMatrix("g_matView", &matrixView);
+    m_fxSSAO->SetMatrix("g_matProj", &matrixProj);
+    m_fxSSAO->SetFloat("g_fNear", m_nearPlane);
+    m_fxSSAO->SetFloat("g_fFar", m_farPlane);
+    m_fxSSAO->SetFloat("g_posRange", m_positionRange);
+    m_fxSSAO->SetFloatArray("g_invSize", reinterpret_cast<FLOAT*>(&invSize), 2);
+    m_fxSSAO->SetTexture("texZ", texRenderTargetZ);
+    m_fxSSAO->SetTexture("texPos", texRenderTargetPos);
+    m_fxSSAO->SetTexture("texNormal", texRenderTargetNormal);
+    m_fxSSAO->SetTexture("texThickness", texRenderTargetThickness);
+    m_fxSSAO->SetFloat("g_sampleRadius", m_sampleRadius);
+    m_fxSSAO->SetInt("g_sampleCount", m_sampleCount);
+    m_fxSSAO->SetBool("g_enableDepthScaledSampleDistance", m_depthScaledSampleDistanceEnabled);
+    m_fxSSAO->SetFloat("g_depthCompareThreshold", 0.0f);
+    m_fxSSAO->SetFloat("g_depthBiasScale", 1.0f);
+    m_fxSSAO->SetFloat("g_normalBiasScale", 1.0f);
 
-    m_fxSSAO2->SetTechnique("TechniqueAO2_Create");
-    m_fxSSAO2->Begin(NULL, 0);
-    m_fxSSAO2->BeginPass(0);
+    m_fxSSAO->SetTechnique("TechniqueAO_Create");
+    m_fxSSAO->Begin(NULL, 0);
+    m_fxSSAO->BeginPass(0);
     DrawFullscreenQuad();
-    m_fxSSAO2->EndPass();
-    m_fxSSAO2->End();
+    m_fxSSAO->EndPass();
+    m_fxSSAO->End();
 
     if (m_blurEnabled)
     {
         Common::D3DDevice()->SetRenderTarget(0, surfAOTemp);
         Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(255, 255, 255, 255), 1.0f, 0);
-        m_fxSSAO2->SetTexture("texAO", m_rtAoTex);
-        m_fxSSAO2->SetTechnique("TechniqueAO2_Blur21x21");
-        m_fxSSAO2->Begin(NULL, 0);
-        m_fxSSAO2->BeginPass(0);
+        m_fxSSAO->SetTexture("texAO", m_rtAoTex);
+        m_fxSSAO->SetTechnique("TechniqueAO_Blur21x21");
+        m_fxSSAO->Begin(NULL, 0);
+        m_fxSSAO->BeginPass(0);
         DrawFullscreenQuad();
-        m_fxSSAO2->EndPass();
-        m_fxSSAO2->End();
+        m_fxSSAO->EndPass();
+        m_fxSSAO->End();
         aoTextureForComposite = m_rtAoTempTex;
     }
 
@@ -179,17 +179,17 @@ void PostEffectSSAO2::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     Common::D3DDevice()->SetRenderTarget(0, surfRenderTarget);
     Common::D3DDevice()->SetViewport(&targetViewport);
     Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 0, 255), 1.0f, 0);
-    m_fxSSAO2->SetFloatArray("g_invSize", reinterpret_cast<FLOAT*>(&targetInvSize), 2);
-    m_fxSSAO2->SetTexture("texColor", renderTarget);
-    m_fxSSAO2->SetTexture("texAO", aoTextureForComposite);
-    m_fxSSAO2->SetFloat("g_shadowStrength", m_shadowStrength);
-    m_fxSSAO2->SetFloat("g_aoSaturationBoost", m_saturationBoost);
-    m_fxSSAO2->SetTechnique("TechniqueAO2_Composite");
-    m_fxSSAO2->Begin(NULL, 0);
-    m_fxSSAO2->BeginPass(0);
+    m_fxSSAO->SetFloatArray("g_invSize", reinterpret_cast<FLOAT*>(&targetInvSize), 2);
+    m_fxSSAO->SetTexture("texColor", renderTarget);
+    m_fxSSAO->SetTexture("texAO", aoTextureForComposite);
+    m_fxSSAO->SetFloat("g_shadowStrength", m_shadowStrength);
+    m_fxSSAO->SetFloat("g_aoSaturationBoost", m_saturationBoost);
+    m_fxSSAO->SetTechnique("TechniqueAO_Composite");
+    m_fxSSAO->Begin(NULL, 0);
+    m_fxSSAO->BeginPass(0);
     DrawFullscreenQuad();
-    m_fxSSAO2->EndPass();
-    m_fxSSAO2->End();
+    m_fxSSAO->EndPass();
+    m_fxSSAO->End();
     Common::D3DDevice()->SetRenderTarget(0, oldRt0);
     Common::D3DDevice()->SetViewport(&oldViewport);
 
@@ -200,7 +200,7 @@ void PostEffectSSAO2::Draw(LPDIRECT3DTEXTURE9 renderTarget,
 
 }
 
-void PostEffectSSAO2::DrawFullscreenQuad()
+void PostEffectSSAO::DrawFullscreenQuad()
 {
     static FullscreenVertex vertices[4] =
     {
@@ -224,37 +224,37 @@ void PostEffectSSAO2::DrawFullscreenQuad()
     SAFE_RELEASE(vertexDecl);
 }
 
-void PostEffectSSAO2::SetShadowStrength(const float shadowStrength)
+void PostEffectSSAO::SetShadowStrength(const float shadowStrength)
 {
     m_shadowStrength = shadowStrength;
 }
 
-void PostEffectSSAO2::SetSaturationBoost(const float saturationBoost)
+void PostEffectSSAO::SetSaturationBoost(const float saturationBoost)
 {
     m_saturationBoost = saturationBoost;
 }
 
-void PostEffectSSAO2::SetSampleRadius(const float sampleRadius)
+void PostEffectSSAO::SetSampleRadius(const float sampleRadius)
 {
     m_sampleRadius = sampleRadius;
 }
 
-void PostEffectSSAO2::SetSampleCount(const int sampleCount)
+void PostEffectSSAO::SetSampleCount(const int sampleCount)
 {
     m_sampleCount = (std::max)(1, (std::min)(sampleCount, 64));
 }
 
-void PostEffectSSAO2::SetDepthScaledSampleDistanceEnabled(const bool enabled)
+void PostEffectSSAO::SetDepthScaledSampleDistanceEnabled(const bool enabled)
 {
     m_depthScaledSampleDistanceEnabled = enabled;
 }
 
-void PostEffectSSAO2::SetBlurEnabled(const bool enabled)
+void PostEffectSSAO::SetBlurEnabled(const bool enabled)
 {
     m_blurEnabled = enabled;
 }
 
-void PostEffectSSAO2::SetTextureScaleDivisor(const int scaleDivisor)
+void PostEffectSSAO::SetTextureScaleDivisor(const int scaleDivisor)
 {
     const int normalizedDivisor = NormalizeTextureScaleDivisor(scaleDivisor);
     if (m_textureScaleDivisor == normalizedDivisor)
@@ -271,14 +271,14 @@ void PostEffectSSAO2::SetTextureScaleDivisor(const int scaleDivisor)
     }
 }
 
-void PostEffectSSAO2::SetDepthRange(const float nearPlane, const float farPlane)
+void PostEffectSSAO::SetDepthRange(const float nearPlane, const float farPlane)
 {
     m_nearPlane = nearPlane;
     m_farPlane = farPlane;
     m_positionRange = GBuffer::ComputePositionRange(nearPlane, farPlane);
 }
 
-int PostEffectSSAO2::NormalizeTextureScaleDivisor(const int scaleDivisor) const
+int PostEffectSSAO::NormalizeTextureScaleDivisor(const int scaleDivisor) const
 {
     if (scaleDivisor == 2)
     {
@@ -293,36 +293,36 @@ int PostEffectSSAO2::NormalizeTextureScaleDivisor(const int scaleDivisor) const
     return 1;
 }
 
-UINT PostEffectSSAO2::ComputeTextureSize(const int screenSize) const
+UINT PostEffectSSAO::ComputeTextureSize(const int screenSize) const
 {
     return static_cast<UINT>((std::max)(1, screenSize / m_textureScaleDivisor));
 }
 
-void PostEffectSSAO2::OnDeviceLost()
+void PostEffectSSAO::OnDeviceLost()
 {
-    if (!m_isInitialized || m_fxSSAO2 == NULL)
+    if (!m_isInitialized || m_fxSSAO == NULL)
     {
         return;
     }
 
-    if (m_fxSSAO2 != NULL)
+    if (m_fxSSAO != NULL)
     {
-        m_fxSSAO2->OnLostDevice();
+        m_fxSSAO->OnLostDevice();
     }
     SAFE_RELEASE(m_rtAoTex);
     SAFE_RELEASE(m_rtAoTempTex);
 }
 
-void PostEffectSSAO2::OnDeviceReset()
+void PostEffectSSAO::OnDeviceReset()
 {
-    if (!m_isInitialized || m_fxSSAO2 == NULL)
+    if (!m_isInitialized || m_fxSSAO == NULL)
     {
         return;
     }
 
-    if (m_fxSSAO2 != NULL)
+    if (m_fxSSAO != NULL)
     {
-        m_fxSSAO2->OnResetDevice();
+        m_fxSSAO->OnResetDevice();
     }
     CreateResources();
 }

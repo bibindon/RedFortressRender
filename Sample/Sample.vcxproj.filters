@@ -120,7 +120,7 @@
     <FxCompile Include="..\Render\shader\PostEffectMotionBlurCamera.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
-    <FxCompile Include="..\Render\shader\PostEffectSSAO2.fx">
+    <FxCompile Include="..\Render\shader\PostEffectSSAO.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
     <FxCompile Include="..\Render\shader\PostEffectDepthOfField.fx">

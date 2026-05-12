@@ -448,7 +448,7 @@ HUD や文字をくっきり表示したい場合に都合がよい。
 - FXAA
 - Motion Blur Camera
 - Depth Buffer Shadow
-- SSAO / SSAO2
+- SSAO
 - Fog / Height Fog
 - Bloom
 - Depth Of Field
@@ -462,8 +462,7 @@ g_render.SetPostEffectBloom(true);
 g_render.SetPostEffectBloomThreshold(2.5f);
 
 g_render.SetPostEffectSSAO(true);
-g_render.SetPostEffectSSAOMode(NSRender::SSAOMode::SSAO2);
-g_render.SetPostEffectSSAO2SampleCount(16);
+g_render.SetPostEffectSSAOSampleCount(16);
 
 g_render.SetPostEffectDepthOfFieldMode(NSRender::DepthOfFieldMode::AutoNear);
 g_render.SetPostEffectDepthOfFieldFocalDistance(8.0f);
@@ -475,10 +474,9 @@ g_render.SetPostEffectDepthOfFieldAutoActivationDistance(10.0f);
 `SetPostEffectFog(bool)` は距離 Fog と Height Fog の両方を同時に切り替える。
 Height Fog だけ別に触りたい場合は `SetPostEffectHeightFog()` や `SetPostEffectFogHeightEnable()` を使う。
 
-### SSAO モード
+### SSAO
 
-`SetPostEffectSSAOMode()` で `Legacy` と `SSAO2` を切り替えられる。
-現在の実装では、`Draw()` 中でモードに応じて `PostEffectSSAO` か `PostEffectSSAO2` を分岐して使う。
+現在は SSAO 実装は一本化されており、`SetPostEffectSSAO()` と関連 setter 群で調整する。
 
 ### DOF モード
 

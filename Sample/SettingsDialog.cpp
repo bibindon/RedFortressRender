@@ -45,19 +45,19 @@ void RefreshShadowDarknessControls(HWND hDlg);
 void RefreshSpecularIntensityControls(HWND hDlg);
 void RefreshSpecularEdgeControls(HWND hDlg);
 void RefreshSSSControls(HWND hDlg);
-void RefreshSSAO2(HWND hDlg);
-void RefreshSSAO2ShadowStrengthControls(HWND hDlg);
-void RefreshSSAO2ShadowSaturationControls(HWND hDlg);
-void RefreshSSAO2SampleCountControls(HWND hDlg);
-void RefreshSSAO2DepthScaledSampleDistanceControls(HWND hDlg);
-void RefreshSSAO2SampleRadiusControls(HWND hDlg);
+void RefreshSSAO(HWND hDlg);
+void RefreshSSAOShadowStrengthControls(HWND hDlg);
+void RefreshSSAOShadowSaturationControls(HWND hDlg);
+void RefreshSSAOSampleCountControls(HWND hDlg);
+void RefreshSSAODepthScaledSampleDistanceControls(HWND hDlg);
+void RefreshSSAOSampleRadiusControls(HWND hDlg);
 void RefreshCameraClipPlaneControls(HWND hDlg);
 void RefreshGBufferClipPlaneControls(HWND hDlg);
-void RefreshSSAO2BlurControls(HWND hDlg);
+void RefreshSSAOBlurControls(HWND hDlg);
 void RefreshAnimateLight(HWND hDlg);
 void RefreshRemoteDesktop(HWND hDlg);
 void RefreshZShadowTexSizeControls(HWND hDlg);
-void RefreshSSAO2TexSizeControls(HWND hDlg);
+void RefreshSSAOTexSizeControls(HWND hDlg);
 void RefreshDepthBufferShadow(HWND hDlg);
 void RefreshBloom(HWND hDlg);
 void RefreshDepthOfField(HWND hDlg);
@@ -108,15 +108,15 @@ constexpr int SSS_INTENSITY_SLIDER_MIN = 0;
 constexpr int SSS_INTENSITY_SLIDER_MAX = static_cast<int>(SSS_INTENSITY_MAX / SSS_INTENSITY_STEP);
 constexpr int SSS_COLOR_SLIDER_MIN = 0;
 constexpr int SSS_COLOR_SLIDER_MAX = static_cast<int>(SSS_COLOR_MAX / SSS_COLOR_STEP);
-constexpr int SSAO2_SHADOW_STRENGTH_SLIDER_MIN = 0;
-constexpr int SSAO2_SHADOW_STRENGTH_SLIDER_MAX = static_cast<int>(SSAO2_SHADOW_STRENGTH_MAX / SSAO2_SHADOW_STRENGTH_STEP);
-constexpr int SSAO2_SHADOW_SATURATION_SLIDER_MIN = 0;
-constexpr int SSAO2_SHADOW_SATURATION_SLIDER_MAX =
-    static_cast<int>(SSAO2_SHADOW_SATURATION_BOOST_MAX / SSAO2_SHADOW_SATURATION_BOOST_STEP);
-constexpr int SSAO2_SAMPLE_COUNT_SLIDER_MIN = SSAO2_SAMPLE_COUNT_MIN;
-constexpr int SSAO2_SAMPLE_COUNT_SLIDER_MAX = SSAO2_SAMPLE_COUNT_MAX;
-constexpr int SSAO2_SAMPLE_RADIUS_SLIDER_MIN = 0;
-constexpr int SSAO2_SAMPLE_RADIUS_SLIDER_MAX = static_cast<int>((SSAO2_SAMPLE_RADIUS_MAX - SSAO2_SAMPLE_RADIUS_MIN) / SSAO2_SAMPLE_RADIUS_STEP);
+constexpr int SSAO_SHADOW_STRENGTH_SLIDER_MIN = 0;
+constexpr int SSAO_SHADOW_STRENGTH_SLIDER_MAX = static_cast<int>(SSAO_SHADOW_STRENGTH_MAX / SSAO_SHADOW_STRENGTH_STEP);
+constexpr int SSAO_SHADOW_SATURATION_SLIDER_MIN = 0;
+constexpr int SSAO_SHADOW_SATURATION_SLIDER_MAX =
+    static_cast<int>(SSAO_SHADOW_SATURATION_BOOST_MAX / SSAO_SHADOW_SATURATION_BOOST_STEP);
+constexpr int SSAO_SAMPLE_COUNT_SLIDER_MIN = SSAO_SAMPLE_COUNT_MIN;
+constexpr int SSAO_SAMPLE_COUNT_SLIDER_MAX = SSAO_SAMPLE_COUNT_MAX;
+constexpr int SSAO_SAMPLE_RADIUS_SLIDER_MIN = 0;
+constexpr int SSAO_SAMPLE_RADIUS_SLIDER_MAX = static_cast<int>((SSAO_SAMPLE_RADIUS_MAX - SSAO_SAMPLE_RADIUS_MIN) / SSAO_SAMPLE_RADIUS_STEP);
 constexpr int BLOOM_THRESHOLD_SLIDER_MIN = 0;
 constexpr int BLOOM_THRESHOLD_SLIDER_MAX = static_cast<int>(BLOOM_THRESHOLD_MAX / BLOOM_THRESHOLD_STEP);
 constexpr int DOF_FOCAL_DISTANCE_SLIDER_MIN = 0;
@@ -304,7 +304,7 @@ void PopulateZShadowTexSizeCombo(HWND hDlg)
                 0);
 }
 
-int SSAO2TexSizeDivisorToComboIndex(const int scaleDivisor)
+int SSAOTexSizeDivisorToComboIndex(const int scaleDivisor)
 {
     if (scaleDivisor == 2)
     {
@@ -319,7 +319,7 @@ int SSAO2TexSizeDivisorToComboIndex(const int scaleDivisor)
     return 0;
 }
 
-int ComboIndexToSSAO2TexSizeDivisor(const int comboIndex)
+int ComboIndexToSSAOTexSizeDivisor(const int comboIndex)
 {
     if (comboIndex == 1)
     {
@@ -334,9 +334,9 @@ int ComboIndexToSSAO2TexSizeDivisor(const int comboIndex)
     return 1;
 }
 
-void PopulateSSAO2TexSizeCombo(HWND hDlg)
+void PopulateSSAOTexSizeCombo(HWND hDlg)
 {
-    HWND combo = GetDlgItem(hDlg, IDC_COMBO_SSAO2_TEX_SIZE);
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_SSAO_TEX_SIZE);
     if (combo == NULL)
     {
         return;
@@ -347,7 +347,7 @@ void PopulateSSAO2TexSizeCombo(HWND hDlg)
     SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/2"));
     SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/4"));
     SendMessage(combo, CB_SETCURSEL,
-                static_cast<WPARAM>(SSAO2TexSizeDivisorToComboIndex(g_ssao2TexSizeDivisor)),
+                static_cast<WPARAM>(SSAOTexSizeDivisorToComboIndex(g_ssaoTexSizeDivisor)),
                 0);
 }
 
@@ -424,10 +424,10 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_SSS_COLOR_R,
         IDC_EDIT_SSS_COLOR_G,
         IDC_EDIT_SSS_COLOR_B,
-        IDC_EDIT_SSAO2_SHADOW_STRENGTH,
-        IDC_EDIT_SSAO2_SHADOW_SATURATION,
-        IDC_EDIT_SSAO2_SAMPLE_COUNT,
-        IDC_EDIT_SSAO2_SAMPLE_RADIUS,
+        IDC_EDIT_SSAO_SHADOW_STRENGTH,
+        IDC_EDIT_SSAO_SHADOW_SATURATION,
+        IDC_EDIT_SSAO_SAMPLE_COUNT,
+        IDC_EDIT_SSAO_SAMPLE_RADIUS,
         IDC_EDIT_CAMERA_NEAR,
         IDC_EDIT_CAMERA_FAR,
         IDC_EDIT_GBUFFER_NEAR,
@@ -748,37 +748,37 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
         }
         RefreshSSSControls(hDlg);
         return true;
-    case IDC_EDIT_SSAO2_SHADOW_STRENGTH:
+    case IDC_EDIT_SSAO_SHADOW_STRENGTH:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
         {
-            g_ssao2ShadowStrength = floatValue;
-            ApplySSAO2ShadowStrength();
+            g_ssaoShadowStrength = floatValue;
+            ApplySSAOShadowStrength();
         }
-        RefreshSSAO2ShadowStrengthControls(hDlg);
+        RefreshSSAOShadowStrengthControls(hDlg);
         return true;
-    case IDC_EDIT_SSAO2_SHADOW_SATURATION:
+    case IDC_EDIT_SSAO_SHADOW_SATURATION:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
         {
-            g_ssao2ShadowSaturationBoost = floatValue;
-            ApplySSAO2ShadowSaturationBoost();
+            g_ssaoShadowSaturationBoost = floatValue;
+            ApplySSAOShadowSaturationBoost();
         }
-        RefreshSSAO2ShadowSaturationControls(hDlg);
+        RefreshSSAOShadowSaturationControls(hDlg);
         return true;
-    case IDC_EDIT_SSAO2_SAMPLE_COUNT:
+    case IDC_EDIT_SSAO_SAMPLE_COUNT:
         if (TryParseEditInt(hDlg, commandId, intValue))
         {
-            g_ssao2SampleCount = intValue;
-            ApplySSAO2SampleCount();
+            g_ssaoSampleCount = intValue;
+            ApplySSAOSampleCount();
         }
-        RefreshSSAO2SampleCountControls(hDlg);
+        RefreshSSAOSampleCountControls(hDlg);
         return true;
-    case IDC_EDIT_SSAO2_SAMPLE_RADIUS:
+    case IDC_EDIT_SSAO_SAMPLE_RADIUS:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
         {
-            g_ssao2SampleRadius = floatValue;
-            ApplySSAO2SampleRadius();
+            g_ssaoSampleRadius = floatValue;
+            ApplySSAOSampleRadius();
         }
-        RefreshSSAO2SampleRadiusControls(hDlg);
+        RefreshSSAOSampleRadiusControls(hDlg);
         return true;
     case IDC_EDIT_CAMERA_NEAR:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
@@ -1541,13 +1541,13 @@ void RefreshAllControls(HWND hDlg)
     RefreshRemoteDesktop(hDlg);
     RefreshZShadowTexSizeControls(hDlg);
     RefreshDepthBufferShadow(hDlg);
-    RefreshSSAO2(hDlg);
-    RefreshSSAO2BlurControls(hDlg);
-    RefreshSSAO2ShadowStrengthControls(hDlg);
-    RefreshSSAO2ShadowSaturationControls(hDlg);
-    RefreshSSAO2SampleCountControls(hDlg);
-    RefreshSSAO2DepthScaledSampleDistanceControls(hDlg);
-    RefreshSSAO2TexSizeControls(hDlg);
+    RefreshSSAO(hDlg);
+    RefreshSSAOBlurControls(hDlg);
+    RefreshSSAOShadowStrengthControls(hDlg);
+    RefreshSSAOShadowSaturationControls(hDlg);
+    RefreshSSAOSampleCountControls(hDlg);
+    RefreshSSAODepthScaledSampleDistanceControls(hDlg);
+    RefreshSSAOTexSizeControls(hDlg);
     RefreshBloom(hDlg);
     RefreshDepthOfField(hDlg);
     RefreshStarBurst(hDlg);
@@ -1567,16 +1567,16 @@ void RefreshAllControls(HWND hDlg)
     RefreshSpecularIntensityControls(hDlg);
     RefreshSpecularEdgeControls(hDlg);
     RefreshSSSControls(hDlg);
-    RefreshSSAO2(hDlg);
-    RefreshSSAO2SampleRadiusControls(hDlg);
+    RefreshSSAO(hDlg);
+    RefreshSSAOSampleRadiusControls(hDlg);
     RefreshCameraClipPlaneControls(hDlg);
     RefreshGBufferClipPlaneControls(hDlg);
-    RefreshSSAO2BlurControls(hDlg);
-    RefreshSSAO2ShadowStrengthControls(hDlg);
-    RefreshSSAO2ShadowSaturationControls(hDlg);
-    RefreshSSAO2SampleCountControls(hDlg);
-    RefreshSSAO2DepthScaledSampleDistanceControls(hDlg);
-    RefreshSSAO2TexSizeControls(hDlg);
+    RefreshSSAOBlurControls(hDlg);
+    RefreshSSAOShadowStrengthControls(hDlg);
+    RefreshSSAOShadowSaturationControls(hDlg);
+    RefreshSSAOSampleCountControls(hDlg);
+    RefreshSSAODepthScaledSampleDistanceControls(hDlg);
+    RefreshSSAOTexSizeControls(hDlg);
     RefreshBloomThresholdControls(hDlg);
     RefreshDepthOfFieldControls(hDlg);
     RefreshDepthOfFieldMaxBlurControls(hDlg);
@@ -1723,25 +1723,25 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_COLOR_B, TBM_SETTICFREQ, 2, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_COLOR_B, TBM_SETPAGESIZE, 0, 2);
 
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SHADOW_STRENGTH, TBM_SETRANGEMIN, FALSE, SSAO2_SHADOW_STRENGTH_SLIDER_MIN);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SHADOW_STRENGTH, TBM_SETRANGEMAX, FALSE, SSAO2_SHADOW_STRENGTH_SLIDER_MAX);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SHADOW_STRENGTH, TBM_SETTICFREQ, 5, 0);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SHADOW_STRENGTH, TBM_SETPAGESIZE, 0, 5);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SHADOW_STRENGTH, TBM_SETRANGEMIN, FALSE, SSAO_SHADOW_STRENGTH_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SHADOW_STRENGTH, TBM_SETRANGEMAX, FALSE, SSAO_SHADOW_STRENGTH_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SHADOW_STRENGTH, TBM_SETTICFREQ, 5, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SHADOW_STRENGTH, TBM_SETPAGESIZE, 0, 5);
 
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SHADOW_SATURATION, TBM_SETRANGEMIN, FALSE, SSAO2_SHADOW_SATURATION_SLIDER_MIN);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SHADOW_SATURATION, TBM_SETRANGEMAX, FALSE, SSAO2_SHADOW_SATURATION_SLIDER_MAX);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SHADOW_SATURATION, TBM_SETTICFREQ, 2, 0);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SHADOW_SATURATION, TBM_SETPAGESIZE, 0, 2);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SHADOW_SATURATION, TBM_SETRANGEMIN, FALSE, SSAO_SHADOW_SATURATION_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SHADOW_SATURATION, TBM_SETRANGEMAX, FALSE, SSAO_SHADOW_SATURATION_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SHADOW_SATURATION, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SHADOW_SATURATION, TBM_SETPAGESIZE, 0, 2);
 
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SAMPLE_COUNT, TBM_SETRANGEMIN, FALSE, SSAO2_SAMPLE_COUNT_SLIDER_MIN);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SAMPLE_COUNT, TBM_SETRANGEMAX, FALSE, SSAO2_SAMPLE_COUNT_SLIDER_MAX);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SAMPLE_COUNT, TBM_SETTICFREQ, 4, 0);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SAMPLE_COUNT, TBM_SETPAGESIZE, 0, 4);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_COUNT, TBM_SETRANGEMIN, FALSE, SSAO_SAMPLE_COUNT_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_COUNT, TBM_SETRANGEMAX, FALSE, SSAO_SAMPLE_COUNT_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_COUNT, TBM_SETTICFREQ, 4, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_COUNT, TBM_SETPAGESIZE, 0, 4);
 
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SAMPLE_RADIUS, TBM_SETRANGEMIN, FALSE, SSAO2_SAMPLE_RADIUS_SLIDER_MIN);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SAMPLE_RADIUS, TBM_SETRANGEMAX, FALSE, SSAO2_SAMPLE_RADIUS_SLIDER_MAX);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SAMPLE_RADIUS, TBM_SETTICFREQ, 10, 0);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO2_SAMPLE_RADIUS, TBM_SETPAGESIZE, 0, 10);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS, TBM_SETRANGEMIN, FALSE, SSAO_SAMPLE_RADIUS_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS, TBM_SETRANGEMAX, FALSE, SSAO_SAMPLE_RADIUS_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS, TBM_SETTICFREQ, 10, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS, TBM_SETPAGESIZE, 0, 10);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETRANGEMIN, FALSE, BLOOM_THRESHOLD_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETRANGEMAX, FALSE, BLOOM_THRESHOLD_SLIDER_MAX);
@@ -2069,7 +2069,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         PopulateResolutionCombo(hDlg);
         PopulatePointLightTypeCombo(hDlg);
         PopulateZShadowTexSizeCombo(hDlg);
-        PopulateSSAO2TexSizeCombo(hDlg);
+        PopulateSSAOTexSizeCombo(hDlg);
         InitializeLoadedModelListView(hDlg);
         InitializePointLightListView(hDlg);
         RefreshAllControls(hDlg);
@@ -2499,39 +2499,39 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
-        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSAO2_SHADOW_STRENGTH))
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSAO_SHADOW_STRENGTH))
         {
             const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
-            g_ssao2ShadowStrength = SliderValueToSSAO2ShadowStrength(sliderValue);
-            ApplySSAO2ShadowStrength();
-            RefreshSSAO2ShadowStrengthControls(hDlg);
+            g_ssaoShadowStrength = SliderValueToSSAOShadowStrength(sliderValue);
+            ApplySSAOShadowStrength();
+            RefreshSSAOShadowStrengthControls(hDlg);
             return TRUE;
         }
 
-        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSAO2_SHADOW_SATURATION))
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSAO_SHADOW_SATURATION))
         {
             const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
-            g_ssao2ShadowSaturationBoost = SliderValueToSSAO2ShadowSaturationBoost(sliderValue);
-            ApplySSAO2ShadowSaturationBoost();
-            RefreshSSAO2ShadowSaturationControls(hDlg);
+            g_ssaoShadowSaturationBoost = SliderValueToSSAOShadowSaturationBoost(sliderValue);
+            ApplySSAOShadowSaturationBoost();
+            RefreshSSAOShadowSaturationControls(hDlg);
             return TRUE;
         }
 
-        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSAO2_SAMPLE_COUNT))
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSAO_SAMPLE_COUNT))
         {
             const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
-            g_ssao2SampleCount = SliderValueToSSAO2SampleCount(sliderValue);
-            ApplySSAO2SampleCount();
-            RefreshSSAO2SampleCountControls(hDlg);
+            g_ssaoSampleCount = SliderValueToSSAOSampleCount(sliderValue);
+            ApplySSAOSampleCount();
+            RefreshSSAOSampleCountControls(hDlg);
             return TRUE;
         }
 
-        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSAO2_SAMPLE_RADIUS))
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS))
         {
             const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
-            g_ssao2SampleRadius = SliderValueToSSAO2SampleRadius(sliderValue);
-            ApplySSAO2SampleRadius();
-            RefreshSSAO2SampleRadiusControls(hDlg);
+            g_ssaoSampleRadius = SliderValueToSSAOSampleRadius(sliderValue);
+            ApplySSAOSampleRadius();
+            RefreshSSAOSampleRadiusControls(hDlg);
             return TRUE;
         }
 
@@ -2814,45 +2814,45 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
-        if (commandId == IDC_CHECK_SSAO2)
+        if (commandId == IDC_CHECK_SSAO)
         {
-            g_bSSAO2 = (IsDlgButtonChecked(hDlg, IDC_CHECK_SSAO2) == BST_CHECKED);
-            g_Render.SetPostEffectSSAO2(g_bSSAO2);
-            RefreshSSAO2(hDlg);
-            RefreshSSAO2BlurControls(hDlg);
-            RefreshSSAO2ShadowStrengthControls(hDlg);
-            RefreshSSAO2ShadowSaturationControls(hDlg);
-            RefreshSSAO2SampleCountControls(hDlg);
-            RefreshSSAO2SampleRadiusControls(hDlg);
-            RefreshSSAO2DepthScaledSampleDistanceControls(hDlg);
-            RefreshSSAO2TexSizeControls(hDlg);
+            g_bSSAO = (IsDlgButtonChecked(hDlg, IDC_CHECK_SSAO) == BST_CHECKED);
+            g_Render.SetPostEffectSSAO(g_bSSAO);
+            RefreshSSAO(hDlg);
+            RefreshSSAOBlurControls(hDlg);
+            RefreshSSAOShadowStrengthControls(hDlg);
+            RefreshSSAOShadowSaturationControls(hDlg);
+            RefreshSSAOSampleCountControls(hDlg);
+            RefreshSSAOSampleRadiusControls(hDlg);
+            RefreshSSAODepthScaledSampleDistanceControls(hDlg);
+            RefreshSSAOTexSizeControls(hDlg);
             return TRUE;
         }
 
-        if (commandId == IDC_CHECK_SSAO2_BLUR)
+        if (commandId == IDC_CHECK_SSAO_BLUR)
         {
-            g_bSSAO2Blur = (IsDlgButtonChecked(hDlg, IDC_CHECK_SSAO2_BLUR) == BST_CHECKED);
-            ApplySSAO2Blur();
-            RefreshSSAO2BlurControls(hDlg);
+            g_bSSAOBlur = (IsDlgButtonChecked(hDlg, IDC_CHECK_SSAO_BLUR) == BST_CHECKED);
+            ApplySSAOBlur();
+            RefreshSSAOBlurControls(hDlg);
             return TRUE;
         }
 
-        if (commandId == IDC_CHECK_SSAO2_DEPTH_SCALED_SAMPLE_DISTANCE)
+        if (commandId == IDC_CHECK_SSAO_DEPTH_SCALED_SAMPLE_DISTANCE)
         {
-            g_bSSAO2DepthScaledSampleDistance =
-                (IsDlgButtonChecked(hDlg, IDC_CHECK_SSAO2_DEPTH_SCALED_SAMPLE_DISTANCE) == BST_CHECKED);
-            ApplySSAO2DepthScaledSampleDistance();
-            RefreshSSAO2DepthScaledSampleDistanceControls(hDlg);
+            g_bSSAODepthScaledSampleDistance =
+                (IsDlgButtonChecked(hDlg, IDC_CHECK_SSAO_DEPTH_SCALED_SAMPLE_DISTANCE) == BST_CHECKED);
+            ApplySSAODepthScaledSampleDistance();
+            RefreshSSAODepthScaledSampleDistanceControls(hDlg);
             return TRUE;
         }
 
-        if (commandId == IDC_COMBO_SSAO2_TEX_SIZE && HIWORD(wParam) == CBN_SELCHANGE)
+        if (commandId == IDC_COMBO_SSAO_TEX_SIZE && HIWORD(wParam) == CBN_SELCHANGE)
         {
             HWND combo = reinterpret_cast<HWND>(lParam);
             const int index = static_cast<int>(SendMessage(combo, CB_GETCURSEL, 0, 0));
-            g_ssao2TexSizeDivisor = ComboIndexToSSAO2TexSizeDivisor(index);
-            ApplySSAO2TexSize();
-            RefreshSSAO2TexSizeControls(hDlg);
+            g_ssaoTexSizeDivisor = ComboIndexToSSAOTexSizeDivisor(index);
+            ApplySSAOTexSize();
+            RefreshSSAOTexSizeControls(hDlg);
             return TRUE;
         }
 

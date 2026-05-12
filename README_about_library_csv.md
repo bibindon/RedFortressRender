@@ -98,15 +98,12 @@ Sample 側の一部キーは `std::stoi(value) != 0` で判定しているため
 | `ShadowCompositeTapCount` | 合成サンプル数 |
 | `ShadowBlurTapCount` | Sample 側では PCF / Composite の両方に同値を入れる簡略キー |
 | `SSAOEnable` | SSAO ON/OFF |
-| `SSAOMode` | `legacy` / `ssao2`。`1` や `new` でも `ssao2` 扱いである |
-| `SSAO2BlurEnable` | SSAO2 のブラー ON/OFF |
-| `SSAO2DepthScaledSampleDistanceEnable` | SSAO2 の深度連動距離 ON/OFF |
-| `SSAOBrightness` | Legacy SSAO の明るさ |
-| `SSAOSaturationBoost` | Legacy SSAO の彩度補正 |
-| `SSAOSampleRadius` | SSAO 半径 |
-| `SSAO2ShadowStrength` | SSAO2 の影の強さ |
-| `SSAO2ShadowSaturationBoost` | SSAO2 の彩度補正 |
-| `SSAO2SampleCount` | SSAO2 サンプル数 |
+| `SSAOBlurEnable` | SSAO のブラー ON/OFF |
+| `SSAODepthScaledSampleDistanceEnable` | SSAO の深度連動距離 ON/OFF |
+| `SSAOSampleRadius` | SSAO のサンプル半径 |
+| `SSAOShadowStrength` | SSAO の影の強さ |
+| `SSAOShadowSaturationBoost` | SSAO の彩度補正 |
+| `SSAOSampleCount` | SSAO サンプル数 |
 
 ### MeshMix の陰影
 
@@ -175,12 +172,12 @@ MotionBlurCameraMaxBlurPixels,24
 MotionBlurCameraSampleCount,13
 
 SSAOEnable,1
-SSAOMode,SSAO2
-SSAO2BlurEnable,1
-SSAOBrightness,0.25
-SSAO2ShadowStrength,1.0
-SSAO2ShadowSaturationBoost,0.30
-SSAO2SampleCount,16
+SSAOBlurEnable,1
+SSAODepthScaledSampleDistanceEnable,0
+SSAOSampleRadius,4.0
+SSAOShadowStrength,1.0
+SSAOShadowSaturationBoost,0.30
+SSAOSampleCount,16
 
 FogEnable,1
 FogIntensity,1.0

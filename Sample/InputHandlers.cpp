@@ -403,7 +403,7 @@ bool HandleSampleKeyDown(HWND hWnd, const WPARAM wParam)
 
     if (wParam == 'J')
     {
-        g_bSSAO2 = !g_bSSAO2;
+        g_bSSAO = !g_bSSAO;
         ApplyPostEffectToggleSettings();
         RefreshSettingsDialogState();
     }

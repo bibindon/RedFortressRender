@@ -204,7 +204,7 @@
 - Fog / Height Fog
 - Sun Light / Ambient Light
 - Depth Buffer Shadow
-- SSAO / SSAO2
+- SSAO
 - Specular / SSS
 - Bloom / Depth Of Field / StarBurst
 - モデル読み込み
@@ -266,7 +266,7 @@ Loaded Models 一覧には、サンプルが追加した描画オブジェクト
 
 - Fog
 - Height Fog
-- SSAO / SSAO2
+- SSAO
 - Shadow
 - Specular
 - SSS

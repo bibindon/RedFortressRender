@@ -291,7 +291,7 @@ GBuffer 側には `RenderToEffect()` を持ち、通常描画と GBuffer 描画�
 
 `GBuffer::Draw()` では前面深度だけでなく、別パスで Thickness も作る。
 このとき `g_texFrontDepth` を使ってバックフェイス深度を扱う。
-この厚みテクスチャは `MeshMixManager::SetSharedThicknessTexture()` 経由で共有され、SSS や SSAO2 などで利用される。
+この厚みテクスチャは `MeshMixManager::SetSharedThicknessTexture()` 経由で共有され、SSS や SSAO などで利用される。
 
 ## `Render::Initialize()` の流れ
 
@@ -304,10 +304,9 @@ GBuffer 側には `RenderToEffect()` を持ち、通常描画と GBuffer 描画�
 5. `GBuffer::Initialize()`
 6. `PostEffectZShadow::Initialize()`
 7. `PostEffectSSAO::Initialize()`
-8. `PostEffectSSAO2::Initialize()`
-9. `PostEffectFog::Initialize()`
-10. `PostEffectHeightFog::Initialize()`
-11. `PostEffectSaturate::Initialize()`
+8. `PostEffectFog::Initialize()`
+9. `PostEffectHeightFog::Initialize()`
+10. `PostEffectSaturate::Initialize()`
 12. `PostEffectGauss::Initialize()`
 13. `PostEffectMaskedGauss::Initialize()`
 14. `PostEffectFXAA::Initialize()`
@@ -369,7 +368,7 @@ GBuffer 側には `RenderToEffect()` を持ち、通常描画と GBuffer 描画�
 順番は次の通りである。
 
 1. Depth Buffer Shadow
-2. SSAO または SSAO2
+2. SSAO
 3. Fog
 4. Height Fog
 5. Saturate

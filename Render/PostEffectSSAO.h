@@ -5,7 +5,7 @@
 namespace NSRender
 {
 
-class PostEffectSSAO2 : public IDeviceResettable
+class PostEffectSSAO : public IDeviceResettable
 {
 public:
 
@@ -44,7 +44,7 @@ private:
     float m_farPlane = 30'000.0f;
     float m_positionRange = 30'000.0f;
 
-    LPD3DXEFFECT m_fxSSAO2 = NULL;
+    LPD3DXEFFECT m_fxSSAO = NULL;
     bool m_isInitialized = false;
     bool m_isRegisteredForDeviceReset = false;
 
