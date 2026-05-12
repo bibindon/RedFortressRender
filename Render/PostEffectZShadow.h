@@ -101,6 +101,9 @@ private:
     LPDIRECT3DTEXTURE9 GetActiveShadowTexture() const;
     LPDIRECT3DSURFACE9 GetActiveShadowDepthStencil() const;
     int GetActiveShadowTexVariantIndex() const;
+    const char* GetWriteShadowTechniqueName() const;
+    const char* GetWriteShadowSkinTechniqueName() const;
+    const char* GetCompositeTechniqueName() const;
 };
 
 }

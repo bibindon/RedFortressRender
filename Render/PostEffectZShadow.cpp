@@ -452,7 +452,7 @@ void PostEffectZShadow::RenderTechnique2()
     hr = g_fxDepthBufferShadow->SetInt("g_shadowPcfTapCount", m_pcfTapCount);
     assert(hr == S_OK);
 
-    hr = g_fxDepthBufferShadow->SetTechnique("TechniqueWriteShadow");
+    hr = g_fxDepthBufferShadow->SetTechnique(GetWriteShadowTechniqueName());
     assert(hr == S_OK);
 
     UINT nPassNum = 0;
@@ -512,7 +512,7 @@ void PostEffectZShadow::RenderTechnique2()
     hr = g_fxDepthBufferShadow->End();
     assert(hr == S_OK);
 
-    hr = g_fxDepthBufferShadow->SetTechnique("TechniqueWriteShadowSkin");
+    hr = g_fxDepthBufferShadow->SetTechnique(GetWriteShadowSkinTechniqueName());
     assert(hr == S_OK);
 
     D3DXMATRIX mViewProj = mView * mProj;
@@ -569,7 +569,7 @@ void PostEffectZShadow::RenderTechnique3()
     // ★ ここでは画面は触らない：Z無効/画面クリアは不要
     Common::D3DDevice()->BeginScene();
 
-    g_fxDepthBufferShadow->SetTechnique("TechniqueComposite");
+    g_fxDepthBufferShadow->SetTechnique(GetCompositeTechniqueName());
     UINT nPassNum = 0;
     g_fxDepthBufferShadow->Begin(&nPassNum, 0);
     g_fxDepthBufferShadow->BeginPass(0);
@@ -848,6 +848,96 @@ LPDIRECT3DSURFACE9 PostEffectZShadow::GetActiveShadowDepthStencil() const
 int PostEffectZShadow::GetActiveShadowTexVariantIndex() const
 {
     return ShadowTextureScaleDivisorToVariantIndex(m_shadowTextureScaleDivisor);
+}
+
+const char* PostEffectZShadow::GetWriteShadowTechniqueName() const
+{
+    if (m_pcfTapCount == 1)
+    {
+        return "TechniqueWriteShadow1";
+    }
+
+    if (m_pcfTapCount == 3)
+    {
+        return "TechniqueWriteShadow3";
+    }
+
+    if (m_pcfTapCount == 5)
+    {
+        return "TechniqueWriteShadow5";
+    }
+
+    if (m_pcfTapCount == 7)
+    {
+        return "TechniqueWriteShadow7";
+    }
+
+    if (m_pcfTapCount == 9)
+    {
+        return "TechniqueWriteShadow9";
+    }
+
+    return "TechniqueWriteShadow11";
+}
+
+const char* PostEffectZShadow::GetWriteShadowSkinTechniqueName() const
+{
+    if (m_pcfTapCount == 1)
+    {
+        return "TechniqueWriteShadowSkin1";
+    }
+
+    if (m_pcfTapCount == 3)
+    {
+        return "TechniqueWriteShadowSkin3";
+    }
+
+    if (m_pcfTapCount == 5)
+    {
+        return "TechniqueWriteShadowSkin5";
+    }
+
+    if (m_pcfTapCount == 7)
+    {
+        return "TechniqueWriteShadowSkin7";
+    }
+
+    if (m_pcfTapCount == 9)
+    {
+        return "TechniqueWriteShadowSkin9";
+    }
+
+    return "TechniqueWriteShadowSkin11";
+}
+
+const char* PostEffectZShadow::GetCompositeTechniqueName() const
+{
+    if (m_compositeTapCount == 1)
+    {
+        return "TechniqueComposite1";
+    }
+
+    if (m_compositeTapCount == 3)
+    {
+        return "TechniqueComposite3";
+    }
+
+    if (m_compositeTapCount == 5)
+    {
+        return "TechniqueComposite5";
+    }
+
+    if (m_compositeTapCount == 7)
+    {
+        return "TechniqueComposite7";
+    }
+
+    if (m_compositeTapCount == 9)
+    {
+        return "TechniqueComposite9";
+    }
+
+    return "TechniqueComposite11";
 }
 
 }

@@ -97,47 +97,141 @@ float3 DecodeWorldNormal(float3 encodedNormal)
     return normal / normalLength;
 }
 
-float SampleShadowAmount(float2 uvLightView, float fDepthLightView)
+void AccumulateShadowDepthSample(float2 uvLightView,
+                                 float fDepthLightView,
+                                 float2 uvTexel,
+                                 int x,
+                                 int y,
+                                 inout float shadowSum,
+                                 inout float sampleCount)
 {
-    float2 uvTexel = float2(g_shadowTexelW, g_shadowTexelH);
-    const int FILTER_RADIUS_MAX = 5;
-    int filterRadius = (g_shadowPcfTapCount - 1) / 2;
-    filterRadius = clamp(filterRadius, 0, FILTER_RADIUS_MAX);
-
-    float shadowSum = 0.0f;
-    float sampleCount = 0.0f;
-
-    for (int y = -FILTER_RADIUS_MAX; y <= FILTER_RADIUS_MAX; ++y)
+    float2 sampleUv = uvLightView + float2((float)x, (float)y) * uvTexel;
+    if (any(sampleUv < 0.0f) || any(sampleUv > 1.0f))
     {
-        for (int x = -FILTER_RADIUS_MAX; x <= FILTER_RADIUS_MAX; ++x)
-        {
-            if (abs(x) > filterRadius || abs(y) > filterRadius)
-            {
-                continue;
-            }
-
-            float2 sampleUv = uvLightView + float2((float)x, (float)y) * uvTexel;
-            if (any(sampleUv < 0.0f) || any(sampleUv > 1.0f))
-            {
-                continue;
-            }
-
-            float shadowDepth = tex2Dlod(samplerLightZ, float4(sampleUv, 0, 0)).r;
-            if (shadowDepth < (fDepthLightView - g_shadowBias))
-            {
-                shadowSum += 1.0f;
-            }
-
-            sampleCount += 1.0f;
-        }
+        return;
     }
 
+    float shadowDepth = tex2Dlod(samplerLightZ, float4(sampleUv, 0, 0)).r;
+    if (shadowDepth < (fDepthLightView - g_shadowBias))
+    {
+        shadowSum += 1.0f;
+    }
+
+    sampleCount += 1.0f;
+}
+
+float FinalizeShadowAmount(float shadowSum, float sampleCount)
+{
     if (sampleCount <= 0.0f)
     {
         return 0.0f;
     }
 
     return shadowSum / sampleCount;
+}
+
+float SampleShadowAmount1(float2 uvLightView, float fDepthLightView)
+{
+    float2 uvTexel = float2(g_shadowTexelW, g_shadowTexelH);
+    float shadowSum = 0.0f;
+    float sampleCount = 0.0f;
+    AccumulateShadowDepthSample(uvLightView, fDepthLightView, uvTexel, 0, 0, shadowSum, sampleCount);
+    return FinalizeShadowAmount(shadowSum, sampleCount);
+}
+
+float SampleShadowAmount3(float2 uvLightView, float fDepthLightView)
+{
+    float2 uvTexel = float2(g_shadowTexelW, g_shadowTexelH);
+    float shadowSum = 0.0f;
+    float sampleCount = 0.0f;
+
+    [loop]
+    for (int y = -1; y <= 1; ++y)
+    {
+        [loop]
+        for (int x = -1; x <= 1; ++x)
+        {
+            AccumulateShadowDepthSample(uvLightView, fDepthLightView, uvTexel, x, y, shadowSum, sampleCount);
+        }
+    }
+
+    return FinalizeShadowAmount(shadowSum, sampleCount);
+}
+
+float SampleShadowAmount5(float2 uvLightView, float fDepthLightView)
+{
+    float2 uvTexel = float2(g_shadowTexelW, g_shadowTexelH);
+    float shadowSum = 0.0f;
+    float sampleCount = 0.0f;
+
+    [loop]
+    for (int y = -2; y <= 2; ++y)
+    {
+        [loop]
+        for (int x = -2; x <= 2; ++x)
+        {
+            AccumulateShadowDepthSample(uvLightView, fDepthLightView, uvTexel, x, y, shadowSum, sampleCount);
+        }
+    }
+
+    return FinalizeShadowAmount(shadowSum, sampleCount);
+}
+
+float SampleShadowAmount7(float2 uvLightView, float fDepthLightView)
+{
+    float2 uvTexel = float2(g_shadowTexelW, g_shadowTexelH);
+    float shadowSum = 0.0f;
+    float sampleCount = 0.0f;
+
+    [loop]
+    for (int y = -3; y <= 3; ++y)
+    {
+        [loop]
+        for (int x = -3; x <= 3; ++x)
+        {
+            AccumulateShadowDepthSample(uvLightView, fDepthLightView, uvTexel, x, y, shadowSum, sampleCount);
+        }
+    }
+
+    return FinalizeShadowAmount(shadowSum, sampleCount);
+}
+
+float SampleShadowAmount9(float2 uvLightView, float fDepthLightView)
+{
+    float2 uvTexel = float2(g_shadowTexelW, g_shadowTexelH);
+    float shadowSum = 0.0f;
+    float sampleCount = 0.0f;
+
+    [loop]
+    for (int y = -4; y <= 4; ++y)
+    {
+        [loop]
+        for (int x = -4; x <= 4; ++x)
+        {
+            AccumulateShadowDepthSample(uvLightView, fDepthLightView, uvTexel, x, y, shadowSum, sampleCount);
+        }
+    }
+
+    return FinalizeShadowAmount(shadowSum, sampleCount);
+}
+
+float SampleShadowAmount11(float2 uvLightView, float fDepthLightView)
+{
+    float2 uvTexel = float2(g_shadowTexelW, g_shadowTexelH);
+    float shadowSum = 0.0f;
+    float sampleCount = 0.0f;
+
+    [loop]
+    for (int y = -5; y <= 5; ++y)
+    {
+        [loop]
+        for (int x = -5; x <= 5; ++x)
+        {
+            AccumulateShadowDepthSample(uvLightView, fDepthLightView, uvTexel, x, y, shadowSum, sampleCount);
+        }
+    }
+
+    return FinalizeShadowAmount(shadowSum, sampleCount);
 }
 
 // 変数名の末尾のOSはローカル座標の意味
@@ -281,13 +375,9 @@ void VS_BaseSkin(in  float4 inPosition     : POSITION,
     outWorldPos = worldPos;
 }
 
-void PS_WriteShadow(in float4 inPos       : POSITION0,
-                    in float2 inUV        : TEXCOORD0,
-                    in float3 inWorldPos  : TEXCOORD1,
-
-                    out float4 outColor   : COLOR0)
+float4 BuildWriteShadowColor(float3 inWorldPos, float nShadowColor)
 {
-    outColor = float4(0, 0, 0, 0);
+    float4 outColor = float4(0, 0, 0, 0);
     
     //---------------------------------------------------------
     // カメラから見た各ピクセルのワールド座標の位置を
@@ -308,7 +398,7 @@ void PS_WriteShadow(in float4 inPos       : POSITION0,
     if (vPosLightView.w <= 0)
     {
         outColor.a = 0.0f;
-        return;
+        return outColor;
     }
 
     // 2D平面の-1 ~ +1の範囲に正規化させた座標を取得する
@@ -324,13 +414,109 @@ void PS_WriteShadow(in float4 inPos       : POSITION0,
     if (any(uvLightView < 0.0f) || any(uvLightView > 1.0f))
     {
         outColor.a = 0.0f;
-        return;
+        return outColor;
     }
-
-    float nShadowColor = SampleShadowAmount(uvLightView, fDepthLightView);
 
     outColor.rgb = nShadowColor.xxx;
     outColor.a = nShadowColor * g_shadowIntensity;
+    return outColor;
+}
+
+float4 PS_WriteShadow1(in float4 inPos : POSITION0,
+                       in float2 inUV : TEXCOORD0,
+                       in float3 inWorldPos : TEXCOORD1) : COLOR0
+{
+    float4 vPosLightView = mul(float4(inWorldPos, 1.0f), g_matLightView);
+    float fDepthLightView = (vPosLightView.z - g_lightNear) / (g_lightFar - g_lightNear);
+    fDepthLightView = saturate(fDepthLightView);
+    float4 vClipLightView = mul(float4(inWorldPos, 1.0f), g_matLightViewProj);
+    float2 uvNormalizedView = vClipLightView.xy / vClipLightView.w;
+    float2 uvLightView = uvNormalizedView * float2(0.5f, -0.5f) + 0.5f;
+    uvLightView += float2(0.5f * g_shadowTexelW, 0.5f * g_shadowTexelH);
+    float nShadowColor = SampleShadowAmount1(uvLightView, fDepthLightView);
+    return BuildWriteShadowColor(inWorldPos, nShadowColor);
+}
+
+float4 PS_WriteShadow3(in float4 inPos : POSITION0,
+                       in float2 inUV : TEXCOORD0,
+                       in float3 inWorldPos : TEXCOORD1) : COLOR0
+{
+    float4 vPosLightView = mul(float4(inWorldPos, 1.0f), g_matLightView);
+    float fDepthLightView = (vPosLightView.z - g_lightNear) / (g_lightFar - g_lightNear);
+    fDepthLightView = saturate(fDepthLightView);
+    float4 vClipLightView = mul(float4(inWorldPos, 1.0f), g_matLightViewProj);
+    float2 uvNormalizedView = vClipLightView.xy / vClipLightView.w;
+    float2 uvLightView = uvNormalizedView * float2(0.5f, -0.5f) + 0.5f;
+    uvLightView += float2(0.5f * g_shadowTexelW, 0.5f * g_shadowTexelH);
+    float nShadowColor = SampleShadowAmount3(uvLightView, fDepthLightView);
+    return BuildWriteShadowColor(inWorldPos, nShadowColor);
+}
+
+float4 PS_WriteShadow5(in float4 inPos : POSITION0,
+                       in float2 inUV : TEXCOORD0,
+                       in float3 inWorldPos : TEXCOORD1) : COLOR0
+{
+    float4 vPosLightView = mul(float4(inWorldPos, 1.0f), g_matLightView);
+    float fDepthLightView = (vPosLightView.z - g_lightNear) / (g_lightFar - g_lightNear);
+    fDepthLightView = saturate(fDepthLightView);
+    float4 vClipLightView = mul(float4(inWorldPos, 1.0f), g_matLightViewProj);
+    float2 uvNormalizedView = vClipLightView.xy / vClipLightView.w;
+    float2 uvLightView = uvNormalizedView * float2(0.5f, -0.5f) + 0.5f;
+    uvLightView += float2(0.5f * g_shadowTexelW, 0.5f * g_shadowTexelH);
+    float nShadowColor = SampleShadowAmount5(uvLightView, fDepthLightView);
+    return BuildWriteShadowColor(inWorldPos, nShadowColor);
+}
+
+float4 PS_WriteShadow7(in float4 inPos : POSITION0,
+                       in float2 inUV : TEXCOORD0,
+                       in float3 inWorldPos : TEXCOORD1) : COLOR0
+{
+    float4 vPosLightView = mul(float4(inWorldPos, 1.0f), g_matLightView);
+    float fDepthLightView = (vPosLightView.z - g_lightNear) / (g_lightFar - g_lightNear);
+    fDepthLightView = saturate(fDepthLightView);
+    float4 vClipLightView = mul(float4(inWorldPos, 1.0f), g_matLightViewProj);
+    float2 uvNormalizedView = vClipLightView.xy / vClipLightView.w;
+    float2 uvLightView = uvNormalizedView * float2(0.5f, -0.5f) + 0.5f;
+    uvLightView += float2(0.5f * g_shadowTexelW, 0.5f * g_shadowTexelH);
+    float nShadowColor = SampleShadowAmount7(uvLightView, fDepthLightView);
+    return BuildWriteShadowColor(inWorldPos, nShadowColor);
+}
+
+float4 PS_WriteShadow9(in float4 inPos : POSITION0,
+                       in float2 inUV : TEXCOORD0,
+                       in float3 inWorldPos : TEXCOORD1) : COLOR0
+{
+    float4 vPosLightView = mul(float4(inWorldPos, 1.0f), g_matLightView);
+    float fDepthLightView = (vPosLightView.z - g_lightNear) / (g_lightFar - g_lightNear);
+    fDepthLightView = saturate(fDepthLightView);
+    float4 vClipLightView = mul(float4(inWorldPos, 1.0f), g_matLightViewProj);
+    float2 uvNormalizedView = vClipLightView.xy / vClipLightView.w;
+    float2 uvLightView = uvNormalizedView * float2(0.5f, -0.5f) + 0.5f;
+    uvLightView += float2(0.5f * g_shadowTexelW, 0.5f * g_shadowTexelH);
+    float nShadowColor = SampleShadowAmount9(uvLightView, fDepthLightView);
+    return BuildWriteShadowColor(inWorldPos, nShadowColor);
+}
+
+float4 PS_WriteShadow11(in float4 inPos : POSITION0,
+                        in float2 inUV : TEXCOORD0,
+                        in float3 inWorldPos : TEXCOORD1) : COLOR0
+{
+    float4 vPosLightView = mul(float4(inWorldPos, 1.0f), g_matLightView);
+    float fDepthLightView = (vPosLightView.z - g_lightNear) / (g_lightFar - g_lightNear);
+    fDepthLightView = saturate(fDepthLightView);
+    float4 vClipLightView = mul(float4(inWorldPos, 1.0f), g_matLightViewProj);
+    float2 uvNormalizedView = vClipLightView.xy / vClipLightView.w;
+    float2 uvLightView = uvNormalizedView * float2(0.5f, -0.5f) + 0.5f;
+    uvLightView += float2(0.5f * g_shadowTexelW, 0.5f * g_shadowTexelH);
+    float nShadowColor = SampleShadowAmount11(uvLightView, fDepthLightView);
+    return BuildWriteShadowColor(inWorldPos, nShadowColor);
+}
+
+float4 PS_WriteShadow(in float4 inPos : POSITION0,
+                      in float2 inUV : TEXCOORD0,
+                      in float3 inWorldPos : TEXCOORD1) : COLOR0
+{
+    return PS_WriteShadow11(inPos, inUV, inWorldPos);
 }
 
 //-------------------------------------------------------------------------
@@ -425,6 +611,190 @@ void PS_Composite(in float4 inPos     : POSITION,
     outColor = result;
 }
 
+void AccumulateCompositeSampleFixed(float2 uv,
+                                    float centerDepth,
+                                    float3 centerNormal,
+                                    int x,
+                                    int y,
+                                    inout float4 vShadowColorSum,
+                                    inout float totalWeight)
+{
+    float2 sampleUv = uv + float2((float)x * g_compositeTexelW, (float)y * g_compositeTexelH);
+
+    if (any(sampleUv < 0.0f) || any(sampleUv > 1.0f))
+    {
+        return;
+    }
+
+    float sampleDepth = tex2D(samplerSceneDepth, sampleUv).r;
+    if (abs(sampleDepth - centerDepth) > g_edgeDepthThreshold)
+    {
+        return;
+    }
+
+    float3 sampleNormal = DecodeWorldNormal(tex2D(samplerSceneNormal, sampleUv).rgb);
+    if (dot(centerNormal, sampleNormal) < g_edgeNormalThreshold)
+    {
+        return;
+    }
+
+    float weight = 1.0f;
+    vShadowColorSum += tex2D(samplerShadow, sampleUv) * weight;
+    totalWeight += weight;
+}
+
+float4 FinalizeCompositeColorFixed(float2 uv,
+                                   float2 pixelCoord,
+                                   float4 vBaseColor,
+                                   float4 vCenterShadowColor,
+                                   float4 vShadowColorSum,
+                                   float totalWeight)
+{
+    float4 vShadowColor = vCenterShadowColor;
+    if (totalWeight > 0.0f)
+    {
+        vShadowColor = vShadowColorSum / totalWeight;
+    }
+
+    float4 result = float4(0, 0, 0, 0);
+    float shadowPresence = saturate(vShadowColor.r);
+    float shadowAmount = saturate(vShadowColor.a);
+    float3 shadowedColor = lerp(vBaseColor.rgb, float3(0.0f, 0.0f, 0.0f), shadowAmount);
+    float saturationAmount = lerp(1.0f, 1.0f + g_shadowSaturationBoost, shadowPresence);
+    result.rgb = IncreaseSaturation(shadowedColor, saturationAmount);
+
+    if (false)
+    {
+        if (fmod(pixelCoord.x, 5.0f) == 0.0f || fmod(pixelCoord.y, 5.0f) == 0.0f)
+        {
+            result.rgb = float3(0.0f, 1.0f, 0.0f);
+        }
+    }
+
+    result.a = 1.f;
+    return result;
+}
+
+float4 BuildCompositeColorFixed(float2 inUV, int filterRadius)
+{
+    float2 uv = inUV + float2(0.5f * g_compositeTexelW, 0.5f * g_compositeTexelH);
+    float2 pixelCoord = floor(uv / float2(g_compositeTexelW, g_compositeTexelH));
+    float4 vBaseColor = tex2D(samplerBase, uv);
+    float4 vCenterShadowColor = tex2D(samplerShadow, uv);
+    float centerDepth = tex2D(samplerSceneDepth, uv).r;
+    float3 centerNormal = DecodeWorldNormal(tex2D(samplerSceneNormal, uv).rgb);
+    float4 vShadowColorSum = 0.0f;
+    float totalWeight = 0.0f;
+
+    if (filterRadius == 0)
+    {
+        AccumulateCompositeSampleFixed(uv, centerDepth, centerNormal, 0, 0, vShadowColorSum, totalWeight);
+    }
+    else if (filterRadius == 1)
+    {
+        [loop]
+        for (int y = -1; y <= 1; ++y)
+        {
+            [loop]
+            for (int x = -1; x <= 1; ++x)
+            {
+                AccumulateCompositeSampleFixed(uv, centerDepth, centerNormal, x, y, vShadowColorSum, totalWeight);
+            }
+        }
+    }
+    else if (filterRadius == 2)
+    {
+        [loop]
+        for (int y = -2; y <= 2; ++y)
+        {
+            [loop]
+            for (int x = -2; x <= 2; ++x)
+            {
+                AccumulateCompositeSampleFixed(uv, centerDepth, centerNormal, x, y, vShadowColorSum, totalWeight);
+            }
+        }
+    }
+    else if (filterRadius == 3)
+    {
+        [loop]
+        for (int y = -3; y <= 3; ++y)
+        {
+            [loop]
+            for (int x = -3; x <= 3; ++x)
+            {
+                AccumulateCompositeSampleFixed(uv, centerDepth, centerNormal, x, y, vShadowColorSum, totalWeight);
+            }
+        }
+    }
+    else if (filterRadius == 4)
+    {
+        [loop]
+        for (int y = -4; y <= 4; ++y)
+        {
+            [loop]
+            for (int x = -4; x <= 4; ++x)
+            {
+                AccumulateCompositeSampleFixed(uv, centerDepth, centerNormal, x, y, vShadowColorSum, totalWeight);
+            }
+        }
+    }
+    else
+    {
+        [loop]
+        for (int y = -5; y <= 5; ++y)
+        {
+            [loop]
+            for (int x = -5; x <= 5; ++x)
+            {
+                AccumulateCompositeSampleFixed(uv, centerDepth, centerNormal, x, y, vShadowColorSum, totalWeight);
+            }
+        }
+    }
+
+    return FinalizeCompositeColorFixed(uv,
+                                       pixelCoord,
+                                       vBaseColor,
+                                       vCenterShadowColor,
+                                       vShadowColorSum,
+                                       totalWeight);
+}
+
+float4 PS_Composite1(in float4 inPos : POSITION,
+                     in float2 inUV : TEXCOORD0) : COLOR0
+{
+    return BuildCompositeColorFixed(inUV, 0);
+}
+
+float4 PS_Composite3(in float4 inPos : POSITION,
+                     in float2 inUV : TEXCOORD0) : COLOR0
+{
+    return BuildCompositeColorFixed(inUV, 1);
+}
+
+float4 PS_Composite5(in float4 inPos : POSITION,
+                     in float2 inUV : TEXCOORD0) : COLOR0
+{
+    return BuildCompositeColorFixed(inUV, 2);
+}
+
+float4 PS_Composite7(in float4 inPos : POSITION,
+                     in float2 inUV : TEXCOORD0) : COLOR0
+{
+    return BuildCompositeColorFixed(inUV, 3);
+}
+
+float4 PS_Composite9(in float4 inPos : POSITION,
+                     in float2 inUV : TEXCOORD0) : COLOR0
+{
+    return BuildCompositeColorFixed(inUV, 4);
+}
+
+float4 PS_Composite11(in float4 inPos : POSITION,
+                      in float2 inUV : TEXCOORD0) : COLOR0
+{
+    return BuildCompositeColorFixed(inUV, 5);
+}
+
 float4 PS_DebugLightZ(in float4 inPos : POSITION,
                       in float2 inUV  : TEXCOORD0) : COLOR0
 {
@@ -477,6 +847,168 @@ technique TechniqueComposite
     {
         VertexShader = compile vs_3_0 VS_Composite();
         PixelShader  = compile ps_3_0 PS_Composite();
+    }
+}
+
+technique TechniqueWriteShadow1
+{
+    pass P0
+    {
+        VertexShader = compile vs_3_0 VS_Base();
+        PixelShader  = compile ps_3_0 PS_WriteShadow1();
+    }
+}
+
+technique TechniqueWriteShadow3
+{
+    pass P0
+    {
+        VertexShader = compile vs_3_0 VS_Base();
+        PixelShader  = compile ps_3_0 PS_WriteShadow3();
+    }
+}
+
+technique TechniqueWriteShadow5
+{
+    pass P0
+    {
+        VertexShader = compile vs_3_0 VS_Base();
+        PixelShader  = compile ps_3_0 PS_WriteShadow5();
+    }
+}
+
+technique TechniqueWriteShadow7
+{
+    pass P0
+    {
+        VertexShader = compile vs_3_0 VS_Base();
+        PixelShader  = compile ps_3_0 PS_WriteShadow7();
+    }
+}
+
+technique TechniqueWriteShadow9
+{
+    pass P0
+    {
+        VertexShader = compile vs_3_0 VS_Base();
+        PixelShader  = compile ps_3_0 PS_WriteShadow9();
+    }
+}
+
+technique TechniqueWriteShadow11
+{
+    pass P0
+    {
+        VertexShader = compile vs_3_0 VS_Base();
+        PixelShader  = compile ps_3_0 PS_WriteShadow11();
+    }
+}
+
+technique TechniqueWriteShadowSkin1
+{
+    pass P0
+    {
+        VertexShader = (vsBaseSkinArray[g_currentBoneIndex]);
+        PixelShader  = compile ps_3_0 PS_WriteShadow1();
+    }
+}
+
+technique TechniqueWriteShadowSkin3
+{
+    pass P0
+    {
+        VertexShader = (vsBaseSkinArray[g_currentBoneIndex]);
+        PixelShader  = compile ps_3_0 PS_WriteShadow3();
+    }
+}
+
+technique TechniqueWriteShadowSkin5
+{
+    pass P0
+    {
+        VertexShader = (vsBaseSkinArray[g_currentBoneIndex]);
+        PixelShader  = compile ps_3_0 PS_WriteShadow5();
+    }
+}
+
+technique TechniqueWriteShadowSkin7
+{
+    pass P0
+    {
+        VertexShader = (vsBaseSkinArray[g_currentBoneIndex]);
+        PixelShader  = compile ps_3_0 PS_WriteShadow7();
+    }
+}
+
+technique TechniqueWriteShadowSkin9
+{
+    pass P0
+    {
+        VertexShader = (vsBaseSkinArray[g_currentBoneIndex]);
+        PixelShader  = compile ps_3_0 PS_WriteShadow9();
+    }
+}
+
+technique TechniqueWriteShadowSkin11
+{
+    pass P0
+    {
+        VertexShader = (vsBaseSkinArray[g_currentBoneIndex]);
+        PixelShader  = compile ps_3_0 PS_WriteShadow11();
+    }
+}
+
+technique TechniqueComposite1
+{
+    pass P0
+    {
+        VertexShader = compile vs_3_0 VS_Composite();
+        PixelShader  = compile ps_3_0 PS_Composite1();
+    }
+}
+
+technique TechniqueComposite3
+{
+    pass P0
+    {
+        VertexShader = compile vs_3_0 VS_Composite();
+        PixelShader  = compile ps_3_0 PS_Composite3();
+    }
+}
+
+technique TechniqueComposite5
+{
+    pass P0
+    {
+        VertexShader = compile vs_3_0 VS_Composite();
+        PixelShader  = compile ps_3_0 PS_Composite5();
+    }
+}
+
+technique TechniqueComposite7
+{
+    pass P0
+    {
+        VertexShader = compile vs_3_0 VS_Composite();
+        PixelShader  = compile ps_3_0 PS_Composite7();
+    }
+}
+
+technique TechniqueComposite9
+{
+    pass P0
+    {
+        VertexShader = compile vs_3_0 VS_Composite();
+        PixelShader  = compile ps_3_0 PS_Composite9();
+    }
+}
+
+technique TechniqueComposite11
+{
+    pass P0
+    {
+        VertexShader = compile vs_3_0 VS_Composite();
+        PixelShader  = compile ps_3_0 PS_Composite11();
     }
 }
 
