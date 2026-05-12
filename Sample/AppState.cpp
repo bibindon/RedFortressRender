@@ -205,7 +205,27 @@ float ClampSSAOShadowSaturationBoost(const float boost)
 
 int ClampSSAOSampleCount(const int sampleCount)
 {
-    return (std::max)(SSAO_SAMPLE_COUNT_MIN, (std::min)(sampleCount, SSAO_SAMPLE_COUNT_MAX));
+    if (sampleCount <= 6)
+    {
+        return 4;
+    }
+
+    if (sampleCount <= 12)
+    {
+        return 8;
+    }
+
+    if (sampleCount <= 24)
+    {
+        return 16;
+    }
+
+    if (sampleCount <= 48)
+    {
+        return 32;
+    }
+
+    return 64;
 }
 
 float ClampSSAOSampleRadius(const float sampleRadius)

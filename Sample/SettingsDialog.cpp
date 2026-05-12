@@ -114,8 +114,6 @@ constexpr int SSAO_SHADOW_STRENGTH_SLIDER_MAX = static_cast<int>(SSAO_SHADOW_STR
 constexpr int SSAO_SHADOW_SATURATION_SLIDER_MIN = 0;
 constexpr int SSAO_SHADOW_SATURATION_SLIDER_MAX =
     static_cast<int>(SSAO_SHADOW_SATURATION_BOOST_MAX / SSAO_SHADOW_SATURATION_BOOST_STEP);
-constexpr int SSAO_SAMPLE_COUNT_SLIDER_MIN = SSAO_SAMPLE_COUNT_MIN;
-constexpr int SSAO_SAMPLE_COUNT_SLIDER_MAX = SSAO_SAMPLE_COUNT_MAX;
 constexpr int SSAO_SAMPLE_RADIUS_SLIDER_MIN = 0;
 constexpr int SSAO_SAMPLE_RADIUS_SLIDER_MAX = static_cast<int>((SSAO_SAMPLE_RADIUS_MAX - SSAO_SAMPLE_RADIUS_MIN) / SSAO_SAMPLE_RADIUS_STEP);
 constexpr int BLOOM_THRESHOLD_SLIDER_MIN = 0;
@@ -352,6 +350,25 @@ void PopulateSSAOTexSizeCombo(HWND hDlg)
                 0);
 }
 
+void PopulateSSAOSampleCountCombo(HWND hDlg)
+{
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_SSAO_SAMPLE_COUNT);
+    if (combo == NULL)
+    {
+        return;
+    }
+
+    SendMessage(combo, CB_RESETCONTENT, 0, 0);
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"4"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"8"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"16"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"32"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"64"));
+    SendMessage(combo, CB_SETCURSEL,
+                static_cast<WPARAM>(SSAOSampleCountToComboIndex(g_ssaoSampleCount)),
+                0);
+}
+
 void PopulateSSAOBlurKernelSizeCombo(HWND hDlg)
 {
     HWND combo = GetDlgItem(hDlg, IDC_COMBO_SSAO_BLUR_KERNEL_SIZE);
@@ -445,7 +462,6 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_SSS_COLOR_B,
         IDC_EDIT_SSAO_SHADOW_STRENGTH,
         IDC_EDIT_SSAO_SHADOW_SATURATION,
-        IDC_EDIT_SSAO_SAMPLE_COUNT,
         IDC_EDIT_SSAO_SAMPLE_RADIUS,
         IDC_EDIT_CAMERA_NEAR,
         IDC_EDIT_CAMERA_FAR,
@@ -782,14 +798,6 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
             ApplySSAOShadowSaturationBoost();
         }
         RefreshSSAOShadowSaturationControls(hDlg);
-        return true;
-    case IDC_EDIT_SSAO_SAMPLE_COUNT:
-        if (TryParseEditInt(hDlg, commandId, intValue))
-        {
-            g_ssaoSampleCount = intValue;
-            ApplySSAOSampleCount();
-        }
-        RefreshSSAOSampleCountControls(hDlg);
         return true;
     case IDC_EDIT_SSAO_SAMPLE_RADIUS:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
@@ -1753,11 +1761,6 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SHADOW_SATURATION, TBM_SETTICFREQ, 2, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SHADOW_SATURATION, TBM_SETPAGESIZE, 0, 2);
 
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_COUNT, TBM_SETRANGEMIN, FALSE, SSAO_SAMPLE_COUNT_SLIDER_MIN);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_COUNT, TBM_SETRANGEMAX, FALSE, SSAO_SAMPLE_COUNT_SLIDER_MAX);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_COUNT, TBM_SETTICFREQ, 4, 0);
-    SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_COUNT, TBM_SETPAGESIZE, 0, 4);
-
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS, TBM_SETRANGEMIN, FALSE, SSAO_SAMPLE_RADIUS_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS, TBM_SETRANGEMAX, FALSE, SSAO_SAMPLE_RADIUS_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS, TBM_SETTICFREQ, 10, 0);
@@ -2089,6 +2092,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         PopulateResolutionCombo(hDlg);
         PopulatePointLightTypeCombo(hDlg);
         PopulateZShadowTexSizeCombo(hDlg);
+        PopulateSSAOSampleCountCombo(hDlg);
         PopulateSSAOTexSizeCombo(hDlg);
         PopulateSSAOBlurKernelSizeCombo(hDlg);
         InitializeLoadedModelListView(hDlg);
@@ -2538,15 +2542,6 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
-        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSAO_SAMPLE_COUNT))
-        {
-            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
-            g_ssaoSampleCount = SliderValueToSSAOSampleCount(sliderValue);
-            ApplySSAOSampleCount();
-            RefreshSSAOSampleCountControls(hDlg);
-            return TRUE;
-        }
-
         if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS))
         {
             const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
@@ -2876,6 +2871,16 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_ssaoTexSizeDivisor = ComboIndexToSSAOTexSizeDivisor(index);
             ApplySSAOTexSize();
             RefreshSSAOTexSizeControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_COMBO_SSAO_SAMPLE_COUNT && HIWORD(wParam) == CBN_SELCHANGE)
+        {
+            HWND combo = reinterpret_cast<HWND>(lParam);
+            const int index = static_cast<int>(SendMessage(combo, CB_GETCURSEL, 0, 0));
+            g_ssaoSampleCount = ComboIndexToSSAOSampleCount(index);
+            ApplySSAOSampleCount();
+            RefreshSSAOSampleCountControls(hDlg);
             return TRUE;
         }
 

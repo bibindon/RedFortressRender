@@ -82,7 +82,27 @@ float ClampSSAOShadowSaturationBoost(const float boost)
 
 int ClampSSAOSampleCount(const int sampleCount)
 {
-    return (std::max)(SSAO_SAMPLE_COUNT_MIN, (std::min)(sampleCount, SSAO_SAMPLE_COUNT_MAX));
+    if (sampleCount <= 6)
+    {
+        return 4;
+    }
+
+    if (sampleCount <= 12)
+    {
+        return 8;
+    }
+
+    if (sampleCount <= 24)
+    {
+        return 16;
+    }
+
+    if (sampleCount <= 48)
+    {
+        return 32;
+    }
+
+    return 64;
 }
 
 float ClampSSAOSampleRadius(const float sampleRadius)
@@ -864,14 +884,56 @@ float SliderValueToSSAOShadowSaturationBoost(const int sliderValue)
     return ClampSSAOShadowSaturationBoost(static_cast<float>(sliderValue) * SSAO_SHADOW_SATURATION_BOOST_STEP);
 }
 
-int SSAOSampleCountToSliderValue(const int sampleCount)
+int SSAOSampleCountToComboIndex(const int sampleCount)
 {
-    return ClampSSAOSampleCount(sampleCount);
+    const int normalizedSampleCount = ClampSSAOSampleCount(sampleCount);
+
+    if (normalizedSampleCount == 4)
+    {
+        return 0;
+    }
+
+    if (normalizedSampleCount == 8)
+    {
+        return 1;
+    }
+
+    if (normalizedSampleCount == 16)
+    {
+        return 2;
+    }
+
+    if (normalizedSampleCount == 32)
+    {
+        return 3;
+    }
+
+    return 4;
 }
 
-int SliderValueToSSAOSampleCount(const int sliderValue)
+int ComboIndexToSSAOSampleCount(const int comboIndex)
 {
-    return ClampSSAOSampleCount(sliderValue);
+    if (comboIndex == 0)
+    {
+        return 4;
+    }
+
+    if (comboIndex == 1)
+    {
+        return 8;
+    }
+
+    if (comboIndex == 2)
+    {
+        return 16;
+    }
+
+    if (comboIndex == 3)
+    {
+        return 32;
+    }
+
+    return 64;
 }
 
 int SSAOSampleRadiusToSliderValue(const float sampleRadius)

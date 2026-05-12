@@ -142,7 +142,7 @@ void PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_fxSSAO->SetFloat("g_depthBiasScale", 1.0f);
     m_fxSSAO->SetFloat("g_normalBiasScale", 1.0f);
 
-    m_fxSSAO->SetTechnique("TechniqueAO_Create");
+    m_fxSSAO->SetTechnique(GetCreateTechniqueName());
     m_fxSSAO->Begin(NULL, 0);
     m_fxSSAO->BeginPass(0);
     DrawFullscreenQuad();
@@ -241,7 +241,7 @@ void PostEffectSSAO::SetSampleRadius(const float sampleRadius)
 
 void PostEffectSSAO::SetSampleCount(const int sampleCount)
 {
-    m_sampleCount = (std::max)(1, (std::min)(sampleCount, 64));
+    m_sampleCount = NormalizeSampleCount(sampleCount);
 }
 
 void PostEffectSSAO::SetDepthScaledSampleDistanceEnabled(const bool enabled)
@@ -283,6 +283,31 @@ void PostEffectSSAO::SetDepthRange(const float nearPlane, const float farPlane)
     m_positionRange = GBuffer::ComputePositionRange(nearPlane, farPlane);
 }
 
+const char* PostEffectSSAO::GetCreateTechniqueName() const
+{
+    if (m_sampleCount == 4)
+    {
+        return "TechniqueAO_Create4";
+    }
+
+    if (m_sampleCount == 8)
+    {
+        return "TechniqueAO_Create8";
+    }
+
+    if (m_sampleCount == 16)
+    {
+        return "TechniqueAO_Create16";
+    }
+
+    if (m_sampleCount == 32)
+    {
+        return "TechniqueAO_Create32";
+    }
+
+    return "TechniqueAO_Create64";
+}
+
 int PostEffectSSAO::NormalizeBlurKernelSize(const int kernelSize) const
 {
     if (kernelSize <= 4)
@@ -321,6 +346,31 @@ const char* PostEffectSSAO::GetBlurTechniqueName() const
     }
 
     return "TechniqueAO_Blur21x21";
+}
+
+int PostEffectSSAO::NormalizeSampleCount(const int sampleCount) const
+{
+    if (sampleCount <= 6)
+    {
+        return 4;
+    }
+
+    if (sampleCount <= 12)
+    {
+        return 8;
+    }
+
+    if (sampleCount <= 24)
+    {
+        return 16;
+    }
+
+    if (sampleCount <= 48)
+    {
+        return 32;
+    }
+
+    return 64;
 }
 
 int PostEffectSSAO::NormalizeTextureScaleDivisor(const int scaleDivisor) const

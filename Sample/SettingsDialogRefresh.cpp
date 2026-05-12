@@ -577,18 +577,18 @@ void RefreshSSAOShadowSaturationControls(HWND hDlg)
 
 void RefreshSSAOSampleCountControls(HWND hDlg)
 {
-    wchar_t buffer[32];
-    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%d", g_ssaoSampleCount);
-    SetDlgItemText(hDlg, IDC_EDIT_SSAO_SAMPLE_COUNT, buffer);
-    SendDlgItemMessage(hDlg,
-                       IDC_SLIDER_SSAO_SAMPLE_COUNT,
-                       TBM_SETPOS,
-                       TRUE,
-                       static_cast<LPARAM>(SSAOSampleCountToSliderValue(g_ssaoSampleCount)));
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_SSAO_SAMPLE_COUNT);
+    if (combo != NULL)
+    {
+        SendMessage(combo,
+                    CB_SETCURSEL,
+                    static_cast<WPARAM>(SSAOSampleCountToComboIndex(g_ssaoSampleCount)),
+                    0);
+    }
+
     const BOOL enabled = g_bSSAO;
     EnableWindow(GetDlgItem(hDlg, IDC_STATIC_SSAO_SAMPLE_COUNT_LABEL), enabled);
-    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SSAO_SAMPLE_COUNT), enabled);
-    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SSAO_SAMPLE_COUNT), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_COMBO_SSAO_SAMPLE_COUNT), enabled);
 }
 
 void RefreshSSAODepthScaledSampleDistanceControls(HWND hDlg)

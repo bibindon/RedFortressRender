@@ -197,56 +197,241 @@ float2 ComputeOcclusionSample(float2 baseUv,
     return float2(0.0f, 1.0f);
 }
 
-float4 PS_AO(VS_OUT i) : COLOR0
+void AccumulateOcclusionSample(float2 baseUv,
+                               float currentDepth,
+                               float3 currentNormal,
+                               float3 currentViewPosition,
+                               float3 tangent,
+                               float3 bitangent,
+                               float sampleRadius,
+                               float sampleIndex,
+                               float sampleCount,
+                               inout float occlusionCount,
+                               inout float validSampleCount)
 {
-    float currentDepth = GetViewDepth(i.uv);
-    if (currentDepth >= g_fFar)
-    {
-        return float4(1.0f, 1.0f, 1.0f, 1.0f);
-    }
+    float2 occlusionSample = ComputeOcclusionSample(baseUv,
+                                                    currentDepth,
+                                                    currentNormal,
+                                                    currentViewPosition,
+                                                    tangent,
+                                                    bitangent,
+                                                    sampleRadius,
+                                                    sampleIndex,
+                                                    sampleCount);
+    occlusionCount += occlusionSample.x;
+    validSampleCount += occlusionSample.y;
+}
 
-    float3 currentViewPosition = GetViewPosition(i.uv);
-    float3 currentNormal = GetViewNormal(i.uv);
-
-    float3 up = float3(0.0f, 1.0f, 0.0f);
-    if (abs(currentNormal.z) < 0.999f)
-    {
-        up = float3(0.0f, 0.0f, 1.0f);
-    }
-    float3 tangent = normalize(cross(up, currentNormal));
-    float3 bitangent = cross(currentNormal, tangent);
-
-    const int kMaxSampleCount = 64;
-    float occlusionCount = 0.0f;
-    float validSampleCount = 0.0f;
-    float sampleCount = (float)max(g_sampleCount, 1);
-
-    [loop]
-    for (int sampleIndex = 0; sampleIndex < kMaxSampleCount; ++sampleIndex)
-    {
-        if (sampleIndex < g_sampleCount)
-        {
-            float2 occlusionSample = ComputeOcclusionSample(i.uv,
-                                                            currentDepth,
-                                                            currentNormal,
-                                                            currentViewPosition,
-                                                            tangent,
-                                                            bitangent,
-                                                            g_sampleRadius,
-                                                            (float)sampleIndex,
-                                                            sampleCount);
-            occlusionCount += occlusionSample.x;
-            validSampleCount += occlusionSample.y;
-        }
-    }
-
+float4 FinalizeAOResult(float occlusionCount, float validSampleCount)
+{
     float ao = 1.0f;
     if (validSampleCount > 0.0f)
     {
         float occlusionRate = occlusionCount / validSampleCount;
         ao = saturate(1.0f - occlusionRate);
     }
+
     return float4(ao, ao, ao, 1.0f);
+}
+
+void InitializeAOSampling(VS_OUT i,
+                          out float currentDepth,
+                          out float3 currentNormal,
+                          out float3 currentViewPosition,
+                          out float3 tangent,
+                          out float3 bitangent)
+{
+    currentDepth = GetViewDepth(i.uv);
+    currentViewPosition = GetViewPosition(i.uv);
+    currentNormal = GetViewNormal(i.uv);
+
+    float3 up = float3(0.0f, 1.0f, 0.0f);
+    if (abs(currentNormal.z) < 0.999f)
+    {
+        up = float3(0.0f, 0.0f, 1.0f);
+    }
+    tangent = normalize(cross(up, currentNormal));
+    bitangent = cross(currentNormal, tangent);
+}
+
+float4 PS_AO4(VS_OUT i) : COLOR0
+{
+    float currentDepth = 0.0f;
+    float3 currentNormal = float3(0.0f, 0.0f, 0.0f);
+    float3 currentViewPosition = float3(0.0f, 0.0f, 0.0f);
+    float3 tangent = float3(0.0f, 0.0f, 0.0f);
+    float3 bitangent = float3(0.0f, 0.0f, 0.0f);
+    InitializeAOSampling(i, currentDepth, currentNormal, currentViewPosition, tangent, bitangent);
+    if (currentDepth >= g_fFar)
+    {
+        return float4(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+
+    float occlusionCount = 0.0f;
+    float validSampleCount = 0.0f;
+    const float sampleCount = 4.0f;
+
+    [unroll]
+    for (int sampleIndex = 0; sampleIndex < 4; ++sampleIndex)
+    {
+        AccumulateOcclusionSample(i.uv,
+                                  currentDepth,
+                                  currentNormal,
+                                  currentViewPosition,
+                                  tangent,
+                                  bitangent,
+                                  g_sampleRadius,
+                                  (float)sampleIndex,
+                                  sampleCount,
+                                  occlusionCount,
+                                  validSampleCount);
+    }
+
+    return FinalizeAOResult(occlusionCount, validSampleCount);
+}
+
+float4 PS_AO8(VS_OUT i) : COLOR0
+{
+    float currentDepth = 0.0f;
+    float3 currentNormal = float3(0.0f, 0.0f, 0.0f);
+    float3 currentViewPosition = float3(0.0f, 0.0f, 0.0f);
+    float3 tangent = float3(0.0f, 0.0f, 0.0f);
+    float3 bitangent = float3(0.0f, 0.0f, 0.0f);
+    InitializeAOSampling(i, currentDepth, currentNormal, currentViewPosition, tangent, bitangent);
+    if (currentDepth >= g_fFar)
+    {
+        return float4(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+
+    float occlusionCount = 0.0f;
+    float validSampleCount = 0.0f;
+    const float sampleCount = 8.0f;
+
+    [unroll]
+    for (int sampleIndex = 0; sampleIndex < 8; ++sampleIndex)
+    {
+        AccumulateOcclusionSample(i.uv,
+                                  currentDepth,
+                                  currentNormal,
+                                  currentViewPosition,
+                                  tangent,
+                                  bitangent,
+                                  g_sampleRadius,
+                                  (float)sampleIndex,
+                                  sampleCount,
+                                  occlusionCount,
+                                  validSampleCount);
+    }
+
+    return FinalizeAOResult(occlusionCount, validSampleCount);
+}
+
+float4 PS_AO16(VS_OUT i) : COLOR0
+{
+    float currentDepth = 0.0f;
+    float3 currentNormal = float3(0.0f, 0.0f, 0.0f);
+    float3 currentViewPosition = float3(0.0f, 0.0f, 0.0f);
+    float3 tangent = float3(0.0f, 0.0f, 0.0f);
+    float3 bitangent = float3(0.0f, 0.0f, 0.0f);
+    InitializeAOSampling(i, currentDepth, currentNormal, currentViewPosition, tangent, bitangent);
+    if (currentDepth >= g_fFar)
+    {
+        return float4(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+
+    float occlusionCount = 0.0f;
+    float validSampleCount = 0.0f;
+    const float sampleCount = 16.0f;
+
+    [unroll]
+    for (int sampleIndex = 0; sampleIndex < 16; ++sampleIndex)
+    {
+        AccumulateOcclusionSample(i.uv,
+                                  currentDepth,
+                                  currentNormal,
+                                  currentViewPosition,
+                                  tangent,
+                                  bitangent,
+                                  g_sampleRadius,
+                                  (float)sampleIndex,
+                                  sampleCount,
+                                  occlusionCount,
+                                  validSampleCount);
+    }
+
+    return FinalizeAOResult(occlusionCount, validSampleCount);
+}
+
+float4 PS_AO32(VS_OUT i) : COLOR0
+{
+    float currentDepth = 0.0f;
+    float3 currentNormal = float3(0.0f, 0.0f, 0.0f);
+    float3 currentViewPosition = float3(0.0f, 0.0f, 0.0f);
+    float3 tangent = float3(0.0f, 0.0f, 0.0f);
+    float3 bitangent = float3(0.0f, 0.0f, 0.0f);
+    InitializeAOSampling(i, currentDepth, currentNormal, currentViewPosition, tangent, bitangent);
+    if (currentDepth >= g_fFar)
+    {
+        return float4(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+
+    float occlusionCount = 0.0f;
+    float validSampleCount = 0.0f;
+    const float sampleCount = 32.0f;
+
+    [unroll]
+    for (int sampleIndex = 0; sampleIndex < 32; ++sampleIndex)
+    {
+        AccumulateOcclusionSample(i.uv,
+                                  currentDepth,
+                                  currentNormal,
+                                  currentViewPosition,
+                                  tangent,
+                                  bitangent,
+                                  g_sampleRadius,
+                                  (float)sampleIndex,
+                                  sampleCount,
+                                  occlusionCount,
+                                  validSampleCount);
+    }
+
+    return FinalizeAOResult(occlusionCount, validSampleCount);
+}
+
+float4 PS_AO64(VS_OUT i) : COLOR0
+{
+    float currentDepth = 0.0f;
+    float3 currentNormal = float3(0.0f, 0.0f, 0.0f);
+    float3 currentViewPosition = float3(0.0f, 0.0f, 0.0f);
+    float3 tangent = float3(0.0f, 0.0f, 0.0f);
+    float3 bitangent = float3(0.0f, 0.0f, 0.0f);
+    InitializeAOSampling(i, currentDepth, currentNormal, currentViewPosition, tangent, bitangent);
+    if (currentDepth >= g_fFar)
+    {
+        return float4(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+
+    float occlusionCount = 0.0f;
+    float validSampleCount = 0.0f;
+    const float sampleCount = 64.0f;
+
+    [loop]
+    for (int sampleIndex = 0; sampleIndex < 64; ++sampleIndex)
+    {
+        AccumulateOcclusionSample(i.uv,
+                                  currentDepth,
+                                  currentNormal,
+                                  currentViewPosition,
+                                  tangent,
+                                  bitangent,
+                                  g_sampleRadius,
+                                  (float)sampleIndex,
+                                  sampleCount,
+                                  occlusionCount,
+                                  validSampleCount);
+    }
+
+    return FinalizeAOResult(occlusionCount, validSampleCount);
 }
 
 float ComputeDepthAwareBlurWeight(float centerDepth, float sampleDepth)
@@ -462,13 +647,53 @@ float4 PS_Composite(VS_OUT i) : COLOR0
     return float4(IncreaseSaturation(shadedColor, saturationAmount), 1.0f);
 }
 
-technique TechniqueAO_Create
+technique TechniqueAO_Create4
 {
     pass P0
     {
         CullMode = NONE;
         VertexShader = compile vs_3_0 VS_Fullscreen();
-        PixelShader = compile ps_3_0 PS_AO();
+        PixelShader = compile ps_3_0 PS_AO4();
+    }
+}
+
+technique TechniqueAO_Create8
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS_Fullscreen();
+        PixelShader = compile ps_3_0 PS_AO8();
+    }
+}
+
+technique TechniqueAO_Create16
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS_Fullscreen();
+        PixelShader = compile ps_3_0 PS_AO16();
+    }
+}
+
+technique TechniqueAO_Create32
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS_Fullscreen();
+        PixelShader = compile ps_3_0 PS_AO32();
+    }
+}
+
+technique TechniqueAO_Create64
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS_Fullscreen();
+        PixelShader = compile ps_3_0 PS_AO64();
     }
 }
 
