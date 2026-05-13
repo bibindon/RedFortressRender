@@ -91,7 +91,7 @@ GodRayLightPosY,10.0
 GodRayLightPosZ,10.0
 
 CameraNear,0.1
-CameraFar,300.0
+CameraFar,30000.0
 GBufferNear,0.1
 GBufferFar,30.0
 

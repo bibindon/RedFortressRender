@@ -1198,13 +1198,14 @@ void Render::Draw()
     // ワールド座標画像を先に作成
     //---------------------------------------------------------------
     LPDIRECT3DTEXTURE9 pTexTempZ = NULL;
+    LPDIRECT3DTEXTURE9 pTexTempCameraZ = NULL;
     LPDIRECT3DTEXTURE9 pTexTempPos = NULL;
     LPDIRECT3DTEXTURE9 pTexTempNoral = NULL;
     LPDIRECT3DTEXTURE9 pTexTempThickness = NULL;
     if (m_gBufferEnabled)
     {
         EnsureGBufferInitialized();
-        m_GBuffer.Draw(m_meshMixList, m_meshMixSkinAnimList, &pTexTempZ, &pTexTempPos, &pTexTempNoral, &pTexTempThickness);
+        m_GBuffer.Draw(m_meshMixList, m_meshMixSkinAnimList, &pTexTempZ, &pTexTempCameraZ, &pTexTempPos, &pTexTempNoral, &pTexTempThickness);
         MeshMixManager::SetSharedThicknessTexture(pTexTempThickness);
     }
     else
@@ -1263,7 +1264,7 @@ void Render::Draw()
         EnsurePostEffectFogInitialized();
         m_postEffectFog.Draw(pTempTexture,
                              pWorkTexture,
-                             pTexTempZ,
+                             pTexTempCameraZ,
                              pTexTempPos,
                              m_postEffectFogZEnabled,
                              false);
@@ -1273,7 +1274,7 @@ void Render::Draw()
     if (m_gBufferEnabled && m_postEffectFogHeightEnabled)
     {
         EnsurePostEffectHeightFogInitialized();
-        m_postEffectHeightFog.Draw(pTempTexture, pWorkTexture, pTexTempPos);
+        m_postEffectHeightFog.Draw(pTempTexture, pWorkTexture, pTexTempCameraZ, pTexTempPos);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
@@ -1319,7 +1320,7 @@ void Render::Draw()
     if (m_gBufferEnabled && m_postEffectGodRayEnabled)
     {
         EnsurePostEffectGodRayInitialized();
-        m_postEffectGodRay.Draw(pTempTexture, pTexTempZ, pWorkTexture);
+        m_postEffectGodRay.Draw(pTempTexture, pTexTempCameraZ, pWorkTexture);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
@@ -1941,7 +1942,11 @@ void Render::SetCameraClipPlanes(const float nearPlane, const float farPlane)
 {
     Camera::SetClipPlanes(nearPlane, farPlane);
     const float positionRange = GBuffer::ComputePositionRange(nearPlane, farPlane);
+    m_GBuffer.SetFogDepthRange(nearPlane, farPlane);
+    m_postEffectFog.SetDepthDecodeRange(nearPlane, farPlane);
     m_postEffectFog.SetFogDepthRange(nearPlane, farPlane);
+    m_postEffectHeightFog.SetDepthDecodeRange(nearPlane, farPlane);
+    m_postEffectGodRay.SetDepthRange(nearPlane, farPlane);
     m_postEffectHeightFog.SetPositionRange(positionRange);
 }
 
@@ -1962,8 +1967,6 @@ void Render::SetGBufferClipPlanes(const float nearPlane, const float farPlane)
     m_GBuffer.SetDepthRange(nearPlane, farPlane);
     m_postEffectSSGI.SetDepthRange(nearPlane, farPlane);
     m_postEffectSSAO.SetDepthRange(nearPlane, farPlane);
-    m_postEffectFog.SetDepthDecodeRange(nearPlane, farPlane);
-    m_postEffectGodRay.SetDepthRange(nearPlane, farPlane);
     m_postEffectDepthOfField.SetPositionRange(positionRange);
 }
 
@@ -2446,6 +2449,12 @@ void Render::SetPostEffectFog(const bool arg)
 void Render::SetPostEffectFogIntensity(const float intensity)
 {
     m_postEffectFog.SetIntensityZ(intensity);
+}
+
+void Render::SetPostEffectFogColor(const D3DXCOLOR& color)
+{
+    m_postEffectFog.SetFogColor(color);
+    m_postEffectHeightFog.SetFogColor(color);
 }
 
 void Render::SetPostEffectHeightFog(const bool arg)

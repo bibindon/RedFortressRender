@@ -85,8 +85,7 @@ void PostEffectFog::Draw(LPDIRECT3DTEXTURE9 texSource,
     m_d3dEffect->SetFloat("g_FogFar", m_fogFar);
 
     // 霧色（必要なら setter を後で追加してください）
-    D3DXVECTOR4 fogColor(0.72f, 0.78f, 0.86f, 1.0f);
-    m_d3dEffect->SetVector("g_FogColor", &fogColor);
+    m_d3dEffect->SetVector("g_FogColor", &m_fogColor);
 
     // 参照テクスチャ
     m_d3dEffect->SetTexture("g_ZTex", texRenderTargetZ);

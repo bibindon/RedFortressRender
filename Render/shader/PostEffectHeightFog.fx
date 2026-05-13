@@ -22,12 +22,25 @@ sampler2D sPos = sampler_state
     AddressV = CLAMP;
 };
 
+texture g_ZTex;
+sampler2D sZ = sampler_state
+{
+    Texture = <g_ZTex>;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+
 float4 g_FogColor = float4(0.72, 0.78, 0.86, 1.0);
 float g_IntensityHeight = 0.3;
 float g_HeightStart = 0.0;
 float g_HeightMax = -5.0;
 float g_DistanceStart = 0.0;
 float g_DistanceMax = 20.0;
+float g_DepthDecodeNear = 0.1;
+float g_DepthDecodeFar = 30000.0;
 float g_PosRange = 50.0;
 float4 g_CameraPos = float4(0.0, 0.0, 0.0, 1.0);
 
@@ -51,8 +64,9 @@ float HeightFogAmountAt(float2 uv)
     float fogByDistance = 1.0f;
     if (g_DistanceMax > g_DistanceStart)
     {
-        float distanceToCamera = distance(wp, g_CameraPos.xyz);
-        fogByDistance = saturate((distanceToCamera - g_DistanceStart) / (g_DistanceMax - g_DistanceStart));
+        float encodedDepth = tex2D(sZ, uv).r;
+        float decodedDepth = lerp(g_DepthDecodeNear, g_DepthDecodeFar, saturate(encodedDepth));
+        fogByDistance = saturate((decodedDepth - g_DistanceStart) / (g_DistanceMax - g_DistanceStart));
     }
 
     return saturate(fogByHeight * fogByDistance);

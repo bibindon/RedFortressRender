@@ -85,6 +85,8 @@ constexpr int SATURATE_SLIDER_MIN = 0;
 constexpr int SATURATE_SLIDER_MAX = static_cast<int>(SATURATE_MAX / SATURATE_STEP);
 constexpr int FOG_SLIDER_MIN = 0;
 constexpr int FOG_SLIDER_MAX = static_cast<int>(FOG_INTENSITY_MAX / FOG_INTENSITY_STEP);
+constexpr int FOG_COLOR_SLIDER_MIN = 0;
+constexpr int FOG_COLOR_SLIDER_MAX = static_cast<int>(FOG_COLOR_MAX / FOG_COLOR_STEP);
 constexpr int HEIGHT_FOG_INTENSITY_SLIDER_MIN = 0;
 constexpr int HEIGHT_FOG_INTENSITY_SLIDER_MAX = static_cast<int>(HEIGHT_FOG_INTENSITY_MAX / HEIGHT_FOG_INTENSITY_STEP);
 constexpr int HEIGHT_FOG_HEIGHT_SLIDER_MIN = 0;
@@ -158,7 +160,7 @@ constexpr int GODRAY_VIRTUAL_PROXIMITY_SLIDER_MIN = 0;
 constexpr int GODRAY_VIRTUAL_PROXIMITY_SLIDER_MAX = static_cast<int>(GODRAY_VIRTUAL_PROXIMITY_MAX / GODRAY_VIRTUAL_PROXIMITY_STEP);
 constexpr int GODRAY_POS_SLIDER_MIN = static_cast<int>(GODRAY_LIGHT_POS_MIN / GODRAY_LIGHT_POS_STEP);
 constexpr int GODRAY_POS_SLIDER_MAX = static_cast<int>(GODRAY_LIGHT_POS_MAX / GODRAY_LIGHT_POS_STEP);
-constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 1350;
+constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 1394;
 constexpr int SETTINGS_DIALOG_WHEEL_STEP_PX = 36;
 constexpr UINT ID_POPUP_EXPORT_BINARY = 60001;
 constexpr UINT ID_POPUP_REMOVE_MODEL = 60002;
@@ -497,6 +499,9 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS,
         IDC_EDIT_MOTION_BLUR_CAMERA_SAMPLE_COUNT,
         IDC_EDIT_FOG_INTENSITY,
+        IDC_EDIT_FOG_COLOR_R,
+        IDC_EDIT_FOG_COLOR_G,
+        IDC_EDIT_FOG_COLOR_B,
         IDC_EDIT_HEIGHT_FOG_INTENSITY,
         IDC_EDIT_HEIGHT_FOG_START,
         IDC_EDIT_HEIGHT_FOG_MAX,
@@ -635,6 +640,30 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
         {
             g_fogIntensity = floatValue;
             ApplyFogIntensity();
+        }
+        RefreshFogControls(hDlg);
+        return true;
+    case IDC_EDIT_FOG_COLOR_R:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_fogColor.r = floatValue;
+            ApplyFogColor();
+        }
+        RefreshFogControls(hDlg);
+        return true;
+    case IDC_EDIT_FOG_COLOR_G:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_fogColor.g = floatValue;
+            ApplyFogColor();
+        }
+        RefreshFogControls(hDlg);
+        return true;
+    case IDC_EDIT_FOG_COLOR_B:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_fogColor.b = floatValue;
+            ApplyFogColor();
         }
         RefreshFogControls(hDlg);
         return true;
@@ -1703,6 +1732,21 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_INTENSITY, TBM_SETTICFREQ, 10, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_INTENSITY, TBM_SETPAGESIZE, 0, 10);
 
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_COLOR_R, TBM_SETRANGEMIN, FALSE, FOG_COLOR_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_COLOR_R, TBM_SETRANGEMAX, FALSE, FOG_COLOR_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_COLOR_R, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_COLOR_R, TBM_SETPAGESIZE, 0, 2);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_COLOR_G, TBM_SETRANGEMIN, FALSE, FOG_COLOR_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_COLOR_G, TBM_SETRANGEMAX, FALSE, FOG_COLOR_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_COLOR_G, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_COLOR_G, TBM_SETPAGESIZE, 0, 2);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_COLOR_B, TBM_SETRANGEMIN, FALSE, FOG_COLOR_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_COLOR_B, TBM_SETRANGEMAX, FALSE, FOG_COLOR_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_COLOR_B, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FOG_COLOR_B, TBM_SETPAGESIZE, 0, 2);
+
     SendDlgItemMessage(hDlg, IDC_SLIDER_HEIGHT_FOG_INTENSITY, TBM_SETRANGEMIN, FALSE, HEIGHT_FOG_INTENSITY_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_HEIGHT_FOG_INTENSITY, TBM_SETRANGEMAX, FALSE, HEIGHT_FOG_INTENSITY_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_HEIGHT_FOG_INTENSITY, TBM_SETTICFREQ, 10, 0);
@@ -2352,6 +2396,33 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
             g_fogIntensity = SliderValueToFogIntensity(sliderValue);
             ApplyFogIntensity();
+            RefreshFogControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_FOG_COLOR_R))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_fogColor.r = SliderValueToFogColor(sliderValue);
+            ApplyFogColor();
+            RefreshFogControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_FOG_COLOR_G))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_fogColor.g = SliderValueToFogColor(sliderValue);
+            ApplyFogColor();
+            RefreshFogControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_FOG_COLOR_B))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_fogColor.b = SliderValueToFogColor(sliderValue);
+            ApplyFogColor();
             RefreshFogControls(hDlg);
             return TRUE;
         }

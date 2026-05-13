@@ -58,6 +58,12 @@ void GBuffer::SetDepthRange(const float nearPlane, const float farPlane)
     m_positionRange = ComputePositionRange(nearPlane, farPlane);
 }
 
+void GBuffer::SetFogDepthRange(const float nearPlane, const float farPlane)
+{
+    m_fogNearPlane = nearPlane;
+    m_fogFarPlane = farPlane;
+}
+
 bool GBuffer::IsInitialized() const
 {
     return m_isInitialized;
@@ -78,7 +84,18 @@ void GBuffer::CreateRawResource()
                                 D3DPOOL_DEFAULT,
                                 &m_texRenderTargetZ);
     assert(hResult == S_OK);
-    
+
+    // Fog 専用 Z 画像
+    hResult = D3DXCreateTexture(Common::D3DDevice(),
+                                Common::ScreenW(),
+                                Common::ScreenH(),
+                                1,
+                                D3DUSAGE_RENDERTARGET,
+                                D3DFMT_R32F,
+                                D3DPOOL_DEFAULT,
+                                &m_texRenderTargetFogZ);
+    assert(hResult == S_OK);
+
     // World座標
     hResult = D3DXCreateTexture(Common::D3DDevice(),
                                 Common::ScreenW(),
@@ -118,6 +135,7 @@ void GBuffer::CreateRawResource()
 void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
                    const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList,
                    LPDIRECT3DTEXTURE9* Z,
+                   LPDIRECT3DTEXTURE9* CameraZ,
                    LPDIRECT3DTEXTURE9* Pos,
                    LPDIRECT3DTEXTURE9* Normal,
                    LPDIRECT3DTEXTURE9* Thickness)
@@ -236,6 +254,94 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     SAFE_RELEASE(surfaceNorm);
     SAFE_RELEASE(surfaceOld);
 
+    // --- Fog 専用深度パス ---
+    LPDIRECT3DSURFACE9 surfaceFogZ = NULL;
+    m_texRenderTargetFogZ->GetSurfaceLevel(0, &surfaceFogZ);
+
+    LPDIRECT3DSURFACE9 surfaceOldFog = NULL;
+    Common::D3DDevice()->GetRenderTarget(0, &surfaceOldFog);
+    Common::D3DDevice()->SetRenderTarget(0, surfaceFogZ);
+
+    Common::D3DDevice()->Clear(0,
+                               NULL,
+                               D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
+                               D3DCOLOR_RGBA(0, 0, 0, 0),
+                               1.0f,
+                               0);
+    Common::D3DDevice()->BeginScene();
+
+    m_fxGBuffer->SetFloat("g_fNear", m_fogNearPlane);
+    m_fxGBuffer->SetFloat("g_fFar", m_fogFarPlane);
+
+    for (auto& mesh : meshList)
+    {
+        if (!mesh.IsEnabled())
+        {
+            continue;
+        }
+
+        if (!mesh.IsLoaded())
+        {
+            continue;
+        }
+
+        if (!mesh.IsSsaoEnabled())
+        {
+            continue;
+        }
+
+        D3DXMATRIX matWorld;
+        D3DXMatrixIdentity(&matWorld);
+        {
+            D3DXMATRIX m;
+            D3DXMatrixIdentity(&m);
+            D3DXMatrixScaling(&m, mesh.GetScale(), mesh.GetScale(), mesh.GetScale());
+            matWorld *= m;
+            D3DXMatrixRotationYawPitchRoll(&m, mesh.GetRot().y, mesh.GetRot().x, mesh.GetRot().z);
+            matWorld *= m;
+            D3DXVECTOR3 p = mesh.GetPos();
+            D3DXMatrixTranslation(&m, p.x, p.y, p.z);
+            matWorld *= m;
+        }
+
+        m_fxGBuffer->SetMatrix("g_matWorld", &matWorld);
+        m_fxGBuffer->SetTechnique("TechniqueGBuffer");
+        m_fxGBuffer->Begin(NULL, 0);
+        m_fxGBuffer->BeginPass(0);
+
+        LPD3DXMESH d3dMesh = mesh.GetD3DMesh();
+        DWORD subsetCount = 1;
+        if (mesh.GetSubsetCount() > 0)
+        {
+            subsetCount = mesh.GetSubsetCount();
+        }
+        for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
+        {
+            d3dMesh->DrawSubset(subsetIndex);
+        }
+
+        m_fxGBuffer->EndPass();
+        m_fxGBuffer->End();
+    }
+
+    m_fxGBuffer->SetTechnique("TechniqueGBufferSkin");
+    for (auto& mesh : meshMixSkinAnimList)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->RenderToEffect(m_fxGBuffer);
+        }
+    }
+
+    Common::D3DDevice()->EndScene();
+    Common::D3DDevice()->SetRenderTarget(0, surfaceOldFog);
+    SAFE_RELEASE(surfaceFogZ);
+    SAFE_RELEASE(surfaceOldFog);
+
+    // 後続パス向けに GBuffer の深度レンジへ戻す
+    m_fxGBuffer->SetFloat("g_fNear", m_nearPlane);
+    m_fxGBuffer->SetFloat("g_fFar", m_farPlane);
+
     // --- 厚みパス（バックフェイス深度）---
     LPDIRECT3DSURFACE9 surfaceThickness = NULL;
     m_texRenderTargetThickness->GetSurfaceLevel(0, &surfaceThickness);
@@ -316,6 +422,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     SAFE_RELEASE(surfaceOld2);
 
     *Z = m_texRenderTargetZ;
+    *CameraZ = m_texRenderTargetFogZ;
     *Pos = m_texRenderTargetPos;
     *Normal = m_texRenderTargetNormal;
     *Thickness = m_texRenderTargetThickness;
@@ -331,6 +438,7 @@ void GBuffer::Finalize()
 
     SAFE_RELEASE(m_fxGBuffer);
     SAFE_RELEASE(m_texRenderTargetZ);
+    SAFE_RELEASE(m_texRenderTargetFogZ);
     SAFE_RELEASE(m_texRenderTargetPos);
     SAFE_RELEASE(m_texRenderTargetNormal);
     SAFE_RELEASE(m_texRenderTargetThickness);
@@ -347,6 +455,7 @@ void GBuffer::OnDeviceLost()
 
     m_fxGBuffer->OnLostDevice();
     SAFE_RELEASE(m_texRenderTargetZ);
+    SAFE_RELEASE(m_texRenderTargetFogZ);
     SAFE_RELEASE(m_texRenderTargetPos);
     SAFE_RELEASE(m_texRenderTargetNormal);
     SAFE_RELEASE(m_texRenderTargetThickness);

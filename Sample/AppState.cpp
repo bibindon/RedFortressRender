@@ -64,6 +64,7 @@ NSRender::DepthOfFieldMode g_depthOfFieldMode = NSRender::DepthOfFieldMode::Disa
 bool g_bStarBurst = false;
 NSRender::DebugGBufferView g_debugGBufferView = NSRender::DebugGBufferView::None;
 float g_fogIntensity = 1.0f;
+D3DXCOLOR g_fogColor = D3DXCOLOR(0.72f, 0.78f, 0.86f, 1.0f);
 float g_heightFogIntensity = 0.3f;
 float g_heightFogStart = 0.0f;
 float g_heightFogMax = -5.0f;
@@ -1930,6 +1931,7 @@ void ApplyAllSampleSettings()
     // サンプル側の保持値と Render 側の実設定を確実に一致させる。
     ApplySaturateLevel();
     ApplyFogIntensity();
+    ApplyFogColor();
     ApplyHeightFogIntensity();
     ApplyHeightFogStart();
     ApplyHeightFogMax();

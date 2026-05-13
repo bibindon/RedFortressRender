@@ -257,6 +257,15 @@
 #define IDC_EDIT_MOTION_BLUR_CAMERA_SAMPLE_COUNT 1189
 #define IDC_SLIDER_MOTION_BLUR_CAMERA_SAMPLE_COUNT 1190
 #define IDC_CHECK_MOVE_SPEED_BOOST_100X 1269
+#define IDC_STATIC_FOG_COLOR_R_LABEL    1270
+#define IDC_EDIT_FOG_COLOR_R            1271
+#define IDC_SLIDER_FOG_COLOR_R          1272
+#define IDC_STATIC_FOG_COLOR_G_LABEL    1273
+#define IDC_EDIT_FOG_COLOR_G            1274
+#define IDC_SLIDER_FOG_COLOR_G          1275
+#define IDC_STATIC_FOG_COLOR_B_LABEL    1276
+#define IDC_EDIT_FOG_COLOR_B            1277
+#define IDC_SLIDER_FOG_COLOR_B          1278
 
 // Next default values for new objects
 // 
@@ -264,7 +273,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1270
+#define _APS_NEXT_CONTROL_VALUE         1279
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

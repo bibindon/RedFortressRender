@@ -197,6 +197,7 @@ void RefreshPointLightControls(HWND hDlg)
 
 void RefreshFogControls(HWND hDlg)
 {
+    const BOOL fogColorEnabled = (g_bFog || g_bHeightFog) ? TRUE : FALSE;
     wchar_t buffer[32];
     std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_fogIntensity);
     SetDlgItemText(hDlg, IDC_EDIT_FOG_INTENSITY, buffer);
@@ -208,6 +209,40 @@ void RefreshFogControls(HWND hDlg)
     EnableWindow(GetDlgItem(hDlg, IDC_EDIT_FOG_INTENSITY), g_bFog);
     EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_FOG_INTENSITY), g_bFog);
     EnableWindow(GetDlgItem(hDlg, IDC_STATIC_FOG_INTENSITY_LABEL), g_bFog);
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_fogColor.r);
+    SetDlgItemText(hDlg, IDC_EDIT_FOG_COLOR_R, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_FOG_COLOR_R,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(FogColorToSliderValue(g_fogColor.r)));
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_fogColor.g);
+    SetDlgItemText(hDlg, IDC_EDIT_FOG_COLOR_G, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_FOG_COLOR_G,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(FogColorToSliderValue(g_fogColor.g)));
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_fogColor.b);
+    SetDlgItemText(hDlg, IDC_EDIT_FOG_COLOR_B, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_FOG_COLOR_B,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(FogColorToSliderValue(g_fogColor.b)));
+
+    EnableWindow(GetDlgItem(hDlg, IDC_STATIC_FOG_COLOR_R_LABEL), fogColorEnabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_FOG_COLOR_R), fogColorEnabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_FOG_COLOR_R), fogColorEnabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_STATIC_FOG_COLOR_G_LABEL), fogColorEnabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_FOG_COLOR_G), fogColorEnabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_FOG_COLOR_G), fogColorEnabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_STATIC_FOG_COLOR_B_LABEL), fogColorEnabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_FOG_COLOR_B), fogColorEnabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_FOG_COLOR_B), fogColorEnabled);
 }
 
 void RefreshHeightFogControls(HWND hDlg)

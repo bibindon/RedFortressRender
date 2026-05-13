@@ -35,6 +35,7 @@ void PostEffectHeightFog::Initialize()
 
 void PostEffectHeightFog::Draw(LPDIRECT3DTEXTURE9 texSource,
                                LPDIRECT3DTEXTURE9 texTarget,
+                               LPDIRECT3DTEXTURE9 texRenderTargetZ,
                                LPDIRECT3DTEXTURE9 texRenderTargetPos)
 {
     if (!m_isInitialized || m_d3dEffect == nullptr)
@@ -42,7 +43,7 @@ void PostEffectHeightFog::Draw(LPDIRECT3DTEXTURE9 texSource,
         return;
     }
 
-    if (texSource == nullptr || texTarget == nullptr || texRenderTargetPos == nullptr)
+    if (texSource == nullptr || texTarget == nullptr || texRenderTargetZ == nullptr || texRenderTargetPos == nullptr)
     {
         return;
     }
@@ -52,11 +53,14 @@ void PostEffectHeightFog::Draw(LPDIRECT3DTEXTURE9 texSource,
     m_d3dEffect->SetFloat("g_HeightMax", m_maxHeight);
     m_d3dEffect->SetFloat("g_DistanceStart", m_distanceStart);
     m_d3dEffect->SetFloat("g_DistanceMax", m_distanceMax);
+    m_d3dEffect->SetFloat("g_DepthDecodeNear", m_depthDecodeNear);
+    m_d3dEffect->SetFloat("g_DepthDecodeFar", m_depthDecodeFar);
     m_d3dEffect->SetFloat("g_PosRange", m_positionRange);
     const D3DXVECTOR3 eye = Camera::GetEyePos();
     const D3DXVECTOR4 cameraPos(eye.x, eye.y, eye.z, 1.0f);
     m_d3dEffect->SetVector("g_CameraPos", &cameraPos);
     m_d3dEffect->SetVector("g_FogColor", &m_fogColor);
+    m_d3dEffect->SetTexture("g_ZTex", texRenderTargetZ);
     m_d3dEffect->SetTexture("g_PosTex", texRenderTargetPos);
 
     DrawFullscreenQuad(texSource, texTarget, "TechHeightFog");
@@ -101,6 +105,12 @@ void PostEffectHeightFog::SetDistanceMax(const float distanceMax)
 void PostEffectHeightFog::SetFogColor(const D3DXCOLOR& color)
 {
     m_fogColor = D3DXVECTOR4(color.r, color.g, color.b, color.a);
+}
+
+void PostEffectHeightFog::SetDepthDecodeRange(const float nearPlane, const float farPlane)
+{
+    m_depthDecodeNear = nearPlane;
+    m_depthDecodeFar = farPlane;
 }
 
 void PostEffectHeightFog::SetPositionRange(const float positionRange)

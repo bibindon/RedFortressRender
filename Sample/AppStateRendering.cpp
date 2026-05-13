@@ -18,6 +18,11 @@ float ClampFogIntensity(const float intensity)
     return (std::max)(FOG_INTENSITY_MIN, (std::min)(intensity, FOG_INTENSITY_MAX));
 }
 
+float ClampFogColor(const float value)
+{
+    return (std::max)(FOG_COLOR_MIN, (std::min)(value, FOG_COLOR_MAX));
+}
+
 float ClampHeightFogIntensity(const float intensity)
 {
     return (std::max)(HEIGHT_FOG_INTENSITY_MIN, (std::min)(intensity, HEIGHT_FOG_INTENSITY_MAX));
@@ -381,6 +386,15 @@ void ApplyFogIntensity()
 {
     g_fogIntensity = ClampFogIntensity(g_fogIntensity);
     g_Render.SetPostEffectFogIntensity(g_fogIntensity);
+}
+
+void ApplyFogColor()
+{
+    g_fogColor.r = ClampFogColor(g_fogColor.r);
+    g_fogColor.g = ClampFogColor(g_fogColor.g);
+    g_fogColor.b = ClampFogColor(g_fogColor.b);
+    g_fogColor.a = 1.0f;
+    g_Render.SetPostEffectFogColor(g_fogColor);
 }
 
 void ApplyHeightFogIntensity()
@@ -819,6 +833,16 @@ int FogIntensityToSliderValue(const float intensity)
 float SliderValueToFogIntensity(const int sliderValue)
 {
     return ClampFogIntensity(static_cast<float>(sliderValue) * FOG_INTENSITY_STEP);
+}
+
+int FogColorToSliderValue(const float value)
+{
+    return static_cast<int>(std::lround(ClampFogColor(value) / FOG_COLOR_STEP));
+}
+
+float SliderValueToFogColor(const int sliderValue)
+{
+    return ClampFogColor(static_cast<float>(sliderValue) * FOG_COLOR_STEP);
 }
 
 int HeightFogIntensityToSliderValue(const float intensity)

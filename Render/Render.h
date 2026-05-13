@@ -281,6 +281,7 @@ public:
     void SetPostEffectSSGIUseThickness(const bool enabled);
     void SetPostEffectFog(const bool arg);
     void SetPostEffectFogIntensity(const float intensity);
+    void SetPostEffectFogColor(const D3DXCOLOR& color);
     void SetPostEffectHeightFog(const bool arg);
     void SetPostEffectHeightFogIntensity(const float intensity);
     void SetPostEffectHeightFogStart(const float start);
