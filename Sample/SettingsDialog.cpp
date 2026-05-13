@@ -63,6 +63,7 @@ void RefreshCameraClipPlaneControls(HWND hDlg);
 void RefreshGBufferClipPlaneControls(HWND hDlg);
 void RefreshSSAOBlurControls(HWND hDlg);
 void RefreshAnimateLight(HWND hDlg);
+void RefreshMoveSpeedBoost100x(HWND hDlg);
 void RefreshRemoteDesktop(HWND hDlg);
 void RefreshZShadowTexSizeControls(HWND hDlg);
 void RefreshSSAOTexSizeControls(HWND hDlg);
@@ -1627,6 +1628,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshPointLightListView(hDlg);
     RefreshPointLightControls(hDlg);
     RefreshAnimateLight(hDlg);
+    RefreshMoveSpeedBoost100x(hDlg);
     RefreshRemoteDesktop(hDlg);
     RefreshZShadowTexSizeControls(hDlg);
     RefreshDepthBufferShadow(hDlg);
@@ -2764,6 +2766,13 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         {
             g_bAnimateLight = (IsDlgButtonChecked(hDlg, IDC_CHECK_ANIMATE_LIGHT) == BST_CHECKED);
             RefreshAnimateLight(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_MOVE_SPEED_BOOST_100X)
+        {
+            g_bMoveSpeedBoost100x = (IsDlgButtonChecked(hDlg, IDC_CHECK_MOVE_SPEED_BOOST_100X) == BST_CHECKED);
+            RefreshMoveSpeedBoost100x(hDlg);
             return TRUE;
         }
 

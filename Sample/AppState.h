@@ -203,6 +203,7 @@ extern std::wstring g_selectedSkinAnimMeshPath;
 extern std::wstring g_selectedMixSkinAnimMeshPath;
 extern std::wstring g_selectedMaskedGaussianMaskPath;
 extern bool g_bAnimateLight;
+extern bool g_bMoveSpeedBoost100x;
 extern bool g_bRemoteDesktop;
 extern bool g_bGaussianFilter;
 extern bool g_bMaskedGaussianFilter;

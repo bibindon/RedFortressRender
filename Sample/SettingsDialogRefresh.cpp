@@ -738,6 +738,16 @@ void RefreshAnimateLight(HWND hDlg)
     CheckDlgButton(hDlg, IDC_CHECK_ANIMATE_LIGHT, checkState);
 }
 
+void RefreshMoveSpeedBoost100x(HWND hDlg)
+{
+    UINT checkState = BST_UNCHECKED;
+    if (g_bMoveSpeedBoost100x)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_MOVE_SPEED_BOOST_100X, checkState);
+}
+
 void RefreshRemoteDesktop(HWND hDlg)
 {
     UINT checkState = BST_UNCHECKED;

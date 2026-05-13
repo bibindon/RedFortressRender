@@ -41,6 +41,7 @@ std::wstring g_selectedSkinAnimMeshPath;
 std::wstring g_selectedMixSkinAnimMeshPath;
 std::wstring g_selectedMaskedGaussianMaskPath;
 bool g_bAnimateLight = false;
+bool g_bMoveSpeedBoost100x = false;
 bool g_bRemoteDesktop = true;
 bool g_bGaussianFilter = false;
 bool g_bMaskedGaussianFilter = false;
@@ -947,6 +948,12 @@ void UpdateCameraMoveByKeyboard()
     {
         speed = (0.2f * 3.0f / 3.0f);
     }
+
+    if (g_bMoveSpeedBoost100x)
+    {
+        speed *= 100.0f;
+    }
+
     g_Render.MoveCamera(move * speed);
 }
 
@@ -2015,6 +2022,7 @@ void DrawSampleOverlay()
     std::wstring text;
     text += L"WASD : Camera move\n";
     text += L"Q/E : Camera up/down\n";
+    text += L"Move x100 : Settings dialog checkbox\n";
     text += L"Arrow keys : Camera rotate\n";
     text += L"Esc : Mouse look ON/OFF\n";
     text += L"F1 : Settings dialog\n";
