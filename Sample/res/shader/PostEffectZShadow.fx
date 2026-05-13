@@ -127,7 +127,7 @@ float FinalizeShadowAmount(float shadowSum, float sampleCount)
         return 0.0f;
     }
 
-    return shadowSum / sampleCount;
+    return shadowSum / max(sampleCount, 1.0f);
 }
 
 float SampleShadowAmount1(float2 uvLightView, float fDepthLightView)
