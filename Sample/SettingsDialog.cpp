@@ -48,6 +48,7 @@ void RefreshSpecularEdgeControls(HWND hDlg);
 void RefreshSSSControls(HWND hDlg);
 void RefreshSSAO(HWND hDlg);
 void RefreshSSGI(HWND hDlg);
+void RefreshSSGISampleRadiusControls(HWND hDlg);
 void RefreshSSGISampleCountControls(HWND hDlg);
 void RefreshSSGIBlurControls(HWND hDlg);
 void RefreshSSGIBlurKernelSizeControls(HWND hDlg);
@@ -127,6 +128,8 @@ constexpr int SSAO_SHADOW_SATURATION_SLIDER_MAX =
     static_cast<int>(SSAO_SHADOW_SATURATION_BOOST_MAX / SSAO_SHADOW_SATURATION_BOOST_STEP);
 constexpr int SSAO_SAMPLE_RADIUS_SLIDER_MIN = 0;
 constexpr int SSAO_SAMPLE_RADIUS_SLIDER_MAX = static_cast<int>((SSAO_SAMPLE_RADIUS_MAX - SSAO_SAMPLE_RADIUS_MIN) / SSAO_SAMPLE_RADIUS_STEP);
+constexpr int SSGI_SAMPLE_RADIUS_SLIDER_MIN = 0;
+constexpr int SSGI_SAMPLE_RADIUS_SLIDER_MAX = static_cast<int>((SSGI_SAMPLE_RADIUS_MAX - SSGI_SAMPLE_RADIUS_MIN) / SSGI_SAMPLE_RADIUS_STEP);
 constexpr int BLOOM_THRESHOLD_SLIDER_MIN = 0;
 constexpr int BLOOM_THRESHOLD_SLIDER_MAX = static_cast<int>(BLOOM_THRESHOLD_MAX / BLOOM_THRESHOLD_STEP);
 constexpr int DOF_FOCAL_DISTANCE_SLIDER_MIN = 0;
@@ -163,7 +166,7 @@ constexpr int GODRAY_VIRTUAL_PROXIMITY_SLIDER_MIN = 0;
 constexpr int GODRAY_VIRTUAL_PROXIMITY_SLIDER_MAX = static_cast<int>(GODRAY_VIRTUAL_PROXIMITY_MAX / GODRAY_VIRTUAL_PROXIMITY_STEP);
 constexpr int GODRAY_POS_SLIDER_MIN = static_cast<int>(GODRAY_LIGHT_POS_MIN / GODRAY_LIGHT_POS_STEP);
 constexpr int GODRAY_POS_SLIDER_MAX = static_cast<int>(GODRAY_LIGHT_POS_MAX / GODRAY_LIGHT_POS_STEP);
-constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 1426;
+constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 1438;
 constexpr int SETTINGS_DIALOG_WHEEL_STEP_PX = 36;
 constexpr UINT ID_POPUP_EXPORT_BINARY = 60001;
 constexpr UINT ID_POPUP_REMOVE_MODEL = 60002;
@@ -902,6 +905,14 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
             ApplySSGIIndirectLightStrength();
         }
         RefreshSSGIIndirectLightControls(hDlg);
+        return true;
+    case IDC_EDIT_SSGI_SAMPLE_RADIUS:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_ssgiSampleRadius = floatValue;
+            ApplySSGISampleRadius();
+        }
+        RefreshSSGISampleRadiusControls(hDlg);
         return true;
     case IDC_EDIT_SSGI_INDIRECT_LIGHT_MAX:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
@@ -1675,6 +1686,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshDepthBufferShadow(hDlg);
     RefreshSSAO(hDlg);
     RefreshSSGI(hDlg);
+    RefreshSSGISampleRadiusControls(hDlg);
     RefreshSSGISampleCountControls(hDlg);
     RefreshSSGIBlurControls(hDlg);
     RefreshSSGIBlurKernelSizeControls(hDlg);
@@ -1894,6 +1906,11 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS, TBM_SETRANGEMAX, FALSE, SSAO_SAMPLE_RADIUS_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS, TBM_SETTICFREQ, 10, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS, TBM_SETPAGESIZE, 0, 10);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSGI_SAMPLE_RADIUS, TBM_SETRANGEMIN, FALSE, SSGI_SAMPLE_RADIUS_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSGI_SAMPLE_RADIUS, TBM_SETRANGEMAX, FALSE, SSGI_SAMPLE_RADIUS_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSGI_SAMPLE_RADIUS, TBM_SETTICFREQ, 10, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_SSGI_SAMPLE_RADIUS, TBM_SETPAGESIZE, 0, 10);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETRANGEMIN, FALSE, BLOOM_THRESHOLD_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETRANGEMAX, FALSE, BLOOM_THRESHOLD_SLIDER_MAX);
@@ -2316,6 +2333,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_fontExGaussianSampleSize = SliderValueToFontExGaussianSampleSize(sliderValue);
             ApplyFontExGaussianSampleSize();
             RefreshFontExGaussianControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_SSGI_SAMPLE_RADIUS))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_ssgiSampleRadius = SliderValueToSSGISampleRadius(sliderValue);
+            ApplySSGISampleRadius();
+            RefreshSSGISampleRadiusControls(hDlg);
             return TRUE;
         }
 
@@ -3026,6 +3052,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_Render.SetPostEffectSSGI(g_bSSGI);
             RefreshSSGI(hDlg);
             RefreshSSGIBlurControls(hDlg);
+            RefreshSSGISampleRadiusControls(hDlg);
             RefreshSSGISampleCountControls(hDlg);
             RefreshSSGIBlurKernelSizeControls(hDlg);
             RefreshSSGIIndirectLightControls(hDlg);

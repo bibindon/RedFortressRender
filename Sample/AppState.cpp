@@ -85,6 +85,7 @@ float g_ssaoSampleRadius = 4.0f;
 int g_ssaoBlurKernelSize = 21;
 int g_ssgiSampleCount = 16;
 int g_ssgiBlurKernelSize = 21;
+float g_ssgiSampleRadius = 1.0f;
 float g_ssgiIndirectLightStrength = 1.0f;
 float g_ssgiIndirectLightMaxContribution = 1.0f;
 float g_cameraNearPlane = 0.1f;
@@ -1705,6 +1706,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_ssgiBlurKernelSize = std::stoi(value);
             }
+            else if (key == L"SSGISampleRadius")
+            {
+                g_ssgiSampleRadius = std::stof(value);
+            }
             else if (key == L"SSGIIndirectLightStrength")
             {
                 g_ssgiIndirectLightStrength = std::stof(value);
@@ -1962,6 +1967,7 @@ void ApplyAllSampleSettings()
     ApplySSAOCompositeGaussian3x3();
     ApplySSAOBlur();
     ApplySSGISampleCount();
+    ApplySSGISampleRadius();
     ApplySSGIBlurKernelSize();
     ApplySSGIBlur();
     ApplySSGIIndirectLightStrength();

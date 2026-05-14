@@ -266,6 +266,11 @@ int NormalizeFontExGaussianSampleSizeLocal(const int sampleSize)
     return (std::max)(FONTEX_GAUSSIAN_SAMPLE_MIN, (std::min)(sampleSize, FONTEX_GAUSSIAN_SAMPLE_MAX));
 }
 
+float NormalizeSSGISampleRadiusLocal(const float sampleRadius)
+{
+    return (std::max)(SSGI_SAMPLE_RADIUS_MIN, (std::min)(sampleRadius, SSGI_SAMPLE_RADIUS_MAX));
+}
+
 int NormalizeFXAAQualityLocal(const int quality)
 {
     return (std::max)(FXAA_QUALITY_MIN, (std::min)(quality, FXAA_QUALITY_MAX));
@@ -563,6 +568,12 @@ void ApplySSGISampleCount()
 {
     g_ssgiSampleCount = ClampSSAOSampleCount(g_ssgiSampleCount);
     g_Render.SetPostEffectSSGISampleCount(g_ssgiSampleCount);
+}
+
+void ApplySSGISampleRadius()
+{
+    g_ssgiSampleRadius = NormalizeSSGISampleRadiusLocal(g_ssgiSampleRadius);
+    g_Render.SetPostEffectSSGISampleRadius(g_ssgiSampleRadius);
 }
 
 void ApplySSGIBlurKernelSize()
@@ -1130,6 +1141,16 @@ int ComboIndexToSSGISampleCount(const int comboIndex)
     }
 
     return 64;
+}
+
+int SSGISampleRadiusToSliderValue(const float sampleRadius)
+{
+    return static_cast<int>(std::lround((NormalizeSSGISampleRadiusLocal(sampleRadius) - SSGI_SAMPLE_RADIUS_MIN) / SSGI_SAMPLE_RADIUS_STEP));
+}
+
+float SliderValueToSSGISampleRadius(const int sliderValue)
+{
+    return NormalizeSSGISampleRadiusLocal(SSGI_SAMPLE_RADIUS_MIN + static_cast<float>(sliderValue) * SSGI_SAMPLE_RADIUS_STEP);
 }
 
 int SSGIBlurKernelSizeToComboIndex(const int kernelSize)

@@ -653,6 +653,22 @@ void RefreshSSAOSampleRadiusControls(HWND hDlg)
     EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SSAO_SAMPLE_RADIUS), enabled);
 }
 
+void RefreshSSGISampleRadiusControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_ssgiSampleRadius);
+    SetDlgItemText(hDlg, IDC_EDIT_SSGI_SAMPLE_RADIUS, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_SSGI_SAMPLE_RADIUS,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(SSGISampleRadiusToSliderValue(g_ssgiSampleRadius)));
+    const BOOL enabled = g_bSSGI;
+    EnableWindow(GetDlgItem(hDlg, IDC_STATIC_SSGI_SAMPLE_RADIUS_LABEL), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SSGI_SAMPLE_RADIUS), enabled);
+    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SSGI_SAMPLE_RADIUS), enabled);
+}
+
 void RefreshSSAOBlurKernelSizeControls(HWND hDlg)
 {
     HWND combo = GetDlgItem(hDlg, IDC_COMBO_SSAO_BLUR_KERNEL_SIZE);
