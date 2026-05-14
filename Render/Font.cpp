@@ -1,4 +1,4 @@
-#include "Font.h"
+Ôªø#include "Font.h"
 
 namespace NSRender
 {
@@ -15,7 +15,7 @@ void Font::Initialize(const std::wstring& fontName,
 
     CreateResource();
 
-    // ÉfÉoÉCÉXÉçÉXÉgÇä«óùÇ∑ÇÈã@î\Ç…Ç±ÇÃÉäÉ\Å[ÉXÇìoò^
+    // „Éá„Éê„Ç§„Çπ„É≠„Çπ„Éà„ÇíÁÆ°ÁêÜ„Åô„ÇãÊ©üËÉΩ„Å´„Åì„ÅÆ„É™„ÇΩ„Éº„Çπ„ÇíÁôªÈå≤
     Common::AddDeviceLostResource(this);
 }
 
@@ -23,9 +23,9 @@ void Font::CreateResource()
 {
     HRESULT hResult = E_FAIL;
 
-    // ÉÇÉjÉ^Å[ÇÃâëúìxÇ…çáÇÌÇπÇƒÉtÉHÉìÉgÉTÉCÉYÇí≤êﬂÇ∑ÇÈÅB
-    // 1920x1080ÇæÇ¡ÇΩÇÁ1600x900ÇÃ1.2î{Ç»ÇÃÇ≈1.2î{ÇÃÉtÉHÉìÉgÉTÉCÉYÇéwíËÇ∑ÇÈ
-    // 1920x900ÇæÇ¡ÇΩÇÁÅAâ°ÇÕ1.2î{ÅAècÇÕ1î{Ç≈Ç†ÇÈÅBÇ±ÇÃèÍçáÇÕè¨Ç≥Ç¢ï˚ÇÃ1î{ÇçÃópÇ∑ÇÈ
+    // „É¢„Éã„Çø„Éº„ÅÆËß£ÂÉèÂ∫¶„Å´Âêà„Çè„Åõ„Å¶„Éï„Ç©„É≥„Éà„Çµ„Ç§„Ç∫„ÇíË™øÁØÄ„Åô„Çã„ÄÇ
+    // 1920x1080„Å†„Å£„Åü„Çâ1600x900„ÅÆ1.2ÂÄç„Å™„ÅÆ„Åß1.2ÂÄç„ÅÆ„Éï„Ç©„É≥„Éà„Çµ„Ç§„Ç∫„ÇíÊåáÂÆö„Åô„Çã
+    // 1920x900„Å†„Å£„Åü„Çâ„ÄÅÊ®™„ÅØ1.2ÂÄç„ÄÅÁ∏¶„ÅØ1ÂÄç„Åß„ÅÇ„Çã„ÄÇ„Åì„ÅÆÂ†¥Âêà„ÅØÂ∞è„Åï„ÅÑÊñπ„ÅÆ1ÂÄç„ÇíÊé°Áî®„Åô„Çã
     float scaleW = (float)Common::ScreenW() / Common::BASE_W;
     float scaleH = (float)Common::ScreenH() / Common::BASE_H;
     float scaleMin = (std::min)(scaleW, scaleH);
@@ -35,7 +35,7 @@ void Font::CreateResource()
     D3DXFONT_DESC desc { };
     desc.Height             = m_fontSizeScaled;
 
-    // ïùÇÕïKÇ∏0(é©ìÆ)ÇéwíËÇ∑ÇÈ
+    // ÂπÖ„ÅØÂøÖ„Åö0(Ëá™Âãï)„ÇíÊåáÂÆö„Åô„Çã
     desc.Width              = 0;
 
     desc.Weight             = FW_HEAVY;
@@ -154,12 +154,12 @@ void Font::Draw()
     {
         if (textInfo.m_bCenter)
         {
-            // DrawTextÇÃñﬂÇËílÇÕï∂éöêîÇ≈Ç†ÇÈÅB
-            // ÇªÇÃÇΩÇﬂÅAhResultÇÃíÜêgÇ™êÆêîÇ≈Ç‡ÉGÉâÅ[Ç™ãNÇ´ÇƒÇ¢ÇÈÇÌÇØÇ≈ÇÕÇ»Ç¢ÅB
+            // DrawText„ÅÆÊàª„ÇäÂÄ§„ÅØÊñáÂ≠óÊï∞„Åß„ÅÇ„Çã„ÄÇ
+            // „Åù„ÅÆ„Åü„ÇÅ„ÄÅhResult„ÅÆ‰∏≠Ë∫´„ÅåÊï¥Êï∞„Åß„ÇÇ„Ç®„É©„Éº„ÅåËµ∑„Åç„Å¶„ÅÑ„Çã„Çè„Åë„Åß„ÅØ„Å™„ÅÑ„ÄÇ
             HRESULT hResult = m_pFont->DrawText(NULL,
                                                 textInfo.m_text.c_str(),
 
-                                                // -1 = í∑Ç≥é©ìÆ
+                                                // -1 = Èï∑„ÅïËá™Âãï
                                                 -1,
 
                                                 &textInfo.m_rect,
@@ -170,12 +170,12 @@ void Font::Draw()
         }
         else
         {
-            // DrawTextÇÃñﬂÇËílÇÕï∂éöêîÇ≈Ç†ÇÈÅB
-            // ÇªÇÃÇΩÇﬂÅAhResultÇÃíÜêgÇ™êÆêîÇ≈Ç‡ÉGÉâÅ[Ç™ãNÇ´ÇƒÇ¢ÇÈÇÌÇØÇ≈ÇÕÇ»Ç¢ÅB
+            // DrawText„ÅÆÊàª„ÇäÂÄ§„ÅØÊñáÂ≠óÊï∞„Åß„ÅÇ„Çã„ÄÇ
+            // „Åù„ÅÆ„Åü„ÇÅ„ÄÅhResult„ÅÆ‰∏≠Ë∫´„ÅåÊï¥Êï∞„Åß„ÇÇ„Ç®„É©„Éº„ÅåËµ∑„Åç„Å¶„ÅÑ„Çã„Çè„Åë„Åß„ÅØ„Å™„ÅÑ„ÄÇ
             HRESULT hResult = m_pFont->DrawText(NULL,
                                                 textInfo.m_text.c_str(),
 
-                                                // -1 = í∑Ç≥é©ìÆ
+                                                // -1 = Èï∑„ÅïËá™Âãï
                                                 -1,
 
                                                 &textInfo.m_rect,
