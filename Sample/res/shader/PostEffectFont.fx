@@ -13,16 +13,10 @@ sampler SrcSampler = sampler_state
 
 #define SAMPLE_SIZE_MAX 21
 
-float GaussianWeight(float distance, float sigma)
-{
-    return exp(-(distance * distance) / (2.0f * sigma * sigma));
-}
-
 float4 GaussianBlur(float2 texCoord, float2 stepDir) : COLOR
 {
     const int radius = SAMPLE_SIZE_MAX / 2;
     const int activeRadius = min(radius, g_sampleSize / 2);
-    const float sigma = max(0.5f, g_sampleSize * 0.35f);
 
     float4 color = tex2D(SrcSampler, texCoord);
     float weightSum = 1.0f;
@@ -35,11 +29,10 @@ float4 GaussianBlur(float2 texCoord, float2 stepDir) : COLOR
             break;
         }
 
-        const float weight = GaussianWeight((float)i, sigma);
         const float2 offset = stepDir * i;
-        color += tex2D(SrcSampler, texCoord + offset) * weight;
-        color += tex2D(SrcSampler, texCoord - offset) * weight;
-        weightSum += weight * 2.0f;
+        color += tex2D(SrcSampler, texCoord + offset);
+        color += tex2D(SrcSampler, texCoord - offset);
+        weightSum += 2.0f;
     }
 
     return color / weightSum;
@@ -58,7 +51,8 @@ float4 GaussianBlurVPS(float2 texCoord : TEXCOORD0) : COLOR
 float4 GaussianBlurVCompositePS(float2 texCoord : TEXCOORD0) : COLOR
 {
     const float4 blurred = GaussianBlur(texCoord, float2(0.0f, g_TexelSize.y));
-    return float4(0.5f, 0.5f, 0.5f, blurred.a);
+    const float blurColor = 0.5f;
+    return float4(blurColor, blurColor, 1.f, blurred.a);
 }
 
 technique GaussianH
