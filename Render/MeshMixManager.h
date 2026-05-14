@@ -97,10 +97,12 @@ private:
 
     std::atomic<bool> m_bLoaded { false };
     bool m_enabled = true;
+    bool m_autoPointLightAdded = false;
     bool m_deviceResourceRegistered = false;
     std::thread m_loadThread;
 
     stMeshParam m_param;
+    std::wstring m_autoPointLightOwnerTag;
 
     void ModifyMeshForNormalMapping(LPD3DXMESH& pMesh);
     void DrawAllSubsets(LPD3DXEFFECT sharedEffect, UINT passIndex);

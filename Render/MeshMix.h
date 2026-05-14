@@ -132,6 +132,9 @@ struct stMeshParam
     // 発光の強さ
     float emitIntensity = 1.0f;
 
+    // 発光色
+    DWORD emitColor = 0x00ffffff;
+
     // 波
     //
     // 海面のような波

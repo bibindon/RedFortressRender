@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <deque>
+#include <string>
 
 namespace NSRender
 {
@@ -29,6 +30,7 @@ struct PointLightInfo
     float m_squareWidth = 10.0f;
     float m_squareHeight = 10.0f;
     D3DXVECTOR3 m_rotation = D3DXVECTOR3(0.f, 0.f, 0.f);
+    std::wstring m_ownerTag;
 };
 
 class Light
@@ -61,8 +63,10 @@ public:
                               const float lineLength = 12.0f,
                               const float squareWidth = 10.0f,
                               const float squareHeight = 10.0f,
-                              const D3DXVECTOR3& rotation = D3DXVECTOR3(0.f, 0.f, 0.f));
+                              const D3DXVECTOR3& rotation = D3DXVECTOR3(0.f, 0.f, 0.f),
+                              const std::wstring& ownerTag = L"");
     static bool RemovePointLight(size_t index);
+    static void RemovePointLightsByOwnerTag(const std::wstring& ownerTag);
 
     static std::deque<PointLightInfo> GetPointLightList();
 

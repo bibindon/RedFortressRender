@@ -25,9 +25,60 @@ struct CachedTexture
 
 using TextureCache = std::unordered_map<std::wstring, CachedTexture>;
 
+std::wstring TrimString(const std::wstring& text);
+
 float PointLightShapeToShaderValue(const PointLightShape shape)
 {
     return static_cast<float>(static_cast<int>(shape));
+}
+
+DWORD PackRgbToColor(const int r, const int g, const int b)
+{
+    return (static_cast<DWORD>(r) << 16)
+         | (static_cast<DWORD>(g) << 8)
+         |  static_cast<DWORD>(b);
+}
+
+bool TryParseCsvRgbColor(const std::wstring& valueText, DWORD& outColor)
+{
+    std::wstringstream ss(valueText);
+    std::wstring token;
+    int rgb[3] = { 0, 0, 0 };
+    int idx = 0;
+    while (std::getline(ss, token, L',') && idx < 3)
+    {
+        try
+        {
+            rgb[idx++] = std::stoi(TrimString(token));
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
+    if (idx != 3)
+    {
+        return false;
+    }
+
+    outColor = PackRgbToColor(rgb[0], rgb[1], rgb[2]);
+    return true;
+}
+
+D3DXCOLOR ConvertRgbDwordToColor(const DWORD color)
+{
+    return D3DXCOLOR(static_cast<float>((color >> 16) & 0xff) / 255.0f,
+                     static_cast<float>((color >> 8) & 0xff) / 255.0f,
+                     static_cast<float>(color & 0xff) / 255.0f,
+                     1.0f);
+}
+
+std::wstring BuildAutoPointLightOwnerTag(const void* owner)
+{
+    std::wstringstream ss;
+    ss << L"emit_mesh_" << owner;
+    return ss.str();
 }
 
 TextureCache& GetTextureCache()
@@ -384,6 +435,8 @@ struct stCsvParam
     eMeshType meshType = eMeshType::None;
     bool emitIntensityDefined = false;
     float emitIntensity = 1.0f;
+    bool emitColorDefined = false;
+    DWORD emitColor = 0x00ffffff;
     bool smoothDefined = false;
     bool smooth = false;
     bool sssDefined = false;
@@ -484,6 +537,15 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
             }
             catch (...) {}
         }
+        else if (key == L"emitcolor")
+        {
+            DWORD color = 0x00ffffff;
+            if (TryParseCsvRgbColor(line.substr(commaPos + 1), color))
+            {
+                result.emitColorDefined = true;
+                result.emitColor = color;
+            }
+        }
         else if (key == L"sss")
         {
             result.sssDefined = true;
@@ -500,21 +562,11 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
         }
         else if (key == L"ssscolor")
         {
-            const std::wstring rest = line.substr(commaPos + 1);
-            std::wstringstream ss(rest);
-            std::wstring token;
-            int rgb[3] = { 0, 0, 0 };
-            int idx = 0;
-            while (std::getline(ss, token, L',') && idx < 3)
-            {
-                try { rgb[idx++] = std::stoi(token); } catch (...) {}
-            }
-            if (idx == 3)
+            DWORD color = 0x80ff80;
+            if (TryParseCsvRgbColor(line.substr(commaPos + 1), color))
             {
                 result.sssColorDefined = true;
-                result.sssColor = (static_cast<DWORD>(rgb[0]) << 16)
-                                | (static_cast<DWORD>(rgb[1]) << 8)
-                                |  static_cast<DWORD>(rgb[2]);
+                result.sssColor = color;
             }
         }
         else if (key == L"sway")
@@ -654,14 +706,17 @@ MeshMixManager& MeshMixManager::operator=(MeshMixManager&& other) noexcept
     m_scale = other.m_scale;
     m_bLoaded = other.m_bLoaded.load();
     m_enabled = other.m_enabled;
+    m_autoPointLightAdded = other.m_autoPointLightAdded;
     m_deviceResourceRegistered = other.m_deviceResourceRegistered;
     m_param = other.m_param;
+    m_autoPointLightOwnerTag = std::move(other.m_autoPointLightOwnerTag);
     m_loadThread = std::move(other.m_loadThread);
 
     other.m_materialCount = 0;
     other.m_subsetCount = 0;
     other.m_bLoaded = false;
     other.m_enabled = false;
+    other.m_autoPointLightAdded = false;
     other.m_deviceResourceRegistered = false;
 
     return *this;
@@ -761,6 +816,11 @@ void MeshMixManager::InitializeInternal()
     if (csvParam.emitIntensityDefined)
     {
         m_param.emitIntensity = csvParam.emitIntensity;
+    }
+
+    if (csvParam.emitColorDefined)
+    {
+        m_param.emitColor = csvParam.emitColor;
     }
 
     if (csvParam.smoothDefined)
@@ -975,6 +1035,24 @@ void MeshMixManager::InitializeInternal()
         m_deviceResourceRegistered = true;
     }
 
+    if (m_param.emit && !m_autoPointLightAdded)
+    {
+        if (m_autoPointLightOwnerTag.empty())
+        {
+            m_autoPointLightOwnerTag = BuildAutoPointLightOwnerTag(this);
+        }
+        Light::AddPointLight(m_pos,
+                             ConvertRgbDwordToColor(m_param.emitColor),
+                             m_param.emitIntensity,
+                             PointLightShape::Point,
+                             12.0f,
+                             10.0f,
+                             10.0f,
+                             D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                             m_autoPointLightOwnerTag);
+        m_autoPointLightAdded = true;
+    }
+
     m_bLoaded = true;
 }
 
@@ -985,12 +1063,18 @@ void MeshMixManager::Finalize()
         m_loadThread.join();
     }
 
-    if (!m_bLoaded && m_D3DMesh == nullptr && m_texCubeMap == nullptr && m_texNormalMap == nullptr && m_texHeightMap == nullptr)
+    if (!m_bLoaded && m_D3DMesh == nullptr && m_texCubeMap == nullptr && m_texNormalMap == nullptr && m_texHeightMap == nullptr &&
+        !m_autoPointLightAdded)
     {
         return;
     }
 
     ReleaseOwnedResources();
+    if (m_autoPointLightAdded)
+    {
+        Light::RemovePointLightsByOwnerTag(m_autoPointLightOwnerTag);
+        m_autoPointLightAdded = false;
+    }
     ReleaseSharedEffectRef();
     if (m_deviceResourceRegistered)
     {
@@ -1084,6 +1168,20 @@ void MeshMixManager::ModifyMeshForNormalMapping(LPD3DXMESH& pMesh)
 void MeshMixManager::SetPos(const D3DXVECTOR3& pos)
 {
     m_pos = pos;
+
+    if (m_autoPointLightAdded)
+    {
+        Light::RemovePointLightsByOwnerTag(m_autoPointLightOwnerTag);
+        Light::AddPointLight(m_pos,
+                             ConvertRgbDwordToColor(m_param.emitColor),
+                             m_param.emitIntensity,
+                             PointLightShape::Point,
+                             12.0f,
+                             10.0f,
+                             10.0f,
+                             D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                             m_autoPointLightOwnerTag);
+    }
 }
 
 void MeshMixManager::SetSaturateShadow(const bool enabled)
@@ -1349,6 +1447,13 @@ void MeshMixManager::Render()
     assert(hResult == S_OK);
 
     hResult = sharedEffect->SetFloat("g_emitIntensity", m_param.emitIntensity);
+    assert(hResult == S_OK);
+
+    D3DXVECTOR4 emitColor(static_cast<float>((m_param.emitColor >> 16) & 0xff) / 255.0f,
+                          static_cast<float>((m_param.emitColor >> 8) & 0xff) / 255.0f,
+                          static_cast<float>(m_param.emitColor & 0xff) / 255.0f,
+                          1.0f);
+    hResult = sharedEffect->SetVector("g_emitColor", &emitColor);
     assert(hResult == S_OK);
 
     static float f = 0.f;

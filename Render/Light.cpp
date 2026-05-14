@@ -70,7 +70,8 @@ void Light::AddPointLight(const D3DXVECTOR3& pos,
                           const float lineLength,
                           const float squareWidth,
                           const float squareHeight,
-                          const D3DXVECTOR3& rotation)
+                          const D3DXVECTOR3& rotation,
+                          const std::wstring& ownerTag)
 {
     PointLightInfo pointLightInfo;
 
@@ -82,6 +83,7 @@ void Light::AddPointLight(const D3DXVECTOR3& pos,
     pointLightInfo.m_squareWidth = squareWidth;
     pointLightInfo.m_squareHeight = squareHeight;
     pointLightInfo.m_rotation = rotation;
+    pointLightInfo.m_ownerTag = ownerTag;
 
     m_pointLightList.push_back(pointLightInfo);
 
@@ -100,6 +102,26 @@ bool Light::RemovePointLight(const size_t index)
 
     m_pointLightList.erase(m_pointLightList.begin() + static_cast<std::ptrdiff_t>(index));
     return true;
+}
+
+void Light::RemovePointLightsByOwnerTag(const std::wstring& ownerTag)
+{
+    if (ownerTag.empty())
+    {
+        return;
+    }
+
+    for (auto it = m_pointLightList.begin(); it != m_pointLightList.end();)
+    {
+        if (it->m_ownerTag == ownerTag)
+        {
+            it = m_pointLightList.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
 }
 
 std::deque<PointLightInfo> Light::GetPointLightList()
