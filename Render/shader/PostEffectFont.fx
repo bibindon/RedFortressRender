@@ -55,6 +55,12 @@ float4 GaussianBlurVPS(float2 texCoord : TEXCOORD0) : COLOR
     return GaussianBlur(texCoord, float2(0.0f, g_TexelSize.y));
 }
 
+float4 GaussianBlurVCompositePS(float2 texCoord : TEXCOORD0) : COLOR
+{
+    const float4 blurred = GaussianBlur(texCoord, float2(0.0f, g_TexelSize.y));
+    return float4(0.5f, 0.5f, 0.5f, blurred.a);
+}
+
 technique GaussianH
 {
     pass P0
@@ -68,5 +74,13 @@ technique GaussianV
     pass P0
     {
         PixelShader = compile ps_3_0 GaussianBlurVPS();
+    }
+}
+
+technique GaussianVComposite
+{
+    pass P0
+    {
+        PixelShader = compile ps_3_0 GaussianBlurVCompositePS();
     }
 }

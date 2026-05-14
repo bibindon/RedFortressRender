@@ -8,7 +8,7 @@ void FontEx::Initialize(const std::wstring& fontName,
                         const UINT fontColor)
 {
     m_fontColor = fontColor;
-    m_shadowFont.Initialize(fontName, fontSize, D3DCOLOR_RGBA(0, 0, 0, 255));
+    m_shadowFont.Initialize(fontName, fontSize, MakeBlurColor(fontColor));
     m_mainFont.Initialize(fontName, fontSize, fontColor);
     m_postEffectFont.Initialize();
 }
@@ -25,7 +25,7 @@ void FontEx::AddText(const std::wstring& text,
                      const int Y,
                      const UINT fontColor)
 {
-    m_shadowFont.AddText(text, X, Y, MakeShadowColor(fontColor));
+    m_shadowFont.AddText(text, X, Y, MakeBlurColor(fontColor));
     m_mainFont.AddText(text, X, Y, fontColor);
 }
 
@@ -45,7 +45,7 @@ void FontEx::AddTextCenter(const std::wstring& text,
                            const int Height,
                            const UINT fontColor)
 {
-    m_shadowFont.AddTextCenter(text, X, Y, Width, Height, MakeShadowColor(fontColor));
+    m_shadowFont.AddTextCenter(text, X, Y, Width, Height, MakeBlurColor(fontColor));
     m_mainFont.AddTextCenter(text, X, Y, Width, Height, fontColor);
 }
 
@@ -69,10 +69,10 @@ void FontEx::SetGaussianSampleSize(const int sampleSize)
     m_postEffectFont.SetGaussianSampleSize(sampleSize);
 }
 
-UINT FontEx::MakeShadowColor(const UINT color)
+UINT FontEx::MakeBlurColor(const UINT color)
 {
     const UINT alpha = color & 0xFF000000;
-    return alpha;
+    return D3DCOLOR_ARGB(alpha >> 24, 128, 128, 128);
 }
 
 }

@@ -68,7 +68,7 @@ void PostEffectFont::DrawBlurredShadow()
 
     LPDIRECT3DSURFACE9 backBuffer = NULL;
     Common::D3DDevice()->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &backBuffer);
-    DrawFullscreenQuad(m_blurTexture, backBuffer, "GaussianV", true);
+    DrawFullscreenQuad(m_blurTexture, backBuffer, "GaussianVComposite", true);
     SAFE_RELEASE(backBuffer);
 }
 
