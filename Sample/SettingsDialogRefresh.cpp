@@ -1039,6 +1039,18 @@ void RefreshGaussianControls(HWND hDlg)
                        static_cast<LPARAM>(GaussianSampleSizeToSliderValue(g_gaussianSampleSize)));
 }
 
+void RefreshFontExGaussianControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%d", g_fontExGaussianSampleSize);
+    SetDlgItemText(hDlg, IDC_EDIT_FONTEX_GAUSSIAN_SAMPLE_SIZE, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_FONTEX_GAUSSIAN_SAMPLE_SIZE,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(FontExGaussianSampleSizeToSliderValue(g_fontExGaussianSampleSize)));
+}
+
 void RefreshFXAAControls(HWND hDlg)
 {
     UINT checkState = BST_UNCHECKED;

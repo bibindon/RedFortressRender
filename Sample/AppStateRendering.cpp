@@ -261,6 +261,11 @@ int NormalizeGaussianSampleSizeLocal(const int sampleSize)
     return (std::max)(GAUSSIAN_SAMPLE_MIN, normalized);
 }
 
+int NormalizeFontExGaussianSampleSizeLocal(const int sampleSize)
+{
+    return (std::max)(FONTEX_GAUSSIAN_SAMPLE_MIN, (std::min)(sampleSize, FONTEX_GAUSSIAN_SAMPLE_MAX));
+}
+
 int NormalizeFXAAQualityLocal(const int quality)
 {
     return (std::max)(FXAA_QUALITY_MIN, (std::min)(quality, FXAA_QUALITY_MAX));
@@ -775,6 +780,12 @@ void ApplyGaussianSampleSize()
 {
     g_gaussianSampleSize = NormalizeGaussianSampleSizeLocal(g_gaussianSampleSize);
     g_Render.SetPostEffectGaussianSampleSize(g_gaussianSampleSize);
+}
+
+void ApplyFontExGaussianSampleSize()
+{
+    g_fontExGaussianSampleSize = NormalizeFontExGaussianSampleSizeLocal(g_fontExGaussianSampleSize);
+    g_Render.SetPostEffectFontSampleSize(g_fontExGaussianSampleSize);
 }
 
 void ApplyFXAAQuality()
@@ -1302,6 +1313,16 @@ int GaussianSampleSizeToSliderValue(const int sampleSize)
 int SliderValueToGaussianSampleSize(const int sliderValue)
 {
     return NormalizeGaussianSampleSizeLocal(sliderValue * 2 - 1);
+}
+
+int FontExGaussianSampleSizeToSliderValue(const int sampleSize)
+{
+    return NormalizeFontExGaussianSampleSizeLocal(sampleSize);
+}
+
+int SliderValueToFontExGaussianSampleSize(const int sliderValue)
+{
+    return NormalizeFontExGaussianSampleSizeLocal(sliderValue);
 }
 
 int FXAAQualityToSliderValue(const int quality)

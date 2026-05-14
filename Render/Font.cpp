@@ -38,7 +38,7 @@ void Font::CreateResource()
     // 幅は必ず0(自動)を指定する
     desc.Width              = 0;
 
-    desc.Weight             = FW_HEAVY;
+    desc.Weight             = FW_THIN;
     desc.MipLevels          = 1;
     desc.Italic             = FALSE;
     desc.CharSet            = DEFAULT_CHARSET;

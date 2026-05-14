@@ -17,6 +17,7 @@
 #include <unordered_map>
 
 #include "Font.h"
+#include "FontEx.h"
 #include "Sprite.h"
 
 #include "MeshOld.h"
@@ -203,6 +204,7 @@ public:
     // フォント作成
     // IDが返ってくるので、そのIDを文字描画するときに指定する
     int SetUpFont(const std::wstring& fontName, const int fontSize, const UINT fontColor);
+    int SetUpFontEx(const std::wstring& fontName, const int fontSize, const UINT fontColor);
 
     // フォント作成時に取得したIDを指定して文字を描画する
     // 文字が表示され続けるためにはこの関数を毎フレーム実行する必要がある。
@@ -216,6 +218,17 @@ public:
                    const int X,
                    const int Y,
                    const UINT color);
+
+    void DrawTextEx(const int fontId,
+                    const std::wstring& text,
+                    const int X,
+                    const int Y);
+
+    void DrawTextEx(const int fontId,
+                    const std::wstring& text,
+                    const int X,
+                    const int Y,
+                    const UINT color);
 
     void DrawTextCenter(const int fontId,
                         const std::wstring& text,
@@ -243,6 +256,7 @@ public:
 
     void SetPostEffectGaussianFilter(const bool arg);
     void SetPostEffectGaussianSampleSize(const int sampleSize);
+    void SetPostEffectFontSampleSize(const int sampleSize);
     void SetPostEffectMaskedGaussianFilter(const bool arg);
     void SetPostEffectMaskedGaussianSampleSize(const int sampleSize);
     void SetPostEffectMaskedGaussianMaskPath(const std::wstring& maskPath);
@@ -367,6 +381,7 @@ private:
 
     // ポインターにしないとデバイスロストを扱う機能が機能しなくなる
     std::vector<Font*> m_fontList;
+    std::vector<FontEx*> m_fontExList;
     Sprite m_sprite;
 
     //---------------------------------------------------------------
@@ -441,9 +456,11 @@ private:
                                       LPDIRECT3DTEXTURE9& texTarget);
     static std::wstring Trim(const std::wstring& text);
     static int NormalizeGaussianSampleSize(const int sampleSize);
+    static int NormalizeFontGaussianSampleSize(const int sampleSize);
 
     std::unordered_map<std::wstring, std::wstring> m_settings;
     int m_gaussianSampleSize = 101;
+    int m_fontExGaussianSampleSize = 21;
     std::wstring m_maskedGaussianMaskPath;
     int m_fxaaQuality = 4;
     int m_motionBlurCameraQuality = 4;

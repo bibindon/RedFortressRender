@@ -20,6 +20,7 @@ void RefreshDepthOfFieldControls(HWND hDlg);
 void RefreshDepthOfFieldMaxBlurControls(HWND hDlg);
 void RefreshDepthOfFieldAutoActivationControls(HWND hDlg);
 void RefreshGaussianControls(HWND hDlg);
+void RefreshFontExGaussianControls(HWND hDlg);
 void RefreshFXAAControls(HWND hDlg);
 void RefreshMotionBlurCameraControls(HWND hDlg);
 void RefreshFog(HWND hDlg);
@@ -144,6 +145,8 @@ constexpr int POINT_LIGHT_BRIGHTNESS_SLIDER_MIN = 0;
 constexpr int POINT_LIGHT_BRIGHTNESS_SLIDER_MAX = static_cast<int>(POINT_LIGHT_BRIGHTNESS_MAX / POINT_LIGHT_BRIGHTNESS_STEP);
 constexpr int GAUSSIAN_SLIDER_MIN = 1;
 constexpr int GAUSSIAN_SLIDER_MAX = (GAUSSIAN_SAMPLE_MAX + 1) / 2;
+constexpr int FONTEX_GAUSSIAN_SLIDER_MIN = FONTEX_GAUSSIAN_SAMPLE_MIN;
+constexpr int FONTEX_GAUSSIAN_SLIDER_MAX = FONTEX_GAUSSIAN_SAMPLE_MAX;
 constexpr int FXAA_QUALITY_SLIDER_MIN = FXAA_QUALITY_MIN;
 constexpr int FXAA_QUALITY_SLIDER_MAX = FXAA_QUALITY_MAX;
 constexpr int MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS_SLIDER_MIN =
@@ -160,7 +163,7 @@ constexpr int GODRAY_VIRTUAL_PROXIMITY_SLIDER_MIN = 0;
 constexpr int GODRAY_VIRTUAL_PROXIMITY_SLIDER_MAX = static_cast<int>(GODRAY_VIRTUAL_PROXIMITY_MAX / GODRAY_VIRTUAL_PROXIMITY_STEP);
 constexpr int GODRAY_POS_SLIDER_MIN = static_cast<int>(GODRAY_LIGHT_POS_MIN / GODRAY_LIGHT_POS_STEP);
 constexpr int GODRAY_POS_SLIDER_MAX = static_cast<int>(GODRAY_LIGHT_POS_MAX / GODRAY_LIGHT_POS_STEP);
-constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 1394;
+constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 1426;
 constexpr int SETTINGS_DIALOG_WHEEL_STEP_PX = 36;
 constexpr UINT ID_POPUP_EXPORT_BINARY = 60001;
 constexpr UINT ID_POPUP_REMOVE_MODEL = 60002;
@@ -495,6 +498,7 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_DOF_MAX_BLUR_DISTANCE,
         IDC_EDIT_DOF_AUTO_ACTIVATION_DISTANCE,
         IDC_EDIT_GAUSSIAN_SAMPLE_SIZE,
+        IDC_EDIT_FONTEX_GAUSSIAN_SAMPLE_SIZE,
         IDC_EDIT_FXAA_QUALITY,
         IDC_EDIT_MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS,
         IDC_EDIT_MOTION_BLUR_CAMERA_SAMPLE_COUNT,
@@ -610,6 +614,14 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
             ApplyGaussianSampleSize();
         }
         RefreshGaussianControls(hDlg);
+        return true;
+    case IDC_EDIT_FONTEX_GAUSSIAN_SAMPLE_SIZE:
+        if (TryParseEditInt(hDlg, commandId, intValue))
+        {
+            g_fontExGaussianSampleSize = intValue;
+            ApplyFontExGaussianSampleSize();
+        }
+        RefreshFontExGaussianControls(hDlg);
         return true;
     case IDC_EDIT_FXAA_QUALITY:
         if (TryParseEditInt(hDlg, commandId, intValue))
@@ -1713,6 +1725,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshStarBurstThresholdControls(hDlg);
     RefreshModelLoadScaleControls(hDlg);
     RefreshGaussianControls(hDlg);
+    RefreshFontExGaussianControls(hDlg);
     RefreshFXAAControls(hDlg);
     RefreshMotionBlurCameraControls(hDlg);
     RefreshShadowPcfTapControls(hDlg);
@@ -1936,6 +1949,11 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETRANGEMAX, FALSE, GAUSSIAN_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETTICFREQ, 5, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETPAGESIZE, 0, 5);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FONTEX_GAUSSIAN_SAMPLE_SIZE, TBM_SETRANGEMIN, FALSE, FONTEX_GAUSSIAN_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FONTEX_GAUSSIAN_SAMPLE_SIZE, TBM_SETRANGEMAX, FALSE, FONTEX_GAUSSIAN_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FONTEX_GAUSSIAN_SAMPLE_SIZE, TBM_SETTICFREQ, 1, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FONTEX_GAUSSIAN_SAMPLE_SIZE, TBM_SETPAGESIZE, 0, 1);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_FXAA_QUALITY, TBM_SETRANGEMIN, FALSE, FXAA_QUALITY_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_FXAA_QUALITY, TBM_SETRANGEMAX, FALSE, FXAA_QUALITY_SLIDER_MAX);
@@ -2289,6 +2307,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_gaussianSampleSize = SliderValueToGaussianSampleSize(sliderValue);
             ApplyGaussianSampleSize();
             RefreshGaussianControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_FONTEX_GAUSSIAN_SAMPLE_SIZE))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_fontExGaussianSampleSize = SliderValueToFontExGaussianSampleSize(sliderValue);
+            ApplyFontExGaussianSampleSize();
+            RefreshFontExGaussianControls(hDlg);
             return TRUE;
         }
 

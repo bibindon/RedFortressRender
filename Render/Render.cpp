@@ -28,6 +28,7 @@
 #include "Light.h"
 
 #include "Font.h"
+#include "FontEx.h"
 #include <chrono>
 #include <set>
 #include <algorithm>
@@ -95,6 +96,11 @@ int Render::NormalizeGaussianSampleSize(const int sampleSize)
     }
 
     return (std::max)(1, normalized);
+}
+
+int Render::NormalizeFontGaussianSampleSize(const int sampleSize)
+{
+    return (std::max)(1, (std::min)(sampleSize, 21));
 }
 
 int NormalizeFXAAQuality(const int quality)
@@ -1168,6 +1174,16 @@ void Render::Finalize()
     }
     m_fontList.clear();
 
+    for (auto& font : m_fontExList)
+    {
+        if (font != nullptr)
+        {
+            font->Finalize();
+        }
+        SAFE_DELETE(font);
+    }
+    m_fontExList.clear();
+
     m_sprite.Finalize();
     m_GBuffer.Finalize();
     SAFE_RELEASE(m_pRenderTarget1);
@@ -2008,6 +2024,18 @@ int Render::SetUpFont(const std::wstring& fontName,
     return (int)(m_fontList.size() - 1);
 }
 
+int Render::SetUpFontEx(const std::wstring& fontName,
+                        const int fontSize,
+                        const UINT fontColor)
+{
+    FontEx* font = NEW FontEx();
+    font->Initialize(fontName, fontSize, fontColor);
+    font->SetGaussianSampleSize(m_fontExGaussianSampleSize);
+    m_fontExList.push_back(font);
+
+    return static_cast<int>(m_fontExList.size() - 1);
+}
+
 void Render::DrawText_(const int fontId,
                                  const std::wstring& text,
                                  const int X,
@@ -2033,6 +2061,33 @@ void Render::DrawText_(const int fontId,
     }
 
     m_fontList.at(fontId)->AddText(text, X, Y, color);
+}
+
+void Render::DrawTextEx(const int fontId,
+                        const std::wstring& text,
+                        const int X,
+                        const int Y)
+{
+    if (fontId >= m_fontExList.size())
+    {
+        throw std::exception("Illegal fontId");
+    }
+
+    m_fontExList.at(fontId)->AddText(text, X, Y);
+}
+
+void Render::DrawTextEx(const int fontId,
+                        const std::wstring& text,
+                        const int X,
+                        const int Y,
+                        const UINT color)
+{
+    if (fontId >= m_fontExList.size())
+    {
+        throw std::exception("Illegal fontId");
+    }
+
+    m_fontExList.at(fontId)->AddText(text, X, Y, color);
 }
 
 void Render::DrawTextCenter(const int fontId,
@@ -2115,6 +2170,18 @@ void Render::SetPostEffectGaussianSampleSize(const int sampleSize)
     m_gaussianSampleSize = NormalizeGaussianSampleSize(sampleSize);
     m_postEffectGauss.SetSampleSize(m_gaussianSampleSize);
     m_postEffectMaskedGauss.SetSampleSize(m_gaussianSampleSize);
+}
+
+void Render::SetPostEffectFontSampleSize(const int sampleSize)
+{
+    m_fontExGaussianSampleSize = NormalizeFontGaussianSampleSize(sampleSize);
+    for (auto& font : m_fontExList)
+    {
+        if (font != nullptr)
+        {
+            font->SetGaussianSampleSize(m_fontExGaussianSampleSize);
+        }
+    }
 }
 
 void Render::SetPostEffectMaskedGaussianFilter(const bool arg)
@@ -2956,6 +3023,11 @@ void Render::ShowFPS(const float arg)
 void Render::Draw2D()
 {
     for (auto& elem : m_fontList)
+    {
+        elem->Draw();
+    }
+
+    for (auto& elem : m_fontExList)
     {
         elem->Draw();
     }

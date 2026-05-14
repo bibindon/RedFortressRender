@@ -357,8 +357,7 @@ bool HandleSampleKeyDown(HWND hWnd, const WPARAM wParam)
 
     if (wParam == 'T')
     {
-        g_bSaturateFilter = !g_bSaturateFilter;
-        ApplyPostEffectToggleSettings();
+        g_bUseFontExOverlay = !g_bUseFontExOverlay;
         RefreshSettingsDialogState();
     }
 

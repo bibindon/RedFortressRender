@@ -301,6 +301,7 @@ exit /B %ERRORLEVEL%</Command>
     <FxCompile Include="..\Render\shader\PostEffectDepthOfField.fx" />
     <FxCompile Include="..\Render\shader\PostEffectEnd.fx" />
     <FxCompile Include="..\Render\shader\PostEffectFog.fx" />
+    <FxCompile Include="..\Render\shader\PostEffectFont.fx" />
     <FxCompile Include="..\Render\shader\PostEffectFXAA.fx" />
     <FxCompile Include="..\Render\shader\PostEffectGaussian.fx" />
     <FxCompile Include="..\Render\shader\PostEffectMotionBlurCamera.fx" />

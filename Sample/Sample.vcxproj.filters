@@ -117,6 +117,9 @@
     <FxCompile Include="..\Render\shader\PostEffectFog.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
+    <FxCompile Include="..\Render\shader\PostEffectFont.fx">
+      <Filter>リソース ファイル</Filter>
+    </FxCompile>
     <FxCompile Include="..\Render\shader\PostEffectMotionBlurCamera.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>

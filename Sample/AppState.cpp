@@ -22,6 +22,7 @@
 bool g_bClose = false;
 NSRender::Render g_Render;
 int g_fontId = 0;
+int g_fontExId = 0;
 bool g_bRecenteringMouse = false;
 bool g_bMouseLookEnabled = false;
 bool g_bPrevMouseClientPosValid = false;
@@ -113,6 +114,7 @@ float g_pointLightSquareWidth = 10.0f;
 float g_pointLightSquareHeight = 10.0f;
 D3DXVECTOR3 g_pointLightRotationDegrees = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 int g_gaussianSampleSize = 101;
+int g_fontExGaussianSampleSize = 21;
 int g_fxaaQuality = 4;
 int g_motionBlurCameraQuality = 4;
 int g_shadowPcfTapCount = 11;
@@ -1981,6 +1983,7 @@ void ApplyAllSampleSettings()
     ApplyStarBurstThreshold();
     ApplyModelLoadScale();
     ApplyGaussianSampleSize();
+    ApplyFontExGaussianSampleSize();
     ApplyFXAAQuality();
     ApplyMotionBlurCameraSettings();
     ApplyMaskedGaussianMaskPath();
@@ -2013,6 +2016,7 @@ bool ReloadRenderSettingsFromCsv(const std::wstring& settingsCsvPath)
 }
 
 bool g_bShowOverlay = true; // グローバル変数
+bool g_bUseFontExOverlay = false;
 
 void DrawSampleOverlay()
 {
@@ -2056,7 +2060,7 @@ void DrawSampleOverlay()
     text += L"\n";
     text += L"Shift + s : Saturation up\n";
     text += L"Ctrl + s : Saturation down\n";
-    text += L"t : Saturation filter ON/OFF\n";
+    text += L"t : FontEx overlay ON/OFF\n";
     text += L"g : Gaussian filter ON/OFF\n";
     text += L"b : Bloom ON/OFF\n";
     text += L"u : Depth of field mode\n";
@@ -2069,7 +2073,14 @@ void DrawSampleOverlay()
     text += FormatVector3(L"Eye        :", g_Render.GetCameraPos());
     text += FormatVector3(L"Real Light :", g_godRayLightPos);
     text += FormatVector3(L"Virtual    :", GetEffectiveGodRayLightPos());
-    g_Render.DrawText_(g_fontId, text, 10, 40);
+    if (g_bUseFontExOverlay)
+    {
+        g_Render.DrawTextEx(g_fontExId, text, 10, 40);
+    }
+    else
+    {
+        g_Render.DrawText_(g_fontId, text, 10, 40);
+    }
 
     DrawRandomized2DContent();
 }
