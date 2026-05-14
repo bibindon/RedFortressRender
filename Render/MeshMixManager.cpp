@@ -352,6 +352,8 @@ enum class eMeshType
 struct stCsvParam
 {
     eMeshType meshType = eMeshType::None;
+    bool emitIntensityDefined = false;
+    float emitIntensity = 1.0f;
     bool smoothDefined = false;
     bool smooth = false;
     bool sssDefined = false;
@@ -442,6 +444,15 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
         {
             result.smoothDefined = true;
             result.smooth = IsCsvTrueValue(value);
+        }
+        else if (key == L"emitintensity")
+        {
+            try
+            {
+                result.emitIntensityDefined = true;
+                result.emitIntensity = (std::max)(0.0f, std::stof(std::wstring(value)));
+            }
+            catch (...) {}
         }
         else if (key == L"sss")
         {
@@ -715,6 +726,11 @@ void MeshMixManager::InitializeInternal()
         m_param.shadow = false;
         m_param.saturateShadow = false;
         m_param.shadowDarkness = 0.0f;
+    }
+
+    if (csvParam.emitIntensityDefined)
+    {
+        m_param.emitIntensity = csvParam.emitIntensity;
     }
 
     if (csvParam.smoothDefined)
@@ -1300,6 +1316,9 @@ void MeshMixManager::Render()
     assert(hResult == S_OK);
 
     hResult = sharedEffect->SetFloat("g_cubeMappingGauss", m_param.cubeMappingGauss);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetFloat("g_emitIntensity", m_param.emitIntensity);
     assert(hResult == S_OK);
 
     static float f = 0.f;

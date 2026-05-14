@@ -129,6 +129,9 @@ struct stMeshParam
     // 発光物か
     bool emit = false;
 
+    // 発光の強さ
+    float emitIntensity = 1.0f;
+
     // 波
     //
     // 海面のような波

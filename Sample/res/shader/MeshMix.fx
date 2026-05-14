@@ -28,6 +28,7 @@ float g_specularIntensity = 0.1f;
 
 float g_cubeMappingRate = 1.0f;
 float g_cubeMappingGauss = 0.0f;
+float g_emitIntensity = 1.0f;
 
 // 距離フォグの色
 float4 g_fogDistanceColor = { 0.5f, 0.5f, 1.0f, 1.0f };
@@ -674,7 +675,7 @@ void PixelShaderEmit(in  float4 inPosition     : POSITION,
                      out float4 outColor       : COLOR)
 {
     float3 albedo = tex2D(g_textureSampler, inTexCoord).rgb * g_diffuse.rgb;
-    outColor = float4(saturate(albedo), 1.0f);
+    outColor = float4(albedo * g_emitIntensity, 1.0f);
 }
 
 float2 CalcUVCoordWithPOM(float3 inNormalizedNormalWS,
