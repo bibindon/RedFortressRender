@@ -114,6 +114,36 @@ bool ContainsToken(const std::wstring& text, const std::wstring& token)
     return text.find(token) != std::wstring::npos;
 }
 
+std::wstring TrimString(const std::wstring& text)
+{
+    const auto first = std::find_if_not(text.begin(), text.end(), [](wchar_t ch)
+    {
+        return std::iswspace(ch) != 0;
+    });
+
+    const auto last = std::find_if_not(text.rbegin(), text.rend(), [](wchar_t ch)
+    {
+        return std::iswspace(ch) != 0;
+    }).base();
+
+    if (first >= last)
+    {
+        return L"";
+    }
+
+    return std::wstring(first, last);
+}
+
+std::wstring NormalizeCsvField(std::wstring text)
+{
+    if (!text.empty() && text.front() == 0xfeff)
+    {
+        text.erase(text.begin());
+    }
+
+    return ToLowerString(TrimString(text));
+}
+
 bool IsCsvTrueValue(const std::wstring& value)
 {
     return value == L"y" || value == L"yes" || value == L"true" || value == L"1";
@@ -415,8 +445,8 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
         {
             continue;
         }
-        const std::wstring key = ToLowerString(line.substr(0, commaPos));
-        const std::wstring value = ToLowerString(line.substr(commaPos + 1));
+        const std::wstring key = NormalizeCsvField(line.substr(0, commaPos));
+        const std::wstring value = NormalizeCsvField(line.substr(commaPos + 1));
         if (key == L"meshtype")
         {
             if (value == L"pom")
