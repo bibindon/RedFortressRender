@@ -469,7 +469,7 @@ void ParticleSystem::EmitDust(EffectInstance& effect, const float deltaTime)
                                    RandomFloat(-0.006f, 0.006f),
                                    RandomFloat(-0.010f, 0.010f));
         const float life = RandomFloat(8.0f, 15.0f);
-        const float startSize = RandomFloat(0.014f, 0.041f);
+        const float startSize = RandomFloat(0.005f, 0.005f);
         const float endSize = startSize * RandomFloat(0.88f, 1.22f);
         const int alpha = static_cast<int>(RandomFloat(16.0f, 58.0f));
         const int gray = static_cast<int>(RandomFloat(220.0f, 255.0f));
@@ -628,7 +628,7 @@ void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
 
             const float fade = 0.25f + 0.75f * sinf(age * D3DX_PI);
             const float shimmer = 0.82f + 0.18f * sinf(particle.life * 2.4f + particle.swayPhase * 1.7f);
-            const int alpha = static_cast<int>(ClampFloat(255.0f * fade * shimmer * particle.alphaBias, 0.0f, 150.0f));
+            const int alpha = static_cast<int>(ClampFloat(255.0f * fade * shimmer * particle.alphaBias, 255.0f, 255.0f));
             particle.color = D3DCOLOR_ARGB(alpha, 238, 238, 238);
             particle.rotation += particle.rotationSpeed * deltaTime;
             continue;
@@ -676,6 +676,7 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
 
     D3DXMATRIX invView;
     D3DXMatrixInverse(&invView, NULL, &view);
+    const D3DXVECTOR3 cameraPos(invView._41, invView._42, invView._43);
 
     D3DXVECTOR3 cameraRight(invView._11, invView._12, invView._13);
     D3DXVECTOR3 cameraUp(invView._21, invView._22, invView._23);
@@ -691,6 +692,15 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
             if (!particle.active)
             {
                 continue;
+            }
+
+            if (effectInstance.preset == ParticleEffectPreset::Dust)
+            {
+                D3DXVECTOR3 toParticle = particle.pos - cameraPos;
+                if (D3DXVec3LengthSq(&toParticle) < 1.0f)
+                {
+                    continue;
+                }
             }
 
             if (effectInstance.preset == ParticleEffectPreset::Dust &&
