@@ -45,16 +45,26 @@ void VS(in float4 inPos : POSITION,
 float4 DecodeWorldPosition(float2 uv)
 {
     float2 positionUv = uv + g_TexelSize;
-    float4 encoded = tex2D(positionSampler, positionUv);
+    float4 encoded = tex2Dlod(positionSampler, float4(positionUv, 0.0f, 0.0f));
     float3 worldPos = ((encoded.xyz * 2.0f) - 1.0f) * g_positionRange;
     return float4(worldPos, encoded.a);
 }
 
 float GetDistanceMeters(float2 uv, out float valid)
 {
+    uv -= g_TexelSize * 0.5f;
+    uv -= g_TexelSize * 0.5f;
+
     float4 worldPos = DecodeWorldPosition(uv);
     valid = worldPos.w;
     return length(worldPos.xyz - g_cameraPos.xyz);
+}
+
+float GetDepthCompareThresholdMeters(float centerDistanceMeters)
+{
+    float relativeThreshold = centerDistanceMeters * 0.02f;
+    float focusBandThreshold = g_focusBandHalfWidthMeters * 0.5f;
+    return max(0.25f, min(relativeThreshold, focusBandThreshold));
 }
 
 int GetBlurHalfSize(float distanceMeters)
@@ -97,11 +107,12 @@ int GetBlurHalfSize(float distanceMeters)
 float4 PS(in float2 uv : TEXCOORD0) : COLOR0
 {
     // 元のコードと同じ 0.5 texel 補正を残す。
-    float2 sampleUv = uv + g_TexelSize * 0.5f;
+    float2 sampleUv = uv;
+    sampleUv += g_TexelSize * 0.5f;
 
     // 0.5ピクセルずれ確認用のデバッグ表示。
     // 5ピクセルごとに縦線・横線を描く。
-    if (0)
+    if (false)
     {
         float2 pixelCoord = floor(sampleUv / g_TexelSize);
         bool isGridLine = (fmod(pixelCoord.x, 5.0f) == 0.0f) || (fmod(pixelCoord.y, 5.0f) == 0.0f);
@@ -130,6 +141,7 @@ float4 PS(in float2 uv : TEXCOORD0) : COLOR0
 
     float4 sumColor = baseColor;
     float weightSum = 1.0f;
+    float depthCompareThresholdMeters = GetDepthCompareThresholdMeters(centerDistanceMeters);
 
     [loop]
     for (int y = -blurHalfSize; y <= blurHalfSize; ++y)
@@ -144,6 +156,17 @@ float4 PS(in float2 uv : TEXCOORD0) : COLOR0
 
             float2 offset = float2((float)x, (float)y) * g_TexelSize * g_blurRadiusPixels;
             float2 tapUv = sampleUv + offset;
+            float tapValid = 0.0f;
+            float tapDistanceMeters = GetDistanceMeters(tapUv, tapValid);
+            if (tapValid <= 0.0f)
+            {
+                continue;
+            }
+
+            if (abs(tapDistanceMeters - centerDistanceMeters) > depthCompareThresholdMeters)
+            {
+                continue;
+            }
 
             sumColor += tex2Dlod(colorSampler, float4(tapUv, 0.0f, 0.0f));
             weightSum += 1.0f;
