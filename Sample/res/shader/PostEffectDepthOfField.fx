@@ -67,6 +67,11 @@ float GetDepthCompareThresholdMeters(float centerDistanceMeters)
     return max(0.25f, min(relativeThreshold, focusBandThreshold));
 }
 
+float GetBlurStartDistanceMeters()
+{
+    return min(g_focalDistanceMeters, g_maxBlurDistanceMeters);
+}
+
 int GetBlurHalfSize(float distanceMeters)
 {
     const float nearDistance = min(g_focalDistanceMeters, g_maxBlurDistanceMeters);
@@ -142,6 +147,7 @@ float4 PS(in float2 uv : TEXCOORD0) : COLOR0
     float4 sumColor = baseColor;
     float weightSum = 1.0f;
     float depthCompareThresholdMeters = GetDepthCompareThresholdMeters(centerDistanceMeters);
+    float blurStartDistanceMeters = GetBlurStartDistanceMeters();
 
     [loop]
     for (int y = -blurHalfSize; y <= blurHalfSize; ++y)
@@ -163,7 +169,9 @@ float4 PS(in float2 uv : TEXCOORD0) : COLOR0
                 continue;
             }
 
-            if (abs(tapDistanceMeters - centerDistanceMeters) > depthCompareThresholdMeters)
+            bool tapAlreadyBlurred = (tapDistanceMeters > blurStartDistanceMeters);
+            if (!tapAlreadyBlurred &&
+                abs(tapDistanceMeters - centerDistanceMeters) > depthCompareThresholdMeters)
             {
                 continue;
             }
