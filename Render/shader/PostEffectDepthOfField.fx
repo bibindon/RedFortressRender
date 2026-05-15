@@ -130,6 +130,11 @@ bool IsDistanceBlurred(float distanceMeters)
     return GetBlurAmountNormalized(distanceMeters) > 0.0f;
 }
 
+bool IsNearBlurred(float distanceMeters)
+{
+    return (g_startNearMeters > 0.0f) && (distanceMeters < g_startNearMeters);
+}
+
 // ps_3_0 では POSITION をピクセルシェーダー入力にしない。
 // 画面位置は使わず、元の uv と sampleUv の扱いを維持する。
 float4 PS(in float2 uv : TEXCOORD0) : COLOR0
@@ -170,6 +175,7 @@ float4 PS(in float2 uv : TEXCOORD0) : COLOR0
     float4 sumColor = baseColor;
     float weightSum = 1.0f;
     float depthCompareThresholdMeters = GetDepthCompareThresholdMeters(centerDistanceMeters);
+    bool centerNearBlurred = IsNearBlurred(centerDistanceMeters);
 
     [loop]
     for (int y = -blurHalfSize; y <= blurHalfSize; ++y)
@@ -192,7 +198,8 @@ float4 PS(in float2 uv : TEXCOORD0) : COLOR0
             }
 
             bool tapAlreadyBlurred = IsDistanceBlurred(tapDistanceMeters);
-            if (!tapAlreadyBlurred &&
+            if (!centerNearBlurred &&
+                !tapAlreadyBlurred &&
                 abs(tapDistanceMeters - centerDistanceMeters) > depthCompareThresholdMeters)
             {
                 continue;
