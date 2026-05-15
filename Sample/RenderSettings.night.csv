@@ -50,6 +50,7 @@ SpecularIntensityOverride,0
 ,
 BloomEnable,0
 BloomThreshold,2.5
+PostEffectAAEnable,0
 ,
 StarBurstEnable,0
 StarBurstThreshold,2.8

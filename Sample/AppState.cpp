@@ -46,6 +46,7 @@ bool g_bMoveSpeedBoost100x = false;
 bool g_bRemoteDesktop = true;
 bool g_bGaussianFilter = false;
 bool g_bMaskedGaussianFilter = false;
+bool g_bPostEffectAA = false;
 bool g_bFXAA = false;
 bool g_bMotionBlurCamera = false;
 float g_motionBlurCameraMaxBlurPixels = 24.0f;
@@ -1835,6 +1836,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"FXAAEnable")
             {
                 g_bFXAA = (std::stoi(value) != 0);
+            }
+            else if (key == L"PostEffectAAEnable")
+            {
+                g_bPostEffectAA = (std::stoi(value) != 0);
             }
             else if (key == L"MotionBlurCameraEnable")
             {

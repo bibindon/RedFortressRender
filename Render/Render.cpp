@@ -478,6 +478,16 @@ void Render::ApplySettings()
         SetPostEffectFXAAQuality(m_fxaaQuality);
     }
 
+    const auto postEffectAAEnable = m_settings.find(L"PostEffectAAEnable");
+    if (postEffectAAEnable != m_settings.end())
+    {
+        bool enabled = false;
+        if (TryParseBoolSetting(postEffectAAEnable->second, enabled))
+        {
+            SetPostEffectAA(enabled);
+        }
+    }
+
     const auto motionBlurCameraEnable = m_settings.find(L"MotionBlurCameraEnable");
     if (motionBlurCameraEnable != m_settings.end())
     {
@@ -1121,6 +1131,7 @@ void Render::Finalize()
     m_postEffectGodRay.Finalize();
     m_postEffectGauss.Finalize();
     m_postEffectMaskedGauss.Finalize();
+    m_postEffectAA.Finalize();
     m_postEffectMotionBlurCamera.Finalize();
     m_postEffectFXAA.Finalize();
     m_postEffectEnd.Finalize();
@@ -1387,6 +1398,13 @@ void Render::Draw()
     {
         EnsurePostEffectMaskedGaussInitialized();
         m_postEffectMaskedGauss.Draw(pTempTexture, pWorkTexture);
+        SwapPostEffectBuffers(pTempTexture, pWorkTexture);
+    }
+
+    if (m_gBufferEnabled && m_postEffectAAEnabled)
+    {
+        EnsurePostEffectAAInitialized();
+        m_postEffectAA.Draw(pTempTexture, pWorkTexture);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
@@ -2243,6 +2261,19 @@ void Render::SetPostEffectMaskedGaussianMaskPath(const std::wstring& maskPath)
     m_postEffectMaskedGauss.SetMaskPath(maskPath);
 }
 
+void Render::SetPostEffectAA(const bool arg)
+{
+    m_postEffectAAEnabled = arg;
+    if (m_postEffectAAEnabled)
+    {
+        EnsurePostEffectAAInitialized();
+    }
+    else
+    {
+        m_postEffectAA.Finalize();
+    }
+}
+
 void Render::SetPostEffectFXAA(const bool arg)
 {
     m_postEffectFXAAEnabled = arg;
@@ -2351,6 +2382,11 @@ void Render::EnsurePostEffectGaussInitialized()
 void Render::EnsurePostEffectMaskedGaussInitialized()
 {
     m_postEffectMaskedGauss.Initialize();
+}
+
+void Render::EnsurePostEffectAAInitialized()
+{
+    m_postEffectAA.Initialize();
 }
 
 void Render::EnsurePostEffectFXAAInitialized()

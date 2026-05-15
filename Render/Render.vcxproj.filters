@@ -84,6 +84,9 @@
     <ClCompile Include="PostEffectBloom.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="PostEffectAA.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="PostEffectStarBurst.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -218,6 +221,9 @@
     <ClInclude Include="PostEffectBloom.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="PostEffectAA.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="PostEffectStarBurst.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -320,6 +326,9 @@
       <Filter>シェーダー</Filter>
     </FxCompile>
     <FxCompile Include="shader\PostEffectBloom.fx">
+      <Filter>シェーダー</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\PostEffectAA.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
     <FxCompile Include="shader\PostEffectStarBurst.fx">

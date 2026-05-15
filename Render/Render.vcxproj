@@ -47,6 +47,7 @@
     <ClCompile Include="MeshSSS.cpp" />
     <ClCompile Include="MeshSSSLike.cpp" />
     <ClCompile Include="PostEffectBloom.cpp" />
+    <ClCompile Include="PostEffectAA.cpp" />
     <ClCompile Include="PostEffectDepthOfField.cpp" />
     <ClCompile Include="PostEffectFog.cpp" />
     <ClCompile Include="PostEffectFont.cpp" />
@@ -93,6 +94,7 @@
     <ClInclude Include="MeshSSS.h" />
     <ClInclude Include="MeshSSSLike.h" />
     <ClInclude Include="PostEffectBloom.h" />
+    <ClInclude Include="PostEffectAA.h" />
     <ClInclude Include="PostEffectDepthOfField.h" />
     <ClInclude Include="PostEffectFog.h" />
     <ClInclude Include="PostEffectFont.h" />
@@ -172,6 +174,7 @@
       <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableOptimizations>
       <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</EnableDebuggingInformation>
     </FxCompile>
+    <FxCompile Include="shader\PostEffectAA.fx" />
     <FxCompile Include="shader\PostEffectGodRay.fx" />
     <FxCompile Include="shader\PostEffectDepthOfField.fx" />
     <FxCompile Include="shader\PostEffectFog.fx" />

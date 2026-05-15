@@ -40,6 +40,7 @@
 #include "PostEffectMaskedGauss.h"
 #include "PostEffectSaturate.h"
 #include "PostEffectBloom.h"
+#include "PostEffectAA.h"
 #include "PostEffectStarBurst.h"
 #include "PostEffectEnd.h"
 #include "PostEffectSSAO.h"
@@ -260,6 +261,7 @@ public:
     void SetPostEffectMaskedGaussianFilter(const bool arg);
     void SetPostEffectMaskedGaussianSampleSize(const int sampleSize);
     void SetPostEffectMaskedGaussianMaskPath(const std::wstring& maskPath);
+    void SetPostEffectAA(const bool arg);
     void SetPostEffectFXAA(const bool arg);
     void SetPostEffectFXAAQuality(const int quality);
     void SetPostEffectMotionBlurCamera(const bool arg);
@@ -419,6 +421,7 @@ private:
     // ガウスフィルター
     PostEffectGauss m_postEffectGauss;
     PostEffectMaskedGauss m_postEffectMaskedGauss;
+    PostEffectAA m_postEffectAA;
 
     // FXAA
     PostEffectFXAA m_postEffectFXAA;
@@ -442,6 +445,7 @@ private:
     void EnsurePostEffectSaturateInitialized();
     void EnsurePostEffectGaussInitialized();
     void EnsurePostEffectMaskedGaussInitialized();
+    void EnsurePostEffectAAInitialized();
     void EnsurePostEffectFXAAInitialized();
     void EnsurePostEffectMotionBlurCameraInitialized();
     void EnsurePostEffectZShadowInitialized();
@@ -470,6 +474,7 @@ private:
     bool m_postEffectSaturateEnabled = false;
     bool m_postEffectGaussEnabled = false;
     bool m_postEffectMaskedGaussEnabled = false;
+    bool m_postEffectAAEnabled = false;
     bool m_postEffectFXAAEnabled = false;
     bool m_postEffectMotionBlurCameraEnabled = false;
     bool m_gBufferEnabled = true;

@@ -219,6 +219,7 @@ extern bool g_bMoveSpeedBoost100x;
 extern bool g_bRemoteDesktop;
 extern bool g_bGaussianFilter;
 extern bool g_bMaskedGaussianFilter;
+extern bool g_bPostEffectAA;
 extern bool g_bFXAA;
 extern bool g_bMotionBlurCamera;
 extern float g_motionBlurCameraMaxBlurPixels;
