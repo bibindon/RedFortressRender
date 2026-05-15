@@ -1104,6 +1104,7 @@ void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
     m_windowManager.Initialize(hWnd);
 
     m_sprite.Initialize();
+    m_particleSystem.Initialize();
 
     CreateTexture();
 
@@ -1135,6 +1136,7 @@ void Render::Finalize()
     m_postEffectMotionBlurCamera.Finalize();
     m_postEffectFXAA.Finalize();
     m_postEffectEnd.Finalize();
+    m_particleSystem.Finalize();
 
     for (auto& mesh : m_meshList)
     {
@@ -1253,6 +1255,9 @@ void Render::Draw()
         float fps = CalcFPS();
         ShowFPS(fps);
     }
+
+    const float frameDeltaSeconds = CalcFrameDeltaSeconds();
+    m_particleSystem.Update(frameDeltaSeconds);
 
     //---------------------------------------------------------------
     // ポストエフェクトと一部のメッシュ描画のために深度画像と
@@ -2872,6 +2877,21 @@ void Render::AddPointLight(const D3DXVECTOR3& pos,
     Light::AddPointLight(pos, color, brightness, shape, lineLength, squareWidth, squareHeight, rotation);
 }
 
+void Render::PlaceParticleEffect(const ParticleEffectPreset preset, const D3DXVECTOR3& origin)
+{
+    m_particleSystem.PlaceEffect(preset, origin);
+}
+
+void Render::ClearParticleEffect()
+{
+    m_particleSystem.ClearEffect();
+}
+
+ParticleEffectPreset Render::GetParticleEffectPreset() const
+{
+    return m_particleSystem.GetPreset();
+}
+
 void Render::RotateCamera(const D3DXVECTOR3& rot)
 {
     D3DXVECTOR3 lookAt = Camera::GetLookAtPos();
@@ -3054,6 +3074,8 @@ void Render::DrawPass1(const bool renderToSceneRenderTargets)
         elem.Render();
     }
 
+    m_particleSystem.Draw(Camera::GetViewMatrix(), Camera::GetProjMatrix());
+
     hResult = Common::D3DDevice()->EndScene();
     assert(hResult == S_OK);
 
@@ -3132,6 +3154,24 @@ void Render::ShowFPS(const float arg)
     DrawText_(m_fontID, fps, 10, 10);
 }
 
+float Render::CalcFrameDeltaSeconds()
+{
+    using ClockType = std::chrono::steady_clock;
+    const ClockType::time_point now = ClockType::now();
+
+    if (!m_hasLastFrameTime)
+    {
+        m_lastFrameTime = now;
+        m_hasLastFrameTime = true;
+        return 1.0f / 60.0f;
+    }
+
+    const float deltaSeconds =
+        static_cast<float>(std::chrono::duration<double>(now - m_lastFrameTime).count());
+    m_lastFrameTime = now;
+    return (std::max)(0.0f, (std::min)(deltaSeconds, 0.033f));
+}
+
 void Render::Draw2D()
 {
     for (auto& elem : m_fontList)
@@ -3153,12 +3193,14 @@ void Render::OnDeviceLost()
     SAFE_RELEASE(m_pRenderTarget1);
     SAFE_RELEASE(m_pRenderTarget2);
     m_sprite.OnDeviceLost();
+    m_particleSystem.OnDeviceLost();
 }
 
 void Render::OnDeviceReset()
 {
     CreateTexture();
     m_sprite.OnDeviceReset();
+    m_particleSystem.OnDeviceReset();
 }
 
 void Render::CreateTexture()

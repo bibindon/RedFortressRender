@@ -142,6 +142,7 @@ float g_godRayVirtualProximityStrength = 1.5f;
 D3DXVECTOR3 g_godRayLightPos = D3DXVECTOR3(0.0f, 50.0f, 50.0f);
 int g_godRaySourceMarkerMeshId = -1;
 int g_godRayEffectiveMarkerMeshId = -1;
+NSRender::ParticleEffectPreset g_particleEffectPreset = NSRender::ParticleEffectPreset::Smoke;
 
 namespace
 {
@@ -1518,6 +1519,35 @@ void AddPointLightAtLookAt()
                            g_pointLightSquareWidth,
                            g_pointLightSquareHeight,
                            rotationRadians);
+    RefreshSettingsDialogState();
+}
+
+void PlaceParticleEffectAtLookAt()
+{
+    D3DXVECTOR3 pos = g_Render.GetLookAtPos();
+    D3DXVECTOR3 forward = g_Render.GetCameraRotate();
+    D3DXVec3Normalize(&forward, &forward);
+
+    // 注視点の面にめり込みやすいので、少し手前かつ上へずらして見えやすくする。
+    pos -= forward * 0.45f;
+
+    switch (g_particleEffectPreset)
+    {
+    case NSRender::ParticleEffectPreset::Smoke:
+    case NSRender::ParticleEffectPreset::Fire:
+        pos.y += 0.25f;
+        break;
+    case NSRender::ParticleEffectPreset::Dust:
+        pos.y += 0.10f;
+        break;
+    case NSRender::ParticleEffectPreset::Fog:
+        pos.y += 0.80f;
+        break;
+    default:
+        break;
+    }
+
+    g_Render.PlaceParticleEffect(g_particleEffectPreset, pos);
     RefreshSettingsDialogState();
 }
 

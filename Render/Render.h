@@ -19,6 +19,7 @@
 #include "Font.h"
 #include "FontEx.h"
 #include "Sprite.h"
+#include "ParticleSystem.h"
 
 #include "MeshOld.h"
 #include "MeshSmooth.h"
@@ -260,6 +261,10 @@ public:
                    const int Y,
                    const int transparency = 255);
 
+    void PlaceParticleEffect(const ParticleEffectPreset preset, const D3DXVECTOR3& origin);
+    void ClearParticleEffect();
+    ParticleEffectPreset GetParticleEffectPreset() const;
+
     // 彩度をどれくらい上げるか（下げるか）を設定
     void SetPostEffectSaturate(const float level);
     void SetPostEffectSaturateEnable(const bool arg);
@@ -395,6 +400,7 @@ private:
     std::vector<Font*> m_fontList;
     std::vector<FontEx*> m_fontExList;
     Sprite m_sprite;
+    ParticleSystem m_particleSystem;
 
     //---------------------------------------------------------------
     // マルチパスレンダリング関連
@@ -519,9 +525,12 @@ private:
 
     float CalcFPS();
     void ShowFPS(const float arg);
+    float CalcFrameDeltaSeconds();
 
     int m_fontID = -1;
     std::vector<std::chrono::steady_clock::time_point> m_vecTime;
+    std::chrono::steady_clock::time_point m_lastFrameTime {};
+    bool m_hasLastFrameTime = false;
 
     //-----------------------------------------------------------------
     // デバイスロスト関連処理

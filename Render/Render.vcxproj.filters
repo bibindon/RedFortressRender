@@ -135,6 +135,9 @@
     <ClCompile Include="MeshPOM.cpp">
       <Filter>ソース ファイル\Trial</Filter>
     </ClCompile>
+    <ClCompile Include="ParticleSystem.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="MeshSmooth.cpp">
       <Filter>ソース ファイル\Trial</Filter>
     </ClCompile>
@@ -272,6 +275,9 @@
     <ClInclude Include="MeshPOM.h">
       <Filter>ヘッダー ファイル\Trial</Filter>
     </ClInclude>
+    <ClInclude Include="ParticleSystem.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="MeshSmooth.h">
       <Filter>ヘッダー ファイル\Trial</Filter>
     </ClInclude>
@@ -395,6 +401,9 @@
       <Filter>シェーダー</Filter>
     </FxCompile>
     <FxCompile Include="shader\PostEffectSSGI.fx">
+      <Filter>シェーダー</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\Particle.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
   </ItemGroup>

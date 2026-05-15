@@ -317,6 +317,7 @@ extern float g_godRayVirtualProximityStrength;
 extern D3DXVECTOR3 g_godRayLightPos;
 extern int g_godRaySourceMarkerMeshId;
 extern int g_godRayEffectiveMarkerMeshId;
+extern NSRender::ParticleEffectPreset g_particleEffectPreset;
 
 // カメラ・マウス関連の補助関数。
 // 生入力を実際の視点移動へ変換する役割を持つ。
@@ -525,6 +526,7 @@ void ApplyAllSampleSettings();
 void ApplyGBufferEnable();
 bool ReloadRenderSettingsFromCsv(const std::wstring& settingsCsvPath);
 void AddPointLightAtLookAt();
+void PlaceParticleEffectAtLookAt();
 
 // Overlay / 補助描画系。
 // Render の 2D 描画を利用してサンプル用の情報表示を行う。

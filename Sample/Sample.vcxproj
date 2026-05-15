@@ -204,6 +204,11 @@
 if %ERRORLEVEL% LSS 8 exit /B 0
 exit /B %ERRORLEVEL%</Command>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>robocopy "$(SolutionDir)Render\assets\particle" "$(TargetDir)particle" *.png /R:0 /W:0 &gt;nul
+if %ERRORLEVEL% LSS 8 exit /B 0
+exit /B %ERRORLEVEL%</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_VisualStudio2019|x64'">
     <ClCompile>
@@ -224,6 +229,11 @@ exit /B %ERRORLEVEL%</Command>
     <FxCompile>
       <ShaderModel>2.0</ShaderModel>
     </FxCompile>
+    <PostBuildEvent>
+      <Command>robocopy "$(SolutionDir)Render\assets\particle" "$(TargetDir)particle" *.png /R:0 /W:0 &gt;nul
+if %ERRORLEVEL% LSS 8 exit /B 0
+exit /B %ERRORLEVEL%</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -248,6 +258,11 @@ exit /B %ERRORLEVEL%</Command>
     <FxCompile>
       <ShaderModel>2.0</ShaderModel>
     </FxCompile>
+    <PostBuildEvent>
+      <Command>robocopy "$(SolutionDir)Render\assets\particle" "$(TargetDir)particle" *.png /R:0 /W:0 &gt;nul
+if %ERRORLEVEL% LSS 8 exit /B 0
+exit /B %ERRORLEVEL%</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AppState.cpp" />
@@ -306,6 +321,7 @@ exit /B %ERRORLEVEL%</Command>
     <FxCompile Include="..\Render\shader\PostEffectFXAA.fx" />
     <FxCompile Include="..\Render\shader\PostEffectGaussian.fx" />
     <FxCompile Include="..\Render\shader\PostEffectMotionBlurCamera.fx" />
+    <FxCompile Include="..\Render\shader\Particle.fx" />
     <FxCompile Include="..\Render\shader\PostEffectSaturate.fx" />
     <FxCompile Include="..\Render\shader\PostEffectSSAO.fx" />
     <FxCompile Include="..\Render\shader\PostEffectSSGI.fx" />

@@ -80,6 +80,7 @@ void RefreshStarBurstThresholdControls(HWND hDlg);
 void RefreshModelLoadScaleControls(HWND hDlg);
 void RefreshPointLightControls(HWND hDlg);
 void RefreshGodRayControls(HWND hDlg);
+void RefreshParticlePlacementControls(HWND hDlg);
 
 namespace
 {
@@ -170,7 +171,7 @@ constexpr int GODRAY_VIRTUAL_PROXIMITY_SLIDER_MIN = 0;
 constexpr int GODRAY_VIRTUAL_PROXIMITY_SLIDER_MAX = static_cast<int>(GODRAY_VIRTUAL_PROXIMITY_MAX / GODRAY_VIRTUAL_PROXIMITY_STEP);
 constexpr int GODRAY_POS_SLIDER_MIN = static_cast<int>(GODRAY_LIGHT_POS_MIN / GODRAY_LIGHT_POS_STEP);
 constexpr int GODRAY_POS_SLIDER_MAX = static_cast<int>(GODRAY_LIGHT_POS_MAX / GODRAY_LIGHT_POS_STEP);
-constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 1438;
+constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 1474;
 constexpr int SETTINGS_DIALOG_WHEEL_STEP_PX = 36;
 constexpr UINT ID_POPUP_EXPORT_BINARY = 60001;
 constexpr UINT ID_POPUP_REMOVE_MODEL = 60002;
@@ -250,6 +251,57 @@ void PopulatePointLightTypeCombo(HWND hDlg)
     SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Square"));
     SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Cube"));
     SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Sphere"));
+}
+
+int ParticleEffectPresetToComboIndex(const NSRender::ParticleEffectPreset preset)
+{
+    switch (preset)
+    {
+    case NSRender::ParticleEffectPreset::Fire:
+        return 1;
+    case NSRender::ParticleEffectPreset::Dust:
+        return 2;
+    case NSRender::ParticleEffectPreset::Fog:
+        return 3;
+    case NSRender::ParticleEffectPreset::Smoke:
+    default:
+        return 0;
+    }
+}
+
+NSRender::ParticleEffectPreset ComboIndexToParticleEffectPreset(const int comboIndex)
+{
+    switch (comboIndex)
+    {
+    case 1:
+        return NSRender::ParticleEffectPreset::Fire;
+    case 2:
+        return NSRender::ParticleEffectPreset::Dust;
+    case 3:
+        return NSRender::ParticleEffectPreset::Fog;
+    case 0:
+    default:
+        return NSRender::ParticleEffectPreset::Smoke;
+    }
+}
+
+void PopulateParticleEffectCombo(HWND hDlg)
+{
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_PARTICLE_EFFECT);
+    if (combo == NULL)
+    {
+        return;
+    }
+
+    SendMessage(combo, CB_RESETCONTENT, 0, 0);
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Smoke"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Fire"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Dust"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Fog"));
+    SendMessage(combo,
+                CB_SETCURSEL,
+                static_cast<WPARAM>(ParticleEffectPresetToComboIndex(g_particleEffectPreset)),
+                0);
 }
 
 int ShadowTexSizeDivisorToComboIndex(const int scaleDivisor)
@@ -1692,6 +1744,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshLoadedModelListView(hDlg);
     RefreshPointLightListView(hDlg);
     RefreshPointLightControls(hDlg);
+    RefreshParticlePlacementControls(hDlg);
     RefreshAnimateLight(hDlg);
     RefreshMoveSpeedBoost100x(hDlg);
     RefreshRemoteDesktop(hDlg);
@@ -2290,6 +2343,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         InitializeTrackbars(hDlg);
         PopulateResolutionCombo(hDlg);
         PopulatePointLightTypeCombo(hDlg);
+        PopulateParticleEffectCombo(hDlg);
         PopulateZShadowTexSizeCombo(hDlg);
         PopulateShadowTapCountCombo(hDlg, IDC_COMBO_SHADOW_PCF_TAPS, g_shadowPcfTapCount);
         PopulateShadowTapCountCombo(hDlg, IDC_COMBO_SHADOW_COMPOSITE_TAPS, g_shadowCompositeTapCount);
@@ -2981,6 +3035,13 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
+        if (commandId == IDC_BUTTON_PLACE_PARTICLE_EFFECT)
+        {
+            PlaceParticleEffectAtLookAt();
+            RefreshParticlePlacementControls(hDlg);
+            return TRUE;
+        }
+
         if (commandId == IDC_COMBO_POINT_LIGHT_TYPE && HIWORD(wParam) == CBN_SELCHANGE)
         {
             HWND combo = reinterpret_cast<HWND>(lParam);
@@ -2988,6 +3049,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_pointLightShape = ComboIndexToPointLightShape(index);
             ApplyPointLightShape();
             RefreshPointLightControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_COMBO_PARTICLE_EFFECT && HIWORD(wParam) == CBN_SELCHANGE)
+        {
+            HWND combo = reinterpret_cast<HWND>(lParam);
+            const int index = static_cast<int>(SendMessage(combo, CB_GETCURSEL, 0, 0));
+            g_particleEffectPreset = ComboIndexToParticleEffectPreset(index);
+            RefreshParticlePlacementControls(hDlg);
             return TRUE;
         }
 

@@ -43,6 +43,7 @@
     <ClCompile Include="MeshNormalMapping.cpp" />
     <ClCompile Include="MeshPointLight.cpp" />
     <ClCompile Include="MeshPOM.cpp" />
+    <ClCompile Include="ParticleSystem.cpp" />
     <ClCompile Include="MeshSmooth.cpp" />
     <ClCompile Include="MeshSSS.cpp" />
     <ClCompile Include="MeshSSSLike.cpp" />
@@ -90,6 +91,7 @@
     <ClInclude Include="MeshNormalMapping.h" />
     <ClInclude Include="MeshPointLight.h" />
     <ClInclude Include="MeshPOM.h" />
+    <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="MeshSmooth.h" />
     <ClInclude Include="MeshSSS.h" />
     <ClInclude Include="MeshSSSLike.h" />
@@ -230,6 +232,7 @@
       <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableOptimizations>
       <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</EnableDebuggingInformation>
     </FxCompile>
+    <FxCompile Include="shader\Particle.fx" />
     <FxCompile Include="shader\simple.fx">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Effect</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">2.0</ShaderModel>

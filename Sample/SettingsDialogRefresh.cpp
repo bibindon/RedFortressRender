@@ -195,6 +195,35 @@ void RefreshPointLightControls(HWND hDlg)
     }
 }
 
+void RefreshParticlePlacementControls(HWND hDlg)
+{
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_PARTICLE_EFFECT);
+    if (combo == NULL)
+    {
+        return;
+    }
+
+    int comboIndex = 0;
+    switch (g_particleEffectPreset)
+    {
+    case NSRender::ParticleEffectPreset::Fire:
+        comboIndex = 1;
+        break;
+    case NSRender::ParticleEffectPreset::Dust:
+        comboIndex = 2;
+        break;
+    case NSRender::ParticleEffectPreset::Fog:
+        comboIndex = 3;
+        break;
+    case NSRender::ParticleEffectPreset::Smoke:
+    default:
+        comboIndex = 0;
+        break;
+    }
+
+    SendMessage(combo, CB_SETCURSEL, comboIndex, 0);
+}
+
 void RefreshFogControls(HWND hDlg)
 {
     const BOOL fogColorEnabled = (g_bFog || g_bHeightFog) ? TRUE : FALSE;
