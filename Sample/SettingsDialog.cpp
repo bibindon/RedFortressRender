@@ -2131,6 +2131,44 @@ bool HandleOpenMeshCommand(HWND hDlg, const WORD commandId)
         return true;
     }
 
+    if (commandId == IDC_BUTTON_OPEN_SPLIT_SKIN_NONANIM_MESH)
+    {
+        ShowOpenFileDialog(hDlg,
+                           L"Split Skin NonAnim Files (*.x)\0*.x\0All Files (*.*)\0*.*\0",
+                           g_selectedSplitSkinNonAnimMeshPath);
+        return true;
+    }
+
+    if (commandId == IDC_BUTTON_OPEN_SPLIT_SKIN_ANIMONLY_MESH)
+    {
+        ShowOpenFileDialog(hDlg,
+                           L"Split Skin AnimOnly Files (*.x)\0*.x\0All Files (*.*)\0*.*\0",
+                           g_selectedSplitSkinAnimOnlyMeshPath);
+        return true;
+    }
+
+    if (commandId == IDC_BUTTON_LOAD_SPLIT_SKIN_ANIM_MESH)
+    {
+        if (g_selectedSplitSkinNonAnimMeshPath.empty() || g_selectedSplitSkinAnimOnlyMeshPath.empty())
+        {
+            MessageBoxW(hDlg,
+                        L"nonAnim.x と AnimOnly.x の両方を選んでから Load Split Anim を押してください。",
+                        L"Split SkinAnim",
+                        MB_OK | MB_ICONWARNING);
+            return true;
+        }
+
+        if (!SpawnSplitSkinAnimMeshAtLookAt(g_selectedSplitSkinNonAnimMeshPath,
+                                            g_selectedSplitSkinAnimOnlyMeshPath))
+        {
+            MessageBoxW(hDlg,
+                        L"Split SkinAnim の結合またはロードに失敗しました。",
+                        L"Split SkinAnim",
+                        MB_OK | MB_ICONERROR);
+        }
+        return true;
+    }
+
     if (commandId == IDC_BUTTON_LOAD_XFILELIST)
     {
         std::wstring selectedPath;

@@ -214,6 +214,8 @@ extern std::wstring g_selectedAnimMeshPath;
 extern std::wstring g_selectedSkinAnimMeshPath;
 extern std::wstring g_selectedMixSkinAnimMeshPath;
 extern std::wstring g_selectedMaskedGaussianMaskPath;
+extern std::wstring g_selectedSplitSkinNonAnimMeshPath;
+extern std::wstring g_selectedSplitSkinAnimOnlyMeshPath;
 extern bool g_bAnimateLight;
 extern bool g_bMoveSpeedBoost100x;
 extern bool g_bRemoteDesktop;
@@ -511,6 +513,8 @@ void SpawnMeshMixAtLookAt(const std::wstring& filePath);
 void SpawnAnimMeshAtLookAt(const std::wstring& filePath);
 void SpawnSkinAnimMeshAtLookAt(const std::wstring& filePath);
 void SpawnMeshMixSkinAnimAtLookAt(const std::wstring& filePath);
+bool SpawnSplitSkinAnimMeshAtLookAt(const std::wstring& nonAnimFilePath,
+                                    const std::wstring& animOnlyFilePath);
 NSRender::AnimSetMap CreateDefaultAnimSetMap();
 bool ShowOpenFileDialog(HWND hWnd, const wchar_t* filter, std::wstring& selectedPath, const wchar_t* defaultExt = L"x");
 bool ShowSaveBinaryXFileDialog(HWND hWnd, const std::wstring& sourcePath, std::wstring& selectedPath);

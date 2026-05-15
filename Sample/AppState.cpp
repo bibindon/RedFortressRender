@@ -41,6 +41,8 @@ std::wstring g_selectedAnimMeshPath;
 std::wstring g_selectedSkinAnimMeshPath;
 std::wstring g_selectedMixSkinAnimMeshPath;
 std::wstring g_selectedMaskedGaussianMaskPath;
+std::wstring g_selectedSplitSkinNonAnimMeshPath;
+std::wstring g_selectedSplitSkinAnimOnlyMeshPath;
 bool g_bAnimateLight = false;
 bool g_bMoveSpeedBoost100x = false;
 bool g_bRemoteDesktop = true;
@@ -739,6 +741,212 @@ bool ResolvePathFromCsvEntry(const std::wstring& csvDirectoryPath,
     return ResolveExistingModelPath(candidatePath, resolvedPath);
 }
 
+bool ReadFileBytes(const std::wstring& path, std::string& bytes)
+{
+    bytes.clear();
+
+    HANDLE fileHandle = CreateFileW(path.c_str(),
+                                    GENERIC_READ,
+                                    FILE_SHARE_READ,
+                                    nullptr,
+                                    OPEN_EXISTING,
+                                    FILE_ATTRIBUTE_NORMAL,
+                                    nullptr);
+    if (fileHandle == INVALID_HANDLE_VALUE)
+    {
+        return false;
+    }
+
+    LARGE_INTEGER fileSize { };
+    if (!GetFileSizeEx(fileHandle, &fileSize) || fileSize.QuadPart < 0)
+    {
+        CloseHandle(fileHandle);
+        return false;
+    }
+
+    if (fileSize.QuadPart > 0)
+    {
+        bytes.resize(static_cast<std::size_t>(fileSize.QuadPart));
+        DWORD totalRead = 0;
+        while (totalRead < bytes.size())
+        {
+            DWORD chunkRead = 0;
+            const DWORD chunkSize = static_cast<DWORD>((std::min<std::size_t>)(bytes.size() - totalRead,
+                                                                                static_cast<std::size_t>(1 << 20)));
+            if (!ReadFile(fileHandle, &bytes[totalRead], chunkSize, &chunkRead, nullptr))
+            {
+                CloseHandle(fileHandle);
+                bytes.clear();
+                return false;
+            }
+
+            if (chunkRead == 0)
+            {
+                break;
+            }
+
+            totalRead += chunkRead;
+        }
+
+        bytes.resize(totalRead);
+    }
+
+    CloseHandle(fileHandle);
+
+    if (bytes.size() >= 3 &&
+        static_cast<unsigned char>(bytes[0]) == 0xEF &&
+        static_cast<unsigned char>(bytes[1]) == 0xBB &&
+        static_cast<unsigned char>(bytes[2]) == 0xBF)
+    {
+        bytes.erase(0, 3);
+    }
+
+    return true;
+}
+
+bool WriteFileBytes(const std::wstring& path, const std::string& bytes)
+{
+    HANDLE fileHandle = CreateFileW(path.c_str(),
+                                    GENERIC_WRITE,
+                                    0,
+                                    nullptr,
+                                    CREATE_ALWAYS,
+                                    FILE_ATTRIBUTE_NORMAL,
+                                    nullptr);
+    if (fileHandle == INVALID_HANDLE_VALUE)
+    {
+        return false;
+    }
+
+    DWORD totalWritten = 0;
+    while (totalWritten < bytes.size())
+    {
+        DWORD chunkWritten = 0;
+        const DWORD chunkSize = static_cast<DWORD>((std::min<std::size_t>)(bytes.size() - totalWritten,
+                                                                            static_cast<std::size_t>(1 << 20)));
+        if (!WriteFile(fileHandle, bytes.data() + totalWritten, chunkSize, &chunkWritten, nullptr))
+        {
+            CloseHandle(fileHandle);
+            return false;
+        }
+
+        if (chunkWritten == 0)
+        {
+            CloseHandle(fileHandle);
+            return false;
+        }
+
+        totalWritten += chunkWritten;
+    }
+
+    CloseHandle(fileHandle);
+    return true;
+}
+
+std::size_t FindLineStartWith(const std::string& text, const char* prefix)
+{
+    const std::size_t prefixLength = std::strlen(prefix);
+    std::size_t lineStart = 0;
+
+    while (lineStart < text.size())
+    {
+        if (text.compare(lineStart, prefixLength, prefix) == 0)
+        {
+            return lineStart;
+        }
+
+        const std::size_t nextLine = text.find('\n', lineStart);
+        if (nextLine == std::string::npos)
+        {
+            break;
+        }
+        lineStart = nextLine + 1;
+    }
+
+    return std::string::npos;
+}
+
+std::wstring GetFileNameWithoutExtension(const std::wstring& filePath)
+{
+    std::wstring fileName = filePath;
+    const std::size_t slashPos = fileName.find_last_of(L"\\/");
+    if (slashPos != std::wstring::npos)
+    {
+        fileName = fileName.substr(slashPos + 1);
+    }
+
+    const std::size_t dotPos = fileName.find_last_of(L'.');
+    if (dotPos != std::wstring::npos)
+    {
+        fileName.erase(dotPos);
+    }
+
+    return fileName;
+}
+
+bool BuildSplitSkinAnimMergedXFile(const std::wstring& nonAnimFilePath,
+                                   const std::wstring& animOnlyFilePath,
+                                   std::wstring& mergedFilePath)
+{
+    std::wstring resolvedNonAnimPath;
+    std::wstring resolvedAnimOnlyPath;
+    if (!ResolveExistingModelPath(nonAnimFilePath, resolvedNonAnimPath) ||
+        !ResolveExistingModelPath(animOnlyFilePath, resolvedAnimOnlyPath))
+    {
+        return false;
+    }
+
+    std::string nonAnimBytes;
+    std::string animOnlyBytes;
+    if (!ReadFileBytes(resolvedNonAnimPath, nonAnimBytes) ||
+        !ReadFileBytes(resolvedAnimOnlyPath, animOnlyBytes))
+    {
+        return false;
+    }
+
+    std::size_t animationSectionStart = FindLineStartWith(animOnlyBytes, "AnimTicksPerSecond {");
+    if (animationSectionStart == std::string::npos)
+    {
+        animationSectionStart = FindLineStartWith(animOnlyBytes, "AnimationSet ");
+    }
+    if (animationSectionStart == std::string::npos)
+    {
+        return false;
+    }
+
+    std::string mergedBytes = nonAnimBytes;
+    while (!mergedBytes.empty() &&
+           (mergedBytes.back() == '\r' || mergedBytes.back() == '\n' || mergedBytes.back() == '\0'))
+    {
+        mergedBytes.pop_back();
+    }
+    mergedBytes += "\r\n";
+    mergedBytes += animOnlyBytes.substr(animationSectionStart);
+    if (mergedBytes.size() < 2 ||
+        mergedBytes.substr(mergedBytes.size() - 2) != "\r\n")
+    {
+        if (!mergedBytes.empty() && mergedBytes.back() == '\n')
+        {
+            mergedBytes.insert(mergedBytes.size() - 1, "\r");
+        }
+        else
+        {
+            mergedBytes += "\r\n";
+        }
+    }
+
+    const std::wstring parentDirectoryPath = GetParentDirectoryPath(resolvedNonAnimPath);
+    if (parentDirectoryPath.empty())
+    {
+        return false;
+    }
+
+    const std::wstring nonAnimBaseName = GetFileNameWithoutExtension(resolvedNonAnimPath);
+    mergedFilePath = parentDirectoryPath + L"\\" + nonAnimBaseName + L".SplitPreviewMerged.x";
+
+    return WriteFileBytes(mergedFilePath, mergedBytes);
+}
+
 std::vector<std::wstring> SplitCsvLine(const std::wstring& line)
 {
     std::vector<std::wstring> fields;
@@ -1295,6 +1503,29 @@ void SpawnMeshMixSkinAnimAtLookAt(const std::wstring& filePath)
                                                      usePOM,
                                                      useNormalMapping);
     RegisterLoadedModel(L"MeshMixSkinAnim", filePath, pos, g_modelLoadScale, renderId);
+}
+
+bool SpawnSplitSkinAnimMeshAtLookAt(const std::wstring& nonAnimFilePath,
+                                    const std::wstring& animOnlyFilePath)
+{
+    std::wstring mergedFilePath;
+    if (!BuildSplitSkinAnimMergedXFile(nonAnimFilePath, animOnlyFilePath, mergedFilePath))
+    {
+        return false;
+    }
+
+    auto pos = g_Render.GetLookAtPos();
+    D3DXVECTOR3 forward = g_Render.GetCameraRotate();
+    D3DXVec3Normalize(&forward, &forward);
+
+    const float yaw = atan2f(forward.x, forward.z);
+    const int renderId = g_Render.AddSkinAnimMesh(mergedFilePath,
+                                                  pos,
+                                                  D3DXVECTOR3(0, yaw, 0.0f),
+                                                  g_modelLoadScale,
+                                                  CreateDefaultAnimSetMap());
+    RegisterLoadedModel(L"SkinAnimMesh", mergedFilePath, pos, g_modelLoadScale, renderId);
+    return true;
 }
 
 bool ShowOpenFileDialog(HWND hWnd, const wchar_t* filter, std::wstring& selectedPath, const wchar_t* defaultExt)
