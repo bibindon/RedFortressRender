@@ -204,6 +204,11 @@ float ClampDepthOfFieldFocalDistance(const float distance)
     return (std::max)(DOF_FOCAL_DISTANCE_MIN, (std::min)(distance, DOF_FOCAL_DISTANCE_MAX));
 }
 
+float ClampDepthOfFieldStartNear(const float distance)
+{
+    return (std::max)(DOF_START_NEAR_MIN, (std::min)(distance, DOF_START_NEAR_MAX));
+}
+
 float ClampDepthOfFieldMaxBlurDistance(const float distance)
 {
     return (std::max)(DOF_MAX_BLUR_DISTANCE_MIN, (std::min)(distance, DOF_MAX_BLUR_DISTANCE_MAX));
@@ -719,6 +724,12 @@ void ApplyDepthOfFieldFocalDistance()
 {
     g_dofFocalDistance = ClampDepthOfFieldFocalDistance(g_dofFocalDistance);
     g_Render.SetPostEffectDepthOfFieldFocalDistance(g_dofFocalDistance);
+}
+
+void ApplyDepthOfFieldStartNear()
+{
+    g_dofStartNear = ClampDepthOfFieldStartNear(g_dofStartNear);
+    g_Render.SetPostEffectDepthOfFieldStartNear(g_dofStartNear);
 }
 
 void ApplyDepthOfFieldMaxBlurDistance()
@@ -1261,6 +1272,16 @@ int DepthOfFieldFocalDistanceToSliderValue(const float distance)
 float SliderValueToDepthOfFieldFocalDistance(const int sliderValue)
 {
     return ClampDepthOfFieldFocalDistance(DOF_FOCAL_DISTANCE_MIN + static_cast<float>(sliderValue) * DOF_FOCAL_DISTANCE_STEP);
+}
+
+int DepthOfFieldStartNearToSliderValue(const float distance)
+{
+    return static_cast<int>(std::lround((ClampDepthOfFieldStartNear(distance) - DOF_START_NEAR_MIN) / DOF_START_NEAR_STEP));
+}
+
+float SliderValueToDepthOfFieldStartNear(const int sliderValue)
+{
+    return ClampDepthOfFieldStartNear(DOF_START_NEAR_MIN + static_cast<float>(sliderValue) * DOF_START_NEAR_STEP);
 }
 
 int DepthOfFieldMaxBlurDistanceToSliderValue(const float distance)

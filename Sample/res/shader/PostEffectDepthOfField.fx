@@ -1,6 +1,7 @@
 float2 g_TexelSize = float2(1.0 / 1600.0, 1.0 / 900.0);
 float4 g_cameraPos = float4(0.0, 0.0, 0.0, 1.0);
 float g_focalDistanceMeters = 8.0;
+float g_startNearMeters = 0.0;
 float g_maxBlurDistanceMeters = 16.0;
 float g_focusBandHalfWidthMeters = 2.0;
 float g_blurRadiusPixels = 1.0;
@@ -72,18 +73,24 @@ float GetBlurStartDistanceMeters()
     return min(g_focalDistanceMeters, g_maxBlurDistanceMeters);
 }
 
-int GetBlurHalfSize(float distanceMeters)
+float GetBlurAmountNormalized(float distanceMeters)
 {
-    const float nearDistance = min(g_focalDistanceMeters, g_maxBlurDistanceMeters);
-    const float farDistance = max(g_focalDistanceMeters, g_maxBlurDistanceMeters);
-    const float totalRange = max(farDistance - nearDistance, 0.0001f);
-    const float normalized = saturate((distanceMeters - nearDistance) / totalRange);
+    const float farBlurStartDistance = min(g_focalDistanceMeters, g_maxBlurDistanceMeters);
+    const float farBlurMaxDistance = max(g_focalDistanceMeters, g_maxBlurDistanceMeters);
+    const float farBlurRange = max(farBlurMaxDistance - farBlurStartDistance, 0.0001f);
+    const float farBlurNormalized = saturate((distanceMeters - farBlurStartDistance) / farBlurRange);
 
-    if (distanceMeters <= nearDistance)
+    float nearBlurNormalized = 0.0f;
+    if (g_startNearMeters > 0.0f && distanceMeters < g_startNearMeters)
     {
-        return 0; // 1x1
+        nearBlurNormalized = saturate((g_startNearMeters - distanceMeters) / max(g_startNearMeters, 0.0001f));
     }
 
+    return max(farBlurNormalized, nearBlurNormalized);
+}
+
+int GetBlurHalfSizeFromNormalized(float normalized)
+{
     if (normalized < 0.20f)
     {
         return 1; // 3x3
@@ -105,6 +112,22 @@ int GetBlurHalfSize(float distanceMeters)
     }
 
     return 5; // 11x11
+}
+
+int GetBlurHalfSize(float distanceMeters)
+{
+    float normalized = GetBlurAmountNormalized(distanceMeters);
+    if (normalized <= 0.0f)
+    {
+        return 0; // 1x1
+    }
+
+    return GetBlurHalfSizeFromNormalized(normalized);
+}
+
+bool IsDistanceBlurred(float distanceMeters)
+{
+    return GetBlurAmountNormalized(distanceMeters) > 0.0f;
 }
 
 // ps_3_0 では POSITION をピクセルシェーダー入力にしない。
@@ -147,7 +170,6 @@ float4 PS(in float2 uv : TEXCOORD0) : COLOR0
     float4 sumColor = baseColor;
     float weightSum = 1.0f;
     float depthCompareThresholdMeters = GetDepthCompareThresholdMeters(centerDistanceMeters);
-    float blurStartDistanceMeters = GetBlurStartDistanceMeters();
 
     [loop]
     for (int y = -blurHalfSize; y <= blurHalfSize; ++y)
@@ -169,7 +191,7 @@ float4 PS(in float2 uv : TEXCOORD0) : COLOR0
                 continue;
             }
 
-            bool tapAlreadyBlurred = (tapDistanceMeters > blurStartDistanceMeters);
+            bool tapAlreadyBlurred = IsDistanceBlurred(tapDistanceMeters);
             if (!tapAlreadyBlurred &&
                 abs(tapDistanceMeters - centerDistanceMeters) > depthCompareThresholdMeters)
             {

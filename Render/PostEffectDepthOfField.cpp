@@ -58,6 +58,7 @@ void PostEffectDepthOfField::Draw(LPDIRECT3DTEXTURE9 renderTarget,
 
     m_d3dEffect->SetVector("g_cameraPos", &cameraPos4);
     m_d3dEffect->SetFloat("g_focalDistanceMeters", m_focalDistance);
+    m_d3dEffect->SetFloat("g_startNearMeters", m_startNear);
     m_d3dEffect->SetFloat("g_maxBlurDistanceMeters", m_maxBlurDistance);
     m_d3dEffect->SetFloat("g_focusBandHalfWidthMeters", m_focusBandHalfWidth);
     m_d3dEffect->SetFloat("g_blurRadiusPixels", m_blurRadiusPixels);
@@ -82,6 +83,11 @@ void PostEffectDepthOfField::Finalize()
 void PostEffectDepthOfField::SetFocalDistance(float focalDistance)
 {
     m_focalDistance = focalDistance;
+}
+
+void PostEffectDepthOfField::SetStartNear(float startNear)
+{
+    m_startNear = (std::max)(0.0f, startNear);
 }
 
 void PostEffectDepthOfField::SetMaxBlurDistance(float maxBlurDistance)

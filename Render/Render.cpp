@@ -1004,6 +1004,40 @@ void Render::ApplySettings()
         SetPostEffectDepthOfFieldFocalDistance(8.0f);
     }
 
+    const auto depthOfFieldStartNear = m_settings.find(L"DepthOfFieldStartNear");
+    if (depthOfFieldStartNear != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectDepthOfFieldStartNear(std::stof(depthOfFieldStartNear->second));
+        }
+        catch (...)
+        {
+            SetPostEffectDepthOfFieldStartNear(0.0f);
+        }
+    }
+    else
+    {
+        SetPostEffectDepthOfFieldStartNear(0.0f);
+    }
+
+    const auto depthOfFieldMaxBlurDistance = m_settings.find(L"DepthOfFieldMaxBlurDistance");
+    if (depthOfFieldMaxBlurDistance != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectDepthOfFieldMaxBlurDistance(std::stof(depthOfFieldMaxBlurDistance->second));
+        }
+        catch (...)
+        {
+            SetPostEffectDepthOfFieldMaxBlurDistance(16.0f);
+        }
+    }
+    else
+    {
+        SetPostEffectDepthOfFieldMaxBlurDistance(16.0f);
+    }
+
     const auto depthOfFieldAutoActivationDistance = m_settings.find(L"DepthOfFieldAutoActivationDistance");
     if (depthOfFieldAutoActivationDistance != m_settings.end())
     {
@@ -2628,6 +2662,11 @@ void Render::SetPostEffectDepthOfFieldMode(const DepthOfFieldMode mode)
 void Render::SetPostEffectDepthOfFieldFocalDistance(const float distance)
 {
     m_postEffectDepthOfField.SetFocalDistance(distance);
+}
+
+void Render::SetPostEffectDepthOfFieldStartNear(const float distance)
+{
+    m_postEffectDepthOfField.SetStartNear(distance);
 }
 
 void Render::SetPostEffectDepthOfFieldMaxBlurDistance(const float distance)

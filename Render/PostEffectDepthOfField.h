@@ -25,6 +25,7 @@ public:
     void Finalize();
 
     void SetFocalDistance(float focalDistance);
+    void SetStartNear(float startNear);
     void SetMaxBlurDistance(float maxBlurDistance);
     void SetFocusBandHalfWidth(float focusBandHalfWidth);
     void SetBlurRadiusPixels(float blurRadiusPixels);
@@ -58,6 +59,7 @@ private:
     LPDIRECT3DSURFACE9 m_surfacePositionReadback = NULL;
 
     float m_focalDistance = 8.0f;
+    float m_startNear = 0.0f;
     float m_maxBlurDistance = 16.0f;
     float m_focusBandHalfWidth = 2.0f;
     float m_blurRadiusPixels = 1.0f;

@@ -103,6 +103,7 @@ float g_sssIntensity = 1.0f;
 D3DXCOLOR g_sssColor = D3DXCOLOR(1.0f, 1.0f, 0.5f, 1.0f);
 float g_bloomThreshold = 2.5f;
 float g_dofFocalDistance = 1.0f;
+float g_dofStartNear = 0.0f;
 float g_dofMaxBlurDistance = 8.0f;
 float g_dofAutoActivationDistance = 10.0f;
 float g_starBurstThreshold = 2.8f;
@@ -332,6 +333,11 @@ float ClampBloomThreshold(const float threshold)
 float ClampDepthOfFieldFocalDistance(const float distance)
 {
     return (std::max)(DOF_FOCAL_DISTANCE_MIN, (std::min)(distance, DOF_FOCAL_DISTANCE_MAX));
+}
+
+float ClampDepthOfFieldStartNear(const float distance)
+{
+    return (std::max)(DOF_START_NEAR_MIN, (std::min)(distance, DOF_START_NEAR_MAX));
 }
 
 float ClampDepthOfFieldMaxBlurDistance(const float distance)
@@ -1754,6 +1760,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_dofMaxBlurDistance = std::stof(value);
             }
+            else if (key == L"DepthOfFieldStartNear")
+            {
+                g_dofStartNear = std::stof(value);
+            }
             else if (key == L"DepthOfFieldAutoActivationDistance")
             {
                 g_dofAutoActivationDistance = std::stof(value);
@@ -1984,6 +1994,7 @@ void ApplyAllSampleSettings()
     ApplyBloomThreshold();
     ApplyDepthOfFieldMode();
     ApplyDepthOfFieldFocalDistance();
+    ApplyDepthOfFieldStartNear();
     ApplyDepthOfFieldMaxBlurDistance();
     ApplyDepthOfFieldAutoActivationDistance();
     ApplyStarBurstThreshold();

@@ -17,6 +17,7 @@
 // こちらには初期化、入力確定、スクロール、メッセージ処理を残している。
 
 void RefreshDepthOfFieldControls(HWND hDlg);
+void RefreshDepthOfFieldStartNearControls(HWND hDlg);
 void RefreshDepthOfFieldMaxBlurControls(HWND hDlg);
 void RefreshDepthOfFieldAutoActivationControls(HWND hDlg);
 void RefreshGaussianControls(HWND hDlg);
@@ -134,6 +135,8 @@ constexpr int BLOOM_THRESHOLD_SLIDER_MIN = 0;
 constexpr int BLOOM_THRESHOLD_SLIDER_MAX = static_cast<int>(BLOOM_THRESHOLD_MAX / BLOOM_THRESHOLD_STEP);
 constexpr int DOF_FOCAL_DISTANCE_SLIDER_MIN = 0;
 constexpr int DOF_FOCAL_DISTANCE_SLIDER_MAX = static_cast<int>((DOF_FOCAL_DISTANCE_MAX - DOF_FOCAL_DISTANCE_MIN) / DOF_FOCAL_DISTANCE_STEP);
+constexpr int DOF_START_NEAR_SLIDER_MIN = 0;
+constexpr int DOF_START_NEAR_SLIDER_MAX = static_cast<int>((DOF_START_NEAR_MAX - DOF_START_NEAR_MIN) / DOF_START_NEAR_STEP);
 constexpr int DOF_MAX_BLUR_DISTANCE_SLIDER_MIN = 0;
 constexpr int DOF_MAX_BLUR_DISTANCE_SLIDER_MAX = static_cast<int>((DOF_MAX_BLUR_DISTANCE_MAX - DOF_MAX_BLUR_DISTANCE_MIN) / DOF_MAX_BLUR_DISTANCE_STEP);
 constexpr int DOF_AUTO_ACTIVATION_DISTANCE_SLIDER_MIN = 0;
@@ -498,6 +501,7 @@ void InitializeEditableNumericFields(HWND hDlg)
     {
         IDC_EDIT_SATURATE_LEVEL,
         IDC_EDIT_DOF_FOCAL_DISTANCE,
+        IDC_EDIT_DOF_START_NEAR,
         IDC_EDIT_DOF_MAX_BLUR_DISTANCE,
         IDC_EDIT_DOF_AUTO_ACTIVATION_DISTANCE,
         IDC_EDIT_GAUSSIAN_SAMPLE_SIZE,
@@ -593,6 +597,14 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
             ApplyDepthOfFieldFocalDistance();
         }
         RefreshDepthOfFieldControls(hDlg);
+        return true;
+    case IDC_EDIT_DOF_START_NEAR:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_dofStartNear = floatValue;
+            ApplyDepthOfFieldStartNear();
+        }
+        RefreshDepthOfFieldStartNearControls(hDlg);
         return true;
     case IDC_EDIT_DOF_MAX_BLUR_DISTANCE:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
@@ -1732,6 +1744,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshSSAOCompositeGaussian3x3Controls(hDlg);
     RefreshBloomThresholdControls(hDlg);
     RefreshDepthOfFieldControls(hDlg);
+    RefreshDepthOfFieldStartNearControls(hDlg);
     RefreshDepthOfFieldMaxBlurControls(hDlg);
     RefreshDepthOfFieldAutoActivationControls(hDlg);
     RefreshStarBurstThresholdControls(hDlg);
@@ -1921,6 +1934,11 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_DOF_FOCAL_DISTANCE, TBM_SETRANGEMAX, FALSE, DOF_FOCAL_DISTANCE_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_DOF_FOCAL_DISTANCE, TBM_SETTICFREQ, 20, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_DOF_FOCAL_DISTANCE, TBM_SETPAGESIZE, 0, 20);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_DOF_START_NEAR, TBM_SETRANGEMIN, FALSE, DOF_START_NEAR_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_DOF_START_NEAR, TBM_SETRANGEMAX, FALSE, DOF_START_NEAR_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_DOF_START_NEAR, TBM_SETTICFREQ, 20, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_DOF_START_NEAR, TBM_SETPAGESIZE, 0, 20);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_DOF_MAX_BLUR_DISTANCE, TBM_SETRANGEMIN, FALSE, DOF_MAX_BLUR_DISTANCE_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_DOF_MAX_BLUR_DISTANCE, TBM_SETRANGEMAX, FALSE, DOF_MAX_BLUR_DISTANCE_SLIDER_MAX);
@@ -2738,6 +2756,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_dofFocalDistance = SliderValueToDepthOfFieldFocalDistance(sliderValue);
             ApplyDepthOfFieldFocalDistance();
             RefreshDepthOfFieldControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_DOF_START_NEAR))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_dofStartNear = SliderValueToDepthOfFieldStartNear(sliderValue);
+            ApplyDepthOfFieldStartNear();
+            RefreshDepthOfFieldStartNearControls(hDlg);
             return TRUE;
         }
 

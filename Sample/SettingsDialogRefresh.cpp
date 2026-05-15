@@ -995,6 +995,18 @@ void RefreshDepthOfFieldControls(HWND hDlg)
                        static_cast<LPARAM>(DepthOfFieldFocalDistanceToSliderValue(g_dofFocalDistance)));
 }
 
+void RefreshDepthOfFieldStartNearControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_dofStartNear);
+    SetDlgItemText(hDlg, IDC_EDIT_DOF_START_NEAR, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_DOF_START_NEAR,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(DepthOfFieldStartNearToSliderValue(g_dofStartNear)));
+}
+
 void RefreshDepthOfFieldMaxBlurControls(HWND hDlg)
 {
     wchar_t buffer[32];

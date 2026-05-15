@@ -311,6 +311,7 @@ public:
     void SetPostEffectDepthOfField(const bool arg);
     void SetPostEffectDepthOfFieldMode(const DepthOfFieldMode mode);
     void SetPostEffectDepthOfFieldFocalDistance(const float distance);
+    void SetPostEffectDepthOfFieldStartNear(const float distance);
     void SetPostEffectDepthOfFieldMaxBlurDistance(const float distance);
     void SetPostEffectDepthOfFieldAutoActivationDistance(const float distance);
 

@@ -1,4 +1,4 @@
-﻿SaturateEnable,1
+SaturateEnable,1
 SaturateLevel,0.4
 ,
 GaussianEnable,0
@@ -66,6 +66,7 @@ StarBurstThreshold,2.8
 ,
 DepthOfFieldMode,0
 DepthOfFieldFocalDistance,1.0
+DepthOfFieldStartNear,0.0
 DepthOfFieldMaxBlurDistance,8.0
 DepthOfFieldAutoActivationDistance,10.0
 ,
