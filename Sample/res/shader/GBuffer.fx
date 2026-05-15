@@ -89,7 +89,7 @@ void VS_GBufferSkin(in  float4 inPosition     : POSITION,
                     uniform int boneNumber)
 {
     float3 position = 0.0f;
-    float3 normalPosition = 0.0f;
+    float3 normal = 0.0f;
     float lastWeight = 0.0f;
 
     int4 indexVector = (int4)inBlendIndices;
@@ -100,12 +100,13 @@ void VS_GBufferSkin(in  float4 inPosition     : POSITION,
     {
         lastWeight += blendWeightsArray[i];
         position += mul(inPosition, g_matWorldArray[indexArray[i]]) * blendWeightsArray[i];
-        normalPosition += mul(inNormal, g_matWorldArray[indexArray[i]]) * blendWeightsArray[i];
+        normal += mul(inNormal.xyz, (float3x3)g_matWorldArray[indexArray[i]]) * blendWeightsArray[i];
     }
 
     lastWeight = 1.0f - lastWeight;
     position += mul(inPosition, g_matWorldArray[indexArray[boneNumber - 1]]) * lastWeight;
-    normalPosition += mul(inNormal, g_matWorldArray[indexArray[boneNumber - 1]]) * lastWeight;
+    normal += mul(inNormal.xyz, (float3x3)g_matWorldArray[indexArray[boneNumber - 1]]) * lastWeight;
+    normal = normalize(normal);
 
     float4 positionView4 = mul(float4(position, 1.0f), g_matView);
 
@@ -114,7 +115,7 @@ void VS_GBufferSkin(in  float4 inPosition     : POSITION,
     outScreenUV = float2(ndc.x * 0.5f + 0.5f, -ndc.y * 0.5f + 0.5f);
     outViewSpaceZ = positionView4.z;
     outWorldPos = position;
-    outWorldNormal = normalize(normalPosition - position);
+    outWorldNormal = normal;
 }
 
 void PS_GBuffer(VS_OUTPUT inputData,
