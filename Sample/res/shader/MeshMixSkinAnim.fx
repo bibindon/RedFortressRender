@@ -14,6 +14,18 @@ float g_fShadowDarkness = 1.0f;
 float g_specularPower = 1.0f;
 float g_specularIntensity = 0.1f;
 
+float3 g_pointLightPos[16];
+float  g_pointLightBrightness[16];
+float  g_pointLightShape[16];
+float  g_pointLightLineLength[16];
+float  g_pointLightSquareWidth[16];
+float  g_pointLightSquareHeight[16];
+float4 g_pointLightRotation[16];
+float3 g_pointLightColor[16];
+
+static const float POINT_LIGHT_CUBE_HALF_SIZE = 4.0f;
+static const float POINT_LIGHT_SPHERE_RADIUS = 5.0f;
+
 static const int MAX_MATRICES = 8;
 float4x3 g_matWorldArray[MAX_MATRICES];
 float4x4 g_matViewProj;
@@ -37,6 +49,111 @@ float3 IncreaseSaturation(float3 color, float amount)
 {
     float luminance = dot(color, float3(0.299f, 0.587f, 0.114f));
     return saturate(lerp(luminance.xxx, color, amount));
+}
+
+float3 RotateVectorXYZ(float3 inputVector, float3 rotation)
+{
+    float sinX = sin(rotation.x);
+    float cosX = cos(rotation.x);
+    float sinY = sin(rotation.y);
+    float cosY = cos(rotation.y);
+    float sinZ = sin(rotation.z);
+    float cosZ = cos(rotation.z);
+
+    float3 rotated = inputVector;
+
+    rotated = float3(rotated.x,
+                     rotated.y * cosX - rotated.z * sinX,
+                     rotated.y * sinX + rotated.z * cosX);
+
+    rotated = float3(rotated.x * cosY + rotated.z * sinY,
+                     rotated.y,
+                     -rotated.x * sinY + rotated.z * cosY);
+
+    rotated = float3(rotated.x * cosZ - rotated.y * sinZ,
+                     rotated.x * sinZ + rotated.y * cosZ,
+                     rotated.z);
+
+    return rotated;
+}
+
+float3 ClosestPointOnPointLightShape(float3 lightPos,
+                                     float lightShape,
+                                     float lightLineLength,
+                                     float lightSquareWidth,
+                                     float lightSquareHeight,
+                                     float3 lightRotation,
+                                     float3 worldPos)
+{
+    float3 delta = worldPos - lightPos;
+
+    if (lightShape < 0.5f)
+    {
+        return lightPos;
+    }
+
+    if (lightShape < 1.5f)
+    {
+        float halfLength = max(lightLineLength * 0.5f, 0.0f);
+        float3 lineAxis = normalize(RotateVectorXYZ(float3(1.0f, 0.0f, 0.0f), lightRotation));
+        float projected = clamp(dot(delta, lineAxis), -halfLength, halfLength);
+        return lightPos + (lineAxis * projected);
+    }
+
+    if (lightShape < 2.5f)
+    {
+        float halfWidth = max(lightSquareWidth * 0.5f, 0.0f);
+        float halfHeight = max(lightSquareHeight * 0.5f, 0.0f);
+        float3 squareAxisX = normalize(RotateVectorXYZ(float3(1.0f, 0.0f, 0.0f), lightRotation));
+        float3 squareAxisZ = normalize(RotateVectorXYZ(float3(0.0f, 0.0f, 1.0f), lightRotation));
+        float projectedX = clamp(dot(delta, squareAxisX), -halfWidth, halfWidth);
+        float projectedZ = clamp(dot(delta, squareAxisZ), -halfHeight, halfHeight);
+        return lightPos + (squareAxisX * projectedX) + (squareAxisZ * projectedZ);
+    }
+
+    if (lightShape < 3.5f)
+    {
+        return lightPos + clamp(delta,
+                                float3(-POINT_LIGHT_CUBE_HALF_SIZE, -POINT_LIGHT_CUBE_HALF_SIZE, -POINT_LIGHT_CUBE_HALF_SIZE),
+                                float3( POINT_LIGHT_CUBE_HALF_SIZE,  POINT_LIGHT_CUBE_HALF_SIZE,  POINT_LIGHT_CUBE_HALF_SIZE));
+    }
+
+    float distanceToCenter = length(delta);
+    if (distanceToCenter <= POINT_LIGHT_SPHERE_RADIUS || distanceToCenter <= 1e-6f)
+    {
+        return worldPos;
+    }
+
+    return lightPos + (delta / distanceToCenter) * POINT_LIGHT_SPHERE_RADIUS;
+}
+
+void AccumulateSingleLightSample(float3 samplePos,
+                                 float sampleBrightness,
+                                 float3 lightColor,
+                                 float3 worldPos,
+                                 float3 normal,
+                                 float3 cameraDirWS,
+                                 out float3 accumContribution,
+                                 out float diffContribution)
+{
+    float3 Lvec = samplePos - worldPos;
+    float dist = length(Lvec);
+    float3 L = Lvec / max(dist, 1e-6);
+
+    float NdotL = saturate(dot(normal, L));
+    float3 H = normalize(L + cameraDirWS);
+    float NdotH = saturate(dot(normal, H));
+    float atten = saturate(1.0 / max(dist, 1e-6));
+
+    float diff = sampleBrightness * atten * NdotL;
+    float spec = 0.0f;
+    if (g_specularIntensity > 0.0f)
+    {
+        spec = pow(NdotH, g_specularPower) * g_specularIntensity * sampleBrightness * atten;
+    }
+
+    accumContribution = lightColor * (diff + spec);
+    diffContribution = diff;
 }
 
 void VertexShader1(in  float4 inPosition     : POSITION,
@@ -140,6 +257,49 @@ void PixelShader1(in  float3 inPosWorld    : TEXCOORD0,
                                textureColor.a * g_diffuse.a));
 }
 
+void PixelShaderPointLight(in  float4 inPosition    : POSITION,
+                           in  float3 inPosWorld    : TEXCOORD0,
+                           in  float3 inNormalWorld : TEXCOORD1,
+                           in  float2 inTexCoord    : TEXCOORD2,
+                           out float4 outColor      : COLOR)
+{
+    float3 N = normalize(inNormalWorld);
+    float3 cameraDirWS = normalize(g_cameraPos.xyz - inPosWorld);
+
+    float3 accum = 0.0f;
+    float diffSum = 0.0f;
+
+    for (int i = 0; i < 16; ++i)
+    {
+        if (g_pointLightBrightness[i] <= 0.0f)
+        {
+            continue;
+        }
+
+        float3 lightSurfacePos = ClosestPointOnPointLightShape(g_pointLightPos[i],
+                                                               g_pointLightShape[i],
+                                                               g_pointLightLineLength[i],
+                                                               g_pointLightSquareWidth[i],
+                                                               g_pointLightSquareHeight[i],
+                                                               g_pointLightRotation[i].xyz,
+                                                               inPosWorld);
+        float3 sampleAccum = 0.0f;
+        float sampleDiff = 0.0f;
+        AccumulateSingleLightSample(lightSurfacePos,
+                                    g_pointLightBrightness[i],
+                                    g_pointLightColor[i],
+                                    inPosWorld,
+                                    N,
+                                    cameraDirWS,
+                                    sampleAccum,
+                                    sampleDiff);
+        accum += sampleAccum;
+        diffSum += sampleDiff;
+    }
+
+    outColor = float4(accum, saturate(diffSum));
+}
+
 technique Technique1
 {
     pass Pass0
@@ -150,5 +310,15 @@ technique Technique1
 
         VertexShader = (vsArray[g_currentBoneIndex]);
         PixelShader = compile ps_3_0 PixelShader1();
+    }
+
+    pass PassPointLight
+    {
+        AlphaBlendEnable = TRUE;
+        SrcBlend = SRCALPHA;
+        DestBlend = INVSRCALPHA;
+
+        VertexShader = (vsArray[g_currentBoneIndex]);
+        PixelShader = compile ps_3_0 PixelShaderPointLight();
     }
 }

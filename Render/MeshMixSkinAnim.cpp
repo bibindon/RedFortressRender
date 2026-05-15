@@ -34,6 +34,11 @@ float ConvertXMaterialPowerToSpecularIntensity(const float materialPower)
     return (clampedPower / 255.0f) * 2.0f;
 }
 
+float PointLightShapeToShaderValue(const PointLightShape shape)
+{
+    return static_cast<float>(static_cast<int>(shape));
+}
+
 float GetMaterialSpecularIntensity(const D3DMATERIAL9& material)
 {
     if (true)
@@ -212,6 +217,54 @@ void MeshMixSkinAnim::Render()
     m_D3DEffect->SetFloat("g_fSaturateShadowIntensity", m_param.saturateShadowIntensity);
     m_D3DEffect->SetFloat("g_fShadowDarkness", m_param.shadowDarkness);
     m_D3DEffect->SetFloat("g_specularIntensity", m_param.specularIntensity);
+
+    if (m_param.pointLight)
+    {
+        auto pointLightList = Light::GetPointLightList();
+
+        D3DXVECTOR4 pos[16];
+        float brightness[16] { };
+        float shape[16] { };
+        float lineLength[16] { };
+        float squareWidth[16] { };
+        float squareHeight[16] { };
+        D3DXVECTOR4 rotation[16];
+        D3DXVECTOR4 color[16];
+
+        ZeroMemory(pos, sizeof(pos));
+        ZeroMemory(rotation, sizeof(rotation));
+        ZeroMemory(color, sizeof(color));
+
+        for (int i = 0; i < 16; ++i)
+        {
+            if (i < pointLightList.size())
+            {
+                pos[i].x = pointLightList.at(i).m_pos.x;
+                pos[i].y = pointLightList.at(i).m_pos.y;
+                pos[i].z = pointLightList.at(i).m_pos.z;
+                brightness[i] = pointLightList.at(i).m_brightness;
+                shape[i] = PointLightShapeToShaderValue(pointLightList.at(i).m_shape);
+                lineLength[i] = pointLightList.at(i).m_lineLength;
+                squareWidth[i] = pointLightList.at(i).m_squareWidth;
+                squareHeight[i] = pointLightList.at(i).m_squareHeight;
+                rotation[i].x = pointLightList.at(i).m_rotation.x;
+                rotation[i].y = pointLightList.at(i).m_rotation.y;
+                rotation[i].z = pointLightList.at(i).m_rotation.z;
+                color[i].x = pointLightList.at(i).m_color.r;
+                color[i].y = pointLightList.at(i).m_color.g;
+                color[i].z = pointLightList.at(i).m_color.b;
+            }
+        }
+
+        m_D3DEffect->SetVectorArray("g_pointLightPos", pos, 16);
+        m_D3DEffect->SetFloatArray("g_pointLightBrightness", brightness, 16);
+        m_D3DEffect->SetFloatArray("g_pointLightShape", shape, 16);
+        m_D3DEffect->SetFloatArray("g_pointLightLineLength", lineLength, 16);
+        m_D3DEffect->SetFloatArray("g_pointLightSquareWidth", squareWidth, 16);
+        m_D3DEffect->SetFloatArray("g_pointLightSquareHeight", squareHeight, 16);
+        m_D3DEffect->SetVectorArray("g_pointLightRotation", rotation, 16);
+        m_D3DEffect->SetVectorArray("g_pointLightColor", color, 16);
+    }
 
     D3DXMATRIX viewProjectionMatrix = Camera::GetViewMatrix() * Camera::GetProjMatrix();
     m_D3DEffect->SetMatrix("g_matViewProj", &viewProjectionMatrix);
@@ -437,6 +490,23 @@ void MeshMixSkinAnim::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBas
 
         m_D3DEffect->Begin(nullptr, 0);
         if (FAILED(m_D3DEffect->BeginPass(0)))
+        {
+            m_D3DEffect->End();
+            throw std::exception("Failed 'BeginPass' function.");
+        }
+
+        m_D3DEffect->CommitChanges();
+        container->MeshData.pMesh->DrawSubset(i);
+        m_D3DEffect->EndPass();
+        m_D3DEffect->End();
+
+        if (!m_param.pointLight)
+        {
+            continue;
+        }
+
+        m_D3DEffect->Begin(nullptr, 0);
+        if (FAILED(m_D3DEffect->BeginPass(1)))
         {
             m_D3DEffect->End();
             throw std::exception("Failed 'BeginPass' function.");
