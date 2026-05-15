@@ -406,7 +406,13 @@ private:
     // マルチパスレンダリング関連
     //---------------------------------------------------------------
 
-    void DrawPass1(const bool renderToSceneRenderTargets = true);
+    void DrawPass1(const bool renderToSceneRenderTargets = true,
+                   int activeMirrorMeshIndex = -1);
+    void DrawSceneGeometry(int activeMirrorMeshIndex,
+                           bool renderActiveMirrorAsMirror,
+                           int skippedMeshMixIndex = -1);
+    int FindActiveMirrorMeshIndex() const;
+    bool RenderMirrorTexture(int activeMirrorMeshIndex);
 
     // 各ピクセルの深度とワールド座標を表した画像を生成
     GBuffer m_GBuffer;
@@ -516,6 +522,7 @@ private:
 
     LPDIRECT3DTEXTURE9 m_pRenderTarget1 = NULL;
     LPDIRECT3DTEXTURE9 m_pRenderTarget2 = NULL;
+    LPDIRECT3DTEXTURE9 m_pMirrorRenderTarget = NULL;
 
     //-----------------------------------------------------------------
     // FPS表示

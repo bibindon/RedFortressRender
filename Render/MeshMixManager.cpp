@@ -111,6 +111,23 @@ LPDIRECT3DTEXTURE9& GetSharedThicknessTexture()
     return sharedThicknessTexture;
 }
 
+LPDIRECT3DTEXTURE9& GetSharedMirrorTexture()
+{
+    static LPDIRECT3DTEXTURE9 sharedMirrorTexture = nullptr;
+    return sharedMirrorTexture;
+}
+
+D3DXMATRIX& GetSharedMirrorViewProj()
+{
+    static D3DXMATRIX sharedMirrorViewProj = []()
+    {
+        D3DXMATRIX identity;
+        D3DXMatrixIdentity(&identity);
+        return identity;
+    }();
+    return sharedMirrorViewProj;
+}
+
 float ClampSpecularEdge(const float edge)
 {
     return (std::max)(0.0f, (std::min)(edge, 1.0f));
@@ -119,6 +136,88 @@ float ClampSpecularEdge(const float edge)
 float ConvertSpecularEdgeToShaderPower(const float edge)
 {
     return 1.0f + (ClampSpecularEdge(edge) * 127.0f);
+}
+
+bool ComputeMirrorPlaneFromMesh(LPD3DXMESH pMesh,
+                                D3DXVECTOR3* pPlanePoint,
+                                D3DXVECTOR3* pPlaneNormal)
+{
+    if (pMesh == nullptr || pPlanePoint == nullptr || pPlaneNormal == nullptr)
+    {
+        return false;
+    }
+
+    if ((pMesh->GetFVF() & D3DFVF_XYZ) == 0 || pMesh->GetNumFaces() == 0)
+    {
+        return false;
+    }
+
+    void* pVertices = nullptr;
+    HRESULT hResult = pMesh->LockVertexBuffer(D3DLOCK_READONLY, &pVertices);
+    if (FAILED(hResult))
+    {
+        return false;
+    }
+
+    LPDIRECT3DINDEXBUFFER9 pIndexBuffer = nullptr;
+    hResult = pMesh->GetIndexBuffer(&pIndexBuffer);
+    if (FAILED(hResult))
+    {
+        pMesh->UnlockVertexBuffer();
+        return false;
+    }
+
+    void* pIndices = nullptr;
+    hResult = pIndexBuffer->Lock(0, 0, &pIndices, D3DLOCK_READONLY);
+    if (FAILED(hResult))
+    {
+        SAFE_RELEASE(pIndexBuffer);
+        pMesh->UnlockVertexBuffer();
+        return false;
+    }
+
+    const UINT vertexStride = pMesh->GetNumBytesPerVertex();
+    const BYTE* pVertexBytes = static_cast<const BYTE*>(pVertices);
+    DWORD i0 = 0;
+    DWORD i1 = 0;
+    DWORD i2 = 0;
+
+    if ((pMesh->GetOptions() & D3DXMESH_32BIT) != 0)
+    {
+        const DWORD* pIndexData = static_cast<const DWORD*>(pIndices);
+        i0 = pIndexData[0];
+        i1 = pIndexData[1];
+        i2 = pIndexData[2];
+    }
+    else
+    {
+        const WORD* pIndexData = static_cast<const WORD*>(pIndices);
+        i0 = pIndexData[0];
+        i1 = pIndexData[1];
+        i2 = pIndexData[2];
+    }
+
+    const D3DXVECTOR3& v0 = *reinterpret_cast<const D3DXVECTOR3*>(pVertexBytes + vertexStride * i0);
+    const D3DXVECTOR3& v1 = *reinterpret_cast<const D3DXVECTOR3*>(pVertexBytes + vertexStride * i1);
+    const D3DXVECTOR3& v2 = *reinterpret_cast<const D3DXVECTOR3*>(pVertexBytes + vertexStride * i2);
+
+    const D3DXVECTOR3 edge1 = v1 - v0;
+    const D3DXVECTOR3 edge2 = v2 - v0;
+    D3DXVECTOR3 normal;
+    D3DXVec3Cross(&normal, &edge1, &edge2);
+
+    const bool isValidNormal = D3DXVec3LengthSq(&normal) > 0.0f;
+    if (isValidNormal)
+    {
+        D3DXVec3Normalize(&normal, &normal);
+        *pPlanePoint = v0;
+        *pPlaneNormal = normal;
+    }
+
+    pIndexBuffer->Unlock();
+    SAFE_RELEASE(pIndexBuffer);
+    pMesh->UnlockVertexBuffer();
+    return isValidNormal;
 }
 
 float ConvertXMaterialPowerToShaderPower(const float materialPower)
@@ -427,6 +526,7 @@ enum class eMeshType
     NormalMapping,
     EnvMapping,
     Glass,
+    Mirror,
     Emit,
 };
 
@@ -517,6 +617,10 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
             else if (value == L"glass")
             {
                 result.meshType = eMeshType::Glass;
+            }
+            else if (value == L"mirror")
+            {
+                result.meshType = eMeshType::Mirror;
             }
             else if (value == L"emit")
             {
@@ -708,8 +812,11 @@ MeshMixManager& MeshMixManager::operator=(MeshMixManager&& other) noexcept
     m_enabled = other.m_enabled;
     m_autoPointLightAdded = other.m_autoPointLightAdded;
     m_deviceResourceRegistered = other.m_deviceResourceRegistered;
+    m_hasMirrorPlane = other.m_hasMirrorPlane;
     m_param = other.m_param;
     m_autoPointLightOwnerTag = std::move(other.m_autoPointLightOwnerTag);
+    m_mirrorPlanePointLocal = other.m_mirrorPlanePointLocal;
+    m_mirrorPlaneNormalLocal = other.m_mirrorPlaneNormalLocal;
     m_loadThread = std::move(other.m_loadThread);
 
     other.m_materialCount = 0;
@@ -718,6 +825,7 @@ MeshMixManager& MeshMixManager::operator=(MeshMixManager&& other) noexcept
     other.m_enabled = false;
     other.m_autoPointLightAdded = false;
     other.m_deviceResourceRegistered = false;
+    other.m_hasMirrorPlane = false;
 
     return *this;
 }
@@ -803,6 +911,10 @@ void MeshMixManager::InitializeInternal()
     else if (csvParam.meshType == eMeshType::Glass)
     {
         m_param.glass = true;
+    }
+    else if (csvParam.meshType == eMeshType::Mirror)
+    {
+        m_param.mirror = true;
     }
     else if (csvParam.meshType == eMeshType::Emit)
     {
@@ -897,6 +1009,17 @@ void MeshMixManager::InitializeInternal()
     if (csvParam.cubeMappingGaussDefined)
     {
         m_param.cubeMappingGauss = csvParam.cubeMappingGauss;
+    }
+
+    if (m_param.mirror)
+    {
+        m_hasMirrorPlane = ComputeMirrorPlaneFromMesh(m_D3DMesh,
+                                                      &m_mirrorPlanePointLocal,
+                                                      &m_mirrorPlaneNormalLocal);
+    }
+    else
+    {
+        m_hasMirrorPlane = false;
     }
 
     DWORD* adjacencyList = static_cast<DWORD*>(adjacencyBuffer->GetBufferPointer());
@@ -1215,6 +1338,28 @@ void MeshMixManager::SetSharedThicknessTexture(LPDIRECT3DTEXTURE9 texture)
     }
 }
 
+void MeshMixManager::SetSharedMirrorTexture(LPDIRECT3DTEXTURE9 texture)
+{
+    GetSharedMirrorTexture() = texture;
+
+    LPD3DXEFFECT sharedEffect = GetSharedEffect();
+    if (sharedEffect != nullptr)
+    {
+        sharedEffect->SetTexture("g_texMirror", texture);
+    }
+}
+
+void MeshMixManager::SetSharedMirrorViewProj(const D3DXMATRIX& matrix)
+{
+    GetSharedMirrorViewProj() = matrix;
+
+    LPD3DXEFFECT sharedEffect = GetSharedEffect();
+    if (sharedEffect != nullptr)
+    {
+        sharedEffect->SetMatrix("g_matMirrorViewProj", &matrix);
+    }
+}
+
 void MeshMixManager::SetSpecularIntensityOverrideEnabled(const bool enabled)
 {
     m_param.specularIntensityOverrideEnabled = enabled;
@@ -1248,6 +1393,26 @@ D3DXVECTOR3 MeshMixManager::GetPos() const
 float MeshMixManager::GetScale() const
 {
     return m_scale;
+}
+
+D3DXMATRIX MeshMixManager::BuildWorldMatrix() const
+{
+    D3DXMATRIX matWorld { };
+    D3DXMatrixIdentity(&matWorld);
+
+    D3DXMATRIX matWork;
+    D3DXMatrixIdentity(&matWork);
+
+    D3DXMatrixScaling(&matWork, m_scale, m_scale, m_scale);
+    matWorld *= matWork;
+
+    D3DXMatrixRotationYawPitchRoll(&matWork, m_rotate.y, m_rotate.x, m_rotate.z);
+    matWorld *= matWork;
+
+    D3DXMatrixTranslation(&matWork, m_pos.x, m_pos.y, m_pos.z);
+    matWorld *= matWork;
+
+    return matWorld;
 }
 
 DWORD MeshMixManager::GetSubsetCount() const
@@ -1295,7 +1460,31 @@ bool MeshMixManager::IsDepthBufferShadowEnabled() const
     return m_param.shadow;
 }
 
-void MeshMixManager::Render()
+bool MeshMixManager::IsMirror() const
+{
+    return m_param.mirror;
+}
+
+bool MeshMixManager::TryGetMirrorPlaneWorld(D3DXVECTOR3& planePoint, D3DXVECTOR3& planeNormal) const
+{
+    if (!m_bLoaded || !m_param.mirror || !m_hasMirrorPlane)
+    {
+        return false;
+    }
+
+    const D3DXMATRIX matWorld = BuildWorldMatrix();
+    D3DXVec3TransformCoord(&planePoint, &m_mirrorPlanePointLocal, &matWorld);
+    D3DXVec3TransformNormal(&planeNormal, &m_mirrorPlaneNormalLocal, &matWorld);
+    if (D3DXVec3LengthSq(&planeNormal) <= 0.0f)
+    {
+        return false;
+    }
+
+    D3DXVec3Normalize(&planeNormal, &planeNormal);
+    return true;
+}
+
+void MeshMixManager::Render(const bool renderAsMirrorSurface)
 {
     if (!m_bLoaded || !m_enabled)
     {
@@ -1328,20 +1517,7 @@ void MeshMixManager::Render()
     hResult = sharedEffect->SetFloat("g_fAmbientIntensity", Light::GetAmbientBrightness());
     assert(hResult == S_OK);
 
-    D3DXMATRIX matWorld{ };
-    D3DXMatrixIdentity(&matWorld);
-
-    D3DXMATRIX matWork;
-    D3DXMatrixIdentity(&matWork);
-
-    D3DXMatrixScaling(&matWork, m_scale, m_scale, m_scale);
-    matWorld *= matWork;
-
-    D3DXMatrixRotationYawPitchRoll(&matWork, m_rotate.y, m_rotate.x, m_rotate.z);
-    matWorld *= matWork;
-
-    D3DXMatrixTranslation(&matWork, m_pos.x, m_pos.y, m_pos.z);
-    matWorld *= matWork;
+    const D3DXMATRIX matWorld = BuildWorldMatrix();
 
     hResult = sharedEffect->SetMatrix("g_matWorld", &matWorld);
 
@@ -1386,6 +1562,13 @@ void MeshMixManager::Render()
     assert(hResult == S_OK);
 
     hResult = sharedEffect->SetTexture("g_texThickness", GetSharedThicknessTexture());
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetTexture("g_texMirror", GetSharedMirrorTexture());
+    assert(hResult == S_OK);
+
+    const D3DXMATRIX sharedMirrorViewProj = GetSharedMirrorViewProj();
+    hResult = sharedEffect->SetMatrix("g_matMirrorViewProj", &sharedMirrorViewProj);
     assert(hResult == S_OK);
 
     BOOL usePom = FALSE;
@@ -1536,7 +1719,11 @@ void MeshMixManager::Render()
     hResult = sharedEffect->CommitChanges();
     assert(hResult == S_OK);
 
-    if (m_param.emit)
+    if (renderAsMirrorSurface && m_param.mirror)
+    {
+        DrawAllSubsets(sharedEffect, 5);
+    }
+    else if (m_param.emit)
     {
         DrawAllSubsets(sharedEffect, 4);
     }

@@ -2,6 +2,7 @@
 float4x4 g_matWorld;
 float4x4 g_matViewProj;
 float4x4 g_matWorldViewProj;
+float4x4 g_matMirrorViewProj;
 
 float4 g_lightDir = { 0.3f, 1.0f, 0.5f, 0.0f };
 float4 g_lightPos = { -5.f, 7.f, -10.f, 0.0f };
@@ -106,6 +107,17 @@ sampler g_thicknessSampler = sampler_state
     MipFilter = NONE;
     MinFilter = POINT;
     MagFilter = POINT;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+
+texture g_texMirror;
+sampler g_mirrorSampler = sampler_state
+{
+    Texture = (g_texMirror);
+    MipFilter = LINEAR;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
     AddressU = CLAMP;
     AddressV = CLAMP;
 };
@@ -679,6 +691,28 @@ void PixelShaderEmit(in  float4 inPosition     : POSITION,
     outColor = float4(albedo * g_emitColor.rgb * g_emitIntensity, 1.0f);
 }
 
+void VertexShaderMirror(in  float4 inPosition   : POSITION,
+                        in  float4 inNormal     : NORMAL0,
+                        in  float4 inTangent    : TANGENT0,
+                        in  float4 inBinormal   : BINORMAL0,
+                        in  float4 inTexCoord   : TEXCOORD0,
+                        out float4 outPosition  : POSITION,
+                        out float4 outMirrorProj : TEXCOORD0)
+{
+    float4 worldPos = mul(inPosition, g_matWorld);
+    outPosition = mul(inPosition, g_matWorldViewProj);
+    outMirrorProj = mul(worldPos, g_matMirrorViewProj);
+}
+
+void PixelShaderMirror(in float4 inMirrorProj : TEXCOORD0,
+                       out float4 outColor    : COLOR)
+{
+    float2 uv;
+    uv.x = inMirrorProj.x / inMirrorProj.w * 0.5f + 0.5f;
+    uv.y = -inMirrorProj.y / inMirrorProj.w * 0.5f + 0.5f;
+    outColor = tex2D(g_mirrorSampler, uv) * 0.8f;
+}
+
 float2 CalcUVCoordWithPOM(float3 inNormalizedNormalWS,
                           float2 inTexCoord,
                           float3 invViewWS,
@@ -770,6 +804,12 @@ technique Technique1
     {
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShaderEmit();
+    }
+
+    pass PassMirror
+    {
+        VertexShader = compile vs_3_0 VertexShaderMirror();
+        PixelShader = compile ps_3_0 PixelShaderMirror();
     }
 
 }

@@ -1235,6 +1235,7 @@ void Render::Finalize()
     m_GBuffer.Finalize();
     SAFE_RELEASE(m_pRenderTarget1);
     SAFE_RELEASE(m_pRenderTarget2);
+    SAFE_RELEASE(m_pMirrorRenderTarget);
 
     Common::RemoveDeviceLostResource(this);
 
@@ -1279,7 +1280,21 @@ void Render::Draw()
         MeshMixManager::SetSharedThicknessTexture(NULL);
     }
 
-    DrawPass1(true);
+    int activeMirrorMeshIndex = FindActiveMirrorMeshIndex();
+    D3DXMATRIX mirrorViewProj;
+    D3DXMatrixIdentity(&mirrorViewProj);
+    MeshMixManager::SetSharedMirrorTexture(NULL);
+    MeshMixManager::SetSharedMirrorViewProj(mirrorViewProj);
+    if (activeMirrorMeshIndex >= 0 && RenderMirrorTexture(activeMirrorMeshIndex))
+    {
+        MeshMixManager::SetSharedMirrorTexture(m_pMirrorRenderTarget);
+    }
+    else
+    {
+        activeMirrorMeshIndex = -1;
+    }
+
+    DrawPass1(true, activeMirrorMeshIndex);
 
     //---------------------------------------------------------------
     // ポストエフェクト
@@ -2944,49 +2959,95 @@ void Render::RotateCamera(const D3DXVECTOR3& rot)
     Camera::SetLookAtPos(lookAt);
 }
 
-void Render::DrawPass1(const bool renderToSceneRenderTargets)
+int Render::FindActiveMirrorMeshIndex() const
 {
+    for (int i = static_cast<int>(m_meshMixList.size()) - 1; i >= 0; --i)
+    {
+        const auto& mesh = m_meshMixList[static_cast<size_t>(i)];
+        if (mesh.IsEnabled() && mesh.IsLoaded() && mesh.IsMirror())
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+bool Render::RenderMirrorTexture(const int activeMirrorMeshIndex)
+{
+    if (activeMirrorMeshIndex < 0 ||
+        activeMirrorMeshIndex >= static_cast<int>(m_meshMixList.size()) ||
+        m_pMirrorRenderTarget == NULL)
+    {
+        return false;
+    }
+
+    D3DXVECTOR3 planePoint;
+    D3DXVECTOR3 planeNormal;
+    if (!m_meshMixList[static_cast<size_t>(activeMirrorMeshIndex)].TryGetMirrorPlaneWorld(planePoint, planeNormal))
+    {
+        return false;
+    }
+
     HRESULT hResult = E_FAIL;
+    LPDIRECT3DSURFACE9 oldRenderTarget = NULL;
+    LPDIRECT3DSURFACE9 oldDepthStencil = NULL;
+    LPDIRECT3DSURFACE9 mirrorRenderSurface = NULL;
 
-    LPDIRECT3DSURFACE9 surfaceOld = NULL;
-    LPDIRECT3DSURFACE9 surfaceRenderTarget0 = NULL;
-    LPDIRECT3DSURFACE9 surfaceRenderTarget1 = NULL;
-
-    if (renderToSceneRenderTargets)
-    {
-        hResult = Common::D3DDevice()->GetRenderTarget(0, &surfaceOld);
-        assert(hResult == S_OK);
-
-        hResult = m_pRenderTarget1->GetSurfaceLevel(0, &surfaceRenderTarget0);
-        assert(hResult == S_OK);
-
-        hResult = m_pRenderTarget2->GetSurfaceLevel(0, &surfaceRenderTarget1);
-        assert(hResult == S_OK);
-
-        hResult = Common::D3DDevice()->SetRenderTarget(0, surfaceRenderTarget0);
-        assert(hResult == S_OK);
-
-        hResult = Common::D3DDevice()->SetRenderTarget(1, surfaceRenderTarget1);
-        assert(hResult == S_OK);
-    }
-    else
-    {
-        hResult = Common::D3DDevice()->SetRenderTarget(1, NULL);
-        assert(hResult == S_OK);
-    }
-
-    hResult = Common::D3DDevice()->Clear(0,
-                                         NULL,
-                                         D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
-                                         D3DCOLOR_RGBA(200, 200, 200, 255),
-                                         1.0f,
-                                         0);
-
+    hResult = Common::D3DDevice()->GetRenderTarget(0, &oldRenderTarget);
     assert(hResult == S_OK);
 
-    hResult = Common::D3DDevice()->BeginScene();
+    hResult = Common::D3DDevice()->GetDepthStencilSurface(&oldDepthStencil);
     assert(hResult == S_OK);
 
+    hResult = m_pMirrorRenderTarget->GetSurfaceLevel(0, &mirrorRenderSurface);
+    assert(hResult == S_OK);
+
+    hResult = Common::D3DDevice()->SetRenderTarget(0, mirrorRenderSurface);
+    assert(hResult == S_OK);
+
+    const D3DXVECTOR3 eye = Camera::GetEyePos();
+    const D3DXVECTOR3 target = Camera::GetLookAtPos();
+    D3DXPLANE mirrorPlane(planeNormal.x,
+                          planeNormal.y,
+                          planeNormal.z,
+                          -D3DXVec3Dot(&planeNormal, &planePoint));
+    D3DXMATRIX matReflection;
+    D3DXMatrixReflect(&matReflection, &mirrorPlane);
+
+    D3DXVECTOR3 reflectedEye;
+    D3DXVECTOR3 reflectedTarget;
+    D3DXVec3TransformCoord(&reflectedEye, &eye, &matReflection);
+    D3DXVec3TransformCoord(&reflectedTarget, &target, &matReflection);
+
+    const D3DXVECTOR3 originalEye = eye;
+    const D3DXVECTOR3 originalLookAt = target;
+    Camera::SetEyePos(reflectedEye);
+    Camera::SetLookAtPos(reflectedTarget);
+
+    const D3DXMATRIX mirrorViewProj = Camera::GetViewMatrix() * Camera::GetProjMatrix();
+    MeshMixManager::SetSharedMirrorViewProj(mirrorViewProj);
+
+    DrawPass1(false, activeMirrorMeshIndex);
+
+    Camera::SetEyePos(originalEye);
+    Camera::SetLookAtPos(originalLookAt);
+
+    hResult = Common::D3DDevice()->SetRenderTarget(0, oldRenderTarget);
+    assert(hResult == S_OK);
+    hResult = Common::D3DDevice()->SetDepthStencilSurface(oldDepthStencil);
+    assert(hResult == S_OK);
+
+    SAFE_RELEASE(mirrorRenderSurface);
+    SAFE_RELEASE(oldDepthStencil);
+    SAFE_RELEASE(oldRenderTarget);
+    return true;
+}
+
+void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
+                               const bool renderActiveMirrorAsMirror,
+                               const int skippedMeshMixIndex)
+{
     for (size_t i = 0; i < m_meshList.size(); ++i)
     {
         if (i < m_meshEnabledList.size() && m_meshEnabledList[i])
@@ -3069,12 +3130,66 @@ void Render::DrawPass1(const bool renderToSceneRenderTargets)
         elem.second->Draw();
     }
 
-    for (auto& elem : m_meshMixList)
+    for (size_t i = 0; i < m_meshMixList.size(); ++i)
     {
-        elem.Render();
+        if (static_cast<int>(i) == skippedMeshMixIndex)
+        {
+            continue;
+        }
+
+        const bool renderAsMirror =
+            renderActiveMirrorAsMirror &&
+            static_cast<int>(i) == activeMirrorMeshIndex;
+        m_meshMixList[i].Render(renderAsMirror);
     }
 
     m_particleSystem.Draw(Camera::GetViewMatrix(), Camera::GetProjMatrix());
+}
+
+void Render::DrawPass1(const bool renderToSceneRenderTargets, const int activeMirrorMeshIndex)
+{
+    HRESULT hResult = E_FAIL;
+
+    LPDIRECT3DSURFACE9 surfaceOld = NULL;
+    LPDIRECT3DSURFACE9 surfaceRenderTarget0 = NULL;
+    LPDIRECT3DSURFACE9 surfaceRenderTarget1 = NULL;
+
+    if (renderToSceneRenderTargets)
+    {
+        hResult = Common::D3DDevice()->GetRenderTarget(0, &surfaceOld);
+        assert(hResult == S_OK);
+
+        hResult = m_pRenderTarget1->GetSurfaceLevel(0, &surfaceRenderTarget0);
+        assert(hResult == S_OK);
+
+        hResult = m_pRenderTarget2->GetSurfaceLevel(0, &surfaceRenderTarget1);
+        assert(hResult == S_OK);
+
+        hResult = Common::D3DDevice()->SetRenderTarget(0, surfaceRenderTarget0);
+        assert(hResult == S_OK);
+
+        hResult = Common::D3DDevice()->SetRenderTarget(1, surfaceRenderTarget1);
+        assert(hResult == S_OK);
+    }
+    else
+    {
+        hResult = Common::D3DDevice()->SetRenderTarget(1, NULL);
+        assert(hResult == S_OK);
+    }
+
+    hResult = Common::D3DDevice()->Clear(0,
+                                         NULL,
+                                         D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
+                                         D3DCOLOR_RGBA(200, 200, 200, 255),
+                                         1.0f,
+                                         0);
+
+    assert(hResult == S_OK);
+
+    hResult = Common::D3DDevice()->BeginScene();
+    assert(hResult == S_OK);
+
+    DrawSceneGeometry(activeMirrorMeshIndex, renderToSceneRenderTargets, renderToSceneRenderTargets ? -1 : activeMirrorMeshIndex);
 
     hResult = Common::D3DDevice()->EndScene();
     assert(hResult == S_OK);
@@ -3192,6 +3307,7 @@ void Render::OnDeviceLost()
 {
     SAFE_RELEASE(m_pRenderTarget1);
     SAFE_RELEASE(m_pRenderTarget2);
+    SAFE_RELEASE(m_pMirrorRenderTarget);
     m_sprite.OnDeviceLost();
     m_particleSystem.OnDeviceLost();
 }
@@ -3226,6 +3342,16 @@ void Render::CreateTexture()
                            D3DFMT_A16B16G16R16F,
                            D3DPOOL_DEFAULT,
                            &m_pRenderTarget2);
+    assert(hr == S_OK);
+
+    hr = D3DXCreateTexture(Common::D3DDevice(),
+                           Common::ScreenW(),
+                           Common::ScreenH(),
+                           1,
+                           D3DUSAGE_RENDERTARGET,
+                           D3DFMT_A16B16G16R16F,
+                           D3DPOOL_DEFAULT,
+                           &m_pMirrorRenderTarget);
     assert(hr == S_OK);
 
 }

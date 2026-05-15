@@ -17,6 +17,8 @@ class MeshMixManager : public IDeviceResettable
 public:
 
     static void SetSharedThicknessTexture(LPDIRECT3DTEXTURE9 texture);
+    static void SetSharedMirrorTexture(LPDIRECT3DTEXTURE9 texture);
+    static void SetSharedMirrorViewProj(const D3DXMATRIX& matrix);
 
     MeshMixManager(const std::wstring& filename,
                    const D3DXVECTOR3& pos,
@@ -37,7 +39,7 @@ public:
 
     void Finalize();
 
-    void Render();
+    void Render(bool renderAsMirrorSurface = false);
 
     void SetPos(const D3DXVECTOR3& pos);
     void SetSaturateShadow(const bool enabled);
@@ -64,6 +66,8 @@ public:
     bool IsLoaded() const;
     bool IsSsaoEnabled() const;
     bool IsDepthBufferShadowEnabled() const;
+    bool IsMirror() const;
+    bool TryGetMirrorPlaneWorld(D3DXVECTOR3& planePoint, D3DXVECTOR3& planeNormal) const;
 
     LPD3DXMESH GetD3DMesh() const;
 
@@ -99,10 +103,13 @@ private:
     bool m_enabled = true;
     bool m_autoPointLightAdded = false;
     bool m_deviceResourceRegistered = false;
+    bool m_hasMirrorPlane = false;
     std::thread m_loadThread;
 
     stMeshParam m_param;
     std::wstring m_autoPointLightOwnerTag;
+    D3DXVECTOR3 m_mirrorPlanePointLocal = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+    D3DXVECTOR3 m_mirrorPlaneNormalLocal = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
 
     void ModifyMeshForNormalMapping(LPD3DXMESH& pMesh);
     void DrawAllSubsets(LPD3DXEFFECT sharedEffect, UINT passIndex);
@@ -112,5 +119,6 @@ private:
     LPDIRECT3DBASETEXTURE9 GetSubsetTexture(const DWORD subsetIndex) const;
     void ReleaseOwnedResources();
     void InitializeInternal();
+    D3DXMATRIX BuildWorldMatrix() const;
 };
 }

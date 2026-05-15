@@ -126,6 +126,9 @@ struct stMeshParam
     // ガラスか
     bool glass = false;
 
+    // 鏡か
+    bool mirror = false;
+
     // 発光物か
     bool emit = false;
 
