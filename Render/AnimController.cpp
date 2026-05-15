@@ -7,7 +7,7 @@ NSRender::AnimController::AnimController()
 
     // 64bitの場合80倍になってしまうので1/80にする
     //m_animSpeed /= 80;
-    m_animSpeed /= 160;
+    m_animSpeed /= 320;
 }
 
 void NSRender::AnimController::Init(const LPD3DXANIMATIONCONTROLLER controller,
