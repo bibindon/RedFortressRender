@@ -180,6 +180,15 @@ public:
                            const float radius = -1.f,
                            const bool useParallaxOcclusionMapping = false,
                            const bool useNormalMapping = false);
+    int AddMeshMixSkinAnim(const std::wstring& meshFilePath,
+                           const std::wstring& animationFilePath,
+                           const D3DXVECTOR3& pos,
+                           const D3DXVECTOR3& rot,
+                           const float scale,
+                           const AnimSetMap& animSetMap,
+                           const float radius = -1.f,
+                           const bool useParallaxOcclusionMapping = false,
+                           const bool useNormalMapping = false);
     bool RemoveMeshMixSkinAnim(int id);
 
     void SetMeshMixPos(const int id, const D3DXVECTOR3& pos);

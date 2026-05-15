@@ -22,6 +22,13 @@ public:
                     const float scale,
                     const stMeshParam& param,
                     const AnimSetMap& animSetMap);
+    MeshMixSkinAnim(const std::wstring& meshFilename,
+                    const std::wstring& animationFilename,
+                    const D3DXVECTOR3& pos,
+                    const D3DXVECTOR3& rotate,
+                    const float scale,
+                    const stMeshParam& param,
+                    const AnimSetMap& animSetMap);
 
     ~MeshMixSkinAnim();
 
@@ -51,6 +58,7 @@ public:
 
 private:
     void UpdateFrameMatrix(const LPD3DXFRAME frameBase, const LPD3DXMATRIX matParent);
+    void ApplyAnimationFrameTransformsToMeshHierarchy(const LPD3DXFRAME meshFrameBase);
     void RenderFrame(const LPD3DXFRAME frame);
     void RenderMeshContainer(const LPD3DXMESHCONTAINER containerBase);
     void RenderFrameToEffect(const LPD3DXFRAME frame, LPD3DXEFFECT effect);
@@ -58,11 +66,15 @@ private:
     HRESULT AllocateBoneMatrix(LPD3DXMESHCONTAINER containerBase);
     HRESULT AllocateAllBoneMatrix(LPD3DXFRAME frame);
     void ReleaseMeshAllocator(const LPD3DXFRAME frame);
+    void ReleaseMeshAllocatorRecursive(const LPD3DXFRAME frame, SkinAnimMeshAlloc& allocator);
     const std::wstring SHADER_FILENAME = L".\\MeshMixSkinAnim.cso";
 
     std::wstring m_meshName;
+    std::wstring m_animationMeshName;
     SkinAnimMeshAlloc m_allocator;
+    SkinAnimMeshAlloc m_animationAllocator;
     LPD3DXFRAME m_frameRoot = nullptr;
+    LPD3DXFRAME m_animationFrameRoot = nullptr;
     LPD3DXEFFECT m_D3DEffect = nullptr;
 
     std::vector<D3DXMATRIX> m_matWorldArray;
@@ -72,6 +84,7 @@ private:
     float m_scale = 1.0f;
     bool m_enabled = true;
     bool m_bLoaded = false;
+    bool m_useExternalAnimation = false;
     stMeshParam m_param;
     AnimSetMap m_animSetMap;
     AnimController m_animController;

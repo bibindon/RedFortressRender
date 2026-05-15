@@ -1823,6 +1823,43 @@ int Render::AddMeshMixSkinAnim(const std::wstring& filePath,
     return static_cast<int>(m_meshMixSkinAnimList.size()) - 1;
 }
 
+int Render::AddMeshMixSkinAnim(const std::wstring& meshFilePath,
+                               const std::wstring& animationFilePath,
+                               const D3DXVECTOR3& pos,
+                               const D3DXVECTOR3& rot,
+                               const float scale,
+                               const AnimSetMap& animSetMap,
+                               const float radius,
+                               const bool useParallaxOcclusionMapping,
+                               const bool useNormalMapping)
+{
+    auto param = GetMeshParamPreset(eMeshParamPreset::GRASS);
+    param.smooth = false;
+    param.parallaxOcclusionMapping = useParallaxOcclusionMapping;
+    param.normalMapping = useNormalMapping;
+    param.saturateShadow = m_meshMixSaturateShadowEnabled;
+    param.saturateShadowIntensity = m_meshMixSaturateShadowIntensity;
+    param.shadowDarkness = m_meshMixShadowDarkness;
+    param.specularIntensity = m_meshMixSpecularIntensity;
+    param.specularEdge = m_meshMixSpecularEdge;
+    param.specularIntensityOverrideEnabled = m_meshMixSpecularIntensityOverrideEnabled;
+    param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
+
+    MeshMixSkinAnim* mesh = NEW MeshMixSkinAnim(meshFilePath, animationFilePath, pos, rot, scale, param, animSetMap);
+    try
+    {
+        mesh->Initialize();
+        m_meshMixSkinAnimList.push_back(mesh);
+    }
+    catch (...)
+    {
+        SAFE_DELETE(mesh);
+        throw;
+    }
+
+    return static_cast<int>(m_meshMixSkinAnimList.size()) - 1;
+}
+
 bool Render::RemoveMeshMixSkinAnim(const int id)
 {
     if (id < 0 || id >= static_cast<int>(m_meshMixSkinAnimList.size()) || m_meshMixSkinAnimList.at(id) == nullptr)

@@ -55,13 +55,35 @@ MeshMixSkinAnim::MeshMixSkinAnim(const std::wstring& filename,
                                  const stMeshParam& param,
                                  const AnimSetMap& animSetMap)
     : m_meshName(filename)
+    , m_animationMeshName(filename)
     , m_allocator(filename)
+    , m_animationAllocator(filename)
     , m_pos(pos)
     , m_rotate(rotate)
     , m_scale(scale)
     , m_param(param)
     , m_animSetMap(animSetMap)
 {
+}
+
+MeshMixSkinAnim::MeshMixSkinAnim(const std::wstring& meshFilename,
+                                 const std::wstring& animationFilename,
+                                 const D3DXVECTOR3& pos,
+                                 const D3DXVECTOR3& rotate,
+                                 const float scale,
+                                 const stMeshParam& param,
+                                 const AnimSetMap& animSetMap)
+    : m_meshName(meshFilename)
+    , m_animationMeshName(animationFilename)
+    , m_allocator(meshFilename)
+    , m_animationAllocator(animationFilename)
+    , m_pos(pos)
+    , m_rotate(rotate)
+    , m_scale(scale)
+    , m_param(param)
+    , m_animSetMap(animSetMap)
+{
+    m_useExternalAnimation = true;
 }
 
 MeshMixSkinAnim::~MeshMixSkinAnim()
@@ -71,8 +93,14 @@ MeshMixSkinAnim::~MeshMixSkinAnim()
 
     if (m_frameRoot != nullptr)
     {
-        ReleaseMeshAllocator(m_frameRoot);
+        ReleaseMeshAllocatorRecursive(m_frameRoot, m_allocator);
         m_frameRoot = nullptr;
+    }
+
+    if (m_animationFrameRoot != nullptr)
+    {
+        ReleaseMeshAllocatorRecursive(m_animationFrameRoot, m_animationAllocator);
+        m_animationFrameRoot = nullptr;
     }
 }
 
@@ -112,10 +140,42 @@ void MeshMixSkinAnim::Initialize()
                                     nullptr,
                                     &m_frameRoot,
                                     &tempAnimController);
-    if (FAILED(hr) || tempAnimController == nullptr)
+    if (FAILED(hr) || m_frameRoot == nullptr)
     {
         SAFE_RELEASE(tempAnimController);
         throw std::exception("Failed to load skin animation mesh.");
+    }
+
+    if (m_useExternalAnimation)
+    {
+        SAFE_RELEASE(tempAnimController);
+
+        if (PathIsRelative(m_animationMeshName.c_str()))
+        {
+            tempPath = Util::GetExeDir() + m_animationMeshName;
+        }
+        else
+        {
+            tempPath = m_animationMeshName;
+        }
+
+        hr = D3DXLoadMeshHierarchyFromX(tempPath.c_str(),
+                                        D3DXMESH_MANAGED | D3DXMESH_32BIT,
+                                        Common::D3DDevice(),
+                                        &m_animationAllocator,
+                                        nullptr,
+                                        &m_animationFrameRoot,
+                                        &tempAnimController);
+        if (FAILED(hr) || m_animationFrameRoot == nullptr || tempAnimController == nullptr)
+        {
+            SAFE_RELEASE(tempAnimController);
+            throw std::exception("Failed to load split animation mesh.");
+        }
+    }
+    else if (tempAnimController == nullptr)
+    {
+        SAFE_RELEASE(tempAnimController);
+        throw std::exception("Failed to load animation controller.");
     }
 
     m_animController.Init(tempAnimController, m_animSetMap);
@@ -176,8 +236,42 @@ void MeshMixSkinAnim::Render()
         worldMatrix *= mat;
     }
 
+    if (m_useExternalAnimation)
+    {
+        ApplyAnimationFrameTransformsToMeshHierarchy(m_frameRoot);
+    }
+
     UpdateFrameMatrix(m_frameRoot, &worldMatrix);
     RenderFrame(m_frameRoot);
+}
+
+void MeshMixSkinAnim::ApplyAnimationFrameTransformsToMeshHierarchy(const LPD3DXFRAME meshFrameBase)
+{
+    if (meshFrameBase == nullptr || m_animationFrameRoot == nullptr)
+    {
+        return;
+    }
+
+    auto meshFrame = reinterpret_cast<SkinAnimMeshFrame*>(meshFrameBase);
+    if (meshFrame->Name != nullptr)
+    {
+        LPD3DXFRAME animationFrameBase = D3DXFrameFind(m_animationFrameRoot, meshFrame->Name);
+        if (animationFrameBase != nullptr)
+        {
+            auto animationFrame = reinterpret_cast<SkinAnimMeshFrame*>(animationFrameBase);
+            meshFrame->TransformationMatrix = animationFrame->TransformationMatrix;
+        }
+    }
+
+    if (meshFrame->pFrameSibling != nullptr)
+    {
+        ApplyAnimationFrameTransformsToMeshHierarchy(meshFrame->pFrameSibling);
+    }
+
+    if (meshFrame->pFrameFirstChild != nullptr)
+    {
+        ApplyAnimationFrameTransformsToMeshHierarchy(meshFrame->pFrameFirstChild);
+    }
 }
 
 void MeshMixSkinAnim::UpdateFrameMatrix(const LPD3DXFRAME frameBase, const LPD3DXMATRIX matParent)
@@ -416,22 +510,32 @@ HRESULT MeshMixSkinAnim::AllocateAllBoneMatrix(LPD3DXFRAME frame)
 
 void MeshMixSkinAnim::ReleaseMeshAllocator(const LPD3DXFRAME frame)
 {
+    ReleaseMeshAllocatorRecursive(frame, m_allocator);
+}
+
+void MeshMixSkinAnim::ReleaseMeshAllocatorRecursive(const LPD3DXFRAME frame, SkinAnimMeshAlloc& allocator)
+{
+    if (frame == nullptr)
+    {
+        return;
+    }
+
     if (frame->pMeshContainer != nullptr)
     {
-        m_allocator.DestroyMeshContainer(frame->pMeshContainer);
+        allocator.DestroyMeshContainer(frame->pMeshContainer);
     }
 
     if (frame->pFrameSibling != nullptr)
     {
-        ReleaseMeshAllocator(frame->pFrameSibling);
+        ReleaseMeshAllocatorRecursive(frame->pFrameSibling, allocator);
     }
 
     if (frame->pFrameFirstChild != nullptr)
     {
-        ReleaseMeshAllocator(frame->pFrameFirstChild);
+        ReleaseMeshAllocatorRecursive(frame->pFrameFirstChild, allocator);
     }
 
-    m_allocator.DestroyFrame(frame);
+    allocator.DestroyFrame(frame);
 }
 
 void MeshMixSkinAnim::SetPos(const D3DXVECTOR3& pos)
