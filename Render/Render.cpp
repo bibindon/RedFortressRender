@@ -1733,7 +1733,7 @@ int Render::AddMeshInstansing(const std::wstring& filePath,
     if (m_meshInstancingMap.find(filePath) == m_meshInstancingMap.end())
     {
         MeshInstancing* mesh = NEW MeshInstancing();
-        mesh->Initialize();
+        mesh->Initialize(filePath);
 
         m_meshInstancingMap[filePath] = mesh;
     }

@@ -36,6 +36,7 @@ bool g_bMoveDown = false;
 float g_saturateLevel = 1.0f;
 HWND g_hSettingsDialog = NULL;
 std::wstring g_selectedMixMeshPath;
+std::wstring g_selectedMeshInstancingPath;
 std::wstring g_selectedMeshPath;
 std::wstring g_selectedAnimMeshPath;
 std::wstring g_selectedSkinAnimMeshPath;
@@ -1229,6 +1230,22 @@ void SpawnMeshMixAtLookAt(const std::wstring& filePath)
 
     const float yaw = atan2f(forward.x, forward.z);
     SpawnMeshMixAtTransform(filePath, pos, D3DXToDegree(yaw));
+}
+
+void SpawnMeshInstancingAtLookAt(const std::wstring& filePath)
+{
+    if (filePath.empty())
+    {
+        return;
+    }
+
+    auto pos = g_Render.GetLookAtPos();
+    D3DXVECTOR3 forward = g_Render.GetCameraRotate();
+    D3DXVec3Normalize(&forward, &forward);
+
+    const float yaw = atan2f(forward.x, forward.z);
+    const int renderId = g_Render.AddMeshInstansing(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), g_modelLoadScale);
+    RegisterLoadedModel(L"Instancing", filePath, pos, g_modelLoadScale, renderId);
 }
 
 NSRender::AnimSetMap CreateDefaultAnimSetMap()

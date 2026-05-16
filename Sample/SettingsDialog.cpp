@@ -1346,6 +1346,7 @@ void RefreshSaturateFilter(HWND hDlg)
 void RefreshSelectedMeshPaths(HWND hDlg)
 {
     SetDlgItemText(hDlg, IDC_EDIT_MIX_MESH_PATH, g_selectedMixMeshPath.c_str());
+    SetDlgItemText(hDlg, IDC_EDIT_MESH_INSTANCING_PATH, g_selectedMeshInstancingPath.c_str());
     SetDlgItemText(hDlg, IDC_EDIT_MESH_PATH, g_selectedMeshPath.c_str());
     SetDlgItemText(hDlg, IDC_EDIT_ANIM_MESH_PATH, g_selectedAnimMeshPath.c_str());
     SetDlgItemText(hDlg, IDC_EDIT_SKIN_ANIM_MESH_PATH, g_selectedSkinAnimMeshPath.c_str());
@@ -2130,6 +2131,18 @@ bool HandleOpenMeshCommand(HWND hDlg, const WORD commandId)
                                g_selectedMeshPath))
         {
             SpawnMeshAtLookAt(g_selectedMeshPath);
+            RefreshSelectedMeshPaths(hDlg);
+        }
+        return true;
+    }
+
+    if (commandId == IDC_BUTTON_OPEN_MESH_INSTANCING)
+    {
+        if (ShowOpenFileDialog(hDlg,
+                               L"Mesh Instancing Files (*.x)\0*.x\0All Files (*.*)\0*.*\0",
+                               g_selectedMeshInstancingPath))
+        {
+            SpawnMeshInstancingAtLookAt(g_selectedMeshInstancingPath);
             RefreshSelectedMeshPaths(hDlg);
         }
         return true;

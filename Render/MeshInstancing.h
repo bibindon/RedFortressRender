@@ -1,20 +1,21 @@
-#pragma once
+ï»¿#pragma once
 
 #include "Common.h"
 
 namespace NSRender
 {
 
-// ƒCƒ“ƒXƒ^ƒ“ƒVƒ“ƒO‰Â”\‚ÈƒƒbƒVƒ…
-// ‘å—Ê‚É•`‰æ‚µ‚Ä‚àŒy‚¢
+// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚·ãƒ³ã‚°å¯èƒ½ãªãƒ¡ãƒƒã‚·ãƒ¥
+// å¤§é‡ã«æç”»ã—ã¦ã‚‚è»½ã„
 class MeshInstancing : public IDeviceResettable
 {
 
 public:
 
     MeshInstancing();
+    ~MeshInstancing();
 
-    void Initialize();
+    void Initialize(const std::wstring& filePath);
 
     void Finalize();
 
@@ -29,6 +30,8 @@ public:
 
 private:
 
+    std::wstring m_filePath;
+
     LPD3DXMESH m_pMesh = NULL;
 
     std::vector<D3DMATERIAL9> m_pMaterials;
@@ -39,27 +42,21 @@ private:
 
     LPD3DXEFFECT m_pEffect = NULL;
 
-    struct WorldPos
+    struct InstanceData
     {
         float x = 0.0f;
         float y = 0.0f;
         float z = 0.0f;
     };
 
-    WorldPos* m_worldPos = nullptr;
-
     IDirect3DVertexBuffer9* m_worldPosBuf = nullptr;
 
     IDirect3DVertexDeclaration9* m_decl = nullptr;
 
     void copyBuf(unsigned sz, void* src, IDirect3DVertexBuffer9* buf);
+    void UpdateInstanceBuffer();
 
-    const int W = 10;
-    const int H = 10;
-    const int D = 10;
-
-    // ƒXƒNƒŠ[ƒ“ã‚Ìƒ`ƒbƒv‘”
-    const int tipNum = W * H * D;
+    std::vector<InstanceData> m_instances;
 
 };
 
