@@ -1,5 +1,6 @@
 ﻿#include "MeshInstancing.h"
 #include "Camera.h"
+#include "Light.h"
 #include "Util.h"
 
 #include <Shlwapi.h>
@@ -259,6 +260,13 @@ void MeshInstancing::Draw()
     assert(hResult == S_OK);
 
     hResult = m_pEffect->SetBool("g_bDitherAlpha", m_ditherAlphaEnabled ? TRUE : FALSE);
+    assert(hResult == S_OK);
+
+    const D3DXVECTOR4 ambientColor = D3DXVECTOR4(Light::GetAmbientColor());
+    hResult = m_pEffect->SetVector("g_ambient", &ambientColor);
+    assert(hResult == S_OK);
+
+    hResult = m_pEffect->SetFloat("g_fAmbientIntensity", Light::GetAmbientBrightness());
     assert(hResult == S_OK);
 
     LPDIRECT3DVERTEXBUFFER9 pVB = nullptr;

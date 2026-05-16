@@ -1,10 +1,14 @@
 float4x4 g_matWorldViewProj;
 float4 g_lightNormal = { 0.3f, 1.0f, 0.5f, 0.0f };
+float4 g_ambient = { 0.2f, 0.2f, 0.2f, 1.0f };
+float g_fAmbientIntensity = 1.0f;
 bool g_bDitherAlpha = true;
 
 texture texture1;
 sampler textureSampler = sampler_state {
     Texture = (texture1);
+    AddressU = CLAMP;
+    AddressV = CLAMP;
     MipFilter = LINEAR;
     MinFilter = LINEAR;
     MagFilter = LINEAR;
@@ -39,8 +43,13 @@ void VertexShader1(in  float4 inPosition  : POSITION,
     rotatedNormal.y = inNormal.y;
     rotatedNormal.z = (-inNormal.x * sinY) + (inNormal.z * cosY);
 
-    float lightIntensity = dot(float4(rotatedNormal, 0.0f), g_lightNormal);
-    outDiffuse.rgb = max(0, lightIntensity);
+    float lightIntensity = 1.0f;
+
+    if (false)
+    {
+        lightIntensity = max(0, dot(float4(rotatedNormal, 0.0f), g_lightNormal));
+    }
+    outDiffuse.rgb = saturate(g_ambient.rgb * g_fAmbientIntensity + lightIntensity);
     outDiffuse.a = 1.0f;
 
     outTexCood = inTexCood;
