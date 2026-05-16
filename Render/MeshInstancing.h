@@ -25,6 +25,7 @@ public:
     void SetDitherAlpha(bool enabled);
 
     void Draw();
+    void RenderToGBufferEffect(LPD3DXEFFECT effect, const char* techniqueName);
 
     void OnDeviceLost();
     void OnDeviceReset();

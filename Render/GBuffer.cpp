@@ -6,6 +6,7 @@
 
 #include "Common.h"
 #include "Camera.h"
+#include "MeshInstancing.h"
 #include "MeshMixSkinAnim.h"
 
 #include "Util.h"
@@ -134,6 +135,7 @@ void GBuffer::CreateRawResource()
 
 void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
                    const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList,
+                   const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap,
                    LPDIRECT3DTEXTURE9* Z,
                    LPDIRECT3DTEXTURE9* CameraZ,
                    LPDIRECT3DTEXTURE9* Pos,
@@ -242,6 +244,14 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         }
     }
 
+    for (const auto& mesh : meshInstancingMap)
+    {
+        if (mesh.second != nullptr)
+        {
+            mesh.second->RenderToGBufferEffect(m_fxGBuffer, "TechniqueGBufferInstancing");
+        }
+    }
+
     hr = Common::D3DDevice()->EndScene();
 
     // MRT を外し、RT0 を元に戻す
@@ -330,6 +340,14 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         if (mesh != nullptr)
         {
             mesh->RenderToEffect(m_fxGBuffer);
+        }
+    }
+
+    for (const auto& mesh : meshInstancingMap)
+    {
+        if (mesh.second != nullptr)
+        {
+            mesh.second->RenderToGBufferEffect(m_fxGBuffer, "TechniqueGBufferInstancingFog");
         }
     }
 

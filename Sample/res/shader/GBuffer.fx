@@ -11,6 +11,8 @@ float g_fNear  = 1.0f;
 float g_fFar   = 1000.0f;
 
 float g_posRange = 50.0f;
+int g_swayMode = 0;
+float g_time = 0.0f;
 
 texture g_texFrontDepth;
 sampler sampFrontDepth = sampler_state
@@ -23,10 +25,30 @@ sampler sampFrontDepth = sampler_state
     AddressV = CLAMP;
 };
 
+texture g_texInstancingAlpha;
+sampler sampInstancingAlpha = sampler_state
+{
+    Texture = (g_texInstancingAlpha);
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    MipFilter = LINEAR;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+
 struct VS_INPUT
 {
     float4 positionObject : POSITION0;
     float3 normalObject   : NORMAL0;
+};
+
+struct VS_INPUT_INSTANCING
+{
+    float4 positionObject : POSITION0;
+    float3 normalObject   : NORMAL0;
+    float2 texCoord       : TEXCOORD0;
+    float4 instancePosRot : TEXCOORD1;
+    float4 instanceScale  : TEXCOORD2;
 };
 
 struct VS_OUTPUT
@@ -36,6 +58,7 @@ struct VS_OUTPUT
     float3 positionWorld  : TEXCOORD1;
     float3 normalWorld    : TEXCOORD2;
     float2 screenUV       : TEXCOORD3;
+    float2 alphaUV        : TEXCOORD4;
 };
 
 VS_OUTPUT VS_GBuffer(VS_INPUT inputData)
@@ -53,7 +76,62 @@ VS_OUTPUT VS_GBuffer(VS_INPUT inputData)
 
     float3 nWS = mul(inputData.normalObject, (float3x3)g_matWorld);
     outputData.normalWorld = normalize(nWS);
+    outputData.alphaUV = 0.0f;
 
+
+    return outputData;
+}
+
+VS_OUTPUT VS_GBufferInstancing(VS_INPUT_INSTANCING inputData)
+{
+    VS_OUTPUT outputData;
+
+    float scale = inputData.instanceScale.x;
+    float rotationY = inputData.instancePosRot.w;
+    float sinY = sin(rotationY);
+    float cosY = cos(rotationY);
+
+    float3 scaledPos = inputData.positionObject.xyz * scale;
+    float swayWeight = saturate(1.0f - inputData.texCoord.y);
+    swayWeight *= swayWeight;
+    if (g_swayMode == 1)
+    {
+        float phase = g_time * 1.7f + inputData.instancePosRot.x * 0.27f + inputData.instancePosRot.z * 0.19f;
+        float sway = sin(phase) * 0.16f + sin(phase * 1.83f + 1.2f) * 0.06f;
+        scaledPos.x += sway * swayWeight * scale;
+    }
+
+    float3 rotatedPos;
+    rotatedPos.x = (scaledPos.x * cosY) + (scaledPos.z * sinY);
+    rotatedPos.y = scaledPos.y;
+    rotatedPos.z = (-scaledPos.x * sinY) + (scaledPos.z * cosY);
+    if (g_swayMode == 2)
+    {
+        float2 waveDir = normalize(float2(0.82f, 0.57f));
+        float waveCoord = dot(inputData.instancePosRot.xz, waveDir);
+        float phase = g_time * 2.2f - waveCoord * 0.42f;
+        float broadWave = sin(phase) * 0.22f;
+        float detailWave = sin(phase * 1.7f + inputData.instancePosRot.x * 0.07f) * 0.07f;
+        float wave = (broadWave + detailWave) * swayWeight * scale;
+        rotatedPos.x += waveDir.x * wave;
+        rotatedPos.z += waveDir.y * wave;
+    }
+
+    float3 worldPos = rotatedPos + inputData.instancePosRot.xyz;
+    float4 positionView4 = mul(float4(worldPos, 1.0f), g_matView);
+    outputData.positionClip = mul(positionView4, g_matProj);
+    float2 ndc = outputData.positionClip.xy / outputData.positionClip.w;
+    outputData.screenUV = float2(ndc.x * 0.5f + 0.5f, -ndc.y * 0.5f + 0.5f);
+
+    outputData.viewSpaceZ = positionView4.z;
+    outputData.positionWorld = worldPos;
+
+    float3 rotatedNormal;
+    rotatedNormal.x = (inputData.normalObject.x * cosY) + (inputData.normalObject.z * sinY);
+    rotatedNormal.y = inputData.normalObject.y;
+    rotatedNormal.z = (-inputData.normalObject.x * sinY) + (inputData.normalObject.z * cosY);
+    outputData.normalWorld = normalize(rotatedNormal);
+    outputData.alphaUV = inputData.texCoord;
 
     return outputData;
 }
@@ -140,6 +218,25 @@ void PS_GBuffer(VS_OUTPUT inputData,
 }
 
 // バックフェイスの線形深度だけを出力する（厚み情報用）
+void PS_GBufferInstancing(VS_OUTPUT inputData,
+                          out float4 outRT0 : COLOR0,
+                          out float4 outRT1 : COLOR1,
+                          out float4 outRT2 : COLOR2)
+{
+    clip(tex2D(sampInstancingAlpha, inputData.alphaUV).a - 0.1f);
+    PS_GBuffer(inputData, outRT0, outRT1, outRT2);
+}
+
+void PS_GBufferInstancingFog(VS_OUTPUT inputData,
+                             out float4 outRT0 : COLOR0)
+{
+    clip(tex2D(sampInstancingAlpha, inputData.alphaUV).a - 0.1f);
+
+    float linearZ = (inputData.viewSpaceZ - g_fNear) / (g_fFar - g_fNear);
+    linearZ = saturate(linearZ);
+    outRT0 = float4(linearZ, 0.0f, 0.0f, 1.0f);
+}
+
 void PS_GBufferBackFace(VS_OUTPUT inputData,
                         out float4 outRT0 : COLOR0)
 {
@@ -164,6 +261,34 @@ technique TechniqueGBuffer
 }
 
 // バックフェイスのみ描画して背面深度を取得（厚み = 背面深度 - 前面深度）
+technique TechniqueGBufferInstancing
+{
+    pass P0
+    {
+        CullMode         = NONE;
+        ZEnable          = TRUE;
+        ZWriteEnable     = TRUE;
+        AlphaBlendEnable = FALSE;
+
+        VertexShader = compile vs_3_0 VS_GBufferInstancing();
+        PixelShader  = compile ps_3_0 PS_GBufferInstancing();
+    }
+}
+
+technique TechniqueGBufferInstancingFog
+{
+    pass P0
+    {
+        CullMode         = NONE;
+        ZEnable          = TRUE;
+        ZWriteEnable     = TRUE;
+        AlphaBlendEnable = FALSE;
+
+        VertexShader = compile vs_3_0 VS_GBufferInstancing();
+        PixelShader  = compile ps_3_0 PS_GBufferInstancingFog();
+    }
+}
+
 technique TechniqueGBufferBackFace
 {
     pass P0

@@ -469,7 +469,7 @@ void ParticleSystem::EmitDust(EffectInstance& effect, const float deltaTime)
                                    RandomFloat(-0.006f, 0.006f),
                                    RandomFloat(-0.010f, 0.010f));
         const float life = RandomFloat(8.0f, 15.0f);
-        const float startSize = RandomFloat(0.005f, 0.005f);
+        const float startSize = RandomFloat(0.005f, 0.015f);
         const float endSize = startSize * RandomFloat(0.88f, 1.22f);
         const int alpha = static_cast<int>(RandomFloat(16.0f, 58.0f));
         const int gray = static_cast<int>(RandomFloat(220.0f, 255.0f));

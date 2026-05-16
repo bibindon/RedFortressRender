@@ -374,6 +374,76 @@ void MeshInstancing::Draw()
     assert(hResult == S_OK);
 }
 
+void MeshInstancing::RenderToGBufferEffect(LPD3DXEFFECT effect, const char* techniqueName)
+{
+    if (m_pMesh == nullptr || effect == nullptr || m_worldPosBuf == nullptr || m_instances.empty())
+    {
+        return;
+    }
+
+    HRESULT hResult = E_FAIL;
+
+    hResult = effect->SetInt("g_swayMode", static_cast<int>(m_swayMode));
+    assert(hResult == S_OK);
+
+    hResult = effect->SetFloat("g_time", static_cast<float>(GetTickCount64()) * 0.001f);
+    assert(hResult == S_OK);
+
+    LPDIRECT3DVERTEXBUFFER9 pVB = nullptr;
+    m_pMesh->GetVertexBuffer(&pVB);
+    Common::D3DDevice()->SetStreamSource(0, pVB, 0, m_pMesh->GetNumBytesPerVertex());
+    pVB->Release();
+
+    Common::D3DDevice()->SetStreamSource(1, m_worldPosBuf, 0, sizeof(InstanceData));
+    Common::D3DDevice()->SetVertexDeclaration(m_decl);
+    Common::D3DDevice()->SetStreamSourceFreq(0, D3DSTREAMSOURCE_INDEXEDDATA | static_cast<UINT>(m_instances.size()));
+    Common::D3DDevice()->SetStreamSourceFreq(1, D3DSTREAMSOURCE_INSTANCEDATA | 1);
+
+    LPDIRECT3DINDEXBUFFER9 pIB = nullptr;
+    m_pMesh->GetIndexBuffer(&pIB);
+    Common::D3DDevice()->SetIndices(pIB);
+    pIB->Release();
+
+    hResult = effect->SetTechnique(techniqueName);
+    assert(hResult == S_OK);
+
+    UINT numPass = 0;
+    hResult = effect->Begin(&numPass, 0);
+    assert(hResult == S_OK);
+
+    hResult = effect->BeginPass(0);
+    assert(hResult == S_OK);
+
+    for (DWORD i = 0; i < m_dwNumMaterials; ++i)
+    {
+        hResult = effect->SetTexture("g_texInstancingAlpha", m_pTextures[i]);
+        assert(hResult == S_OK);
+
+        hResult = effect->CommitChanges();
+        assert(hResult == S_OK);
+
+        hResult = Common::D3DDevice()->DrawIndexedPrimitive(D3DPT_TRIANGLELIST,
+                                                            0,
+                                                            0,
+                                                            m_pMesh->GetNumVertices(),
+                                                            0,
+                                                            m_pMesh->GetNumFaces());
+        assert(hResult == S_OK);
+    }
+
+    hResult = effect->EndPass();
+    assert(hResult == S_OK);
+
+    hResult = effect->End();
+    assert(hResult == S_OK);
+
+    hResult = Common::D3DDevice()->SetStreamSourceFreq(0, 1);
+    assert(hResult == S_OK);
+
+    hResult = Common::D3DDevice()->SetStreamSourceFreq(1, 1);
+    assert(hResult == S_OK);
+}
+
 void MeshInstancing::OnDeviceLost()
 {
     if (m_pEffect != nullptr)
