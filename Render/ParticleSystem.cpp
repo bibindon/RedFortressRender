@@ -12,6 +12,9 @@
 namespace
 {
 #define SAFE_RELEASE_LOCAL(p) { if ((p) != NULL) { (p)->Release(); (p) = NULL; } }
+constexpr float kDustFixedScreenReferenceDistance = 6.0f;
+constexpr float kDustFixedScreenMinScale = 0.15f;
+constexpr float kDustFixedScreenMaxScale = 24.0f;
 }
 
 namespace NSRender
@@ -469,7 +472,16 @@ void ParticleSystem::EmitDust(EffectInstance& effect, const float deltaTime)
                                    RandomFloat(-0.006f, 0.006f),
                                    RandomFloat(-0.010f, 0.010f));
         const float life = RandomFloat(8.0f, 15.0f);
-        const float startSize = RandomFloat(0.005f, 0.015f);
+        float startSize = 0.f;
+        if (true)
+        {
+            startSize = RandomFloat(0.02f, 0.04f);
+        }
+        else
+        {
+            static float temp = 0.01f;
+            startSize = temp;
+        }
         const float endSize = startSize * RandomFloat(0.88f, 1.22f);
         const int alpha = static_cast<int>(RandomFloat(16.0f, 58.0f));
         const int gray = static_cast<int>(RandomFloat(220.0f, 255.0f));
@@ -713,7 +725,17 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
             const float sinValue = sinf(particle.rotation);
             float halfWidth = particle.size * 0.5f;
             float halfHeight = particle.size * 0.5f;
+            float fixedScreenScale = 1.0f;
             D3DXVECTOR3 center = particle.pos;
+
+            if (effectInstance.preset == ParticleEffectPreset::Dust)
+            {
+                D3DXVECTOR3 viewPos;
+                D3DXVec3TransformCoord(&viewPos, &particle.pos, &view);
+                fixedScreenScale = ClampFloat(fabsf(viewPos.z) / kDustFixedScreenReferenceDistance,
+                                              kDustFixedScreenMinScale,
+                                              kDustFixedScreenMaxScale);
+            }
 
             D3DXVECTOR3 rotatedRight;
             rotatedRight.x = cameraRight.x * cosValue + cameraUp.x * sinValue;
@@ -738,8 +760,8 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
             }
             else if (effectInstance.preset == ParticleEffectPreset::Dust)
             {
-                halfWidth = particle.size * 0.50f;
-                halfHeight = particle.size * 0.50f;
+                halfWidth = particle.size * 0.50f * fixedScreenScale;
+                halfHeight = particle.size * 0.50f * fixedScreenScale;
             }
 
             const D3DXVECTOR3 halfRight(rotatedRight.x * halfWidth,
