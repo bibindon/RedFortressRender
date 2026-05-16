@@ -1251,6 +1251,11 @@ void Render::Draw()
 {
     HRESULT hResult = E_FAIL;
 
+    if (!m_windowManager.EnsureDeviceReady())
+    {
+        return;
+    }
+
     if (m_bShowFPS)
     {
         float fps = CalcFPS();
@@ -1489,6 +1494,11 @@ void Render::Draw()
     }
 
     hResult = Common::D3DDevice()->Present(NULL, NULL, NULL, NULL);
+    if (hResult == D3DERR_DEVICELOST)
+    {
+        m_windowManager.NotifyDeviceLost();
+        return;
+    }
     assert(hResult == S_OK);
 
     m_windowManager.ChangeWindowMode();

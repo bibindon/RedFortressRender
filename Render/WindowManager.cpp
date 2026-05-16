@@ -135,8 +135,48 @@ void WindowManager::ChangeWindowMode()
         return;
     }
 
-    ResetDeviceForMode(m_eWindowModeRequest, Common::ScreenW(), Common::ScreenH());
-    m_eWindowModeRequest = eWindowMode::NONE;
+    if (ResetDeviceForMode(m_eWindowModeRequest, Common::ScreenW(), Common::ScreenH()))
+    {
+        m_eWindowModeRequest = eWindowMode::NONE;
+    }
+}
+
+void WindowManager::NotifyDeviceLost()
+{
+    if (!m_bDeviceLost)
+    {
+        Common::OnDeviceLostAll();
+        m_bDeviceLost = true;
+    }
+}
+
+bool WindowManager::EnsureDeviceReady()
+{
+    LPDIRECT3DDEVICE9 device = Common::D3DDevice();
+    if (device == NULL)
+    {
+        return false;
+    }
+
+    const HRESULT cooperativeResult = device->TestCooperativeLevel();
+    if (cooperativeResult == D3D_OK)
+    {
+        return true;
+    }
+
+    if (cooperativeResult == D3DERR_DEVICELOST)
+    {
+        NotifyDeviceLost();
+        return false;
+    }
+
+    if (cooperativeResult == D3DERR_DEVICENOTRESET)
+    {
+        return ResetDeviceForMode(m_eWindowModeCurrent, Common::ScreenW(), Common::ScreenH());
+    }
+
+    assert(false);
+    return false;
 }
 
 std::pair<int, int> WindowManager::ResolveFullscreenResolution(const int requestedWidth,
@@ -232,18 +272,28 @@ void WindowManager::UpdateWindowPlacement(const eWindowMode mode, const int widt
                  SWP_FRAMECHANGED | SWP_SHOWWINDOW);
 }
 
-void WindowManager::ResetDeviceForMode(const eWindowMode mode, int width, int height)
+bool WindowManager::ResetDeviceForMode(const eWindowMode mode, int width, int height)
 {
-    Common::OnDeviceLostAll();
+    NotifyDeviceLost();
 
     D3DPRESENT_PARAMETERS d3dpp = CreatePresentParameters(mode, width, height);
     UpdateWindowPlacement(mode, static_cast<int>(d3dpp.BackBufferWidth), static_cast<int>(d3dpp.BackBufferHeight));
 
     const HRESULT hResult = Common::D3DDevice()->Reset(&d3dpp);
+    if (hResult == D3DERR_DEVICELOST)
+    {
+        return false;
+    }
     assert(hResult == S_OK);
+    if (hResult != S_OK)
+    {
+        return false;
+    }
 
     Common::OnDeviceResetAll();
     m_eWindowModeCurrent = mode;
+    m_bDeviceLost = false;
+    return true;
 }
 
 std::vector<D3DFORMAT> WindowManager::GetCandidateFormats()

@@ -35,6 +35,8 @@ public:
     void RequestWindowMode(const eWindowMode eWindowMode_);
 
     void ChangeWindowMode();
+    bool EnsureDeviceReady();
+    void NotifyDeviceLost();
 
     std::vector<std::pair<int, int>> GetResolutionList();
 
@@ -46,10 +48,11 @@ private:
     std::pair<int, int> ResolveFullscreenResolution(int requestedWidth, int requestedHeight);
     D3DPRESENT_PARAMETERS CreatePresentParameters(eWindowMode mode, int width, int height);
     void UpdateWindowPlacement(eWindowMode mode, int width, int height);
-    void ResetDeviceForMode(eWindowMode mode, int width, int height);
+    bool ResetDeviceForMode(eWindowMode mode, int width, int height);
 
     eWindowMode m_eWindowModeCurrent = eWindowMode::WINDOW;
     eWindowMode m_eWindowModeRequest = eWindowMode::NONE;
+    bool m_bDeviceLost = false;
 
     HWND m_hWnd = NULL;
     LPDIRECT3D9 m_pD3D = NULL;
