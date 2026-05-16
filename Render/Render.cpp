@@ -1734,6 +1734,7 @@ int Render::AddMeshInstansing(const std::wstring& filePath,
     {
         MeshInstancing* mesh = NEW MeshInstancing();
         mesh->Initialize(filePath);
+        mesh->SetDitherAlpha(m_meshInstancingDitherAlphaEnabled);
 
         m_meshInstancingMap[filePath] = mesh;
     }
@@ -1753,6 +1754,19 @@ bool Render::RemoveMeshInstancing(const std::wstring& filePath)
     SAFE_DELETE(found->second);
     m_meshInstancingMap.erase(found);
     return true;
+}
+
+void Render::SetMeshInstancingDitherAlpha(const bool enabled)
+{
+    m_meshInstancingDitherAlphaEnabled = enabled;
+
+    for (auto& mesh : m_meshInstancingMap)
+    {
+        if (mesh.second != nullptr)
+        {
+            mesh.second->SetDitherAlpha(enabled);
+        }
+    }
 }
 
 int Render::AddMeshMix(const std::wstring& filePath,

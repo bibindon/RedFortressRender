@@ -163,6 +163,7 @@ public:
                           const D3DXVECTOR3& rot,
                           const float scale);
     bool RemoveMeshInstancing(const std::wstring& filePath);
+    void SetMeshInstancingDitherAlpha(bool enabled);
 
     int AddMeshMix(const std::wstring& filePath,
                    const D3DXVECTOR3& pos,
@@ -395,6 +396,7 @@ private:
     std::deque<MeshMixManager> m_meshMixList;
 
     std::unordered_map<std::wstring, MeshInstancing*> m_meshInstancingMap;
+    bool m_meshInstancingDitherAlphaEnabled = true;
 
     // ポインターにしないとデバイスロストを扱う機能が機能しなくなる
     std::vector<Font*> m_fontList;

@@ -22,6 +22,8 @@ public:
     // TODO rotate, scale
     void AddInstance(const D3DXVECTOR3& pos);
 
+    void SetDitherAlpha(bool enabled);
+
     void Draw();
 
     void OnDeviceLost();
@@ -64,6 +66,7 @@ private:
 
     std::vector<InstanceData> m_instances;
     bool m_loadedPlacementCsv = false;
+    bool m_ditherAlphaEnabled = true;
 
 };
 

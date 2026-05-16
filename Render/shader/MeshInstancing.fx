@@ -1,5 +1,6 @@
 float4x4 g_matWorldViewProj;
 float4 g_lightNormal = { 0.3f, 1.0f, 0.5f, 0.0f };
+bool g_bDitherAlpha = true;
 
 texture texture1;
 sampler textureSampler = sampler_state {
@@ -45,20 +46,70 @@ void VertexShader1(in  float4 inPosition  : POSITION,
     outTexCood = inTexCood;
 }
 
-void PixelShader1(in float4 inScreenColor : COLOR0,
+float Bayer4x4Threshold(float2 screenPos)
+{
+    float2 p = fmod(floor(screenPos), 4.0f);
+    float threshold = 0.0f;
+
+    if (p.y < 1.0f)
+    {
+        if (p.x < 1.0f) threshold = 0.0f;
+        else if (p.x < 2.0f) threshold = 8.0f;
+        else if (p.x < 3.0f) threshold = 2.0f;
+        else threshold = 10.0f;
+    }
+    else if (p.y < 2.0f)
+    {
+        if (p.x < 1.0f) threshold = 12.0f;
+        else if (p.x < 2.0f) threshold = 4.0f;
+        else if (p.x < 3.0f) threshold = 14.0f;
+        else threshold = 6.0f;
+    }
+    else if (p.y < 3.0f)
+    {
+        if (p.x < 1.0f) threshold = 3.0f;
+        else if (p.x < 2.0f) threshold = 11.0f;
+        else if (p.x < 3.0f) threshold = 1.0f;
+        else threshold = 9.0f;
+    }
+    else
+    {
+        if (p.x < 1.0f) threshold = 15.0f;
+        else if (p.x < 2.0f) threshold = 7.0f;
+        else if (p.x < 3.0f) threshold = 13.0f;
+        else threshold = 5.0f;
+    }
+
+    return (threshold + 0.5f) / 16.0f;
+}
+
+void PixelShader1(in float2 inScreenPos   : VPOS,
+                  in float4 inScreenColor : COLOR0,
                   in float2 inTexCood     : TEXCOORD0,
 
                   out float4 outColor     : COLOR)
 {
     float4 workColor = (float4)0;
     workColor = tex2D(textureSampler, inTexCood);
-    outColor = inScreenColor * workColor;
+    if (g_bDitherAlpha)
+    {
+        clip(workColor.a - Bayer4x4Threshold(inScreenPos));
+    }
+    else
+    {
+        clip(workColor.a - 0.1f);
+    }
+    outColor.rgb = inScreenColor.rgb * workColor.rgb;
+    outColor.a = 1.0f;
 }
 
 technique Technique1
 {
    pass Pass1
    {
+      AlphaBlendEnable = FALSE;
+      AlphaTestEnable = FALSE;
+      CullMode = NONE;
       VertexShader = compile vs_3_0 VertexShader1();
       PixelShader = compile ps_3_0 PixelShader1();
    }

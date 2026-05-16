@@ -240,6 +240,11 @@ void MeshInstancing::AddInstance(const D3DXVECTOR3& pos)
     UpdateInstanceBuffer();
 }
 
+void MeshInstancing::SetDitherAlpha(const bool enabled)
+{
+    m_ditherAlphaEnabled = enabled;
+}
+
 void MeshInstancing::Draw()
 {
     if (m_pMesh == nullptr || m_pEffect == nullptr || m_worldPosBuf == nullptr || m_instances.empty())
@@ -251,6 +256,9 @@ void MeshInstancing::Draw()
     const D3DXMATRIX viewProj = Camera::GetViewMatrix() * Camera::GetProjMatrix();
 
     hResult = m_pEffect->SetMatrix("g_matWorldViewProj", &viewProj);
+    assert(hResult == S_OK);
+
+    hResult = m_pEffect->SetBool("g_bDitherAlpha", m_ditherAlphaEnabled ? TRUE : FALSE);
     assert(hResult == S_OK);
 
     LPDIRECT3DVERTEXBUFFER9 pVB = nullptr;
