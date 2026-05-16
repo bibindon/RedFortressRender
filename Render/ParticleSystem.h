@@ -122,6 +122,6 @@ private:
     LPDIRECT3DTEXTURE9 m_dustTexture2 = NULL;
     LPDIRECT3DTEXTURE9 m_fogTexture = NULL;
     LPD3DXEFFECT m_effect = NULL;
-    bool m_dustFixedScreenSizeEnabled = false;
+    bool m_dustFixedScreenSizeEnabled = true;
 };
 }

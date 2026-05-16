@@ -713,10 +713,13 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
 
             if (effectInstance.preset == ParticleEffectPreset::Dust)
             {
-                D3DXVECTOR3 toParticle = particle.pos - cameraPos;
-                if (D3DXVec3LengthSq(&toParticle) < 30.0f)
+                if (!m_dustFixedScreenSizeEnabled)
                 {
-                    continue;
+                    D3DXVECTOR3 toParticle = particle.pos - cameraPos;
+                    if (D3DXVec3LengthSq(&toParticle) < 30.0f)
+                    {
+                        continue;
+                    }
                 }
             }
 
