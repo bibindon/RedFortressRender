@@ -2,6 +2,7 @@
 float4x4 g_matWorld;
 float4x4 g_matView;
 float4x4 g_matProj;
+float4x4 g_matWorldViewProjParticle;
 
 static const int MAX_MATRICES = 8;
 float4x3 g_matWorldArray[MAX_MATRICES];
@@ -36,6 +37,17 @@ sampler sampInstancingAlpha = sampler_state
     AddressV = CLAMP;
 };
 
+texture g_texParticleAlpha;
+sampler sampParticleAlpha = sampler_state
+{
+    Texture = (g_texParticleAlpha);
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    MipFilter = LINEAR;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+
 struct VS_INPUT
 {
     float4 positionObject : POSITION0;
@@ -59,6 +71,13 @@ struct VS_OUTPUT
     float3 normalWorld    : TEXCOORD2;
     float2 screenUV       : TEXCOORD3;
     float2 alphaUV        : TEXCOORD4;
+};
+
+struct VS_INPUT_PARTICLE
+{
+    float4 positionObject : POSITION0;
+    float4 color          : COLOR0;
+    float2 texCoord       : TEXCOORD0;
 };
 
 VS_OUTPUT VS_GBuffer(VS_INPUT inputData)
@@ -131,6 +150,23 @@ VS_OUTPUT VS_GBufferInstancing(VS_INPUT_INSTANCING inputData)
     rotatedNormal.y = inputData.normalObject.y;
     rotatedNormal.z = (-inputData.normalObject.x * sinY) + (inputData.normalObject.z * cosY);
     outputData.normalWorld = normalize(rotatedNormal);
+    outputData.alphaUV = inputData.texCoord;
+
+    return outputData;
+}
+
+VS_OUTPUT VS_GBufferParticle(VS_INPUT_PARTICLE inputData)
+{
+    VS_OUTPUT outputData;
+
+    float4 positionView4 = mul(inputData.positionObject, g_matView);
+    outputData.positionClip = mul(inputData.positionObject, g_matWorldViewProjParticle);
+    float2 ndc = outputData.positionClip.xy / outputData.positionClip.w;
+    outputData.screenUV = float2(ndc.x * 0.5f + 0.5f, -ndc.y * 0.5f + 0.5f);
+
+    outputData.viewSpaceZ = positionView4.z;
+    outputData.positionWorld = inputData.positionObject.xyz;
+    outputData.normalWorld = float3(0.0f, 1.0f, 0.0f);
     outputData.alphaUV = inputData.texCoord;
 
     return outputData;
@@ -237,6 +273,25 @@ void PS_GBufferInstancingFog(VS_OUTPUT inputData,
     outRT0 = float4(linearZ, 0.0f, 0.0f, 1.0f);
 }
 
+void PS_GBufferParticle(VS_OUTPUT inputData,
+                        out float4 outRT0 : COLOR0,
+                        out float4 outRT1 : COLOR1,
+                        out float4 outRT2 : COLOR2)
+{
+    clip(tex2D(sampParticleAlpha, inputData.alphaUV).a - 0.1f);
+    PS_GBuffer(inputData, outRT0, outRT1, outRT2);
+}
+
+void PS_GBufferParticleFog(VS_OUTPUT inputData,
+                           out float4 outRT0 : COLOR0)
+{
+    clip(tex2D(sampParticleAlpha, inputData.alphaUV).a - 0.1f);
+
+    float linearZ = (inputData.viewSpaceZ - g_fNear) / (g_fFar - g_fNear);
+    linearZ = saturate(linearZ);
+    outRT0 = float4(linearZ, 0.0f, 0.0f, 1.0f);
+}
+
 void PS_GBufferBackFace(VS_OUTPUT inputData,
                         out float4 outRT0 : COLOR0)
 {
@@ -286,6 +341,34 @@ technique TechniqueGBufferInstancingFog
 
         VertexShader = compile vs_3_0 VS_GBufferInstancing();
         PixelShader  = compile ps_3_0 PS_GBufferInstancingFog();
+    }
+}
+
+technique TechniqueGBufferParticle
+{
+    pass P0
+    {
+        CullMode         = NONE;
+        ZEnable          = TRUE;
+        ZWriteEnable     = TRUE;
+        AlphaBlendEnable = FALSE;
+
+        VertexShader = compile vs_3_0 VS_GBufferParticle();
+        PixelShader  = compile ps_3_0 PS_GBufferParticle();
+    }
+}
+
+technique TechniqueGBufferParticleFog
+{
+    pass P0
+    {
+        CullMode         = NONE;
+        ZEnable          = TRUE;
+        ZWriteEnable     = TRUE;
+        AlphaBlendEnable = FALSE;
+
+        VertexShader = compile vs_3_0 VS_GBufferParticle();
+        PixelShader  = compile ps_3_0 PS_GBufferParticleFog();
     }
 }
 

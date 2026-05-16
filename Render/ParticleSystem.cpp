@@ -14,7 +14,7 @@ namespace
 #define SAFE_RELEASE_LOCAL(p) { if ((p) != NULL) { (p)->Release(); (p) = NULL; } }
 constexpr float kDustFixedScreenReferenceDistance = 6.0f;
 constexpr float kDustFixedScreenMinScale = 0.15f;
-constexpr float kDustFixedScreenMaxScale = 24.0f;
+constexpr float kDustFixedScreenMaxScale = 1.0f;
 }
 
 namespace NSRender
@@ -182,6 +182,176 @@ void ParticleSystem::Draw(const D3DXMATRIX& view, const D3DXMATRIX& proj)
     for (const auto& effect : m_effects)
     {
         DrawEffect(effect, view, proj);
+    }
+}
+
+int ParticleSystem::FillDustVertices(const EffectInstance& effectInstance,
+                                     LPDIRECT3DTEXTURE9 batchTexture,
+                                     const D3DXMATRIX& view)
+{
+    if (effectInstance.preset != ParticleEffectPreset::Dust || batchTexture == NULL)
+    {
+        return 0;
+    }
+
+    D3DXMATRIX invView;
+    D3DXMatrixInverse(&invView, NULL, &view);
+    const D3DXVECTOR3 cameraPos(invView._41, invView._42, invView._43);
+
+    D3DXVECTOR3 cameraRight(invView._11, invView._12, invView._13);
+    D3DXVECTOR3 cameraUp(invView._21, invView._22, invView._23);
+    D3DXVec3Normalize(&cameraRight, &cameraRight);
+    D3DXVec3Normalize(&cameraUp, &cameraUp);
+
+    int activeCount = 0;
+
+    for (const auto& particle : effectInstance.particles)
+    {
+        if (!particle.active)
+        {
+            continue;
+        }
+
+        const bool usesAltTexture = (batchTexture == m_dustTexture2);
+        if (particle.useAltTexture != usesAltTexture)
+        {
+            continue;
+        }
+
+        D3DXVECTOR3 toParticle = particle.pos - cameraPos;
+        if (!m_dustFixedScreenSizeEnabled)
+        {
+            if (D3DXVec3LengthSq(&toParticle) < 30.0f)
+            {
+                continue;
+            }
+        }
+
+        const float cosValue = cosf(particle.rotation);
+        const float sinValue = sinf(particle.rotation);
+        float halfWidth = particle.size * 0.5f;
+        float halfHeight = particle.size * 0.5f;
+        float fixedScreenScale = 1.0f;
+
+        if (m_dustFixedScreenSizeEnabled)
+        {
+            D3DXVECTOR3 viewPos;
+            D3DXVec3TransformCoord(&viewPos, &particle.pos, &view);
+            fixedScreenScale = ClampFloat(fabsf(viewPos.z) / kDustFixedScreenReferenceDistance,
+                                          kDustFixedScreenMinScale,
+                                          kDustFixedScreenMaxScale);
+        }
+
+        D3DXVECTOR3 rotatedRight;
+        rotatedRight.x = cameraRight.x * cosValue + cameraUp.x * sinValue;
+        rotatedRight.y = cameraRight.y * cosValue + cameraUp.y * sinValue;
+        rotatedRight.z = cameraRight.z * cosValue + cameraUp.z * sinValue;
+
+        D3DXVECTOR3 rotatedUp;
+        rotatedUp.x = cameraUp.x * cosValue - cameraRight.x * sinValue;
+        rotatedUp.y = cameraUp.y * cosValue - cameraRight.y * sinValue;
+        rotatedUp.z = cameraUp.z * cosValue - cameraRight.z * sinValue;
+
+        halfWidth *= 0.50f * fixedScreenScale;
+        halfHeight *= 0.50f * fixedScreenScale;
+
+        const D3DXVECTOR3 halfRight(rotatedRight.x * halfWidth,
+                                    rotatedRight.y * halfWidth,
+                                    rotatedRight.z * halfWidth);
+        const D3DXVECTOR3 halfUp(rotatedUp.x * halfHeight,
+                                 rotatedUp.y * halfHeight,
+                                 rotatedUp.z * halfHeight);
+
+        const D3DXVECTOR3 topLeft(particle.pos.x - halfRight.x + halfUp.x,
+                                  particle.pos.y - halfRight.y + halfUp.y,
+                                  particle.pos.z - halfRight.z + halfUp.z);
+        const D3DXVECTOR3 topRight(particle.pos.x + halfRight.x + halfUp.x,
+                                   particle.pos.y + halfRight.y + halfUp.y,
+                                   particle.pos.z + halfRight.z + halfUp.z);
+        const D3DXVECTOR3 bottomLeft(particle.pos.x - halfRight.x - halfUp.x,
+                                     particle.pos.y - halfRight.y - halfUp.y,
+                                     particle.pos.z - halfRight.z - halfUp.z);
+        const D3DXVECTOR3 bottomRight(particle.pos.x + halfRight.x - halfUp.x,
+                                      particle.pos.y + halfRight.y - halfUp.y,
+                                      particle.pos.z + halfRight.z - halfUp.z);
+
+        const int vertexIndex = activeCount * PARTICLE_VERTEX_COUNT;
+        m_vertices[vertexIndex + 0] = { topLeft, particle.color, 0.0f, 0.0f };
+        m_vertices[vertexIndex + 1] = { topRight, particle.color, 1.0f, 0.0f };
+        m_vertices[vertexIndex + 2] = { bottomLeft, particle.color, 0.0f, 1.0f };
+        m_vertices[vertexIndex + 3] = { bottomLeft, particle.color, 0.0f, 1.0f };
+        m_vertices[vertexIndex + 4] = { topRight, particle.color, 1.0f, 0.0f };
+        m_vertices[vertexIndex + 5] = { bottomRight, particle.color, 1.0f, 1.0f };
+        ++activeCount;
+    }
+
+    return activeCount;
+}
+
+void ParticleSystem::RenderDustToGBufferEffect(LPD3DXEFFECT effect,
+                                               const D3DXMATRIX& view,
+                                               const D3DXMATRIX& proj,
+                                               const char* techniqueName)
+{
+    if (!m_initialized || effect == NULL || techniqueName == NULL)
+    {
+        return;
+    }
+
+    D3DXMATRIX worldViewProj = view * proj;
+    HRESULT hResult = effect->SetMatrix("g_matWorldViewProjParticle", &worldViewProj);
+    assert(SUCCEEDED(hResult));
+
+    for (const auto& effectInstance : m_effects)
+    {
+        if (effectInstance.preset != ParticleEffectPreset::Dust)
+        {
+            continue;
+        }
+
+        const LPDIRECT3DTEXTURE9 dustTextures[] = { m_dustTexture, m_dustTexture2 };
+        for (const auto& dustTexture : dustTextures)
+        {
+            const int activeCount = FillDustVertices(effectInstance, dustTexture, view);
+            if (activeCount <= 0)
+            {
+                continue;
+            }
+
+            hResult = effect->SetTechnique(techniqueName);
+            assert(SUCCEEDED(hResult));
+
+            hResult = effect->SetTexture("g_texParticleAlpha", dustTexture);
+            assert(SUCCEEDED(hResult));
+
+            UINT numPasses = 0;
+            hResult = effect->Begin(&numPasses, 0);
+            assert(SUCCEEDED(hResult));
+
+            for (UINT passIndex = 0; passIndex < numPasses; ++passIndex)
+            {
+                hResult = effect->BeginPass(passIndex);
+                assert(SUCCEEDED(hResult));
+
+                hResult = effect->CommitChanges();
+                assert(SUCCEEDED(hResult));
+
+                hResult = Common::D3DDevice()->SetFVF(ParticleVertex::FVF);
+                assert(SUCCEEDED(hResult));
+
+                hResult = Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLELIST,
+                                                               activeCount * 2,
+                                                               m_vertices.data(),
+                                                               sizeof(ParticleVertex));
+                assert(SUCCEEDED(hResult));
+
+                hResult = effect->EndPass();
+                assert(SUCCEEDED(hResult));
+            }
+
+            hResult = effect->End();
+            assert(SUCCEEDED(hResult));
+        }
     }
 }
 
@@ -700,123 +870,133 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
     D3DXVec3Normalize(&cameraRight, &cameraRight);
     D3DXVec3Normalize(&cameraUp, &cameraUp);
 
-    auto fillVertices = [&](const bool useAltTextureFilter) -> int
-    {
-        int activeCount = 0;
-
-        for (const auto& particle : effectInstance.particles)
-        {
-            if (!particle.active)
-            {
-                continue;
-            }
-
-            if (effectInstance.preset == ParticleEffectPreset::Dust)
-            {
-                if (!m_dustFixedScreenSizeEnabled)
-                {
-                    D3DXVECTOR3 toParticle = particle.pos - cameraPos;
-                    if (D3DXVec3LengthSq(&toParticle) < 30.0f)
-                    {
-                        continue;
-                    }
-                }
-            }
-
-            if (effectInstance.preset == ParticleEffectPreset::Dust &&
-                particle.useAltTexture != useAltTextureFilter)
-            {
-                continue;
-            }
-
-            const float cosValue = cosf(particle.rotation);
-            const float sinValue = sinf(particle.rotation);
-            float halfWidth = particle.size * 0.5f;
-            float halfHeight = particle.size * 0.5f;
-            float fixedScreenScale = 1.0f;
-            D3DXVECTOR3 center = particle.pos;
-
-            if (effectInstance.preset == ParticleEffectPreset::Dust &&
-                m_dustFixedScreenSizeEnabled)
-            {
-                D3DXVECTOR3 viewPos;
-                D3DXVec3TransformCoord(&viewPos, &particle.pos, &view);
-                fixedScreenScale = ClampFloat(fabsf(viewPos.z) / kDustFixedScreenReferenceDistance,
-                                              kDustFixedScreenMinScale,
-                                              kDustFixedScreenMaxScale);
-            }
-
-            D3DXVECTOR3 rotatedRight;
-            rotatedRight.x = cameraRight.x * cosValue + cameraUp.x * sinValue;
-            rotatedRight.y = cameraRight.y * cosValue + cameraUp.y * sinValue;
-            rotatedRight.z = cameraRight.z * cosValue + cameraUp.z * sinValue;
-
-            D3DXVECTOR3 rotatedUp;
-            rotatedUp.x = cameraUp.x * cosValue - cameraRight.x * sinValue;
-            rotatedUp.y = cameraUp.y * cosValue - cameraRight.y * sinValue;
-            rotatedUp.z = cameraUp.z * cosValue - cameraRight.z * sinValue;
-
-            if (effectInstance.preset == ParticleEffectPreset::Fire)
-            {
-                halfWidth = particle.size * 0.38f;
-                halfHeight = particle.size * 0.92f;
-                center.y += halfHeight * 0.18f;
-            }
-            else if (effectInstance.preset == ParticleEffectPreset::Fog)
-            {
-                halfWidth = particle.size * 0.75f;
-                halfHeight = particle.size * 0.62f;
-            }
-            else if (effectInstance.preset == ParticleEffectPreset::Dust)
-            {
-                halfWidth = particle.size * 0.50f * fixedScreenScale;
-                halfHeight = particle.size * 0.50f * fixedScreenScale;
-            }
-
-            const D3DXVECTOR3 halfRight(rotatedRight.x * halfWidth,
-                                        rotatedRight.y * halfWidth,
-                                        rotatedRight.z * halfWidth);
-            const D3DXVECTOR3 halfUp(rotatedUp.x * halfHeight,
-                                     rotatedUp.y * halfHeight,
-                                     rotatedUp.z * halfHeight);
-
-            const D3DXVECTOR3 topLeft(center.x - halfRight.x + halfUp.x,
-                                      center.y - halfRight.y + halfUp.y,
-                                      center.z - halfRight.z + halfUp.z);
-            const D3DXVECTOR3 topRight(center.x + halfRight.x + halfUp.x,
-                                       center.y + halfRight.y + halfUp.y,
-                                       center.z + halfRight.z + halfUp.z);
-            const D3DXVECTOR3 bottomLeft(center.x - halfRight.x - halfUp.x,
-                                         center.y - halfRight.y - halfUp.y,
-                                         center.z - halfRight.z - halfUp.z);
-            const D3DXVECTOR3 bottomRight(center.x + halfRight.x - halfUp.x,
-                                          center.y + halfRight.y - halfUp.y,
-                                          center.z + halfRight.z - halfUp.z);
-
-            const int vertexIndex = activeCount * PARTICLE_VERTEX_COUNT;
-            m_vertices[vertexIndex + 0] = { topLeft, particle.color, 0.0f, 0.0f };
-            m_vertices[vertexIndex + 1] = { topRight, particle.color, 1.0f, 0.0f };
-            m_vertices[vertexIndex + 2] = { bottomLeft, particle.color, 0.0f, 1.0f };
-            m_vertices[vertexIndex + 3] = { bottomLeft, particle.color, 0.0f, 1.0f };
-            m_vertices[vertexIndex + 4] = { topRight, particle.color, 1.0f, 0.0f };
-            m_vertices[vertexIndex + 5] = { bottomRight, particle.color, 1.0f, 1.0f };
-            ++activeCount;
-        }
-
-        return activeCount;
-    };
-
     auto drawBatch = [&](LPDIRECT3DTEXTURE9 batchTexture,
                          const bool useAltTextureFilter,
                          const char* techniqueName) -> void
     {
-        const int activeCount = fillVertices(useAltTextureFilter);
+        HRESULT hResult = E_FAIL;
+        const int activeCount = (effectInstance.preset == ParticleEffectPreset::Dust)
+            ? FillDustVertices(effectInstance, batchTexture, view)
+            : 0;
         if (activeCount <= 0)
         {
+            if (effectInstance.preset == ParticleEffectPreset::Dust)
+            {
+                return;
+            }
+        }
+
+        if (effectInstance.preset != ParticleEffectPreset::Dust)
+        {
+            int activeCountNonDust = 0;
+
+            for (const auto& particle : effectInstance.particles)
+            {
+                if (!particle.active)
+                {
+                    continue;
+                }
+
+                const float cosValue = cosf(particle.rotation);
+                const float sinValue = sinf(particle.rotation);
+                float halfWidth = particle.size * 0.5f;
+                float halfHeight = particle.size * 0.5f;
+                D3DXVECTOR3 center = particle.pos;
+
+                D3DXVECTOR3 rotatedRight;
+                rotatedRight.x = cameraRight.x * cosValue + cameraUp.x * sinValue;
+                rotatedRight.y = cameraRight.y * cosValue + cameraUp.y * sinValue;
+                rotatedRight.z = cameraRight.z * cosValue + cameraUp.z * sinValue;
+
+                D3DXVECTOR3 rotatedUp;
+                rotatedUp.x = cameraUp.x * cosValue - cameraRight.x * sinValue;
+                rotatedUp.y = cameraUp.y * cosValue - cameraRight.y * sinValue;
+                rotatedUp.z = cameraUp.z * cosValue - cameraRight.z * sinValue;
+
+                if (effectInstance.preset == ParticleEffectPreset::Fire)
+                {
+                    halfWidth = particle.size * 0.38f;
+                    halfHeight = particle.size * 0.92f;
+                    center.y += halfHeight * 0.18f;
+                }
+                else if (effectInstance.preset == ParticleEffectPreset::Fog)
+                {
+                    halfWidth = particle.size * 0.75f;
+                    halfHeight = particle.size * 0.62f;
+                }
+
+                const D3DXVECTOR3 halfRight(rotatedRight.x * halfWidth,
+                                            rotatedRight.y * halfWidth,
+                                            rotatedRight.z * halfWidth);
+                const D3DXVECTOR3 halfUp(rotatedUp.x * halfHeight,
+                                         rotatedUp.y * halfHeight,
+                                         rotatedUp.z * halfHeight);
+
+                const D3DXVECTOR3 topLeft(center.x - halfRight.x + halfUp.x,
+                                          center.y - halfRight.y + halfUp.y,
+                                          center.z - halfRight.z + halfUp.z);
+                const D3DXVECTOR3 topRight(center.x + halfRight.x + halfUp.x,
+                                           center.y + halfRight.y + halfUp.y,
+                                           center.z + halfRight.z + halfUp.z);
+                const D3DXVECTOR3 bottomLeft(center.x - halfRight.x - halfUp.x,
+                                             center.y - halfRight.y - halfUp.y,
+                                             center.z - halfRight.z - halfUp.z);
+                const D3DXVECTOR3 bottomRight(center.x + halfRight.x - halfUp.x,
+                                              center.y + halfRight.y - halfUp.y,
+                                              center.z + halfRight.z - halfUp.z);
+
+                const int vertexIndex = activeCountNonDust * PARTICLE_VERTEX_COUNT;
+                m_vertices[vertexIndex + 0] = { topLeft, particle.color, 0.0f, 0.0f };
+                m_vertices[vertexIndex + 1] = { topRight, particle.color, 1.0f, 0.0f };
+                m_vertices[vertexIndex + 2] = { bottomLeft, particle.color, 0.0f, 1.0f };
+                m_vertices[vertexIndex + 3] = { bottomLeft, particle.color, 0.0f, 1.0f };
+                m_vertices[vertexIndex + 4] = { topRight, particle.color, 1.0f, 0.0f };
+                m_vertices[vertexIndex + 5] = { bottomRight, particle.color, 1.0f, 1.0f };
+                ++activeCountNonDust;
+            }
+
+            if (activeCountNonDust <= 0)
+            {
+                return;
+            }
+
+            hResult = m_effect->SetTechnique(techniqueName);
+            assert(SUCCEEDED(hResult));
+
+            hResult = m_effect->SetTexture("g_texture0", batchTexture);
+            assert(SUCCEEDED(hResult));
+
+            UINT numPasses = 0;
+            hResult = m_effect->Begin(&numPasses, 0);
+            assert(SUCCEEDED(hResult));
+
+            for (UINT passIndex = 0; passIndex < numPasses; ++passIndex)
+            {
+                hResult = m_effect->BeginPass(passIndex);
+                assert(SUCCEEDED(hResult));
+
+                hResult = m_effect->CommitChanges();
+                assert(SUCCEEDED(hResult));
+
+                hResult = Common::D3DDevice()->SetFVF(ParticleVertex::FVF);
+                assert(SUCCEEDED(hResult));
+
+                hResult = Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLELIST,
+                                                               activeCountNonDust * 2,
+                                                               m_vertices.data(),
+                                                               sizeof(ParticleVertex));
+                assert(SUCCEEDED(hResult));
+
+                hResult = m_effect->EndPass();
+                assert(SUCCEEDED(hResult));
+            }
+
+            hResult = m_effect->End();
+            assert(SUCCEEDED(hResult));
             return;
         }
 
-        HRESULT hResult = m_effect->SetTechnique(techniqueName);
+        hResult = m_effect->SetTechnique(techniqueName);
         assert(SUCCEEDED(hResult));
 
         hResult = m_effect->SetTexture("g_texture0", batchTexture);

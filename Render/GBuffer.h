@@ -11,6 +11,7 @@ namespace NSRender
 {
 class MeshMixSkinAnim;
 class MeshInstancing;
+class ParticleSystem;
 
 // 各ピクセルの深度とワールド座標を表した画像を生成
 class GBuffer : public IDeviceResettable
@@ -28,6 +29,7 @@ public:
     void Draw(const std::deque<MeshMixManager>& meshList,
               const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList,
               const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap,
+              ParticleSystem* particleSystem,
               LPDIRECT3DTEXTURE9* Z,
               LPDIRECT3DTEXTURE9* CameraZ,
               LPDIRECT3DTEXTURE9* Pos,

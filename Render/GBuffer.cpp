@@ -8,6 +8,7 @@
 #include "Camera.h"
 #include "MeshInstancing.h"
 #include "MeshMixSkinAnim.h"
+#include "ParticleSystem.h"
 
 #include "Util.h"
 
@@ -136,6 +137,7 @@ void GBuffer::CreateRawResource()
 void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
                    const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList,
                    const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap,
+                   ParticleSystem* particleSystem,
                    LPDIRECT3DTEXTURE9* Z,
                    LPDIRECT3DTEXTURE9* CameraZ,
                    LPDIRECT3DTEXTURE9* Pos,
@@ -252,6 +254,14 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         }
     }
 
+    if (particleSystem != nullptr)
+    {
+        particleSystem->RenderDustToGBufferEffect(m_fxGBuffer,
+                                                  mView,
+                                                  mProj,
+                                                  "TechniqueGBufferParticle");
+    }
+
     hr = Common::D3DDevice()->EndScene();
 
     // MRT を外し、RT0 を元に戻す
@@ -349,6 +359,14 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         {
             mesh.second->RenderToGBufferEffect(m_fxGBuffer, "TechniqueGBufferInstancingFog");
         }
+    }
+
+    if (particleSystem != nullptr)
+    {
+        particleSystem->RenderDustToGBufferEffect(m_fxGBuffer,
+                                                  mView,
+                                                  mProj,
+                                                  "TechniqueGBufferParticleFog");
     }
 
     Common::D3DDevice()->EndScene();

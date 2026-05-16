@@ -1277,7 +1277,15 @@ void Render::Draw()
     if (m_gBufferEnabled)
     {
         EnsureGBufferInitialized();
-        m_GBuffer.Draw(m_meshMixList, m_meshMixSkinAnimList, m_meshInstancingMap, &pTexTempZ, &pTexTempCameraZ, &pTexTempPos, &pTexTempNoral, &pTexTempThickness);
+        m_GBuffer.Draw(m_meshMixList,
+                       m_meshMixSkinAnimList,
+                       m_meshInstancingMap,
+                       &m_particleSystem,
+                       &pTexTempZ,
+                       &pTexTempCameraZ,
+                       &pTexTempPos,
+                       &pTexTempNoral,
+                       &pTexTempThickness);
         MeshMixManager::SetSharedThicknessTexture(pTexTempThickness);
     }
     else

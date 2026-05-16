@@ -32,6 +32,10 @@ public:
 
     void Update(float deltaTime);
     void Draw(const D3DXMATRIX& view, const D3DXMATRIX& proj);
+    void RenderDustToGBufferEffect(LPD3DXEFFECT effect,
+                                   const D3DXMATRIX& view,
+                                   const D3DXMATRIX& proj,
+                                   const char* techniqueName);
 
     ParticleEffectPreset GetPreset() const;
 
@@ -104,6 +108,9 @@ private:
     void EmitFog(EffectInstance& effect, float deltaTime);
     void UpdateEffect(EffectInstance& effect, float deltaTime);
     void DrawEffect(const EffectInstance& effect, const D3DXMATRIX& view, const D3DXMATRIX& proj);
+    int FillDustVertices(const EffectInstance& effectInstance,
+                         LPDIRECT3DTEXTURE9 batchTexture,
+                         const D3DXMATRIX& view);
 
     std::wstring BuildAssetPath(const wchar_t* fileName) const;
     float RandomFloat(float minValue, float maxValue) const;
