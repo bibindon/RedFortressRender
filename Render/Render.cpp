@@ -2926,6 +2926,11 @@ void Render::ClearParticleEffect()
     m_particleSystem.ClearEffect();
 }
 
+void Render::SetDustFixedScreenSize(const bool enabled)
+{
+    m_particleSystem.SetDustFixedScreenSize(enabled);
+}
+
 ParticleEffectPreset Render::GetParticleEffectPreset() const
 {
     return m_particleSystem.GetPreset();

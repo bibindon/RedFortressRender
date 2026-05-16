@@ -28,6 +28,7 @@ public:
 
     void PlaceEffect(ParticleEffectPreset preset, const D3DXVECTOR3& origin);
     void ClearEffect();
+    void SetDustFixedScreenSize(bool enabled);
 
     void Update(float deltaTime);
     void Draw(const D3DXMATRIX& view, const D3DXMATRIX& proj);
@@ -121,5 +122,6 @@ private:
     LPDIRECT3DTEXTURE9 m_dustTexture2 = NULL;
     LPDIRECT3DTEXTURE9 m_fogTexture = NULL;
     LPD3DXEFFECT m_effect = NULL;
+    bool m_dustFixedScreenSizeEnabled = false;
 };
 }

@@ -143,6 +143,11 @@ void ParticleSystem::ClearEffect()
     m_lastPlacedPreset = ParticleEffectPreset::None;
 }
 
+void ParticleSystem::SetDustFixedScreenSize(const bool enabled)
+{
+    m_dustFixedScreenSizeEnabled = enabled;
+}
+
 void ParticleSystem::Update(const float deltaTime)
 {
     if (!m_initialized)
@@ -475,7 +480,7 @@ void ParticleSystem::EmitDust(EffectInstance& effect, const float deltaTime)
         float startSize = 0.f;
         if (true)
         {
-            startSize = RandomFloat(0.02f, 0.04f);
+            startSize = RandomFloat(0.01f, 0.02f);
         }
         else
         {
@@ -709,7 +714,7 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
             if (effectInstance.preset == ParticleEffectPreset::Dust)
             {
                 D3DXVECTOR3 toParticle = particle.pos - cameraPos;
-                if (D3DXVec3LengthSq(&toParticle) < 1.0f)
+                if (D3DXVec3LengthSq(&toParticle) < 30.0f)
                 {
                     continue;
                 }
@@ -728,7 +733,8 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
             float fixedScreenScale = 1.0f;
             D3DXVECTOR3 center = particle.pos;
 
-            if (effectInstance.preset == ParticleEffectPreset::Dust)
+            if (effectInstance.preset == ParticleEffectPreset::Dust &&
+                m_dustFixedScreenSizeEnabled)
             {
                 D3DXVECTOR3 viewPos;
                 D3DXVec3TransformCoord(&viewPos, &particle.pos, &view);

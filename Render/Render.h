@@ -264,6 +264,7 @@ public:
 
     void PlaceParticleEffect(const ParticleEffectPreset preset, const D3DXVECTOR3& origin);
     void ClearParticleEffect();
+    void SetDustFixedScreenSize(bool enabled);
     ParticleEffectPreset GetParticleEffectPreset() const;
 
     // 彩度をどれくらい上げるか（下げるか）を設定
