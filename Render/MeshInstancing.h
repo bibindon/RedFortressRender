@@ -47,6 +47,11 @@ private:
         float x = 0.0f;
         float y = 0.0f;
         float z = 0.0f;
+        float rotationYRadians = 0.0f;
+        float scale = 1.0f;
+        float padding0 = 0.0f;
+        float padding1 = 0.0f;
+        float padding2 = 0.0f;
     };
 
     IDirect3DVertexBuffer9* m_worldPosBuf = nullptr;
@@ -55,8 +60,10 @@ private:
 
     void copyBuf(unsigned sz, void* src, IDirect3DVertexBuffer9* buf);
     void UpdateInstanceBuffer();
+    bool LoadPlacementCsv();
 
     std::vector<InstanceData> m_instances;
+    bool m_loadedPlacementCsv = false;
 
 };
 

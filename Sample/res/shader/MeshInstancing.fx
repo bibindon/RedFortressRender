@@ -12,18 +12,33 @@ sampler textureSampler = sampler_state {
 void VertexShader1(in  float4 inPosition  : POSITION,
                    in  float4 inNormal    : NORMAL0,
                    in  float4 inTexCood   : TEXCOORD0,
-                   in  float3 inWorldPos  : TEXCOORD1,
+                   in  float4 inInstancePosRot : TEXCOORD1,
+                   in  float4 inInstanceScale  : TEXCOORD2,
 
                    out float4 outPosition : POSITION,
                    out float4 outDiffuse  : COLOR0,
                    out float4 outTexCood  : TEXCOORD0)
 {
-    inPosition.x += inWorldPos.x;
-    inPosition.y += inWorldPos.y;
-    inPosition.z += inWorldPos.z;
-    outPosition = mul(inPosition, g_matWorldViewProj);
+    float scale = inInstanceScale.x;
+    float rotationY = inInstancePosRot.w;
+    float sinY = sin(rotationY);
+    float cosY = cos(rotationY);
 
-    float lightIntensity = dot(inNormal, g_lightNormal);
+    float3 scaledPos = inPosition.xyz * scale;
+    float3 rotatedPos;
+    rotatedPos.x = (scaledPos.x * cosY) + (scaledPos.z * sinY);
+    rotatedPos.y = scaledPos.y;
+    rotatedPos.z = (-scaledPos.x * sinY) + (scaledPos.z * cosY);
+
+    float3 worldPos = rotatedPos + inInstancePosRot.xyz;
+    outPosition = mul(float4(worldPos, 1.0f), g_matWorldViewProj);
+
+    float3 rotatedNormal;
+    rotatedNormal.x = (inNormal.x * cosY) + (inNormal.z * sinY);
+    rotatedNormal.y = inNormal.y;
+    rotatedNormal.z = (-inNormal.x * sinY) + (inNormal.z * cosY);
+
+    float lightIntensity = dot(float4(rotatedNormal, 0.0f), g_lightNormal);
     outDiffuse.rgb = max(0, lightIntensity);
     outDiffuse.a = 1.0f;
 

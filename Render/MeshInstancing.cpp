@@ -3,6 +3,9 @@
 #include "Util.h"
 
 #include <Shlwapi.h>
+#include <cwchar>
+#include <fstream>
+#include <sstream>
 
 namespace NSRender
 {
@@ -55,6 +58,67 @@ std::wstring ResolveTexturePath(const std::wstring& modelPath, const char* textu
     }
 
     return modelDirectory + L'\\' + wideTexturePath;
+}
+
+std::wstring BuildPlacementCsvPath(const std::wstring& modelPath)
+{
+    const std::wstring::size_type dotPos = modelPath.find_last_of(L'.');
+    if (dotPos == std::wstring::npos)
+    {
+        return modelPath + L".csv";
+    }
+
+    return modelPath.substr(0, dotPos) + L".csv";
+}
+
+std::wstring TrimWhitespace(const std::wstring& value)
+{
+    const std::wstring whitespace = L" \t\r\n";
+    const size_t start = value.find_first_not_of(whitespace);
+    if (start == std::wstring::npos)
+    {
+        return std::wstring();
+    }
+
+    const size_t end = value.find_last_not_of(whitespace);
+    return value.substr(start, end - start + 1);
+}
+
+std::vector<std::wstring> SplitCsvFields(const std::wstring& line)
+{
+    std::vector<std::wstring> fields;
+    std::wstring field;
+    std::wstringstream stream(line);
+
+    while (std::getline(stream, field, L','))
+    {
+        fields.push_back(TrimWhitespace(field));
+    }
+
+    if (!line.empty() && line.back() == L',')
+    {
+        fields.push_back(L"");
+    }
+
+    return fields;
+}
+
+bool TryParseFloat(const std::wstring& text, float& value)
+{
+    if (text.empty())
+    {
+        return false;
+    }
+
+    wchar_t* endPtr = nullptr;
+    const double parsed = std::wcstod(text.c_str(), &endPtr);
+    if (endPtr == text.c_str() || *endPtr != L'\0')
+    {
+        return false;
+    }
+
+    value = static_cast<float>(parsed);
+    return true;
 }
 }
 
@@ -123,13 +187,15 @@ void MeshInstancing::Initialize(const std::wstring& filePath)
         { 0, 0, D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0 },
         { 0, 12, D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_NORMAL, 0 },
         { 0, 24, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0 },
-        { 1, 0, D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 1 },
+        { 1, 0, D3DDECLTYPE_FLOAT4, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 1 },
+        { 1, 16, D3DDECLTYPE_FLOAT4, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 2 },
         D3DDECL_END()
     };
 
     hResult = Common::D3DDevice()->CreateVertexDeclaration(declElems, &m_decl);
     assert(hResult == S_OK);
 
+    m_loadedPlacementCsv = LoadPlacementCsv();
     Common::AddDeviceLostResource(this);
 }
 
@@ -152,14 +218,22 @@ void MeshInstancing::Finalize()
     m_dwNumMaterials = 0;
     m_instances.clear();
     m_filePath.clear();
+    m_loadedPlacementCsv = false;
 }
 
 void MeshInstancing::AddInstance(const D3DXVECTOR3& pos)
 {
+    if (m_loadedPlacementCsv && !m_instances.empty())
+    {
+        return;
+    }
+
     InstanceData instance;
     instance.x = pos.x;
     instance.y = pos.y;
     instance.z = pos.z;
+    instance.rotationYRadians = 0.0f;
+    instance.scale = 1.0f;
 
     m_instances.clear();
     m_instances.push_back(instance);
@@ -270,6 +344,72 @@ void MeshInstancing::UpdateInstanceBuffer()
     copyBuf(sizeof(InstanceData) * static_cast<unsigned>(m_instances.size()),
             m_instances.data(),
             m_worldPosBuf);
+}
+
+bool MeshInstancing::LoadPlacementCsv()
+{
+    const std::wstring csvPath = BuildPlacementCsvPath(m_filePath);
+    std::wifstream file(csvPath);
+    if (!file.is_open())
+    {
+        return false;
+    }
+
+    std::vector<InstanceData> loadedInstances;
+    std::wstring line;
+
+    while (std::getline(file, line))
+    {
+        const std::wstring trimmedLine = TrimWhitespace(line);
+        if (trimmedLine.empty())
+        {
+            continue;
+        }
+
+        const std::vector<std::wstring> fields = SplitCsvFields(trimmedLine);
+        if (fields.size() < 3)
+        {
+            continue;
+        }
+
+        InstanceData instance;
+        if (!TryParseFloat(fields[0], instance.x) ||
+            !TryParseFloat(fields[1], instance.y) ||
+            !TryParseFloat(fields[2], instance.z))
+        {
+            continue;
+        }
+
+        float rotationYDegrees = 0.0f;
+        if (fields.size() >= 4 && !fields[3].empty())
+        {
+            if (!TryParseFloat(fields[3], rotationYDegrees))
+            {
+                continue;
+            }
+        }
+        instance.rotationYRadians = D3DXToRadian(rotationYDegrees);
+
+        instance.scale = 1.0f;
+        if (fields.size() >= 5 && !fields[4].empty())
+        {
+            if (!TryParseFloat(fields[4], instance.scale))
+            {
+                continue;
+            }
+        }
+
+        loadedInstances.push_back(instance);
+    }
+
+    if (loadedInstances.empty())
+    {
+        return false;
+    }
+
+    m_instances = loadedInstances;
+    UpdateInstanceBuffer();
+    return true;
 }
 
 void MeshInstancing::copyBuf(unsigned sz, void* src, IDirect3DVertexBuffer9* buf)
