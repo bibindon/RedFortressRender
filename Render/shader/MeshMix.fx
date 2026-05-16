@@ -264,8 +264,8 @@ void AccumulateSingleLightSample(float3 samplePos,
                                  float3 worldPos,
                                  float3 normal,
                                  float3 cameraDirWS,
-                                 out float3 accumContribution,
-                                 out float diffContribution)
+                                 out float3 diffuseContribution,
+                                 out float3 specularContribution)
 {
     float3 Lvec = samplePos - worldPos;
     float dist = length(Lvec);
@@ -283,8 +283,8 @@ void AccumulateSingleLightSample(float3 samplePos,
         spec = pow(NdotH, g_specularPower) * g_specularIntensity * sampleBrightness * atten;
     }
 
-    accumContribution = lightColor * (diff + spec);
-    diffContribution = diff;
+    diffuseContribution = lightColor * diff;
+    specularContribution = lightColor * spec;
 }
 
 //---------------------------------------------------------
@@ -623,6 +623,8 @@ void PixelShaderPointLight(in  float4 inPosition            : POSITION,
                                 invParallaxOffsetTS );
     }
 
+    float3 albedo = tex2D(g_textureSampler, uv).rgb * g_diffuse.rgb;
+
     float3 N = normalWS;
     if (g_bNormalMapping)
     {
@@ -639,9 +641,8 @@ void PixelShaderPointLight(in  float4 inPosition            : POSITION,
         N = normalize(mul(normalTS, tbn));
     }
 
-    float3 accum = 0.0;
-
-    float diffSum = 0.f;
+    float3 diffuseAccum = 0.0f;
+    float3 specularAccum = 0.0f;
 
     for (int i = 0; i < 16; ++i)
     {
@@ -657,22 +658,22 @@ void PixelShaderPointLight(in  float4 inPosition            : POSITION,
                                                                g_pointLightSquareHeight[i],
                                                                g_pointLightRotation[i].xyz,
                                                                inPosWorld);
-        float3 sampleAccum = 0.0f;
-        float sampleDiff = 0.0f;
+        float3 sampleDiffuse = 0.0f;
+        float3 sampleSpecular = 0.0f;
         AccumulateSingleLightSample(lightSurfacePos,
                                     g_pointLightBrightness[i],
                                     g_pointLightColor[i],
                                     inPosWorld,
                                     N,
                                     cameraDirWS,
-                                    sampleAccum,
-                                    sampleDiff);
-        accum += sampleAccum;
-        diffSum += sampleDiff;
+                                    sampleDiffuse,
+                                    sampleSpecular);
+        diffuseAccum += sampleDiffuse;
+        specularAccum += sampleSpecular;
     }
 
-    // HDRè“„ç©ï¼šã“ã“ã§ã‚¯ãƒ©ãƒ³ãƒ—ã—ãªã„
-    outColor = float4(accum, saturate(diffSum));
+    // 点光源はベースパスへ加算する。拡散はアルベドを保持し、鏡面だけライト色を乗せる。
+    outColor = float4((albedo * diffuseAccum) + specularAccum, 0.0f);
 }
 
 void PixelShaderEmit(in  float4 inPosition     : POSITION,
@@ -793,8 +794,8 @@ technique Technique1
     pass PassPointLight
     {
         AlphaBlendEnable = TRUE;
-        SrcBlend = SRCALPHA;
-        DestBlend = INVSRCALPHA;
+        SrcBlend = ONE;
+        DestBlend = ONE;
 
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShaderPointLight();
