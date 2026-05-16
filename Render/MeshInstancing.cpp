@@ -143,17 +143,23 @@ std::wstring NormalizeCsvKey(const std::wstring& value)
     return ToLower(key);
 }
 
-bool TryParseBool(const std::wstring& text, bool& value)
+bool TryParseSwayMode(const std::wstring& text, MeshInstancing::SwayMode& value)
 {
     const std::wstring lower = ToLower(TrimWhitespace(text));
-    if (lower == L"true" || lower == L"1" || lower == L"on" || lower == L"yes")
+    if (lower == L"normal" || lower == L"on" || lower == L"true" || lower == L"1" ||
+        lower == L"yes" || lower == L"y")
     {
-        value = true;
+        value = MeshInstancing::SwayMode::Normal;
         return true;
     }
-    if (lower == L"false" || lower == L"0" || lower == L"off" || lower == L"no")
+    if (lower == L"wave")
     {
-        value = false;
+        value = MeshInstancing::SwayMode::Wave;
+        return true;
+    }
+    if (lower == L"off" || lower == L"false" || lower == L"0" || lower == L"no" || lower == L"n")
+    {
+        value = MeshInstancing::SwayMode::Off;
         return true;
     }
     return false;
@@ -257,7 +263,7 @@ void MeshInstancing::Finalize()
     m_instances.clear();
     m_filePath.clear();
     m_loadedPlacementCsv = false;
-    m_swayEnabled = false;
+    m_swayMode = SwayMode::Off;
 }
 
 void MeshInstancing::AddInstance(const D3DXVECTOR3& pos)
@@ -307,7 +313,7 @@ void MeshInstancing::Draw()
     hResult = m_pEffect->SetFloat("g_fAmbientIntensity", Light::GetAmbientBrightness());
     assert(hResult == S_OK);
 
-    hResult = m_pEffect->SetBool("g_bSway", m_swayEnabled ? TRUE : FALSE);
+    hResult = m_pEffect->SetInt("g_swayMode", static_cast<int>(m_swayMode));
     assert(hResult == S_OK);
 
     hResult = m_pEffect->SetFloat("g_time", static_cast<float>(GetTickCount64()) * 0.001f);
@@ -429,10 +435,10 @@ bool MeshInstancing::LoadPlacementCsv()
         const std::vector<std::wstring> fields = SplitCsvFields(trimmedLine);
         if (fields.size() >= 2 && NormalizeCsvKey(fields[0]) == L"sway")
         {
-            bool swayEnabled = false;
-            if (TryParseBool(fields[1], swayEnabled))
+            SwayMode swayMode = SwayMode::Off;
+            if (TryParseSwayMode(fields[1], swayMode))
             {
-                m_swayEnabled = swayEnabled;
+                m_swayMode = swayMode;
             }
             continue;
         }

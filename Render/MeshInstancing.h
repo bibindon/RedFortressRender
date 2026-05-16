@@ -29,6 +29,13 @@ public:
     void OnDeviceLost();
     void OnDeviceReset();
 
+    enum class SwayMode
+    {
+        Off = 0,
+        Normal = 1,
+        Wave = 2
+    };
+
 
 private:
 
@@ -67,7 +74,7 @@ private:
     std::vector<InstanceData> m_instances;
     bool m_loadedPlacementCsv = false;
     bool m_ditherAlphaEnabled = true;
-    bool m_swayEnabled = false;
+    SwayMode m_swayMode = SwayMode::Off;
 
 };
 
