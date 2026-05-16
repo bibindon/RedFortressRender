@@ -5,6 +5,7 @@
 
 #include <Shlwapi.h>
 #include <cwchar>
+#include <cwctype>
 #include <fstream>
 #include <sstream>
 
@@ -121,6 +122,42 @@ bool TryParseFloat(const std::wstring& text, float& value)
     value = static_cast<float>(parsed);
     return true;
 }
+
+std::wstring ToLower(const std::wstring& value)
+{
+    std::wstring lower = value;
+    for (wchar_t& ch : lower)
+    {
+        ch = static_cast<wchar_t>(std::towlower(ch));
+    }
+    return lower;
+}
+
+std::wstring NormalizeCsvKey(const std::wstring& value)
+{
+    std::wstring key = TrimWhitespace(value);
+    if (!key.empty() && key[0] == 0xFEFF)
+    {
+        key.erase(key.begin());
+    }
+    return ToLower(key);
+}
+
+bool TryParseBool(const std::wstring& text, bool& value)
+{
+    const std::wstring lower = ToLower(TrimWhitespace(text));
+    if (lower == L"true" || lower == L"1" || lower == L"on" || lower == L"yes")
+    {
+        value = true;
+        return true;
+    }
+    if (lower == L"false" || lower == L"0" || lower == L"off" || lower == L"no")
+    {
+        value = false;
+        return true;
+    }
+    return false;
+}
 }
 
 MeshInstancing::MeshInstancing()
@@ -220,6 +257,7 @@ void MeshInstancing::Finalize()
     m_instances.clear();
     m_filePath.clear();
     m_loadedPlacementCsv = false;
+    m_swayEnabled = false;
 }
 
 void MeshInstancing::AddInstance(const D3DXVECTOR3& pos)
@@ -267,6 +305,12 @@ void MeshInstancing::Draw()
     assert(hResult == S_OK);
 
     hResult = m_pEffect->SetFloat("g_fAmbientIntensity", Light::GetAmbientBrightness());
+    assert(hResult == S_OK);
+
+    hResult = m_pEffect->SetBool("g_bSway", m_swayEnabled ? TRUE : FALSE);
+    assert(hResult == S_OK);
+
+    hResult = m_pEffect->SetFloat("g_time", static_cast<float>(GetTickCount64()) * 0.001f);
     assert(hResult == S_OK);
 
     LPDIRECT3DVERTEXBUFFER9 pVB = nullptr;
@@ -383,6 +427,16 @@ bool MeshInstancing::LoadPlacementCsv()
         }
 
         const std::vector<std::wstring> fields = SplitCsvFields(trimmedLine);
+        if (fields.size() >= 2 && NormalizeCsvKey(fields[0]) == L"sway")
+        {
+            bool swayEnabled = false;
+            if (TryParseBool(fields[1], swayEnabled))
+            {
+                m_swayEnabled = swayEnabled;
+            }
+            continue;
+        }
+
         if (fields.size() < 3)
         {
             continue;

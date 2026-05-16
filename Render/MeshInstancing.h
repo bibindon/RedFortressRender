@@ -67,6 +67,7 @@ private:
     std::vector<InstanceData> m_instances;
     bool m_loadedPlacementCsv = false;
     bool m_ditherAlphaEnabled = true;
+    bool m_swayEnabled = false;
 
 };
 

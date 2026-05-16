@@ -3,6 +3,8 @@ float4 g_lightNormal = { 0.3f, 1.0f, 0.5f, 0.0f };
 float4 g_ambient = { 0.2f, 0.2f, 0.2f, 1.0f };
 float g_fAmbientIntensity = 1.0f;
 bool g_bDitherAlpha = true;
+bool g_bSway = false;
+float g_time = 0.0f;
 
 texture texture1;
 sampler textureSampler = sampler_state {
@@ -30,6 +32,15 @@ void VertexShader1(in  float4 inPosition  : POSITION,
     float cosY = cos(rotationY);
 
     float3 scaledPos = inPosition.xyz * scale;
+    if (g_bSway)
+    {
+        float swayWeight = saturate(1.0f - inTexCood.y);
+        swayWeight *= swayWeight;
+        float phase = g_time * 1.7f + inInstancePosRot.x * 0.27f + inInstancePosRot.z * 0.19f;
+        float sway = sin(phase) * 0.16f + sin(phase * 1.83f + 1.2f) * 0.06f;
+        scaledPos.x += sway * swayWeight * scale;
+    }
+
     float3 rotatedPos;
     rotatedPos.x = (scaledPos.x * cosY) + (scaledPos.z * sinY);
     rotatedPos.y = scaledPos.y;
