@@ -79,6 +79,14 @@ SkinAnimMesh::~SkinAnimMesh()
     ReleaseMeshAllocator(m_frameRoot);
 }
 
+void SkinAnimMesh::UpdateAnimation()
+{
+    m_animController.Update();
+
+    D3DXMATRIX worldMatrix = BuildWorldMatrix();
+    UpdateFrameMatrix(m_frameRoot, &worldMatrix);
+}
+
 void SkinAnimMesh::Render(const D3DXMATRIX& view_matrix,
                           const D3DXMATRIX& projection_matrix,
                           const D3DXVECTOR4& light_normal,
@@ -90,15 +98,8 @@ void SkinAnimMesh::Render(const D3DXMATRIX& view_matrix,
     RenderImpl(view_matrix, projection_matrix);
 }
 
-void SkinAnimMesh::RenderImpl(const D3DXMATRIX &view_matrix,
-                               const D3DXMATRIX &projection_matrix)
+D3DXMATRIX SkinAnimMesh::BuildWorldMatrix() const
 {
-    D3DXMATRIX view_projection_matrix = view_matrix * projection_matrix;
-
-    m_D3DEffect->SetMatrix("g_matViewProj", &view_projection_matrix);
-
-    m_animController.Update();
-
     D3DXMATRIX world_matrix;
     D3DXMatrixIdentity(&world_matrix);
     {
@@ -116,7 +117,15 @@ void SkinAnimMesh::RenderImpl(const D3DXMATRIX &view_matrix,
         world_matrix *= mat;
     }
 
-    UpdateFrameMatrix(m_frameRoot, &world_matrix);
+    return world_matrix;
+}
+
+void SkinAnimMesh::RenderImpl(const D3DXMATRIX &view_matrix,
+                               const D3DXMATRIX &projection_matrix)
+{
+    D3DXMATRIX view_projection_matrix = view_matrix * projection_matrix;
+
+    m_D3DEffect->SetMatrix("g_matViewProj", &view_projection_matrix);
     RenderFrame(m_frameRoot);
 }
 

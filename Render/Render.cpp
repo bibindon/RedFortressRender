@@ -1264,6 +1264,7 @@ void Render::Draw()
 
     const float frameDeltaSeconds = CalcFrameDeltaSeconds();
     m_particleSystem.Update(frameDeltaSeconds);
+    UpdateSkinAnimationState();
 
     //---------------------------------------------------------------
     // ポストエフェクトと一部のメッシュ描画のために深度画像と
@@ -1511,6 +1512,25 @@ void Render::Draw()
 
     m_windowManager.ChangeWindowMode();
 
+}
+
+void Render::UpdateSkinAnimationState()
+{
+    for (auto& elem : m_skinAnimMeshList)
+    {
+        if (elem != nullptr)
+        {
+            elem->UpdateAnimation();
+        }
+    }
+
+    for (auto& elem : m_meshMixSkinAnimList)
+    {
+        if (elem != nullptr)
+        {
+            elem->UpdateAnimation();
+        }
+    }
 }
 
 void Render::ChangeResolution(const int W, const int H)

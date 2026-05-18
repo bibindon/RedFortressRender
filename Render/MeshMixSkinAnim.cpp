@@ -190,6 +190,24 @@ void MeshMixSkinAnim::Initialize()
     m_bLoaded = true;
 }
 
+void MeshMixSkinAnim::UpdateAnimation()
+{
+    if (!m_bLoaded || !m_enabled)
+    {
+        return;
+    }
+
+    m_animController.Update();
+
+    if (m_useExternalAnimation)
+    {
+        ApplyAnimationFrameTransformsToMeshHierarchy(m_frameRoot);
+    }
+
+    D3DXMATRIX worldMatrix = BuildWorldMatrix();
+    UpdateFrameMatrix(m_frameRoot, &worldMatrix);
+}
+
 void MeshMixSkinAnim::Render()
 {
     if (!m_bLoaded || !m_enabled)
@@ -269,9 +287,11 @@ void MeshMixSkinAnim::Render()
     D3DXMATRIX viewProjectionMatrix = Camera::GetViewMatrix() * Camera::GetProjMatrix();
     m_D3DEffect->SetMatrix("g_matViewProj", &viewProjectionMatrix);
     m_D3DEffect->SetTechnique("Technique1");
+    RenderFrame(m_frameRoot);
+}
 
-    m_animController.Update();
-
+D3DXMATRIX MeshMixSkinAnim::BuildWorldMatrix() const
+{
     D3DXMATRIX worldMatrix;
     D3DXMatrixIdentity(&worldMatrix);
     {
@@ -289,13 +309,7 @@ void MeshMixSkinAnim::Render()
         worldMatrix *= mat;
     }
 
-    if (m_useExternalAnimation)
-    {
-        ApplyAnimationFrameTransformsToMeshHierarchy(m_frameRoot);
-    }
-
-    UpdateFrameMatrix(m_frameRoot, &worldMatrix);
-    RenderFrame(m_frameRoot);
+    return worldMatrix;
 }
 
 void MeshMixSkinAnim::ApplyAnimationFrameTransformsToMeshHierarchy(const LPD3DXFRAME meshFrameBase)

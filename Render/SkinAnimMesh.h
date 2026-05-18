@@ -25,6 +25,7 @@ public:
 
     ~SkinAnimMesh();
 
+    void UpdateAnimation();
     void Render(const D3DXMATRIX&,
                 const D3DXMATRIX&,
                 const D3DXVECTOR4&,
@@ -35,6 +36,7 @@ public:
 
 private:
 
+    D3DXMATRIX BuildWorldMatrix() const;
     void RenderImpl(const D3DXMATRIX &, const D3DXMATRIX &);
 
     void ReleaseMeshAllocator(const LPD3DXFRAME);

@@ -463,6 +463,7 @@ private:
     PostEffectGodRay m_postEffectGodRay;
 
     void Draw2D();
+    void UpdateSkinAnimationState();
     void LoadSettingsCsv(const std::wstring& settingsCsvPath);
     void ApplySettings();
     void EnsureGBufferInitialized();

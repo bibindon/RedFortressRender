@@ -33,6 +33,7 @@ public:
     ~MeshMixSkinAnim();
 
     void Initialize();
+    void UpdateAnimation();
     void Render();
     void RenderToEffect(LPD3DXEFFECT effect);
 
@@ -57,6 +58,7 @@ public:
     void OnDeviceReset() override;
 
 private:
+    D3DXMATRIX BuildWorldMatrix() const;
     void UpdateFrameMatrix(const LPD3DXFRAME frameBase, const LPD3DXMATRIX matParent);
     void ApplyAnimationFrameTransformsToMeshHierarchy(const LPD3DXFRAME meshFrameBase);
     void RenderFrame(const LPD3DXFRAME frame);
