@@ -38,8 +38,10 @@
     <ClCompile Include="MeshHierarchy.cpp" />
     <ClCompile Include="MeshInstancing.cpp" />
     <ClCompile Include="MeshMix.cpp" />
+    <ClCompile Include="MeshPBR.cpp" />
     <ClCompile Include="MeshMixSkinAnim.cpp" />
     <ClCompile Include="MeshMixManager.cpp" />
+    <ClCompile Include="MeshPBRManager.cpp" />
     <ClCompile Include="MeshNormalMapping.cpp" />
     <ClCompile Include="MeshPointLight.cpp" />
     <ClCompile Include="MeshPOM.cpp" />
@@ -86,8 +88,10 @@
     <ClInclude Include="MeshHierarchy.h" />
     <ClInclude Include="MeshInstancing.h" />
     <ClInclude Include="MeshMix.h" />
+    <ClInclude Include="MeshPBR.h" />
     <ClInclude Include="MeshMixSkinAnim.h" />
     <ClInclude Include="MeshMixManager.h" />
+    <ClInclude Include="MeshPBRManager.h" />
     <ClInclude Include="MeshNormalMapping.h" />
     <ClInclude Include="MeshPointLight.h" />
     <ClInclude Include="MeshPOM.h" />
@@ -141,6 +145,13 @@
       <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</EnableDebuggingInformation>
     </FxCompile>
     <FxCompile Include="shader\MeshMix.fx">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_VisualStudio2019|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+      <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableOptimizations>
+      <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</EnableDebuggingInformation>
+    </FxCompile>
+    <FxCompile Include="shader\MeshPBR.fx">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_VisualStudio2019|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>

@@ -209,6 +209,7 @@ extern bool g_bMoveDown;
 extern float g_saturateLevel;
 extern HWND g_hSettingsDialog;
 extern std::wstring g_selectedMixMeshPath;
+extern std::wstring g_selectedPbrMeshPath;
 extern std::wstring g_selectedMeshInstancingPath;
 extern bool g_bMeshInstancingDitherAlpha;
 extern std::wstring g_selectedMeshPath;
@@ -514,6 +515,7 @@ bool RemoveLoadedModel(size_t modelIndex);
 
 void SpawnMeshAtLookAt(const std::wstring& filePath);
 void SpawnMeshMixAtLookAt(const std::wstring& filePath);
+void SpawnMeshPBRAtLookAt(const std::wstring& filePath);
 void SpawnMeshInstancingAtLookAt(const std::wstring& filePath);
 void SpawnAnimMeshAtLookAt(const std::wstring& filePath);
 void SpawnSkinAnimMeshAtLookAt(const std::wstring& filePath);

@@ -69,6 +69,9 @@
     <ClCompile Include="MeshMix.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="MeshPBR.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="MeshMixSkinAnim.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -106,6 +109,9 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="MeshMixManager.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshPBRManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="GBuffer.cpp">
@@ -209,6 +215,9 @@
     <ClInclude Include="MeshMix.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="MeshPBR.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="MeshMixSkinAnim.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -246,6 +255,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="MeshMixManager.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshPBRManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="GBuffer.h">
@@ -341,6 +353,9 @@
       <Filter>シェーダー</Filter>
     </FxCompile>
     <FxCompile Include="shader\MeshMix.fx">
+      <Filter>シェーダー</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\MeshPBR.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
     <FxCompile Include="shader\MeshMixSkinAnim.fx">

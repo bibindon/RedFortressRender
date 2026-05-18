@@ -1,0 +1,124 @@
+﻿#pragma once
+
+#include "Common.h"
+#include "MeshPBR.h"
+
+#include <atomic>
+#include <thread>
+
+namespace NSRender
+{
+
+// D3DXEFFECT ファイルはメッシュごとに生成するのではなく、
+// 複数のメッシュで 1 つのエフェクトを共有するためのクラス。
+class MeshPBRManager : public IDeviceResettable
+{
+
+public:
+
+    static void SetSharedThicknessTexture(LPDIRECT3DTEXTURE9 texture);
+    static void SetSharedMirrorTexture(LPDIRECT3DTEXTURE9 texture);
+    static void SetSharedMirrorViewProj(const D3DXMATRIX& matrix);
+
+    MeshPBRManager(const std::wstring& filename,
+                   const D3DXVECTOR3& pos,
+                   const D3DXVECTOR3& rotate,
+                   const float scale,
+                   const stMeshPBRParam& param);
+
+    ~MeshPBRManager();
+
+    MeshPBRManager(const MeshPBRManager&) = delete;
+    MeshPBRManager& operator=(const MeshPBRManager&) = delete;
+    MeshPBRManager(MeshPBRManager&& other) noexcept;
+    MeshPBRManager& operator=(MeshPBRManager&& other) noexcept;
+
+    void Initialize(bool async = true);
+
+    void WaitForLoad();
+
+    void Finalize();
+
+    void Render(bool renderAsMirrorSurface = false);
+
+    void SetPos(const D3DXVECTOR3& pos);
+    void SetSaturateShadow(const bool enabled);
+    void SetSaturateShadowIntensity(const float intensity);
+    void SetShadowDarkness(const float darkness);
+    void SetSpecularIntensity(const float intensity);
+    void SetSpecularEdge(const float edge);
+    void SetSpecularIntensityOverrideEnabled(const bool enabled);
+    void SetSpecularEdgeOverrideEnabled(const bool enabled);
+    void SetSSS(const bool enabled);
+    void SetSSSIntensity(const float intensity);
+    void SetSSSColor(const DWORD color);
+
+    D3DXVECTOR3 GetPos() const;
+
+    void SetRotY(const float rotY);
+
+    D3DXVECTOR3 GetRot() const;
+
+    float GetScale() const;
+    DWORD GetSubsetCount() const;
+    bool IsEnabled() const;
+    void SetEnabled(bool enabled);
+    bool IsLoaded() const;
+    bool IsSsaoEnabled() const;
+    bool IsDepthBufferShadowEnabled() const;
+    bool IsMirror() const;
+    bool TryGetMirrorPlaneWorld(D3DXVECTOR3& planePoint, D3DXVECTOR3& planeNormal) const;
+
+    LPD3DXMESH GetD3DMesh() const;
+
+    float GetRadius() const;
+
+    std::wstring GetMeshName();
+
+    void OnDeviceLost();
+    void OnDeviceReset();
+
+private:
+
+    const std::wstring SHADER_FILENAME = L".\\MeshPBR.cso";
+    std::wstring m_meshName;
+
+    LPD3DXMESH m_D3DMesh = nullptr;
+
+    DWORD m_materialCount = 0;
+    DWORD m_subsetCount = 0;
+    std::vector<D3DXVECTOR4> m_vecDiffuse;
+    std::vector<float> m_vecSpecularIntensity;
+    std::vector<float> m_vecSpecularPower;
+    std::vector<LPDIRECT3DBASETEXTURE9> m_vecTexture;
+    LPDIRECT3DBASETEXTURE9 m_texCubeMap = nullptr;
+    LPDIRECT3DBASETEXTURE9 m_texNormalMap = nullptr;
+    LPDIRECT3DBASETEXTURE9 m_texHeightMap = nullptr;
+
+    D3DXVECTOR3 m_pos = D3DXVECTOR3(0.f, 0.f, 0.f);
+    D3DXVECTOR3 m_rotate = D3DXVECTOR3(0.f, 0.f, 0.f);
+    float m_scale = 0.0f;
+
+    std::atomic<bool> m_bLoaded { false };
+    bool m_enabled = true;
+    bool m_autoPointLightAdded = false;
+    bool m_deviceResourceRegistered = false;
+    bool m_hasMirrorPlane = false;
+    std::thread m_loadThread;
+
+    stMeshPBRParam m_param;
+    std::wstring m_autoPointLightOwnerTag;
+    D3DXVECTOR3 m_mirrorPlanePointLocal = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+    D3DXVECTOR3 m_mirrorPlaneNormalLocal = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
+
+    void ModifyMeshForNormalMapping(LPD3DXMESH& pMesh);
+    void DrawAllSubsets(LPD3DXEFFECT sharedEffect, UINT passIndex);
+    D3DXVECTOR4 GetSubsetDiffuse(const DWORD subsetIndex) const;
+    float GetSubsetSpecularIntensity(const DWORD subsetIndex) const;
+    float GetSubsetSpecularPower(const DWORD subsetIndex) const;
+    LPDIRECT3DBASETEXTURE9 GetSubsetTexture(const DWORD subsetIndex) const;
+    void ReleaseOwnedResources();
+    void InitializeInternal();
+    D3DXMATRIX BuildWorldMatrix() const;
+};
+}

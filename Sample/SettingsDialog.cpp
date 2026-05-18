@@ -1346,6 +1346,7 @@ void RefreshSaturateFilter(HWND hDlg)
 void RefreshSelectedMeshPaths(HWND hDlg)
 {
     SetDlgItemText(hDlg, IDC_EDIT_MIX_MESH_PATH, g_selectedMixMeshPath.c_str());
+    SetDlgItemText(hDlg, IDC_EDIT_PBR_MESH_PATH, g_selectedPbrMeshPath.c_str());
     SetDlgItemText(hDlg, IDC_EDIT_MESH_INSTANCING_PATH, g_selectedMeshInstancingPath.c_str());
     SetDlgItemText(hDlg, IDC_EDIT_MESH_PATH, g_selectedMeshPath.c_str());
     SetDlgItemText(hDlg, IDC_EDIT_ANIM_MESH_PATH, g_selectedAnimMeshPath.c_str());
@@ -2132,6 +2133,18 @@ bool HandleOpenMeshCommand(HWND hDlg, const WORD commandId)
                                g_selectedMixMeshPath))
         {
             SpawnMeshMixAtLookAt(g_selectedMixMeshPath);
+            RefreshSelectedMeshPaths(hDlg);
+        }
+        return true;
+    }
+
+    if (commandId == IDC_BUTTON_OPEN_PBR_MESH)
+    {
+        if (ShowOpenFileDialog(hDlg,
+                               L"PBR Mesh Files (*.x;*.blend.x)\0*.x;*.blend.x\0All Files (*.*)\0*.*\0",
+                               g_selectedPbrMeshPath))
+        {
+            SpawnMeshPBRAtLookAt(g_selectedPbrMeshPath);
             RefreshSelectedMeshPaths(hDlg);
         }
         return true;

@@ -28,6 +28,7 @@
 #include "MeshNormalMapping.h"
 #include "MeshMix.h"
 #include "MeshMixManager.h"
+#include "MeshPBRManager.h"
 #include "MeshMixSkinAnim.h"
 #include "MeshSSS.h"
 #include "MeshPOM.h"
@@ -174,6 +175,13 @@ public:
                    const bool useNormalMapping = false,
                    const bool async = true);
     bool RemoveMeshMix(int id);
+    int AddMeshPBR(const std::wstring& filePath,
+                   const D3DXVECTOR3& pos,
+                   const D3DXVECTOR3& rot,
+                   const float scale,
+                   const float radius = -1.f,
+                   const bool async = true);
+    bool RemoveMeshPBR(int id);
     int AddMeshMixSkinAnim(const std::wstring& filePath,
                            const D3DXVECTOR3& pos,
                            const D3DXVECTOR3& rot,
@@ -395,6 +403,7 @@ private:
     std::vector<bool> m_meshPOMEnabledList;
 
     std::deque<MeshMixManager> m_meshMixList;
+    std::deque<MeshPBRManager> m_meshPBRList;
 
     std::unordered_map<std::wstring, MeshInstancing*> m_meshInstancingMap;
     bool m_meshInstancingDitherAlphaEnabled = true;

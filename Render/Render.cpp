@@ -1215,6 +1215,12 @@ void Render::Finalize()
     }
     m_meshMixList.clear();
 
+    for (auto& mesh : m_meshPBRList)
+    {
+        mesh.Finalize();
+    }
+    m_meshPBRList.clear();
+
     for (auto& font : m_fontList)
     {
         SAFE_DELETE(font);
@@ -1846,6 +1852,46 @@ bool Render::RemoveMeshMix(const int id)
 
     m_meshMixList.at(id).Finalize();
     m_meshMixList.erase(m_meshMixList.begin() + static_cast<std::ptrdiff_t>(id));
+    return true;
+}
+
+int Render::AddMeshPBR(const std::wstring& filePath,
+                       const D3DXVECTOR3& pos,
+                       const D3DXVECTOR3& rot,
+                       const float scale,
+                       const float radius,
+                       const bool async)
+{
+    auto param = GetMeshPBRParamPreset(eMeshPBRParamPreset::GRASS);
+    param.smooth = false;
+    param.saturateShadow = m_meshMixSaturateShadowEnabled;
+    param.saturateShadowIntensity = m_meshMixSaturateShadowIntensity;
+    param.shadowDarkness = m_meshMixShadowDarkness;
+    param.specularIntensity = m_meshMixSpecularIntensity;
+    param.specularEdge = m_meshMixSpecularEdge;
+    param.specularIntensityOverrideEnabled = m_meshMixSpecularIntensityOverrideEnabled;
+    param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
+    param.sss = m_meshMixSSSEnabled;
+    param.sssIntensity = m_meshMixSSSIntensity;
+    param.sssColor = m_meshMixSSSColor;
+    (void)radius;
+
+    auto mesh = MeshPBRManager(filePath, pos, rot, scale, param);
+    m_meshPBRList.push_back(std::move(mesh));
+    m_meshPBRList.rbegin()->Initialize(async);
+
+    return static_cast<int>(m_meshPBRList.size()) - 1;
+}
+
+bool Render::RemoveMeshPBR(const int id)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshPBRList.size()))
+    {
+        return false;
+    }
+
+    m_meshPBRList.at(id).Finalize();
+    m_meshPBRList.erase(m_meshPBRList.begin() + static_cast<std::ptrdiff_t>(id));
     return true;
 }
 
@@ -3180,6 +3226,11 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
         {
             elem->Render();
         }
+    }
+
+    for (auto& elem : m_meshPBRList)
+    {
+        elem.Render();
     }
 
     for (auto& elem : m_meshInstancingMap)

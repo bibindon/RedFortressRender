@@ -36,6 +36,7 @@ bool g_bMoveDown = false;
 float g_saturateLevel = 1.0f;
 HWND g_hSettingsDialog = NULL;
 std::wstring g_selectedMixMeshPath;
+std::wstring g_selectedPbrMeshPath;
 std::wstring g_selectedMeshInstancingPath;
 bool g_bMeshInstancingDitherAlpha = true;
 std::wstring g_selectedMeshPath;
@@ -819,6 +820,25 @@ bool SpawnMeshMixAtTransform(const std::wstring& filePath,
     return true;
 }
 
+bool SpawnMeshPBRAtTransform(const std::wstring& filePath,
+                             const D3DXVECTOR3& pos,
+                             const float yawDegrees)
+{
+    if (filePath.empty())
+    {
+        return false;
+    }
+
+    const D3DXVECTOR3 rotationRadians(0.0f, D3DXToRadian(yawDegrees), 0.0f);
+    const int renderId = g_Render.AddMeshPBR(filePath,
+                                             pos,
+                                             rotationRadians,
+                                             g_modelLoadScale,
+                                             1.0f);
+    RegisterLoadedModel(L"MeshPBRManager", filePath, pos, g_modelLoadScale, renderId);
+    return true;
+}
+
 bool ExportXHierarchyBinary(const std::wstring& inputPath, const std::wstring& outputPath)
 {
     ExportXHierarchyAllocator allocator;
@@ -1109,6 +1129,10 @@ bool RemoveLoadedModel(const size_t modelIndex)
     {
         removed = g_Render.RemoveMeshMix(model.m_renderId);
     }
+    else if (model.m_type == L"MeshPBR" || model.m_type == L"MeshPBRManager")
+    {
+        removed = g_Render.RemoveMeshPBR(model.m_renderId);
+    }
     else if (model.m_type == L"MeshMixSkinAnim")
     {
         removed = g_Render.RemoveMeshMixSkinAnim(model.m_renderId);
@@ -1149,6 +1173,7 @@ bool RemoveLoadedModel(const size_t modelIndex)
 
     bool renderIdsShift = false;
     if (model.m_type == L"MeshMix" || model.m_type == L"MeshMixManager" ||
+        model.m_type == L"MeshPBR" || model.m_type == L"MeshPBRManager" ||
         model.m_type == L"MeshMixSkinAnim" ||
         model.m_type == L"AnimMesh" ||
         model.m_type == L"SkinAnimMesh")
@@ -1161,6 +1186,11 @@ bool RemoveLoadedModel(const size_t modelIndex)
         if (model.m_type == L"MeshMix" || model.m_type == L"MeshMixManager")
         {
             return info.m_type == L"MeshMix" || info.m_type == L"MeshMixManager";
+        }
+
+        if (model.m_type == L"MeshPBR" || model.m_type == L"MeshPBRManager")
+        {
+            return info.m_type == L"MeshPBR" || info.m_type == L"MeshPBRManager";
         }
 
         return info.m_type == model.m_type;
@@ -1231,6 +1261,21 @@ void SpawnMeshMixAtLookAt(const std::wstring& filePath)
 
     const float yaw = atan2f(forward.x, forward.z);
     SpawnMeshMixAtTransform(filePath, pos, D3DXToDegree(yaw));
+}
+
+void SpawnMeshPBRAtLookAt(const std::wstring& filePath)
+{
+    if (filePath.empty())
+    {
+        return;
+    }
+
+    auto pos = g_Render.GetLookAtPos();
+    D3DXVECTOR3 forward = g_Render.GetCameraRotate();
+    D3DXVec3Normalize(&forward, &forward);
+
+    const float yaw = atan2f(forward.x, forward.z);
+    SpawnMeshPBRAtTransform(filePath, pos, D3DXToDegree(yaw));
 }
 
 void SpawnMeshInstancingAtLookAt(const std::wstring& filePath)
