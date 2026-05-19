@@ -477,6 +477,7 @@ void MeshMixSkinAnim::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBas
         const D3DMATERIAL9& material = container->pMaterials[materialIndex].MatD3D;
         const bool hasTexture = materialIndex < container->m_textureList.size() &&
                                 container->m_textureList[materialIndex] != nullptr;
+        const bool disableZWrite = hasTexture && material.Diffuse.a <= 0.001f;
         const float diffuseAlpha = (hasTexture && material.Diffuse.a <= 0.001f)
                                  ? 1.0f
                                  : material.Diffuse.a;
@@ -509,9 +510,20 @@ void MeshMixSkinAnim::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBas
             m_D3DEffect->SetTexture("g_texture", nullptr);
         }
 
+        DWORD oldZWriteEnable = TRUE;
+        if (disableZWrite)
+        {
+            Common::D3DDevice()->GetRenderState(D3DRS_ZWRITEENABLE, &oldZWriteEnable);
+            Common::D3DDevice()->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+        }
+
         m_D3DEffect->Begin(nullptr, 0);
         if (FAILED(m_D3DEffect->BeginPass(0)))
         {
+            if (disableZWrite)
+            {
+                Common::D3DDevice()->SetRenderState(D3DRS_ZWRITEENABLE, oldZWriteEnable);
+            }
             m_D3DEffect->End();
             throw std::exception("Failed 'BeginPass' function.");
         }
@@ -523,12 +535,20 @@ void MeshMixSkinAnim::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBas
 
         if (!m_param.pointLight)
         {
+            if (disableZWrite)
+            {
+                Common::D3DDevice()->SetRenderState(D3DRS_ZWRITEENABLE, oldZWriteEnable);
+            }
             continue;
         }
 
         m_D3DEffect->Begin(nullptr, 0);
         if (FAILED(m_D3DEffect->BeginPass(1)))
         {
+            if (disableZWrite)
+            {
+                Common::D3DDevice()->SetRenderState(D3DRS_ZWRITEENABLE, oldZWriteEnable);
+            }
             m_D3DEffect->End();
             throw std::exception("Failed 'BeginPass' function.");
         }
@@ -537,6 +557,11 @@ void MeshMixSkinAnim::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBas
         container->MeshData.pMesh->DrawSubset(i);
         m_D3DEffect->EndPass();
         m_D3DEffect->End();
+
+        if (disableZWrite)
+        {
+            Common::D3DDevice()->SetRenderState(D3DRS_ZWRITEENABLE, oldZWriteEnable);
+        }
     }
 }
 
