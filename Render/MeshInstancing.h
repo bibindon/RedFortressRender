@@ -22,7 +22,7 @@ public:
     // TODO rotate, scale
     void AddInstance(const D3DXVECTOR3& pos);
 
-    void SetDitherAlpha(bool enabled);
+    void SetHighQuality(bool enabled);
 
     void Draw();
     void RenderToGBufferEffect(LPD3DXEFFECT effect, const char* techniqueName);
@@ -70,12 +70,13 @@ private:
     IDirect3DVertexDeclaration9* m_decl = nullptr;
 
     void copyBuf(unsigned sz, void* src, IDirect3DVertexBuffer9* buf);
+    void SortInstancesBackToFront();
     void UpdateInstanceBuffer();
     bool LoadPlacementCsv();
 
     std::vector<InstanceData> m_instances;
     bool m_loadedPlacementCsv = false;
-    bool m_ditherAlphaEnabled = true;
+    bool m_highQualityEnabled = true;
     SwayMode m_swayMode = SwayMode::Off;
 
 };

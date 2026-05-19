@@ -1395,15 +1395,15 @@ void RefreshMixMeshShaderMode(HWND hDlg)
                    normalMapState);
 }
 
-void RefreshMeshInstancingAlphaMode(HWND hDlg)
+void RefreshMeshInstancingRenderMode(HWND hDlg)
 {
     UINT checkState = BST_UNCHECKED;
-    if (g_bMeshInstancingDitherAlpha)
+    if (g_bMeshInstancingHighQuality)
     {
         checkState = BST_CHECKED;
     }
     CheckDlgButton(hDlg,
-                   IDC_CHECK_MESH_INSTANCING_DITHER_ALPHA,
+                   IDC_CHECK_MESH_INSTANCING_HIGH_QUALITY,
                    checkState);
 }
 
@@ -1766,7 +1766,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshSaturateControls(hDlg);
     RefreshSelectedMeshPaths(hDlg);
     RefreshMixMeshShaderMode(hDlg);
-    RefreshMeshInstancingAlphaMode(hDlg);
+    RefreshMeshInstancingRenderMode(hDlg);
     RefreshResolutionControls(hDlg);
     RefreshLoadedModelListView(hDlg);
     RefreshPointLightListView(hDlg);
@@ -3073,12 +3073,12 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
-        if (commandId == IDC_CHECK_MESH_INSTANCING_DITHER_ALPHA)
+        if (commandId == IDC_CHECK_MESH_INSTANCING_HIGH_QUALITY)
         {
-            g_bMeshInstancingDitherAlpha =
-                (IsDlgButtonChecked(hDlg, IDC_CHECK_MESH_INSTANCING_DITHER_ALPHA) == BST_CHECKED);
-            ApplyMeshInstancingAlphaMode();
-            RefreshMeshInstancingAlphaMode(hDlg);
+            g_bMeshInstancingHighQuality =
+                (IsDlgButtonChecked(hDlg, IDC_CHECK_MESH_INSTANCING_HIGH_QUALITY) == BST_CHECKED);
+            ApplyMeshInstancingRenderMode();
+            RefreshMeshInstancingRenderMode(hDlg);
             return TRUE;
         }
 

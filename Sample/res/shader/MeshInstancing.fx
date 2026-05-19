@@ -2,7 +2,6 @@ float4x4 g_matWorldViewProj;
 float4 g_lightNormal = { 0.3f, 1.0f, 0.5f, 0.0f };
 float4 g_ambient = { 0.2f, 0.2f, 0.2f, 1.0f };
 float g_fAmbientIntensity = 1.0f;
-bool g_bDitherAlpha = true;
 int g_swayMode = 0;
 float g_time = 0.0f;
 
@@ -114,11 +113,24 @@ float Bayer4x4Threshold(float2 screenPos)
     return (threshold + 0.5f) / 16.0f;
 }
 
-void PixelShader1(in float2 inScreenPos   : VPOS,
-                  in float4 inScreenColor : COLOR0,
-                  in float2 inTexCood     : TEXCOORD0,
+void PixelShaderNormal(in float2 inScreenPos   : VPOS,
+                       in float4 inScreenColor : COLOR0,
+                       in float2 inTexCood     : TEXCOORD0,
 
-                  out float4 outColor     : COLOR)
+                       out float4 outColor     : COLOR)
+{
+    float4 workColor = (float4)0;
+    workColor = tex2D(textureSampler, inTexCood);
+    clip(workColor.a - 0.5f);
+    outColor.rgb = inScreenColor.rgb * workColor.rgb;
+    outColor.a = 1.0f;
+}
+
+void PixelShaderHighQuality(in float2 inScreenPos   : VPOS,
+                            in float4 inScreenColor : COLOR0,
+                            in float2 inTexCood     : TEXCOORD0,
+
+                            out float4 outColor     : COLOR)
 {
     float4 workColor = (float4)0;
     workColor = tex2D(textureSampler, inTexCood);
@@ -127,7 +139,19 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
     outColor.a = workColor.a;
 }
 
-technique Technique1
+technique TechniqueNormal
+{
+   pass Pass1
+   {
+      AlphaBlendEnable = FALSE;
+      AlphaTestEnable = FALSE;
+      CullMode = NONE;
+      VertexShader = compile vs_3_0 VertexShader1();
+      PixelShader = compile ps_3_0 PixelShaderNormal();
+   }
+}
+
+technique TechniqueHighQuality
 {
    pass Pass1
    {
@@ -137,6 +161,6 @@ technique Technique1
       AlphaTestEnable = FALSE;
       CullMode = NONE;
       VertexShader = compile vs_3_0 VertexShader1();
-      PixelShader = compile ps_3_0 PixelShader1();
+      PixelShader = compile ps_3_0 PixelShaderHighQuality();
    }
 }

@@ -38,7 +38,7 @@ HWND g_hSettingsDialog = NULL;
 std::wstring g_selectedMixMeshPath;
 std::wstring g_selectedPbrMeshPath;
 std::wstring g_selectedMeshInstancingPath;
-bool g_bMeshInstancingDitherAlpha = true;
+bool g_bMeshInstancingHighQuality = true;
 std::wstring g_selectedMeshPath;
 std::wstring g_selectedAnimMeshPath;
 std::wstring g_selectedSkinAnimMeshPath;
@@ -2141,7 +2141,7 @@ void ApplyAllSampleSettings()
     ApplyDepthOfFieldAutoActivationDistance();
     ApplyStarBurstThreshold();
     ApplyModelLoadScale();
-    ApplyMeshInstancingAlphaMode();
+    ApplyMeshInstancingRenderMode();
     ApplyGaussianSampleSize();
     ApplyFontExGaussianSampleSize();
     ApplyFXAAQuality();

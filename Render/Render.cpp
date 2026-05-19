@@ -1778,7 +1778,7 @@ int Render::AddMeshInstansing(const std::wstring& filePath,
     {
         MeshInstancing* mesh = NEW MeshInstancing();
         mesh->Initialize(filePath);
-        mesh->SetDitherAlpha(m_meshInstancingDitherAlphaEnabled);
+        mesh->SetHighQuality(m_meshInstancingHighQualityEnabled);
 
         m_meshInstancingMap[filePath] = mesh;
     }
@@ -1800,15 +1800,15 @@ bool Render::RemoveMeshInstancing(const std::wstring& filePath)
     return true;
 }
 
-void Render::SetMeshInstancingDitherAlpha(const bool enabled)
+void Render::SetMeshInstancingHighQuality(const bool enabled)
 {
-    m_meshInstancingDitherAlphaEnabled = enabled;
+    m_meshInstancingHighQualityEnabled = enabled;
 
     for (auto& mesh : m_meshInstancingMap)
     {
         if (mesh.second != nullptr)
         {
-            mesh.second->SetDitherAlpha(enabled);
+            mesh.second->SetHighQuality(enabled);
         }
     }
 }

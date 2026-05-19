@@ -4,6 +4,7 @@
 #include "Util.h"
 
 #include <Shlwapi.h>
+#include <algorithm>
 #include <cwchar>
 #include <cwctype>
 #include <fstream>
@@ -317,9 +318,9 @@ void MeshInstancing::AddInstance(const D3DXVECTOR3& pos)
     UpdateInstanceBuffer();
 }
 
-void MeshInstancing::SetDitherAlpha(const bool enabled)
+void MeshInstancing::SetHighQuality(const bool enabled)
 {
-    m_ditherAlphaEnabled = enabled;
+    m_highQualityEnabled = enabled;
 }
 
 void MeshInstancing::Draw()
@@ -329,13 +330,18 @@ void MeshInstancing::Draw()
         return;
     }
 
+    const bool hasAlphaMaterial =
+        (std::find(m_materialUsesAlpha.begin(), m_materialUsesAlpha.end(), true) != m_materialUsesAlpha.end());
+    if (m_highQualityEnabled && hasAlphaMaterial)
+    {
+        SortInstancesBackToFront();
+        UpdateInstanceBuffer();
+    }
+
     HRESULT hResult = E_FAIL;
     const D3DXMATRIX viewProj = Camera::GetViewMatrix() * Camera::GetProjMatrix();
 
     hResult = m_pEffect->SetMatrix("g_matWorldViewProj", &viewProj);
-    assert(hResult == S_OK);
-
-    hResult = m_pEffect->SetBool("g_bDitherAlpha", m_ditherAlphaEnabled ? TRUE : FALSE);
     assert(hResult == S_OK);
 
     const D3DXVECTOR4 ambientColor = D3DXVECTOR4(Light::GetAmbientColor());
@@ -366,7 +372,7 @@ void MeshInstancing::Draw()
     Common::D3DDevice()->SetIndices(pIB);
     pIB->Release();
 
-    hResult = m_pEffect->SetTechnique("Technique1");
+    hResult = m_pEffect->SetTechnique(m_highQualityEnabled ? "TechniqueHighQuality" : "TechniqueNormal");
     assert(hResult == S_OK);
 
     UINT numPass = 0;
@@ -382,7 +388,7 @@ void MeshInstancing::Draw()
         assert(hResult == S_OK);
 
         DWORD oldZWriteEnable = TRUE;
-        if (i < m_materialUsesAlpha.size() && m_materialUsesAlpha[i])
+        if (m_highQualityEnabled && i < m_materialUsesAlpha.size() && m_materialUsesAlpha[i])
         {
             Common::D3DDevice()->GetRenderState(D3DRS_ZWRITEENABLE, &oldZWriteEnable);
             Common::D3DDevice()->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
@@ -399,7 +405,7 @@ void MeshInstancing::Draw()
                                                             m_pMesh->GetNumFaces());
         assert(hResult == S_OK);
 
-        if (i < m_materialUsesAlpha.size() && m_materialUsesAlpha[i])
+        if (m_highQualityEnabled && i < m_materialUsesAlpha.size() && m_materialUsesAlpha[i])
         {
             Common::D3DDevice()->SetRenderState(D3DRS_ZWRITEENABLE, oldZWriteEnable);
         }
@@ -502,6 +508,25 @@ void MeshInstancing::OnDeviceReset()
     {
         m_pEffect->OnResetDevice();
     }
+}
+
+void MeshInstancing::SortInstancesBackToFront()
+{
+    const D3DXVECTOR3 eyePos = Camera::GetEyePos();
+    std::stable_sort(m_instances.begin(),
+                     m_instances.end(),
+                     [&eyePos](const InstanceData& lhs, const InstanceData& rhs)
+                     {
+                         const float lhsDx = lhs.x - eyePos.x;
+                         const float lhsDy = lhs.y - eyePos.y;
+                         const float lhsDz = lhs.z - eyePos.z;
+                         const float rhsDx = rhs.x - eyePos.x;
+                         const float rhsDy = rhs.y - eyePos.y;
+                         const float rhsDz = rhs.z - eyePos.z;
+                         const float lhsDistanceSq = lhsDx * lhsDx + lhsDy * lhsDy + lhsDz * lhsDz;
+                         const float rhsDistanceSq = rhsDx * rhsDx + rhsDy * rhsDy + rhsDz * rhsDz;
+                         return lhsDistanceSq > rhsDistanceSq;
+                     });
 }
 
 void MeshInstancing::UpdateInstanceBuffer()

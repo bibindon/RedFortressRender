@@ -767,9 +767,9 @@ void ApplyModelLoadScale()
     g_modelLoadScale = ClampModelLoadScale(g_modelLoadScale);
 }
 
-void ApplyMeshInstancingAlphaMode()
+void ApplyMeshInstancingRenderMode()
 {
-    g_Render.SetMeshInstancingDitherAlpha(g_bMeshInstancingDitherAlpha);
+    g_Render.SetMeshInstancingHighQuality(g_bMeshInstancingHighQuality);
 }
 
 void ApplyPointLightColor()
