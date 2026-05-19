@@ -3255,17 +3255,17 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
         m_meshMixList[i].Render(renderAsMirror);
     }
 
-    for (auto& elem : m_meshInstancingMap)
-    {
-        elem.second->Draw();
-    }
-
     for (auto& elem : m_meshMixSkinAnimList)
     {
         if (elem != nullptr)
         {
             elem->Render();
         }
+    }
+
+    for (auto& elem : m_meshInstancingMap)
+    {
+        elem.second->Draw();
     }
 
     m_particleSystem.Draw(Camera::GetViewMatrix(), Camera::GetProjMatrix());
