@@ -769,12 +769,14 @@ technique Technique1
 {
     pass Pass1
     {
+        CullMode = NONE;
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShader1();
     }
 
     pass PassCubeMapping
     {
+        CullMode = NONE;
         AlphaBlendEnable = TRUE;
         SrcBlend = SRCALPHA;
         DestBlend = INVSRCALPHA;
@@ -785,6 +787,7 @@ technique Technique1
 
     pass PassGlass
     {
+        CullMode = NONE;
         AlphaBlendEnable = TRUE;
         SrcBlend = SRCALPHA;
         DestBlend = INVSRCALPHA;
@@ -795,6 +798,7 @@ technique Technique1
 
     pass PassPointLight
     {
+        CullMode = NONE;
         AlphaBlendEnable = TRUE;
         SrcBlend = ONE;
         DestBlend = ONE;
@@ -805,12 +809,14 @@ technique Technique1
 
     pass PassEmit
     {
+        CullMode = NONE;
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShaderEmit();
     }
 
     pass PassMirror
     {
+        CullMode = NONE;
         VertexShader = compile vs_3_0 VertexShaderMirror();
         PixelShader = compile ps_3_0 PixelShaderMirror();
     }
