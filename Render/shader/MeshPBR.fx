@@ -548,10 +548,11 @@ void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
     float3 reflectWorld = reflect(-cameraDir, normal);
 
     float cubeLod = g_cubeMappingGauss * 7.0f;
-    float3 cubeColor = texCUBElod(g_cubeMapSampler, float4(reflectWorld, cubeLod)).rgb;
+    float4 cubeSample = texCUBElod(g_cubeMapSampler, float4(reflectWorld, cubeLod));
+    float3 cubeColor = cubeSample.rgb;
     float NdotH = saturate(dot(normal, halfVector));
     float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_specularColor.xyz * g_lightColor.rgb;
-    outColor = float4(cubeColor + specular, saturate(g_cubeMappingRate));
+    outColor = float4(cubeColor + specular, saturate(g_cubeMappingRate * cubeSample.a));
 }
 
 //-------------------------------------------------------------
@@ -575,11 +576,12 @@ void PixelShaderGlass(in float4 inPosition     : POSITION,
     float3 halfVector = normalize(lightDir + cameraDir);
     float3 refractWorld = refract(-cameraDir, normal, 1.f / 1.5f);
     float cubeLod = g_cubeMappingGauss * 7.0f;
-    float3 cubeColor = texCUBElod(g_cubeMapSampler, float4(refractWorld, cubeLod)).rgb;
+    float4 cubeSample = texCUBElod(g_cubeMapSampler, float4(refractWorld, cubeLod));
+    float3 cubeColor = cubeSample.rgb;
     float NdotH = saturate(dot(normal, halfVector));
     float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_specularColor.xyz * g_lightColor.rgb;
 
-    outColor = float4(cubeColor + specular, saturate(g_cubeMappingRate));
+    outColor = float4(cubeColor + specular, saturate(g_cubeMappingRate * cubeSample.a));
 }
 
 //-------------------------------------------------------------
