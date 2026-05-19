@@ -3237,14 +3237,6 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
         }
     }
 
-    for (auto& elem : m_meshMixSkinAnimList)
-    {
-        if (elem != nullptr)
-        {
-            elem->Render();
-        }
-    }
-
     for (auto& elem : m_meshPBRList)
     {
         elem.Render();
@@ -3266,6 +3258,14 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
             renderActiveMirrorAsMirror &&
             static_cast<int>(i) == activeMirrorMeshIndex;
         m_meshMixList[i].Render(renderAsMirror);
+    }
+
+    for (auto& elem : m_meshMixSkinAnimList)
+    {
+        if (elem != nullptr)
+        {
+            elem->Render();
+        }
     }
 
     m_particleSystem.Draw(Camera::GetViewMatrix(), Camera::GetProjMatrix());
