@@ -122,23 +122,18 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
 {
     float4 workColor = (float4)0;
     workColor = tex2D(textureSampler, inTexCood);
-    if (g_bDitherAlpha)
-    {
-        clip(workColor.a - Bayer4x4Threshold(inScreenPos));
-    }
-    else
-    {
-        clip(workColor.a - 0.1f);
-    }
+    clip(workColor.a - (1.0f / 255.0f));
     outColor.rgb = inScreenColor.rgb * workColor.rgb;
-    outColor.a = 1.0f;
+    outColor.a = workColor.a;
 }
 
 technique Technique1
 {
    pass Pass1
    {
-      AlphaBlendEnable = FALSE;
+      AlphaBlendEnable = TRUE;
+      SrcBlend = SRCALPHA;
+      DestBlend = INVSRCALPHA;
       AlphaTestEnable = FALSE;
       CullMode = NONE;
       VertexShader = compile vs_3_0 VertexShader1();

@@ -47,6 +47,7 @@ private:
     std::vector<D3DMATERIAL9> m_pMaterials;
 
     std::vector<LPDIRECT3DTEXTURE9> m_pTextures;
+    std::vector<bool> m_materialUsesAlpha;
 
     DWORD m_dwNumMaterials = 0;
 

@@ -14,6 +14,31 @@ namespace NSRender
 
 namespace
 {
+bool TextureFormatHasAlpha(const D3DFORMAT format)
+{
+    switch (format)
+    {
+    case D3DFMT_A8R8G8B8:
+    case D3DFMT_A1R5G5B5:
+    case D3DFMT_A4R4G4B4:
+    case D3DFMT_A8:
+    case D3DFMT_A8B8G8R8:
+    case D3DFMT_A2R10G10B10:
+    case D3DFMT_A16B16G16R16:
+    case D3DFMT_A8P8:
+    case D3DFMT_A8L8:
+    case D3DFMT_DXT2:
+    case D3DFMT_DXT3:
+    case D3DFMT_DXT4:
+    case D3DFMT_DXT5:
+    case D3DFMT_A16B16G16R16F:
+    case D3DFMT_A32B32G32R32F:
+        return true;
+    default:
+        return false;
+    }
+}
+
 std::wstring ResolvePathFromExeDir(const std::wstring& path)
 {
     if (path.empty())
@@ -195,6 +220,7 @@ void MeshInstancing::Initialize(const std::wstring& filePath)
     D3DXMATERIAL* d3dxMaterials = reinterpret_cast<D3DXMATERIAL*>(pD3DXMtrlBuffer->GetBufferPointer());
     m_pMaterials.resize(m_dwNumMaterials);
     m_pTextures.resize(m_dwNumMaterials);
+    m_materialUsesAlpha.assign(m_dwNumMaterials, false);
 
     for (DWORD i = 0; i < m_dwNumMaterials; ++i)
     {
@@ -209,6 +235,11 @@ void MeshInstancing::Initialize(const std::wstring& filePath)
                                                 texturePath.c_str(),
                                                 &m_pTextures[i]);
             assert(hResult == S_OK);
+
+            D3DSURFACE_DESC surfaceDesc { };
+            hResult = m_pTextures[i]->GetLevelDesc(0, &surfaceDesc);
+            assert(hResult == S_OK);
+            m_materialUsesAlpha[i] = TextureFormatHasAlpha(surfaceDesc.Format);
         }
     }
 
@@ -258,6 +289,7 @@ void MeshInstancing::Finalize()
     }
 
     m_pTextures.clear();
+    m_materialUsesAlpha.clear();
     m_pMaterials.clear();
     m_dwNumMaterials = 0;
     m_instances.clear();
@@ -349,6 +381,13 @@ void MeshInstancing::Draw()
         hResult = m_pEffect->SetTexture("texture1", m_pTextures[i]);
         assert(hResult == S_OK);
 
+        DWORD oldZWriteEnable = TRUE;
+        if (i < m_materialUsesAlpha.size() && m_materialUsesAlpha[i])
+        {
+            Common::D3DDevice()->GetRenderState(D3DRS_ZWRITEENABLE, &oldZWriteEnable);
+            Common::D3DDevice()->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+        }
+
         hResult = m_pEffect->CommitChanges();
         assert(hResult == S_OK);
 
@@ -359,6 +398,11 @@ void MeshInstancing::Draw()
                                                             0,
                                                             m_pMesh->GetNumFaces());
         assert(hResult == S_OK);
+
+        if (i < m_materialUsesAlpha.size() && m_materialUsesAlpha[i])
+        {
+            Common::D3DDevice()->SetRenderState(D3DRS_ZWRITEENABLE, oldZWriteEnable);
+        }
     }
 
     hResult = m_pEffect->EndPass();
