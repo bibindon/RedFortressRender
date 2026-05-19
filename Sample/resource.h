@@ -289,6 +289,9 @@
 #define IDC_STATIC_PARTICLE_EFFECT_LABEL 1292
 #define IDC_COMBO_PARTICLE_EFFECT      1293
 #define IDC_BUTTON_PLACE_PARTICLE_EFFECT 1294
+#define IDC_STATIC_ENVMAP_BLEND_LABEL   1302
+#define IDC_EDIT_ENVMAP_BLEND           1303
+#define IDC_SLIDER_ENVMAP_BLEND         1304
 
 // Next default values for new objects
 // 
@@ -296,7 +299,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1302
+#define _APS_NEXT_CONTROL_VALUE         1305
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -176,6 +176,11 @@ float ClampSpecularEdge(const float edge)
     return (std::max)(SPECULAR_EDGE_MIN, (std::min)(edge, SPECULAR_EDGE_MAX));
 }
 
+float ClampEnvMapBlend(const float blend)
+{
+    return (std::max)(ENV_MAP_BLEND_MIN, (std::min)(blend, ENV_MAP_BLEND_MAX));
+}
+
 float ClampSSSIntensity(const float intensity)
 {
     return (std::max)(SSS_INTENSITY_MIN, (std::min)(intensity, SSS_INTENSITY_MAX));
@@ -687,6 +692,12 @@ void ApplySpecularEdgeOverride()
 {
     g_Render.SetMeshMixSpecularEdgeOverrideEnabled(g_bUseSpecularEdgeOverride);
     RefreshSettingsDialogState();
+}
+
+void ApplyEnvMapBlend()
+{
+    g_envMapBlend = ClampEnvMapBlend(g_envMapBlend);
+    g_Render.SetMeshMixEnvMapBlend(g_envMapBlend);
 }
 
 void ApplySSS()
@@ -1238,6 +1249,16 @@ int SpecularEdgeToSliderValue(const float edge)
 float SliderValueToSpecularEdge(const int sliderValue)
 {
     return ClampSpecularEdge(static_cast<float>(sliderValue) * SPECULAR_EDGE_STEP);
+}
+
+int EnvMapBlendToSliderValue(const float blend)
+{
+    return static_cast<int>(std::lround(ClampEnvMapBlend(blend) / ENV_MAP_BLEND_STEP));
+}
+
+float SliderValueToEnvMapBlend(const int sliderValue)
+{
+    return ClampEnvMapBlend(static_cast<float>(sliderValue) * ENV_MAP_BLEND_STEP);
 }
 
 int SSSIntensityToSliderValue(const float intensity)

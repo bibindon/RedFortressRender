@@ -207,6 +207,7 @@ public:
     void SetMeshMixShadowDarkness(const float darkness);
     void SetMeshMixSpecularIntensity(const float intensity);
     void SetMeshMixSpecularEdge(const float edge);
+    void SetMeshMixEnvMapBlend(const float blend);
     void SetMeshMixSpecularIntensityOverrideEnabled(const bool enabled);
     void SetMeshMixSpecularEdgeOverrideEnabled(const bool enabled);
 
@@ -527,6 +528,7 @@ private:
     float m_meshMixShadowDarkness = 1.0f;
     float m_meshMixSpecularIntensity = 0.0f;
     float m_meshMixSpecularEdge = 0.0f;
+    float m_meshMixCubeMappingRate = 1.0f;
     bool m_meshMixSpecularIntensityOverrideEnabled = true;
     bool m_meshMixSpecularEdgeOverrideEnabled = true;
     bool m_meshMixSSSEnabled = false;

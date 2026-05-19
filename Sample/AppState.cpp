@@ -102,6 +102,7 @@ float g_halfLambertShadowSaturation = 1.0f;
 float g_shadowDarkness = 0.3f;
 float g_specularIntensity = 0.1f;
 float g_specularEdge = 0.0f;
+float g_envMapBlend = 1.0f;
 bool g_bUseSpecularIntensityOverride = false;
 bool g_bUseSpecularEdgeOverride = false;
 bool g_bSSS = false;
@@ -312,6 +313,11 @@ float ClampSpecularIntensity(const float intensity)
 float ClampSpecularEdge(const float edge)
 {
     return (std::max)(SPECULAR_EDGE_MIN, (std::min)(edge, SPECULAR_EDGE_MAX));
+}
+
+float ClampEnvMapBlend(const float blend)
+{
+    return (std::max)(ENV_MAP_BLEND_MIN, (std::min)(blend, ENV_MAP_BLEND_MAX));
 }
 
 float ClampSSSIntensity(const float intensity)
@@ -1871,6 +1877,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_specularEdge = std::stof(value);
             }
+            else if (key == L"EnvMapBlend")
+            {
+                g_envMapBlend = std::stof(value);
+            }
             else if (key == L"SpecularEdgeOverride")
             {
                 g_bUseSpecularEdgeOverride = (std::stoi(value) != 0);
@@ -2119,6 +2129,7 @@ void ApplyAllSampleSettings()
     ApplySpecularIntensityOverride();
     ApplySpecularEdge();
     ApplySpecularEdgeOverride();
+    ApplyEnvMapBlend();
     ApplySSSIntensity();
     ApplySSSColor();
     ApplySSS();

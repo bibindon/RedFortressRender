@@ -1833,6 +1833,7 @@ int Render::AddMeshMix(const std::wstring& filePath,
     param.specularEdge = m_meshMixSpecularEdge;
     param.specularIntensityOverrideEnabled = m_meshMixSpecularIntensityOverrideEnabled;
     param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
+    param.cubeMappingRate = m_meshMixCubeMappingRate;
     param.sss = m_meshMixSSSEnabled;
     param.sssIntensity = m_meshMixSSSIntensity;
     param.sssColor = m_meshMixSSSColor;
@@ -1871,6 +1872,7 @@ int Render::AddMeshPBR(const std::wstring& filePath,
     param.specularEdge = m_meshMixSpecularEdge;
     param.specularIntensityOverrideEnabled = m_meshMixSpecularIntensityOverrideEnabled;
     param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
+    param.cubeMappingRate = m_meshMixCubeMappingRate;
     param.sss = m_meshMixSSSEnabled;
     param.sssIntensity = m_meshMixSSSIntensity;
     param.sssColor = m_meshMixSSSColor;
@@ -2077,6 +2079,21 @@ void Render::SetMeshMixSpecularEdge(const float edge)
         {
             mesh->SetSpecularEdge(edge);
         }
+    }
+}
+
+void Render::SetMeshMixEnvMapBlend(const float blend)
+{
+    m_meshMixCubeMappingRate = blend;
+
+    for (auto& mesh : m_meshMixList)
+    {
+        mesh.SetCubeMappingRate(blend);
+    }
+
+    for (auto& mesh : m_meshPBRList)
+    {
+        mesh.SetCubeMappingRate(blend);
     }
 }
 

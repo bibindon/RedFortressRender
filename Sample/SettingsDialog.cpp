@@ -46,6 +46,7 @@ void RefreshHalfLambertShadowSaturationControls(HWND hDlg);
 void RefreshShadowDarknessControls(HWND hDlg);
 void RefreshSpecularIntensityControls(HWND hDlg);
 void RefreshSpecularEdgeControls(HWND hDlg);
+void RefreshEnvMapBlendControls(HWND hDlg);
 void RefreshSSSControls(HWND hDlg);
 void RefreshSSAO(HWND hDlg);
 void RefreshSSGI(HWND hDlg);
@@ -120,6 +121,8 @@ constexpr int SPECULAR_INTENSITY_SLIDER_MIN = 0;
 constexpr int SPECULAR_INTENSITY_SLIDER_MAX = static_cast<int>(SPECULAR_INTENSITY_MAX / SPECULAR_INTENSITY_STEP);
 constexpr int SPECULAR_EDGE_SLIDER_MIN = 0;
 constexpr int SPECULAR_EDGE_SLIDER_MAX = static_cast<int>(SPECULAR_EDGE_MAX / SPECULAR_EDGE_STEP);
+constexpr int ENV_MAP_BLEND_SLIDER_MIN = 0;
+constexpr int ENV_MAP_BLEND_SLIDER_MAX = static_cast<int>(ENV_MAP_BLEND_MAX / ENV_MAP_BLEND_STEP);
 constexpr int SSS_INTENSITY_SLIDER_MIN = 0;
 constexpr int SSS_INTENSITY_SLIDER_MAX = static_cast<int>(SSS_INTENSITY_MAX / SSS_INTENSITY_STEP);
 constexpr int SSS_COLOR_SLIDER_MIN = 0;
@@ -586,6 +589,7 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_SHADOW_DARKNESS,
         IDC_EDIT_SPECULAR_INTENSITY,
         IDC_EDIT_SPECULAR_EDGE,
+        IDC_EDIT_ENVMAP_BLEND,
         IDC_EDIT_SSS_INTENSITY,
         IDC_EDIT_SSS_COLOR_R,
         IDC_EDIT_SSS_COLOR_G,
@@ -906,6 +910,14 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
             ApplySpecularEdge();
         }
         RefreshSpecularEdgeControls(hDlg);
+        return true;
+    case IDC_EDIT_ENVMAP_BLEND:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_envMapBlend = floatValue;
+            ApplyEnvMapBlend();
+        }
+        RefreshEnvMapBlendControls(hDlg);
         return true;
     case IDC_EDIT_SSS_INTENSITY:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
@@ -1799,6 +1811,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshShadowDarknessControls(hDlg);
     RefreshSpecularIntensityControls(hDlg);
     RefreshSpecularEdgeControls(hDlg);
+    RefreshEnvMapBlendControls(hDlg);
     RefreshSSSControls(hDlg);
     RefreshSSAO(hDlg);
     RefreshSSAOSampleRadiusControls(hDlg);
@@ -1954,6 +1967,11 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_SPECULAR_EDGE, TBM_SETRANGEMAX, FALSE, SPECULAR_EDGE_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SPECULAR_EDGE, TBM_SETTICFREQ, 2, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SPECULAR_EDGE, TBM_SETPAGESIZE, 0, 2);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_ENVMAP_BLEND, TBM_SETRANGEMIN, FALSE, ENV_MAP_BLEND_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_ENVMAP_BLEND, TBM_SETRANGEMAX, FALSE, ENV_MAP_BLEND_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_ENVMAP_BLEND, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_ENVMAP_BLEND, TBM_SETPAGESIZE, 0, 2);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_INTENSITY, TBM_SETRANGEMIN, FALSE, SSS_INTENSITY_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_INTENSITY, TBM_SETRANGEMAX, FALSE, SSS_INTENSITY_SLIDER_MAX);
@@ -2808,6 +2826,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_specularEdge = SliderValueToSpecularEdge(sliderValue);
             ApplySpecularEdge();
             RefreshSpecularEdgeControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_ENVMAP_BLEND))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_envMapBlend = SliderValueToEnvMapBlend(sliderValue);
+            ApplyEnvMapBlend();
+            RefreshEnvMapBlendControls(hDlg);
             return TRUE;
         }
 

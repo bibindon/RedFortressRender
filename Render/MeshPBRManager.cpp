@@ -1414,6 +1414,11 @@ void MeshPBRManager::SetSpecularEdge(const float edge)
     m_param.specularEdge = edge;
 }
 
+void MeshPBRManager::SetCubeMappingRate(const float rate)
+{
+    m_param.cubeMappingRate = rate;
+}
+
 void MeshPBRManager::SetSpecularEdgeOverrideEnabled(const bool enabled)
 {
     m_param.specularEdgeOverrideEnabled = enabled;
