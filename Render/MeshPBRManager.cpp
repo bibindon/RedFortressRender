@@ -538,7 +538,6 @@ enum class eMeshType
 {
     None,
     POM,
-    NormalMapping,
     Glass,
     Mirror,
     Emit,
@@ -577,6 +576,10 @@ struct stCsvParam
     bool ssao = false;
     bool collisionDefined = false;
     bool collision = false;
+    bool normalMapDefined = false;
+    bool normalMap = false;
+    bool normalMapFileNameDefined = false;
+    std::wstring normalMapFileName;
     bool envMapDefined = false;
     bool envMap = false;
     bool envMapFileNameDefined = false;
@@ -623,10 +626,6 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
             if (value == L"pom")
             {
                 result.meshType = eMeshType::POM;
-            }
-            else if (value == L"normalmapping")
-            {
-                result.meshType = eMeshType::NormalMapping;
             }
             else if (value == L"glass")
             {
@@ -739,6 +738,16 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
         {
             result.collisionDefined = true;
             result.collision = IsCsvTrueValue(value);
+        }
+        else if (key == L"normalmap")
+        {
+            result.normalMapDefined = true;
+            result.normalMap = IsCsvTrueValue(value);
+        }
+        else if (key == L"normalmapfilename")
+        {
+            result.normalMapFileName = TrimCsvStringValue(line.substr(commaPos + 1));
+            result.normalMapFileNameDefined = !result.normalMapFileName.empty();
         }
         else if (key == L"envmap")
         {
@@ -923,11 +932,6 @@ void MeshPBRManager::InitializeInternal()
         m_param.parallaxOcclusionMapping = true;
         m_param.normalMapping = true;
     }
-    else if (csvParam.meshType == eMeshType::NormalMapping)
-    {
-        m_param.parallaxOcclusionMapping = false;
-        m_param.normalMapping = true;
-    }
     else if (csvParam.meshType == eMeshType::Glass)
     {
         m_param.glass = true;
@@ -1021,6 +1025,11 @@ void MeshPBRManager::InitializeInternal()
         m_param.collision = csvParam.collision;
     }
 
+    if (csvParam.normalMapDefined)
+    {
+        m_param.normalMapping = csvParam.normalMap;
+    }
+
     if (csvParam.envMapDefined)
     {
         m_param.cubeMapping = csvParam.envMap;
@@ -1082,6 +1091,15 @@ void MeshPBRManager::InitializeInternal()
     std::vector<float> specularIntensityList;
     std::vector<float> specularPowerList;
     std::vector<LPDIRECT3DBASETEXTURE9> diffuseTextureList;
+
+    if (csvParam.normalMapFileNameDefined)
+    {
+        const std::wstring normalMapPath = PathIsRelative(csvParam.normalMapFileName.c_str())
+                                         ? xFileDir + csvParam.normalMapFileName
+                                         : csvParam.normalMapFileName;
+        hResult = LoadTextureCached(normalMapPath, &m_texNormalMap);
+        assert(hResult == S_OK);
+    }
 
     if (csvParam.envMapFileNameDefined)
     {

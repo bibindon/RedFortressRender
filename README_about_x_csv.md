@@ -1,4 +1,4 @@
-﻿# `.x` と同名の `.csv` について
+# `.x` と同名の `.csv` について
 
 `MeshMix` 系で `.x` ファイルを読むとき、同じ場所に同名の `.csv` があれば追加設定として読み込む。
 
@@ -15,7 +15,7 @@
 1 行につき `キー,値` である。
 
 ```csv
-meshtype,envmapping
+envmap,y
 smooth,y
 shadow,n
 ```
@@ -34,12 +34,42 @@ bool 系は次の値が使える。
 | 値 | 内容 |
 |---|---|
 | `pom` | Parallax Occlusion Mapping |
-| `normalmapping` | Normal Mapping |
-| `envmapping` | 環境マッピング |
 | `glass` | ガラス表現 |
+| `mirror` | ミラー表現 |
 | `emit` | 発光表現 |
 
 未指定時は通常の `MeshMix` として扱われる。
+
+### normalmap / normalmapfilename
+
+法線マップの使用有無と、使用する法線マップ画像を指定する。
+
+```csv
+normalmap,y
+normalmapfilename,"normal.png"
+```
+
+- `normalmap`
+  法線マップを使うかどうかを指定する
+- `normalmapfilename`
+  使用する法線マップ画像を指定する
+- `normalmapfilename` が相対パスなら `.x` ファイルと同じディレクトリ基準で解決される
+- `normalmapfilename` を指定しない場合は、従来どおりマテリアルから見つかった法線マップが使われる
+
+### envmap / envmapfilename
+
+環境マップの使用有無と、使用するキューブテクスチャ画像を指定する。
+
+```csv
+envmap,y
+envmapfilename,"env.dds"
+```
+
+- `envmap`
+  環境マップを使うかどうかを指定する
+- `envmapfilename`
+  使用するキューブテクスチャ画像を指定する
+- `envmapfilename` が相対パスなら `.x` ファイルと同じディレクトリ基準で解決される
 
 ### smooth
 
@@ -146,12 +176,19 @@ cubemappinggauss,0.2
 ### 環境マッピング
 
 ```csv
-meshtype,envmapping
+envmap,y
 smooth,n
 cubemappingrate,1.0
 cubemappinggauss,0.0
 ssao,n
 shadow,n
+```
+
+### 法線マッピング
+
+```csv
+normalmap,y
+normalmapfilename,"cubeNormal.png"
 ```
 
 ### ガラス
