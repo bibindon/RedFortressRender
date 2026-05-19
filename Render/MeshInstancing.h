@@ -26,6 +26,9 @@ public:
 
     void Draw();
     void RenderToGBufferEffect(LPD3DXEFFECT effect, const char* techniqueName);
+    void RenderToShadowOccluderEffect(LPD3DXEFFECT effect,
+                                      const char* techniqueName,
+                                      float alphaClipThreshold);
 
     void OnDeviceLost();
     void OnDeviceReset();

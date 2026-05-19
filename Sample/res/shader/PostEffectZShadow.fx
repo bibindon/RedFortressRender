@@ -8,6 +8,9 @@ float4x4 g_matLightView;
 float    g_lightNear;
 float    g_lightFar;
 float4x4 g_matLightViewProj;
+float    g_instancingAlphaClipThreshold;
+int      g_swayMode;
+float    g_time;
 
 static const int MAX_MATRICES = 8;
 float4x3 g_matWorldArray[MAX_MATRICES];
@@ -75,6 +78,17 @@ sampler samplerSceneNormal = sampler_state
     MipFilter = NONE;
     MinFilter = POINT;
     MagFilter = POINT;
+    AddressU  = CLAMP;
+    AddressV  = CLAMP;
+};
+
+texture g_texInstancingAlpha;
+sampler sampInstancingAlpha = sampler_state
+{
+    Texture   = (g_texInstancingAlpha);
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    MipFilter = LINEAR;
     AddressU  = CLAMP;
     AddressV  = CLAMP;
 };
@@ -252,6 +266,21 @@ struct VSOutDepth
     float  fDepth  : TEXCOORD0;
 };
 
+struct VSInShadowOccluderInstancing
+{
+    float4 positionObject : POSITION0;
+    float3 normalObject   : NORMAL0;
+    float2 texCoord       : TEXCOORD0;
+    float4 instancePosRot : TEXCOORD1;
+    float4 instanceScale  : TEXCOORD2;
+};
+
+struct VSOutShadowOccluderInstancing
+{
+    float4 positionClip : POSITION0;
+    float2 alphaUV      : TEXCOORD0;
+};
+
 float3 SkinPosition(float4 inPosition, float4 inBlendWeights, float4 inBlendIndices, int boneNumber)
 {
     float3 position = 0.0f;
@@ -322,6 +351,53 @@ float4 PS_DepthFromLight(VSOutDepth pin) : COLOR0
 {
     float d = pin.fDepth;
     return float4(d, d, d, 1.0f);
+}
+
+VSOutShadowOccluderInstancing VS_ShadowOccluderInstancing(VSInShadowOccluderInstancing inputData)
+{
+    VSOutShadowOccluderInstancing outputData;
+
+    float scale = inputData.instanceScale.x;
+    float rotationY = inputData.instancePosRot.w;
+    float sinY = sin(rotationY);
+    float cosY = cos(rotationY);
+
+    float3 scaledPos = inputData.positionObject.xyz * scale;
+    float swayWeight = saturate(1.0f - inputData.texCoord.y);
+    swayWeight *= swayWeight;
+    if (g_swayMode == 1)
+    {
+        float phase = g_time * 1.7f + inputData.instancePosRot.x * 0.27f + inputData.instancePosRot.z * 0.19f;
+        float sway = sin(phase) * 0.16f + sin(phase * 1.83f + 1.2f) * 0.06f;
+        scaledPos.x += sway * swayWeight * scale;
+    }
+
+    float3 rotatedPos;
+    rotatedPos.x = (scaledPos.x * cosY) + (scaledPos.z * sinY);
+    rotatedPos.y = scaledPos.y;
+    rotatedPos.z = (-scaledPos.x * sinY) + (scaledPos.z * cosY);
+    if (g_swayMode == 2)
+    {
+        float2 waveDir = normalize(float2(0.82f, 0.57f));
+        float waveCoord = dot(inputData.instancePosRot.xz, waveDir);
+        float phase = g_time * 2.2f - waveCoord * 0.42f;
+        float broadWave = sin(phase) * 0.22f;
+        float detailWave = sin(phase * 1.7f + inputData.instancePosRot.x * 0.07f) * 0.07f;
+        float wave = (broadWave + detailWave) * swayWeight * scale;
+        rotatedPos.x += waveDir.x * wave;
+        rotatedPos.z += waveDir.y * wave;
+    }
+
+    float3 worldPos = rotatedPos + inputData.instancePosRot.xyz;
+    outputData.positionClip = mul(float4(worldPos, 1.0f), g_matWorldViewProj);
+    outputData.alphaUV = inputData.texCoord;
+    return outputData;
+}
+
+float4 PS_ShadowOccluderInstancing(VSOutShadowOccluderInstancing inputData) : COLOR0
+{
+    clip(tex2D(sampInstancingAlpha, inputData.alphaUV).a - g_instancingAlphaClipThreshold);
+    return 0.0f;
 }
 
 //-------------------------------------------------------------------------
@@ -823,12 +899,24 @@ technique TechniqueDepthFromLightSkin
     }
 }
 
+technique TechniqueShadowOccluderInstancing
+{
+    pass P0
+    {
+        CullMode         = NONE;
+        ZEnable          = TRUE;
+        ZWriteEnable     = TRUE;
+        AlphaBlendEnable = FALSE;
+        VertexShader     = compile vs_3_0 VS_ShadowOccluderInstancing();
+        PixelShader      = compile ps_3_0 PS_ShadowOccluderInstancing();
+    }
+}
+
 // 光源から見た深度画像とカメラから見たワールド座標を使って、影を描画するテクニック
 technique TechniqueWriteShadow
 {
     pass P0
     {
-        CullMode     = NONE;
         VertexShader = compile vs_3_0 VS_Base();
         PixelShader  = compile ps_3_0 PS_WriteShadow();
     }

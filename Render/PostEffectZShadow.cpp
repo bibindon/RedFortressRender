@@ -1,6 +1,7 @@
 ﻿#include "PostEffectZShadow.h"
 
 #include "Camera.h"
+#include "MeshInstancing.h"
 #include "MeshMixSkinAnim.h"
 
 #include "Util.h"
@@ -181,12 +182,14 @@ void PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                              LPDIRECT3DTEXTURE9 sceneDepthTexture,
                              LPDIRECT3DTEXTURE9 sceneNormalTexture,
                              const std::deque<MeshMixManager>& meshMixList,
-                             const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList)
+                             const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList,
+                             const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap)
 {
     g_texTemp = renderTarget;
     m_texCompositeTarget = texTarget;
     m_pMeshList = &meshMixList;
     m_pSkinAnimMeshList = &meshMixSkinAnimList;
+    m_pMeshInstancingMap = &meshInstancingMap;
     m_sceneDepthTexture = sceneDepthTexture;
     m_sceneNormalTexture = sceneNormalTexture;
 
@@ -196,6 +199,7 @@ void PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
 
     m_pMeshList = nullptr;
     m_pSkinAnimMeshList = nullptr;
+    m_pMeshInstancingMap = nullptr;
     m_sceneDepthTexture = NULL;
     m_sceneNormalTexture = NULL;
     m_texCompositeTarget = NULL;
@@ -451,6 +455,30 @@ void PostEffectZShadow::RenderTechnique2()
 
     hr = g_fxDepthBufferShadow->SetInt("g_shadowPcfTapCount", m_pcfTapCount);
     assert(hr == S_OK);
+
+    if (m_pMeshInstancingMap != nullptr)
+    {
+        DWORD oldColorWriteEnable = 0;
+        hr = Common::D3DDevice()->GetRenderState(D3DRS_COLORWRITEENABLE, &oldColorWriteEnable);
+        assert(hr == S_OK);
+
+        hr = Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE, 0);
+        assert(hr == S_OK);
+
+        const float alphaClipThreshold = 0.5f;
+        for (const auto& meshEntry : *m_pMeshInstancingMap)
+        {
+            if (meshEntry.second != nullptr)
+            {
+                meshEntry.second->RenderToShadowOccluderEffect(g_fxDepthBufferShadow,
+                                                               "TechniqueShadowOccluderInstancing",
+                                                               alphaClipThreshold);
+            }
+        }
+
+        hr = Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE, oldColorWriteEnable);
+        assert(hr == S_OK);
+    }
 
     hr = g_fxDepthBufferShadow->SetTechnique(GetWriteShadowTechniqueName());
     assert(hr == S_OK);

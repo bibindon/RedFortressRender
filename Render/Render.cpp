@@ -1332,7 +1332,8 @@ void Render::Draw()
                                  pTexTempZ,
                                  pTexTempNoral,
                                  m_meshMixList,
-                                 m_meshMixSkinAnimList);
+                                 m_meshMixSkinAnimList,
+                                 m_meshInstancingMap);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
