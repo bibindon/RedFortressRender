@@ -12,6 +12,8 @@ namespace NSRender
 {
 namespace
 {
+constexpr float X_MATERIAL_SPECULAR_INTENSITY_SCALE = 0.5f;
+
 float ClampSpecularEdge(const float edge)
 {
     return (std::max)(0.0f, (std::min)(edge, 1.0f));
@@ -31,7 +33,7 @@ float ConvertXMaterialPowerToShaderPower(const float materialPower)
 float ConvertXMaterialPowerToSpecularIntensity(const float materialPower)
 {
     const float clampedPower = (std::max)(0.0f, (std::min)(materialPower, 255.0f));
-    return (clampedPower / 255.0f) * 2.0f;
+    return (clampedPower / 255.0f) * X_MATERIAL_SPECULAR_INTENSITY_SCALE;
 }
 
 float PointLightShapeToShaderValue(const PointLightShape shape)
@@ -473,10 +475,15 @@ void MeshMixSkinAnim::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBas
 
         const DWORD materialIndex = boneCombination[i].AttribId;
         const D3DMATERIAL9& material = container->pMaterials[materialIndex].MatD3D;
+        const bool hasTexture = materialIndex < container->m_textureList.size() &&
+                                container->m_textureList[materialIndex] != nullptr;
+        const float diffuseAlpha = (hasTexture && material.Diffuse.a <= 0.001f)
+                                 ? 1.0f
+                                 : material.Diffuse.a;
         D3DXVECTOR4 diffuse(material.Diffuse.r,
                             material.Diffuse.g,
                             material.Diffuse.b,
-                            material.Diffuse.a);
+                            diffuseAlpha);
         m_D3DEffect->SetVector("g_diffuse", &diffuse);
 
         float specularIntensity = GetMaterialSpecularIntensity(material);
@@ -493,7 +500,7 @@ void MeshMixSkinAnim::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBas
         }
         m_D3DEffect->SetFloat("g_specularPower", specularPower);
 
-        if (materialIndex < container->m_textureList.size())
+        if (hasTexture)
         {
             m_D3DEffect->SetTexture("g_texture", container->m_textureList[materialIndex]);
         }

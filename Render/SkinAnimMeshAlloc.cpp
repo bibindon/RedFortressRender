@@ -147,11 +147,10 @@ void SkinAnimMeshAlloc::InitializeMaterials(const DWORD materialCount,
     for (DWORD i = 0; i < materialCount; ++i)
     {
         m_container->pMaterials[i] = materials[i];
+        LPDIRECT3DTEXTURE9 tempTexture = nullptr;
 
         if (m_container->pMaterials[i].pTextureFilename != nullptr)
         {
-            LPDIRECT3DTEXTURE9 tempTexture = NULL;
-
             std::wstring filename = Util::Utf8ToWstring(m_container->pMaterials[i].pTextureFilename);
 
             filename = dirPath + L'\\' + filename;
@@ -165,9 +164,9 @@ void SkinAnimMeshAlloc::InitializeMaterials(const DWORD materialCount,
             {
                 throw std::exception("texture file is not found.");
             }
-
-            m_container->m_textureList.push_back(tempTexture);
         }
+
+        m_container->m_textureList.push_back(tempTexture);
     }
 }
 
