@@ -307,6 +307,7 @@ technique Technique1
         AlphaBlendEnable = TRUE;
         SrcBlend = SRCALPHA;
         DestBlend = INVSRCALPHA;
+        //CullMode = NONE;
 
         VertexShader = (vsArray[g_currentBoneIndex]);
         PixelShader = compile ps_3_0 PixelShader1();
@@ -317,6 +318,7 @@ technique Technique1
         AlphaBlendEnable = TRUE;
         SrcBlend = ONE;
         DestBlend = ONE;
+        //CullMode = NONE;
 
         VertexShader = (vsArray[g_currentBoneIndex]);
         PixelShader = compile ps_3_0 PixelShaderPointLight();
