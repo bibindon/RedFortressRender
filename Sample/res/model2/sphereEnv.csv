@@ -1,4 +1,5 @@
-meshtype,envmapping
+EnvMap, y
+EnvMapFileName, "Texture1.dds"
 smooth,n
 cubemappingrate,1.0
 cubemappinggauss,0.0

@@ -284,6 +284,21 @@ std::wstring TrimString(const std::wstring& text)
     return std::wstring(first, last);
 }
 
+std::wstring TrimCsvStringValue(std::wstring text)
+{
+    if (!text.empty() && text.front() == 0xfeff)
+    {
+        text.erase(text.begin());
+    }
+
+    text = TrimString(text);
+    if (text.size() >= 2 && text.front() == L'"' && text.back() == L'"')
+    {
+        text = text.substr(1, text.size() - 2);
+    }
+    return text;
+}
+
 std::wstring NormalizeCsvField(std::wstring text)
 {
     if (!text.empty() && text.front() == 0xfeff)
@@ -524,7 +539,6 @@ enum class eMeshType
     None,
     POM,
     NormalMapping,
-    EnvMapping,
     Glass,
     Mirror,
     Emit,
@@ -563,6 +577,10 @@ struct stCsvParam
     bool ssao = false;
     bool collisionDefined = false;
     bool collision = false;
+    bool envMapDefined = false;
+    bool envMap = false;
+    bool envMapFileNameDefined = false;
+    std::wstring envMapFileName;
     bool cubeMappingRateDefined = false;
     float cubeMappingRate = 1.0f;
     bool cubeMappingGaussDefined = false;
@@ -609,10 +627,6 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
             else if (value == L"normalmapping")
             {
                 result.meshType = eMeshType::NormalMapping;
-            }
-            else if (value == L"envmapping")
-            {
-                result.meshType = eMeshType::EnvMapping;
             }
             else if (value == L"glass")
             {
@@ -725,6 +739,16 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
         {
             result.collisionDefined = true;
             result.collision = IsCsvTrueValue(value);
+        }
+        else if (key == L"envmap")
+        {
+            result.envMapDefined = true;
+            result.envMap = IsCsvTrueValue(value);
+        }
+        else if (key == L"envmapfilename")
+        {
+            result.envMapFileName = TrimCsvStringValue(line.substr(commaPos + 1));
+            result.envMapFileNameDefined = !result.envMapFileName.empty();
         }
         else if (key == L"cubemappingrate")
         {
@@ -904,10 +928,6 @@ void MeshMixManager::InitializeInternal()
         m_param.parallaxOcclusionMapping = false;
         m_param.normalMapping = true;
     }
-    else if (csvParam.meshType == eMeshType::EnvMapping)
-    {
-        m_param.cubeMapping = true;
-    }
     else if (csvParam.meshType == eMeshType::Glass)
     {
         m_param.glass = true;
@@ -1001,6 +1021,11 @@ void MeshMixManager::InitializeInternal()
         m_param.collision = csvParam.collision;
     }
 
+    if (csvParam.envMapDefined)
+    {
+        m_param.cubeMapping = csvParam.envMap;
+    }
+
     if (csvParam.cubeMappingRateDefined)
     {
         m_param.cubeMappingRate = csvParam.cubeMappingRate;
@@ -1058,6 +1083,15 @@ void MeshMixManager::InitializeInternal()
     std::vector<float> specularPowerList;
     std::vector<LPDIRECT3DBASETEXTURE9> diffuseTextureList;
 
+    if (csvParam.envMapFileNameDefined)
+    {
+        const std::wstring envMapPath = PathIsRelative(csvParam.envMapFileName.c_str())
+                                      ? xFileDir + csvParam.envMapFileName
+                                      : csvParam.envMapFileName;
+        hResult = LoadCubeTextureCached(envMapPath, &m_texCubeMap);
+        assert(hResult == S_OK);
+    }
+
     for (DWORD i = 0; i < m_materialCount; ++i)
     {
         D3DXVECTOR4 diffuse(1.0f, 1.0f, 1.0f, 1.0f);
@@ -1077,8 +1111,7 @@ void MeshMixManager::InitializeInternal()
             textureFileName = Util::Utf8ToWstring(materialList[i].pTextureFilename);
             const std::wstring texturePath = xFileDir + textureFileName;
             const std::wstring lowerExt = ToLowerString(textureFileName.substr(textureFileName.find_last_of(L'.') + 1));
-            if ((csvParam.meshType == eMeshType::EnvMapping || csvParam.meshType == eMeshType::Glass) &&
-                lowerExt == L"dds")
+            if ((m_param.cubeMapping || m_param.glass) && lowerExt == L"dds")
             {
                 hResult = LoadCubeTextureCached(texturePath, &tempTexture);
             }
@@ -1094,13 +1127,12 @@ void MeshMixManager::InitializeInternal()
         {
             lowerExtRole = ToLowerString(textureFileName.substr(textureFileName.find_last_of(L'.') + 1));
         }
-        const bool isCubeByEnvMapping =
-            ((csvParam.meshType == eMeshType::EnvMapping || csvParam.meshType == eMeshType::Glass) &&
-             lowerExtRole == L"dds");
+        const bool isCubeByEnvMap =
+            ((m_param.cubeMapping || m_param.glass) && lowerExtRole == L"dds");
         // 共有ローダでも単体版と同じ命名規約を使い、
         // ディフューズ以外の補助テクスチャを自動判定する。
         eMeshTextureRole textureRole = ClassifyTextureRole(textureFileName);
-        if (isCubeByEnvMapping)
+        if (isCubeByEnvMap)
         {
             textureRole = eMeshTextureRole::Cube;
         }
@@ -1110,6 +1142,10 @@ void MeshMixManager::InitializeInternal()
             {
                 m_texNormalMap = tempTexture;
             }
+            else
+            {
+                ReleaseTextureCached(tempTexture);
+            }
         }
         else if (textureRole == eMeshTextureRole::Height)
         {
@@ -1117,12 +1153,20 @@ void MeshMixManager::InitializeInternal()
             {
                 m_texHeightMap = tempTexture;
             }
+            else
+            {
+                ReleaseTextureCached(tempTexture);
+            }
         }
         else if (textureRole == eMeshTextureRole::Cube)
         {
             if (m_texCubeMap == nullptr)
             {
                 m_texCubeMap = tempTexture;
+            }
+            else
+            {
+                ReleaseTextureCached(tempTexture);
             }
         }
         else
