@@ -807,6 +807,7 @@ technique TechniqueDepthFromLight
 {
     pass P0
     {
+        CullMode     = NONE;
         VertexShader = compile vs_3_0 VS_DepthFromLight();
         PixelShader  = compile ps_3_0 PS_DepthFromLight();
     }
@@ -816,6 +817,7 @@ technique TechniqueDepthFromLightSkin
 {
     pass P0
     {
+        CullMode     = NONE;
         VertexShader = (vsDepthSkinArray[g_currentBoneIndex]);
         PixelShader  = compile ps_3_0 PS_DepthFromLight();
     }
@@ -826,6 +828,7 @@ technique TechniqueWriteShadow
 {
     pass P0
     {
+        CullMode     = NONE;
         VertexShader = compile vs_3_0 VS_Base();
         PixelShader  = compile ps_3_0 PS_WriteShadow();
     }
