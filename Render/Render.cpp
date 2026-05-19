@@ -3242,11 +3242,6 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
         elem.Render();
     }
 
-    for (auto& elem : m_meshInstancingMap)
-    {
-        elem.second->Draw();
-    }
-
     for (size_t i = 0; i < m_meshMixList.size(); ++i)
     {
         if (static_cast<int>(i) == skippedMeshMixIndex)
@@ -3258,6 +3253,11 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
             renderActiveMirrorAsMirror &&
             static_cast<int>(i) == activeMirrorMeshIndex;
         m_meshMixList[i].Render(renderAsMirror);
+    }
+
+    for (auto& elem : m_meshInstancingMap)
+    {
+        elem.second->Draw();
     }
 
     for (auto& elem : m_meshMixSkinAnimList)
