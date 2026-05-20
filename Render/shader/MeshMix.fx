@@ -161,10 +161,11 @@ float3 IncreaseSaturation(float3 color, float amount)
 
 
 float g_time = 0.0f;
+bool  g_waveEnable = false;
 
 bool ShouldUseAlphaCutout()
 {
-    return g_diffuse.a <= 0.0f;
+    return g_waveEnable && (g_diffuse.a <= 0.0f);
 }
 
 void ApplyAlphaCutout(float2 uv)
@@ -182,7 +183,6 @@ bool  g_swayEnable = false;
 float g_swayAmount = 0.5f;
 float g_swaySpeed  = 5.0f;
 float g_swayHeight = 3.0f;
-bool  g_waveEnable = false;
 float g_waveAmount = 0.1f;
 float g_waveSpeed  = 10.0f;
 float g_waveDensity = 6.5f;
