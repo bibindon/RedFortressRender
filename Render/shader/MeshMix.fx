@@ -184,6 +184,28 @@ bool  g_waveEnable = false;
 float g_waveAmount = 0.1f;
 float g_waveSpeed  = 10.0f;
 
+float CalcWaveHeight(float x, float z)
+{
+    float wavePrimary = sin((x * 6.5f) + (g_time * g_waveSpeed * 1.7f));
+    float waveSecondary = cos((z * 6.5f) + (g_time * g_waveSpeed * 1.2f));
+    float waveGrid = wavePrimary * waveSecondary;
+    float waveDiagonal = sin(((x + z) * 4.8f) + (g_time * g_waveSpeed * 2.1f));
+    return ((waveGrid * 0.85f) + (waveDiagonal * 0.15f)) * g_waveAmount;
+}
+
+float2 CalcWaveGradient(float x, float z)
+{
+    float wavePrimaryPhase = (x * 6.5f) + (g_time * g_waveSpeed * 1.7f);
+    float waveSecondaryPhase = (z * 6.5f) + (g_time * g_waveSpeed * 1.2f);
+    float waveDiagonalPhase = ((x + z) * 4.8f) + (g_time * g_waveSpeed * 2.1f);
+
+    float dHeightDx = ((cos(wavePrimaryPhase) * 6.5f) * cos(waveSecondaryPhase) * 0.85f
+                      + cos(waveDiagonalPhase) * 4.8f * 0.15f) * g_waveAmount;
+    float dHeightDz = ((sin(wavePrimaryPhase) * (-sin(waveSecondaryPhase) * 6.5f) * 0.85f)
+                      + cos(waveDiagonalPhase) * 4.8f * 0.15f) * g_waveAmount;
+    return float2(dHeightDx, dHeightDz);
+}
+
 //---------------------------------------------------------
 // ポイントライト
 //---------------------------------------------------------
@@ -328,16 +350,21 @@ void VertexShader1(in  float4 inPosition     : POSITION,
                    out float3 outvViewTS     : TEXCOORD7,
                    out float2 outvParallaxOffsetTS    : TEXCOORD8)
 {
+    float3 localNormal = inNormal.xyz;
+    float3 localTangent = inTangent.xyz;
+    float3 localBinorm = inBinormal.xyz;
+
     // ゆらぎ効果（草とか）
     if (g_waveEnable)
     {
         float4 pos = inPosition;
-        float wavePrimary = sin((pos.x * 6.5f) + (g_time * g_waveSpeed * 1.7f));
-        float waveSecondary = cos((pos.z * 6.5f) + (g_time * g_waveSpeed * 1.2f));
-        float waveGrid = wavePrimary * waveSecondary;
-        float waveDiagonal = sin(((pos.x + pos.z) * 4.8f) + (g_time * g_waveSpeed * 2.1f));
-        pos.y += ((waveGrid * 0.85f) + (waveDiagonal * 0.15f)) * g_waveAmount;
+        float2 waveGradient = CalcWaveGradient(pos.x, pos.z);
+        pos.y += CalcWaveHeight(pos.x, pos.z);
         inPosition = pos;
+
+        localTangent = normalize(float3(1.0f, waveGradient.x, 0.0f));
+        localBinorm = normalize(float3(0.0f, waveGradient.y, 1.0f));
+        localNormal = normalize(cross(localBinorm, localTangent));
     }
 
     if (g_swayEnable)
@@ -372,12 +399,12 @@ void VertexShader1(in  float4 inPosition     : POSITION,
     outPosWorld = mul(inPosition, g_matWorld).xyz;
 
     float3x3 world3x3 = (float3x3) g_matWorld;
-    outNormalWorld = mul(inNormal.xyz, world3x3);
+    outNormalWorld = mul(localNormal, world3x3);
 
     outTexCood = inTexCoord.xy;
 
-    outTangent = normalize(mul(inTangent.xyz, world3x3));
-    outBinorm = normalize(mul(inBinormal.xyz, world3x3));
+    outTangent = normalize(mul(localTangent, world3x3));
+    outBinorm = normalize(mul(localBinorm, world3x3));
 
     float3 vViewWS = g_cameraPos.xyz - outPosWorld.xyz;
     outvViewWS = vViewWS;

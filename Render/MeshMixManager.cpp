@@ -957,9 +957,9 @@ void MeshMixManager::InitializeInternal()
     {
         m_param.wave = true;
         m_param.waveIntensity = 0.12f;
-        m_param.shadow = false;
-        m_param.saturateShadow = false;
-        m_param.shadowDarkness = 0.0f;
+        m_param.shadow = true;
+        m_param.saturateShadow = true;
+        m_param.shadowDarkness = 0.5f;
     }
 
     if (csvParam.emitIntensityDefined)
