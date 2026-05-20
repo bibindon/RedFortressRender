@@ -17,12 +17,12 @@ float4 g_lightColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 float4 g_specularColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 float2 g_screenSize = { 1600.0f, 900.0f };
 
-// ã‚¹ãƒšã‚­ãƒ¥ãƒ©å…‰ã®é‹­ã•
+// スペキュラ光の鋭さ
 //float g_specularPower = 16.0f;
 // float g_specularPower = 128.0f;
 float g_specularPower = 1.0f;
 
-// ã‚¹ãƒšã‚­ãƒ¥ãƒ©å…‰ã®å¼·ã•
+// スペキュラ光の強さ
 float g_specularIntensity = 0.1f;
 //float g_specularIntensity = 0.2f;
 //float g_specularIntensity = 0.0f;
@@ -32,21 +32,21 @@ float g_cubeMappingGauss = 0.0f;
 float g_emitIntensity = 1.0f;
 float4 g_emitColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-// è·é›¢ãƒ•ã‚©ã‚°ã®è‰²
+// 距離フォグの色
 float4 g_fogDistanceColor = { 0.5f, 0.5f, 1.0f, 1.0f };
 
-// è·é›¢ãƒ•ã‚©ã‚°ã®å¼·ã•
+// 距離フォグの強さ
 float g_fogDistanceDensity = 0.01f;
 
-// é«˜ã•ãƒ•ã‚©ã‚°ã®è‰²
+// 高さフォグの色
 float4 g_fogHeightColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-// é«˜ã•ãƒ•ã‚©ã‚°ã®å¼·ã•
+// 高さフォグの強さ
 float g_fogHeightDensity = 0.01f;
 
-// ç©ºé–“ã®æ˜Žã‚‹ã•
-// 0ãªã‚‰æ´žçªŸã€0.1ãªã‚‰å¤œã€1ãªã‚‰æ˜Žã‚‹ã„å®¤å†…ã€3ãªã‚‰å¿«æ™´ã€ã¨ã„ã†æ„Ÿã˜
-// 1.0ã‚’è¶…ãˆã‚‹ã¨å½©åº¦ãŒä¸ŠãŒã‚Šã€é€†ã«æš—ããªã‚‹ã‚ˆã†ã«ã™ã‚‹ã¨é¢ç™½ã„æ°—ãŒã™ã‚‹ã€‚
+// 空間の明るさ
+// 0なら洞窟、0.1なら夜、1なら明るい室内、3なら快晴、という感じ
+// 1.0を超えると彩度が上がり、逆に暗くなるようにすると面白い気がする。
 float g_fSunLightIntensity = 1.0f;
 bool g_bSaturateShadow = false;
 float g_fSaturateShadowIntensity = 0.2f;
@@ -67,7 +67,7 @@ sampler g_textureSampler = sampler_state
     MaxMipLevel = 1;
 };
 
-// ç’°å¢ƒãƒžãƒƒãƒ—
+// 環境マップ
 textureCUBE g_texCubeMap;
 
 samplerCUBE g_cubeMapSampler = sampler_state
@@ -79,13 +79,13 @@ samplerCUBE g_cubeMapSampler = sampler_state
     AddressU = CLAMP;
     AddressV = CLAMP;
 
-    // ã©ã‚Œãã‚‰ã„ã¼ã‹ã™ã‹
-    // æ•°å­—ãŒå¤§ãã„ã»ã©ã¼ã‹ã•ã‚Œã‚‹
+    // どれくらいぼかすか
+    // 数字が大きいほどぼかされる
     //MaxMipLevel = 7;
     MaxMipLevel = 1;
 };
 
-// æ³•ç·šãƒžãƒƒãƒ—
+// 法線マップ
 texture g_texNormalMap;
 sampler g_normalMapSampler = sampler_state
 {
@@ -123,7 +123,7 @@ sampler g_mirrorSampler = sampler_state
 };
 
 //------------------------------------------------------
-// è¦–å·®é®è”½ãƒžãƒƒãƒ”ãƒ³ã‚°é–¢é€£
+// 視差遮蔽マッピング関連
 //------------------------------------------------------
 
 bool g_bPOM = false;
@@ -132,16 +132,16 @@ bool g_bSSS = false;
 float g_sssIntensity = 1.0f;
 float4 g_sssColor = { 0.5f, 1.0f, 0.5f, 1.0f };
 
-// é«˜ã• 0.0 ~ 1.0
+// 高さ 0.0 ~ 1.0
 float g_fHeightMapScale = 0.1f;
 
-// ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°æ•°ï¼ˆæœ€å°ï¼‰
+// サンプリング数（最小）
 int g_nMinSamples = 50;
 
-// ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°æ•°ï¼ˆæœ€å¤§ï¼‰
+// サンプリング数（最大）
 int g_nMaxSamples = 100;
 
-// é«˜ã•ãƒžãƒƒãƒ—
+// 高さマップ
 texture g_texHeightMap;
 sampler g_heightMapSampler = sampler_state
 {
@@ -174,7 +174,7 @@ void ApplyAlphaCutout(float2 uv)
 }
 
 //---------------------------------------------------------
-// æºã‚‰ã—ã‚¨ãƒ•ã‚§ã‚¯ãƒˆç”¨ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+// 揺らしエフェクト用パラメータ
 //---------------------------------------------------------
 bool  g_swayEnable = false;
 float g_swayAmount = 0.5f;
@@ -185,7 +185,7 @@ float g_waveAmount = 0.1f;
 float g_waveSpeed  = 10.0f;
 
 //---------------------------------------------------------
-// ãƒã‚¤ãƒ³ãƒˆãƒ©ã‚¤ãƒˆ
+// ポイントライト
 //---------------------------------------------------------
 float3 g_pointLightPos[16];
 float  g_pointLightBrightness[16];
@@ -304,8 +304,8 @@ void AccumulateSingleLightSample(float3 samplePos,
 }
 
 //---------------------------------------------------------
-// é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼
-// è¦–å·®ãƒžãƒƒãƒ”ãƒ³ã‚°ã¯ã€Œ1ãƒ‘ã‚¹ç›®ã§ã¯å®Ÿæ–½ã›ãšã€2ãƒ‘ã‚¹ç›®ã§å®Ÿè£…ã™ã‚‹ã€ã¨ã„ã†ã‚ˆã†ãªã“ã¨ã¯ã§ããªã„
+// 頂点シェーダー
+// 視差マッピングは「1パス目では実施せず、2パス目で実装する」というようなことはできない
 //
 // WS ... WorldSpace
 // TS ... TangentSpace
@@ -328,7 +328,7 @@ void VertexShader1(in  float4 inPosition     : POSITION,
                    out float3 outvViewTS     : TEXCOORD7,
                    out float2 outvParallaxOffsetTS    : TEXCOORD8)
 {
-    // ã‚†ã‚‰ãŽåŠ¹æžœï¼ˆè‰ã¨ã‹ï¼‰
+    // ゆらぎ効果（草とか）
     if (g_waveEnable)
     {
         float4 pos = inPosition;
@@ -344,18 +344,18 @@ void VertexShader1(in  float4 inPosition     : POSITION,
     {
         float4 pos = inPosition;
     
-        // æºã‚‰ã—ã‚¨ãƒ•ã‚§ã‚¯ãƒˆã‚’é©ç”¨
-        // Yåº§æ¨™ã®é«˜ã•ã«åŸºã¥ã„ã¦æºã‚‰ã—ã®å¼·åº¦ã‚’å¤‰ãˆã‚‹ï¼ˆä¸Šã«ã„ãã»ã©å¤§ããæºã‚Œã‚‹ï¼‰
-        float heightFactor = (pos.y + 1.0) / 3.0; // å††æŸ±ã®é«˜ã•ã«åˆã‚ã›ã¦èª¿æ•´
+        // 揺らしエフェクトを適用
+        // Y座標の高さに基づいて揺らしの強度を変える（上にいくほど大きく揺れる）
+        float heightFactor = (pos.y + 1.0) / 3.0; // 円柱の高さに合わせて調整
         heightFactor = pow(heightFactor, 2.0);
         heightFactor = clamp(heightFactor, 0.0, 1.0);
     
-        // è¤‡æ•°ã®æ³¢ã‚’çµ„ã¿åˆã‚ã›ã¦è‡ªç„¶ãªæºã‚‰ã—ã‚’ä½œæˆ
+        // 複数の波を組み合わせて自然な揺らしを作成
         float wave1 = sin(g_time * g_swaySpeed) * g_swayAmount;
         float wave2 = sin(g_time * g_swaySpeed * 0.7 + 1.5) * g_swayAmount * 0.5;
         float wave3 = cos(g_time * g_swaySpeed * 1.3 + 2.0) * g_swayAmount * 0.3;
     
-        // Xè»¸ã¨Zè»¸ã®ä¸¡æ–¹å‘ã«æºã‚‰ã—ã‚’é©ç”¨
+        // X軸とZ軸の両方向に揺らしを適用
         float swayX = (wave1 + wave2 + wave3) * heightFactor;
         float swayZ = (sin(g_time * g_swaySpeed * 0.8 + 0.5) * g_swayAmount * 0.7 +
                    cos(g_time * g_swaySpeed * 1.1 + 1.0) * g_swayAmount * 0.4) * heightFactor;
@@ -367,8 +367,8 @@ void VertexShader1(in  float4 inPosition     : POSITION,
 
     outPosition = mul(inPosition, g_matWorldViewProj);
 
-    // outPosWorldã§ã¯4x4ã‚’ä½¿ã„outNormalWorldã§ã¯3x3ã®å¤‰æ›è¡Œåˆ—ã‚’ä½¿ã£ã¦ã„ã‚‹
-    // ã“ã†ã—ãªã„ã¨ç’°å¢ƒãƒžãƒƒãƒ—ãŒãŠã‹ã—ããªã‚‹
+    // outPosWorldでは4x4を使いoutNormalWorldでは3x3の変換行列を使っている
+    // こうしないと環境マップがおかしくなる
     outPosWorld = mul(inPosition, g_matWorld).xyz;
 
     float3x3 world3x3 = (float3x3) g_matWorld;
@@ -382,18 +382,18 @@ void VertexShader1(in  float4 inPosition     : POSITION,
     float3 vViewWS = g_cameraPos.xyz - outPosWorld.xyz;
     outvViewWS = vViewWS;
 
-    // å…‰æºãƒ™ã‚¯ãƒˆãƒ«ï¼ˆæ­£è¦åŒ–ã—ãªã„ï¼‰
+    // 光源ベクトル（正規化しない）
     float3 vLightWS = g_lightDir.xyz;
 
-    // å…‰æºãƒ™ã‚¯ãƒˆãƒ«ãƒ»ã‚«ãƒ¡ãƒ©æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«ã‚’æŽ¥ç©ºé–“ã¸å¤‰æ›
+    // 光源ベクトル・カメラ方向ベクトルを接空間へ変換
     float3x3 mWorldToTangent = float3x3(outTangent, outBinorm, outNormalWorld);
 
     outvLightTS = mul(mWorldToTangent, vLightWS);
     outvViewTS = mul(mWorldToTangent, vViewWS);
 
-    // ã‚ºãƒ¬é‡
-    // ã‚°ãƒ¬ãƒ¼ã‚¸ãƒ³ã‚°è§’ãªã‚‰æ²¢å±±ã‚ºãƒ¬ã‚‹ã—ã€æ­£é¢ã‚’å‘ã„ã¦ã‚‹ãªã‚‰ã‚ºãƒ¬ãªã„ã€‚
-    // ãã‚Œã‚’è¡¨ã™æ•°å€¤
+    // ズレ量
+    // グレージング角なら沢山ズレるし、正面を向いてるならズレない。
+    // それを表す数値
     outvParallaxOffsetTS = outvViewTS.xy / outvViewTS.z;
 
     outvParallaxOffsetTS *= g_fHeightMapScale;
@@ -421,17 +421,17 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
 
                   out float4 outColor     : COLOR)
 {
-    // æ­£è¦åŒ–ã¯ãƒ”ã‚¯ã‚»ãƒ«ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã§ã‚„ã‚‰ãªã„ã¨ã„ã‘ãªã„
+    // 正規化はピクセルシェーダーでやらないといけない
     float3 normal = normalize(inNormalWorld);
     float3 lightDir = normalize(g_lightDir.xyz);
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float3 halfVector = normalize(lightDir + cameraDir);
 
-    // æŽ¥ç·šç©ºé–“ã¸å¤‰æ›æ¸ˆã¿ã®å…‰ãƒ™ã‚¯ãƒˆãƒ«ã¯ã“ã“ã§æ­£è¦åŒ–ã—ã¦ä½¿ã†ã€‚
+    // 接線空間へ変換済みの光ベクトルはここで正規化して使う。
     invLightTS = normalize(invLightTS);
 
     //----------------------------------------------------
-    // è¦–å·®é®è”½ãƒžãƒƒãƒ”ãƒ³ã‚°
+    // 視差遮蔽マッピング
     //----------------------------------------------------
     if (g_bPOM)
     {
@@ -446,12 +446,12 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
     float3 albedo = tex2D(g_textureSampler, inTexCoord).rgb * g_diffuse.rgb;
 
     //-----------------------------------------------------------------------
-    // æ³•ç·šãƒžãƒƒãƒ”ãƒ³ã‚°ã§NdotLã‚’èª¿ç¯€
+    // 法線マッピングでNdotLを調節
     //-----------------------------------------------------------------------
     float NdotL = 0.f;
     float NdotH = 0.f;
 
-    // æ³•ç·šãƒžãƒƒãƒ”ãƒ³ã‚°ã‚’è¡Œã†ã‹
+    // 法線マッピングを行うか
     if (g_bNormalMapping)
     {
         float3 normalInTangent = float3(0, 0, 0);
@@ -461,12 +461,12 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
         normalInTangent.x *= -1;
         normalInTangent = normalize(normalInTangent);
 
-        // TBNï¼ˆTangent, Binormal, Normalï¼‰ã§ãƒ¯ãƒ¼ãƒ«ãƒ‰ã¸
+        // TBN（Tangent, Binormal, Normal）でワールドへ
         float3x3 tangentToWorld = float3x3(-inTangent, -inBinorm, normal);
         float3 normalInWorld = normalize(mul(normalInTangent, tangentToWorld));
 
-        // Lambert æ‹¡æ•£ï¼ˆå…‰ç·šæ–¹å‘ï¼‰
-        // saturateé–¢æ•°ã‚’ã“ã“ã§å®Ÿè¡Œã™ã‚‹ã¨ãƒžã‚¤ãƒŠã‚¹æˆåˆ†ãŒæ¶ˆãˆã‚‹ã€‚
+        // Lambert 拡散（光線方向）
+        // saturate関数をここで実行するとマイナス成分が消える。
         NdotL = dot(normalInWorld, lightDir);
         NdotH = saturate(dot(normalInWorld, halfVector));
     }
@@ -479,15 +479,15 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
 
     float3 lambert = 0.f;
     
-    // ãƒãƒ¼ãƒ•ãƒ©ãƒ³ãƒãƒ¼ãƒˆ
-    // æ·±åº¦ãƒãƒƒãƒ•ã‚¡ã‚·ãƒ£ãƒ‰ã‚¦ã‚’å®Ÿè¡Œã™ã‚‹ã¨ã€å½±ãŒ2é‡ã«è¡¨ç¤ºã•ã‚Œã¦ã—ã¾ã†ã€‚
-    // ãƒãƒ¼ãƒ•ãƒ©ãƒ³ãƒãƒ¼ãƒˆãªã‚‰ãƒžã‚·ã«ãªã‚‹
+    // ハーフランバート
+    // 深度バッファシャドウを実行すると、影が2重に表示されてしまう。
+    // ハーフランバートならマシになる
     if (false)
     {
         NdotL = (NdotL + 1.0f) * 0.5f;
 
-        // 0.5ãŒ0.7ã«ãªã‚‹ã‚ˆã†ãªè£œæ­£ã‚’ã‹ã‘ã‚‹
-        // å¯¾æ•°ã‚°ãƒ©ãƒ•ã®ã‚¤ãƒ¡ãƒ¼ã‚¸
+        // 0.5が0.7になるような補正をかける
+        // 対数グラフのイメージ
         NdotL = pow(NdotL, 0.5);
     }
     else
@@ -510,19 +510,19 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
 
     float3 ambient = g_ambient.rgb * g_fAmbientIntensity * albedo;
 
-    // é™°ã®å½©åº¦ã‚’ä¸Šã’ã‚‹
-    // è¦ã‚‰ãªã„ã‹ã‚‚ã—ã‚Œãªã„
+    // 陰の彩度を上げる
+    // 要らないかもしれない
     if (false)
     {
         if (NdotL <= 0.0f)
         {
-            // ã‚¢ãƒ«ãƒ™ãƒ‰ã®å½©åº¦ã‚’å¼·èª¿ã—ãŸè‰²ã‚’ã‚¢ãƒ³ãƒ“ã‚¨ãƒ³ãƒˆè‰²ã«è¨­å®šã™ã‚‹
-            // é™°ã®å½©åº¦ã‚’ä¸Šã’ãŸã„ãŒã€ã“ã‚Œã ã¨å…¨ä½“çš„ã«å½©åº¦ãŒé«˜ããªã£ã¦ã—ã¾ã†ã€‚
+            // アルベドの彩度を強調した色をアンビエント色に設定する
+            // 陰の彩度を上げたいが、これだと全体的に彩度が高くなってしまう。
             float3 workColor = albedo;
 
             float average = (workColor.r + workColor.g + workColor.b) / 3;
 
-            // å½©åº¦ã‚’ä¸Šã’ä¸‹ã’ã™ã‚‹
+            // 彩度を上げ下げする
             workColor.r = average + (workColor.r - average) * 8.0f;
             workColor.g = average + (workColor.g - average) * 8.0f;
             workColor.b = average + (workColor.b - average) * 8.0f;
@@ -619,13 +619,13 @@ void PixelShaderGlass(in float4 inPosition     : POSITION,
 //-------------------------------------------------------------
 // Pass 3
 //-------------------------------------------------------------
-// éœ§ã®æ¸›è¡°é–¢æ•°ï¼ˆã‚„ã‚ã‚‰ã‹ï¼‰
+// 霧の減衰関数（やわらか）
 float FogAmountExp(float distance, float density)
 {
     return 1 - exp(-density * distance);
 }
 
-// éœ§ã®æ¸›è¡°é–¢æ•°ï¼ˆãƒªã‚¢ãƒ«ï¼‰
+// 霧の減衰関数（リアル）
 float FogAmountExp2(float distance, float density)
 {
     float x = density * distance;
@@ -646,7 +646,7 @@ void PixelShaderPointLight(in  float4 inPosition            : POSITION,
     float3 normalWS = normalize(inNormalWorld);
     float3 cameraDirWS = normalize(g_cameraPos.xyz - inPosWorld);
 
-    // POMã§UVæ›´æ–°ï¼ˆå¿…è¦ãªã¨ãã ã‘ï¼‰
+    // POMでUV更新（必要なときだけ）
     float2 uv = inTexCoord;
     if (g_bPOM)
     {
@@ -663,7 +663,7 @@ void PixelShaderPointLight(in  float4 inPosition            : POSITION,
     float3 N = normalWS;
     if (g_bNormalMapping)
     {
-        // æ³•ç·šãƒžãƒƒãƒ—ãŒã‚ã‚‹å ´åˆã ã‘ã€æŽ¥ç©ºé–“æ³•ç·šã‚’ãƒ¯ãƒ¼ãƒ«ãƒ‰ç©ºé–“ã¸å¤‰æ›ã—ã¦ä½¿ã†
+        // 法線マップがある場合だけ、接空間法線をワールド空間へ変換して使う
         float3 normalTS;
         float4 nTex = tex2D(g_normalMapSampler, uv);
         normalTS.x = nTex.r * 2.0 - 1.0;
@@ -759,8 +759,8 @@ float2 CalcUVCoordWithPOM(float3 inNormalizedNormalWS,
     invViewWS = normalize(invViewWS);
     invViewTS= normalize(invViewTS);
 
-    // è¦–è§’ã«å¿œã˜ã¦ã‚µãƒ³ãƒ—ãƒ«æ•°ã‚’å¤‰æ›´ã€‚
-    // ã‚°ãƒ¬ãƒ¼ã‚¸ãƒ³ã‚°è§’ã§ã‚ã‚‹ã»ã©ã‚¹ãƒ†ãƒƒãƒ—ã‚’ç´°ã‹ãã—ã¦ç²¾åº¦ã‚’ä¸Šã’ã‚‹ã€‚
+    // 視角に応じてサンプル数を変更。
+    // グレージング角であるほどステップを細かくして精度を上げる。
     int nNumSteps = (int) lerp(g_nMaxSamples, g_nMinSamples, dot(invViewWS, inNormalizedNormalWS));
 
     float fStepSize = 1.0 / (float) nNumSteps;
@@ -771,14 +771,14 @@ float2 CalcUVCoordWithPOM(float3 inNormalizedNormalWS,
     float2 vTexOffsetPerStep = fStepSize * invParallaxOffsetTS;
     float2 vTexCurrentOffset = inTexCoord;
 
-    // ä»Šã©ã®æ·±ã•ã®å±¤ï¼ˆLayerï¼‰ã¾ã§ãƒ¬ã‚¤ã‚’é€²ã‚ãŸã‹
+    // 今どの深さの層（Layer）までレイを進めたか
     float fCurrentLayer = 1.0;
 
     while (nStepIndex < nNumSteps)
     {
         vTexCurrentOffset -= vTexOffsetPerStep;
 
-        // tex2Dgradé–¢æ•°ã‚’ä½¿ã†ã¨PIX For WindowsãŒè½ã¡ã‚‹
+        // tex2Dgrad関数を使うとPIX For Windowsが落ちる
         // fCurrHeight = tex2Dgrad(g_heightMapSampler, vTexCurrentOffset, dx, dy ).r;
         fCurrHeight = tex2Dlod(g_heightMapSampler, float4(vTexCurrentOffset, 0.0f, 0.0f)).r;
 
@@ -794,7 +794,7 @@ float2 CalcUVCoordWithPOM(float3 inNormalizedNormalWS,
 
     float2 vParallaxOffset = invParallaxOffsetTS * (1 - fCurrentLayer);
 
-    // ç–‘ä¼¼çš„ã«æŠ¼ã—å‡ºã•ã‚ŒãŸè¡¨é¢ä¸Šã®æœ€çµ‚ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
+    // 疑似的に押し出された表面上の最終テクスチャ座標
     inTexCoord -= vParallaxOffset;
     return inTexCoord;
 }
