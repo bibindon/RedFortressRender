@@ -69,6 +69,8 @@ public:
     bool IsDepthBufferShadowEnabled() const;
     bool IsMirror() const;
     bool TryGetMirrorPlaneWorld(D3DXVECTOR3& planePoint, D3DXVECTOR3& planeNormal) const;
+    bool IsAlphaCutoutSubset(DWORD subsetIndex) const;
+    LPDIRECT3DBASETEXTURE9 GetSubsetTextureForShadow(DWORD subsetIndex) const;
 
     LPD3DXMESH GetD3DMesh() const;
 

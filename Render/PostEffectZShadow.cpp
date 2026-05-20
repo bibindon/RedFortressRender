@@ -294,6 +294,9 @@ void PostEffectZShadow::RenderTechnique1()
     hr = g_fxDepthBufferShadow->SetFloat ("g_lightFar", fLightFar);
     assert(hr == S_OK);
 
+    hr = g_fxDepthBufferShadow->SetFloat("g_meshAlphaClipThreshold", 0.5f);
+    assert(hr == S_OK);
+
     g_fxDepthBufferShadow->Begin(NULL, 0);
     g_fxDepthBufferShadow->BeginPass(0);
 
@@ -337,6 +340,17 @@ void PostEffectZShadow::RenderTechnique1()
         }
         for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
         {
+            const BOOL useAlphaCutout = mesh.IsAlphaCutoutSubset(subsetIndex) ? TRUE : FALSE;
+            hr = g_fxDepthBufferShadow->SetBool("g_useMeshAlphaCutout", useAlphaCutout);
+            assert(hr == S_OK);
+
+            hr = g_fxDepthBufferShadow->SetTexture("g_texMeshAlpha",
+                                                   useAlphaCutout ? mesh.GetSubsetTextureForShadow(subsetIndex) : nullptr);
+            assert(hr == S_OK);
+
+            hr = g_fxDepthBufferShadow->CommitChanges();
+            assert(hr == S_OK);
+
             d3dMesh->DrawSubset(subsetIndex);
         }
     }

@@ -1551,6 +1551,17 @@ bool MeshMixManager::TryGetMirrorPlaneWorld(D3DXVECTOR3& planePoint, D3DXVECTOR3
     return true;
 }
 
+bool MeshMixManager::IsAlphaCutoutSubset(const DWORD subsetIndex) const
+{
+    const D3DXVECTOR4 diffuse = GetSubsetDiffuse(subsetIndex);
+    return diffuse.w <= 0.0f && GetSubsetTexture(subsetIndex) != nullptr;
+}
+
+LPDIRECT3DBASETEXTURE9 MeshMixManager::GetSubsetTextureForShadow(const DWORD subsetIndex) const
+{
+    return GetSubsetTexture(subsetIndex);
+}
+
 void MeshMixManager::Render(const bool renderAsMirrorSurface)
 {
     if (!m_bLoaded || !m_enabled)

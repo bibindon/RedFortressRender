@@ -9,8 +9,10 @@ float    g_lightNear;
 float    g_lightFar;
 float4x4 g_matLightViewProj;
 float    g_instancingAlphaClipThreshold;
+float    g_meshAlphaClipThreshold;
 int      g_swayMode;
 float    g_time;
+bool     g_useMeshAlphaCutout;
 
 static const int MAX_MATRICES = 8;
 float4x3 g_matWorldArray[MAX_MATRICES];
@@ -91,6 +93,17 @@ sampler sampInstancingAlpha = sampler_state
     MipFilter = LINEAR;
     AddressU  = CLAMP;
     AddressV  = CLAMP;
+};
+
+texture g_texMeshAlpha;
+sampler sampMeshAlpha = sampler_state
+{
+    Texture   = (g_texMeshAlpha);
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    MipFilter = LINEAR;
+    AddressU  = WRAP;
+    AddressV  = WRAP;
 };
 
 float3 IncreaseSaturation(float3 color, float amount)
@@ -258,12 +271,14 @@ float SampleShadowAmount11(float2 uvLightView, float fDepthLightView)
 struct VSInDepth
 {
     float4 vPosOS  : POSITION0;
+    float2 uv      : TEXCOORD0;
 };
 
 struct VSOutDepth
 {
     float4 vPos    : POSITION0;
     float  fDepth  : TEXCOORD0;
+    float2 uv      : TEXCOORD1;
 };
 
 struct VSInShadowOccluderInstancing
@@ -314,6 +329,7 @@ VSOutDepth VS_DepthFromLight(VSInDepth vin)
     // 線形深度（ライト View 空間 z を near..far で正規化）
     float  depthLinear = (vPosLightView.z - g_lightNear) / (g_lightFar - g_lightNear);
     vout.fDepth = saturate(depthLinear);
+    vout.uv = vin.uv;
 
     return vout;
 }
@@ -349,6 +365,11 @@ void VS_DepthFromLightSkin(in  float4 inPosition     : POSITION,
 
 float4 PS_DepthFromLight(VSOutDepth pin) : COLOR0
 {
+    if (g_useMeshAlphaCutout)
+    {
+        clip(tex2D(sampMeshAlpha, pin.uv).a - g_meshAlphaClipThreshold);
+    }
+
     float d = pin.fDepth;
     return float4(d, d, d, 1.0f);
 }
