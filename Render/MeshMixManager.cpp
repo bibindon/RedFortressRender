@@ -541,6 +541,7 @@ enum class eMeshType
     Glass,
     Mirror,
     Emit,
+    Water,
 };
 
 struct stCsvParam
@@ -638,6 +639,10 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
             else if (value == L"emit")
             {
                 result.meshType = eMeshType::Emit;
+            }
+            else if (value == L"water")
+            {
+                result.meshType = eMeshType::Water;
             }
         }
         else if (key == L"smooth")
@@ -944,6 +949,14 @@ void MeshMixManager::InitializeInternal()
     {
         m_param.emit = true;
         m_param.ssao = false;
+        m_param.shadow = false;
+        m_param.saturateShadow = false;
+        m_param.shadowDarkness = 0.0f;
+    }
+    else if (csvParam.meshType == eMeshType::Water)
+    {
+        m_param.wave = true;
+        m_param.waveIntensity = 0.12f;
         m_param.shadow = false;
         m_param.saturateShadow = false;
         m_param.shadowDarkness = 0.0f;
@@ -1722,14 +1735,18 @@ void MeshMixManager::Render(const bool renderAsMirrorSurface)
     hResult = sharedEffect->SetFloat("g_time", f);
     assert(hResult == S_OK);
 
-    if (m_param.sway)
-    {
-        hResult = sharedEffect->SetBool("g_swayEnable", TRUE);
-        hResult = sharedEffect->SetFloat("g_swayAmount", 2.5f);
-        assert(hResult == S_OK);
-        hResult = sharedEffect->SetFloat("g_swaySpeed", 1.0f);
-        assert(hResult == S_OK);
-    }
+    hResult = sharedEffect->SetBool("g_swayEnable", m_param.sway ? TRUE : FALSE);
+    assert(hResult == S_OK);
+    hResult = sharedEffect->SetFloat("g_swayAmount", m_param.sway ? m_param.swayIntensity : 0.0f);
+    assert(hResult == S_OK);
+    hResult = sharedEffect->SetFloat("g_swaySpeed", 1.0f);
+    assert(hResult == S_OK);
+    hResult = sharedEffect->SetBool("g_waveEnable", m_param.wave ? TRUE : FALSE);
+    assert(hResult == S_OK);
+    hResult = sharedEffect->SetFloat("g_waveAmount", m_param.wave ? m_param.waveIntensity : 0.0f);
+    assert(hResult == S_OK);
+    hResult = sharedEffect->SetFloat("g_waveSpeed", 1.0f);
+    assert(hResult == S_OK);
 
     if (m_param.pointLight)
     {

@@ -180,6 +180,9 @@ bool  g_swayEnable = false;
 float g_swayAmount = 0.5f;
 float g_swaySpeed  = 2.0f;
 float g_swayHeight = 3.0f;
+bool  g_waveEnable = false;
+float g_waveAmount = 0.1f;
+float g_waveSpeed  = 1.0f;
 
 //---------------------------------------------------------
 // ãƒã‚¤ãƒ³ãƒˆãƒ©ã‚¤ãƒˆ
@@ -326,6 +329,16 @@ void VertexShader1(in  float4 inPosition     : POSITION,
                    out float2 outvParallaxOffsetTS    : TEXCOORD8)
 {
     // ã‚†ã‚‰ãŽåŠ¹æžœï¼ˆè‰ã¨ã‹ï¼‰
+    if (g_waveEnable)
+    {
+        float4 pos = inPosition;
+        float wavePrimary = sin((pos.x * 0.85f) + (g_time * g_waveSpeed * 1.7f));
+        float waveSecondary = cos((pos.z * 1.15f) + (g_time * g_waveSpeed * 1.2f));
+        float waveDiagonal = sin(((pos.x + pos.z) * 0.55f) + (g_time * g_waveSpeed * 2.1f));
+        pos.y += (wavePrimary + (waveSecondary * 0.6f) + (waveDiagonal * 0.35f)) * g_waveAmount;
+        inPosition = pos;
+    }
+
     if (g_swayEnable)
     {
         float4 pos = inPosition;
