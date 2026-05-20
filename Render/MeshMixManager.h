@@ -71,6 +71,7 @@ public:
     bool TryGetMirrorPlaneWorld(D3DXVECTOR3& planePoint, D3DXVECTOR3& planeNormal) const;
     bool IsAlphaCutoutSubset(DWORD subsetIndex) const;
     LPDIRECT3DBASETEXTURE9 GetSubsetTextureForShadow(DWORD subsetIndex) const;
+    bool UsesWaterTextureAlpha() const;
 
     LPD3DXMESH GetD3DMesh() const;
 
@@ -120,7 +121,6 @@ private:
     float GetSubsetSpecularIntensity(const DWORD subsetIndex) const;
     float GetSubsetSpecularPower(const DWORD subsetIndex) const;
     LPDIRECT3DBASETEXTURE9 GetSubsetTexture(const DWORD subsetIndex) const;
-    bool UsesWaterTextureAlpha() const;
     void ReleaseOwnedResources();
     void InitializeInternal();
     D3DXMATRIX BuildWorldMatrix() const;

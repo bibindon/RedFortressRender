@@ -3243,6 +3243,8 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
         elem.Render();
     }
 
+    const D3DXVECTOR3 eyePos = Camera::GetEyePos();
+    std::vector<size_t> transparentWaterMeshIndices;
     for (size_t i = 0; i < m_meshMixList.size(); ++i)
     {
         if (static_cast<int>(i) == skippedMeshMixIndex)
@@ -3253,7 +3255,29 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
         const bool renderAsMirror =
             renderActiveMirrorAsMirror &&
             static_cast<int>(i) == activeMirrorMeshIndex;
+        if (!renderAsMirror && m_meshMixList[i].UsesWaterTextureAlpha())
+        {
+            transparentWaterMeshIndices.push_back(i);
+            continue;
+        }
+
         m_meshMixList[i].Render(renderAsMirror);
+    }
+
+    std::stable_sort(transparentWaterMeshIndices.begin(),
+                     transparentWaterMeshIndices.end(),
+                     [&](const size_t lhs, const size_t rhs)
+                     {
+                         const D3DXVECTOR3 lhsDelta = m_meshMixList[lhs].GetPos() - eyePos;
+                         const D3DXVECTOR3 rhsDelta = m_meshMixList[rhs].GetPos() - eyePos;
+                         const float lhsDistanceSq = D3DXVec3LengthSq(&lhsDelta);
+                         const float rhsDistanceSq = D3DXVec3LengthSq(&rhsDelta);
+                         return lhsDistanceSq > rhsDistanceSq;
+                     });
+
+    for (const size_t index : transparentWaterMeshIndices)
+    {
+        m_meshMixList[index].Render(false);
     }
 
     for (auto& elem : m_meshMixSkinAnimList)
