@@ -1745,7 +1745,7 @@ void MeshMixManager::Render(const bool renderAsMirrorSurface)
     assert(hResult == S_OK);
     hResult = sharedEffect->SetFloat("g_waveAmount", m_param.wave ? m_param.waveIntensity : 0.0f);
     assert(hResult == S_OK);
-    hResult = sharedEffect->SetFloat("g_waveSpeed", 1.0f);
+    hResult = sharedEffect->SetFloat("g_waveSpeed", 10.0f);
     assert(hResult == S_OK);
 
     if (m_param.pointLight)

@@ -182,7 +182,7 @@ float g_swaySpeed  = 2.0f;
 float g_swayHeight = 3.0f;
 bool  g_waveEnable = false;
 float g_waveAmount = 0.1f;
-float g_waveSpeed  = 1.0f;
+float g_waveSpeed  = 10.0f;
 
 //---------------------------------------------------------
 // ãƒã‚¤ãƒ³ãƒˆãƒ©ã‚¤ãƒˆ
@@ -332,10 +332,11 @@ void VertexShader1(in  float4 inPosition     : POSITION,
     if (g_waveEnable)
     {
         float4 pos = inPosition;
-        float wavePrimary = sin((pos.x * 0.85f) + (g_time * g_waveSpeed * 1.7f));
-        float waveSecondary = cos((pos.z * 1.15f) + (g_time * g_waveSpeed * 1.2f));
-        float waveDiagonal = sin(((pos.x + pos.z) * 0.55f) + (g_time * g_waveSpeed * 2.1f));
-        pos.y += (wavePrimary + (waveSecondary * 0.6f) + (waveDiagonal * 0.35f)) * g_waveAmount;
+        float wavePrimary = sin((pos.x * 6.5f) + (g_time * g_waveSpeed * 1.7f));
+        float waveSecondary = cos((pos.z * 6.5f) + (g_time * g_waveSpeed * 1.2f));
+        float waveGrid = wavePrimary * waveSecondary;
+        float waveDiagonal = sin(((pos.x + pos.z) * 4.8f) + (g_time * g_waveSpeed * 2.1f));
+        pos.y += ((waveGrid * 0.85f) + (waveDiagonal * 0.15f)) * g_waveAmount;
         inPosition = pos;
     }
 
