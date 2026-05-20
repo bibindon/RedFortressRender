@@ -120,6 +120,7 @@ private:
     float GetSubsetSpecularIntensity(const DWORD subsetIndex) const;
     float GetSubsetSpecularPower(const DWORD subsetIndex) const;
     LPDIRECT3DBASETEXTURE9 GetSubsetTexture(const DWORD subsetIndex) const;
+    bool UsesWaterTextureAlpha() const;
     void ReleaseOwnedResources();
     void InitializeInternal();
     D3DXMATRIX BuildWorldMatrix() const;

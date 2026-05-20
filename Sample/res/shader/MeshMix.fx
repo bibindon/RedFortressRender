@@ -165,7 +165,22 @@ bool  g_waveEnable = false;
 
 bool ShouldUseAlphaCutout()
 {
+    return (!g_waveEnable) && (g_diffuse.a <= 0.0f);
+}
+
+bool ShouldUseWaterTextureAlpha()
+{
     return g_waveEnable && (g_diffuse.a <= 0.0f);
+}
+
+float GetSurfaceAlpha(float2 uv)
+{
+    if (ShouldUseWaterTextureAlpha())
+    {
+        return tex2D(g_textureSampler, uv).a;
+    }
+
+    return saturate(g_diffuse.a);
 }
 
 void ApplyAlphaCutout(float2 uv)
@@ -485,6 +500,7 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
     }
 
     ApplyAlphaCutout(inTexCoord);
+    float surfaceAlpha = GetSurfaceAlpha(inTexCoord);
     float3 albedo = tex2D(g_textureSampler, inTexCoord).rgb * g_diffuse.rgb;
 
     //-----------------------------------------------------------------------
@@ -590,7 +606,7 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
         finalColor += sssColor * sssBlend;
     }
 
-    outColor = saturate(float4(finalColor, 1.f));
+    outColor = saturate(float4(finalColor, surfaceAlpha));
 
     if (false)
     {
@@ -904,6 +920,17 @@ technique Technique1
         CullMode = NONE;
         VertexShader = compile vs_3_0 VertexShaderMirror();
         PixelShader = compile ps_3_0 PixelShaderMirror();
+    }
+
+    pass PassTransparent
+    {
+        CullMode = NONE;
+        AlphaBlendEnable = TRUE;
+        SrcBlend = SRCALPHA;
+        DestBlend = INVSRCALPHA;
+        ZWriteEnable = FALSE;
+        VertexShader = compile vs_3_0 VertexShader1();
+        PixelShader = compile ps_3_0 PixelShader1();
     }
 
 }

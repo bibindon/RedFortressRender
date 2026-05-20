@@ -1861,7 +1861,8 @@ void MeshMixManager::Render(const bool renderAsMirrorSurface)
     }
     else
     {
-        DrawAllSubsets(sharedEffect, 0);
+        const UINT basePassIndex = UsesWaterTextureAlpha() ? 6 : 0;
+        DrawAllSubsets(sharedEffect, basePassIndex);
 
         if (m_param.cubeMapping)
         {
@@ -1969,6 +1970,24 @@ LPDIRECT3DBASETEXTURE9 MeshMixManager::GetSubsetTexture(const DWORD subsetIndex)
     }
 
     return nullptr;
+}
+
+bool MeshMixManager::UsesWaterTextureAlpha() const
+{
+    if (!m_param.wave)
+    {
+        return false;
+    }
+
+    for (DWORD subsetIndex = 0; subsetIndex < m_subsetCount; ++subsetIndex)
+    {
+        if (GetSubsetTexture(subsetIndex) != nullptr && GetSubsetDiffuse(subsetIndex).w <= 0.0f)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 float MeshMixManager::GetRadius() const
