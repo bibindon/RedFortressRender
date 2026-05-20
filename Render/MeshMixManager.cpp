@@ -1798,7 +1798,7 @@ void MeshMixManager::Render(const bool renderAsMirrorSurface)
     assert(hResult == S_OK);
     hResult = sharedEffect->SetFloat("g_waveAmount", m_param.wave ? m_param.waveIntensity : 0.0f);
     assert(hResult == S_OK);
-    hResult = sharedEffect->SetFloat("g_waveSpeed", 10.0f);
+    hResult = sharedEffect->SetFloat("g_waveSpeed", 5.0f);
     assert(hResult == S_OK);
 
     hResult = sharedEffect->SetFloat("g_waveDensity", 20.0f);
