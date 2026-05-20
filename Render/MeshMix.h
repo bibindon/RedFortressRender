@@ -135,6 +135,9 @@ struct stMeshParam
     // 鏡か
     bool mirror = false;
 
+    // 水面反射か
+    bool waterMirror = false;
+
     // 発光物か
     bool emit = false;
 

@@ -542,6 +542,7 @@ enum class eMeshType
     Mirror,
     Emit,
     Water,
+    WaterMirror,
 };
 
 struct stCsvParam
@@ -647,6 +648,10 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
             else if (value == L"water")
             {
                 result.meshType = eMeshType::Water;
+            }
+            else if (value == L"watermirror")
+            {
+                result.meshType = eMeshType::WaterMirror;
             }
         }
         else if (key == L"smooth")
@@ -979,6 +984,17 @@ void MeshMixManager::InitializeInternal()
         m_param.saturateShadow = true;
         m_param.shadowDarkness = 0.5f;
     }
+    else if (csvParam.meshType == eMeshType::WaterMirror)
+    {
+        m_param.wave = true;
+        m_param.waveIntensity = 0.01f;
+        m_param.shadow = true;
+        m_param.saturateShadow = true;
+        m_param.shadowDarkness = 0.5f;
+        m_param.waterMirror = true;
+        m_param.fresnel = true;
+        m_param.fresnelIntensity = 0.5f;
+    }
 
     if (csvParam.emitIntensityDefined)
     {
@@ -1086,7 +1102,7 @@ void MeshMixManager::InitializeInternal()
         m_param.cubeMappingGauss = csvParam.cubeMappingGauss;
     }
 
-    if (m_param.mirror)
+    if (m_param.mirror || m_param.waterMirror)
     {
         m_hasMirrorPlane = ComputeMirrorPlaneFromMesh(m_D3DMesh,
                                                       &m_mirrorPlanePointLocal,
@@ -1570,12 +1586,12 @@ bool MeshMixManager::IsDepthBufferShadowEnabled() const
 
 bool MeshMixManager::IsMirror() const
 {
-    return m_param.mirror;
+    return m_param.mirror || m_param.waterMirror;
 }
 
 bool MeshMixManager::TryGetMirrorPlaneWorld(D3DXVECTOR3& planePoint, D3DXVECTOR3& planeNormal) const
 {
-    if (!m_bLoaded || !m_param.mirror || !m_hasMirrorPlane)
+    if (!m_bLoaded || (!m_param.mirror && !m_param.waterMirror) || !m_hasMirrorPlane)
     {
         return false;
     }
@@ -1746,6 +1762,9 @@ void MeshMixManager::Render(const bool renderAsMirrorSurface)
     assert(hResult == S_OK);
 
     hResult = sharedEffect->SetFloat("g_fresnelIntensity", m_param.fresnelIntensity);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetBool("g_waterMirrorEnable", m_param.waterMirror ? TRUE : FALSE);
     assert(hResult == S_OK);
 
     hResult = sharedEffect->SetFloat("g_cubeMappingRate", m_param.cubeMappingRate);
@@ -1974,7 +1993,7 @@ LPDIRECT3DBASETEXTURE9 MeshMixManager::GetSubsetTexture(const DWORD subsetIndex)
 
 bool MeshMixManager::UsesWaterTextureAlpha() const
 {
-    if (!m_param.wave)
+    if (!m_param.wave || m_param.waterMirror)
     {
         return false;
     }

@@ -18,6 +18,7 @@ float4 g_specularColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 float2 g_screenSize = { 1600.0f, 900.0f };
 bool g_fresnelEnable = true;
 float g_fresnelIntensity = 0.08f;
+bool g_waterMirrorEnable = false;
 
 // スペキュラ光の鋭さ
 //float g_specularPower = 16.0f;
@@ -170,7 +171,7 @@ bool ShouldUseAlphaCutout()
 
 bool ShouldUseWaterTextureAlpha()
 {
-    return g_waveEnable && (g_diffuse.a <= 0.0f);
+    return g_waveEnable && !g_waterMirrorEnable && (g_diffuse.a <= 0.0f);
 }
 
 float GetSurfaceAlpha(float2 uv)
@@ -352,6 +353,15 @@ float CalcFresnelFactor(float3 normal, float3 cameraDir)
 {
     float viewDot = saturate(dot(normalize(normal), normalize(cameraDir)));
     return pow(1.0f - viewDot, 5.0f);
+}
+
+float3 SampleMirrorColor(float3 worldPos)
+{
+    float4 mirrorProj = mul(float4(worldPos, 1.0f), g_matMirrorViewProj);
+    float2 mirrorUV;
+    mirrorUV.x = mirrorProj.x / mirrorProj.w * 0.5f + 0.5f;
+    mirrorUV.y = -mirrorProj.y / mirrorProj.w * 0.5f + 0.5f;
+    return tex2D(g_mirrorSampler, mirrorUV).rgb;
 }
 
 //---------------------------------------------------------
@@ -595,6 +605,12 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
     float3 fresnelColor = g_specularColor.xyz * fresnel;
 
     float3 finalColor = ambient.rgb + lambert + specular + fresnelColor;
+    if (g_waterMirrorEnable)
+    {
+        float reflectionBlend = saturate(fresnel);
+        float3 mirrorColor = SampleMirrorColor(inPosWorld);
+        finalColor = lerp(finalColor, mirrorColor * albedo, reflectionBlend);
+    }
 
     if (g_bSSS)
     {
