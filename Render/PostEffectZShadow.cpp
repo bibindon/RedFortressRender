@@ -543,6 +543,17 @@ void PostEffectZShadow::RenderTechnique2()
         }
         for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
         {
+            const BOOL useAlphaCutout = mesh.IsAlphaCutoutSubset(subsetIndex) ? TRUE : FALSE;
+            hr = g_fxDepthBufferShadow->SetBool("g_useMeshAlphaCutout", useAlphaCutout);
+            assert(hr == S_OK);
+
+            hr = g_fxDepthBufferShadow->SetTexture("g_texMeshAlpha",
+                                                   useAlphaCutout ? mesh.GetSubsetTextureForShadow(subsetIndex) : nullptr);
+            assert(hr == S_OK);
+
+            hr = g_fxDepthBufferShadow->CommitChanges();
+            assert(hr == S_OK);
+
             hr = mesh.GetD3DMesh()->DrawSubset(subsetIndex);
             assert(hr == S_OK);
         }
@@ -559,6 +570,12 @@ void PostEffectZShadow::RenderTechnique2()
 
     D3DXMATRIX mViewProj = mView * mProj;
     hr = g_fxDepthBufferShadow->SetMatrix("g_matWorldViewProj", &mViewProj);
+    assert(hr == S_OK);
+
+    hr = g_fxDepthBufferShadow->SetBool("g_useMeshAlphaCutout", FALSE);
+    assert(hr == S_OK);
+
+    hr = g_fxDepthBufferShadow->SetTexture("g_texMeshAlpha", nullptr);
     assert(hr == S_OK);
 
     hr = g_fxDepthBufferShadow->CommitChanges();

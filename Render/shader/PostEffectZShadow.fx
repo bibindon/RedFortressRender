@@ -519,10 +519,19 @@ float4 BuildWriteShadowColor(float3 inWorldPos, float nShadowColor)
     return outColor;
 }
 
+void ApplyMeshAlphaCutoutShadow(float2 uv)
+{
+    if (g_useMeshAlphaCutout)
+    {
+        clip(tex2D(sampMeshAlpha, uv).a - g_meshAlphaClipThreshold);
+    }
+}
+
 float4 PS_WriteShadow1(in float4 inPos : POSITION0,
                        in float2 inUV : TEXCOORD0,
                        in float3 inWorldPos : TEXCOORD1) : COLOR0
 {
+    ApplyMeshAlphaCutoutShadow(inUV);
     float4 vPosLightView = mul(float4(inWorldPos, 1.0f), g_matLightView);
     float fDepthLightView = (vPosLightView.z - g_lightNear) / (g_lightFar - g_lightNear);
     fDepthLightView = saturate(fDepthLightView);
@@ -538,6 +547,7 @@ float4 PS_WriteShadow3(in float4 inPos : POSITION0,
                        in float2 inUV : TEXCOORD0,
                        in float3 inWorldPos : TEXCOORD1) : COLOR0
 {
+    ApplyMeshAlphaCutoutShadow(inUV);
     float4 vPosLightView = mul(float4(inWorldPos, 1.0f), g_matLightView);
     float fDepthLightView = (vPosLightView.z - g_lightNear) / (g_lightFar - g_lightNear);
     fDepthLightView = saturate(fDepthLightView);
@@ -553,6 +563,7 @@ float4 PS_WriteShadow5(in float4 inPos : POSITION0,
                        in float2 inUV : TEXCOORD0,
                        in float3 inWorldPos : TEXCOORD1) : COLOR0
 {
+    ApplyMeshAlphaCutoutShadow(inUV);
     float4 vPosLightView = mul(float4(inWorldPos, 1.0f), g_matLightView);
     float fDepthLightView = (vPosLightView.z - g_lightNear) / (g_lightFar - g_lightNear);
     fDepthLightView = saturate(fDepthLightView);
@@ -568,6 +579,7 @@ float4 PS_WriteShadow7(in float4 inPos : POSITION0,
                        in float2 inUV : TEXCOORD0,
                        in float3 inWorldPos : TEXCOORD1) : COLOR0
 {
+    ApplyMeshAlphaCutoutShadow(inUV);
     float4 vPosLightView = mul(float4(inWorldPos, 1.0f), g_matLightView);
     float fDepthLightView = (vPosLightView.z - g_lightNear) / (g_lightFar - g_lightNear);
     fDepthLightView = saturate(fDepthLightView);
@@ -583,6 +595,7 @@ float4 PS_WriteShadow9(in float4 inPos : POSITION0,
                        in float2 inUV : TEXCOORD0,
                        in float3 inWorldPos : TEXCOORD1) : COLOR0
 {
+    ApplyMeshAlphaCutoutShadow(inUV);
     float4 vPosLightView = mul(float4(inWorldPos, 1.0f), g_matLightView);
     float fDepthLightView = (vPosLightView.z - g_lightNear) / (g_lightFar - g_lightNear);
     fDepthLightView = saturate(fDepthLightView);
@@ -598,6 +611,7 @@ float4 PS_WriteShadow11(in float4 inPos : POSITION0,
                         in float2 inUV : TEXCOORD0,
                         in float3 inWorldPos : TEXCOORD1) : COLOR0
 {
+    ApplyMeshAlphaCutoutShadow(inUV);
     float4 vPosLightView = mul(float4(inWorldPos, 1.0f), g_matLightView);
     float fDepthLightView = (vPosLightView.z - g_lightNear) / (g_lightFar - g_lightNear);
     fDepthLightView = saturate(fDepthLightView);
