@@ -37,7 +37,7 @@ bool TextureFormatHasAlpha(const D3DFORMAT format)
         return true;
     default:
         return false;
-    }
+}
 }
 
 std::wstring ResolvePathFromExeDir(const std::wstring& path)
@@ -45,7 +45,7 @@ std::wstring ResolvePathFromExeDir(const std::wstring& path)
     if (path.empty())
     {
         return std::wstring();
-    }
+}
 
     if (PathIsRelative(path.c_str()))
     {
@@ -223,6 +223,26 @@ void MeshInstancing::Initialize(const std::wstring& filePath)
     m_pTextures.resize(m_dwNumMaterials);
     m_materialUsesAlpha.assign(m_dwNumMaterials, false);
 
+    DWORD subsetCount = 0;
+    hResult = m_pMesh->GetAttributeTable(nullptr, &subsetCount);
+    assert(hResult == S_OK);
+    if (subsetCount > 0)
+    {
+        m_attributeTable.resize(subsetCount);
+        hResult = m_pMesh->GetAttributeTable(m_attributeTable.data(), &subsetCount);
+        assert(hResult == S_OK);
+    }
+    else
+    {
+        D3DXATTRIBUTERANGE range { };
+        range.AttribId = 0;
+        range.FaceStart = 0;
+        range.FaceCount = m_pMesh->GetNumFaces();
+        range.VertexStart = 0;
+        range.VertexCount = m_pMesh->GetNumVertices();
+        m_attributeTable.push_back(range);
+    }
+
     for (DWORD i = 0; i < m_dwNumMaterials; ++i)
     {
         m_pMaterials[i] = d3dxMaterials[i].MatD3D;
@@ -292,6 +312,7 @@ void MeshInstancing::Finalize()
     m_pTextures.clear();
     m_materialUsesAlpha.clear();
     m_pMaterials.clear();
+    m_attributeTable.clear();
     m_dwNumMaterials = 0;
     m_instances.clear();
     m_filePath.clear();
@@ -382,13 +403,15 @@ void MeshInstancing::Draw()
     hResult = m_pEffect->BeginPass(0);
     assert(hResult == S_OK);
 
-    for (DWORD i = 0; i < m_dwNumMaterials; ++i)
+    for (DWORD i = 0; i < m_attributeTable.size(); ++i)
     {
-        hResult = m_pEffect->SetTexture("texture1", m_pTextures[i]);
+        const DWORD materialIndex = GetSubsetMaterialIndex(i);
+        hResult = m_pEffect->SetTexture("texture1",
+                                        materialIndex < m_pTextures.size() ? m_pTextures[materialIndex] : nullptr);
         assert(hResult == S_OK);
 
         DWORD oldZWriteEnable = TRUE;
-        if (m_highQualityEnabled && i < m_materialUsesAlpha.size() && m_materialUsesAlpha[i])
+        if (m_highQualityEnabled && IsSubsetAlphaMaterial(i))
         {
             Common::D3DDevice()->GetRenderState(D3DRS_ZWRITEENABLE, &oldZWriteEnable);
             Common::D3DDevice()->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
@@ -397,15 +420,10 @@ void MeshInstancing::Draw()
         hResult = m_pEffect->CommitChanges();
         assert(hResult == S_OK);
 
-        hResult = Common::D3DDevice()->DrawIndexedPrimitive(D3DPT_TRIANGLELIST,
-                                                            0,
-                                                            0,
-                                                            m_pMesh->GetNumVertices(),
-                                                            0,
-                                                            m_pMesh->GetNumFaces());
+        hResult = DrawInstancedSubset(i);
         assert(hResult == S_OK);
 
-        if (m_highQualityEnabled && i < m_materialUsesAlpha.size() && m_materialUsesAlpha[i])
+        if (m_highQualityEnabled && IsSubsetAlphaMaterial(i))
         {
             Common::D3DDevice()->SetRenderState(D3DRS_ZWRITEENABLE, oldZWriteEnable);
         }
@@ -464,20 +482,17 @@ void MeshInstancing::RenderToGBufferEffect(LPD3DXEFFECT effect, const char* tech
     hResult = effect->BeginPass(0);
     assert(hResult == S_OK);
 
-    for (DWORD i = 0; i < m_dwNumMaterials; ++i)
+    for (DWORD i = 0; i < m_attributeTable.size(); ++i)
     {
-        hResult = effect->SetTexture("g_texInstancingAlpha", m_pTextures[i]);
+        const DWORD materialIndex = GetSubsetMaterialIndex(i);
+        hResult = effect->SetTexture("g_texInstancingAlpha",
+                                     materialIndex < m_pTextures.size() ? m_pTextures[materialIndex] : nullptr);
         assert(hResult == S_OK);
 
         hResult = effect->CommitChanges();
         assert(hResult == S_OK);
 
-        hResult = Common::D3DDevice()->DrawIndexedPrimitive(D3DPT_TRIANGLELIST,
-                                                            0,
-                                                            0,
-                                                            m_pMesh->GetNumVertices(),
-                                                            0,
-                                                            m_pMesh->GetNumFaces());
+        hResult = DrawInstancedSubset(i);
         assert(hResult == S_OK);
     }
 
@@ -543,20 +558,17 @@ void MeshInstancing::RenderToShadowOccluderEffect(LPD3DXEFFECT effect,
     hResult = effect->BeginPass(0);
     assert(hResult == S_OK);
 
-    for (DWORD i = 0; i < m_dwNumMaterials; ++i)
+    for (DWORD i = 0; i < m_attributeTable.size(); ++i)
     {
-        hResult = effect->SetTexture("g_texInstancingAlpha", m_pTextures[i]);
+        const DWORD materialIndex = GetSubsetMaterialIndex(i);
+        hResult = effect->SetTexture("g_texInstancingAlpha",
+                                     materialIndex < m_pTextures.size() ? m_pTextures[materialIndex] : nullptr);
         assert(hResult == S_OK);
 
         hResult = effect->CommitChanges();
         assert(hResult == S_OK);
 
-        hResult = Common::D3DDevice()->DrawIndexedPrimitive(D3DPT_TRIANGLELIST,
-                                                            0,
-                                                            0,
-                                                            m_pMesh->GetNumVertices(),
-                                                            0,
-                                                            m_pMesh->GetNumFaces());
+        hResult = DrawInstancedSubset(i);
         assert(hResult == S_OK);
     }
 
@@ -712,6 +724,38 @@ void MeshInstancing::copyBuf(unsigned sz, void* src, IDirect3DVertexBuffer9* buf
     buf->Lock(0, 0, &p, 0);
     memcpy(p, src, sz);
     buf->Unlock();
+}
+
+DWORD MeshInstancing::GetSubsetMaterialIndex(const DWORD subsetIndex) const
+{
+    if (subsetIndex < m_attributeTable.size())
+    {
+        return m_attributeTable[subsetIndex].AttribId;
+    }
+
+    return subsetIndex;
+}
+
+bool MeshInstancing::IsSubsetAlphaMaterial(const DWORD subsetIndex) const
+{
+    const DWORD materialIndex = GetSubsetMaterialIndex(subsetIndex);
+    return materialIndex < m_materialUsesAlpha.size() && m_materialUsesAlpha[materialIndex];
+}
+
+HRESULT MeshInstancing::DrawInstancedSubset(const DWORD subsetIndex) const
+{
+    if (subsetIndex >= m_attributeTable.size())
+    {
+        return E_INVALIDARG;
+    }
+
+    const D3DXATTRIBUTERANGE& range = m_attributeTable[subsetIndex];
+    return Common::D3DDevice()->DrawIndexedPrimitive(D3DPT_TRIANGLELIST,
+                                                     0,
+                                                     range.VertexStart,
+                                                     range.VertexCount,
+                                                     range.FaceStart * 3,
+                                                     range.FaceCount);
 }
 
 }

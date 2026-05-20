@@ -51,6 +51,7 @@ private:
 
     std::vector<LPDIRECT3DTEXTURE9> m_pTextures;
     std::vector<bool> m_materialUsesAlpha;
+    std::vector<D3DXATTRIBUTERANGE> m_attributeTable;
 
     DWORD m_dwNumMaterials = 0;
 
@@ -76,6 +77,9 @@ private:
     void SortInstancesBackToFront();
     void UpdateInstanceBuffer();
     bool LoadPlacementCsv();
+    DWORD GetSubsetMaterialIndex(DWORD subsetIndex) const;
+    bool IsSubsetAlphaMaterial(DWORD subsetIndex) const;
+    HRESULT DrawInstancedSubset(DWORD subsetIndex) const;
 
     std::vector<InstanceData> m_instances;
     bool m_loadedPlacementCsv = false;
