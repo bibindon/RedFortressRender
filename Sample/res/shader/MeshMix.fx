@@ -171,7 +171,7 @@ bool ShouldUseAlphaCutout()
 
 bool ShouldUseWaterTextureAlpha()
 {
-    return g_waveEnable && !g_waterMirrorEnable && (g_diffuse.a <= 0.0f);
+    return g_waveEnable && g_waterMirrorEnable && (g_diffuse.a <= 0.0f);
 }
 
 float GetSurfaceAlpha(float2 uv)

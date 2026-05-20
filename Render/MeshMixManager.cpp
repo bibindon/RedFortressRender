@@ -1993,7 +1993,12 @@ LPDIRECT3DBASETEXTURE9 MeshMixManager::GetSubsetTexture(const DWORD subsetIndex)
 
 bool MeshMixManager::UsesWaterTextureAlpha() const
 {
-    if (!m_param.wave || m_param.waterMirror)
+    if (!m_param.wave)
+    {
+        return false;
+    }
+
+    if (!m_param.waterMirror)
     {
         return false;
     }
