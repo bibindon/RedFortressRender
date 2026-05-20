@@ -30,6 +30,12 @@ struct stMeshParam
     //float specularEdge = 0.8f;
     float specularEdge = 0.0f;
 
+    // フレネルを有効にするか
+    bool fresnel = true;
+
+    // フレネルの強さ
+    float fresnelIntensity = 0.08f;
+
     // 設定ダイアログのスペキュラ光の強さで上書きするか
     bool specularIntensityOverrideEnabled = true;
 

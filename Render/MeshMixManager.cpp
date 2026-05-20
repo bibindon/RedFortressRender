@@ -551,6 +551,10 @@ struct stCsvParam
     float emitIntensity = 1.0f;
     bool emitColorDefined = false;
     DWORD emitColor = 0x00ffffff;
+    bool fresnelDefined = false;
+    bool fresnel = true;
+    bool fresnelIntensityDefined = false;
+    float fresnelIntensity = 0.08f;
     bool smoothDefined = false;
     bool smooth = false;
     bool sssDefined = false;
@@ -667,6 +671,20 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
                 result.emitColorDefined = true;
                 result.emitColor = color;
             }
+        }
+        else if (key == L"fresnel")
+        {
+            result.fresnelDefined = true;
+            result.fresnel = !IsCsvFalseValue(value);
+        }
+        else if (key == L"fresnelintensity")
+        {
+            try
+            {
+                result.fresnelIntensityDefined = true;
+                result.fresnelIntensity = (std::max)(0.0f, std::stof(std::wstring(value)));
+            }
+            catch (...) {}
         }
         else if (key == L"sss")
         {
@@ -970,6 +988,16 @@ void MeshMixManager::InitializeInternal()
     if (csvParam.emitColorDefined)
     {
         m_param.emitColor = csvParam.emitColor;
+    }
+
+    if (csvParam.fresnelDefined)
+    {
+        m_param.fresnel = csvParam.fresnel;
+    }
+
+    if (csvParam.fresnelIntensityDefined)
+    {
+        m_param.fresnelIntensity = csvParam.fresnelIntensity;
     }
 
     if (csvParam.smoothDefined)
@@ -1714,6 +1742,12 @@ void MeshMixManager::Render(const bool renderAsMirrorSurface)
     hResult = sharedEffect->SetFloat("g_specularIntensity", m_param.specularIntensity);
     assert(hResult == S_OK);
 
+    hResult = sharedEffect->SetBool("g_fresnelEnable", m_param.fresnel ? TRUE : FALSE);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetFloat("g_fresnelIntensity", m_param.fresnelIntensity);
+    assert(hResult == S_OK);
+
     hResult = sharedEffect->SetFloat("g_cubeMappingRate", m_param.cubeMappingRate);
     assert(hResult == S_OK);
 
@@ -1746,6 +1780,9 @@ void MeshMixManager::Render(const bool renderAsMirrorSurface)
     hResult = sharedEffect->SetFloat("g_waveAmount", m_param.wave ? m_param.waveIntensity : 0.0f);
     assert(hResult == S_OK);
     hResult = sharedEffect->SetFloat("g_waveSpeed", 10.0f);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetFloat("g_waveDensity", 20.0f);
     assert(hResult == S_OK);
 
     if (m_param.pointLight)

@@ -16,6 +16,8 @@ float4 g_lightColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 float4 g_specularColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 float2 g_screenSize = { 1600.0f, 900.0f };
+bool g_fresnelEnable = true;
+float g_fresnelIntensity = 0.08f;
 
 // スペキュラ光の鋭さ
 //float g_specularPower = 16.0f;
@@ -178,18 +180,19 @@ void ApplyAlphaCutout(float2 uv)
 //---------------------------------------------------------
 bool  g_swayEnable = false;
 float g_swayAmount = 0.5f;
-float g_swaySpeed  = 2.0f;
+float g_swaySpeed  = 5.0f;
 float g_swayHeight = 3.0f;
 bool  g_waveEnable = false;
 float g_waveAmount = 0.1f;
 float g_waveSpeed  = 10.0f;
+float g_waveDensity = 6.5f;
 
 float CalcWaveHeight(float x, float z)
 {
-    float wavePrimary = sin((x * 6.5f) + (g_time * g_waveSpeed * 1.7f));
-    float waveSecondary = cos((z * 6.5f) + (g_time * g_waveSpeed * 1.2f));
+    float wavePrimary = sin((x * g_waveDensity) + (g_time * g_waveSpeed * 1.7f));
+    float waveSecondary = cos((z * g_waveDensity) + (g_time * g_waveSpeed * 1.2f));
     float waveGrid = wavePrimary * waveSecondary;
-    float waveDiagonal = sin(((x + z) * 4.8f) + (g_time * g_waveSpeed * 2.1f));
+    float waveDiagonal = sin(((x + z) * (g_waveDensity * 0.7384615f)) + (g_time * g_waveSpeed * 2.1f));
     return ((waveGrid * 0.85f) + (waveDiagonal * 0.15f)) * g_waveAmount;
 }
 
@@ -328,6 +331,12 @@ void AccumulateSingleLightSample(float3 samplePos,
 
     diffuseContribution = lightColor * diff;
     specularContribution = lightColor * spec;
+}
+
+float CalcFresnelFactor(float3 normal, float3 cameraDir)
+{
+    float viewDot = saturate(dot(normalize(normal), normalize(cameraDir)));
+    return pow(1.0f - viewDot, 5.0f);
 }
 
 //---------------------------------------------------------
@@ -483,6 +492,7 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
     //-----------------------------------------------------------------------
     float NdotL = 0.f;
     float NdotH = 0.f;
+    float3 shadingNormal = normal;
 
     // 法線マッピングを行うか
     if (g_bNormalMapping)
@@ -500,6 +510,7 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
 
         // Lambert 拡散（光線方向）
         // saturate関数をここで実行するとマイナス成分が消える。
+        shadingNormal = normalInWorld;
         NdotL = dot(normalInWorld, lightDir);
         NdotH = saturate(dot(normalInWorld, halfVector));
     }
@@ -564,8 +575,10 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
     }
 
     float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_specularColor.xyz * g_lightColor.rgb;
+    float fresnel = g_fresnelEnable ? (CalcFresnelFactor(shadingNormal, cameraDir) * g_fresnelIntensity) : 0.0f;
+    float3 fresnelColor = g_specularColor.xyz * fresnel;
 
-    float3 finalColor = ambient.rgb + lambert + specular;
+    float3 finalColor = ambient.rgb + lambert + specular + fresnelColor;
 
     if (g_bSSS)
     {
@@ -615,7 +628,8 @@ void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
     float3 cubeColor = cubeSample.rgb;
     float NdotH = saturate(dot(normal, halfVector));
     float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_specularColor.xyz * g_lightColor.rgb;
-    outColor = float4(cubeColor + specular, saturate(g_cubeMappingRate * cubeSample.a));
+    float fresnel = g_fresnelEnable ? (CalcFresnelFactor(normal, cameraDir) * g_fresnelIntensity) : 0.0f;
+    outColor = float4(cubeColor + specular + (g_specularColor.xyz * fresnel), saturate(g_cubeMappingRate * cubeSample.a));
 }
 
 //-------------------------------------------------------------
@@ -645,8 +659,9 @@ void PixelShaderGlass(in float4 inPosition     : POSITION,
     float3 cubeColor = cubeSample.rgb;
     float NdotH = saturate(dot(normal, halfVector));
     float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_specularColor.xyz * g_lightColor.rgb;
+    float fresnel = g_fresnelEnable ? (CalcFresnelFactor(normal, cameraDir) * g_fresnelIntensity) : 0.0f;
 
-    outColor = float4(cubeColor + specular, saturate(g_cubeMappingRate * cubeSample.a));
+    outColor = float4(cubeColor + specular + (g_specularColor.xyz * fresnel), saturate(g_cubeMappingRate * cubeSample.a));
 }
 
 //-------------------------------------------------------------
@@ -758,7 +773,10 @@ void PixelShaderEmit(in  float4 inPosition     : POSITION,
 {
     ApplyAlphaCutout(inTexCoord);
     float3 albedo = tex2D(g_textureSampler, inTexCoord).rgb * g_diffuse.rgb;
-    outColor = float4(albedo * g_emitColor.rgb * g_emitIntensity, 1.0f);
+    float3 normal = normalize(inNormalWorld);
+    float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
+    float fresnel = g_fresnelEnable ? (CalcFresnelFactor(normal, cameraDir) * g_fresnelIntensity) : 0.0f;
+    outColor = float4((albedo * g_emitColor.rgb * g_emitIntensity) + (g_specularColor.xyz * fresnel), 1.0f);
 }
 
 void VertexShaderMirror(in  float4 inPosition   : POSITION,
