@@ -193,17 +193,22 @@ float CalcWaveHeight(float x, float z)
     return ((waveGrid * 0.85f) + (waveDiagonal * 0.15f)) * g_waveAmount;
 }
 
-float2 CalcWaveGradient(float x, float z)
+float3 CalcWaveNormal(float x, float z)
 {
-    float wavePrimaryPhase = (x * 6.5f) + (g_time * g_waveSpeed * 1.7f);
-    float waveSecondaryPhase = (z * 6.5f) + (g_time * g_waveSpeed * 1.2f);
-    float waveDiagonalPhase = ((x + z) * 4.8f) + (g_time * g_waveSpeed * 2.1f);
+    const float sampleOffset = 0.05f;
 
-    float dHeightDx = ((cos(wavePrimaryPhase) * 6.5f) * cos(waveSecondaryPhase) * 0.85f
-                      + cos(waveDiagonalPhase) * 4.8f * 0.15f) * g_waveAmount;
-    float dHeightDz = ((sin(wavePrimaryPhase) * (-sin(waveSecondaryPhase) * 6.5f) * 0.85f)
-                      + cos(waveDiagonalPhase) * 4.8f * 0.15f) * g_waveAmount;
-    return float2(dHeightDx, dHeightDz);
+    float heightLeft = CalcWaveHeight(x - sampleOffset, z);
+    float heightRight = CalcWaveHeight(x + sampleOffset, z);
+    float heightBack = CalcWaveHeight(x, z - sampleOffset);
+    float heightFront = CalcWaveHeight(x, z + sampleOffset);
+
+    float3 tangentX = normalize(float3(sampleOffset * 2.0f,
+                                       heightRight - heightLeft,
+                                       0.0f));
+    float3 tangentZ = normalize(float3(0.0f,
+                                       heightFront - heightBack,
+                                       sampleOffset * 2.0f));
+    return normalize(cross(tangentZ, tangentX));
 }
 
 //---------------------------------------------------------
@@ -358,13 +363,14 @@ void VertexShader1(in  float4 inPosition     : POSITION,
     if (g_waveEnable)
     {
         float4 pos = inPosition;
-        float2 waveGradient = CalcWaveGradient(pos.x, pos.z);
         pos.y += CalcWaveHeight(pos.x, pos.z);
         inPosition = pos;
 
-        localTangent = normalize(float3(1.0f, waveGradient.x, 0.0f));
-        localBinorm = normalize(float3(0.0f, waveGradient.y, 1.0f));
-        localNormal = normalize(cross(localBinorm, localTangent));
+        localNormal = CalcWaveNormal(pos.x, pos.z);
+        float3 referenceAxis = (abs(localNormal.y) < 0.999f) ? float3(0.0f, 1.0f, 0.0f)
+                                                             : float3(1.0f, 0.0f, 0.0f);
+        localTangent = normalize(cross(referenceAxis, localNormal));
+        localBinorm = normalize(cross(localNormal, localTangent));
     }
 
     if (g_swayEnable)
