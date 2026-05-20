@@ -160,6 +160,19 @@ float3 IncreaseSaturation(float3 color, float amount)
 
 float g_time = 0.0f;
 
+bool ShouldUseAlphaCutout()
+{
+    return g_diffuse.a <= 0.0f;
+}
+
+void ApplyAlphaCutout(float2 uv)
+{
+    if (ShouldUseAlphaCutout())
+    {
+        clip(tex2D(g_textureSampler, uv).a - 0.5f);
+    }
+}
+
 //---------------------------------------------------------
 // æºã‚‰ã—ã‚¨ãƒ•ã‚§ã‚¯ãƒˆç”¨ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 //---------------------------------------------------------
@@ -414,7 +427,8 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
                                         invViewTS,
                                         invParallaxOffsetTS);
     }
-    
+
+    ApplyAlphaCutout(inTexCoord);
     float3 albedo = tex2D(g_textureSampler, inTexCoord).rgb * g_diffuse.rgb;
 
     //-----------------------------------------------------------------------
@@ -541,6 +555,8 @@ void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
 {
     outColor = float4(0, 0, 0, 0);
 
+    ApplyAlphaCutout(inTexCoord);
+
     float3 normal = normalize(inNormalWorld);
     float3 lightDir = normalize(g_lightDir.xyz);
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
@@ -568,6 +584,8 @@ void PixelShaderGlass(in float4 inPosition     : POSITION,
                       out float4 outColor      : COLOR)
 {
     outColor = float4(0, 0, 0, 0);
+
+    ApplyAlphaCutout(inTexCoord);
 
     float3 normal = normalize(inNormalWorld);
     float3 lightDir = normalize(g_lightDir.xyz);
@@ -625,6 +643,7 @@ void PixelShaderPointLight(in  float4 inPosition            : POSITION,
                                 invParallaxOffsetTS );
     }
 
+    ApplyAlphaCutout(uv);
     float3 albedo = tex2D(g_textureSampler, uv).rgb * g_diffuse.rgb;
 
     float3 N = normalWS;
@@ -690,6 +709,7 @@ void PixelShaderEmit(in  float4 inPosition     : POSITION,
                      in  float2 invParallaxOffsetTS  : TEXCOORD8,
                      out float4 outColor       : COLOR)
 {
+    ApplyAlphaCutout(inTexCoord);
     float3 albedo = tex2D(g_textureSampler, inTexCoord).rgb * g_diffuse.rgb;
     outColor = float4(albedo * g_emitColor.rgb * g_emitIntensity, 1.0f);
 }

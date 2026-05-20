@@ -292,6 +292,7 @@
 #define IDC_STATIC_ENVMAP_BLEND_LABEL   1302
 #define IDC_EDIT_ENVMAP_BLEND           1303
 #define IDC_SLIDER_ENVMAP_BLEND         1304
+#define IDC_CHECK_MIX_MESH_HIGH_QUALITY 1305
 
 // Next default values for new objects
 // 
@@ -299,7 +300,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1305
+#define _APS_NEXT_CONTROL_VALUE         1306
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

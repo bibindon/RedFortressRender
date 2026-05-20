@@ -38,6 +38,7 @@ HWND g_hSettingsDialog = NULL;
 std::wstring g_selectedMixMeshPath;
 std::wstring g_selectedPbrMeshPath;
 std::wstring g_selectedMeshInstancingPath;
+bool g_bMeshMixHighQuality = false;
 bool g_bMeshInstancingHighQuality = true;
 std::wstring g_selectedMeshPath;
 std::wstring g_selectedAnimMeshPath;

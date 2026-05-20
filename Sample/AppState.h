@@ -214,6 +214,7 @@ extern HWND g_hSettingsDialog;
 extern std::wstring g_selectedMixMeshPath;
 extern std::wstring g_selectedPbrMeshPath;
 extern std::wstring g_selectedMeshInstancingPath;
+extern bool g_bMeshMixHighQuality;
 extern bool g_bMeshInstancingHighQuality;
 extern std::wstring g_selectedMeshPath;
 extern std::wstring g_selectedAnimMeshPath;

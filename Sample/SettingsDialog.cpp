@@ -1407,6 +1407,18 @@ void RefreshMeshInstancingRenderMode(HWND hDlg)
                    checkState);
 }
 
+void RefreshMeshMixRenderMode(HWND hDlg)
+{
+    UINT checkState = BST_UNCHECKED;
+    if (g_bMeshMixHighQuality)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg,
+                   IDC_CHECK_MIX_MESH_HIGH_QUALITY,
+                   checkState);
+}
+
 void RefreshResolutionControls(HWND hDlg)
 {
     HWND combo = GetDlgItem(hDlg, IDC_COMBO_RESOLUTION);
@@ -1766,6 +1778,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshSaturateControls(hDlg);
     RefreshSelectedMeshPaths(hDlg);
     RefreshMixMeshShaderMode(hDlg);
+    RefreshMeshMixRenderMode(hDlg);
     RefreshMeshInstancingRenderMode(hDlg);
     RefreshResolutionControls(hDlg);
     RefreshLoadedModelListView(hDlg);
@@ -3079,6 +3092,14 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
                 (IsDlgButtonChecked(hDlg, IDC_CHECK_MESH_INSTANCING_HIGH_QUALITY) == BST_CHECKED);
             ApplyMeshInstancingRenderMode();
             RefreshMeshInstancingRenderMode(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_MIX_MESH_HIGH_QUALITY)
+        {
+            g_bMeshMixHighQuality =
+                (IsDlgButtonChecked(hDlg, IDC_CHECK_MIX_MESH_HIGH_QUALITY) == BST_CHECKED);
+            RefreshMeshMixRenderMode(hDlg);
             return TRUE;
         }
 
