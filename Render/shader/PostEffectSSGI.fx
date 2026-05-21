@@ -15,6 +15,7 @@ float g_depthCompareThreshold = 0.0f;
 float g_sampleDepthBiasDistance = 0.1f;
 float g_targetNormalBiasScale = 1.0f;
 float g_targetDepthBiasScale = 1.0f;
+float g_minThickness = 0.10f;
 
 texture texZ;
 texture texNormal;
@@ -268,6 +269,7 @@ void ComputeGiSample(float2 baseUv,
     float sampleDepthBias = depthDelta * targetNormalDepthBiasFactor * g_targetDepthBiasScale;
     float adjustedSampleDepth = max(g_fNear, sampleDepth + sampleDepthBias);
     float thickness = tex2Dlod(sampThickness, float4(sampleUv, 0.0f, 0.0f)).r;
+    thickness = max(thickness, g_minThickness);
     float frontDepthWithMargin = adjustedSampleDepth - g_depthCompareThreshold;
     float backDepthWithMargin = adjustedSampleDepth + g_depthCompareThreshold;
     if (g_useThickness)
