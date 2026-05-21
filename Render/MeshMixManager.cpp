@@ -594,6 +594,8 @@ struct stCsvParam
     float cubeMappingRate = 1.0f;
     bool cubeMappingGaussDefined = false;
     float cubeMappingGauss = 0.0f;
+    bool autoHideDefined = false;
+    bool autoHide = false;
 };
 
 stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
@@ -732,6 +734,11 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
         {
             result.waveDefined = true;
             result.wave = IsCsvTrueValue(value);
+        }
+        else if (key == L"autohide")
+        {
+            result.autoHideDefined = true;
+            result.autoHide = IsCsvTrueValue(value);
         }
         else if (key == L"waveintensity")
         {
@@ -1100,6 +1107,11 @@ void MeshMixManager::InitializeInternal()
     if (csvParam.cubeMappingGaussDefined)
     {
         m_param.cubeMappingGauss = csvParam.cubeMappingGauss;
+    }
+
+    if (csvParam.autoHideDefined)
+    {
+        m_param.autoHide = csvParam.autoHide;
     }
 
     if (m_param.mirror || m_param.waterMirror)
@@ -1629,6 +1641,16 @@ void MeshMixManager::Render(const bool renderAsMirrorSurface)
     if (!m_bLoaded || !m_enabled)
     {
         return;
+    }
+
+    if (m_param.autoHide)
+    {
+        const D3DXVECTOR3 cameraPos = Camera::GetEyePos();
+        const D3DXVECTOR3 distance = cameraPos - m_pos;
+        if (D3DXVec3LengthSq(&distance) > (30.0f * 30.0f))
+        {
+            return;
+        }
     }
 
     LPD3DXEFFECT sharedEffect = GetSharedEffect();

@@ -123,6 +123,9 @@ struct stMeshParam
     //float cubeMappingGauss = 0.9f;
     float cubeMappingGauss = 0.0f;
 
+    // カメラから遠いときに自動で非表示にするか
+    bool autoHide = false;
+
     // 視差遮蔽マッピングを行うか
     // デコボコが本当にあるように見せる
     // 視差遮蔽マッピングを行うが、法線マッピングを行わない、ということは理論上可能。
