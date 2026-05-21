@@ -1,7 +1,9 @@
 ﻿#include "PostEffectStarBurst.h"
 
 #include <algorithm>
+#include <cmath>
 
+#include "Camera.h"
 #include "Util.h"
 
 namespace NSRender
@@ -76,6 +78,23 @@ void PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource,
     }
     m_d3dEffect->SetFloatArray("g_BurstWeightsA", burstWeightsA, 4);
     m_d3dEffect->SetFloatArray("g_BurstWeightsB", burstWeightsB, 4);
+
+    D3DXVECTOR3 cameraForward = Camera::GetLookAtPos() - Camera::GetEyePos();
+    cameraForward.y = 0.0f;
+    if (D3DXVec3LengthSq(&cameraForward) <= 0.000001f)
+    {
+        cameraForward = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
+    }
+    else
+    {
+        D3DXVec3Normalize(&cameraForward, &cameraForward);
+    }
+
+    const float cameraYaw = std::atan2(cameraForward.x, cameraForward.z);
+    const float starBurstAngle = -cameraYaw + D3DX_PI * 0.25f;
+    const float starBurstDirection[2] = { static_cast<float>(std::cos(starBurstAngle)),
+                                          static_cast<float>(std::sin(starBurstAngle)) };
+    m_d3dEffect->SetFloatArray("g_StarBurstDirection", starBurstDirection, 2);
 
     DrawFullscreenQuad(renderSource, m_texDownsample[0], "BrightPass");
 

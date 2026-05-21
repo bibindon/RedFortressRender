@@ -99,6 +99,7 @@ sampler BlurSampler6 = sampler_state
 
 float g_Threshold = 2.8f;
 float2 g_TexelSize;
+float2 g_StarBurstDirection = float2(1.0f, 1.0f);
 float4 g_BurstWeightsA = float4(0.32f, 0.23f, 0.16f, 0.11f);
 float4 g_BurstWeightsB = float4(0.08f, 0.06f, 0.04f, 0.0f);
 
@@ -121,7 +122,8 @@ float4 DownsamplePS(float2 uv : TEXCOORD0) : COLOR
 float4 DiagonalBlur3x3PS(float2 uv : TEXCOORD0) : COLOR
 {
     const float2 texel = g_TexelSize;
-    const float2 diagonalStep = texel * float2(1.0f, 1.0f);
+    const float2 direction = normalize(g_StarBurstDirection);
+    const float2 diagonalStep = texel * direction;
 
     float4 sum = float4(0.0f, 0.0f, 0.0f, 0.0f);
     float weightSum = 0.0f;
