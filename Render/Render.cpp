@@ -1893,6 +1893,7 @@ int Render::AddMeshPBR(const std::wstring& filePath,
                        const D3DXVECTOR3& rot,
                        const float scale,
                        const float radius,
+                       const std::wstring& envMapPath,
                        const bool async)
 {
     auto param = GetMeshPBRParamPreset(eMeshPBRParamPreset::GRASS);
@@ -1908,6 +1909,11 @@ int Render::AddMeshPBR(const std::wstring& filePath,
     param.sss = m_meshMixSSSEnabled;
     param.sssIntensity = m_meshMixSSSIntensity;
     param.sssColor = m_meshMixSSSColor;
+    param.envMapTexturePath = envMapPath;
+    if (!envMapPath.empty())
+    {
+        param.cubeMapping = true;
+    }
     (void)radius;
 
     auto mesh = MeshPBRManager(filePath, pos, rot, scale, param);

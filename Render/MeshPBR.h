@@ -53,6 +53,7 @@ struct stMeshPBRParam
     float envMaxMipLevel = 5.0f;
     float envDiffuseIntensity = 0.8f;
     float envDiffuseMipLevel = 3.0f;
+    std::wstring envMapTexturePath;
 };
 
 enum class eMeshPBRParamPreset

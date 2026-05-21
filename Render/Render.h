@@ -180,6 +180,7 @@ public:
                    const D3DXVECTOR3& rot,
                    const float scale,
                    const float radius = -1.f,
+                   const std::wstring& envMapPath = L"",
                    const bool async = true);
     bool RemoveMeshPBR(int id);
     int AddMeshMixSkinAnim(const std::wstring& filePath,

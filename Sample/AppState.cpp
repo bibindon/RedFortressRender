@@ -737,36 +737,6 @@ std::wstring Unquote(const std::wstring& text)
     return text;
 }
 
-std::wstring QuoteCsvValue(const std::wstring& text)
-{
-    std::wstring escapedText;
-    escapedText.reserve(text.size() + 2);
-    escapedText.push_back(L'"');
-    for (const wchar_t ch : text)
-    {
-        if (ch == L'"')
-        {
-            escapedText.push_back(L'"');
-        }
-
-        escapedText.push_back(ch);
-    }
-    escapedText.push_back(L'"');
-    return escapedText;
-}
-
-std::wstring ReplaceFileExtension(const std::wstring& filePath, const wchar_t* newExtension)
-{
-    const std::size_t slashPos = filePath.find_last_of(L"\\/");
-    const std::size_t dotPos = filePath.find_last_of(L'.');
-    if (dotPos == std::wstring::npos || (slashPos != std::wstring::npos && dotPos < slashPos))
-    {
-        return filePath + newExtension;
-    }
-
-    return filePath.substr(0, dotPos) + newExtension;
-}
-
 bool ResolvePathFromCsvEntry(const std::wstring& csvDirectoryPath,
                              const std::wstring& sourcePath,
                              std::wstring& resolvedPath)
@@ -823,45 +793,6 @@ std::vector<std::wstring> SplitCsvLine(const std::wstring& line)
     return fields;
 }
 
-void UpdateOrAppendCsvKeyValue(std::vector<std::wstring>& lines,
-                               const std::wstring& key,
-                               const std::wstring& outputLine)
-{
-    const auto toLowerCopy = [](std::wstring text)
-    {
-        std::transform(text.begin(), text.end(), text.begin(), [](const wchar_t ch)
-        {
-            return static_cast<wchar_t>(std::towlower(ch));
-        });
-        return text;
-    };
-
-    const std::wstring lowerKey = toLowerCopy(Trim(key));
-
-    for (std::wstring& line : lines)
-    {
-        const std::wstring trimmedLine = Trim(line);
-        if (trimmedLine.empty() || trimmedLine.front() == L'#')
-        {
-            continue;
-        }
-
-        const std::size_t commaPos = trimmedLine.find(L',');
-        const std::wstring lineKey = toLowerCopy(Trim(commaPos == std::wstring::npos
-                                                        ? trimmedLine
-                                                        : trimmedLine.substr(0, commaPos)));
-        if (lineKey != lowerKey)
-        {
-            continue;
-        }
-
-        line = outputLine;
-        return;
-    }
-
-    lines.push_back(outputLine);
-}
-
 bool SpawnMeshAtTransform(const std::wstring& filePath,
                           const D3DXVECTOR3& pos,
                           const float yawDegrees)
@@ -914,7 +845,8 @@ bool SpawnMeshPBRAtTransform(const std::wstring& filePath,
                                              pos,
                                              rotationRadians,
                                              g_modelLoadScale,
-                                             1.0f);
+                                             1.0f,
+                                             g_selectedPbrEnvMapPath);
     RegisterLoadedModel(L"MeshPBRManager", filePath, pos, g_modelLoadScale, renderId);
     return true;
 }
