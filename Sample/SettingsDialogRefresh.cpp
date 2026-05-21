@@ -667,6 +667,18 @@ void RefreshSSAOSampleCountControls(HWND hDlg)
     EnableWindow(GetDlgItem(hDlg, IDC_COMBO_SSAO_SAMPLE_COUNT), enabled);
 }
 
+void RefreshSSAORandomSamplingDirectionControls(HWND hDlg)
+{
+    UINT checkState = BST_UNCHECKED;
+    if (g_bSSAORandomSamplingDirection)
+    {
+        checkState = BST_CHECKED;
+    }
+
+    CheckDlgButton(hDlg, IDC_CHECK_SSAO_RANDOM_SAMPLING_DIRECTION, checkState);
+    EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SSAO_RANDOM_SAMPLING_DIRECTION), g_bSSAO);
+}
+
 void RefreshSSAODepthScaledSampleDistanceControls(HWND hDlg)
 {
     UINT checkState = BST_UNCHECKED;

@@ -537,6 +537,11 @@ void ApplySSAOSampleCount()
     g_Render.SetPostEffectSSAOSampleCount(g_ssaoSampleCount);
 }
 
+void ApplySSAORandomSamplingDirection()
+{
+    g_Render.SetPostEffectSSAORandomSamplingDirection(g_bSSAORandomSamplingDirection);
+}
+
 void ApplySSAODepthScaledSampleDistance()
 {
     g_Render.SetPostEffectSSAODepthScaledSampleDistance(g_bSSAODepthScaledSampleDistance);

@@ -23,6 +23,7 @@ public:
     void SetSaturationBoost(const float saturationBoost);
     void SetSampleRadius(const float sampleRadius);
     void SetSampleCount(const int sampleCount);
+    void SetRandomSamplingDirectionEnabled(const bool enabled);
     void SetDepthScaledSampleDistanceEnabled(const bool enabled);
     void SetBlurEnabled(const bool enabled);
     void SetBlurKernelSize(const int kernelSize);
@@ -39,6 +40,7 @@ private:
     float m_saturationBoost = 0.30f;
     float m_sampleRadius = 4.0f;
     int m_sampleCount = 16;
+    bool m_randomSamplingDirectionEnabled = true;
     bool m_depthScaledSampleDistanceEnabled = false;
     bool m_blurEnabled = true;
     int m_blurKernelSize = 21;

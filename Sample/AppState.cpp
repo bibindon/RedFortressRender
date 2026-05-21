@@ -63,6 +63,7 @@ bool g_bSSAO = true;
 bool g_bSSGI = false;
 bool g_bSSAOBlur = false;
 bool g_bSSGIBlur = true;
+bool g_bSSAORandomSamplingDirection = true;
 bool g_bSSAODepthScaledSampleDistance = false;
 bool g_bFog = true;
 bool g_bHeightFog = true;
@@ -1750,6 +1751,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_bSSAODepthScaledSampleDistance = (std::stoi(value) != 0);
             }
+            else if (key == L"SSAORandomSamplingDirectionEnable")
+            {
+                g_bSSAORandomSamplingDirection = (std::stoi(value) != 0);
+            }
             else if (key == L"SSAOTexSize")
             {
                 if (value == L"1/2")
@@ -2112,6 +2117,7 @@ void ApplyAllSampleSettings()
     ApplySSAOShadowStrength();
     ApplySSAOShadowSaturationBoost();
     ApplySSAOSampleCount();
+    ApplySSAORandomSamplingDirection();
     ApplySSAODepthScaledSampleDistance();
     ApplySSAOSampleRadius();
     ApplySSAOBlurKernelSize();

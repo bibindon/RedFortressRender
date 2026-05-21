@@ -298,6 +298,16 @@ void Render::ApplySettings()
         }
     }
 
+    const auto ssaoRandomSamplingDirectionEnable = m_settings.find(L"SSAORandomSamplingDirectionEnable");
+    if (ssaoRandomSamplingDirectionEnable != m_settings.end())
+    {
+        bool enabled = true;
+        if (TryParseBoolSetting(ssaoRandomSamplingDirectionEnable->second, enabled))
+        {
+            SetPostEffectSSAORandomSamplingDirection(enabled);
+        }
+    }
+
     const auto ssaoTexSize = m_settings.find(L"SSAOTexSize");
     if (ssaoTexSize != m_settings.end())
     {
@@ -2657,6 +2667,11 @@ void Render::SetPostEffectSSAOSampleCount(const int sampleCount)
 {
     const int normalizedSampleCount = (std::max)(1, (std::min)(sampleCount, 64));
     m_postEffectSSAO.SetSampleCount(normalizedSampleCount);
+}
+
+void Render::SetPostEffectSSAORandomSamplingDirection(const bool enabled)
+{
+    m_postEffectSSAO.SetRandomSamplingDirectionEnabled(enabled);
 }
 
 void Render::SetPostEffectSSAODepthScaledSampleDistance(const bool enabled)

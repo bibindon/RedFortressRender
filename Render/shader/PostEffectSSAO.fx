@@ -10,6 +10,7 @@ float2 g_invSize;
 float2 g_aoInvSize;
 float g_sampleRadius = 1.0f;
 int g_sampleCount = 16;
+bool g_useRandomSamplingDirection = true;
 bool g_enableDepthScaledSampleDistance = false;
 float g_shadowStrength = 1.0f;
 float g_aoSaturationBoost = 0.30f;
@@ -94,6 +95,60 @@ float3 DecodeWorldNormal(float3 enc)
     return normalize(enc * 2.0f - 1.0f);
 }
 
+float Random01(float2 seed)
+{
+    return frac(sin(dot(seed, float2(12.9898f, 78.233f))) * 43758.5453f);
+}
+
+void BuildViewSpaceBasis(float3 normal, out float3 tangent, out float3 bitangent)
+{
+    float3 helperAxis = float3(0.0f, 0.0f, 1.0f);
+    if (abs(normal.z) > 0.999f)
+    {
+        helperAxis = float3(1.0f, 0.0f, 0.0f);
+    }
+
+    tangent = normalize(cross(helperAxis, normal));
+    bitangent = normalize(cross(normal, tangent));
+}
+
+float3 SampleRandomHemisphereDirection(float3 normal, float2 randomPair)
+{
+    const float kTwoPi = 6.2831853f;
+    float azimuth = kTwoPi * randomPair.x;
+    float cosTheta = randomPair.y;
+    float sinTheta = sqrt(saturate(1.0f - cosTheta * cosTheta));
+
+    float3 localDirection = float3(cos(azimuth) * sinTheta,
+                                   sin(azimuth) * sinTheta,
+                                   cosTheta);
+
+    float3 tangent = float3(0.0f, 0.0f, 0.0f);
+    float3 bitangent = float3(0.0f, 0.0f, 0.0f);
+    BuildViewSpaceBasis(normal, tangent, bitangent);
+
+    float3 sampleDirection = tangent * localDirection.x +
+                             bitangent * localDirection.y +
+                             normal * localDirection.z;
+    return normalize(sampleDirection);
+}
+
+float3 ComputeSampleDirection(float2 baseUv,
+                              float3 currentNormal,
+                              float index)
+{
+    if (!g_useRandomSamplingDirection)
+    {
+        return currentNormal;
+    }
+
+    float2 sampleSeed = baseUv / g_invSize + float2(index * 13.37f,
+                                                     index * 7.91f);
+    float2 randomPair = float2(Random01(sampleSeed + float2(17.0f, 59.4f)),
+                               Random01(sampleSeed + float2(83.1f, 11.7f)));
+    return SampleRandomHemisphereDirection(currentNormal, randomPair);
+}
+
 float3 GetViewPosition(float2 uv)
 {
     float viewDepth = GetViewDepth(uv);
@@ -164,7 +219,8 @@ float2 ComputeOcclusionSample(float2 baseUv,
     distanceScale += 0.1f * normalizedDepth;
 
     float sampleDistanceScaled = sampleDistance * distanceScale;
-    float3 sampleViewPosition = currentViewPosition + currentNormal * sampleDistanceScaled;
+    float3 sampleDirection = ComputeSampleDirection(baseUv, currentNormal, index);
+    float3 sampleViewPosition = currentViewPosition + sampleDirection * sampleDistanceScaled;
     if (sampleViewPosition.z <= 0.0f)
     {
         return float2(0.0f, 0.0f);
@@ -246,13 +302,7 @@ void InitializeAOSampling(VS_OUT i,
     currentViewPosition = GetViewPosition(i.uv);
     currentNormal = GetViewNormal(i.uv);
 
-    float3 up = float3(0.0f, 1.0f, 0.0f);
-    if (abs(currentNormal.z) < 0.999f)
-    {
-        up = float3(0.0f, 0.0f, 1.0f);
-    }
-    tangent = normalize(cross(up, currentNormal));
-    bitangent = cross(currentNormal, tangent);
+    BuildViewSpaceBasis(currentNormal, tangent, bitangent);
 }
 
 float4 PS_AO4(VS_OUT i) : COLOR0

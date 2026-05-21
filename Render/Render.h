@@ -305,6 +305,7 @@ public:
     void SetPostEffectSSAOShadowStrength(const float shadowStrength);
     void SetPostEffectSSAOSaturationBoost(const float saturationBoost);
     void SetPostEffectSSAOSampleCount(const int sampleCount);
+    void SetPostEffectSSAORandomSamplingDirection(const bool enabled);
     void SetPostEffectSSAODepthScaledSampleDistance(const bool enabled);
     void SetPostEffectSSAOSampleRadius(const float sampleRadius);
     void SetPostEffectSSAOBlurKernelSize(const int kernelSize);

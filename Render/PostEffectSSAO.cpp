@@ -137,6 +137,7 @@ void PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_fxSSAO->SetTexture("texThickness", texRenderTargetThickness);
     m_fxSSAO->SetFloat("g_sampleRadius", m_sampleRadius);
     m_fxSSAO->SetInt("g_sampleCount", m_sampleCount);
+    m_fxSSAO->SetBool("g_useRandomSamplingDirection", m_randomSamplingDirectionEnabled);
     m_fxSSAO->SetBool("g_enableDepthScaledSampleDistance", m_depthScaledSampleDistanceEnabled);
     m_fxSSAO->SetFloat("g_depthCompareThreshold", 0.0f);
     m_fxSSAO->SetFloat("g_depthBiasScale", 1.0f);
@@ -245,6 +246,11 @@ void PostEffectSSAO::SetSampleRadius(const float sampleRadius)
 void PostEffectSSAO::SetSampleCount(const int sampleCount)
 {
     m_sampleCount = NormalizeSampleCount(sampleCount);
+}
+
+void PostEffectSSAO::SetRandomSamplingDirectionEnabled(const bool enabled)
+{
+    m_randomSamplingDirectionEnabled = enabled;
 }
 
 void PostEffectSSAO::SetDepthScaledSampleDistanceEnabled(const bool enabled)

@@ -59,6 +59,7 @@ void RefreshSSGIIndirectLightMaxControls(HWND hDlg);
 void RefreshSSAOShadowStrengthControls(HWND hDlg);
 void RefreshSSAOShadowSaturationControls(HWND hDlg);
 void RefreshSSAOSampleCountControls(HWND hDlg);
+void RefreshSSAORandomSamplingDirectionControls(HWND hDlg);
 void RefreshSSAODepthScaledSampleDistanceControls(HWND hDlg);
 void RefreshSSAOSampleRadiusControls(HWND hDlg);
 void RefreshSSAOBlurKernelSizeControls(HWND hDlg);
@@ -1802,6 +1803,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshSSAOShadowStrengthControls(hDlg);
     RefreshSSAOShadowSaturationControls(hDlg);
     RefreshSSAOSampleCountControls(hDlg);
+    RefreshSSAORandomSamplingDirectionControls(hDlg);
     RefreshSSAODepthScaledSampleDistanceControls(hDlg);
     RefreshSSAOTexSizeControls(hDlg);
     RefreshSSAOCompositeGaussian3x3Controls(hDlg);
@@ -1835,6 +1837,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshSSAOShadowStrengthControls(hDlg);
     RefreshSSAOShadowSaturationControls(hDlg);
     RefreshSSAOSampleCountControls(hDlg);
+    RefreshSSAORandomSamplingDirectionControls(hDlg);
     RefreshSSAODepthScaledSampleDistanceControls(hDlg);
     RefreshSSAOTexSizeControls(hDlg);
     RefreshSSAOCompositeGaussian3x3Controls(hDlg);
@@ -3271,6 +3274,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             RefreshSSAOShadowStrengthControls(hDlg);
             RefreshSSAOShadowSaturationControls(hDlg);
             RefreshSSAOSampleCountControls(hDlg);
+            RefreshSSAORandomSamplingDirectionControls(hDlg);
             RefreshSSAOSampleRadiusControls(hDlg);
             RefreshSSAOBlurKernelSizeControls(hDlg);
             RefreshSSAODepthScaledSampleDistanceControls(hDlg);
@@ -3308,6 +3312,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             ApplySSAOBlur();
             RefreshSSAOBlurControls(hDlg);
             RefreshSSAOBlurKernelSizeControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_SSAO_RANDOM_SAMPLING_DIRECTION)
+        {
+            g_bSSAORandomSamplingDirection =
+                (IsDlgButtonChecked(hDlg, IDC_CHECK_SSAO_RANDOM_SAMPLING_DIRECTION) == BST_CHECKED);
+            ApplySSAORandomSamplingDirection();
+            RefreshSSAORandomSamplingDirectionControls(hDlg);
             return TRUE;
         }
 
