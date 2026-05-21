@@ -100,6 +100,8 @@ float g_ssgiIndirectLightStrength = 1.0f;
 float g_ssgiIndirectLightMaxContribution = 1.0f;
 float g_cameraNearPlane = 0.1f;
 float g_cameraFarPlane = 30'000.0f;
+float g_cameraShakeDurationSeconds = 1.0f;
+float g_cameraShakeIntensity = 0.12f;
 float g_gbufferNearPlane = 0.1f;
 float g_gbufferFarPlane = 30'000.0f;
 float g_halfLambertShadowSaturation = 1.0f;
@@ -293,6 +295,16 @@ float ClampCameraNearPlane(const float nearPlane)
 float ClampCameraFarPlane(const float farPlane)
 {
     return (std::max)(CAMERA_FAR_MIN, (std::min)(farPlane, CAMERA_FAR_MAX));
+}
+
+float ClampCameraShakeDuration(const float durationSeconds)
+{
+    return (std::max)(CAMERA_SHAKE_DURATION_MIN, (std::min)(durationSeconds, CAMERA_SHAKE_DURATION_MAX));
+}
+
+float ClampCameraShakeIntensity(const float intensity)
+{
+    return (std::max)(CAMERA_SHAKE_INTENSITY_MIN, (std::min)(intensity, CAMERA_SHAKE_INTENSITY_MAX));
 }
 
 float ClampGBufferNearPlane(const float nearPlane)
@@ -1029,6 +1041,21 @@ void MoveCameraAwayFromLookAtByWheel(const short wheelDelta)
     const D3DXVECTOR3 newEye = eye - forward * MOUSE_WHEEL_CAMERA_DISTANCE * notchCount;
 
     g_Render.SetCamera(newEye, lookAt);
+}
+
+void ApplyCameraShakeSettings()
+{
+    g_cameraShakeDurationSeconds = ClampCameraShakeDuration(g_cameraShakeDurationSeconds);
+    g_cameraShakeIntensity = ClampCameraShakeIntensity(g_cameraShakeIntensity);
+    g_Render.SetCameraShakeDuration(g_cameraShakeDurationSeconds);
+    g_Render.SetCameraShakeIntensity(g_cameraShakeIntensity);
+    RefreshSettingsDialogState();
+}
+
+void TriggerCameraShake()
+{
+    ApplyCameraShakeSettings();
+    g_Render.TriggerCameraShake();
 }
 
 POINT GetClientCenter(HWND hWnd)
@@ -2130,6 +2157,7 @@ void ApplyAllSampleSettings()
     ApplyShadowCompositeTapCount();
     ApplyZShadowTexSize();
     ApplyCameraClipPlanes();
+    ApplyCameraShakeSettings();
     ApplyGBufferEnable();
     ApplyGBufferClipPlanes();
     ApplySSAOShadowStrength();

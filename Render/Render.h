@@ -223,6 +223,9 @@ public:
     void SetCamera(const D3DXVECTOR3& pos, const D3DXVECTOR3& lookAt);
     void MoveCamera(const D3DXVECTOR3& pos);
     void RotateCamera(const D3DXVECTOR3& rot);
+    void SetCameraShakeDuration(const float durationSeconds);
+    void SetCameraShakeIntensity(const float intensity);
+    void TriggerCameraShake();
     void SetCameraClipPlanes(const float nearPlane, const float farPlane);
     void SetGBufferEnable(const bool enabled);
     void SetGBufferClipPlanes(const float nearPlane, const float farPlane);

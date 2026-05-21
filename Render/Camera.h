@@ -43,6 +43,11 @@ public:
     static void SetClipPlanes(const float nearPlane, const float farPlane);
     static float GetNear();
     static float GetFar();
+    static void SetShakeDuration(const float durationSeconds);
+    static void SetShakeIntensity(const float intensity);
+    static void TriggerShake();
+    static void BeginShakeFrame();
+    static void EndShakeFrame();
 
 private:
 
@@ -55,6 +60,12 @@ private:
     static float m_radian;
     static float m_y;
     static bool m_sleepMode;
+    static float m_shakeDurationSeconds;
+    static float m_shakeIntensity;
+    static bool m_shakeActive;
+    static ULONGLONG m_shakeStartTick;
+    static bool m_shakeFrameActive;
+    static D3DXVECTOR3 m_shakeOffset;
 
     static eCameraMode m_eCameraMode;
     static int m_counter;

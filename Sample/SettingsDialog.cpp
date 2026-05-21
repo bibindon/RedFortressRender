@@ -72,6 +72,7 @@ void RefreshSSAOMaxDarknessClampControls(HWND hDlg);
 void RefreshSSAOSampleRadiusControls(HWND hDlg);
 void RefreshSSAOBlurKernelSizeControls(HWND hDlg);
 void RefreshSSAOCompositeGaussian3x3Controls(HWND hDlg);
+void RefreshCameraShakeControls(HWND hDlg);
 void RefreshCameraClipPlaneControls(HWND hDlg);
 void RefreshGBufferClipPlaneControls(HWND hDlg);
 void RefreshSSAOBlurControls(HWND hDlg);
@@ -157,6 +158,12 @@ constexpr int SSAO_SAMPLE_RADIUS_SLIDER_MIN = 0;
 constexpr int SSAO_SAMPLE_RADIUS_SLIDER_MAX = static_cast<int>((SSAO_SAMPLE_RADIUS_MAX - SSAO_SAMPLE_RADIUS_MIN) / SSAO_SAMPLE_RADIUS_STEP);
 constexpr int SSGI_SAMPLE_RADIUS_SLIDER_MIN = 0;
 constexpr int SSGI_SAMPLE_RADIUS_SLIDER_MAX = static_cast<int>((SSGI_SAMPLE_RADIUS_MAX - SSGI_SAMPLE_RADIUS_MIN) / SSGI_SAMPLE_RADIUS_STEP);
+constexpr int CAMERA_SHAKE_DURATION_SLIDER_MIN = 0;
+constexpr int CAMERA_SHAKE_DURATION_SLIDER_MAX =
+    static_cast<int>((CAMERA_SHAKE_DURATION_MAX - CAMERA_SHAKE_DURATION_MIN) / CAMERA_SHAKE_DURATION_STEP);
+constexpr int CAMERA_SHAKE_INTENSITY_SLIDER_MIN = 0;
+constexpr int CAMERA_SHAKE_INTENSITY_SLIDER_MAX =
+    static_cast<int>(CAMERA_SHAKE_INTENSITY_MAX / CAMERA_SHAKE_INTENSITY_STEP);
 constexpr int BLOOM_THRESHOLD_SLIDER_MIN = 0;
 constexpr int BLOOM_THRESHOLD_SLIDER_MAX = static_cast<int>(BLOOM_THRESHOLD_MAX / BLOOM_THRESHOLD_STEP);
 constexpr int DOF_FOCAL_DISTANCE_SLIDER_MIN = 0;
@@ -195,7 +202,7 @@ constexpr int GODRAY_VIRTUAL_PROXIMITY_SLIDER_MIN = 0;
 constexpr int GODRAY_VIRTUAL_PROXIMITY_SLIDER_MAX = static_cast<int>(GODRAY_VIRTUAL_PROXIMITY_MAX / GODRAY_VIRTUAL_PROXIMITY_STEP);
 constexpr int GODRAY_POS_SLIDER_MIN = static_cast<int>(GODRAY_LIGHT_POS_MIN / GODRAY_LIGHT_POS_STEP);
 constexpr int GODRAY_POS_SLIDER_MAX = static_cast<int>(GODRAY_LIGHT_POS_MAX / GODRAY_LIGHT_POS_STEP);
-constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 2180;
+constexpr int SETTINGS_DIALOG_CONTENT_HEIGHT_DLU = 2204;
 constexpr int SETTINGS_DIALOG_WHEEL_STEP_PX = 36;
 constexpr UINT ID_POPUP_EXPORT_BINARY = 60001;
 constexpr UINT ID_POPUP_REMOVE_MODEL = 60002;
@@ -1859,6 +1866,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshSSSControls(hDlg);
     RefreshSSAO(hDlg);
     RefreshSSAOSampleRadiusControls(hDlg);
+    RefreshCameraShakeControls(hDlg);
     RefreshCameraClipPlaneControls(hDlg);
     RefreshGBufferClipPlaneControls(hDlg);
     RefreshSSAOBlurControls(hDlg);
@@ -2088,6 +2096,16 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSGI_SAMPLE_RADIUS, TBM_SETRANGEMAX, FALSE, SSGI_SAMPLE_RADIUS_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSGI_SAMPLE_RADIUS, TBM_SETTICFREQ, 10, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSGI_SAMPLE_RADIUS, TBM_SETPAGESIZE, 0, 10);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_CAMERA_SHAKE_DURATION, TBM_SETRANGEMIN, FALSE, CAMERA_SHAKE_DURATION_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_CAMERA_SHAKE_DURATION, TBM_SETRANGEMAX, FALSE, CAMERA_SHAKE_DURATION_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_CAMERA_SHAKE_DURATION, TBM_SETTICFREQ, 5, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_CAMERA_SHAKE_DURATION, TBM_SETPAGESIZE, 0, 5);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_CAMERA_SHAKE_INTENSITY, TBM_SETRANGEMIN, FALSE, CAMERA_SHAKE_INTENSITY_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_CAMERA_SHAKE_INTENSITY, TBM_SETRANGEMAX, FALSE, CAMERA_SHAKE_INTENSITY_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_CAMERA_SHAKE_INTENSITY, TBM_SETTICFREQ, 10, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_CAMERA_SHAKE_INTENSITY, TBM_SETPAGESIZE, 0, 10);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETRANGEMIN, FALSE, BLOOM_THRESHOLD_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETRANGEMAX, FALSE, BLOOM_THRESHOLD_SLIDER_MAX);
@@ -2605,6 +2623,24 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_ssgiSampleRadius = SliderValueToSSGISampleRadius(sliderValue);
             ApplySSGISampleRadius();
             RefreshSSGISampleRadiusControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_CAMERA_SHAKE_DURATION))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_cameraShakeDurationSeconds = SliderValueToCameraShakeDuration(sliderValue);
+            ApplyCameraShakeSettings();
+            RefreshCameraShakeControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_CAMERA_SHAKE_INTENSITY))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_cameraShakeIntensity = SliderValueToCameraShakeIntensity(sliderValue);
+            ApplyCameraShakeSettings();
+            RefreshCameraShakeControls(hDlg);
             return TRUE;
         }
 
@@ -3256,6 +3292,13 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         {
             g_bRemoteDesktop = (IsDlgButtonChecked(hDlg, IDC_CHECK_REMOTE_DESKTOP) == BST_CHECKED);
             RefreshRemoteDesktop(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_BUTTON_CAMERA_SHAKE)
+        {
+            TriggerCameraShake();
+            RefreshCameraShakeControls(hDlg);
             return TRUE;
         }
 

@@ -41,6 +41,20 @@ namespace NSRender
 {
 namespace
 {
+class CameraShakeFrameScope
+{
+public:
+    CameraShakeFrameScope()
+    {
+        Camera::BeginShakeFrame();
+    }
+
+    ~CameraShakeFrameScope()
+    {
+        Camera::EndShakeFrame();
+    }
+};
+
 bool TryParseBoolSetting(const std::wstring& value, bool& result)
 {
     std::wstring normalized;
@@ -1302,6 +1316,7 @@ void Render::Draw()
     const float frameDeltaSeconds = CalcFrameDeltaSeconds();
     m_particleSystem.Update(frameDeltaSeconds);
     UpdateSkinAnimationState();
+    CameraShakeFrameScope cameraShakeFrameScope;
 
     //---------------------------------------------------------------
     // ポストエフェクトと一部のメッシュ描画のために深度画像と
@@ -2313,6 +2328,21 @@ void Render::MoveCamera(const D3DXVECTOR3& pos)
 
     auto lookAtPos = Camera::GetLookAtPos();
     Camera::SetLookAtPos(lookAtPos + pos);
+}
+
+void Render::SetCameraShakeDuration(const float durationSeconds)
+{
+    Camera::SetShakeDuration(durationSeconds);
+}
+
+void Render::SetCameraShakeIntensity(const float intensity)
+{
+    Camera::SetShakeIntensity(intensity);
+}
+
+void Render::TriggerCameraShake()
+{
+    Camera::TriggerShake();
 }
 
 void Render::SetCameraClipPlanes(const float nearPlane, const float farPlane)

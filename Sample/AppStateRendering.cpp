@@ -1272,6 +1272,26 @@ float SliderValueToSSGISampleRadius(const int sliderValue)
     return NormalizeSSGISampleRadiusLocal(SSGI_SAMPLE_RADIUS_MIN + static_cast<float>(sliderValue) * SSGI_SAMPLE_RADIUS_STEP);
 }
 
+int CameraShakeDurationToSliderValue(const float durationSeconds)
+{
+    return static_cast<int>(std::lround((durationSeconds - CAMERA_SHAKE_DURATION_MIN) / CAMERA_SHAKE_DURATION_STEP));
+}
+
+float SliderValueToCameraShakeDuration(const int sliderValue)
+{
+    return CAMERA_SHAKE_DURATION_MIN + static_cast<float>(sliderValue) * CAMERA_SHAKE_DURATION_STEP;
+}
+
+int CameraShakeIntensityToSliderValue(const float intensity)
+{
+    return static_cast<int>(std::lround(intensity / CAMERA_SHAKE_INTENSITY_STEP));
+}
+
+float SliderValueToCameraShakeIntensity(const int sliderValue)
+{
+    return static_cast<float>(sliderValue) * CAMERA_SHAKE_INTENSITY_STEP;
+}
+
 int SSGIBlurKernelSizeToComboIndex(const int kernelSize)
 {
     if (kernelSize <= 8)

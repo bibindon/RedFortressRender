@@ -875,6 +875,26 @@ void RefreshCameraClipPlaneControls(HWND hDlg)
     SetDlgItemText(hDlg, IDC_EDIT_CAMERA_FAR, buffer);
 }
 
+void RefreshCameraShakeControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_cameraShakeDurationSeconds);
+    SetDlgItemText(hDlg, IDC_EDIT_CAMERA_SHAKE_DURATION, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_CAMERA_SHAKE_DURATION,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(CameraShakeDurationToSliderValue(g_cameraShakeDurationSeconds)));
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_cameraShakeIntensity);
+    SetDlgItemText(hDlg, IDC_EDIT_CAMERA_SHAKE_INTENSITY, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_CAMERA_SHAKE_INTENSITY,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(CameraShakeIntensityToSliderValue(g_cameraShakeIntensity)));
+}
+
 void RefreshGBufferClipPlaneControls(HWND hDlg)
 {
     wchar_t buffer[32];
