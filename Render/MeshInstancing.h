@@ -74,6 +74,7 @@ private:
     IDirect3DVertexDeclaration9* m_decl = nullptr;
 
     void copyBuf(unsigned sz, void* src, IDirect3DVertexBuffer9* buf);
+    void UpdateVisibleInstances();
     void SortInstancesBackToFront();
     void UpdateInstanceBuffer();
     bool LoadPlacementCsv();
@@ -81,9 +82,11 @@ private:
     bool IsSubsetAlphaMaterial(DWORD subsetIndex) const;
     HRESULT DrawInstancedSubset(DWORD subsetIndex) const;
 
+    std::vector<InstanceData> m_allInstances;
     std::vector<InstanceData> m_instances;
     bool m_loadedPlacementCsv = false;
     bool m_highQualityEnabled = true;
+    bool m_autoHide = false;
     SwayMode m_swayMode = SwayMode::Off;
 
 };

@@ -190,6 +190,13 @@ bool TryParseSwayMode(const std::wstring& text, MeshInstancing::SwayMode& value)
     }
     return false;
 }
+
+bool IsCsvTrueValue(const std::wstring& text)
+{
+    const std::wstring lower = ToLower(TrimWhitespace(text));
+    return lower == L"on" || lower == L"true" || lower == L"1" ||
+           lower == L"yes" || lower == L"y";
+}
 }
 
 MeshInstancing::MeshInstancing()
@@ -314,15 +321,17 @@ void MeshInstancing::Finalize()
     m_pMaterials.clear();
     m_attributeTable.clear();
     m_dwNumMaterials = 0;
+    m_allInstances.clear();
     m_instances.clear();
     m_filePath.clear();
     m_loadedPlacementCsv = false;
+    m_autoHide = false;
     m_swayMode = SwayMode::Off;
 }
 
 void MeshInstancing::AddInstance(const D3DXVECTOR3& pos)
 {
-    if (m_loadedPlacementCsv && !m_instances.empty())
+    if (m_loadedPlacementCsv && !m_allInstances.empty())
     {
         return;
     }
@@ -334,9 +343,9 @@ void MeshInstancing::AddInstance(const D3DXVECTOR3& pos)
     instance.rotationYRadians = 0.0f;
     instance.scale = 1.0f;
 
-    m_instances.clear();
-    m_instances.push_back(instance);
-    UpdateInstanceBuffer();
+    m_allInstances.clear();
+    m_allInstances.push_back(instance);
+    UpdateVisibleInstances();
 }
 
 void MeshInstancing::SetHighQuality(const bool enabled)
@@ -346,6 +355,8 @@ void MeshInstancing::SetHighQuality(const bool enabled)
 
 void MeshInstancing::Draw()
 {
+    UpdateVisibleInstances();
+
     if (m_pMesh == nullptr || m_pEffect == nullptr || m_worldPosBuf == nullptr || m_instances.empty())
     {
         return;
@@ -444,6 +455,8 @@ void MeshInstancing::Draw()
 
 void MeshInstancing::RenderToGBufferEffect(LPD3DXEFFECT effect, const char* techniqueName)
 {
+    UpdateVisibleInstances();
+
     if (m_pMesh == nullptr || effect == nullptr || m_worldPosBuf == nullptr || m_instances.empty())
     {
         return;
@@ -513,6 +526,8 @@ void MeshInstancing::RenderToShadowOccluderEffect(LPD3DXEFFECT effect,
                                                   const char* techniqueName,
                                                   const float alphaClipThreshold)
 {
+    UpdateVisibleInstances();
+
     if (m_pMesh == nullptr || effect == nullptr || m_worldPosBuf == nullptr || m_instances.empty())
     {
         return;
@@ -601,6 +616,50 @@ void MeshInstancing::OnDeviceReset()
     }
 }
 
+void MeshInstancing::UpdateVisibleInstances()
+{
+    if (!m_autoHide)
+    {
+        if (m_instances.size() == m_allInstances.size() &&
+            std::equal(m_instances.begin(), m_instances.end(), m_allInstances.begin(),
+                       [](const InstanceData& lhs, const InstanceData& rhs)
+                       {
+                           return lhs.x == rhs.x &&
+                                  lhs.y == rhs.y &&
+                                  lhs.z == rhs.z &&
+                                  lhs.rotationYRadians == rhs.rotationYRadians &&
+                                  lhs.scale == rhs.scale;
+                       }))
+        {
+            return;
+        }
+
+        m_instances = m_allInstances;
+        UpdateInstanceBuffer();
+        return;
+    }
+
+    const D3DXVECTOR3 eyePos = Camera::GetEyePos();
+    const float hideDistanceSq = 30.0f * 30.0f;
+
+    std::vector<InstanceData> visibleInstances;
+    visibleInstances.reserve(m_allInstances.size());
+    for (const InstanceData& instance : m_allInstances)
+    {
+        const float dx = instance.x - eyePos.x;
+        const float dy = instance.y - eyePos.y;
+        const float dz = instance.z - eyePos.z;
+        const float distanceSq = dx * dx + dy * dy + dz * dz;
+        if (distanceSq <= hideDistanceSq)
+        {
+            visibleInstances.push_back(instance);
+        }
+    }
+
+    m_instances.swap(visibleInstances);
+    UpdateInstanceBuffer();
+}
+
 void MeshInstancing::SortInstancesBackToFront()
 {
     const D3DXVECTOR3 eyePos = Camera::GetEyePos();
@@ -672,6 +731,11 @@ bool MeshInstancing::LoadPlacementCsv()
             }
             continue;
         }
+        if (fields.size() >= 2 && NormalizeCsvKey(fields[0]) == L"autohide")
+        {
+            m_autoHide = IsCsvTrueValue(fields[1]);
+            continue;
+        }
 
         if (fields.size() < 3)
         {
@@ -713,8 +777,8 @@ bool MeshInstancing::LoadPlacementCsv()
         return false;
     }
 
-    m_instances = loadedInstances;
-    UpdateInstanceBuffer();
+    m_allInstances = loadedInstances;
+    UpdateVisibleInstances();
     return true;
 }
 
