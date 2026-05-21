@@ -17,6 +17,7 @@ float g_aoSaturationBoost = 0.30f;
 float g_depthCompareThreshold = 0.00f;
 float g_depthBiasScale = 1.0f;
 float g_normalBiasScale = 1.0f;
+float g_minThickness = 0.10f;
 
 texture texZ;
 texture texNormal;
@@ -245,6 +246,7 @@ float2 ComputeOcclusionSample(float2 baseUv,
     float sampleDepthBias = (currentDepth - expectedDepth) * normalDepthBiasFactor * g_depthBiasScale;
     float adjustedSampleDepth = max(0.0f, sampleDepth + sampleDepthBias);
     float sampleThickness = tex2Dlod(sampThickness, float4(sampleUv, 0.0f, 0.0f)).r;
+    sampleThickness = max(sampleThickness, g_minThickness);
 
     float frontDepthWithMargin = adjustedSampleDepth - g_depthCompareThreshold;
     float backDepthWithMargin = adjustedSampleDepth + sampleThickness + g_depthCompareThreshold;
