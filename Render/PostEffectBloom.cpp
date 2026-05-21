@@ -1,4 +1,4 @@
-#include "PostEffectBloom.h"
+﻿#include "PostEffectBloom.h"
 
 #include <algorithm>
 
@@ -148,9 +148,20 @@ void PostEffectBloom::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
     texSource->GetLevelDesc(0, &sourceDesc);
     texTarget->GetLevelDesc(0, &targetDesc);
 
+    D3DVIEWPORT9 oldViewport { };
+    Common::D3DDevice()->GetViewport(&oldViewport);
+    D3DVIEWPORT9 targetViewport { };
+    targetViewport.X = 0;
+    targetViewport.Y = 0;
+    targetViewport.Width = targetDesc.Width;
+    targetViewport.Height = targetDesc.Height;
+    targetViewport.MinZ = 0.0f;
+    targetViewport.MaxZ = 1.0f;
+
     LPDIRECT3DSURFACE9 pSceneRT = NULL;
     texTarget->GetSurfaceLevel(0, &pSceneRT);
     Common::D3DDevice()->SetRenderTarget(0, pSceneRT);
+    Common::D3DDevice()->SetViewport(&targetViewport);
     SAFE_RELEASE(pSceneRT);
 
     Common::D3DDevice()->SetVertexShader(NULL);
@@ -206,6 +217,7 @@ void PostEffectBloom::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
     Common::D3DDevice()->EndScene();
 
     Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
+    Common::D3DDevice()->SetViewport(&oldViewport);
 }
 
 void PostEffectBloom::DrawCombineQuad(LPDIRECT3DTEXTURE9 texScene,
@@ -219,9 +231,20 @@ void PostEffectBloom::DrawCombineQuad(LPDIRECT3DTEXTURE9 texScene,
     D3DSURFACE_DESC targetDesc { };
     texTarget->GetLevelDesc(0, &targetDesc);
 
+    D3DVIEWPORT9 oldViewport { };
+    Common::D3DDevice()->GetViewport(&oldViewport);
+    D3DVIEWPORT9 targetViewport { };
+    targetViewport.X = 0;
+    targetViewport.Y = 0;
+    targetViewport.Width = targetDesc.Width;
+    targetViewport.Height = targetDesc.Height;
+    targetViewport.MinZ = 0.0f;
+    targetViewport.MaxZ = 1.0f;
+
     LPDIRECT3DSURFACE9 pSceneRT = NULL;
     texTarget->GetSurfaceLevel(0, &pSceneRT);
     Common::D3DDevice()->SetRenderTarget(0, pSceneRT);
+    Common::D3DDevice()->SetViewport(&targetViewport);
     SAFE_RELEASE(pSceneRT);
 
     Common::D3DDevice()->SetVertexShader(NULL);
@@ -280,6 +303,7 @@ void PostEffectBloom::DrawCombineQuad(LPDIRECT3DTEXTURE9 texScene,
     Common::D3DDevice()->EndScene();
 
     Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
+    Common::D3DDevice()->SetViewport(&oldViewport);
 }
 
 void PostEffectBloom::SetThreshold(const float arg)

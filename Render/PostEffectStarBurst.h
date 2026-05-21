@@ -25,7 +25,7 @@ public:
 
 private:
 
-    static const int STARBURST_LEVEL_COUNT = 6;
+    static const int STARBURST_LEVEL_COUNT = 7;
     static const int STARBURST_LEVEL_DIVISORS[STARBURST_LEVEL_COUNT];
 
     LPD3DXEFFECT m_d3dEffect = NULL;

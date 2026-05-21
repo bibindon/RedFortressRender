@@ -1,4 +1,4 @@
-#include "PostEffectStarBurst.h"
+﻿#include "PostEffectStarBurst.h"
 
 #include <algorithm>
 
@@ -7,7 +7,7 @@
 namespace NSRender
 {
 
-const int PostEffectStarBurst::STARBURST_LEVEL_DIVISORS[PostEffectStarBurst::STARBURST_LEVEL_COUNT] = { 2, 4, 8, 16, 32, 64 };
+const int PostEffectStarBurst::STARBURST_LEVEL_DIVISORS[PostEffectStarBurst::STARBURST_LEVEL_COUNT] = { 2, 4, 8, 16, 32, 64, 128 };
 
 void PostEffectStarBurst::Initialize()
 {
@@ -59,7 +59,7 @@ void PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource,
 
     m_d3dEffect->SetFloat("g_Threshold", m_threshold);
 
-    const float baseWeights[STARBURST_LEVEL_COUNT] = { 0.34f, 0.24f, 0.17f, 0.12f, 0.08f, 0.05f };
+    const float baseWeights[STARBURST_LEVEL_COUNT] = { 0.32f, 0.23f, 0.16f, 0.11f, 0.08f, 0.06f, 0.04f };
     float burstWeightsA[4] { };
     float burstWeightsB[4] { };
     for (int i = 0; i < STARBURST_LEVEL_COUNT; ++i)
@@ -118,9 +118,20 @@ void PostEffectStarBurst::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
     texSource->GetLevelDesc(0, &sourceDesc);
     texTarget->GetLevelDesc(0, &targetDesc);
 
+    D3DVIEWPORT9 oldViewport { };
+    Common::D3DDevice()->GetViewport(&oldViewport);
+    D3DVIEWPORT9 targetViewport { };
+    targetViewport.X = 0;
+    targetViewport.Y = 0;
+    targetViewport.Width = targetDesc.Width;
+    targetViewport.Height = targetDesc.Height;
+    targetViewport.MinZ = 0.0f;
+    targetViewport.MaxZ = 1.0f;
+
     LPDIRECT3DSURFACE9 rt = NULL;
     texTarget->GetSurfaceLevel(0, &rt);
     Common::D3DDevice()->SetRenderTarget(0, rt);
+    Common::D3DDevice()->SetViewport(&targetViewport);
     SAFE_RELEASE(rt);
 
     Common::D3DDevice()->SetVertexShader(NULL);
@@ -174,6 +185,7 @@ void PostEffectStarBurst::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
     Common::D3DDevice()->EndScene();
 
     Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
+    Common::D3DDevice()->SetViewport(&oldViewport);
 }
 
 void PostEffectStarBurst::DrawCombineQuad(LPDIRECT3DTEXTURE9 texScene,
@@ -187,9 +199,20 @@ void PostEffectStarBurst::DrawCombineQuad(LPDIRECT3DTEXTURE9 texScene,
     D3DSURFACE_DESC targetDesc { };
     texTarget->GetLevelDesc(0, &targetDesc);
 
+    D3DVIEWPORT9 oldViewport { };
+    Common::D3DDevice()->GetViewport(&oldViewport);
+    D3DVIEWPORT9 targetViewport { };
+    targetViewport.X = 0;
+    targetViewport.Y = 0;
+    targetViewport.Width = targetDesc.Width;
+    targetViewport.Height = targetDesc.Height;
+    targetViewport.MinZ = 0.0f;
+    targetViewport.MaxZ = 1.0f;
+
     LPDIRECT3DSURFACE9 rt = NULL;
     texTarget->GetSurfaceLevel(0, &rt);
     Common::D3DDevice()->SetRenderTarget(0, rt);
+    Common::D3DDevice()->SetViewport(&targetViewport);
     SAFE_RELEASE(rt);
 
     Common::D3DDevice()->SetVertexShader(NULL);
@@ -203,6 +226,7 @@ void PostEffectStarBurst::DrawCombineQuad(LPDIRECT3DTEXTURE9 texScene,
     m_d3dEffect->SetTexture("g_BlurTex3", m_texBlur[3]);
     m_d3dEffect->SetTexture("g_BlurTex4", m_texBlur[4]);
     m_d3dEffect->SetTexture("g_BlurTex5", m_texBlur[5]);
+    m_d3dEffect->SetTexture("g_BlurTex6", m_texBlur[6]);
 
     ScreenVertex quad[4] { };
 
@@ -247,6 +271,7 @@ void PostEffectStarBurst::DrawCombineQuad(LPDIRECT3DTEXTURE9 texScene,
     Common::D3DDevice()->EndScene();
 
     Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
+    Common::D3DDevice()->SetViewport(&oldViewport);
 }
 
 void PostEffectStarBurst::SetThreshold(const float arg)

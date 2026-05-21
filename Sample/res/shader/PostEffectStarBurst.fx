@@ -86,10 +86,21 @@ sampler BlurSampler5 = sampler_state
     AddressV = CLAMP;
 };
 
+texture g_BlurTex6;
+sampler BlurSampler6 = sampler_state
+{
+    Texture = <g_BlurTex6>;
+    MipFilter = LINEAR;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+
 float g_Threshold = 2.8f;
 float2 g_TexelSize;
-float4 g_BurstWeightsA = float4(0.34f, 0.24f, 0.17f, 0.12f);
-float4 g_BurstWeightsB = float4(0.08f, 0.05f, 0.0f, 0.0f);
+float4 g_BurstWeightsA = float4(0.32f, 0.23f, 0.16f, 0.11f);
+float4 g_BurstWeightsB = float4(0.08f, 0.06f, 0.04f, 0.0f);
 
 float4 BrightPassPS(float2 uv : TEXCOORD0) : COLOR
 {
@@ -112,11 +123,9 @@ float4 DiagonalBlur3x3PS(float2 uv : TEXCOORD0) : COLOR
     const float2 texel = g_TexelSize;
 
     float4 sum = float4(0.0f, 0.0f, 0.0f, 0.0f);
-    sum += tex2D(SrcSampler, uv + texel * float2(-1.0f, -1.0f)) * (2.0f / 8.0f);
-    sum += tex2D(SrcSampler, uv + texel * float2( 1.0f, -1.0f)) * (1.0f / 8.0f);
-    sum += tex2D(SrcSampler, uv)                                   * (2.0f / 8.0f);
-    sum += tex2D(SrcSampler, uv + texel * float2(-1.0f,  1.0f)) * (1.0f / 8.0f);
-    sum += tex2D(SrcSampler, uv + texel * float2( 1.0f,  1.0f)) * (2.0f / 8.0f);
+    sum += tex2D(SrcSampler, uv + texel * float2(-1.0f, -1.0f)) * 0.25f;
+    sum += tex2D(SrcSampler, uv)                                   * 0.50f;
+    sum += tex2D(SrcSampler, uv + texel * float2( 1.0f,  1.0f)) * 0.25f;
     return sum;
 }
 
@@ -129,7 +138,8 @@ float4 CombinePS(float2 uv : TEXCOORD0) : COLOR
         tex2D(BlurSampler2, uv) * g_BurstWeightsA.z +
         tex2D(BlurSampler3, uv) * g_BurstWeightsA.w +
         tex2D(BlurSampler4, uv) * g_BurstWeightsB.x +
-        tex2D(BlurSampler5, uv) * g_BurstWeightsB.y;
+        tex2D(BlurSampler5, uv) * g_BurstWeightsB.y +
+        tex2D(BlurSampler6, uv) * g_BurstWeightsB.z;
 
     float4 outColor = scene + burst;
     outColor.a = 1.0f;
