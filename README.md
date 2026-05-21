@@ -1,4 +1,10 @@
-﻿# RedFortressRender
+
+
+https://github.com/user-attachments/assets/d3606f93-b007-4f5b-9e59-6477df304694
+
+
+ 
+ # RedFortressRender
 
 DirectX 9 ベースの 3D 描画ライブラリと、その確認用サンプルをまとめたリポジトリである。
 ゲーム本体で必要になった描画機能を `Render` に集約し、`Sample` から見た目やパラメーターを確認できる構成になっている。
