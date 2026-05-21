@@ -115,8 +115,10 @@ void BuildViewSpaceBasis(float3 normal, out float3 tangent, out float3 bitangent
 float3 SampleRandomHemisphereDirection(float3 normal, float2 randomPair)
 {
     const float kTwoPi = 6.2831853f;
+    const float kMinCosTheta = 0.70710678f;
     float azimuth = kTwoPi * randomPair.x;
-    float cosTheta = randomPair.y;
+    // 法線を中心に ±45 度へ制限し、接線方向のサンプルを減らす。
+    float cosTheta = lerp(kMinCosTheta, 1.0f, randomPair.y);
     float sinTheta = sqrt(saturate(1.0f - cosTheta * cosTheta));
 
     float3 localDirection = float3(cos(azimuth) * sinTheta,
