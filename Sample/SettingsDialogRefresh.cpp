@@ -921,6 +921,18 @@ void RefreshBloomThresholdControls(HWND hDlg)
                        static_cast<LPARAM>(BloomThresholdToSliderValue(g_bloomThreshold)));
 }
 
+void RefreshBloomWeightSumControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.0f", g_bloomWeightSum);
+    SetDlgItemText(hDlg, IDC_EDIT_BLOOM_WEIGHT_SUM, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_BLOOM_WEIGHT_SUM,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(BloomWeightSumToSliderValue(g_bloomWeightSum)));
+}
+
 void RefreshStarBurstThresholdControls(HWND hDlg)
 {
     wchar_t buffer[32];
@@ -931,6 +943,18 @@ void RefreshStarBurstThresholdControls(HWND hDlg)
                        TBM_SETPOS,
                        TRUE,
                        static_cast<LPARAM>(StarBurstThresholdToSliderValue(g_starBurstThreshold)));
+}
+
+void RefreshStarBurstDistanceFadeControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_starBurstDistanceFade);
+    SetDlgItemText(hDlg, IDC_EDIT_STARBURST_DISTANCE_FADE, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_STARBURST_DISTANCE_FADE,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(StarBurstDistanceFadeToSliderValue(g_starBurstDistanceFade)));
 }
 
 void RefreshModelLoadScaleControls(HWND hDlg)

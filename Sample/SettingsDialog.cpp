@@ -87,7 +87,9 @@ void RefreshPostEffectAA(HWND hDlg);
 void RefreshDepthOfField(HWND hDlg);
 void RefreshStarBurst(HWND hDlg);
 void RefreshBloomThresholdControls(HWND hDlg);
+void RefreshBloomWeightSumControls(HWND hDlg);
 void RefreshStarBurstThresholdControls(HWND hDlg);
+void RefreshStarBurstDistanceFadeControls(HWND hDlg);
 void RefreshModelLoadScaleControls(HWND hDlg);
 void RefreshPointLightControls(HWND hDlg);
 void RefreshGodRayControls(HWND hDlg);
@@ -166,6 +168,8 @@ constexpr int CAMERA_SHAKE_INTENSITY_SLIDER_MAX =
     static_cast<int>(CAMERA_SHAKE_INTENSITY_MAX / CAMERA_SHAKE_INTENSITY_STEP);
 constexpr int BLOOM_THRESHOLD_SLIDER_MIN = 0;
 constexpr int BLOOM_THRESHOLD_SLIDER_MAX = static_cast<int>(BLOOM_THRESHOLD_MAX / BLOOM_THRESHOLD_STEP);
+constexpr int BLOOM_WEIGHT_SUM_SLIDER_MIN = static_cast<int>(BLOOM_WEIGHT_SUM_MIN);
+constexpr int BLOOM_WEIGHT_SUM_SLIDER_MAX = static_cast<int>(BLOOM_WEIGHT_SUM_MAX);
 constexpr int DOF_FOCAL_DISTANCE_SLIDER_MIN = 0;
 constexpr int DOF_FOCAL_DISTANCE_SLIDER_MAX = static_cast<int>((DOF_FOCAL_DISTANCE_MAX - DOF_FOCAL_DISTANCE_MIN) / DOF_FOCAL_DISTANCE_STEP);
 constexpr int DOF_START_NEAR_SLIDER_MIN = 0;
@@ -176,6 +180,8 @@ constexpr int DOF_AUTO_ACTIVATION_DISTANCE_SLIDER_MIN = 0;
 constexpr int DOF_AUTO_ACTIVATION_DISTANCE_SLIDER_MAX = static_cast<int>((DOF_AUTO_ACTIVATION_DISTANCE_MAX - DOF_AUTO_ACTIVATION_DISTANCE_MIN) / DOF_AUTO_ACTIVATION_DISTANCE_STEP);
 constexpr int STARBURST_THRESHOLD_SLIDER_MIN = 0;
 constexpr int STARBURST_THRESHOLD_SLIDER_MAX = static_cast<int>(STARBURST_THRESHOLD_MAX / STARBURST_THRESHOLD_STEP);
+constexpr int STARBURST_DISTANCE_FADE_SLIDER_MIN = 0;
+constexpr int STARBURST_DISTANCE_FADE_SLIDER_MAX = static_cast<int>(STARBURST_DISTANCE_FADE_MAX / STARBURST_DISTANCE_FADE_STEP);
 constexpr int MODEL_LOAD_SCALE_SLIDER_MIN = 0;
 constexpr int MODEL_LOAD_SCALE_SLIDER_MAX = static_cast<int>((MODEL_LOAD_SCALE_MAX - MODEL_LOAD_SCALE_MIN) / MODEL_LOAD_SCALE_STEP);
 constexpr int POINT_LIGHT_COLOR_SLIDER_MIN = 0;
@@ -632,7 +638,9 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_GBUFFER_NEAR,
         IDC_EDIT_GBUFFER_FAR,
         IDC_EDIT_BLOOM_THRESHOLD,
+        IDC_EDIT_BLOOM_WEIGHT_SUM,
         IDC_EDIT_STARBURST_THRESHOLD,
+        IDC_EDIT_STARBURST_DISTANCE_FADE,
         IDC_EDIT_MODEL_LOAD_SCALE,
         IDC_EDIT_POINT_LIGHT_COLOR_R,
         IDC_EDIT_POINT_LIGHT_COLOR_G,
@@ -1067,6 +1075,14 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
         }
         RefreshBloomThresholdControls(hDlg);
         return true;
+    case IDC_EDIT_BLOOM_WEIGHT_SUM:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_bloomWeightSum = floatValue;
+            ApplyBloomWeightSum();
+        }
+        RefreshBloomWeightSumControls(hDlg);
+        return true;
     case IDC_EDIT_STARBURST_THRESHOLD:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
         {
@@ -1074,6 +1090,14 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
             ApplyStarBurstThreshold();
         }
         RefreshStarBurstThresholdControls(hDlg);
+        return true;
+    case IDC_EDIT_STARBURST_DISTANCE_FADE:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_starBurstDistanceFade = floatValue;
+            ApplyStarBurstDistanceFade();
+        }
+        RefreshStarBurstDistanceFadeControls(hDlg);
         return true;
     case IDC_EDIT_MODEL_LOAD_SCALE:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
@@ -1880,11 +1904,13 @@ void RefreshAllControls(HWND hDlg)
     RefreshSSAOTexSizeControls(hDlg);
     RefreshSSAOCompositeGaussian3x3Controls(hDlg);
     RefreshBloomThresholdControls(hDlg);
+    RefreshBloomWeightSumControls(hDlg);
     RefreshDepthOfFieldControls(hDlg);
     RefreshDepthOfFieldStartNearControls(hDlg);
     RefreshDepthOfFieldMaxBlurControls(hDlg);
     RefreshDepthOfFieldAutoActivationControls(hDlg);
     RefreshStarBurstThresholdControls(hDlg);
+    RefreshStarBurstDistanceFadeControls(hDlg);
     RefreshModelLoadScaleControls(hDlg);
     RefreshGaussianControls(hDlg);
     RefreshFontExGaussianControls(hDlg);
@@ -2112,6 +2138,11 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETTICFREQ, 5, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_THRESHOLD, TBM_SETPAGESIZE, 0, 5);
 
+    SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_WEIGHT_SUM, TBM_SETRANGEMIN, FALSE, BLOOM_WEIGHT_SUM_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_WEIGHT_SUM, TBM_SETRANGEMAX, FALSE, BLOOM_WEIGHT_SUM_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_WEIGHT_SUM, TBM_SETTICFREQ, 10, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_BLOOM_WEIGHT_SUM, TBM_SETPAGESIZE, 0, 10);
+
     SendDlgItemMessage(hDlg, IDC_SLIDER_DOF_FOCAL_DISTANCE, TBM_SETRANGEMIN, FALSE, DOF_FOCAL_DISTANCE_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_DOF_FOCAL_DISTANCE, TBM_SETRANGEMAX, FALSE, DOF_FOCAL_DISTANCE_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_DOF_FOCAL_DISTANCE, TBM_SETTICFREQ, 20, 0);
@@ -2136,6 +2167,11 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_STARBURST_THRESHOLD, TBM_SETRANGEMAX, FALSE, STARBURST_THRESHOLD_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_STARBURST_THRESHOLD, TBM_SETTICFREQ, 5, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_STARBURST_THRESHOLD, TBM_SETPAGESIZE, 0, 5);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_STARBURST_DISTANCE_FADE, TBM_SETRANGEMIN, FALSE, STARBURST_DISTANCE_FADE_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_STARBURST_DISTANCE_FADE, TBM_SETRANGEMAX, FALSE, STARBURST_DISTANCE_FADE_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_STARBURST_DISTANCE_FADE, TBM_SETTICFREQ, 2, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_STARBURST_DISTANCE_FADE, TBM_SETPAGESIZE, 0, 2);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_MODEL_LOAD_SCALE, TBM_SETRANGEMIN, FALSE, MODEL_LOAD_SCALE_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_MODEL_LOAD_SCALE, TBM_SETRANGEMAX, FALSE, MODEL_LOAD_SCALE_SLIDER_MAX);
@@ -3094,6 +3130,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             return TRUE;
         }
 
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_BLOOM_WEIGHT_SUM))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_bloomWeightSum = SliderValueToBloomWeightSum(sliderValue);
+            ApplyBloomWeightSum();
+            RefreshBloomWeightSumControls(hDlg);
+            return TRUE;
+        }
+
         if (slider == GetDlgItem(hDlg, IDC_SLIDER_DOF_FOCAL_DISTANCE))
         {
             const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
@@ -3136,6 +3181,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_starBurstThreshold = SliderValueToStarBurstThreshold(sliderValue);
             ApplyStarBurstThreshold();
             RefreshStarBurstThresholdControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_STARBURST_DISTANCE_FADE))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_starBurstDistanceFade = SliderValueToStarBurstDistanceFade(sliderValue);
+            ApplyStarBurstDistanceFade();
+            RefreshStarBurstDistanceFadeControls(hDlg);
             return TRUE;
         }
 

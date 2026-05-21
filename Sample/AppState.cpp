@@ -122,11 +122,13 @@ bool g_bSSS = false;
 float g_sssIntensity = 1.0f;
 D3DXCOLOR g_sssColor = D3DXCOLOR(1.0f, 1.0f, 0.5f, 1.0f);
 float g_bloomThreshold = 2.5f;
+float g_bloomWeightSum = 1.0f;
 float g_dofFocalDistance = 1.0f;
 float g_dofStartNear = 0.0f;
 float g_dofMaxBlurDistance = 8.0f;
 float g_dofAutoActivationDistance = 10.0f;
 float g_starBurstThreshold = 2.8f;
+float g_starBurstDistanceFade = 0.0f;
 float g_modelLoadScale = 1.0f;
 D3DXCOLOR g_pointLightColor = D3DXCOLOR(1.0f, 0.35f, 0.1f, 1.0f);
 float g_pointLightBrightness = 1.0f;
@@ -366,6 +368,11 @@ float ClampBloomThreshold(const float threshold)
     return (std::max)(BLOOM_THRESHOLD_MIN, (std::min)(threshold, BLOOM_THRESHOLD_MAX));
 }
 
+float ClampBloomWeightSum(const float weightSum)
+{
+    return (std::max)(BLOOM_WEIGHT_SUM_MIN, (std::min)(weightSum, BLOOM_WEIGHT_SUM_MAX));
+}
+
 float ClampDepthOfFieldFocalDistance(const float distance)
 {
     return (std::max)(DOF_FOCAL_DISTANCE_MIN, (std::min)(distance, DOF_FOCAL_DISTANCE_MAX));
@@ -390,6 +397,11 @@ float ClampDepthOfFieldAutoActivationDistance(const float distance)
 float ClampStarBurstThreshold(const float threshold)
 {
     return (std::max)(STARBURST_THRESHOLD_MIN, (std::min)(threshold, STARBURST_THRESHOLD_MAX));
+}
+
+float ClampStarBurstDistanceFade(const float fade)
+{
+    return (std::max)(STARBURST_DISTANCE_FADE_MIN, (std::min)(fade, STARBURST_DISTANCE_FADE_MAX));
 }
 
 float ClampModelLoadScale(const float scale)
@@ -1940,6 +1952,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_bloomThreshold = std::stof(value);
             }
+            else if (key == L"BloomWeightSum")
+            {
+                g_bloomWeightSum = std::stof(value);
+            }
             else if (key == L"DepthOfFieldFocalDistance")
             {
                 g_dofFocalDistance = std::stof(value);
@@ -1959,6 +1975,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"StarBurstThreshold")
             {
                 g_starBurstThreshold = std::stof(value);
+            }
+            else if (key == L"StarBurstDistanceFade")
+            {
+                g_starBurstDistanceFade = std::stof(value);
             }
             else if (key == L"ModelLoadScale")
             {
@@ -2195,12 +2215,14 @@ void ApplyAllSampleSettings()
     ApplySSSColor();
     ApplySSS();
     ApplyBloomThreshold();
+    ApplyBloomWeightSum();
     ApplyDepthOfFieldMode();
     ApplyDepthOfFieldFocalDistance();
     ApplyDepthOfFieldStartNear();
     ApplyDepthOfFieldMaxBlurDistance();
     ApplyDepthOfFieldAutoActivationDistance();
     ApplyStarBurstThreshold();
+    ApplyStarBurstDistanceFade();
     ApplyModelLoadScale();
     ApplyMeshInstancingRenderMode();
     ApplyGaussianSampleSize();

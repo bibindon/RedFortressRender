@@ -52,6 +52,7 @@ int PostEffectStarBurst::ComputeTextureHeight(const int divisor) const
 }
 
 void PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource,
+                               LPDIRECT3DTEXTURE9 texZ,
                                LPDIRECT3DTEXTURE9 renderTarget)
 {
     if (!m_isInitialized || m_d3dEffect == NULL)
@@ -60,6 +61,8 @@ void PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource,
     }
 
     m_d3dEffect->SetFloat("g_Threshold", m_threshold);
+    m_d3dEffect->SetFloat("g_DistanceFadeStrength", (std::max)(0.0f, (std::min)(m_distanceFade, 1.0f)));
+    m_d3dEffect->SetTexture("g_ZTex", texZ);
 
     const float baseWeights[STARBURST_LEVEL_COUNT] = { 0.32f, 0.23f, 0.16f, 0.11f, 0.08f, 0.06f, 0.04f };
     float burstWeightsA[4] { };
@@ -306,6 +309,11 @@ void PostEffectStarBurst::SetIntensity(const float arg)
 void PostEffectStarBurst::SetSize(const float arg)
 {
     m_size = arg;
+}
+
+void PostEffectStarBurst::SetDistanceFade(const float arg)
+{
+    m_distanceFade = arg;
 }
 
 void PostEffectStarBurst::OnDeviceLost()

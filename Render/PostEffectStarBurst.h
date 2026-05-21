@@ -13,12 +13,14 @@ public:
 
     void Initialize();
     void Draw(LPDIRECT3DTEXTURE9 texSource,
+              LPDIRECT3DTEXTURE9 texZ,
               LPDIRECT3DTEXTURE9 texTarget);
     void Finalize();
 
     void SetThreshold(const float arg);
     void SetIntensity(const float arg);
     void SetSize(const float arg);
+    void SetDistanceFade(const float arg);
 
     void OnDeviceLost();
     void OnDeviceReset();
@@ -66,6 +68,10 @@ private:
     // ブルームの広さ
     // 0.0 ~ 1.0
     float m_size = 1.0f;
+
+    // 遠いほど暗くする距離減衰の強さ
+    // 0.0 ~ 1.0
+    float m_distanceFade = 0.0f;
 
     void CreateTexture();
 };

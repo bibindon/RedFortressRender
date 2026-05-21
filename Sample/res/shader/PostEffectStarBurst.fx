@@ -20,6 +20,17 @@ sampler SrcSampler = sampler_state
     AddressV = CLAMP;
 };
 
+texture g_ZTex;
+sampler ZSampler = sampler_state
+{
+    Texture = <g_ZTex>;
+    MipFilter = NONE;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+
 texture g_BlurTex0;
 sampler BlurSampler0 = sampler_state
 {
@@ -102,14 +113,17 @@ float2 g_TexelSize;
 float2 g_StarBurstDirection = float2(1.0f, 1.0f);
 float4 g_BurstWeightsA = float4(0.32f, 0.23f, 0.16f, 0.11f);
 float4 g_BurstWeightsB = float4(0.08f, 0.06f, 0.04f, 0.0f);
+float g_DistanceFadeStrength = 0.0f;
 
 float4 BrightPassPS(float2 uv : TEXCOORD0) : COLOR
 {
     const float4 c = tex2D(SrcSampler, uv);
     const float lum = dot(c.rgb, float3(0.299f, 0.587f, 0.114f));
+    const float depth = tex2D(ZSampler, uv).r;
+    const float distanceFade = saturate(1.0f - depth * g_DistanceFadeStrength);
     if (lum > g_Threshold)
     {
-        return c;
+        return float4(c.rgb * distanceFade, c.a);
     }
     return float4(0.0f, 0.0f, 0.0f, 1.0f);
 }

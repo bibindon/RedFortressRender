@@ -7,7 +7,7 @@
 namespace NSRender
 {
 
-const int PostEffectBloom::BLOOM_LEVEL_DIVISORS[PostEffectBloom::BLOOM_LEVEL_COUNT] = { 2, 4, 8, 16, 32, 64 };
+const int PostEffectBloom::BLOOM_LEVEL_DIVISORS[PostEffectBloom::BLOOM_LEVEL_COUNT] = { 8, 16, 32, 64 };
 
 void PostEffectBloom::Initialize()
 {
@@ -89,7 +89,14 @@ void PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource,
 
     m_d3dEffect->SetFloat("g_Threshold", m_threshold);
 
-    const float baseWeights[BLOOM_LEVEL_COUNT] = { 0.28f, 0.24f, 0.18f, 0.14f, 0.10f, 0.06f };
+    const float perLevelWeight = m_weightSum / static_cast<float>(BLOOM_LEVEL_COUNT);
+    const float baseWeights[BLOOM_LEVEL_COUNT] =
+    {
+        perLevelWeight,
+        perLevelWeight,
+        perLevelWeight,
+        perLevelWeight
+    };
     float bloomWeightsA[4] { };
     float bloomWeightsB[4] { };
     for (int i = 0; i < BLOOM_LEVEL_COUNT; ++i)
@@ -107,7 +114,7 @@ void PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource,
     m_d3dEffect->SetFloatArray("g_BloomWeightsA", bloomWeightsA, 4);
     m_d3dEffect->SetFloatArray("g_BloomWeightsB", bloomWeightsB, 4);
 
-    DrawFullscreenQuad(renderSource, m_texDownsample[0], "BrightPass");
+    DrawFullscreenQuad(renderSource, m_texDownsample[0], "BrightPassDownsample");
 
     for (int i = 1; i < BLOOM_LEVEL_COUNT; ++i)
     {
@@ -116,7 +123,7 @@ void PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource,
 
     for (int i = 0; i < BLOOM_LEVEL_COUNT; ++i)
     {
-        DrawFullscreenQuad(m_texDownsample[i], m_texBlur[i], "Blur3x3");
+        DrawFullscreenQuad(m_texDownsample[i], m_texBlur[i], "Blur5x5");
     }
 
     DrawCombineQuad(renderSource, renderTarget);
@@ -255,8 +262,6 @@ void PostEffectBloom::DrawCombineQuad(LPDIRECT3DTEXTURE9 texScene,
     m_d3dEffect->SetTexture("g_BlurTex1", m_texBlur[1]);
     m_d3dEffect->SetTexture("g_BlurTex2", m_texBlur[2]);
     m_d3dEffect->SetTexture("g_BlurTex3", m_texBlur[3]);
-    m_d3dEffect->SetTexture("g_BlurTex4", m_texBlur[4]);
-    m_d3dEffect->SetTexture("g_BlurTex5", m_texBlur[5]);
 
     ScreenVertex quad[4] { };
 
@@ -319,6 +324,11 @@ void PostEffectBloom::SetIntensity(const float arg)
 void PostEffectBloom::SetSize(const float arg)
 {
     m_size = arg;
+}
+
+void PostEffectBloom::SetWeightSum(const float arg)
+{
+    m_weightSum = arg;
 }
 
 void PostEffectBloom::OnDeviceLost()

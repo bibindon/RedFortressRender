@@ -1005,6 +1005,23 @@ void Render::ApplySettings()
         SetPostEffectBloomThreshold(2.5f);
     }
 
+    const auto bloomWeightSum = m_settings.find(L"BloomWeightSum");
+    if (bloomWeightSum != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectBloomWeightSum(std::stof(bloomWeightSum->second));
+        }
+        catch (...)
+        {
+            SetPostEffectBloomWeightSum(1.0f);
+        }
+    }
+    else
+    {
+        SetPostEffectBloomWeightSum(1.0f);
+    }
+
     const auto depthOfFieldMode = m_settings.find(L"DepthOfFieldMode");
     if (depthOfFieldMode != m_settings.end())
     {
@@ -1135,6 +1152,23 @@ void Render::ApplySettings()
     else
     {
         SetPostEffectStarBurstThreshold(2.8f);
+    }
+
+    const auto starBurstDistanceFade = m_settings.find(L"StarBurstDistanceFade");
+    if (starBurstDistanceFade != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectStarBurstDistanceFade(std::stof(starBurstDistanceFade->second));
+        }
+        catch (...)
+        {
+            SetPostEffectStarBurstDistanceFade(0.0f);
+        }
+    }
+    else
+    {
+        SetPostEffectStarBurstDistanceFade(0.0f);
     }
 }
 
@@ -1461,7 +1495,7 @@ void Render::Draw()
     if (m_gBufferEnabled && m_postEffectStarBurstEnabled)
     {
         EnsurePostEffectStarBurstInitialized();
-        m_postEffectStarBurst.Draw(pTempTexture, pWorkTexture);
+        m_postEffectStarBurst.Draw(pTempTexture, pTexTempCameraZ, pWorkTexture);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
@@ -3014,6 +3048,11 @@ void Render::SetPostEffectBloomThreshold(const float threshold)
     m_PostEffectBloom.SetThreshold(threshold);
 }
 
+void Render::SetPostEffectBloomWeightSum(const float weightSum)
+{
+    m_PostEffectBloom.SetWeightSum(weightSum);
+}
+
 void Render::SetPostEffectDepthOfField(const bool arg)
 {
     if (arg)
@@ -3080,6 +3119,11 @@ void Render::SetPostEffectStarBurst(const bool arg)
 void Render::SetPostEffectStarBurstThreshold(const float threshold)
 {
     m_postEffectStarBurst.SetThreshold(threshold);
+}
+
+void Render::SetPostEffectStarBurstDistanceFade(const float fade)
+{
+    m_postEffectStarBurst.SetDistanceFade(fade);
 }
 
 void Render::SetPostEffectGodRay(const bool arg)

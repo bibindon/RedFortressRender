@@ -19,13 +19,14 @@ public:
     void SetThreshold(const float arg);
     void SetIntensity(const float arg);
     void SetSize(const float arg);
+    void SetWeightSum(const float arg);
 
     void OnDeviceLost();
     void OnDeviceReset();
 
 private:
 
-    static const int BLOOM_LEVEL_COUNT = 6;
+    static const int BLOOM_LEVEL_COUNT = 4;
     static const int BLOOM_LEVEL_DIVISORS[BLOOM_LEVEL_COUNT];
 
     LPD3DXEFFECT m_d3dEffect = NULL;
@@ -66,6 +67,9 @@ private:
     // ブルームの広さ
     // 0.0 ~ 1.0
     float m_size = 1.0f;
+
+    // 合成時の重み合計
+    float m_weightSum = 1.0f;
 
     void CreateTexture();
 };

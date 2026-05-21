@@ -238,6 +238,11 @@ float ClampBloomThreshold(const float threshold)
     return (std::max)(BLOOM_THRESHOLD_MIN, (std::min)(threshold, BLOOM_THRESHOLD_MAX));
 }
 
+float ClampBloomWeightSum(const float weightSum)
+{
+    return (std::max)(BLOOM_WEIGHT_SUM_MIN, (std::min)(weightSum, BLOOM_WEIGHT_SUM_MAX));
+}
+
 float ClampDepthOfFieldFocalDistance(const float distance)
 {
     return (std::max)(DOF_FOCAL_DISTANCE_MIN, (std::min)(distance, DOF_FOCAL_DISTANCE_MAX));
@@ -262,6 +267,11 @@ float ClampDepthOfFieldAutoActivationDistance(const float distance)
 float ClampStarBurstThreshold(const float threshold)
 {
     return (std::max)(STARBURST_THRESHOLD_MIN, (std::min)(threshold, STARBURST_THRESHOLD_MAX));
+}
+
+float ClampStarBurstDistanceFade(const float fade)
+{
+    return (std::max)(STARBURST_DISTANCE_FADE_MIN, (std::min)(fade, STARBURST_DISTANCE_FADE_MAX));
 }
 
 float ClampModelLoadScale(const float scale)
@@ -818,6 +828,12 @@ void ApplyBloomThreshold()
     g_Render.SetPostEffectBloomThreshold(g_bloomThreshold);
 }
 
+void ApplyBloomWeightSum()
+{
+    g_bloomWeightSum = ClampBloomWeightSum(g_bloomWeightSum);
+    g_Render.SetPostEffectBloomWeightSum(g_bloomWeightSum);
+}
+
 void ApplyDepthOfFieldMode()
 {
     g_Render.SetPostEffectDepthOfFieldMode(g_depthOfFieldMode);
@@ -851,6 +867,12 @@ void ApplyStarBurstThreshold()
 {
     g_starBurstThreshold = ClampStarBurstThreshold(g_starBurstThreshold);
     g_Render.SetPostEffectStarBurstThreshold(g_starBurstThreshold);
+}
+
+void ApplyStarBurstDistanceFade()
+{
+    g_starBurstDistanceFade = ClampStarBurstDistanceFade(g_starBurstDistanceFade);
+    g_Render.SetPostEffectStarBurstDistanceFade(g_starBurstDistanceFade);
 }
 
 void ApplyModelLoadScale()
@@ -1462,6 +1484,16 @@ float SliderValueToBloomThreshold(const int sliderValue)
     return ClampBloomThreshold(static_cast<float>(sliderValue) * BLOOM_THRESHOLD_STEP);
 }
 
+int BloomWeightSumToSliderValue(const float weightSum)
+{
+    return static_cast<int>(std::lround(ClampBloomWeightSum(weightSum)));
+}
+
+float SliderValueToBloomWeightSum(const int sliderValue)
+{
+    return ClampBloomWeightSum(static_cast<float>(sliderValue));
+}
+
 int DepthOfFieldFocalDistanceToSliderValue(const float distance)
 {
     return static_cast<int>(std::lround((ClampDepthOfFieldFocalDistance(distance) - DOF_FOCAL_DISTANCE_MIN) / DOF_FOCAL_DISTANCE_STEP));
@@ -1513,6 +1545,16 @@ int StarBurstThresholdToSliderValue(const float threshold)
 float SliderValueToStarBurstThreshold(const int sliderValue)
 {
     return ClampStarBurstThreshold(static_cast<float>(sliderValue) * STARBURST_THRESHOLD_STEP);
+}
+
+int StarBurstDistanceFadeToSliderValue(const float fade)
+{
+    return static_cast<int>(std::lround(ClampStarBurstDistanceFade(fade) / STARBURST_DISTANCE_FADE_STEP));
+}
+
+float SliderValueToStarBurstDistanceFade(const int sliderValue)
+{
+    return ClampStarBurstDistanceFade(static_cast<float>(sliderValue) * STARBURST_DISTANCE_FADE_STEP);
 }
 
 int ModelLoadScaleToSliderValue(const float scale)

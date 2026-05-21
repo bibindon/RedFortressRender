@@ -349,6 +349,7 @@ public:
 
     void SetPostEffectBloom(const bool arg);
     void SetPostEffectBloomThreshold(const float threshold);
+    void SetPostEffectBloomWeightSum(const float weightSum);
     void SetPostEffectDepthOfField(const bool arg);
     void SetPostEffectDepthOfFieldMode(const DepthOfFieldMode mode);
     void SetPostEffectDepthOfFieldFocalDistance(const float distance);
@@ -358,6 +359,7 @@ public:
 
     void SetPostEffectStarBurst(const bool arg);
     void SetPostEffectStarBurstThreshold(const float threshold);
+    void SetPostEffectStarBurstDistanceFade(const float fade);
 
     void SetPostEffectGodRay(const bool arg);
     void SetPostEffectGodRayLightPos(const D3DXVECTOR3& pos);
