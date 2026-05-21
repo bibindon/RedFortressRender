@@ -966,6 +966,36 @@ void MeshPBRManager::SetCubeMappingRate(const float rate)
     m_param.cubeMappingRate = rate;
 }
 
+void MeshPBRManager::SetPBRRoughness(const float roughness)
+{
+    m_param.pbrRoughness = roughness;
+}
+
+void MeshPBRManager::SetPBRMetallic(const float metallic)
+{
+    m_param.pbrMetallic = metallic;
+}
+
+void MeshPBRManager::SetPBREnvReflectionIntensity(const float intensity)
+{
+    m_param.envReflectionIntensity = intensity;
+}
+
+void MeshPBRManager::SetPBREnvMaxMipLevel(const float mipLevel)
+{
+    m_param.envMaxMipLevel = mipLevel;
+}
+
+void MeshPBRManager::SetPBREnvDiffuseIntensity(const float intensity)
+{
+    m_param.envDiffuseIntensity = intensity;
+}
+
+void MeshPBRManager::SetPBREnvDiffuseMipLevel(const float mipLevel)
+{
+    m_param.envDiffuseMipLevel = mipLevel;
+}
+
 void MeshPBRManager::SetSpecularEdgeOverrideEnabled(const bool enabled)
 {
     m_param.specularEdgeOverrideEnabled = enabled;

@@ -181,6 +181,40 @@ float ClampEnvMapBlend(const float blend)
     return (std::max)(ENV_MAP_BLEND_MIN, (std::min)(blend, ENV_MAP_BLEND_MAX));
 }
 
+float ClampPBRRoughness(const float roughness)
+{
+    return (std::max)(PBR_ROUGHNESS_MIN, (std::min)(roughness, PBR_ROUGHNESS_MAX));
+}
+
+float ClampPBRMetallic(const float metallic)
+{
+    return (std::max)(PBR_METALLIC_MIN, (std::min)(metallic, PBR_METALLIC_MAX));
+}
+
+float ClampPBREnvReflectionIntensity(const float intensity)
+{
+    return (std::max)(PBR_ENV_REFLECTION_INTENSITY_MIN,
+                      (std::min)(intensity, PBR_ENV_REFLECTION_INTENSITY_MAX));
+}
+
+float ClampPBREnvMaxMipLevel(const float mipLevel)
+{
+    return (std::max)(PBR_ENV_MAX_MIP_LEVEL_MIN,
+                      (std::min)(mipLevel, PBR_ENV_MAX_MIP_LEVEL_MAX));
+}
+
+float ClampPBREnvDiffuseIntensity(const float intensity)
+{
+    return (std::max)(PBR_ENV_DIFFUSE_INTENSITY_MIN,
+                      (std::min)(intensity, PBR_ENV_DIFFUSE_INTENSITY_MAX));
+}
+
+float ClampPBREnvDiffuseMipLevel(const float mipLevel)
+{
+    return (std::max)(PBR_ENV_DIFFUSE_MIP_LEVEL_MIN,
+                      (std::min)(mipLevel, PBR_ENV_DIFFUSE_MIP_LEVEL_MAX));
+}
+
 float ClampSSSIntensity(const float intensity)
 {
     return (std::max)(SSS_INTENSITY_MIN, (std::min)(intensity, SSS_INTENSITY_MAX));
@@ -714,6 +748,42 @@ void ApplyEnvMapBlend()
 {
     g_envMapBlend = ClampEnvMapBlend(g_envMapBlend);
     g_Render.SetMeshMixEnvMapBlend(g_envMapBlend);
+}
+
+void ApplyPBRRoughness()
+{
+    g_pbrRoughness = ClampPBRRoughness(g_pbrRoughness);
+    g_Render.SetMeshPBRRoughness(g_pbrRoughness);
+}
+
+void ApplyPBRMetallic()
+{
+    g_pbrMetallic = ClampPBRMetallic(g_pbrMetallic);
+    g_Render.SetMeshPBRMetallic(g_pbrMetallic);
+}
+
+void ApplyPBREnvReflectionIntensity()
+{
+    g_pbrEnvReflectionIntensity = ClampPBREnvReflectionIntensity(g_pbrEnvReflectionIntensity);
+    g_Render.SetMeshPBREnvReflectionIntensity(g_pbrEnvReflectionIntensity);
+}
+
+void ApplyPBREnvMaxMipLevel()
+{
+    g_pbrEnvMaxMipLevel = ClampPBREnvMaxMipLevel(g_pbrEnvMaxMipLevel);
+    g_Render.SetMeshPBREnvMaxMipLevel(g_pbrEnvMaxMipLevel);
+}
+
+void ApplyPBREnvDiffuseIntensity()
+{
+    g_pbrEnvDiffuseIntensity = ClampPBREnvDiffuseIntensity(g_pbrEnvDiffuseIntensity);
+    g_Render.SetMeshPBREnvDiffuseIntensity(g_pbrEnvDiffuseIntensity);
+}
+
+void ApplyPBREnvDiffuseMipLevel()
+{
+    g_pbrEnvDiffuseMipLevel = ClampPBREnvDiffuseMipLevel(g_pbrEnvDiffuseMipLevel);
+    g_Render.SetMeshPBREnvDiffuseMipLevel(g_pbrEnvDiffuseMipLevel);
 }
 
 void ApplySSS()
@@ -1275,6 +1345,66 @@ int EnvMapBlendToSliderValue(const float blend)
 float SliderValueToEnvMapBlend(const int sliderValue)
 {
     return ClampEnvMapBlend(static_cast<float>(sliderValue) * ENV_MAP_BLEND_STEP);
+}
+
+int PBRRoughnessToSliderValue(const float roughness)
+{
+    return static_cast<int>(std::lround((ClampPBRRoughness(roughness) - PBR_ROUGHNESS_MIN) / PBR_ROUGHNESS_STEP));
+}
+
+float SliderValueToPBRRoughness(const int sliderValue)
+{
+    return ClampPBRRoughness(PBR_ROUGHNESS_MIN + static_cast<float>(sliderValue) * PBR_ROUGHNESS_STEP);
+}
+
+int PBRMetallicToSliderValue(const float metallic)
+{
+    return static_cast<int>(std::lround(ClampPBRMetallic(metallic) / PBR_METALLIC_STEP));
+}
+
+float SliderValueToPBRMetallic(const int sliderValue)
+{
+    return ClampPBRMetallic(static_cast<float>(sliderValue) * PBR_METALLIC_STEP);
+}
+
+int PBREnvReflectionIntensityToSliderValue(const float intensity)
+{
+    return static_cast<int>(std::lround(ClampPBREnvReflectionIntensity(intensity) / PBR_ENV_REFLECTION_INTENSITY_STEP));
+}
+
+float SliderValueToPBREnvReflectionIntensity(const int sliderValue)
+{
+    return ClampPBREnvReflectionIntensity(static_cast<float>(sliderValue) * PBR_ENV_REFLECTION_INTENSITY_STEP);
+}
+
+int PBREnvMaxMipLevelToSliderValue(const float mipLevel)
+{
+    return static_cast<int>(std::lround(ClampPBREnvMaxMipLevel(mipLevel) / PBR_ENV_MAX_MIP_LEVEL_STEP));
+}
+
+float SliderValueToPBREnvMaxMipLevel(const int sliderValue)
+{
+    return ClampPBREnvMaxMipLevel(static_cast<float>(sliderValue) * PBR_ENV_MAX_MIP_LEVEL_STEP);
+}
+
+int PBREnvDiffuseIntensityToSliderValue(const float intensity)
+{
+    return static_cast<int>(std::lround(ClampPBREnvDiffuseIntensity(intensity) / PBR_ENV_DIFFUSE_INTENSITY_STEP));
+}
+
+float SliderValueToPBREnvDiffuseIntensity(const int sliderValue)
+{
+    return ClampPBREnvDiffuseIntensity(static_cast<float>(sliderValue) * PBR_ENV_DIFFUSE_INTENSITY_STEP);
+}
+
+int PBREnvDiffuseMipLevelToSliderValue(const float mipLevel)
+{
+    return static_cast<int>(std::lround(ClampPBREnvDiffuseMipLevel(mipLevel) / PBR_ENV_DIFFUSE_MIP_LEVEL_STEP));
+}
+
+float SliderValueToPBREnvDiffuseMipLevel(const int sliderValue)
+{
+    return ClampPBREnvDiffuseMipLevel(static_cast<float>(sliderValue) * PBR_ENV_DIFFUSE_MIP_LEVEL_STEP);
 }
 
 int SSSIntensityToSliderValue(const float intensity)

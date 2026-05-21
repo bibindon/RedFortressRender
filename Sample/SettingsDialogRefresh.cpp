@@ -572,6 +572,78 @@ void RefreshEnvMapBlendControls(HWND hDlg)
                        static_cast<LPARAM>(EnvMapBlendToSliderValue(g_envMapBlend)));
 }
 
+void RefreshPBRRoughnessControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.3f", g_pbrRoughness);
+    SetDlgItemText(hDlg, IDC_EDIT_PBR_ROUGHNESS, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_PBR_ROUGHNESS,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(PBRRoughnessToSliderValue(g_pbrRoughness)));
+}
+
+void RefreshPBRMetallicControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.3f", g_pbrMetallic);
+    SetDlgItemText(hDlg, IDC_EDIT_PBR_METALLIC, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_PBR_METALLIC,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(PBRMetallicToSliderValue(g_pbrMetallic)));
+}
+
+void RefreshPBREnvReflectionIntensityControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.3f", g_pbrEnvReflectionIntensity);
+    SetDlgItemText(hDlg, IDC_EDIT_PBR_ENV_REFLECTION_INTENSITY, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_PBR_ENV_REFLECTION_INTENSITY,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(PBREnvReflectionIntensityToSliderValue(g_pbrEnvReflectionIntensity)));
+}
+
+void RefreshPBREnvMaxMipLevelControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.3f", g_pbrEnvMaxMipLevel);
+    SetDlgItemText(hDlg, IDC_EDIT_PBR_ENV_MAX_MIP_LEVEL, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_PBR_ENV_MAX_MIP_LEVEL,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(PBREnvMaxMipLevelToSliderValue(g_pbrEnvMaxMipLevel)));
+}
+
+void RefreshPBREnvDiffuseIntensityControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.3f", g_pbrEnvDiffuseIntensity);
+    SetDlgItemText(hDlg, IDC_EDIT_PBR_ENV_DIFFUSE_INTENSITY, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_PBR_ENV_DIFFUSE_INTENSITY,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(PBREnvDiffuseIntensityToSliderValue(g_pbrEnvDiffuseIntensity)));
+}
+
+void RefreshPBREnvDiffuseMipLevelControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.3f", g_pbrEnvDiffuseMipLevel);
+    SetDlgItemText(hDlg, IDC_EDIT_PBR_ENV_DIFFUSE_MIP_LEVEL, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_PBR_ENV_DIFFUSE_MIP_LEVEL,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(PBREnvDiffuseMipLevelToSliderValue(g_pbrEnvDiffuseMipLevel)));
+}
+
 void RefreshSSSControls(HWND hDlg)
 {
     wchar_t buffer[32];

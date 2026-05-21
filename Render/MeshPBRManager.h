@@ -48,6 +48,12 @@ public:
     void SetSpecularIntensity(const float intensity);
     void SetSpecularEdge(const float edge);
     void SetCubeMappingRate(const float rate);
+    void SetPBRRoughness(const float roughness);
+    void SetPBRMetallic(const float metallic);
+    void SetPBREnvReflectionIntensity(const float intensity);
+    void SetPBREnvMaxMipLevel(const float mipLevel);
+    void SetPBREnvDiffuseIntensity(const float intensity);
+    void SetPBREnvDiffuseMipLevel(const float mipLevel);
     void SetSpecularIntensityOverrideEnabled(const bool enabled);
     void SetSpecularEdgeOverrideEnabled(const bool enabled);
     void SetSSS(const bool enabled);

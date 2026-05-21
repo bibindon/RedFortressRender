@@ -48,6 +48,12 @@ void RefreshSpecularIntensityControls(HWND hDlg);
 void RefreshSpecularEdgeControls(HWND hDlg);
 void RefreshPhongTreatTextureAsWhiteControls(HWND hDlg);
 void RefreshEnvMapBlendControls(HWND hDlg);
+void RefreshPBRRoughnessControls(HWND hDlg);
+void RefreshPBRMetallicControls(HWND hDlg);
+void RefreshPBREnvReflectionIntensityControls(HWND hDlg);
+void RefreshPBREnvMaxMipLevelControls(HWND hDlg);
+void RefreshPBREnvDiffuseIntensityControls(HWND hDlg);
+void RefreshPBREnvDiffuseMipLevelControls(HWND hDlg);
 void RefreshSSSControls(HWND hDlg);
 void RefreshSSAO(HWND hDlg);
 void RefreshSSGI(HWND hDlg);
@@ -126,6 +132,18 @@ constexpr int SPECULAR_EDGE_SLIDER_MIN = 0;
 constexpr int SPECULAR_EDGE_SLIDER_MAX = static_cast<int>(SPECULAR_EDGE_MAX / SPECULAR_EDGE_STEP);
 constexpr int ENV_MAP_BLEND_SLIDER_MIN = 0;
 constexpr int ENV_MAP_BLEND_SLIDER_MAX = static_cast<int>(ENV_MAP_BLEND_MAX / ENV_MAP_BLEND_STEP);
+constexpr int PBR_ROUGHNESS_SLIDER_MIN = 0;
+constexpr int PBR_ROUGHNESS_SLIDER_MAX = static_cast<int>((PBR_ROUGHNESS_MAX - PBR_ROUGHNESS_MIN) / PBR_ROUGHNESS_STEP);
+constexpr int PBR_METALLIC_SLIDER_MIN = 0;
+constexpr int PBR_METALLIC_SLIDER_MAX = static_cast<int>(PBR_METALLIC_MAX / PBR_METALLIC_STEP);
+constexpr int PBR_ENV_REFLECTION_INTENSITY_SLIDER_MIN = 0;
+constexpr int PBR_ENV_REFLECTION_INTENSITY_SLIDER_MAX = static_cast<int>(PBR_ENV_REFLECTION_INTENSITY_MAX / PBR_ENV_REFLECTION_INTENSITY_STEP);
+constexpr int PBR_ENV_MAX_MIP_LEVEL_SLIDER_MIN = 0;
+constexpr int PBR_ENV_MAX_MIP_LEVEL_SLIDER_MAX = static_cast<int>(PBR_ENV_MAX_MIP_LEVEL_MAX / PBR_ENV_MAX_MIP_LEVEL_STEP);
+constexpr int PBR_ENV_DIFFUSE_INTENSITY_SLIDER_MIN = 0;
+constexpr int PBR_ENV_DIFFUSE_INTENSITY_SLIDER_MAX = static_cast<int>(PBR_ENV_DIFFUSE_INTENSITY_MAX / PBR_ENV_DIFFUSE_INTENSITY_STEP);
+constexpr int PBR_ENV_DIFFUSE_MIP_LEVEL_SLIDER_MIN = 0;
+constexpr int PBR_ENV_DIFFUSE_MIP_LEVEL_SLIDER_MAX = static_cast<int>(PBR_ENV_DIFFUSE_MIP_LEVEL_MAX / PBR_ENV_DIFFUSE_MIP_LEVEL_STEP);
 constexpr int SSS_INTENSITY_SLIDER_MIN = 0;
 constexpr int SSS_INTENSITY_SLIDER_MAX = static_cast<int>(SSS_INTENSITY_MAX / SSS_INTENSITY_STEP);
 constexpr int SSS_COLOR_SLIDER_MIN = 0;
@@ -1832,6 +1850,12 @@ void RefreshAllControls(HWND hDlg)
     RefreshSpecularEdgeControls(hDlg);
     RefreshPhongTreatTextureAsWhiteControls(hDlg);
     RefreshEnvMapBlendControls(hDlg);
+    RefreshPBRRoughnessControls(hDlg);
+    RefreshPBRMetallicControls(hDlg);
+    RefreshPBREnvReflectionIntensityControls(hDlg);
+    RefreshPBREnvMaxMipLevelControls(hDlg);
+    RefreshPBREnvDiffuseIntensityControls(hDlg);
+    RefreshPBREnvDiffuseMipLevelControls(hDlg);
     RefreshSSSControls(hDlg);
     RefreshSSAO(hDlg);
     RefreshSSAOSampleRadiusControls(hDlg);
@@ -1994,6 +2018,36 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_ENVMAP_BLEND, TBM_SETRANGEMAX, FALSE, ENV_MAP_BLEND_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_ENVMAP_BLEND, TBM_SETTICFREQ, 2, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_ENVMAP_BLEND, TBM_SETPAGESIZE, 0, 2);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_ROUGHNESS, TBM_SETRANGEMIN, FALSE, PBR_ROUGHNESS_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_ROUGHNESS, TBM_SETRANGEMAX, FALSE, PBR_ROUGHNESS_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_ROUGHNESS, TBM_SETTICFREQ, 8, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_ROUGHNESS, TBM_SETPAGESIZE, 0, 8);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_METALLIC, TBM_SETRANGEMIN, FALSE, PBR_METALLIC_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_METALLIC, TBM_SETRANGEMAX, FALSE, PBR_METALLIC_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_METALLIC, TBM_SETTICFREQ, 8, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_METALLIC, TBM_SETPAGESIZE, 0, 8);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_ENV_REFLECTION_INTENSITY, TBM_SETRANGEMIN, FALSE, PBR_ENV_REFLECTION_INTENSITY_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_ENV_REFLECTION_INTENSITY, TBM_SETRANGEMAX, FALSE, PBR_ENV_REFLECTION_INTENSITY_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_ENV_REFLECTION_INTENSITY, TBM_SETTICFREQ, 10, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_ENV_REFLECTION_INTENSITY, TBM_SETPAGESIZE, 0, 10);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_ENV_MAX_MIP_LEVEL, TBM_SETRANGEMIN, FALSE, PBR_ENV_MAX_MIP_LEVEL_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_ENV_MAX_MIP_LEVEL, TBM_SETRANGEMAX, FALSE, PBR_ENV_MAX_MIP_LEVEL_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_ENV_MAX_MIP_LEVEL, TBM_SETTICFREQ, 10, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_ENV_MAX_MIP_LEVEL, TBM_SETPAGESIZE, 0, 10);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_ENV_DIFFUSE_INTENSITY, TBM_SETRANGEMIN, FALSE, PBR_ENV_DIFFUSE_INTENSITY_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_ENV_DIFFUSE_INTENSITY, TBM_SETRANGEMAX, FALSE, PBR_ENV_DIFFUSE_INTENSITY_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_ENV_DIFFUSE_INTENSITY, TBM_SETTICFREQ, 10, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_ENV_DIFFUSE_INTENSITY, TBM_SETPAGESIZE, 0, 10);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_ENV_DIFFUSE_MIP_LEVEL, TBM_SETRANGEMIN, FALSE, PBR_ENV_DIFFUSE_MIP_LEVEL_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_ENV_DIFFUSE_MIP_LEVEL, TBM_SETRANGEMAX, FALSE, PBR_ENV_DIFFUSE_MIP_LEVEL_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_ENV_DIFFUSE_MIP_LEVEL, TBM_SETTICFREQ, 10, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_PBR_ENV_DIFFUSE_MIP_LEVEL, TBM_SETPAGESIZE, 0, 10);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_INTENSITY, TBM_SETRANGEMIN, FALSE, SSS_INTENSITY_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SSS_INTENSITY, TBM_SETRANGEMAX, FALSE, SSS_INTENSITY_SLIDER_MAX);
@@ -2868,6 +2922,60 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_envMapBlend = SliderValueToEnvMapBlend(sliderValue);
             ApplyEnvMapBlend();
             RefreshEnvMapBlendControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_PBR_ROUGHNESS))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_pbrRoughness = SliderValueToPBRRoughness(sliderValue);
+            ApplyPBRRoughness();
+            RefreshPBRRoughnessControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_PBR_METALLIC))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_pbrMetallic = SliderValueToPBRMetallic(sliderValue);
+            ApplyPBRMetallic();
+            RefreshPBRMetallicControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_PBR_ENV_REFLECTION_INTENSITY))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_pbrEnvReflectionIntensity = SliderValueToPBREnvReflectionIntensity(sliderValue);
+            ApplyPBREnvReflectionIntensity();
+            RefreshPBREnvReflectionIntensityControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_PBR_ENV_MAX_MIP_LEVEL))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_pbrEnvMaxMipLevel = SliderValueToPBREnvMaxMipLevel(sliderValue);
+            ApplyPBREnvMaxMipLevel();
+            RefreshPBREnvMaxMipLevelControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_PBR_ENV_DIFFUSE_INTENSITY))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_pbrEnvDiffuseIntensity = SliderValueToPBREnvDiffuseIntensity(sliderValue);
+            ApplyPBREnvDiffuseIntensity();
+            RefreshPBREnvDiffuseIntensityControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_PBR_ENV_DIFFUSE_MIP_LEVEL))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_pbrEnvDiffuseMipLevel = SliderValueToPBREnvDiffuseMipLevel(sliderValue);
+            ApplyPBREnvDiffuseMipLevel();
+            RefreshPBREnvDiffuseMipLevelControls(hDlg);
             return TRUE;
         }
 

@@ -209,6 +209,12 @@ public:
     void SetMeshMixSpecularIntensity(const float intensity);
     void SetMeshMixSpecularEdge(const float edge);
     void SetMeshMixEnvMapBlend(const float blend);
+    void SetMeshPBRRoughness(const float roughness);
+    void SetMeshPBRMetallic(const float metallic);
+    void SetMeshPBREnvReflectionIntensity(const float intensity);
+    void SetMeshPBREnvMaxMipLevel(const float mipLevel);
+    void SetMeshPBREnvDiffuseIntensity(const float intensity);
+    void SetMeshPBREnvDiffuseMipLevel(const float mipLevel);
     void SetMeshMixSpecularIntensityOverrideEnabled(const bool enabled);
     void SetMeshMixSpecularEdgeOverrideEnabled(const bool enabled);
     void SetPhongTreatTextureAsWhite(const bool enabled);
@@ -533,6 +539,12 @@ private:
     float m_meshMixSpecularIntensity = 0.0f;
     float m_meshMixSpecularEdge = 0.0f;
     float m_meshMixCubeMappingRate = 1.0f;
+    float m_meshPBRRoughness = 0.85f;
+    float m_meshPBRMetallic = 0.0f;
+    float m_meshPBREnvReflectionIntensity = 0.05f;
+    float m_meshPBREnvMaxMipLevel = 5.0f;
+    float m_meshPBREnvDiffuseIntensity = 0.8f;
+    float m_meshPBREnvDiffuseMipLevel = 3.0f;
     bool m_meshMixSpecularIntensityOverrideEnabled = true;
     bool m_meshMixSpecularEdgeOverrideEnabled = true;
     bool m_phongTreatTextureAsWhiteEnabled = false;

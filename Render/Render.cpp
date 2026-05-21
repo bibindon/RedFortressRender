@@ -1906,6 +1906,12 @@ int Render::AddMeshPBR(const std::wstring& filePath,
     param.specularIntensityOverrideEnabled = m_meshMixSpecularIntensityOverrideEnabled;
     param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
     param.cubeMappingRate = m_meshMixCubeMappingRate;
+    param.pbrRoughness = m_meshPBRRoughness;
+    param.pbrMetallic = m_meshPBRMetallic;
+    param.envReflectionIntensity = m_meshPBREnvReflectionIntensity;
+    param.envMaxMipLevel = m_meshPBREnvMaxMipLevel;
+    param.envDiffuseIntensity = m_meshPBREnvDiffuseIntensity;
+    param.envDiffuseMipLevel = m_meshPBREnvDiffuseMipLevel;
     param.sss = m_meshMixSSSEnabled;
     param.sssIntensity = m_meshMixSSSIntensity;
     param.sssColor = m_meshMixSSSColor;
@@ -2134,6 +2140,66 @@ void Render::SetMeshMixEnvMapBlend(const float blend)
     for (auto& mesh : m_meshPBRList)
     {
         mesh.SetCubeMappingRate(blend);
+    }
+}
+
+void Render::SetMeshPBRRoughness(const float roughness)
+{
+    m_meshPBRRoughness = roughness;
+
+    for (auto& mesh : m_meshPBRList)
+    {
+        mesh.SetPBRRoughness(roughness);
+    }
+}
+
+void Render::SetMeshPBRMetallic(const float metallic)
+{
+    m_meshPBRMetallic = metallic;
+
+    for (auto& mesh : m_meshPBRList)
+    {
+        mesh.SetPBRMetallic(metallic);
+    }
+}
+
+void Render::SetMeshPBREnvReflectionIntensity(const float intensity)
+{
+    m_meshPBREnvReflectionIntensity = intensity;
+
+    for (auto& mesh : m_meshPBRList)
+    {
+        mesh.SetPBREnvReflectionIntensity(intensity);
+    }
+}
+
+void Render::SetMeshPBREnvMaxMipLevel(const float mipLevel)
+{
+    m_meshPBREnvMaxMipLevel = mipLevel;
+
+    for (auto& mesh : m_meshPBRList)
+    {
+        mesh.SetPBREnvMaxMipLevel(mipLevel);
+    }
+}
+
+void Render::SetMeshPBREnvDiffuseIntensity(const float intensity)
+{
+    m_meshPBREnvDiffuseIntensity = intensity;
+
+    for (auto& mesh : m_meshPBRList)
+    {
+        mesh.SetPBREnvDiffuseIntensity(intensity);
+    }
+}
+
+void Render::SetMeshPBREnvDiffuseMipLevel(const float mipLevel)
+{
+    m_meshPBREnvDiffuseMipLevel = mipLevel;
+
+    for (auto& mesh : m_meshPBRList)
+    {
+        mesh.SetPBREnvDiffuseMipLevel(mipLevel);
     }
 }
 
