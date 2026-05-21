@@ -44,6 +44,15 @@ struct stMeshPBRParam
     bool sss = false;
     float sssIntensity = 1.0f;
     DWORD sssColor = 0xffff80;
+    D3DXCOLOR pbrBaseColorFactor = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
+    float pbrRoughness = 0.85f;
+    float pbrMetallic = 0.0f;
+    bool pbrEnableSrgbToLinear = true;
+    bool pbrEnableLinearToSrgb = true;
+    float envReflectionIntensity = 0.05f;
+    float envMaxMipLevel = 5.0f;
+    float envDiffuseIntensity = 0.8f;
+    float envDiffuseMipLevel = 3.0f;
 };
 
 enum class eMeshPBRParamPreset

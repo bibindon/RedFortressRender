@@ -1,176 +1,45 @@
-
 float4x4 g_matWorld;
 float4x4 g_matViewProj;
 float4x4 g_matWorldViewProj;
 float4x4 g_matMirrorViewProj;
 
 float4 g_lightDir = { 0.3f, 1.0f, 0.5f, 0.0f };
-float4 g_lightPos = { -5.f, 7.f, -10.f, 0.0f };
-
-float4 g_cameraPos = { 10.f, 5.f, 10.f, 0.0f };
-
-float4 g_ambient = { 0.2f, 0.2f, 0.2f, 1.0f };
-float g_fAmbientIntensity = 1.0f;
-float4 g_diffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
 float4 g_lightColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+float4 g_cameraPos = { 10.0f, 5.0f, 10.0f, 1.0f };
+float4 g_ambient = { 0.2f, 0.2f, 0.2f, 1.0f };
+float g_fSunLightIntensity = 1.0f;
+float g_fAmbientIntensity = 1.0f;
 
-float4 g_specularColor = { 1.0f, 1.0f, 1.0f, 1.0f };
-float2 g_screenSize = { 1600.0f, 900.0f };
-
-// スペキュラ光の鋭さ
-//float g_specularPower = 16.0f;
-// float g_specularPower = 128.0f;
-float g_specularPower = 1.0f;
-
-// スペキュラ光の強さ
-float g_specularIntensity = 0.1f;
-//float g_specularIntensity = 0.2f;
-//float g_specularIntensity = 0.0f;
-
+float4 g_diffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
+float4 g_pbrBaseColorFactor = { 1.0f, 1.0f, 1.0f, 1.0f };
+float g_pbrRoughness = 0.85f;
+float g_pbrMetallic = 0.0f;
+bool g_enableSrgbToLinear = true;
+bool g_enableLinearToSrgb = true;
+float g_envReflectionIntensity = 0.05f;
+float g_envMaxMipLevel = 5.0f;
+float g_envDiffuseIntensity = 0.8f;
+float g_envDiffuseMipLevel = 3.0f;
+float g_specularIntensity = 0.0f;
 float g_cubeMappingRate = 1.0f;
 float g_cubeMappingGauss = 0.0f;
-float g_emitIntensity = 1.0f;
-float4 g_emitColor = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-// 距離フォグの色
-float4 g_fogDistanceColor = { 0.5f, 0.5f, 1.0f, 1.0f };
-
-// 距離フォグの強さ
-float g_fogDistanceDensity = 0.01f;
-
-// 高さフォグの色
-float4 g_fogHeightColor = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-// 高さフォグの強さ
-float g_fogHeightDensity = 0.01f;
-
-// 空間の明るさ
-// 0なら洞窟、0.1なら夜、1なら明るい室内、3なら快晴、という感じ
-// 1.0を超えると彩度が上がり、逆に暗くなるようにすると面白い気がする。
-float g_fSunLightIntensity = 1.0f;
-bool g_bSaturateShadow = false;
-float g_fSaturateShadowIntensity = 0.2f;
-float g_fShadowDarkness = 1.0f;
-
-texture g_texture;
-sampler g_textureSampler = sampler_state
-{
-    Texture = (g_texture);
-    MipFilter = LINEAR;
-    MinFilter = ANISOTROPIC;
-    MagFilter = ANISOTROPIC;
-    MaxAnisotropy = 8;
-
-    AddressU = Wrap;
-    AddressV = Wrap;
-
-    MaxMipLevel = 1;
-};
-
-// 環境マップ
-textureCUBE g_texCubeMap;
-
-samplerCUBE g_cubeMapSampler = sampler_state
-{
-    Texture = <g_texCubeMap>;
-    MipFilter = LINEAR;
-    MinFilter = LINEAR;
-    MagFilter = LINEAR;
-    AddressU = CLAMP;
-    AddressV = CLAMP;
-
-    // どれくらいぼかすか
-    // 数字が大きいほどぼかされる
-    //MaxMipLevel = 7;
-    MaxMipLevel = 1;
-};
-
-// 法線マップ
-texture g_texNormalMap;
-sampler g_normalMapSampler = sampler_state
-{
-    Texture = (g_texNormalMap);
-    MipFilter = LINEAR;
-    MinFilter = LINEAR;
-    MagFilter = LINEAR;
-
-    AddressU = Wrap;
-    AddressV = Wrap;
-
-    MaxMipLevel = 1;
-};
-
-texture g_texThickness;
-sampler g_thicknessSampler = sampler_state
-{
-    Texture = (g_texThickness);
-    MipFilter = NONE;
-    MinFilter = POINT;
-    MagFilter = POINT;
-    AddressU = CLAMP;
-    AddressV = CLAMP;
-};
-
-texture g_texMirror;
-sampler g_mirrorSampler = sampler_state
-{
-    Texture = (g_texMirror);
-    MipFilter = LINEAR;
-    MinFilter = LINEAR;
-    MagFilter = LINEAR;
-    AddressU = CLAMP;
-    AddressV = CLAMP;
-};
-
-//------------------------------------------------------
-// 視差遮蔽マッピング関連
-//------------------------------------------------------
-
 bool g_bPOM = false;
 bool g_bNormalMapping = false;
 bool g_bSSS = false;
 float g_sssIntensity = 1.0f;
 float4 g_sssColor = { 0.5f, 1.0f, 0.5f, 1.0f };
-
-// 高さ 0.0 ~ 1.0
-float g_fHeightMapScale = 0.1f;
-
-// サンプリング数（最小）
-int g_nMinSamples = 50;
-
-// サンプリング数（最大）
-int g_nMaxSamples = 100;
-
-// 高さマップ
-texture g_texHeightMap;
-sampler g_heightMapSampler = sampler_state
-{
-    Texture = (g_texHeightMap);
-    MipFilter = LINEAR;
-    MinFilter = LINEAR;
-    MagFilter = LINEAR;
-};
-
-float3 IncreaseSaturation(float3 color, float amount)
-{
-    float luminance = dot(color, float3(0.299f, 0.587f, 0.114f));
-    return saturate(lerp(luminance.xxx, color, amount));
-}
-
-
 float g_time = 0.0f;
+bool g_swayEnable = false;
+float g_swayAmount = 0.0f;
+float g_swaySpeed = 0.0f;
 
-//---------------------------------------------------------
-// 揺らしエフェクト用パラメータ
-//---------------------------------------------------------
-bool  g_swayEnable = false;
-float g_swayAmount = 0.5f;
-float g_swaySpeed  = 2.0f;
-float g_swayHeight = 3.0f;
+bool g_hasDiffuseTexture = false;
+bool g_hasNormalTexture = false;
+bool g_hasEnvTexture = false;
 
-//---------------------------------------------------------
-// ポイントライト
-//---------------------------------------------------------
+float g_emitIntensity = 1.0f;
+float4 g_emitColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+
 float3 g_pointLightPos[16];
 float  g_pointLightBrightness[16];
 float  g_pointLightShape[16];
@@ -182,6 +51,231 @@ float3 g_pointLightColor[16];
 
 static const float POINT_LIGHT_CUBE_HALF_SIZE = 4.0f;
 static const float POINT_LIGHT_SPHERE_RADIUS = 5.0f;
+static const float PI = 3.14159265f;
+
+texture g_texture;
+sampler2D g_textureSampler = sampler_state
+{
+    Texture = (g_texture);
+    MipFilter = LINEAR;
+    MinFilter = ANISOTROPIC;
+    MagFilter = ANISOTROPIC;
+    MaxAnisotropy = 8;
+    AddressU = WRAP;
+    AddressV = WRAP;
+};
+
+texture g_texNormalMap;
+sampler2D g_normalMapSampler = sampler_state
+{
+    Texture = (g_texNormalMap);
+    MipFilter = LINEAR;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    AddressU = WRAP;
+    AddressV = WRAP;
+};
+
+textureCUBE g_texCubeMap;
+samplerCUBE g_cubeMapSampler = sampler_state
+{
+    Texture = <g_texCubeMap>;
+    MipFilter = LINEAR;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+
+texture g_texMirror;
+sampler2D g_mirrorSampler = sampler_state
+{
+    Texture = (g_texMirror);
+    MipFilter = LINEAR;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+
+texture g_texHeightMap;
+texture g_texThickness;
+
+struct VSIn
+{
+    float4 pos : POSITION;
+    float4 nrm : NORMAL0;
+    float4 tangent : TANGENT0;
+    float4 binorm : BINORMAL0;
+    float4 uv : TEXCOORD0;
+};
+
+struct VSOut
+{
+    float4 pos : POSITION;
+    float3 posWorld : TEXCOORD0;
+    float3 normWorld : TEXCOORD1;
+    float2 uv : TEXCOORD2;
+    float3 tangentWorld : TEXCOORD3;
+    float3 binormWorld : TEXCOORD4;
+};
+
+VSOut VertexShader1(VSIn i)
+{
+    VSOut o;
+    o.pos = mul(i.pos, g_matWorldViewProj);
+    o.posWorld = mul(i.pos, g_matWorld).xyz;
+
+    float3x3 world3x3 = (float3x3)g_matWorld;
+    o.normWorld = normalize(mul(i.nrm.xyz, world3x3));
+    o.tangentWorld = normalize(mul(i.tangent.xyz, world3x3));
+    o.binormWorld = normalize(mul(i.binorm.xyz, world3x3));
+    o.uv = i.uv.xy;
+    return o;
+}
+
+float3 SrgbToLinear(float3 c)
+{
+    return pow(saturate(c), 2.2f);
+}
+
+float3 LinearToSrgb(float3 c)
+{
+    return pow(saturate(c), 1.0f / 2.2f);
+}
+
+float DistributionGGX(float3 N, float3 H, float roughness)
+{
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float NdotH = saturate(dot(N, H));
+    float NdotH2 = NdotH * NdotH;
+
+    float denom = NdotH2 * (a2 - 1.0f) + 1.0f;
+    denom = PI * denom * denom;
+
+    return a2 / max(denom, 0.0001f);
+}
+
+float GeometrySchlickGGX(float NdotV, float roughness)
+{
+    float r = roughness + 1.0f;
+    float k = (r * r) / 8.0f;
+
+    float denom = NdotV * (1.0f - k) + k;
+    return NdotV / max(denom, 0.0001f);
+}
+
+float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
+{
+    float NdotV = saturate(dot(N, V));
+    float NdotL = saturate(dot(N, L));
+    return GeometrySchlickGGX(NdotV, roughness) * GeometrySchlickGGX(NdotL, roughness);
+}
+
+float3 FresnelSchlick(float cosTheta, float3 F0)
+{
+    return F0 + (1.0f - F0) * pow(1.0f - saturate(cosTheta), 5.0f);
+}
+
+float4 SampleDiffuseTexture(float2 uv)
+{
+    if (!g_hasDiffuseTexture)
+    {
+        return float4(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+
+    float4 textureColor = tex2D(g_textureSampler, uv);
+    if (g_enableSrgbToLinear)
+    {
+        textureColor.rgb = SrgbToLinear(textureColor.rgb);
+    }
+
+    return textureColor;
+}
+
+float3 SampleNormalWorld(VSOut i)
+{
+    float3 normalWorld = normalize(i.normWorld);
+    if (!g_hasNormalTexture || !g_bNormalMapping)
+    {
+        return normalWorld;
+    }
+
+    float3 normalTS = tex2D(g_normalMapSampler, i.uv).xyz * 2.0f - 1.0f;
+    normalTS.x *= -1.0f;
+    normalTS = normalize(normalTS);
+
+    float3x3 tangentToWorld = float3x3(-normalize(i.tangentWorld),
+                                       -normalize(i.binormWorld),
+                                       normalWorld);
+    return normalize(mul(normalTS, tangentToWorld));
+}
+
+float3 GetEnvSpecular(float3 R, float3 N, float3 V, float3 F0, float roughness, float metallic)
+{
+    if (!g_hasEnvTexture)
+    {
+        return 0.0f.xxx;
+    }
+
+    float mipLevel = clamp(saturate(roughness) * g_envMaxMipLevel, 0.0f, g_envMaxMipLevel);
+    float3 envColor = texCUBElod(g_cubeMapSampler, float4(R, mipLevel)).rgb;
+    if (g_enableSrgbToLinear)
+    {
+        envColor = SrgbToLinear(envColor);
+    }
+
+    float3 envF = FresnelSchlick(saturate(dot(N, V)), F0);
+    float envSpecularStrength = lerp(0.1f, 1.0f, metallic);
+    return envColor * envF * envSpecularStrength * g_envReflectionIntensity;
+}
+
+float3 GetEnvDiffuse(float3 N, float3 albedo, float3 kD)
+{
+    if (!g_hasEnvTexture)
+    {
+        return g_ambient.rgb * g_fAmbientIntensity * albedo * kD;
+    }
+
+    float diffuseMipLevel = clamp(g_envDiffuseMipLevel, 0.0f, g_envMaxMipLevel);
+    float3 envDiffuseColor = texCUBElod(g_cubeMapSampler, float4(N, diffuseMipLevel)).rgb;
+    if (g_enableSrgbToLinear)
+    {
+        envDiffuseColor = SrgbToLinear(envDiffuseColor);
+    }
+
+    return envDiffuseColor * albedo * kD * g_envDiffuseIntensity;
+}
+
+float3 EvaluatePbrLight(float3 N,
+                        float3 V,
+                        float3 L,
+                        float3 radiance,
+                        float3 albedo,
+                        float roughness,
+                        float metallic,
+                        float3 F0)
+{
+    float3 H = normalize(L + V);
+    float NdotL = saturate(dot(N, L));
+    float NdotV = saturate(dot(N, V));
+
+    float D = DistributionGGX(N, H, roughness);
+    float G = GeometrySmith(N, V, L, roughness);
+    float3 F = FresnelSchlick(saturate(dot(H, V)), F0);
+
+    float3 numerator = D * G * F;
+    float denominator = 4.0f * max(NdotV, 0.0001f) * max(NdotL, 0.0001f);
+    float3 specularBRDF = numerator / max(denominator, 0.0001f);
+
+    float3 kS = F;
+    float3 kD = (1.0f - kS) * (1.0f - metallic);
+    float3 diffuseBRDF = kD * albedo * (1.0f / PI);
+
+    return (diffuseBRDF + specularBRDF) * radiance * NdotL;
+}
+
 float3 RotateVectorXYZ(float3 inputVector, float3 rotation)
 {
     float sinX = sin(rotation.x);
@@ -192,19 +286,15 @@ float3 RotateVectorXYZ(float3 inputVector, float3 rotation)
     float cosZ = cos(rotation.z);
 
     float3 rotated = inputVector;
-
     rotated = float3(rotated.x,
                      rotated.y * cosX - rotated.z * sinX,
                      rotated.y * sinX + rotated.z * cosX);
-
     rotated = float3(rotated.x * cosY + rotated.z * sinY,
                      rotated.y,
                      -rotated.x * sinY + rotated.z * cosY);
-
     rotated = float3(rotated.x * cosZ - rotated.y * sinZ,
                      rotated.x * sinZ + rotated.y * cosZ,
                      rotated.z);
-
     return rotated;
 }
 
@@ -258,562 +348,178 @@ float3 ClosestPointOnPointLightShape(float3 lightPos,
     return lightPos + (delta / distanceToCenter) * POINT_LIGHT_SPHERE_RADIUS;
 }
 
-void AccumulateSingleLightSample(float3 samplePos,
-                                 float sampleBrightness,
-                                 float3 lightColor,
-                                 float3 worldPos,
-                                 float3 normal,
-                                 float3 cameraDirWS,
-                                 out float3 diffuseContribution,
-                                 out float3 specularContribution)
+float4 PixelShaderBase(VSOut i) : COLOR0
 {
-    float3 Lvec = samplePos - worldPos;
-    float dist = length(Lvec);
-    float3 L = Lvec / max(dist, 1e-6);
+    float4 diffuseSample = SampleDiffuseTexture(i.uv);
+    float3 albedo = diffuseSample.rgb * g_diffuse.rgb * g_pbrBaseColorFactor.rgb;
+    float alpha = diffuseSample.a * g_diffuse.a * g_pbrBaseColorFactor.a;
 
-    float NdotL = saturate(dot(normal, L));
-    float3 H = normalize(L + cameraDirWS);
-    float NdotH = saturate(dot(normal, H));
-    float atten = saturate(1.0 / max(dist, 1e-6));
+    float roughness = clamp(g_pbrRoughness, 0.04f, 1.0f);
+    float metallic = saturate(g_pbrMetallic);
 
-    float diff = sampleBrightness * atten * NdotL;
-    float spec = 0.0f;
-    if (g_specularIntensity > 0.0f)
+    float3 N = SampleNormalWorld(i);
+    float3 V = normalize(g_cameraPos.xyz - i.posWorld);
+    float3 L = normalize(g_lightDir.xyz);
+    float3 R = reflect(-V, N);
+
+    float3 F0 = lerp(float3(0.04f, 0.04f, 0.04f), albedo, metallic);
+    float3 directColor = EvaluatePbrLight(N,
+                                          V,
+                                          L,
+                                          g_lightColor.rgb * g_fSunLightIntensity,
+                                          albedo,
+                                          roughness,
+                                          metallic,
+                                          F0);
+
+    for (int lightIndex = 0; lightIndex < 16; ++lightIndex)
     {
-        spec = pow(NdotH, g_specularPower) * g_specularIntensity * sampleBrightness * atten;
-    }
-
-    diffuseContribution = lightColor * diff;
-    specularContribution = lightColor * spec;
-}
-
-//---------------------------------------------------------
-// 頂点シェーダー
-// 視差マッピングは「1パス目では実施せず、2パス目で実装する」というようなことはできない
-//
-// WS ... WorldSpace
-// TS ... TangentSpace
-// OS ... ObjectSpace(Local coordinate)
-//---------------------------------------------------------
-void VertexShader1(in  float4 inPosition     : POSITION,
-                   in  float4 inNormal       : NORMAL0,
-                   in  float4 inTangent      : TANGENT0,
-                   in  float4 inBinormal     : BINORMAL0,
-                   in  float4 inTexCoord     : TEXCOORD0,
-
-                   out float4 outPosition    : POSITION,
-                   out float3 outPosWorld    : TEXCOORD0,
-                   out float3 outNormalWorld : TEXCOORD1,
-                   out float2 outTexCood     : TEXCOORD2,
-                   out float3 outTangent     : TEXCOORD3,
-                   out float3 outBinorm      : TEXCOORD4,
-                   out float3 outvViewWS     : TEXCOORD5,
-                   out float3 outvLightTS    : TEXCOORD6,
-                   out float3 outvViewTS     : TEXCOORD7,
-                   out float2 outvParallaxOffsetTS    : TEXCOORD8)
-{
-    // ゆらぎ効果（草とか）
-    if (g_swayEnable)
-    {
-        float4 pos = inPosition;
-    
-        // 揺らしエフェクトを適用
-        // Y座標の高さに基づいて揺らしの強度を変える（上にいくほど大きく揺れる）
-        float heightFactor = (pos.y + 1.0) / 3.0; // 円柱の高さに合わせて調整
-        heightFactor = pow(heightFactor, 2.0);
-        heightFactor = clamp(heightFactor, 0.0, 1.0);
-    
-        // 複数の波を組み合わせて自然な揺らしを作成
-        float wave1 = sin(g_time * g_swaySpeed) * g_swayAmount;
-        float wave2 = sin(g_time * g_swaySpeed * 0.7 + 1.5) * g_swayAmount * 0.5;
-        float wave3 = cos(g_time * g_swaySpeed * 1.3 + 2.0) * g_swayAmount * 0.3;
-    
-        // X軸とZ軸の両方向に揺らしを適用
-        float swayX = (wave1 + wave2 + wave3) * heightFactor;
-        float swayZ = (sin(g_time * g_swaySpeed * 0.8 + 0.5) * g_swayAmount * 0.7 +
-                   cos(g_time * g_swaySpeed * 1.1 + 1.0) * g_swayAmount * 0.4) * heightFactor;
-    
-        pos.x += swayX;
-        pos.z += swayZ;
-        inPosition = pos;
-    }
-
-    outPosition = mul(inPosition, g_matWorldViewProj);
-
-    // outPosWorldでは4x4を使いoutNormalWorldでは3x3の変換行列を使っている
-    // こうしないと環境マップがおかしくなる
-    outPosWorld = mul(inPosition, g_matWorld).xyz;
-
-    float3x3 world3x3 = (float3x3) g_matWorld;
-    outNormalWorld = mul(inNormal.xyz, world3x3);
-
-    outTexCood = inTexCoord.xy;
-
-    outTangent = normalize(mul(inTangent.xyz, world3x3));
-    outBinorm = normalize(mul(inBinormal.xyz, world3x3));
-
-    float3 vViewWS = g_cameraPos.xyz - outPosWorld.xyz;
-    outvViewWS = vViewWS;
-
-    // 光源ベクトル（正規化しない）
-    float3 vLightWS = g_lightDir.xyz;
-
-    // 光源ベクトル・カメラ方向ベクトルを接空間へ変換
-    float3x3 mWorldToTangent = float3x3(outTangent, outBinorm, outNormalWorld);
-
-    outvLightTS = mul(mWorldToTangent, vLightWS);
-    outvViewTS = mul(mWorldToTangent, vViewWS);
-
-    // ズレ量
-    // グレージング角なら沢山ズレるし、正面を向いてるならズレない。
-    // それを表す数値
-    outvParallaxOffsetTS = outvViewTS.xy / outvViewTS.z;
-
-    outvParallaxOffsetTS *= g_fHeightMapScale;
-}
-
-float2 CalcUVCoordWithPOM(float3 inNormalizedNormalWS,
-                          float2 inTexCoord,
-                          float3 invViewWS,
-                          float3 invViewTS,
-                          float2 invParallaxOffsetTS);
-
-//-------------------------------------------------------------
-// Pass 0
-//-------------------------------------------------------------
-void PixelShader1(in float2 inScreenPos   : VPOS,
-                  in float3 inPosWorld    : TEXCOORD0,
-                  in float3 inNormalWorld : TEXCOORD1,
-                  in float2 inTexCoord    : TEXCOORD2,
-                  in float3 inTangent     : TEXCOORD3,
-                  in float3 inBinorm      : TEXCOORD4,
-                  in float3 invViewWS     : TEXCOORD5,
-                  in float3 invLightTS    : TEXCOORD6,
-                  in float3 invViewTS     : TEXCOORD7,
-                  in float2 invParallaxOffsetTS  : TEXCOORD8,
-
-                  out float4 outColor     : COLOR)
-{
-    // 正規化はピクセルシェーダーでやらないといけない
-    float3 normal = normalize(inNormalWorld);
-    float3 lightDir = normalize(g_lightDir.xyz);
-    float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
-    float3 halfVector = normalize(lightDir + cameraDir);
-
-    // 接線空間へ変換済みの光ベクトルはここで正規化して使う。
-    invLightTS = normalize(invLightTS);
-
-    //----------------------------------------------------
-    // 視差遮蔽マッピング
-    //----------------------------------------------------
-    if (g_bPOM)
-    {
-        inTexCoord = CalcUVCoordWithPOM(normal,
-                                        inTexCoord,
-                                        invViewWS,
-                                        invViewTS,
-                                        invParallaxOffsetTS);
-    }
-    
-    float3 albedo = tex2D(g_textureSampler, inTexCoord).rgb * g_diffuse.rgb;
-
-    //-----------------------------------------------------------------------
-    // 法線マッピングでNdotLを調節
-    //-----------------------------------------------------------------------
-    float NdotL = 0.f;
-    float NdotH = 0.f;
-
-    // 法線マッピングを行うか
-    if (g_bNormalMapping)
-    {
-        float3 normalInTangent = float3(0, 0, 0);
-        normalInTangent.x = tex2D(g_normalMapSampler, inTexCoord).r * 2.0 - 1.0;
-        normalInTangent.y = tex2D(g_normalMapSampler, inTexCoord).g * 2.0 - 1.0;
-        normalInTangent.z = tex2D(g_normalMapSampler, inTexCoord).b * 2.0 - 1.0;
-        normalInTangent.x *= -1;
-        normalInTangent = normalize(normalInTangent);
-
-        // TBN（Tangent, Binormal, Normal）でワールドへ
-        float3x3 tangentToWorld = float3x3(-inTangent, -inBinorm, normal);
-        float3 normalInWorld = normalize(mul(normalInTangent, tangentToWorld));
-
-        // Lambert 拡散（光線方向）
-        // saturate関数をここで実行するとマイナス成分が消える。
-        NdotL = dot(normalInWorld, lightDir);
-        NdotH = saturate(dot(normalInWorld, halfVector));
-    }
-    else
-    {
-        NdotL = dot(normal, lightDir);
-        NdotH = saturate(dot(normal, halfVector));
-    }
-
-
-    float3 lambert = 0.f;
-    
-    // ハーフランバート
-    // 深度バッファシャドウを実行すると、影が2重に表示されてしまう。
-    // ハーフランバートならマシになる
-    if (false)
-    {
-        NdotL = (NdotL + 1.0f) * 0.5f;
-
-        // 0.5が0.7になるような補正をかける
-        // 対数グラフのイメージ
-        NdotL = pow(NdotL, 0.5);
-    }
-    else
-    {
-        NdotL = saturate(NdotL);
-    }
-
-    float shadowAmount = saturate(1.0f - NdotL);
-    float3 shadowAlbedo = albedo;
-    if (g_bSaturateShadow)
-    {
-        float saturationAmount = 1.0f + (shadowAmount * g_fSaturateShadowIntensity);
-        shadowAlbedo = IncreaseSaturation(albedo, saturationAmount);
-    }
-
-    lambert = shadowAlbedo
-            * (1.0f - ((1.0f - NdotL) * g_fShadowDarkness))
-            * g_lightColor.rgb
-            * g_fSunLightIntensity;
-
-    float3 ambient = g_ambient.rgb * g_fAmbientIntensity * albedo;
-
-    // 陰の彩度を上げる
-    // 要らないかもしれない
-    if (false)
-    {
-        if (NdotL <= 0.0f)
-        {
-            // アルベドの彩度を強調した色をアンビエント色に設定する
-            // 陰の彩度を上げたいが、これだと全体的に彩度が高くなってしまう。
-            float3 workColor = albedo;
-
-            float average = (workColor.r + workColor.g + workColor.b) / 3;
-
-            // 彩度を上げ下げする
-            workColor.r = average + (workColor.r - average) * 8.0f;
-            workColor.g = average + (workColor.g - average) * 8.0f;
-            workColor.b = average + (workColor.b - average) * 8.0f;
-            lambert = workColor * 0.05f * -NdotL;
-        }
-    }
-
-    float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_specularColor.xyz * g_lightColor.rgb;
-
-    float3 finalColor = ambient.rgb + lambert + specular;
-
-    if (g_bSSS)
-    {
-        float2 thicknessUV = (inScreenPos.xy + 0.5f) / g_screenSize;
-        float thickness = tex2D(g_thicknessSampler, thicknessUV).r;
-        float sigmaT = max(g_sssIntensity, 0.001f);
-        float sssBlend = saturate(exp(-sigmaT * thickness));
-        float3 sssColor = albedo * g_sssColor.rgb;
-        finalColor += sssColor * sssBlend;
-    }
-
-    outColor = saturate(float4(finalColor, 1.f));
-
-    if (false)
-    {
-        if (abs(inScreenPos.x - (g_screenSize.x * 0.5f)) <= 0.5f)
-        {
-            outColor = float4(0.0f, 1.0f, 0.0f, 1.0f);
-        }
-    }
-}
-
-//-------------------------------------------------------------
-// Pass 1
-//-------------------------------------------------------------
-void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
-                            in float3 inPosWorld     : TEXCOORD0,
-                            in float3 inNormalWorld  : TEXCOORD1,
-                            in float2 inTexCoord      : TEXCOORD2,
-                            in float3 inTangent      : TEXCOORD3,
-                            in float3 inBinorm       : TEXCOORD4,
-
-                            out float4 outColor      : COLOR)
-{
-    outColor = float4(0, 0, 0, 0);
-
-    float3 normal = normalize(inNormalWorld);
-    float3 lightDir = normalize(g_lightDir.xyz);
-    float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
-    float3 halfVector = normalize(lightDir + cameraDir);
-    float3 reflectWorld = reflect(-cameraDir, normal);
-
-    float cubeLod = g_cubeMappingGauss * 7.0f;
-    float4 cubeSample = texCUBElod(g_cubeMapSampler, float4(reflectWorld, cubeLod));
-    float3 cubeColor = cubeSample.rgb;
-    float NdotH = saturate(dot(normal, halfVector));
-    float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_specularColor.xyz * g_lightColor.rgb;
-    outColor = float4(cubeColor + specular, saturate(g_cubeMappingRate * cubeSample.a));
-}
-
-//-------------------------------------------------------------
-// Pass 2
-//-------------------------------------------------------------
-void PixelShaderGlass(in float4 inPosition     : POSITION,
-                      in float3 inPosWorld     : TEXCOORD0,
-                      in float3 inNormalWorld  : TEXCOORD1,
-                      in float2 inTexCoord      : TEXCOORD2,
-                      in float3 inTangent      : TEXCOORD3,
-                      in float3 inBinorm       : TEXCOORD4,
-
-                      out float4 outColor      : COLOR)
-{
-    outColor = float4(0, 0, 0, 0);
-
-    float3 normal = normalize(inNormalWorld);
-    float3 lightDir = normalize(g_lightDir.xyz);
-    
-    float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
-    float3 halfVector = normalize(lightDir + cameraDir);
-    float3 refractWorld = refract(-cameraDir, normal, 1.f / 1.5f);
-    float cubeLod = g_cubeMappingGauss * 7.0f;
-    float4 cubeSample = texCUBElod(g_cubeMapSampler, float4(refractWorld, cubeLod));
-    float3 cubeColor = cubeSample.rgb;
-    float NdotH = saturate(dot(normal, halfVector));
-    float3 specular = (pow(NdotH, g_specularPower) * g_specularIntensity) * g_specularColor.xyz * g_lightColor.rgb;
-
-    outColor = float4(cubeColor + specular, saturate(g_cubeMappingRate * cubeSample.a));
-}
-
-//-------------------------------------------------------------
-// Pass 3
-//-------------------------------------------------------------
-// 霧の減衰関数（やわらか）
-float FogAmountExp(float distance, float density)
-{
-    return 1 - exp(-density * distance);
-}
-
-// 霧の減衰関数（リアル）
-float FogAmountExp2(float distance, float density)
-{
-    float x = density * distance;
-    return 1 - exp(-x * x);
-}
-
-void PixelShaderPointLight(in  float4 inPosition            : POSITION,
-                           in  float3 inPosWorld            : TEXCOORD0,
-                           in  float3 inNormalWorld         : TEXCOORD1,
-                           in  float2 inTexCoord            : TEXCOORD2,
-                           in  float3 inTangent             : TEXCOORD3,
-                           in  float3 inBinorm              : TEXCOORD4,
-                           in  float3 invViewWS             : TEXCOORD5,
-                           in  float3 invViewTS             : TEXCOORD7,
-                           in  float2 invParallaxOffsetTS   : TEXCOORD8,
-                           out float4 outColor              : COLOR)
-{
-    float3 normalWS = normalize(inNormalWorld);
-    float3 cameraDirWS = normalize(g_cameraPos.xyz - inPosWorld);
-
-    // POMでUV更新（必要なときだけ）
-    float2 uv = inTexCoord;
-    if (g_bPOM)
-    {
-        uv = CalcUVCoordWithPOM(normalWS,
-                                inTexCoord,
-                                invViewWS,
-                                invViewTS,
-                                invParallaxOffsetTS );
-    }
-
-    float3 albedo = tex2D(g_textureSampler, uv).rgb * g_diffuse.rgb;
-
-    float3 N = normalWS;
-    if (g_bNormalMapping)
-    {
-        // 法線マップがある場合だけ、接空間法線をワールド空間へ変換して使う
-        float3 normalTS;
-        float4 nTex = tex2D(g_normalMapSampler, uv);
-        normalTS.x = nTex.r * 2.0 - 1.0;
-        normalTS.y = nTex.g * 2.0 - 1.0;
-        normalTS.z = nTex.b * 2.0 - 1.0;
-        normalTS.x *= -1.0;
-        normalTS = normalize(normalTS);
-
-        float3x3 tbn = float3x3(-inTangent, -inBinorm, normalWS);
-        N = normalize(mul(normalTS, tbn));
-    }
-
-    float3 diffuseAccum = 0.0f;
-    float3 specularAccum = 0.0f;
-
-    for (int i = 0; i < 16; ++i)
-    {
-        if (g_pointLightBrightness[i] <= 0.0f)
+        if (g_pointLightBrightness[lightIndex] <= 0.0f)
         {
             continue;
         }
 
-        float3 lightSurfacePos = ClosestPointOnPointLightShape(g_pointLightPos[i],
-                                                               g_pointLightShape[i],
-                                                               g_pointLightLineLength[i],
-                                                               g_pointLightSquareWidth[i],
-                                                               g_pointLightSquareHeight[i],
-                                                               g_pointLightRotation[i].xyz,
-                                                               inPosWorld);
-        float3 sampleDiffuse = 0.0f;
-        float3 sampleSpecular = 0.0f;
-        AccumulateSingleLightSample(lightSurfacePos,
-                                    g_pointLightBrightness[i],
-                                    g_pointLightColor[i],
-                                    inPosWorld,
-                                    N,
-                                    cameraDirWS,
-                                    sampleDiffuse,
-                                    sampleSpecular);
-        diffuseAccum += sampleDiffuse;
-        specularAccum += sampleSpecular;
+        float3 lightSurfacePos = ClosestPointOnPointLightShape(g_pointLightPos[lightIndex],
+                                                               g_pointLightShape[lightIndex],
+                                                               g_pointLightLineLength[lightIndex],
+                                                               g_pointLightSquareWidth[lightIndex],
+                                                               g_pointLightSquareHeight[lightIndex],
+                                                               g_pointLightRotation[lightIndex].xyz,
+                                                               i.posWorld);
+        float3 lightVector = lightSurfacePos - i.posWorld;
+        float distanceToLight = length(lightVector);
+        float attenuation = saturate(1.0f / max(distanceToLight, 1e-6f));
+        float3 pointLightDir = lightVector / max(distanceToLight, 1e-6f);
+        float3 pointRadiance = g_pointLightColor[lightIndex] * g_pointLightBrightness[lightIndex] * attenuation;
+        directColor += EvaluatePbrLight(N,
+                                        V,
+                                        pointLightDir,
+                                        pointRadiance,
+                                        albedo,
+                                        roughness,
+                                        metallic,
+                                        F0);
     }
 
-    // 点光源はベースパスへ加算する。拡散はアルベドを保持し、鏡面だけライト色を乗せる。
-    outColor = float4((albedo * diffuseAccum) + specularAccum, 0.0f);
-}
+    float3 kS = FresnelSchlick(saturate(dot(N, V)), F0);
+    float3 kD = (1.0f - kS) * (1.0f - metallic);
+    float3 color = directColor;
+    color += GetEnvSpecular(R, N, V, F0, roughness, metallic);
+    color += GetEnvDiffuse(N, albedo, kD);
 
-void PixelShaderEmit(in  float4 inPosition     : POSITION,
-                     in  float3 inPosWorld     : TEXCOORD0,
-                     in  float3 inNormalWorld  : TEXCOORD1,
-                     in  float2 inTexCoord     : TEXCOORD2,
-                     in  float3 inTangent      : TEXCOORD3,
-                     in  float3 inBinorm       : TEXCOORD4,
-                     in  float3 invViewWS      : TEXCOORD5,
-                     in  float3 invLightTS     : TEXCOORD6,
-                     in  float3 invViewTS      : TEXCOORD7,
-                     in  float2 invParallaxOffsetTS  : TEXCOORD8,
-                     out float4 outColor       : COLOR)
-{
-    float3 albedo = tex2D(g_textureSampler, inTexCoord).rgb * g_diffuse.rgb;
-    outColor = float4(albedo * g_emitColor.rgb * g_emitIntensity, 1.0f);
-}
-
-void VertexShaderMirror(in  float4 inPosition   : POSITION,
-                        in  float4 inNormal     : NORMAL0,
-                        in  float4 inTangent    : TANGENT0,
-                        in  float4 inBinormal   : BINORMAL0,
-                        in  float4 inTexCoord   : TEXCOORD0,
-                        out float4 outPosition  : POSITION,
-                        out float4 outMirrorProj : TEXCOORD0)
-{
-    float4 worldPos = mul(inPosition, g_matWorld);
-    outPosition = mul(inPosition, g_matWorldViewProj);
-    outMirrorProj = mul(worldPos, g_matMirrorViewProj);
-}
-
-void PixelShaderMirror(in float4 inMirrorProj : TEXCOORD0,
-                       out float4 outColor    : COLOR)
-{
-    float2 uv;
-    uv.x = inMirrorProj.x / inMirrorProj.w * 0.5f + 0.5f;
-    uv.y = -inMirrorProj.y / inMirrorProj.w * 0.5f + 0.5f;
-    outColor = tex2D(g_mirrorSampler, uv) * 0.8f;
-}
-
-float2 CalcUVCoordWithPOM(float3 inNormalizedNormalWS,
-                          float2 inTexCoord,
-                          float3 invViewWS,
-                          float3 invViewTS,
-                          float2 invParallaxOffsetTS)
-{
-    invViewWS = normalize(invViewWS);
-    invViewTS= normalize(invViewTS);
-
-    // 視角に応じてサンプル数を変更。
-    // グレージング角であるほどステップを細かくして精度を上げる。
-    int nNumSteps = (int) lerp(g_nMaxSamples, g_nMinSamples, dot(invViewWS, inNormalizedNormalWS));
-
-    float fStepSize = 1.0 / (float) nNumSteps;
-    int nStepIndex = 0;
-
-    float fCurrHeight = 0.0;
-
-    float2 vTexOffsetPerStep = fStepSize * invParallaxOffsetTS;
-    float2 vTexCurrentOffset = inTexCoord;
-
-    // 今どの深さの層（Layer）までレイを進めたか
-    float fCurrentLayer = 1.0;
-
-    while (nStepIndex < nNumSteps)
+    if (g_enableLinearToSrgb)
     {
-        vTexCurrentOffset -= vTexOffsetPerStep;
+        color = LinearToSrgb(color);
+    }
 
-        // tex2Dgrad関数を使うとPIX For Windowsが落ちる
-        // fCurrHeight = tex2Dgrad(g_heightMapSampler, vTexCurrentOffset, dx, dy ).r;
-        fCurrHeight = tex2Dlod(g_heightMapSampler, float4(vTexCurrentOffset, 0.0f, 0.0f)).r;
+    return float4(saturate(color), saturate(alpha));
+}
 
-        fCurrentLayer -= fStepSize;
+float4 PixelShaderPointLight(VSOut i) : COLOR0
+{
+    float4 diffuseSample = SampleDiffuseTexture(i.uv);
+    float3 albedo = diffuseSample.rgb * g_diffuse.rgb * g_pbrBaseColorFactor.rgb;
+    float roughness = clamp(g_pbrRoughness, 0.04f, 1.0f);
+    float metallic = saturate(g_pbrMetallic);
+    float3 F0 = lerp(float3(0.04f, 0.04f, 0.04f), albedo, metallic);
+    float3 N = SampleNormalWorld(i);
+    float3 V = normalize(g_cameraPos.xyz - i.posWorld);
 
-        if (fCurrHeight > fCurrentLayer)
+    float3 color = 0.0f.xxx;
+    for (int lightIndex = 0; lightIndex < 16; ++lightIndex)
+    {
+        if (g_pointLightBrightness[lightIndex] <= 0.0f)
         {
-            break;
+            continue;
         }
 
-        nStepIndex++;
+        float3 lightSurfacePos = ClosestPointOnPointLightShape(g_pointLightPos[lightIndex],
+                                                               g_pointLightShape[lightIndex],
+                                                               g_pointLightLineLength[lightIndex],
+                                                               g_pointLightSquareWidth[lightIndex],
+                                                               g_pointLightSquareHeight[lightIndex],
+                                                               g_pointLightRotation[lightIndex].xyz,
+                                                               i.posWorld);
+        float3 lightVector = lightSurfacePos - i.posWorld;
+        float distanceToLight = length(lightVector);
+        float attenuation = saturate(1.0f / max(distanceToLight, 1e-6f));
+        float3 L = lightVector / max(distanceToLight, 1e-6f);
+        float3 radiance = g_pointLightColor[lightIndex] * g_pointLightBrightness[lightIndex] * attenuation;
+        color += EvaluatePbrLight(N, V, L, radiance, albedo, roughness, metallic, F0);
     }
 
-    float2 vParallaxOffset = invParallaxOffsetTS * (1 - fCurrentLayer);
+    if (g_enableLinearToSrgb)
+    {
+        color = LinearToSrgb(color);
+    }
 
-    // 疑似的に押し出された表面上の最終テクスチャ座標
-    inTexCoord -= vParallaxOffset;
-    return inTexCoord;
+    return float4(saturate(color), 0.0f);
+}
+
+float4 PixelShaderEmit(VSOut i) : COLOR0
+{
+    float4 diffuseSample = SampleDiffuseTexture(i.uv);
+    float3 albedo = diffuseSample.rgb * g_diffuse.rgb * g_pbrBaseColorFactor.rgb;
+    float3 color = albedo * g_emitColor.rgb * g_emitIntensity;
+    if (g_enableLinearToSrgb)
+    {
+        color = LinearToSrgb(color);
+    }
+    return float4(saturate(color), saturate(diffuseSample.a * g_diffuse.a * g_pbrBaseColorFactor.a));
+}
+
+float4 PixelShaderMirror(VSOut i) : COLOR0
+{
+    float4 mirrorProj = mul(float4(i.posWorld, 1.0f), g_matMirrorViewProj);
+    float2 uv;
+    uv.x = mirrorProj.x / mirrorProj.w * 0.5f + 0.5f;
+    uv.y = -mirrorProj.y / mirrorProj.w * 0.5f + 0.5f;
+    return tex2D(g_mirrorSampler, uv) * 0.8f;
 }
 
 technique Technique1
 {
-    pass Pass1
-    {
-        VertexShader = compile vs_3_0 VertexShader1();
-        PixelShader = compile ps_3_0 PixelShader1();
-    }
-
-    pass PassCubeMapping
+    pass P0
     {
         AlphaBlendEnable = TRUE;
         SrcBlend = SRCALPHA;
         DestBlend = INVSRCALPHA;
+        CullMode = NONE;
 
         VertexShader = compile vs_3_0 VertexShader1();
-        PixelShader = compile ps_3_0 PixelShaderCubeMapping();
+        PixelShader = compile ps_3_0 PixelShaderBase();
     }
 
-    pass PassGlass
-    {
-        AlphaBlendEnable = TRUE;
-        SrcBlend = SRCALPHA;
-        DestBlend = INVSRCALPHA;
-
-        VertexShader = compile vs_3_0 VertexShader1();
-        PixelShader = compile ps_3_0 PixelShaderGlass();
-    }
-
-    pass PassPointLight
+    pass P1
     {
         AlphaBlendEnable = TRUE;
         SrcBlend = ONE;
         DestBlend = ONE;
+        CullMode = NONE;
 
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShaderPointLight();
     }
 
-    pass PassEmit
+    pass P2
     {
+        AlphaBlendEnable = TRUE;
+        SrcBlend = SRCALPHA;
+        DestBlend = INVSRCALPHA;
+        CullMode = NONE;
+
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShaderEmit();
     }
 
-    pass PassMirror
+    pass P3
     {
-        VertexShader = compile vs_3_0 VertexShaderMirror();
+        AlphaBlendEnable = TRUE;
+        SrcBlend = SRCALPHA;
+        DestBlend = INVSRCALPHA;
+        CullMode = NONE;
+
+        VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShaderMirror();
     }
-
 }
-

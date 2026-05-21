@@ -588,6 +588,24 @@ struct stCsvParam
     float cubeMappingRate = 1.0f;
     bool cubeMappingGaussDefined = false;
     float cubeMappingGauss = 0.0f;
+    bool pbrBaseColorDefined = false;
+    D3DXCOLOR pbrBaseColor = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
+    bool pbrRoughnessDefined = false;
+    float pbrRoughness = 0.85f;
+    bool pbrMetallicDefined = false;
+    float pbrMetallic = 0.0f;
+    bool pbrEnableSrgbToLinearDefined = false;
+    bool pbrEnableSrgbToLinear = true;
+    bool pbrEnableLinearToSrgbDefined = false;
+    bool pbrEnableLinearToSrgb = true;
+    bool envReflectionIntensityDefined = false;
+    float envReflectionIntensity = 0.05f;
+    bool envMaxMipLevelDefined = false;
+    float envMaxMipLevel = 5.0f;
+    bool envDiffuseIntensityDefined = false;
+    float envDiffuseIntensity = 0.8f;
+    bool envDiffuseMipLevelDefined = false;
+    float envDiffuseMipLevel = 3.0f;
 };
 
 stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
@@ -774,6 +792,82 @@ stCsvParam ReadCsvParam(const std::wstring& meshFilePath)
             {
                 result.cubeMappingGaussDefined = true;
                 result.cubeMappingGauss = ClampZeroToOne(std::stof(std::wstring(value)));
+            }
+            catch (...) {}
+        }
+        else if (key == L"pbrbasecolor")
+        {
+            DWORD color = 0xffffff;
+            if (TryParseCsvRgbColor(line.substr(commaPos + 1), color))
+            {
+                result.pbrBaseColorDefined = true;
+                result.pbrBaseColor = D3DXCOLOR(static_cast<float>((color >> 16) & 0xff) / 255.0f,
+                                                static_cast<float>((color >> 8) & 0xff) / 255.0f,
+                                                static_cast<float>(color & 0xff) / 255.0f,
+                                                1.0f);
+            }
+        }
+        else if (key == L"pbrroughness")
+        {
+            try
+            {
+                result.pbrRoughnessDefined = true;
+                result.pbrRoughness = ClampZeroToOne(std::stof(std::wstring(value)));
+            }
+            catch (...) {}
+        }
+        else if (key == L"pbrmetallic")
+        {
+            try
+            {
+                result.pbrMetallicDefined = true;
+                result.pbrMetallic = ClampZeroToOne(std::stof(std::wstring(value)));
+            }
+            catch (...) {}
+        }
+        else if (key == L"pbrsrgbtolinear")
+        {
+            result.pbrEnableSrgbToLinearDefined = true;
+            result.pbrEnableSrgbToLinear = !IsCsvFalseValue(value);
+        }
+        else if (key == L"pbrlineartosrgb")
+        {
+            result.pbrEnableLinearToSrgbDefined = true;
+            result.pbrEnableLinearToSrgb = !IsCsvFalseValue(value);
+        }
+        else if (key == L"envreflectionintensity")
+        {
+            try
+            {
+                result.envReflectionIntensityDefined = true;
+                result.envReflectionIntensity = (std::max)(0.0f, std::stof(std::wstring(value)));
+            }
+            catch (...) {}
+        }
+        else if (key == L"envmaxmiplevel")
+        {
+            try
+            {
+                result.envMaxMipLevelDefined = true;
+                result.envMaxMipLevel = (std::max)(0.0f, std::stof(std::wstring(value)));
+            }
+            catch (...) {}
+        }
+        else if (key == L"envdiffuseintensity")
+        {
+            try
+            {
+                result.envDiffuseIntensityDefined = true;
+                result.envDiffuseIntensity = (std::max)(0.0f, std::stof(std::wstring(value)));
+            }
+            catch (...) {}
+        }
+        else if (key == L"envdiffusemiplevel")
+        {
+            try
+            {
+                result.envDiffuseMipLevelDefined = true;
+                result.envDiffuseMipLevel = (std::max)(0.0f, std::stof(std::wstring(value)));
             }
             catch (...) {}
         }
@@ -1043,6 +1137,51 @@ void MeshPBRManager::InitializeInternal()
     if (csvParam.cubeMappingGaussDefined)
     {
         m_param.cubeMappingGauss = csvParam.cubeMappingGauss;
+    }
+
+    if (csvParam.pbrBaseColorDefined)
+    {
+        m_param.pbrBaseColorFactor = csvParam.pbrBaseColor;
+    }
+
+    if (csvParam.pbrRoughnessDefined)
+    {
+        m_param.pbrRoughness = csvParam.pbrRoughness;
+    }
+
+    if (csvParam.pbrMetallicDefined)
+    {
+        m_param.pbrMetallic = csvParam.pbrMetallic;
+    }
+
+    if (csvParam.pbrEnableSrgbToLinearDefined)
+    {
+        m_param.pbrEnableSrgbToLinear = csvParam.pbrEnableSrgbToLinear;
+    }
+
+    if (csvParam.pbrEnableLinearToSrgbDefined)
+    {
+        m_param.pbrEnableLinearToSrgb = csvParam.pbrEnableLinearToSrgb;
+    }
+
+    if (csvParam.envReflectionIntensityDefined)
+    {
+        m_param.envReflectionIntensity = csvParam.envReflectionIntensity;
+    }
+
+    if (csvParam.envMaxMipLevelDefined)
+    {
+        m_param.envMaxMipLevel = csvParam.envMaxMipLevel;
+    }
+
+    if (csvParam.envDiffuseIntensityDefined)
+    {
+        m_param.envDiffuseIntensity = csvParam.envDiffuseIntensity;
+    }
+
+    if (csvParam.envDiffuseMipLevelDefined)
+    {
+        m_param.envDiffuseMipLevel = csvParam.envDiffuseMipLevel;
     }
 
     if (m_param.mirror)
@@ -1605,14 +1744,6 @@ void MeshPBRManager::Render(const bool renderAsMirrorSurface)
     hResult = sharedEffect->SetVector("g_cameraPos", &cameraPos);
     assert(hResult == S_OK);
 
-    const float screenSize[2] =
-    {
-        static_cast<float>(Common::ScreenW()),
-        static_cast<float>(Common::ScreenH())
-    };
-    hResult = sharedEffect->SetFloatArray("g_screenSize", screenSize, 2);
-    assert(hResult == S_OK);
-
     hResult = sharedEffect->SetTechnique("Technique1");
     assert(hResult == S_OK);
 
@@ -1636,6 +1767,43 @@ void MeshPBRManager::Render(const bool renderAsMirrorSurface)
 
     const D3DXMATRIX sharedMirrorViewProj = GetSharedMirrorViewProj();
     hResult = sharedEffect->SetMatrix("g_matMirrorViewProj", &sharedMirrorViewProj);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetBool("g_hasNormalTexture", m_texNormalMap != nullptr ? TRUE : FALSE);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetBool("g_hasEnvTexture", m_texCubeMap != nullptr ? TRUE : FALSE);
+    assert(hResult == S_OK);
+
+    D3DXVECTOR4 pbrBaseColor(m_param.pbrBaseColorFactor.r,
+                             m_param.pbrBaseColorFactor.g,
+                             m_param.pbrBaseColorFactor.b,
+                             m_param.pbrBaseColorFactor.a);
+    hResult = sharedEffect->SetVector("g_pbrBaseColorFactor", &pbrBaseColor);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetFloat("g_pbrRoughness", m_param.pbrRoughness);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetFloat("g_pbrMetallic", m_param.pbrMetallic);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetBool("g_enableSrgbToLinear", m_param.pbrEnableSrgbToLinear ? TRUE : FALSE);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetBool("g_enableLinearToSrgb", m_param.pbrEnableLinearToSrgb ? TRUE : FALSE);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetFloat("g_envReflectionIntensity", m_param.envReflectionIntensity);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetFloat("g_envMaxMipLevel", m_param.envMaxMipLevel);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetFloat("g_envDiffuseIntensity", m_param.envDiffuseIntensity);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetFloat("g_envDiffuseMipLevel", m_param.envDiffuseMipLevel);
     assert(hResult == S_OK);
 
     BOOL usePom = FALSE;
@@ -1673,20 +1841,6 @@ void MeshPBRManager::Render(const bool renderAsMirrorSurface)
     hResult = sharedEffect->SetVector("g_sssColor", &sssColor);
     assert(hResult == S_OK);
 
-    BOOL useSaturateShadow = FALSE;
-    if (m_param.saturateShadow)
-    {
-        useSaturateShadow = TRUE;
-    }
-    hResult = sharedEffect->SetBool("g_bSaturateShadow", useSaturateShadow);
-    assert(hResult == S_OK);
-
-    hResult = sharedEffect->SetFloat("g_fSaturateShadowIntensity", m_param.saturateShadowIntensity);
-    assert(hResult == S_OK);
-
-    hResult = sharedEffect->SetFloat("g_fShadowDarkness", m_param.shadowDarkness);
-    assert(hResult == S_OK);
-
     hResult = sharedEffect->SetFloat("g_specularIntensity", m_param.specularIntensity);
     assert(hResult == S_OK);
 
@@ -1720,23 +1874,23 @@ void MeshPBRManager::Render(const bool renderAsMirrorSurface)
         assert(hResult == S_OK);
     }
 
+    auto pointLightList = Light::GetPointLightList();
+
+    D3DXVECTOR4 pos[16];
+    float brightness[16] { };
+    float shape[16] { };
+    float lineLength[16] { };
+    float squareWidth[16] { };
+    float squareHeight[16] { };
+    D3DXVECTOR4 rotation[16];
+    D3DXVECTOR4 color[16];
+
+    ZeroMemory(pos, sizeof(pos));
+    ZeroMemory(rotation, sizeof(rotation));
+    ZeroMemory(color, sizeof(color));
+
     if (m_param.pointLight)
     {
-        auto pointLightList = Light::GetPointLightList();
-
-        D3DXVECTOR4 pos[16];
-        float brightness[16] { };
-        float shape[16] { };
-        float lineLength[16] { };
-        float squareWidth[16] { };
-        float squareHeight[16] { };
-        D3DXVECTOR4 rotation[16];
-        D3DXVECTOR4 color[16];
-
-        ZeroMemory(pos, sizeof(pos));
-        ZeroMemory(rotation, sizeof(rotation));
-        ZeroMemory(color, sizeof(color));
-
         for (int i = 0; i < 16; ++i)
         {
             if (i < pointLightList.size())
@@ -1757,58 +1911,46 @@ void MeshPBRManager::Render(const bool renderAsMirrorSurface)
                 color[i].z = pointLightList.at(i).m_color.b;
             }
         }
-
-        hResult = sharedEffect->SetVectorArray("g_pointLightPos", pos, 16);
-        assert(hResult == S_OK);
-
-        hResult = sharedEffect->SetFloatArray("g_pointLightBrightness", brightness, 16);
-        assert(hResult == S_OK);
-
-        hResult = sharedEffect->SetFloatArray("g_pointLightShape", shape, 16);
-        assert(hResult == S_OK);
-
-        hResult = sharedEffect->SetFloatArray("g_pointLightLineLength", lineLength, 16);
-        assert(hResult == S_OK);
-
-        hResult = sharedEffect->SetFloatArray("g_pointLightSquareWidth", squareWidth, 16);
-        assert(hResult == S_OK);
-
-        hResult = sharedEffect->SetFloatArray("g_pointLightSquareHeight", squareHeight, 16);
-        assert(hResult == S_OK);
-
-        hResult = sharedEffect->SetVectorArray("g_pointLightRotation", rotation, 16);
-        assert(hResult == S_OK);
-
-        hResult = sharedEffect->SetVectorArray("g_pointLightColor", color, 16);
-        assert(hResult == S_OK);
     }
+
+    hResult = sharedEffect->SetVectorArray("g_pointLightPos", pos, 16);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetFloatArray("g_pointLightBrightness", brightness, 16);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetFloatArray("g_pointLightShape", shape, 16);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetFloatArray("g_pointLightLineLength", lineLength, 16);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetFloatArray("g_pointLightSquareWidth", squareWidth, 16);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetFloatArray("g_pointLightSquareHeight", squareHeight, 16);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetVectorArray("g_pointLightRotation", rotation, 16);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetVectorArray("g_pointLightColor", color, 16);
+    assert(hResult == S_OK);
 
     hResult = sharedEffect->CommitChanges();
     assert(hResult == S_OK);
 
     if (renderAsMirrorSurface && m_param.mirror)
     {
-        DrawAllSubsets(sharedEffect, 5);
+        DrawAllSubsets(sharedEffect, 3);
     }
     else if (m_param.emit)
     {
-        DrawAllSubsets(sharedEffect, 4);
+        DrawAllSubsets(sharedEffect, 2);
     }
     else
     {
         DrawAllSubsets(sharedEffect, 0);
-
-        if (m_param.cubeMapping)
-        {
-            DrawAllSubsets(sharedEffect, 1);
-        }
-
-        if (m_param.glass)
-        {
-            DrawAllSubsets(sharedEffect, 2);
-        }
-
-        DrawAllSubsets(sharedEffect, 3);
     }
 
     hResult = sharedEffect->End();
@@ -1831,10 +1973,10 @@ void MeshPBRManager::DrawAllSubsets(LPD3DXEFFECT sharedEffect, const UINT passIn
         hResult = sharedEffect->SetVector("g_diffuse", &diffuse);
         assert(hResult == S_OK);
 
-        hResult = sharedEffect->SetFloat("g_specularIntensity", GetSubsetSpecularIntensity(subsetIndex));
+        hResult = sharedEffect->SetBool("g_hasDiffuseTexture", GetSubsetTexture(subsetIndex) != nullptr ? TRUE : FALSE);
         assert(hResult == S_OK);
 
-        hResult = sharedEffect->SetFloat("g_specularPower", GetSubsetSpecularPower(subsetIndex));
+        hResult = sharedEffect->SetFloat("g_specularIntensity", GetSubsetSpecularIntensity(subsetIndex));
         assert(hResult == S_OK);
 
         hResult = sharedEffect->SetTexture("g_texture", GetSubsetTexture(subsetIndex));

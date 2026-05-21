@@ -554,12 +554,41 @@ void MeshPBR::Render()
     hResult = m_D3DEffect->SetVector("g_cameraPos", &cameraPos);
     assert(hResult == S_OK);
 
-    const float screenSize[2] =
-    {
-        static_cast<float>(Common::ScreenW()),
-        static_cast<float>(Common::ScreenH())
-    };
-    hResult = m_D3DEffect->SetFloatArray("g_screenSize", screenSize, 2);
+    hResult = m_D3DEffect->SetBool("g_hasNormalTexture", m_texNormalMap != nullptr ? TRUE : FALSE);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetBool("g_hasEnvTexture", m_texCubeMap != nullptr ? TRUE : FALSE);
+    assert(hResult == S_OK);
+
+    D3DXVECTOR4 pbrBaseColor(m_param.pbrBaseColorFactor.r,
+                             m_param.pbrBaseColorFactor.g,
+                             m_param.pbrBaseColorFactor.b,
+                             m_param.pbrBaseColorFactor.a);
+    hResult = m_D3DEffect->SetVector("g_pbrBaseColorFactor", &pbrBaseColor);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetFloat("g_pbrRoughness", m_param.pbrRoughness);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetFloat("g_pbrMetallic", m_param.pbrMetallic);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetBool("g_enableSrgbToLinear", m_param.pbrEnableSrgbToLinear ? TRUE : FALSE);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetBool("g_enableLinearToSrgb", m_param.pbrEnableLinearToSrgb ? TRUE : FALSE);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetFloat("g_envReflectionIntensity", m_param.envReflectionIntensity);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetFloat("g_envMaxMipLevel", m_param.envMaxMipLevel);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetFloat("g_envDiffuseIntensity", m_param.envDiffuseIntensity);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetFloat("g_envDiffuseMipLevel", m_param.envDiffuseMipLevel);
     assert(hResult == S_OK);
 
     //--------------------------------------------------------
@@ -599,25 +628,7 @@ void MeshPBR::Render()
     hResult = m_D3DEffect->SetBool("g_bNormalMapping", useNormalMapping);
     assert(hResult == S_OK);
 
-    BOOL useSaturateShadow = FALSE;
-    if (m_param.saturateShadow)
-    {
-        useSaturateShadow = TRUE;
-    }
-    hResult = m_D3DEffect->SetBool("g_bSaturateShadow", useSaturateShadow);
-    assert(hResult == S_OK);
-
-    hResult = m_D3DEffect->SetFloat("g_fSaturateShadowIntensity", m_param.saturateShadowIntensity);
-    assert(hResult == S_OK);
-
-    hResult = m_D3DEffect->SetFloat("g_fShadowDarkness", m_param.shadowDarkness);
-    assert(hResult == S_OK);
-
     hResult = m_D3DEffect->SetFloat("g_specularIntensity", m_param.specularIntensity);
-    assert(hResult == S_OK);
-
-    const float specularPower = 1.0f + ((std::max)(0.0f, (std::min)(m_param.specularEdge, 1.0f)) * 127.0f);
-    hResult = m_D3DEffect->SetFloat("g_specularPower", specularPower);
     assert(hResult == S_OK);
 
     // 時間パラメータを設定
@@ -646,23 +657,23 @@ void MeshPBR::Render()
     //--------------------------------------------------------
     // ポイントライト
     //--------------------------------------------------------
+    auto pointLightList = Light::GetPointLightList();
+
+    D3DXVECTOR4 pos[16];
+    float brightness[16] { };
+    float shape[16] { };
+    float lineLength[16] { };
+    float squareWidth[16] { };
+    float squareHeight[16] { };
+    D3DXVECTOR4 rotation[16];
+    D3DXVECTOR4 color[16];
+
+    ZeroMemory(pos, sizeof(pos));
+    ZeroMemory(rotation, sizeof(rotation));
+    ZeroMemory(color, sizeof(color));
+
     if (m_param.pointLight)
     {
-        auto pointLightList = Light::GetPointLightList();
-
-        D3DXVECTOR4 pos[16];
-        float brightness[16] { };
-        float shape[16] { };
-        float lineLength[16] { };
-        float squareWidth[16] { };
-        float squareHeight[16] { };
-        D3DXVECTOR4 rotation[16];
-        D3DXVECTOR4 color[16];
-
-        ZeroMemory(pos, sizeof(pos));
-        ZeroMemory(rotation, sizeof(rotation));
-        ZeroMemory(color, sizeof(color));
-
         for (int i = 0; i < 16; ++i)
         {
             if (i < pointLightList.size())
@@ -683,32 +694,31 @@ void MeshPBR::Render()
                 color[i].z = pointLightList.at(i).m_color.b;
             }
         }
-        
-        hResult = m_D3DEffect->SetVectorArray("g_pointLightPos", pos, 16);
-        assert(hResult == S_OK);
-
-        hResult = m_D3DEffect->SetFloatArray("g_pointLightBrightness", brightness, 16);
-        assert(hResult == S_OK);
-
-        hResult = m_D3DEffect->SetFloatArray("g_pointLightShape", shape, 16);
-        assert(hResult == S_OK);
-
-        hResult = m_D3DEffect->SetFloatArray("g_pointLightLineLength", lineLength, 16);
-        assert(hResult == S_OK);
-
-        hResult = m_D3DEffect->SetFloatArray("g_pointLightSquareWidth", squareWidth, 16);
-        assert(hResult == S_OK);
-
-        hResult = m_D3DEffect->SetFloatArray("g_pointLightSquareHeight", squareHeight, 16);
-        assert(hResult == S_OK);
-
-        hResult = m_D3DEffect->SetVectorArray("g_pointLightRotation", rotation, 16);
-        assert(hResult == S_OK);
-
-        hResult = m_D3DEffect->SetVectorArray("g_pointLightColor", color, 16);
-        assert(hResult == S_OK);
-
     }
+
+    hResult = m_D3DEffect->SetVectorArray("g_pointLightPos", pos, 16);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetFloatArray("g_pointLightBrightness", brightness, 16);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetFloatArray("g_pointLightShape", shape, 16);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetFloatArray("g_pointLightLineLength", lineLength, 16);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetFloatArray("g_pointLightSquareWidth", squareWidth, 16);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetFloatArray("g_pointLightSquareHeight", squareHeight, 16);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetVectorArray("g_pointLightRotation", rotation, 16);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetVectorArray("g_pointLightColor", color, 16);
+    assert(hResult == S_OK);
 
     hResult = m_D3DEffect->CommitChanges();
     assert(hResult == S_OK);
@@ -729,6 +739,9 @@ void MeshPBR::Render()
             hResult = m_D3DEffect->SetVector("g_diffuse", &diffuse);
             assert(hResult == S_OK);
 
+            hResult = m_D3DEffect->SetBool("g_hasDiffuseTexture", GetSubsetTexture(subsetIndex) != nullptr ? TRUE : FALSE);
+            assert(hResult == S_OK);
+
             hResult = m_D3DEffect->SetTexture("g_texture", GetSubsetTexture(subsetIndex));
             assert(hResult == S_OK);
 
@@ -746,30 +759,9 @@ void MeshPBR::Render()
     //--------------------------------------------------------
     // パス0
     // 通常の描画
-    // 法線マッピングを含む
+    // 直接光、環境光、ポイントライトを含む
     //--------------------------------------------------------
     drawAllSubsets(0);
-
-    //--------------------------------------------------------
-    // パス1
-    // 環境マッピング
-    //--------------------------------------------------------
-    drawAllSubsets(1);
-
-    //--------------------------------------------------------
-    // パス2
-    // ガラスエフェクト
-    //--------------------------------------------------------
-    if (m_param.glass)
-    {
-        drawAllSubsets(2);
-    }
-
-    //--------------------------------------------------------
-    // パス3
-    // ポイントライト
-    //--------------------------------------------------------
-    drawAllSubsets(3);
 
     hResult = m_D3DEffect->End();
     assert(hResult == S_OK);
@@ -826,8 +818,68 @@ stMeshPBRParam GetMeshPBRParamPreset(const eMeshPBRParamPreset preset)
 {
     stMeshPBRParam param;
 
-    // TODO 引数をもとにパラメータにプリセットをセットする
-    (void)preset;
+    switch (preset)
+    {
+    case eMeshPBRParamPreset::TREE:
+        param.pbrRoughness = 0.92f;
+        param.pbrMetallic = 0.0f;
+        param.envReflectionIntensity = 0.03f;
+        break;
+    case eMeshPBRParamPreset::GRASS:
+        param.pbrRoughness = 0.95f;
+        param.pbrMetallic = 0.0f;
+        param.envReflectionIntensity = 0.02f;
+        break;
+    case eMeshPBRParamPreset::STONE:
+        param.pbrRoughness = 0.88f;
+        param.pbrMetallic = 0.0f;
+        param.envReflectionIntensity = 0.04f;
+        break;
+    case eMeshPBRParamPreset::MIRROR:
+        param.pbrRoughness = 0.04f;
+        param.pbrMetallic = 1.0f;
+        param.envReflectionIntensity = 1.0f;
+        param.envDiffuseIntensity = 0.0f;
+        break;
+    case eMeshPBRParamPreset::GLASS:
+        param.pbrRoughness = 0.08f;
+        param.pbrMetallic = 0.0f;
+        param.envReflectionIntensity = 0.6f;
+        break;
+    case eMeshPBRParamPreset::SKIN:
+        param.pbrRoughness = 0.55f;
+        param.pbrMetallic = 0.0f;
+        param.envReflectionIntensity = 0.08f;
+        break;
+    case eMeshPBRParamPreset::HAIR:
+        param.pbrRoughness = 0.35f;
+        param.pbrMetallic = 0.0f;
+        param.envReflectionIntensity = 0.12f;
+        break;
+    case eMeshPBRParamPreset::WAVE:
+        param.pbrRoughness = 0.12f;
+        param.pbrMetallic = 0.0f;
+        param.envReflectionIntensity = 0.45f;
+        param.wave = true;
+        break;
+    case eMeshPBRParamPreset::CLOTH:
+        param.pbrRoughness = 0.9f;
+        param.pbrMetallic = 0.0f;
+        param.envReflectionIntensity = 0.02f;
+        break;
+    case eMeshPBRParamPreset::METAL:
+        param.pbrRoughness = 0.24f;
+        param.pbrMetallic = 1.0f;
+        param.envReflectionIntensity = 0.9f;
+        break;
+    case eMeshPBRParamPreset::RUBBER:
+        param.pbrRoughness = 0.82f;
+        param.pbrMetallic = 0.0f;
+        param.envReflectionIntensity = 0.03f;
+        break;
+    default:
+        break;
+    }
 
     return param;
 }
