@@ -2616,6 +2616,7 @@ void Render::SetPostEffectGaussianStrength(const float strength)
 {
     m_gaussianStrength = (std::max)(0.0f, (std::min)(strength, 1.0f));
     m_postEffectGauss.SetIntensity(m_gaussianStrength);
+    m_postEffectMaskedGauss.SetIntensity(m_gaussianStrength);
 }
 
 void Render::SetPostEffectFontSampleSize(const int sampleSize)
