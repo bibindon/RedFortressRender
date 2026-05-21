@@ -1499,6 +1499,11 @@ void MeshMixManager::SetSpecularEdgeOverrideEnabled(const bool enabled)
     m_param.specularEdgeOverrideEnabled = enabled;
 }
 
+void MeshMixManager::SetTreatTextureAsWhite(const bool enabled)
+{
+    m_param.treatTextureAsWhite = enabled;
+}
+
 void MeshMixManager::SetRotY(const float rotY)
 {
     m_rotate.y = rotY;
@@ -1747,6 +1752,8 @@ void MeshMixManager::Render(const bool renderAsMirrorSurface)
         useSaturateShadow = TRUE;
     }
     hResult = sharedEffect->SetBool("g_bSaturateShadow", useSaturateShadow);
+    assert(hResult == S_OK);
+    hResult = sharedEffect->SetBool("g_treatTextureAsWhite", m_param.treatTextureAsWhite ? TRUE : FALSE);
     assert(hResult == S_OK);
 
     hResult = sharedEffect->SetFloat("g_fSaturateShadowIntensity", m_param.saturateShadowIntensity);

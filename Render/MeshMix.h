@@ -42,6 +42,9 @@ struct stMeshParam
     // 設定ダイアログのスペキュラ光の鋭さで上書きするか
     bool specularEdgeOverrideEnabled = true;
 
+    // テクスチャ色を無視して白として扱うか
+    bool treatTextureAsWhite = false;
+
     // TODO 霧は陰の後に表示しないといけないので、ポストエフェクトで実行しなければいけない。
 
     //--------------------------------------------------------

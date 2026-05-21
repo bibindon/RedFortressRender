@@ -49,6 +49,7 @@ SSAOBlurKernelSize,21
 ,
 SpecularIntensity,0.1
 SpecularIntensityOverride,0
+PhongTreatTextureAsWhite,0
 ,
 BloomEnable,0
 BloomThreshold,2.5

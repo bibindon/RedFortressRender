@@ -13,6 +13,7 @@ float g_fSaturateShadowIntensity = 0.2f;
 float g_fShadowDarkness = 1.0f;
 float g_specularPower = 1.0f;
 float g_specularIntensity = 0.1f;
+bool g_treatTextureAsWhite = false;
 
 float3 g_pointLightPos[16];
 float  g_pointLightBrightness[16];
@@ -49,6 +50,17 @@ float3 IncreaseSaturation(float3 color, float amount)
 {
     float luminance = dot(color, float3(0.299f, 0.587f, 0.114f));
     return saturate(lerp(luminance.xxx, color, amount));
+}
+
+float3 SampleBaseTextureColor(float2 uv)
+{
+    float3 textureColor = tex2D(g_textureSampler, uv).rgb;
+    if (g_treatTextureAsWhite)
+    {
+        textureColor = 1.0f.xxx;
+    }
+
+    return textureColor;
 }
 
 float3 RotateVectorXYZ(float3 inputVector, float3 rotation)
@@ -229,7 +241,7 @@ void PixelShader1(in  float3 inPosWorld    : TEXCOORD0,
     float3 halfVector = normalize(lightDir + cameraDir);
 
     float4 textureColor = tex2D(g_textureSampler, inTexCoord);
-    float3 albedo = textureColor.rgb * g_diffuse.rgb;
+    float3 albedo = SampleBaseTextureColor(inTexCoord) * g_diffuse.rgb;
 
     float NdotL = saturate(dot(normal, lightDir));
     float NdotH = saturate(dot(normal, halfVector));
@@ -264,7 +276,7 @@ void PixelShaderPointLight(in  float4 inPosition    : POSITION,
 {
     float3 N = normalize(inNormalWorld);
     float3 cameraDirWS = normalize(g_cameraPos.xyz - inPosWorld);
-    float3 albedo = tex2D(g_textureSampler, inTexCoord).rgb * g_diffuse.rgb;
+    float3 albedo = SampleBaseTextureColor(inTexCoord) * g_diffuse.rgb;
 
     float3 diffuseAccum = 0.0f;
     float3 specularAccum = 0.0f;

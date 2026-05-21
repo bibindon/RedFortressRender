@@ -19,6 +19,7 @@ float2 g_screenSize = { 1600.0f, 900.0f };
 bool g_fresnelEnable = true;
 float g_fresnelIntensity = 0.08f;
 bool g_waterMirrorEnable = false;
+bool g_treatTextureAsWhite = false;
 
 // スペキュラ光の鋭さ
 //float g_specularPower = 16.0f;
@@ -158,6 +159,17 @@ float3 IncreaseSaturation(float3 color, float amount)
 {
     float luminance = dot(color, float3(0.299f, 0.587f, 0.114f));
     return saturate(lerp(luminance.xxx, color, amount));
+}
+
+float3 SampleBaseTextureColor(float2 uv)
+{
+    float3 textureColor = tex2D(g_textureSampler, uv).rgb;
+    if (g_treatTextureAsWhite)
+    {
+        textureColor = 1.0f.xxx;
+    }
+
+    return textureColor;
 }
 
 
@@ -511,7 +523,7 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
 
     ApplyAlphaCutout(inTexCoord);
     float surfaceAlpha = GetSurfaceAlpha(inTexCoord);
-    float3 albedo = tex2D(g_textureSampler, inTexCoord).rgb * g_diffuse.rgb;
+    float3 albedo = SampleBaseTextureColor(inTexCoord) * g_diffuse.rgb;
 
     //-----------------------------------------------------------------------
     // 法線マッピングでNdotLを調節
@@ -738,7 +750,7 @@ void PixelShaderPointLight(in  float4 inPosition            : POSITION,
     }
 
     ApplyAlphaCutout(uv);
-    float3 albedo = tex2D(g_textureSampler, uv).rgb * g_diffuse.rgb;
+    float3 albedo = SampleBaseTextureColor(uv) * g_diffuse.rgb;
 
     float3 N = normalWS;
     if (g_bNormalMapping)
@@ -804,7 +816,7 @@ void PixelShaderEmit(in  float4 inPosition     : POSITION,
                      out float4 outColor       : COLOR)
 {
     ApplyAlphaCutout(inTexCoord);
-    float3 albedo = tex2D(g_textureSampler, inTexCoord).rgb * g_diffuse.rgb;
+    float3 albedo = SampleBaseTextureColor(inTexCoord) * g_diffuse.rgb;
     float3 normal = normalize(inNormalWorld);
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float fresnel = g_fresnelEnable ? (CalcFresnelFactor(normal, cameraDir) * g_fresnelIntensity) : 0.0f;

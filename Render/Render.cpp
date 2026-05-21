@@ -572,6 +572,16 @@ void Render::ApplySettings()
         }
     }
 
+    const auto phongTreatTextureAsWhite = m_settings.find(L"PhongTreatTextureAsWhite");
+    if (phongTreatTextureAsWhite != m_settings.end())
+    {
+        bool enabled = false;
+        if (TryParseBoolSetting(phongTreatTextureAsWhite->second, enabled))
+        {
+            SetPhongTreatTextureAsWhite(enabled);
+        }
+    }
+
     const auto sssIntensity = m_settings.find(L"SSSIntensity");
     if (sssIntensity != m_settings.end())
     {
@@ -1949,6 +1959,7 @@ int Render::AddMeshMixSkinAnim(const std::wstring& filePath,
     param.specularEdge = m_meshMixSpecularEdge;
     param.specularIntensityOverrideEnabled = m_meshMixSpecularIntensityOverrideEnabled;
     param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
+    param.treatTextureAsWhite = m_phongTreatTextureAsWhiteEnabled;
 
     MeshMixSkinAnim* mesh = NEW MeshMixSkinAnim(filePath, pos, rot, scale, param, animSetMap);
     try
@@ -1986,6 +1997,7 @@ int Render::AddMeshMixSkinAnim(const std::wstring& meshFilePath,
     param.specularEdge = m_meshMixSpecularEdge;
     param.specularIntensityOverrideEnabled = m_meshMixSpecularIntensityOverrideEnabled;
     param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
+    param.treatTextureAsWhite = m_phongTreatTextureAsWhiteEnabled;
 
     MeshMixSkinAnim* mesh = NEW MeshMixSkinAnim(meshFilePath, animationFilePath, pos, rot, scale, param, animSetMap);
     try
@@ -2151,6 +2163,24 @@ void Render::SetMeshMixSpecularEdgeOverrideEnabled(const bool enabled)
         if (mesh != nullptr)
         {
             mesh->SetSpecularEdgeOverrideEnabled(enabled);
+        }
+    }
+}
+
+void Render::SetPhongTreatTextureAsWhite(const bool enabled)
+{
+    m_phongTreatTextureAsWhiteEnabled = enabled;
+
+    for (auto& mesh : m_meshMixList)
+    {
+        mesh.SetTreatTextureAsWhite(enabled);
+    }
+
+    for (auto& mesh : m_meshMixSkinAnimList)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->SetTreatTextureAsWhite(enabled);
         }
     }
 }

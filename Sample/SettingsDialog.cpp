@@ -46,6 +46,7 @@ void RefreshHalfLambertShadowSaturationControls(HWND hDlg);
 void RefreshShadowDarknessControls(HWND hDlg);
 void RefreshSpecularIntensityControls(HWND hDlg);
 void RefreshSpecularEdgeControls(HWND hDlg);
+void RefreshPhongTreatTextureAsWhiteControls(HWND hDlg);
 void RefreshEnvMapBlendControls(HWND hDlg);
 void RefreshSSSControls(HWND hDlg);
 void RefreshSSAO(HWND hDlg);
@@ -1828,6 +1829,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshShadowDarknessControls(hDlg);
     RefreshSpecularIntensityControls(hDlg);
     RefreshSpecularEdgeControls(hDlg);
+    RefreshPhongTreatTextureAsWhiteControls(hDlg);
     RefreshEnvMapBlendControls(hDlg);
     RefreshSSSControls(hDlg);
     RefreshSSAO(hDlg);
@@ -3541,6 +3543,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_bUseSpecularEdgeOverride = (IsDlgButtonChecked(hDlg, IDC_CHECK_SPECULAR_EDGE_OVERRIDE) == BST_CHECKED);
             ApplySpecularEdgeOverride();
             RefreshSpecularEdgeControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_PHONG_TREAT_TEXTURE_AS_WHITE)
+        {
+            g_bPhongTreatTextureAsWhite =
+                (IsDlgButtonChecked(hDlg, IDC_CHECK_PHONG_TREAT_TEXTURE_AS_WHITE) == BST_CHECKED);
+            ApplyPhongTreatTextureAsWhite();
+            RefreshPhongTreatTextureAsWhiteControls(hDlg);
             return TRUE;
         }
 

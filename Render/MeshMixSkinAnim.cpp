@@ -234,6 +234,7 @@ void MeshMixSkinAnim::Render()
         useSaturateShadow = TRUE;
     }
     m_D3DEffect->SetBool("g_bSaturateShadow", useSaturateShadow);
+    m_D3DEffect->SetBool("g_treatTextureAsWhite", m_param.treatTextureAsWhite ? TRUE : FALSE);
     m_D3DEffect->SetFloat("g_fSaturateShadowIntensity", m_param.saturateShadowIntensity);
     m_D3DEffect->SetFloat("g_fShadowDarkness", m_param.shadowDarkness);
     m_D3DEffect->SetFloat("g_specularIntensity", m_param.specularIntensity);
@@ -692,6 +693,11 @@ void MeshMixSkinAnim::SetSpecularIntensityOverrideEnabled(const bool enabled)
 void MeshMixSkinAnim::SetSpecularEdgeOverrideEnabled(const bool enabled)
 {
     m_param.specularEdgeOverrideEnabled = enabled;
+}
+
+void MeshMixSkinAnim::SetTreatTextureAsWhite(const bool enabled)
+{
+    m_param.treatTextureAsWhite = enabled;
 }
 
 void MeshMixSkinAnim::SetRotY(const float rotY)

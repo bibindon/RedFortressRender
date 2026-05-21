@@ -50,6 +50,7 @@ public:
     void SetCubeMappingRate(const float rate);
     void SetSpecularIntensityOverrideEnabled(const bool enabled);
     void SetSpecularEdgeOverrideEnabled(const bool enabled);
+    void SetTreatTextureAsWhite(const bool enabled);
     void SetSSS(const bool enabled);
     void SetSSSIntensity(const float intensity);
     void SetSSSColor(const DWORD color);

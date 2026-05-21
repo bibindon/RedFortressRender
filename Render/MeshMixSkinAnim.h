@@ -45,6 +45,7 @@ public:
     void SetSpecularEdge(const float edge);
     void SetSpecularIntensityOverrideEnabled(const bool enabled);
     void SetSpecularEdgeOverrideEnabled(const bool enabled);
+    void SetTreatTextureAsWhite(const bool enabled);
     void SetRotY(const float rotY);
 
     D3DXVECTOR3 GetRot() const;

@@ -704,6 +704,12 @@ void ApplySpecularEdgeOverride()
     RefreshSettingsDialogState();
 }
 
+void ApplyPhongTreatTextureAsWhite()
+{
+    g_Render.SetPhongTreatTextureAsWhite(g_bPhongTreatTextureAsWhite);
+    RefreshSettingsDialogState();
+}
+
 void ApplyEnvMapBlend()
 {
     g_envMapBlend = ClampEnvMapBlend(g_envMapBlend);

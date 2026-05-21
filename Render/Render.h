@@ -210,6 +210,7 @@ public:
     void SetMeshMixEnvMapBlend(const float blend);
     void SetMeshMixSpecularIntensityOverrideEnabled(const bool enabled);
     void SetMeshMixSpecularEdgeOverrideEnabled(const bool enabled);
+    void SetPhongTreatTextureAsWhite(const bool enabled);
 
     void SetCamera(const D3DXVECTOR3& pos, const D3DXVECTOR3& lookAt);
     void MoveCamera(const D3DXVECTOR3& pos);
@@ -533,6 +534,7 @@ private:
     float m_meshMixCubeMappingRate = 1.0f;
     bool m_meshMixSpecularIntensityOverrideEnabled = true;
     bool m_meshMixSpecularEdgeOverrideEnabled = true;
+    bool m_phongTreatTextureAsWhiteEnabled = false;
     bool m_meshMixSSSEnabled = false;
     float m_meshMixSSSIntensity = 1.0f;
     DWORD m_meshMixSSSColor = 0xffff80;

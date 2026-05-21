@@ -550,6 +550,16 @@ void RefreshSpecularEdgeControls(HWND hDlg)
     EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SPECULAR_EDGE), enabled);
 }
 
+void RefreshPhongTreatTextureAsWhiteControls(HWND hDlg)
+{
+    UINT checkState = BST_UNCHECKED;
+    if (g_bPhongTreatTextureAsWhite)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_PHONG_TREAT_TEXTURE_AS_WHITE, checkState);
+}
+
 void RefreshEnvMapBlendControls(HWND hDlg)
 {
     wchar_t buffer[32];

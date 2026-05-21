@@ -108,6 +108,7 @@ float g_specularEdge = 0.0f;
 float g_envMapBlend = 1.0f;
 bool g_bUseSpecularIntensityOverride = false;
 bool g_bUseSpecularEdgeOverride = false;
+bool g_bPhongTreatTextureAsWhite = false;
 bool g_bSSS = false;
 float g_sssIntensity = 1.0f;
 D3DXCOLOR g_sssColor = D3DXCOLOR(1.0f, 1.0f, 0.5f, 1.0f);
@@ -1896,6 +1897,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_bUseSpecularEdgeOverride = (std::stoi(value) != 0);
             }
+            else if (key == L"PhongTreatTextureAsWhite")
+            {
+                g_bPhongTreatTextureAsWhite = (std::stoi(value) != 0);
+            }
             else if (key == L"BloomThreshold")
             {
                 g_bloomThreshold = std::stof(value);
@@ -2142,6 +2147,7 @@ void ApplyAllSampleSettings()
     ApplySpecularIntensityOverride();
     ApplySpecularEdge();
     ApplySpecularEdgeOverride();
+    ApplyPhongTreatTextureAsWhite();
     ApplyEnvMapBlend();
     ApplySSSIntensity();
     ApplySSSColor();
