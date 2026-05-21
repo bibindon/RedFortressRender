@@ -215,6 +215,7 @@ public:
     void SetMeshPBREnvMaxMipLevel(const float mipLevel);
     void SetMeshPBREnvDiffuseIntensity(const float intensity);
     void SetMeshPBREnvDiffuseMipLevel(const float mipLevel);
+    bool SetMeshPBREnvMapTexturePath(const std::wstring& envMapTexturePath);
     void SetMeshMixSpecularIntensityOverrideEnabled(const bool enabled);
     void SetMeshMixSpecularEdgeOverrideEnabled(const bool enabled);
     void SetPhongTreatTextureAsWhite(const bool enabled);

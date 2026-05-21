@@ -54,6 +54,7 @@ public:
     void SetPBREnvMaxMipLevel(const float mipLevel);
     void SetPBREnvDiffuseIntensity(const float intensity);
     void SetPBREnvDiffuseMipLevel(const float mipLevel);
+    bool SetPBREnvMapTexturePath(const std::wstring& envMapTexturePath);
     void SetSpecularIntensityOverrideEnabled(const bool enabled);
     void SetSpecularEdgeOverrideEnabled(const bool enabled);
     void SetSSS(const bool enabled);

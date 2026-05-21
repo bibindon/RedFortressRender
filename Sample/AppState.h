@@ -422,6 +422,7 @@ void ApplyPBREnvReflectionIntensity();
 void ApplyPBREnvMaxMipLevel();
 void ApplyPBREnvDiffuseIntensity();
 void ApplyPBREnvDiffuseMipLevel();
+bool ApplyPBREnvMapTexturePath();
 void ApplySSS();
 void ApplySSSIntensity();
 void ApplySSSColor();

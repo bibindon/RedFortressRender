@@ -635,8 +635,14 @@ void MeshPBRManager::InitializeInternal()
                                       ? xFileDir + m_param.envMapTexturePath
                                       : m_param.envMapTexturePath;
         hResult = LoadCubeTextureCached(envMapPath, &m_texCubeMap);
-        assert(hResult == S_OK);
-        m_param.cubeMapping = true;
+        if (SUCCEEDED(hResult))
+        {
+            m_param.cubeMapping = true;
+        }
+        else
+        {
+            m_param.cubeMapping = false;
+        }
     }
 
     for (DWORD i = 0; i < m_materialCount; ++i)
@@ -994,6 +1000,47 @@ void MeshPBRManager::SetPBREnvDiffuseIntensity(const float intensity)
 void MeshPBRManager::SetPBREnvDiffuseMipLevel(const float mipLevel)
 {
     m_param.envDiffuseMipLevel = mipLevel;
+}
+
+bool MeshPBRManager::SetPBREnvMapTexturePath(const std::wstring& envMapTexturePath)
+{
+    WaitForLoad();
+
+    if (!m_bLoaded)
+    {
+        m_param.envMapTexturePath = envMapTexturePath;
+        m_param.cubeMapping = !envMapTexturePath.empty();
+        return true;
+    }
+
+    LPDIRECT3DBASETEXTURE9 newCubeMap = nullptr;
+    if (!envMapTexturePath.empty())
+    {
+        std::wstring xFilePath = m_meshName;
+        if (PathIsRelative(xFilePath.c_str()))
+        {
+            xFilePath = Util::GetExeDir() + xFilePath;
+        }
+
+        std::wstring xFileDir = xFilePath;
+        const std::size_t lastPos = xFileDir.find_last_of(L"\\");
+        xFileDir = (lastPos == std::wstring::npos) ? L"" : xFileDir.substr(0, lastPos + 1);
+
+        const std::wstring envMapPath = PathIsRelative(envMapTexturePath.c_str())
+                                      ? xFileDir + envMapTexturePath
+                                      : envMapTexturePath;
+        const HRESULT hResult = LoadCubeTextureCached(envMapPath, &newCubeMap);
+        if (FAILED(hResult))
+        {
+            return false;
+        }
+    }
+
+    ReleaseTextureCached(m_texCubeMap);
+    m_texCubeMap = newCubeMap;
+    m_param.envMapTexturePath = envMapTexturePath;
+    m_param.cubeMapping = (m_texCubeMap != nullptr);
+    return true;
 }
 
 void MeshPBRManager::SetSpecularEdgeOverrideEnabled(const bool enabled)

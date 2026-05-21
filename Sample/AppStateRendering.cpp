@@ -786,6 +786,11 @@ void ApplyPBREnvDiffuseMipLevel()
     g_Render.SetMeshPBREnvDiffuseMipLevel(g_pbrEnvDiffuseMipLevel);
 }
 
+bool ApplyPBREnvMapTexturePath()
+{
+    return g_Render.SetMeshPBREnvMapTexturePath(g_selectedPbrEnvMapPath);
+}
+
 void ApplySSS()
 {
     g_Render.SetMeshMixSSS(g_bSSS);

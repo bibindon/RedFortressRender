@@ -2247,9 +2247,16 @@ bool HandleOpenMeshCommand(HWND hDlg, const WORD commandId)
     if (commandId == IDC_BUTTON_OPEN_PBR_ENVMAP)
     {
         if (ShowOpenFileDialog(hDlg,
-                               L"Environment Map Files (*.dds;*.hdr;*.png;*.jpg;*.jpeg;*.bmp;*.tga)\0*.dds;*.hdr;*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All Files (*.*)\0*.*\0",
+                               L"Cube Environment Map Files (*.dds)\0*.dds\0All Files (*.*)\0*.*\0",
                                g_selectedPbrEnvMapPath))
         {
+            if (!ApplyPBREnvMapTexturePath())
+            {
+                MessageBoxW(hDlg,
+                            L"PBR 環境マップをキューブテクスチャとして読み込めませんでした。DDS の cube map を指定してください。",
+                            L"PBR Environment Map",
+                            MB_OK | MB_ICONWARNING);
+            }
             RefreshSelectedMeshPaths(hDlg);
         }
         return true;

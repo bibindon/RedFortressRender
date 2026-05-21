@@ -2203,6 +2203,19 @@ void Render::SetMeshPBREnvDiffuseMipLevel(const float mipLevel)
     }
 }
 
+bool Render::SetMeshPBREnvMapTexturePath(const std::wstring& envMapTexturePath)
+{
+    bool allSucceeded = true;
+    for (auto& mesh : m_meshPBRList)
+    {
+        if (!mesh.SetPBREnvMapTexturePath(envMapTexturePath))
+        {
+            allSucceeded = false;
+        }
+    }
+    return allSucceeded;
+}
+
 void Render::SetMeshMixSpecularIntensityOverrideEnabled(const bool enabled)
 {
     m_meshMixSpecularIntensityOverrideEnabled = enabled;
