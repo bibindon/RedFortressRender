@@ -470,6 +470,23 @@ void Render::ApplySettings()
         SetPostEffectGaussianSampleSize(m_gaussianSampleSize);
     }
 
+    const auto gaussianStrength = m_settings.find(L"GaussianStrength");
+    if (gaussianStrength != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectGaussianStrength(std::stof(gaussianStrength->second));
+        }
+        catch (...)
+        {
+            SetPostEffectGaussianStrength(m_gaussianStrength);
+        }
+    }
+    else
+    {
+        SetPostEffectGaussianStrength(m_gaussianStrength);
+    }
+
     const auto maskedGaussianEnable = m_settings.find(L"MaskedGaussianEnable");
     if (maskedGaussianEnable != m_settings.end())
     {
@@ -1509,9 +1526,7 @@ void Render::Draw()
     if (m_gBufferEnabled && m_postEffectGaussEnabled)
     {
         EnsurePostEffectGaussInitialized();
-        m_postEffectGauss.DrawHorizontal(pTempTexture, pWorkTexture);
-        SwapPostEffectBuffers(pTempTexture, pWorkTexture);
-        m_postEffectGauss.DrawVertical(pTempTexture, pWorkTexture);
+        m_postEffectGauss.Draw(pTempTexture, pWorkTexture);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
@@ -2595,6 +2610,12 @@ void Render::SetPostEffectGaussianSampleSize(const int sampleSize)
     m_gaussianSampleSize = NormalizeGaussianSampleSize(sampleSize);
     m_postEffectGauss.SetSampleSize(m_gaussianSampleSize);
     m_postEffectMaskedGauss.SetSampleSize(m_gaussianSampleSize);
+}
+
+void Render::SetPostEffectGaussianStrength(const float strength)
+{
+    m_gaussianStrength = (std::max)(0.0f, (std::min)(strength, 1.0f));
+    m_postEffectGauss.SetIntensity(m_gaussianStrength);
 }
 
 void Render::SetPostEffectFontSampleSize(const int sampleSize)

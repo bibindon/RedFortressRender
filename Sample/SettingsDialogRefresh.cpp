@@ -1265,6 +1265,14 @@ void RefreshGaussianControls(HWND hDlg)
                        TBM_SETPOS,
                        TRUE,
                        static_cast<LPARAM>(GaussianSampleSizeToSliderValue(g_gaussianSampleSize)));
+
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_gaussianStrength);
+    SetDlgItemText(hDlg, IDC_EDIT_GAUSSIAN_STRENGTH, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_GAUSSIAN_STRENGTH,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(GaussianStrengthToSliderValue(g_gaussianStrength)));
 }
 
 void RefreshFontExGaussianControls(HWND hDlg)

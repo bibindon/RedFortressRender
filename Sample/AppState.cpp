@@ -138,6 +138,7 @@ float g_pointLightSquareWidth = 10.0f;
 float g_pointLightSquareHeight = 10.0f;
 D3DXVECTOR3 g_pointLightRotationDegrees = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 int g_gaussianSampleSize = 101;
+float g_gaussianStrength = 1.0f;
 int g_fontExGaussianSampleSize = 21;
 int g_fxaaQuality = 4;
 int g_motionBlurCameraQuality = 4;
@@ -765,6 +766,11 @@ std::wstring Unquote(const std::wstring& text)
     }
 
     return text;
+}
+
+float ClampGaussianStrength(const float strength)
+{
+    return (std::max)(GAUSSIAN_STRENGTH_MIN, (std::min)(strength, GAUSSIAN_STRENGTH_MAX));
 }
 
 bool ResolvePathFromCsvEntry(const std::wstring& csvDirectoryPath,
@@ -1714,6 +1720,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_gaussianSampleSize = std::stoi(value);
             }
+            else if (key == L"GaussianStrength")
+            {
+                g_gaussianStrength = std::stof(value);
+            }
             else if (key == L"FXAAQuality")
             {
                 g_fxaaQuality = std::stoi(value);
@@ -2226,6 +2236,7 @@ void ApplyAllSampleSettings()
     ApplyModelLoadScale();
     ApplyMeshInstancingRenderMode();
     ApplyGaussianSampleSize();
+    ApplyGaussianStrength();
     ApplyFontExGaussianSampleSize();
     ApplyFXAAQuality();
     ApplyMotionBlurCameraSettings();

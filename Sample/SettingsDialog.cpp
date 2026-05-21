@@ -190,6 +190,8 @@ constexpr int POINT_LIGHT_BRIGHTNESS_SLIDER_MIN = 0;
 constexpr int POINT_LIGHT_BRIGHTNESS_SLIDER_MAX = static_cast<int>(POINT_LIGHT_BRIGHTNESS_MAX / POINT_LIGHT_BRIGHTNESS_STEP);
 constexpr int GAUSSIAN_SLIDER_MIN = 1;
 constexpr int GAUSSIAN_SLIDER_MAX = (GAUSSIAN_SAMPLE_MAX + 1) / 2;
+constexpr int GAUSSIAN_STRENGTH_SLIDER_MIN = static_cast<int>(GAUSSIAN_STRENGTH_MIN / GAUSSIAN_STRENGTH_STEP);
+constexpr int GAUSSIAN_STRENGTH_SLIDER_MAX = static_cast<int>(GAUSSIAN_STRENGTH_MAX / GAUSSIAN_STRENGTH_STEP);
 constexpr int FONTEX_GAUSSIAN_SLIDER_MIN = FONTEX_GAUSSIAN_SAMPLE_MIN;
 constexpr int FONTEX_GAUSSIAN_SLIDER_MAX = FONTEX_GAUSSIAN_SAMPLE_MAX;
 constexpr int FXAA_QUALITY_SLIDER_MIN = FXAA_QUALITY_MIN;
@@ -595,6 +597,7 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_DOF_MAX_BLUR_DISTANCE,
         IDC_EDIT_DOF_AUTO_ACTIVATION_DISTANCE,
         IDC_EDIT_GAUSSIAN_SAMPLE_SIZE,
+        IDC_EDIT_GAUSSIAN_STRENGTH,
         IDC_EDIT_FONTEX_GAUSSIAN_SAMPLE_SIZE,
         IDC_EDIT_FXAA_QUALITY,
         IDC_EDIT_MOTION_BLUR_CAMERA_MAX_BLUR_PIXELS,
@@ -720,6 +723,14 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
         {
             g_gaussianSampleSize = intValue;
             ApplyGaussianSampleSize();
+        }
+        RefreshGaussianControls(hDlg);
+        return true;
+    case IDC_EDIT_GAUSSIAN_STRENGTH:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_gaussianStrength = floatValue;
+            ApplyGaussianStrength();
         }
         RefreshGaussianControls(hDlg);
         return true;
@@ -2203,6 +2214,11 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETTICFREQ, 5, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_SAMPLE_SIZE, TBM_SETPAGESIZE, 0, 5);
 
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_STRENGTH, TBM_SETRANGEMIN, FALSE, GAUSSIAN_STRENGTH_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_STRENGTH, TBM_SETRANGEMAX, FALSE, GAUSSIAN_STRENGTH_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_STRENGTH, TBM_SETTICFREQ, 10, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_GAUSSIAN_STRENGTH, TBM_SETPAGESIZE, 0, 10);
+
     SendDlgItemMessage(hDlg, IDC_SLIDER_FONTEX_GAUSSIAN_SAMPLE_SIZE, TBM_SETRANGEMIN, FALSE, FONTEX_GAUSSIAN_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_FONTEX_GAUSSIAN_SAMPLE_SIZE, TBM_SETRANGEMAX, FALSE, FONTEX_GAUSSIAN_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_FONTEX_GAUSSIAN_SAMPLE_SIZE, TBM_SETTICFREQ, 1, 0);
@@ -2640,6 +2656,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
             g_gaussianSampleSize = SliderValueToGaussianSampleSize(sliderValue);
             ApplyGaussianSampleSize();
+            RefreshGaussianControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_GAUSSIAN_STRENGTH))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_gaussianStrength = SliderValueToGaussianStrength(sliderValue);
+            ApplyGaussianStrength();
             RefreshGaussianControls(hDlg);
             return TRUE;
         }

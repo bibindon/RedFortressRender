@@ -294,6 +294,7 @@ public:
 
     void SetPostEffectGaussianFilter(const bool arg);
     void SetPostEffectGaussianSampleSize(const int sampleSize);
+    void SetPostEffectGaussianStrength(const float strength);
     void SetPostEffectFontSampleSize(const int sampleSize);
     void SetPostEffectMaskedGaussianFilter(const bool arg);
     void SetPostEffectMaskedGaussianSampleSize(const int sampleSize);
@@ -516,6 +517,7 @@ private:
 
     std::unordered_map<std::wstring, std::wstring> m_settings;
     int m_gaussianSampleSize = 101;
+    float m_gaussianStrength = 1.0f;
     int m_fontExGaussianSampleSize = 21;
     std::wstring m_maskedGaussianMaskPath;
     int m_fxaaQuality = 4;

@@ -828,6 +828,11 @@ void ApplyBloomThreshold()
     g_Render.SetPostEffectBloomThreshold(g_bloomThreshold);
 }
 
+float ClampGaussianStrength(const float strength)
+{
+    return (std::max)(GAUSSIAN_STRENGTH_MIN, (std::min)(strength, GAUSSIAN_STRENGTH_MAX));
+}
+
 void ApplyBloomWeightSum()
 {
     g_bloomWeightSum = ClampBloomWeightSum(g_bloomWeightSum);
@@ -932,6 +937,12 @@ void ApplyGaussianSampleSize()
 {
     g_gaussianSampleSize = NormalizeGaussianSampleSizeLocal(g_gaussianSampleSize);
     g_Render.SetPostEffectGaussianSampleSize(g_gaussianSampleSize);
+}
+
+void ApplyGaussianStrength()
+{
+    g_gaussianStrength = ClampGaussianStrength(g_gaussianStrength);
+    g_Render.SetPostEffectGaussianStrength(g_gaussianStrength);
 }
 
 void ApplyFontExGaussianSampleSize()
@@ -1595,6 +1606,16 @@ int GaussianSampleSizeToSliderValue(const int sampleSize)
 int SliderValueToGaussianSampleSize(const int sliderValue)
 {
     return NormalizeGaussianSampleSizeLocal(sliderValue * 2 - 1);
+}
+
+int GaussianStrengthToSliderValue(const float strength)
+{
+    return static_cast<int>(std::lround(ClampGaussianStrength(strength) / GAUSSIAN_STRENGTH_STEP));
+}
+
+float SliderValueToGaussianStrength(const int sliderValue)
+{
+    return ClampGaussianStrength(static_cast<float>(sliderValue) * GAUSSIAN_STRENGTH_STEP);
 }
 
 int FontExGaussianSampleSizeToSliderValue(const int sampleSize)
