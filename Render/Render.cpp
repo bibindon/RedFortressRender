@@ -340,6 +340,17 @@ void Render::ApplySettings()
         }
     }
 
+    const auto ssaoMaxDarknessClampEnable =
+        m_settings.find(L"SSAOMaxDarknessClampEnable");
+    if (ssaoMaxDarknessClampEnable != m_settings.end())
+    {
+        bool enabled = true;
+        if (TryParseBoolSetting(ssaoMaxDarknessClampEnable->second, enabled))
+        {
+            SetPostEffectSSAOMaxDarknessClamp(enabled);
+        }
+    }
+
     const auto ssgiEnable = m_settings.find(L"SSGIEnable");
     if (ssgiEnable != m_settings.end())
     {
@@ -2697,6 +2708,11 @@ void Render::SetPostEffectSSAOTexSizeDivisor(const int scaleDivisor)
 void Render::SetPostEffectSSAOCompositeGaussian3x3(const bool enabled)
 {
     m_postEffectSSAO.SetCompositeGaussian3x3Enabled(enabled);
+}
+
+void Render::SetPostEffectSSAOMaxDarknessClamp(const bool enabled)
+{
+    m_postEffectSSAO.SetMaxDarknessClampEnabled(enabled);
 }
 
 void Render::SetPostEffectSSGI(const bool arg)

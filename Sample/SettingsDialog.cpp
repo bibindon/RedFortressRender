@@ -61,6 +61,7 @@ void RefreshSSAOShadowSaturationControls(HWND hDlg);
 void RefreshSSAOSampleCountControls(HWND hDlg);
 void RefreshSSAORandomSamplingDirectionControls(HWND hDlg);
 void RefreshSSAODepthScaledSampleDistanceControls(HWND hDlg);
+void RefreshSSAOMaxDarknessClampControls(HWND hDlg);
 void RefreshSSAOSampleRadiusControls(HWND hDlg);
 void RefreshSSAOBlurKernelSizeControls(HWND hDlg);
 void RefreshSSAOCompositeGaussian3x3Controls(HWND hDlg);
@@ -1805,6 +1806,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshSSAOSampleCountControls(hDlg);
     RefreshSSAORandomSamplingDirectionControls(hDlg);
     RefreshSSAODepthScaledSampleDistanceControls(hDlg);
+    RefreshSSAOMaxDarknessClampControls(hDlg);
     RefreshSSAOTexSizeControls(hDlg);
     RefreshSSAOCompositeGaussian3x3Controls(hDlg);
     RefreshBloom(hDlg);
@@ -1839,6 +1841,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshSSAOSampleCountControls(hDlg);
     RefreshSSAORandomSamplingDirectionControls(hDlg);
     RefreshSSAODepthScaledSampleDistanceControls(hDlg);
+    RefreshSSAOMaxDarknessClampControls(hDlg);
     RefreshSSAOTexSizeControls(hDlg);
     RefreshSSAOCompositeGaussian3x3Controls(hDlg);
     RefreshBloomThresholdControls(hDlg);
@@ -3278,6 +3281,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             RefreshSSAOSampleRadiusControls(hDlg);
             RefreshSSAOBlurKernelSizeControls(hDlg);
             RefreshSSAODepthScaledSampleDistanceControls(hDlg);
+            RefreshSSAOMaxDarknessClampControls(hDlg);
             RefreshSSAOTexSizeControls(hDlg);
             RefreshSSAOCompositeGaussian3x3Controls(hDlg);
             return TRUE;
@@ -3330,6 +3334,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
                 (IsDlgButtonChecked(hDlg, IDC_CHECK_SSAO_DEPTH_SCALED_SAMPLE_DISTANCE) == BST_CHECKED);
             ApplySSAODepthScaledSampleDistance();
             RefreshSSAODepthScaledSampleDistanceControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_SSAO_MAX_DARKNESS_CLAMP)
+        {
+            g_bSSAOMaxDarknessClamp =
+                (IsDlgButtonChecked(hDlg, IDC_CHECK_SSAO_MAX_DARKNESS_CLAMP) == BST_CHECKED);
+            ApplySSAOMaxDarknessClamp();
+            RefreshSSAOMaxDarknessClampControls(hDlg);
             return TRUE;
         }
 

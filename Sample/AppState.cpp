@@ -65,6 +65,7 @@ bool g_bSSAOBlur = false;
 bool g_bSSGIBlur = true;
 bool g_bSSAORandomSamplingDirection = true;
 bool g_bSSAODepthScaledSampleDistance = false;
+bool g_bSSAOMaxDarknessClamp = true;
 bool g_bFog = true;
 bool g_bHeightFog = true;
 bool g_bSaturateFilter = false;
@@ -1774,6 +1775,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_bSSAOCompositeGaussian3x3 = (std::stoi(value) != 0);
             }
+            else if (key == L"SSAOMaxDarknessClampEnable")
+            {
+                g_bSSAOMaxDarknessClamp = (std::stoi(value) != 0);
+            }
             else if (key == L"CameraNear")
             {
                 g_cameraNearPlane = std::stof(value);
@@ -2119,6 +2124,7 @@ void ApplyAllSampleSettings()
     ApplySSAOSampleCount();
     ApplySSAORandomSamplingDirection();
     ApplySSAODepthScaledSampleDistance();
+    ApplySSAOMaxDarknessClamp();
     ApplySSAOSampleRadius();
     ApplySSAOBlurKernelSize();
     ApplySSAOTexSize();

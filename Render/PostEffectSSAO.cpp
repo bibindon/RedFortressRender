@@ -188,6 +188,7 @@ void PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_fxSSAO->SetTexture("texAO", aoTextureForComposite);
     m_fxSSAO->SetFloat("g_shadowStrength", m_shadowStrength);
     m_fxSSAO->SetFloat("g_aoSaturationBoost", m_saturationBoost);
+    m_fxSSAO->SetBool("g_enableMaxDarknessClamp", m_maxDarknessClampEnabled);
     m_fxSSAO->SetTechnique(GetCompositeTechniqueName());
     m_fxSSAO->Begin(NULL, 0);
     m_fxSSAO->BeginPass(0);
@@ -288,6 +289,11 @@ void PostEffectSSAO::SetTextureScaleDivisor(const int scaleDivisor)
 void PostEffectSSAO::SetCompositeGaussian3x3Enabled(const bool enabled)
 {
     m_compositeGaussian3x3Enabled = enabled;
+}
+
+void PostEffectSSAO::SetMaxDarknessClampEnabled(const bool enabled)
+{
+    m_maxDarknessClampEnabled = enabled;
 }
 
 void PostEffectSSAO::SetDepthRange(const float nearPlane, const float farPlane)

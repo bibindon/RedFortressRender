@@ -30,6 +30,7 @@ public:
     void SetDepthRange(const float nearPlane, const float farPlane);
     void SetTextureScaleDivisor(const int scaleDivisor);
     void SetCompositeGaussian3x3Enabled(const bool enabled);
+    void SetMaxDarknessClampEnabled(const bool enabled);
 
     void OnDeviceLost();
     void OnDeviceReset();
@@ -46,6 +47,7 @@ private:
     int m_blurKernelSize = 21;
     int m_textureScaleDivisor = 1;
     bool m_compositeGaussian3x3Enabled = false;
+    bool m_maxDarknessClampEnabled = true;
     float m_nearPlane = 0.1f;
     float m_farPlane = 30'000.0f;
     float m_positionRange = 30'000.0f;

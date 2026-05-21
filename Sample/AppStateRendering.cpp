@@ -547,6 +547,11 @@ void ApplySSAODepthScaledSampleDistance()
     g_Render.SetPostEffectSSAODepthScaledSampleDistance(g_bSSAODepthScaledSampleDistance);
 }
 
+void ApplySSAOMaxDarknessClamp()
+{
+    g_Render.SetPostEffectSSAOMaxDarknessClamp(g_bSSAOMaxDarknessClamp);
+}
+
 void ApplySSAOSampleRadius()
 {
     g_ssaoSampleRadius = ClampSSAOSampleRadius(g_ssaoSampleRadius);

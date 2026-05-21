@@ -18,6 +18,7 @@ float g_depthCompareThreshold = 0.00f;
 float g_depthBiasScale = 1.0f;
 float g_normalBiasScale = 1.0f;
 float g_minThickness = 0.10f;
+bool g_enableMaxDarknessClamp = true;
 
 texture texZ;
 texture texNormal;
@@ -696,7 +697,11 @@ float4 PS_Composite(VS_OUT i) : COLOR0
     float3 color = tex2D(sampColor, i.uv).rgb;
     float ao = tex2D(sampAO, i.uv).r;
     float aoAdjusted = saturate(1.0f - (1.0f - saturate(ao)) * g_shadowStrength);
-    float shadowPresence = saturate(1.0f - ao);
+    if (g_enableMaxDarknessClamp)
+    {
+        aoAdjusted = max(aoAdjusted, 0.5f);
+    }
+    float shadowPresence = saturate(1.0f - aoAdjusted);
     float3 shadedColor = color * aoAdjusted;
     float saturationAmount = lerp(1.0f, 1.0f + g_aoSaturationBoost, shadowPresence);
     return float4(IncreaseSaturation(shadedColor, saturationAmount), 1.0f);
@@ -718,7 +723,11 @@ float4 PS_Composite3x3Gaussian(VS_OUT i) : COLOR0
     ao += tex2D(sampAO, i.uv + float2(texelSize.x, texelSize.y)).r * 1.0f;
     ao *= (1.0f / 16.0f);
     float aoAdjusted = saturate(1.0f - (1.0f - saturate(ao)) * g_shadowStrength);
-    float shadowPresence = saturate(1.0f - ao);
+    if (g_enableMaxDarknessClamp)
+    {
+        aoAdjusted = max(aoAdjusted, 0.5f);
+    }
+    float shadowPresence = saturate(1.0f - aoAdjusted);
     float3 shadedColor = color * aoAdjusted;
     float saturationAmount = lerp(1.0f, 1.0f + g_aoSaturationBoost, shadowPresence);
     return float4(IncreaseSaturation(shadedColor, saturationAmount), 1.0f);

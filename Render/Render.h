@@ -311,6 +311,7 @@ public:
     void SetPostEffectSSAOBlurKernelSize(const int kernelSize);
     void SetPostEffectSSAOTexSizeDivisor(const int scaleDivisor);
     void SetPostEffectSSAOCompositeGaussian3x3(const bool enabled);
+    void SetPostEffectSSAOMaxDarknessClamp(const bool enabled);
     void SetPostEffectSSGI(const bool arg);
     void SetPostEffectSSGIBlur(const bool arg);
     void SetPostEffectSSGISampleCount(const int sampleCount);

@@ -38,6 +38,7 @@ SSAOEnable,0
 SSAOBlurEnable,0
 SSAORandomSamplingDirectionEnable,1
 SSAODepthScaledSampleDistanceEnable,0
+SSAOMaxDarknessClampEnable,1
 SSAOTexSize,1/1
 SSAOCompositeGaussian3x3Enable,0
 SSAOShadowStrength,1.0

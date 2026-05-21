@@ -690,6 +690,17 @@ void RefreshSSAODepthScaledSampleDistanceControls(HWND hDlg)
     EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SSAO_DEPTH_SCALED_SAMPLE_DISTANCE), g_bSSAO);
 }
 
+void RefreshSSAOMaxDarknessClampControls(HWND hDlg)
+{
+    UINT checkState = BST_UNCHECKED;
+    if (g_bSSAOMaxDarknessClamp)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_SSAO_MAX_DARKNESS_CLAMP, checkState);
+    EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SSAO_MAX_DARKNESS_CLAMP), g_bSSAO);
+}
+
 void RefreshSSAOSampleRadiusControls(HWND hDlg)
 {
     wchar_t buffer[32];
