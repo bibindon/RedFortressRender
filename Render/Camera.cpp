@@ -63,7 +63,35 @@ D3DXVECTOR3 NSRender::Camera::GetLookAtPos()
 {
     if (m_shakeFrameActive)
     {
-        return m_lookAtPos + m_shakeOffset;
+        D3DXVECTOR3 forward = m_lookAtPos - m_eyePos;
+        const float lookDistance = D3DXVec3Length(&forward);
+        if (lookDistance <= 0.0001f)
+        {
+            return m_lookAtPos;
+        }
+
+        D3DXVec3Normalize(&forward, &forward);
+        D3DXVECTOR3 right;
+        D3DXVec3Cross(&right, &UPWARD, &forward);
+        if (D3DXVec3LengthSq(&right) <= 0.000001f)
+        {
+            right = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
+        }
+        else
+        {
+            D3DXVec3Normalize(&right, &right);
+        }
+
+        D3DXMATRIX yawMatrix { };
+        D3DXMATRIX pitchMatrix { };
+        D3DXMatrixRotationAxis(&yawMatrix, &UPWARD, m_shakeOffset.x);
+        D3DXMatrixRotationAxis(&pitchMatrix, &right, m_shakeOffset.y);
+        const D3DXMATRIX shakeRotation = pitchMatrix * yawMatrix;
+
+        D3DXVECTOR3 rotatedForward;
+        D3DXVec3TransformNormal(&rotatedForward, &forward, &shakeRotation);
+        D3DXVec3Normalize(&rotatedForward, &rotatedForward);
+        return m_eyePos + rotatedForward * lookDistance;
     }
 
     return m_lookAtPos;
@@ -71,11 +99,6 @@ D3DXVECTOR3 NSRender::Camera::GetLookAtPos()
 
 D3DXVECTOR3 NSRender::Camera::GetEyePos()
 {
-    if (m_shakeFrameActive)
-    {
-        return m_eyePos + m_shakeOffset;
-    }
-
     return m_eyePos;
 }
 
@@ -229,10 +252,10 @@ void NSRender::Camera::BeginShakeFrame()
 
     const float normalizedTime = elapsedSeconds / m_shakeDurationSeconds;
     const float damping = 1.0f - normalizedTime;
-    const float amplitude = m_shakeIntensity * damping;
-    m_shakeOffset = D3DXVECTOR3(std::sin(elapsedSeconds * 55.0f) * amplitude,
-                                std::cos(elapsedSeconds * 83.0f) * amplitude * 0.55f,
-                                std::sin(elapsedSeconds * 34.0f) * amplitude * 0.20f);
+    const float amplitudeRadians = (D3DX_PI / 180.0f) * 8.0f * m_shakeIntensity * damping;
+    m_shakeOffset = D3DXVECTOR3(std::sin(elapsedSeconds * 55.0f) * amplitudeRadians,
+                                std::cos(elapsedSeconds * 83.0f) * amplitudeRadians * 0.55f,
+                                0.0f);
     m_shakeFrameActive = true;
 }
 
