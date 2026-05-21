@@ -2329,11 +2329,11 @@ void DrawSampleOverlay()
     text += FormatVector3(L"Virtual    :", GetEffectiveGodRayLightPos());
     if (g_bUseFontExOverlay)
     {
-        g_Render.DrawTextEx(g_fontExId, text, 10, 40);
+        g_Render.DrawTextEx(g_fontExId, text, 30, 60);
     }
     else
     {
-        g_Render.DrawText_(g_fontId, text, 10, 40);
+        g_Render.DrawText_(g_fontId, text, 30, 60);
     }
 
     DrawRandomized2DContent();
