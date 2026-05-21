@@ -121,12 +121,21 @@ float4 DownsamplePS(float2 uv : TEXCOORD0) : COLOR
 float4 DiagonalBlur3x3PS(float2 uv : TEXCOORD0) : COLOR
 {
     const float2 texel = g_TexelSize;
+    const float2 diagonalStep = texel * float2(1.0f, 1.0f);
 
     float4 sum = float4(0.0f, 0.0f, 0.0f, 0.0f);
-    sum += tex2D(SrcSampler, uv + texel * float2(-1.0f, -1.0f)) * 0.25f;
-    sum += tex2D(SrcSampler, uv)                                   * 0.50f;
-    sum += tex2D(SrcSampler, uv + texel * float2( 1.0f,  1.0f)) * 0.25f;
-    return sum;
+    float weightSum = 0.0f;
+    [unroll]
+    for (int i = -15; i <= 15; ++i)
+    {
+        const float distance = abs((float)i);
+        const float normalizedDistance = distance / 15.0f;
+        const float weight = (1.0f - normalizedDistance) * (1.0f - normalizedDistance);
+        sum += tex2D(SrcSampler, uv + diagonalStep * i) * weight;
+        weightSum += weight;
+    }
+
+    return sum / weightSum;
 }
 
 float4 CombinePS(float2 uv : TEXCOORD0) : COLOR
