@@ -25,18 +25,24 @@ public:
 
 private:
 
+    static const int BLOOM_LEVEL_COUNT = 6;
+    static const int BLOOM_LEVEL_DIVISORS[BLOOM_LEVEL_COUNT];
+
     LPD3DXEFFECT m_d3dEffect = NULL;
     bool m_isInitialized = false;
     bool m_isRegisteredForDeviceReset = false;
 
-    LPDIRECT3DTEXTURE9 m_texBright = NULL;
-    LPDIRECT3DTEXTURE9 m_texBlurH = NULL;
-    LPDIRECT3DTEXTURE9 m_texBlurH2 = NULL;
-    LPDIRECT3DTEXTURE9 m_texBlurV = NULL;
-    LPDIRECT3DTEXTURE9 m_texBlurV2 = NULL;
+    LPDIRECT3DTEXTURE9 m_texDownsample[BLOOM_LEVEL_COUNT] { };
+    LPDIRECT3DTEXTURE9 m_texBlur[BLOOM_LEVEL_COUNT] { };
 
-    void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
+    void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
+                            LPDIRECT3DTEXTURE9 texTarget,
                             const std::string& technique);
+    void DrawCombineQuad(LPDIRECT3DTEXTURE9 texScene,
+                         LPDIRECT3DTEXTURE9 texTarget);
+    void ReleaseTextures();
+    int ComputeBloomTextureWidth(const int divisor) const;
+    int ComputeBloomTextureHeight(const int divisor) const;
 
     struct ScreenVertex
     {
