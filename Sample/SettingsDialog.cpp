@@ -1,9 +1,12 @@
 ﻿#include "SettingsDialog.h"
 
+#include <algorithm>
 #include <cassert>
 #include <commctrl.h>
-#include <string>
 #include <cwchar>
+#include <fstream>
+#include <string>
+#include <vector>
 #include <windowsx.h>
 
 #include "AppState.h"
@@ -88,6 +91,125 @@ void RefreshParticlePlacementControls(HWND hDlg);
 
 namespace
 {
+std::wstring TrimDialogText(const std::wstring& text)
+{
+    const std::size_t firstPos = text.find_first_not_of(L" \t\r\n");
+    if (firstPos == std::wstring::npos)
+    {
+        return L"";
+    }
+
+    const std::size_t lastPos = text.find_last_not_of(L" \t\r\n");
+    return text.substr(firstPos, lastPos - firstPos + 1);
+}
+
+std::wstring ToLowerDialogText(std::wstring text)
+{
+    std::transform(text.begin(), text.end(), text.begin(), [](const wchar_t ch)
+    {
+        return static_cast<wchar_t>(towlower(ch));
+    });
+    return text;
+}
+
+std::wstring QuoteDialogCsvValue(const std::wstring& text)
+{
+    std::wstring escapedText;
+    escapedText.reserve(text.size() + 2);
+    escapedText.push_back(L'"');
+    for (const wchar_t ch : text)
+    {
+        if (ch == L'"')
+        {
+            escapedText.push_back(L'"');
+        }
+
+        escapedText.push_back(ch);
+    }
+    escapedText.push_back(L'"');
+    return escapedText;
+}
+
+std::wstring ReplaceDialogFileExtension(const std::wstring& filePath, const wchar_t* newExtension)
+{
+    const std::size_t slashPos = filePath.find_last_of(L"\\/");
+    const std::size_t dotPos = filePath.find_last_of(L'.');
+    if (dotPos == std::wstring::npos || (slashPos != std::wstring::npos && dotPos < slashPos))
+    {
+        return filePath + newExtension;
+    }
+
+    return filePath.substr(0, dotPos) + newExtension;
+}
+
+void UpdateOrAppendDialogCsvKeyValue(std::vector<std::wstring>& lines,
+                                     const std::wstring& key,
+                                     const std::wstring& outputLine)
+{
+    const std::wstring lowerKey = ToLowerDialogText(TrimDialogText(key));
+    for (std::wstring& line : lines)
+    {
+        const std::wstring trimmedLine = TrimDialogText(line);
+        if (trimmedLine.empty() || trimmedLine.front() == L'#')
+        {
+            continue;
+        }
+
+        const std::size_t commaPos = trimmedLine.find(L',');
+        const std::wstring lineKey = ToLowerDialogText(TrimDialogText(commaPos == std::wstring::npos
+                                                                        ? trimmedLine
+                                                                        : trimmedLine.substr(0, commaPos)));
+        if (lineKey != lowerKey)
+        {
+            continue;
+        }
+
+        line = outputLine;
+        return;
+    }
+
+    lines.push_back(outputLine);
+}
+
+void ApplySelectedPbrEnvMapOverride()
+{
+    if (g_selectedPbrMeshPath.empty() || g_selectedPbrEnvMapPath.empty())
+    {
+        return;
+    }
+
+    const std::wstring csvPath = ReplaceDialogFileExtension(g_selectedPbrMeshPath, L".csv");
+    std::vector<std::wstring> lines;
+    {
+        std::wifstream inputFile(csvPath);
+        std::wstring line;
+        while (std::getline(inputFile, line))
+        {
+            lines.push_back(line);
+        }
+    }
+
+    UpdateOrAppendDialogCsvKeyValue(lines, L"EnvMap", L"EnvMap, y");
+    UpdateOrAppendDialogCsvKeyValue(lines,
+                                    L"EnvMapFileName",
+                                    L"EnvMapFileName, " + QuoteDialogCsvValue(g_selectedPbrEnvMapPath));
+
+    std::wofstream outputFile(csvPath, std::ios::trunc);
+    if (!outputFile)
+    {
+        return;
+    }
+
+    for (std::size_t i = 0; i < lines.size(); ++i)
+    {
+        outputFile << lines[i];
+        if ((i + 1) < lines.size())
+        {
+            outputFile << L"\r\n";
+        }
+    }
+}
+
 // スライダー範囲定数は AppState 側の step / min / max と対になる。
 // UI 初期化時に「どこまで動かせるか」をここで定義している。
 constexpr int SATURATE_SLIDER_MIN = 0;
@@ -1362,6 +1484,7 @@ void RefreshSelectedMeshPaths(HWND hDlg)
 {
     SetDlgItemText(hDlg, IDC_EDIT_MIX_MESH_PATH, g_selectedMixMeshPath.c_str());
     SetDlgItemText(hDlg, IDC_EDIT_PBR_MESH_PATH, g_selectedPbrMeshPath.c_str());
+    SetDlgItemText(hDlg, IDC_EDIT_PBR_ENVMAP_PATH, g_selectedPbrEnvMapPath.c_str());
     SetDlgItemText(hDlg, IDC_EDIT_MESH_INSTANCING_PATH, g_selectedMeshInstancingPath.c_str());
     SetDlgItemText(hDlg, IDC_EDIT_MESH_PATH, g_selectedMeshPath.c_str());
     SetDlgItemText(hDlg, IDC_EDIT_ANIM_MESH_PATH, g_selectedAnimMeshPath.c_str());
@@ -2183,7 +2306,20 @@ bool HandleOpenMeshCommand(HWND hDlg, const WORD commandId)
                                L"PBR Mesh Files (*.x;*.blend.x)\0*.x;*.blend.x\0All Files (*.*)\0*.*\0",
                                g_selectedPbrMeshPath))
         {
+            ApplySelectedPbrEnvMapOverride();
             SpawnMeshPBRAtLookAt(g_selectedPbrMeshPath);
+            RefreshSelectedMeshPaths(hDlg);
+        }
+        return true;
+    }
+
+    if (commandId == IDC_BUTTON_OPEN_PBR_ENVMAP)
+    {
+        if (ShowOpenFileDialog(hDlg,
+                               L"Environment Map Files (*.dds;*.hdr;*.png;*.jpg;*.jpeg;*.bmp;*.tga)\0*.dds;*.hdr;*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All Files (*.*)\0*.*\0",
+                               g_selectedPbrEnvMapPath))
+        {
+            ApplySelectedPbrEnvMapOverride();
             RefreshSelectedMeshPaths(hDlg);
         }
         return true;
