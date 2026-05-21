@@ -123,7 +123,9 @@ float4 DiagonalBlur3x3PS(float2 uv : TEXCOORD0) : COLOR
 {
     const float2 texel = g_TexelSize;
     const float2 direction = normalize(g_StarBurstDirection);
+    const float2 perpendicularDirection = float2(-direction.y, direction.x);
     const float2 diagonalStep = texel * direction;
+    const float2 perpendicularStep = texel * perpendicularDirection;
 
     float4 sum = float4(0.0f, 0.0f, 0.0f, 0.0f);
     float weightSum = 0.0f;
@@ -134,10 +136,11 @@ float4 DiagonalBlur3x3PS(float2 uv : TEXCOORD0) : COLOR
         const float normalizedDistance = distance / 15.0f;
         const float weight = (1.0f - normalizedDistance) * (1.0f - normalizedDistance);
         sum += tex2D(SrcSampler, uv + diagonalStep * i) * weight;
+        sum += tex2D(SrcSampler, uv + perpendicularStep * i) * weight;
         weightSum += weight;
     }
 
-    return sum / weightSum;
+    return sum / (weightSum * 2.0f);
 }
 
 float4 CombinePS(float2 uv : TEXCOORD0) : COLOR

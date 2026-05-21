@@ -91,7 +91,7 @@ void PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource,
     }
 
     const float cameraYaw = std::atan2(cameraForward.x, cameraForward.z);
-    const float starBurstAngle = -cameraYaw + D3DX_PI * 0.25f;
+    const float starBurstAngle = -cameraYaw * 2.0f + D3DX_PI * 0.25f;
     const float starBurstDirection[2] = { static_cast<float>(std::cos(starBurstAngle)),
                                           static_cast<float>(std::sin(starBurstAngle)) };
     m_d3dEffect->SetFloatArray("g_StarBurstDirection", starBurstDirection, 2);
