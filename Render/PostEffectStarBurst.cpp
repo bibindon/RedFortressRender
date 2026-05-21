@@ -1,9 +1,13 @@
-﻿#include "PostEffectStarBurst.h"
+#include "PostEffectStarBurst.h"
+
+#include <algorithm>
 
 #include "Util.h"
 
 namespace NSRender
 {
+
+const int PostEffectStarBurst::STARBURST_LEVEL_DIVISORS[PostEffectStarBurst::STARBURST_LEVEL_COUNT] = { 2, 4, 8, 16, 32, 64 };
 
 void PostEffectStarBurst::Initialize()
 {
@@ -35,68 +39,57 @@ void PostEffectStarBurst::Initialize()
     m_isInitialized = true;
 }
 
+int PostEffectStarBurst::ComputeTextureWidth(const int divisor) const
+{
+    return (std::max)(1, Common::ScreenW() / divisor);
+}
+
+int PostEffectStarBurst::ComputeTextureHeight(const int divisor) const
+{
+    return (std::max)(1, Common::ScreenH() / divisor);
+}
+
 void PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource,
                                LPDIRECT3DTEXTURE9 renderTarget)
 {
-    if (m_d3dEffect == NULL)
+    if (!m_isInitialized || m_d3dEffect == NULL)
     {
         return;
     }
 
-    float texelSize[2] = { 1.0f / Common::ScreenW(), 1.0f / Common::ScreenH() };
-    m_d3dEffect->SetFloatArray("g_TexelSize", texelSize, 2);
     m_d3dEffect->SetFloat("g_Threshold", m_threshold);
 
-    SetRTFromTex(m_texBright);
-    DrawFullscreenQuad(renderSource, "BrightPass");
-
-    SetRTFromTex(m_texBlurH);
+    const float baseWeights[STARBURST_LEVEL_COUNT] = { 0.34f, 0.24f, 0.17f, 0.12f, 0.08f, 0.05f };
+    float burstWeightsA[4] { };
+    float burstWeightsB[4] { };
+    for (int i = 0; i < STARBURST_LEVEL_COUNT; ++i)
     {
-        float dir[4] = { 1.0f, 0.0f, 0, 0 };
-        m_d3dEffect->SetFloatArray("g_Direction", dir, 4);
+        const float weight = baseWeights[i] * m_intensity;
+        if (i < 4)
+        {
+            burstWeightsA[i] = weight;
+        }
+        else
+        {
+            burstWeightsB[i - 4] = weight;
+        }
+    }
+    m_d3dEffect->SetFloatArray("g_BurstWeightsA", burstWeightsA, 4);
+    m_d3dEffect->SetFloatArray("g_BurstWeightsB", burstWeightsB, 4);
+
+    DrawFullscreenQuad(renderSource, m_texDownsample[0], "BrightPass");
+
+    for (int i = 1; i < STARBURST_LEVEL_COUNT; ++i)
+    {
+        DrawFullscreenQuad(m_texDownsample[i - 1], m_texDownsample[i], "Downsample");
     }
 
-    DrawFullscreenQuad(m_texBright, "Blur");
-
-    SetRTFromTex(m_texBlurH2);
-    DrawFullscreenQuad(m_texBlurH, "Blur");
-
-    SetRTFromTex(m_texBlurV);
+    for (int i = 0; i < STARBURST_LEVEL_COUNT; ++i)
     {
-        float dir[4] = { 0.5f, 0.8660254f, 0, 0 };
-        m_d3dEffect->SetFloatArray("g_Direction", dir, 4);
+        DrawFullscreenQuad(m_texDownsample[i], m_texBlur[i], "DiagonalBlur3x3");
     }
 
-    DrawFullscreenQuad(m_texBright, "Blur");
-
-    SetRTFromTex(m_texBlurV2);
-    DrawFullscreenQuad(m_texBlurV, "Blur");
-
-    SetRTFromTex(m_texBlurD);
-    {
-        float dir[4] = { -0.5f, 0.8660254f, 0, 0 };
-        m_d3dEffect->SetFloatArray("g_Direction", dir, 4);
-    }
-
-    DrawFullscreenQuad(m_texBright, "Blur");
-
-    SetRTFromTex(m_texBlurD2);
-    DrawFullscreenQuad(m_texBlurD, "Blur");
-
-    SetRTFromTex(renderTarget);
-    m_d3dEffect->SetTexture("g_SceneTex", renderSource);
-    m_d3dEffect->SetTexture("g_BlurTexH", m_texBlurH2);
-    m_d3dEffect->SetTexture("g_BlurTexV", m_texBlurV2);
-    m_d3dEffect->SetTexture("g_BlurTex60", m_texBlurD2);
-    DrawFullscreenQuad(NULL, "Combine");
-}
-
-void PostEffectStarBurst::SetRTFromTex(LPDIRECT3DTEXTURE9 tex)
-{
-    LPDIRECT3DSURFACE9 rt = NULL;
-    tex->GetSurfaceLevel(0, &rt);
-    Common::D3DDevice()->SetRenderTarget(0, rt);
-    SAFE_RELEASE(rt);
+    DrawCombineQuad(renderSource, renderTarget);
 }
 
 void PostEffectStarBurst::Finalize()
@@ -107,23 +100,36 @@ void PostEffectStarBurst::Finalize()
         m_isRegisteredForDeviceReset = false;
     }
     SAFE_RELEASE(m_d3dEffect);
-    SAFE_RELEASE(m_texBright);
-    SAFE_RELEASE(m_texBlurH);
-    SAFE_RELEASE(m_texBlurV);
-    SAFE_RELEASE(m_texBlurD);
-    SAFE_RELEASE(m_texBlurH2);
-    SAFE_RELEASE(m_texBlurV2);
-    SAFE_RELEASE(m_texBlurD2);
+    ReleaseTextures();
     m_isInitialized = false;
 }
 
 void PostEffectStarBurst::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
+                                             LPDIRECT3DTEXTURE9 texTarget,
                                              const std::string& technique)
 {
+    if (texSource == NULL || texTarget == NULL)
+    {
+        return;
+    }
+
+    D3DSURFACE_DESC sourceDesc { };
+    D3DSURFACE_DESC targetDesc { };
+    texSource->GetLevelDesc(0, &sourceDesc);
+    texTarget->GetLevelDesc(0, &targetDesc);
+
+    LPDIRECT3DSURFACE9 rt = NULL;
+    texTarget->GetSurfaceLevel(0, &rt);
+    Common::D3DDevice()->SetRenderTarget(0, rt);
+    SAFE_RELEASE(rt);
+
     Common::D3DDevice()->SetVertexShader(NULL);
     Common::D3DDevice()->SetVertexDeclaration(NULL);
 
     m_d3dEffect->SetTechnique(technique.c_str());
+    m_d3dEffect->SetTexture("g_SrcTex", texSource);
+    const float texelSize[2] = { 1.0f / static_cast<float>(sourceDesc.Width), 1.0f / static_cast<float>(sourceDesc.Height) };
+    m_d3dEffect->SetFloatArray("g_TexelSize", texelSize, 2);
 
     ScreenVertex quad[4] { };
 
@@ -134,7 +140,7 @@ void PostEffectStarBurst::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
     quad[0].u   = 0.0f;
     quad[0].v   = 0.0f;
 
-    quad[1].x   = -0.5f + Common::ScreenW();
+    quad[1].x   = -0.5f + static_cast<float>(targetDesc.Width);
     quad[1].y   = -0.5f;
     quad[1].z   = 0.0f;
     quad[1].rhw = 1.0f;
@@ -142,14 +148,14 @@ void PostEffectStarBurst::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
     quad[1].v   = 0.0f;
 
     quad[2].x   = -0.5f;
-    quad[2].y   = -0.5f + Common::ScreenH();
+    quad[2].y   = -0.5f + static_cast<float>(targetDesc.Height);
     quad[2].z   = 0.0f;
     quad[2].rhw = 1.0f;
     quad[2].u   = 0.0f;
     quad[2].v   = 1.0f;
 
-    quad[3].x   = -0.5f + Common::ScreenW();
-    quad[3].y   = -0.5f + Common::ScreenH();
+    quad[3].x   = -0.5f + static_cast<float>(targetDesc.Width);
+    quad[3].y   = -0.5f + static_cast<float>(targetDesc.Height);
     quad[3].z   = 0.0f;
     quad[3].rhw = 1.0f;
     quad[3].u   = 1.0f;
@@ -158,23 +164,89 @@ void PostEffectStarBurst::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
     Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
     Common::D3DDevice()->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
 
-    if (texSource)
-    {
-        m_d3dEffect->SetTexture("g_SrcTex", texSource);
-    }
     Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
     Common::D3DDevice()->BeginScene();
     m_d3dEffect->Begin(NULL, 0);
     m_d3dEffect->BeginPass(0);
-
     Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, quad, sizeof(ScreenVertex));
-
     m_d3dEffect->EndPass();
     m_d3dEffect->End();
     Common::D3DDevice()->EndScene();
 
     Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
-    
+}
+
+void PostEffectStarBurst::DrawCombineQuad(LPDIRECT3DTEXTURE9 texScene,
+                                          LPDIRECT3DTEXTURE9 texTarget)
+{
+    if (texScene == NULL || texTarget == NULL)
+    {
+        return;
+    }
+
+    D3DSURFACE_DESC targetDesc { };
+    texTarget->GetLevelDesc(0, &targetDesc);
+
+    LPDIRECT3DSURFACE9 rt = NULL;
+    texTarget->GetSurfaceLevel(0, &rt);
+    Common::D3DDevice()->SetRenderTarget(0, rt);
+    SAFE_RELEASE(rt);
+
+    Common::D3DDevice()->SetVertexShader(NULL);
+    Common::D3DDevice()->SetVertexDeclaration(NULL);
+
+    m_d3dEffect->SetTechnique("Combine");
+    m_d3dEffect->SetTexture("g_SceneTex", texScene);
+    m_d3dEffect->SetTexture("g_BlurTex0", m_texBlur[0]);
+    m_d3dEffect->SetTexture("g_BlurTex1", m_texBlur[1]);
+    m_d3dEffect->SetTexture("g_BlurTex2", m_texBlur[2]);
+    m_d3dEffect->SetTexture("g_BlurTex3", m_texBlur[3]);
+    m_d3dEffect->SetTexture("g_BlurTex4", m_texBlur[4]);
+    m_d3dEffect->SetTexture("g_BlurTex5", m_texBlur[5]);
+
+    ScreenVertex quad[4] { };
+
+    quad[0].x   = -0.5f;
+    quad[0].y   = -0.5f;
+    quad[0].z   = 0.0f;
+    quad[0].rhw = 1.0f;
+    quad[0].u   = 0.0f;
+    quad[0].v   = 0.0f;
+
+    quad[1].x   = -0.5f + static_cast<float>(targetDesc.Width);
+    quad[1].y   = -0.5f;
+    quad[1].z   = 0.0f;
+    quad[1].rhw = 1.0f;
+    quad[1].u   = 1.0f;
+    quad[1].v   = 0.0f;
+
+    quad[2].x   = -0.5f;
+    quad[2].y   = -0.5f + static_cast<float>(targetDesc.Height);
+    quad[2].z   = 0.0f;
+    quad[2].rhw = 1.0f;
+    quad[2].u   = 0.0f;
+    quad[2].v   = 1.0f;
+
+    quad[3].x   = -0.5f + static_cast<float>(targetDesc.Width);
+    quad[3].y   = -0.5f + static_cast<float>(targetDesc.Height);
+    quad[3].z   = 0.0f;
+    quad[3].rhw = 1.0f;
+    quad[3].u   = 1.0f;
+    quad[3].v   = 1.0f;
+
+    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
+    Common::D3DDevice()->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
+
+    Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
+    Common::D3DDevice()->BeginScene();
+    m_d3dEffect->Begin(NULL, 0);
+    m_d3dEffect->BeginPass(0);
+    Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, quad, sizeof(ScreenVertex));
+    m_d3dEffect->EndPass();
+    m_d3dEffect->End();
+    Common::D3DDevice()->EndScene();
+
+    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
 }
 
 void PostEffectStarBurst::SetThreshold(const float arg)
@@ -200,13 +272,7 @@ void PostEffectStarBurst::OnDeviceLost()
     }
 
     m_d3dEffect->OnLostDevice();
-    SAFE_RELEASE(m_texBright);
-    SAFE_RELEASE(m_texBlurH);
-    SAFE_RELEASE(m_texBlurV);
-    SAFE_RELEASE(m_texBlurD);
-    SAFE_RELEASE(m_texBlurH2);
-    SAFE_RELEASE(m_texBlurV2);
-    SAFE_RELEASE(m_texBlurD2);
+    ReleaseTextures();
 }
 
 void PostEffectStarBurst::OnDeviceReset()
@@ -222,69 +288,40 @@ void PostEffectStarBurst::OnDeviceReset()
 
 void PostEffectStarBurst::CreateTexture()
 {
+    ReleaseTextures();
 
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
-                      D3DPOOL_DEFAULT,
-                      &m_texBright);
+    for (int i = 0; i < STARBURST_LEVEL_COUNT; ++i)
+    {
+        const int width = ComputeTextureWidth(STARBURST_LEVEL_DIVISORS[i]);
+        const int height = ComputeTextureHeight(STARBURST_LEVEL_DIVISORS[i]);
 
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
-                      D3DPOOL_DEFAULT,
-                      &m_texBlurH);
+        D3DXCreateTexture(Common::D3DDevice(),
+                          width,
+                          height,
+                          1,
+                          D3DUSAGE_RENDERTARGET,
+                          D3DFMT_A16B16G16R16F,
+                          D3DPOOL_DEFAULT,
+                          &m_texDownsample[i]);
 
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
-                      D3DPOOL_DEFAULT,
-                      &m_texBlurH2);
+        D3DXCreateTexture(Common::D3DDevice(),
+                          width,
+                          height,
+                          1,
+                          D3DUSAGE_RENDERTARGET,
+                          D3DFMT_A16B16G16R16F,
+                          D3DPOOL_DEFAULT,
+                          &m_texBlur[i]);
+    }
+}
 
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
-                      D3DPOOL_DEFAULT,
-                      &m_texBlurV);
-
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
-                      D3DPOOL_DEFAULT,
-                      &m_texBlurV2);
-
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
-                      D3DPOOL_DEFAULT,
-                      &m_texBlurD);
-
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
-                      D3DPOOL_DEFAULT,
-                      &m_texBlurD2);
+void PostEffectStarBurst::ReleaseTextures()
+{
+    for (int i = 0; i < STARBURST_LEVEL_COUNT; ++i)
+    {
+        SAFE_RELEASE(m_texDownsample[i]);
+        SAFE_RELEASE(m_texBlur[i]);
+    }
 }
 
 }

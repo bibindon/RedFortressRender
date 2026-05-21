@@ -25,20 +25,24 @@ public:
 
 private:
 
+    static const int STARBURST_LEVEL_COUNT = 6;
+    static const int STARBURST_LEVEL_DIVISORS[STARBURST_LEVEL_COUNT];
+
     LPD3DXEFFECT m_d3dEffect = NULL;
     bool m_isInitialized = false;
     bool m_isRegisteredForDeviceReset = false;
 
-    LPDIRECT3DTEXTURE9 m_texBright = NULL;
-    LPDIRECT3DTEXTURE9 m_texBlurH = NULL;
-    LPDIRECT3DTEXTURE9 m_texBlurV = NULL;
-    LPDIRECT3DTEXTURE9 m_texBlurD = NULL;
-    LPDIRECT3DTEXTURE9 m_texBlurH2 = NULL;
-    LPDIRECT3DTEXTURE9 m_texBlurV2 = NULL;
-    LPDIRECT3DTEXTURE9 m_texBlurD2 = NULL;
+    LPDIRECT3DTEXTURE9 m_texDownsample[STARBURST_LEVEL_COUNT] { };
+    LPDIRECT3DTEXTURE9 m_texBlur[STARBURST_LEVEL_COUNT] { };
 
-    void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
+    void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
+                            LPDIRECT3DTEXTURE9 texTarget,
                             const std::string& technique);
+    void DrawCombineQuad(LPDIRECT3DTEXTURE9 texScene,
+                         LPDIRECT3DTEXTURE9 texTarget);
+    void ReleaseTextures();
+    int ComputeTextureWidth(const int divisor) const;
+    int ComputeTextureHeight(const int divisor) const;
 
     struct ScreenVertex
     {
@@ -62,8 +66,6 @@ private:
     // ブルームの広さ
     // 0.0 ~ 1.0
     float m_size = 1.0f;
-
-    void SetRTFromTex(LPDIRECT3DTEXTURE9 tex);
 
     void CreateTexture();
 };

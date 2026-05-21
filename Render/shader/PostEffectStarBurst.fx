@@ -1,11 +1,3 @@
-// bloom.fx  (UTF-8 / BOMなし)
-// 6方向スターバースト。長い光条向けチューニング版。
-// - サンプラーは CLAMP（端の回り込み防止）
-// - 方向性ブラーの重みを「指数減衰」に変更して遠距離の寄与を残す
-// - STRETCH を拡大してサンプル間隔を広げ、見た目の伸びを強化
-
-// ========= テクスチャ & サンプラー =========
-
 texture g_SceneTex;
 sampler SceneSampler = sampler_state
 {
@@ -28,10 +20,10 @@ sampler SrcSampler = sampler_state
     AddressV = CLAMP;
 };
 
-texture g_BlurTexH; // 0°
-sampler BlurSamplerH = sampler_state
+texture g_BlurTex0;
+sampler BlurSampler0 = sampler_state
 {
-    Texture = <g_BlurTexH>;
+    Texture = <g_BlurTex0>;
     MipFilter = LINEAR;
     MinFilter = LINEAR;
     MagFilter = LINEAR;
@@ -39,10 +31,10 @@ sampler BlurSamplerH = sampler_state
     AddressV = CLAMP;
 };
 
-texture g_BlurTexV; // 60°
-sampler BlurSamplerV = sampler_state
+texture g_BlurTex1;
+sampler BlurSampler1 = sampler_state
 {
-    Texture = <g_BlurTexV>;
+    Texture = <g_BlurTex1>;
     MipFilter = LINEAR;
     MinFilter = LINEAR;
     MagFilter = LINEAR;
@@ -50,10 +42,10 @@ sampler BlurSamplerV = sampler_state
     AddressV = CLAMP;
 };
 
-texture g_BlurTex60; // 120°
-sampler BlurSampler60 = sampler_state
+texture g_BlurTex2;
+sampler BlurSampler2 = sampler_state
 {
-    Texture = <g_BlurTex60>;
+    Texture = <g_BlurTex2>;
     MipFilter = LINEAR;
     MinFilter = LINEAR;
     MagFilter = LINEAR;
@@ -61,69 +53,88 @@ sampler BlurSampler60 = sampler_state
     AddressV = CLAMP;
 };
 
-// ========= パラメータ =========
+texture g_BlurTex3;
+sampler BlurSampler3 = sampler_state
+{
+    Texture = <g_BlurTex3>;
+    MipFilter = LINEAR;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
 
-float g_Threshold = 2.8f; // 明部抽出のしきい値（高め＝コアだけ伸びる）
-float2 g_TexelSize; // (1/width, 1/height)
-float4 g_Direction; // (cosθ, sinθ, 0, 0)
+texture g_BlurTex4;
+sampler BlurSampler4 = sampler_state
+{
+    Texture = <g_BlurTex4>;
+    MipFilter = LINEAR;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
 
-// ========= シェーダ =========
+texture g_BlurTex5;
+sampler BlurSampler5 = sampler_state
+{
+    Texture = <g_BlurTex5>;
+    MipFilter = LINEAR;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
 
-// 明部抽出
+float g_Threshold = 2.8f;
+float2 g_TexelSize;
+float4 g_BurstWeightsA = float4(0.34f, 0.24f, 0.17f, 0.12f);
+float4 g_BurstWeightsB = float4(0.08f, 0.05f, 0.0f, 0.0f);
+
 float4 BrightPassPS(float2 uv : TEXCOORD0) : COLOR
 {
-    float4 c = tex2D(SrcSampler, uv);
-    float lum = dot(c.rgb, float3(0.299, 0.587, 0.114));
-
-    if (lum <= g_Threshold)
+    const float4 c = tex2D(SrcSampler, uv);
+    const float lum = dot(c.rgb, float3(0.299f, 0.587f, 0.114f));
+    if (lum > g_Threshold)
     {
-        c = float4(0, 0, 0, 1);
+        return c;
     }
-
-    return c;
+    return float4(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
-#define SAMPLE_SIZE_MAX 101
-int g_sampleSize = 101;
-
-// 方向性 1D ブラー（指数減衰プロファイル）
-// ガウシアンより遠距離の寄与が残るため、長い“筋”が出やすい。
-float4 BlurPS(float2 uv : TEXCOORD0) : COLOR
+float4 DownsamplePS(float2 uv : TEXCOORD0) : COLOR
 {
-    float2 step = g_TexelSize * g_Direction.xy; // 1px相当のUVステップ
+    return tex2D(SrcSampler, uv);
+}
 
-    float4 sum = 0;
+float4 DiagonalBlur3x3PS(float2 uv : TEXCOORD0) : COLOR
+{
+    const float2 texel = g_TexelSize;
 
-    static const int RADIUS = SAMPLE_SIZE_MAX / 2;
-
-    [unroll]
-    for (int i = 1; i <= RADIUS; i++)
-    {
-        if ((g_sampleSize / 2) < i)
-        {
-            break;
-        }
-
-        sum += tex2D(SrcSampler, uv + step * i) / g_sampleSize;
-        sum += tex2D(SrcSampler, uv - step * i) / g_sampleSize;
-    }
-
+    float4 sum = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    sum += tex2D(SrcSampler, uv + texel * float2(-1.0f, -1.0f)) * (2.0f / 8.0f);
+    sum += tex2D(SrcSampler, uv + texel * float2( 1.0f, -1.0f)) * (1.0f / 8.0f);
+    sum += tex2D(SrcSampler, uv)                                   * (2.0f / 8.0f);
+    sum += tex2D(SrcSampler, uv + texel * float2(-1.0f,  1.0f)) * (1.0f / 8.0f);
+    sum += tex2D(SrcSampler, uv + texel * float2( 1.0f,  1.0f)) * (2.0f / 8.0f);
     return sum;
 }
 
-// 合成：Scene + 3軸ブラー（=6方向）
 float4 CombinePS(float2 uv : TEXCOORD0) : COLOR
 {
-    float4 scene = tex2D(SceneSampler, uv);
-    float4 b0 = tex2D(BlurSamplerH, uv); // 0°
-    float4 b1 = tex2D(BlurSamplerV, uv); // 60°
-    float4 b2 = tex2D(BlurSampler60, uv); // 120°
+    const float4 scene = tex2D(SceneSampler, uv);
+    const float4 burst =
+        tex2D(BlurSampler0, uv) * g_BurstWeightsA.x +
+        tex2D(BlurSampler1, uv) * g_BurstWeightsA.y +
+        tex2D(BlurSampler2, uv) * g_BurstWeightsA.z +
+        tex2D(BlurSampler3, uv) * g_BurstWeightsA.w +
+        tex2D(BlurSampler4, uv) * g_BurstWeightsB.x +
+        tex2D(BlurSampler5, uv) * g_BurstWeightsB.y;
 
-    const float gain = 1.2f; // 強すぎる場合は下げる(1.2〜2.0目安)
-    return scene + (b0 + b1 + b2) * gain;
+    float4 outColor = scene + burst;
+    outColor.a = 1.0f;
+    return outColor;
 }
-
-// ========= テクニック =========
 
 technique BrightPass
 {
@@ -133,11 +144,19 @@ technique BrightPass
     }
 }
 
-technique Blur
+technique Downsample
 {
     pass P0
     {
-        PixelShader = compile ps_3_0 BlurPS();
+        PixelShader = compile ps_3_0 DownsamplePS();
+    }
+}
+
+technique DiagonalBlur3x3
+{
+    pass P0
+    {
+        PixelShader = compile ps_3_0 DiagonalBlur3x3PS();
     }
 }
 
