@@ -135,6 +135,7 @@ Sample 側の一部キーは `std::stoi(value) != 0` で判定しているため
 |---|---|
 | `BloomEnable` | Bloom ON/OFF |
 | `BloomThreshold` | Bloom 閾値 |
+| `HaloEnable` | Halo ON/OFF |
 | `DepthOfFieldEnable` | DOF の旧形式 ON/OFF |
 | `DepthOfFieldMode` | `0=OFF`, `1=ON`, `2 以上=AutoNear` |
 | `DepthOfFieldFocalDistance` | 焦点距離 |

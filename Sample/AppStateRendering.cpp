@@ -442,6 +442,7 @@ void ApplyPostEffectToggleSettings()
     g_Render.SetPostEffectMotionBlurCamera(g_bMotionBlurCamera);
     g_Render.SetMeshMixSSS(g_bSSS);
     g_Render.SetPostEffectBloom(g_bBloom);
+    ApplyHalo();
     ApplyDepthOfFieldMode();
     g_Render.SetPostEffectStarBurst(g_bStarBurst);
     ApplyGodRay();
@@ -728,6 +729,7 @@ void ApplyRenderingQuality()
     g_bFog = g_renderingQualitySettings.fogEnabled;
     g_bHeightFog = g_renderingQualitySettings.heightFogEnabled;
     g_bBloom = g_renderingQualitySettings.bloomEnabled;
+    g_bHalo = g_renderingQualitySettings.haloEnabled;
     g_depthOfFieldMode = g_renderingQualitySettings.depthOfFieldMode;
     g_bStarBurst = g_renderingQualitySettings.starBurstEnabled;
     g_bGodRay = g_renderingQualitySettings.godRayEnabled;
@@ -881,6 +883,12 @@ void ApplyBloomWeightSum()
 {
     g_bloomWeightSum = ClampBloomWeightSum(g_bloomWeightSum);
     g_Render.SetPostEffectBloomWeightSum(g_bloomWeightSum);
+}
+
+void ApplyHalo()
+{
+    g_Render.SetPostEffectHalo(g_bHalo);
+    RefreshSettingsDialogState();
 }
 
 void ApplyDepthOfFieldMode()

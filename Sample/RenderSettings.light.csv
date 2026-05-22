@@ -70,6 +70,7 @@ PhongTreatTextureAsWhite,0
 BloomEnable,0
 BloomThreshold,2.5
 BloomWeightSum,1.0
+HaloEnable,0
 PostEffectAAEnable,0
 ,
 StarBurstEnable,0

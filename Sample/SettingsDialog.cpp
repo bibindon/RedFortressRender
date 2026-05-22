@@ -86,6 +86,7 @@ void RefreshZShadowTexSizeControls(HWND hDlg);
 void RefreshSSAOTexSizeControls(HWND hDlg);
 void RefreshDepthBufferShadow(HWND hDlg);
 void RefreshBloom(HWND hDlg);
+void RefreshHalo(HWND hDlg);
 void RefreshPostEffectAA(HWND hDlg);
 void RefreshTAA(HWND hDlg);
 void RefreshDepthOfField(HWND hDlg);
@@ -1952,6 +1953,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshSSAOTexSizeControls(hDlg);
     RefreshSSAOCompositeGaussian3x3Controls(hDlg);
     RefreshBloom(hDlg);
+    RefreshHalo(hDlg);
     RefreshPostEffectAA(hDlg);
     RefreshTAA(hDlg);
     RefreshDepthOfField(hDlg);
@@ -3877,6 +3879,14 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_bBloom = (IsDlgButtonChecked(hDlg, IDC_CHECK_BLOOM) == BST_CHECKED);
             g_Render.SetPostEffectBloom(g_bBloom);
             RefreshBloom(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_HALO)
+        {
+            g_bHalo = (IsDlgButtonChecked(hDlg, IDC_CHECK_HALO) == BST_CHECKED);
+            ApplyHalo();
+            RefreshHalo(hDlg);
             return TRUE;
         }
 

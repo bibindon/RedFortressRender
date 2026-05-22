@@ -1082,6 +1082,16 @@ void Render::ApplySettings()
         SetPostEffectBloomWeightSum(1.0f);
     }
 
+    const auto haloEnable = m_settings.find(L"HaloEnable");
+    if (haloEnable != m_settings.end())
+    {
+        bool enabled = true;
+        if (TryParseBoolSetting(haloEnable->second, enabled))
+        {
+            SetPostEffectHalo(enabled);
+        }
+    }
+
     const auto depthOfFieldMode = m_settings.find(L"DepthOfFieldMode");
     if (depthOfFieldMode != m_settings.end())
     {
@@ -1273,6 +1283,7 @@ void Render::Finalize()
     m_postEffectSaturate.Finalize();
     m_postEffectDepthOfField.Finalize();
     m_PostEffectBloom.Finalize();
+    m_postEffectHalo.Finalize();
     m_postEffectStarBurst.Finalize();
     m_postEffectGodRay.Finalize();
     m_postEffectGauss.Finalize();
@@ -1557,6 +1568,13 @@ void Render::Draw()
     {
         EnsurePostEffectBloomInitialized();
         m_PostEffectBloom.Draw(pTempTexture, pWorkTexture);
+        SwapPostEffectBuffers(pTempTexture, pWorkTexture);
+    }
+
+    if (m_gBufferEnabled && m_postEffectHaloEnabled)
+    {
+        EnsurePostEffectHaloInitialized();
+        m_postEffectHalo.Draw(pTempTexture, pWorkTexture);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
@@ -2552,6 +2570,7 @@ RenderingQualitySettings Render::SetRenderQuality(const std::wstring& quality)
         settings.fogEnabled = false;
         settings.heightFogEnabled = false;
         settings.bloomEnabled = false;
+        settings.haloEnabled = false;
         settings.depthOfFieldMode = DepthOfFieldMode::Disabled;
         settings.starBurstEnabled = false;
         settings.godRayEnabled = false;
@@ -2572,6 +2591,7 @@ RenderingQualitySettings Render::SetRenderQuality(const std::wstring& quality)
         settings.fogEnabled = true;
         settings.heightFogEnabled = true;
         settings.bloomEnabled = true;
+        settings.haloEnabled = true;
         settings.depthOfFieldMode = DepthOfFieldMode::Enabled;
         settings.starBurstEnabled = true;
         settings.godRayEnabled = true;
@@ -2591,6 +2611,7 @@ RenderingQualitySettings Render::SetRenderQuality(const std::wstring& quality)
     SetPostEffectFog(settings.fogEnabled);
     SetPostEffectHeightFog(settings.heightFogEnabled);
     SetPostEffectBloom(settings.bloomEnabled);
+    SetPostEffectHalo(settings.haloEnabled);
     SetPostEffectDepthOfFieldMode(settings.depthOfFieldMode);
     SetPostEffectStarBurst(settings.starBurstEnabled);
     SetPostEffectGodRay(settings.godRayEnabled);
@@ -3018,6 +3039,11 @@ void Render::EnsurePostEffectBloomInitialized()
     m_PostEffectBloom.Initialize();
 }
 
+void Render::EnsurePostEffectHaloInitialized()
+{
+    m_postEffectHalo.Initialize();
+}
+
 void Render::EnsurePostEffectDepthOfFieldInitialized()
 {
     m_postEffectDepthOfField.Initialize();
@@ -3277,6 +3303,19 @@ void Render::SetPostEffectBloomThreshold(const float threshold)
 void Render::SetPostEffectBloomWeightSum(const float weightSum)
 {
     m_PostEffectBloom.SetWeightSum(weightSum);
+}
+
+void Render::SetPostEffectHalo(const bool arg)
+{
+    m_postEffectHaloEnabled = arg;
+    if (m_postEffectHaloEnabled)
+    {
+        EnsurePostEffectHaloInitialized();
+    }
+    else
+    {
+        m_postEffectHalo.Finalize();
+    }
 }
 
 void Render::SetPostEffectDepthOfField(const bool arg)

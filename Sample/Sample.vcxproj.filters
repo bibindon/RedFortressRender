@@ -63,6 +63,9 @@
     <FxCompile Include="..\Render\shader\PostEffectBloom.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
+    <FxCompile Include="..\Render\shader\PostEffectHalo.fx">
+      <Filter>リソース ファイル</Filter>
+    </FxCompile>
     <FxCompile Include="..\Render\shader\PostEffectAA.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>

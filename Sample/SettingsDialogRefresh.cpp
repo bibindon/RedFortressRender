@@ -1185,6 +1185,16 @@ void RefreshBloom(HWND hDlg)
     CheckDlgButton(hDlg, IDC_CHECK_BLOOM, checkState);
 }
 
+void RefreshHalo(HWND hDlg)
+{
+    UINT checkState = BST_UNCHECKED;
+    if (g_bHalo)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_HALO, checkState);
+}
+
 void RefreshPostEffectAA(HWND hDlg)
 {
     UINT checkState = BST_UNCHECKED;

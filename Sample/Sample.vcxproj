@@ -314,6 +314,7 @@ exit /B %ERRORLEVEL%</Command>
     <FxCompile Include="..\Render\shader\MeshSSS.fx" />
     <FxCompile Include="..\Render\shader\MeshSSSLike.fx" />
     <FxCompile Include="..\Render\shader\PostEffectBloom.fx" />
+    <FxCompile Include="..\Render\shader\PostEffectHalo.fx" />
     <FxCompile Include="..\Render\shader\PostEffectAA.fx" />
     <FxCompile Include="..\Render\shader\PostEffectDepthOfField.fx" />
     <FxCompile Include="..\Render\shader\PostEffectEnd.fx" />

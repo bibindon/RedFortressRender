@@ -162,6 +162,9 @@
     <ClCompile Include="PostEffectHeightFog.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="PostEffectHalo.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="PostEffectMotionBlurCamera.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -311,6 +314,9 @@
     <ClInclude Include="PostEffectHeightFog.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="PostEffectHalo.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="PostEffectMotionBlurCamera.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -407,6 +413,9 @@
       <Filter>シェーダー</Filter>
     </FxCompile>
     <FxCompile Include="shader\PostEffectGodRay.fx">
+      <Filter>シェーダー</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\PostEffectHalo.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
     <FxCompile Include="shader\PostEffectMaskedGaussian.fx">

@@ -43,6 +43,7 @@
 #include "PostEffectSaturate.h"
 #include "PostEffectBloom.h"
 #include "PostEffectAA.h"
+#include "PostEffectHalo.h"
 #include "PostEffectStarBurst.h"
 #include "PostEffectEnd.h"
 #include "PostEffectSSAO.h"
@@ -89,6 +90,7 @@ struct RenderingQualitySettings
     bool fogEnabled = false;
     bool heightFogEnabled = false;
     bool bloomEnabled = false;
+    bool haloEnabled = false;
     DepthOfFieldMode depthOfFieldMode = DepthOfFieldMode::Disabled;
     bool starBurstEnabled = false;
     bool godRayEnabled = false;
@@ -379,6 +381,7 @@ public:
     void SetPostEffectBloom(const bool arg);
     void SetPostEffectBloomThreshold(const float threshold);
     void SetPostEffectBloomWeightSum(const float weightSum);
+    void SetPostEffectHalo(const bool arg);
     void SetPostEffectDepthOfField(const bool arg);
     void SetPostEffectDepthOfFieldMode(const DepthOfFieldMode mode);
     void SetPostEffectDepthOfFieldFocalDistance(const float distance);
@@ -496,6 +499,9 @@ private:
     // ブルームフィルター
     PostEffectBloom m_PostEffectBloom;
 
+    // ハロー
+    PostEffectHalo m_postEffectHalo;
+
     // 被写界深度
     PostEffectDepthOfField m_postEffectDepthOfField;
 
@@ -540,6 +546,7 @@ private:
     void EnsurePostEffectFogInitialized();
     void EnsurePostEffectHeightFogInitialized();
     void EnsurePostEffectBloomInitialized();
+    void EnsurePostEffectHaloInitialized();
     void EnsurePostEffectDepthOfFieldInitialized();
     void EnsurePostEffectStarBurstInitialized();
     void EnsurePostEffectGodRayInitialized();
@@ -574,6 +581,7 @@ private:
     bool m_postEffectFogZEnabled = true;
     bool m_postEffectFogHeightEnabled = false;
     bool m_postEffectBloomEnabled = false;
+    bool m_postEffectHaloEnabled = false;
     DepthOfFieldMode m_postEffectDepthOfFieldMode = DepthOfFieldMode::Disabled;
     bool m_postEffectStarBurstEnabled = false;
     bool m_postEffectGodRayEnabled = false;

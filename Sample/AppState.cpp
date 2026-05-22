@@ -74,6 +74,7 @@ bool g_bFog = true;
 bool g_bHeightFog = true;
 bool g_bSaturateFilter = false;
 bool g_bBloom = false;
+bool g_bHalo = false;
 NSRender::DepthOfFieldMode g_depthOfFieldMode = NSRender::DepthOfFieldMode::Disabled;
 bool g_bStarBurst = false;
 NSRender::DebugGBufferView g_debugGBufferView = NSRender::DebugGBufferView::None;
@@ -2120,6 +2121,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_bBloom = (std::stoi(value) != 0);
             }
+            else if (key == L"HaloEnable")
+            {
+                g_bHalo = (std::stoi(value) != 0);
+            }
             else if (key == L"DepthOfFieldEnable")
             {
                 if (std::stoi(value) != 0)
@@ -2259,6 +2264,7 @@ void ApplyAllSampleSettings()
     ApplySSS();
     ApplyBloomThreshold();
     ApplyBloomWeightSum();
+    ApplyHalo();
     ApplyDepthOfFieldMode();
     ApplyDepthOfFieldFocalDistance();
     ApplyDepthOfFieldStartNear();
