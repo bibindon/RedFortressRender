@@ -850,7 +850,9 @@ void PixelShaderMirror(in float4 inMirrorProj : TEXCOORD0,
     uv.y = -inMirrorProj.y / inMirrorProj.w * 0.5f + 0.5f;
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float fresnel = g_fresnelEnable ? (CalcFresnelFactor(inNormalWorld, cameraDir) * g_fresnelIntensity) : 0.0f;
-    outColor = tex2D(g_mirrorSampler, uv) * saturate(0.8f + fresnel);
+    float4 mirrorColor = tex2D(g_mirrorSampler, uv);
+    float mirrorBrightness = saturate(0.8f + fresnel);
+    outColor = saturate(float4((mirrorColor.rgb * mirrorBrightness) + fresnel.xxx, mirrorColor.a * mirrorBrightness));
 }
 
 float2 CalcUVCoordWithPOM(float3 inNormalizedNormalWS,
