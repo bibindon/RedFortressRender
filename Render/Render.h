@@ -470,6 +470,8 @@ private:
                            int skippedMeshMixIndex = -1);
     int FindActiveMirrorMeshIndex() const;
     bool RenderMirrorTexture(int activeMirrorMeshIndex);
+    void ApplyTAAProjectionJitter();
+    void ClearTAAProjectionJitter();
 
     // 各ピクセルの深度とワールド座標を表した画像を生成
     GBuffer m_GBuffer;
@@ -563,6 +565,7 @@ private:
     bool m_postEffectFXAAEnabled = false;
     bool m_postEffectTAAEnabled = false;
     bool m_postEffectMotionBlurCameraEnabled = false;
+    unsigned int m_taaFrameIndex = 0;
     bool m_gBufferEnabled = true;
     bool m_postEffectZShadowEnabled = true;
     bool m_postEffectSSAOEnabled = true;

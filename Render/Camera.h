@@ -43,6 +43,7 @@ public:
     static void SetClipPlanes(const float nearPlane, const float farPlane);
     static float GetNear();
     static float GetFar();
+    static void SetProjectionJitter(const float jitterX, const float jitterY);
     static void SetShakeDuration(const float durationSeconds);
     static void SetShakeIntensity(const float intensity);
     static void TriggerShake();
@@ -57,6 +58,8 @@ private:
     static float m_viewAngle;
     static float m_nearPlane;
     static float m_farPlane;
+    static float m_projectionJitterX;
+    static float m_projectionJitterY;
     static float m_radian;
     static float m_y;
     static bool m_sleepMode;

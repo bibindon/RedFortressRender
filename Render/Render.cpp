@@ -122,6 +122,19 @@ int NormalizeFXAAQuality(const int quality)
     return (std::max)(1, (std::min)(quality, 8));
 }
 
+float HaltonSequence(unsigned int index, const unsigned int base)
+{
+    float result = 0.0f;
+    float fraction = 1.0f / static_cast<float>(base);
+    while (index > 0)
+    {
+        result += fraction * static_cast<float>(index % base);
+        index /= base;
+        fraction /= static_cast<float>(base);
+    }
+    return result;
+}
+
 int NormalizeMotionBlurCameraQuality(const int quality)
 {
     return (std::max)(1, (std::min)(quality, 8));
@@ -1405,6 +1418,7 @@ void Render::Draw()
     m_particleSystem.Update(frameDeltaSeconds);
     UpdateSkinAnimationState();
     CameraShakeFrameScope cameraShakeFrameScope;
+    ApplyTAAProjectionJitter();
 
     //---------------------------------------------------------------
     // ポストエフェクトと一部のメッシュ描画のために深度画像と
@@ -1649,6 +1663,7 @@ void Render::Draw()
     }
 
     hResult = Common::D3DDevice()->Present(NULL, NULL, NULL, NULL);
+    ClearTAAProjectionJitter();
     if (hResult == D3DERR_DEVICELOST)
     {
         m_windowManager.NotifyDeviceLost();
@@ -1677,6 +1692,29 @@ void Render::UpdateSkinAnimationState()
             elem->UpdateAnimation();
         }
     }
+}
+
+void Render::ApplyTAAProjectionJitter()
+{
+    if (!m_gBufferEnabled || !m_postEffectTAAEnabled || Common::ScreenW() <= 0 || Common::ScreenH() <= 0)
+    {
+        Camera::SetProjectionJitter(0.0f, 0.0f);
+        return;
+    }
+
+    const unsigned int sampleIndex = (m_taaFrameIndex % 8) + 1;
+    ++m_taaFrameIndex;
+
+    const float jitterPixelX = HaltonSequence(sampleIndex, 2) - 0.5f;
+    const float jitterPixelY = HaltonSequence(sampleIndex, 3) - 0.5f;
+    const float jitterX = (jitterPixelX * 2.0f) / static_cast<float>(Common::ScreenW());
+    const float jitterY = (jitterPixelY * -2.0f) / static_cast<float>(Common::ScreenH());
+    Camera::SetProjectionJitter(jitterX, jitterY);
+}
+
+void Render::ClearTAAProjectionJitter()
+{
+    Camera::SetProjectionJitter(0.0f, 0.0f);
 }
 
 void Render::ChangeResolution(const int W, const int H)
@@ -2828,10 +2866,12 @@ void Render::SetPostEffectTAA(const bool arg)
     if (m_postEffectTAAEnabled)
     {
         EnsurePostEffectTAAInitialized();
+        m_taaFrameIndex = 0;
         m_postEffectTAA.ResetHistory();
     }
     else
     {
+        m_taaFrameIndex = 0;
         m_postEffectTAA.Finalize();
     }
 }

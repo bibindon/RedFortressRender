@@ -15,6 +15,8 @@ D3DXVECTOR3 NSRender::Camera::m_lookAtPos(0.0f, 0.0f, 0.0f);
 float NSRender::Camera::m_viewAngle = (D3DX_PI / 4);
 float NSRender::Camera::m_nearPlane = 0.1f;
 float NSRender::Camera::m_farPlane = 30'000.0f;
+float NSRender::Camera::m_projectionJitterX = 0.0f;
+float NSRender::Camera::m_projectionJitterY = 0.0f;
 
 // m_radian == D3DX_PI * 3 / 2の時（270度の時）カメラは正面を向く
 float NSRender::Camera::m_radian = D3DX_PI * 3 / 2;
@@ -50,6 +52,8 @@ D3DXMATRIX NSRender::Camera::GetProjMatrix()
                                static_cast<float>(1920) / 1080, /* TODO */
                                m_nearPlane,
                                m_farPlane);
+    projection_matrix._31 += m_projectionJitterX;
+    projection_matrix._32 += m_projectionJitterY;
 
     return projection_matrix;
 }
@@ -214,6 +218,12 @@ float NSRender::Camera::GetNear()
 float NSRender::Camera::GetFar()
 {
     return m_farPlane;
+}
+
+void NSRender::Camera::SetProjectionJitter(const float jitterX, const float jitterY)
+{
+    m_projectionJitterX = jitterX;
+    m_projectionJitterY = jitterY;
 }
 
 void NSRender::Camera::SetShakeDuration(const float durationSeconds)
