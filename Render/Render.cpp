@@ -3719,15 +3719,15 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
             continue;
         }
 
-        const bool renderAsMirror =
-            renderActiveMirrorAsMirror &&
-            static_cast<int>(i) == activeMirrorMeshIndex;
-        if (!renderAsMirror && m_meshMixList[i].UsesWaterTextureAlpha())
+        if (m_meshMixList[i].UsesWaterTextureAlpha())
         {
             transparentWaterMeshIndices.push_back(i);
             continue;
         }
 
+        const bool renderAsMirror =
+            renderActiveMirrorAsMirror &&
+            static_cast<int>(i) == activeMirrorMeshIndex;
         m_meshMixList[i].Render(renderAsMirror);
     }
 
