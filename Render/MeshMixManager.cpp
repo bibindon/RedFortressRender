@@ -128,6 +128,18 @@ D3DXMATRIX& GetSharedMirrorViewProj()
     return sharedMirrorViewProj;
 }
 
+bool& GetSharedMirrorClipEnabled()
+{
+    static bool sharedMirrorClipEnabled = false;
+    return sharedMirrorClipEnabled;
+}
+
+D3DXVECTOR4& GetSharedMirrorClipPlane()
+{
+    static D3DXVECTOR4 sharedMirrorClipPlane(0.0f, 1.0f, 0.0f, 0.0f);
+    return sharedMirrorClipPlane;
+}
+
 float ClampSpecularEdge(const float edge)
 {
     return (std::max)(0.0f, (std::min)(edge, 1.0f));
@@ -1491,6 +1503,19 @@ void MeshMixManager::SetSharedMirrorViewProj(const D3DXMATRIX& matrix)
     }
 }
 
+void MeshMixManager::SetSharedMirrorClipPlane(const bool enabled, const D3DXVECTOR4& plane)
+{
+    GetSharedMirrorClipEnabled() = enabled;
+    GetSharedMirrorClipPlane() = plane;
+
+    LPD3DXEFFECT sharedEffect = GetSharedEffect();
+    if (sharedEffect != nullptr)
+    {
+        sharedEffect->SetBool("g_mirrorClipEnable", enabled ? TRUE : FALSE);
+        sharedEffect->SetVector("g_mirrorClipPlane", &plane);
+    }
+}
+
 void MeshMixManager::SetSpecularIntensityOverrideEnabled(const bool enabled)
 {
     m_param.specularIntensityOverrideEnabled = enabled;
@@ -1736,6 +1761,13 @@ void MeshMixManager::Render(const bool renderAsMirrorSurface)
 
     const D3DXMATRIX sharedMirrorViewProj = GetSharedMirrorViewProj();
     hResult = sharedEffect->SetMatrix("g_matMirrorViewProj", &sharedMirrorViewProj);
+    assert(hResult == S_OK);
+
+    hResult = sharedEffect->SetBool("g_mirrorClipEnable", GetSharedMirrorClipEnabled() ? TRUE : FALSE);
+    assert(hResult == S_OK);
+
+    const D3DXVECTOR4 sharedMirrorClipPlane = GetSharedMirrorClipPlane();
+    hResult = sharedEffect->SetVector("g_mirrorClipPlane", &sharedMirrorClipPlane);
     assert(hResult == S_OK);
 
     BOOL usePom = FALSE;

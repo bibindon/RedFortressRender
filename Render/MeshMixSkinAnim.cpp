@@ -41,6 +41,18 @@ float PointLightShapeToShaderValue(const PointLightShape shape)
     return static_cast<float>(static_cast<int>(shape));
 }
 
+bool& GetSharedMirrorClipEnabled()
+{
+    static bool sharedMirrorClipEnabled = false;
+    return sharedMirrorClipEnabled;
+}
+
+D3DXVECTOR4& GetSharedMirrorClipPlane()
+{
+    static D3DXVECTOR4 sharedMirrorClipPlane(0.0f, 1.0f, 0.0f, 0.0f);
+    return sharedMirrorClipPlane;
+}
+
 float GetMaterialSpecularIntensity(const D3DMATERIAL9& material)
 {
     if (true)
@@ -53,6 +65,12 @@ float GetMaterialSpecularIntensity(const D3DMATERIAL9& material)
                (std::max)(material.Specular.g, material.Specular.b));
     }
 }
+}
+
+void MeshMixSkinAnim::SetSharedMirrorClipPlane(const bool enabled, const D3DXVECTOR4& plane)
+{
+    GetSharedMirrorClipEnabled() = enabled;
+    GetSharedMirrorClipPlane() = plane;
 }
 
 MeshMixSkinAnim::MeshMixSkinAnim(const std::wstring& filename,
@@ -237,6 +255,9 @@ void MeshMixSkinAnim::Render()
     m_D3DEffect->SetBool("g_treatTextureAsWhite", m_param.treatTextureAsWhite ? TRUE : FALSE);
     m_D3DEffect->SetBool("g_fresnelEnable", m_param.fresnel ? TRUE : FALSE);
     m_D3DEffect->SetFloat("g_fresnelIntensity", m_param.fresnelIntensity);
+    m_D3DEffect->SetBool("g_mirrorClipEnable", GetSharedMirrorClipEnabled() ? TRUE : FALSE);
+    const D3DXVECTOR4 mirrorClipPlane = GetSharedMirrorClipPlane();
+    m_D3DEffect->SetVector("g_mirrorClipPlane", &mirrorClipPlane);
     m_D3DEffect->SetFloat("g_fSaturateShadowIntensity", m_param.saturateShadowIntensity);
     m_D3DEffect->SetFloat("g_fShadowDarkness", m_param.shadowDarkness);
     m_D3DEffect->SetFloat("g_specularIntensity", m_param.specularIntensity);

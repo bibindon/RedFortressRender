@@ -20,6 +20,8 @@ bool g_fresnelEnable = true;
 float g_fresnelIntensity = 0.08f;
 bool g_waterMirrorEnable = false;
 bool g_treatTextureAsWhite = false;
+bool g_mirrorClipEnable = false;
+float4 g_mirrorClipPlane = { 0.0f, 1.0f, 0.0f, 0.0f };
 
 // スペキュラ光の鋭さ
 //float g_specularPower = 16.0f;
@@ -367,6 +369,14 @@ float CalcFresnelFactor(float3 normal, float3 cameraDir)
     return pow(1.0f - viewDot, 5.0f);
 }
 
+void ApplyMirrorClip(float3 worldPos)
+{
+    if (g_mirrorClipEnable)
+    {
+        clip(dot(float4(worldPos, 1.0f), g_mirrorClipPlane));
+    }
+}
+
 float3 SampleMirrorColor(float3 worldPos)
 {
     float4 mirrorProj = mul(float4(worldPos, 1.0f), g_matMirrorViewProj);
@@ -500,6 +510,8 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
 
                   out float4 outColor     : COLOR)
 {
+    ApplyMirrorClip(inPosWorld);
+
     // 正規化はピクセルシェーダーでやらないといけない
     float3 normal = normalize(inNormalWorld);
     float3 lightDir = normalize(g_lightDir.xyz);
@@ -659,6 +671,8 @@ void PixelShaderCubeMapping(in float4 inPosition     : POSITION,
 {
     outColor = float4(0, 0, 0, 0);
 
+    ApplyMirrorClip(inPosWorld);
+
     ApplyAlphaCutout(inTexCoord);
 
     float3 normal = normalize(inNormalWorld);
@@ -689,6 +703,8 @@ void PixelShaderGlass(in float4 inPosition     : POSITION,
                       out float4 outColor      : COLOR)
 {
     outColor = float4(0, 0, 0, 0);
+
+    ApplyMirrorClip(inPosWorld);
 
     ApplyAlphaCutout(inTexCoord);
 
@@ -735,6 +751,8 @@ void PixelShaderPointLight(in  float4 inPosition            : POSITION,
                            in  float2 invParallaxOffsetTS   : TEXCOORD8,
                            out float4 outColor              : COLOR)
 {
+    ApplyMirrorClip(inPosWorld);
+
     float3 normalWS = normalize(inNormalWorld);
     float3 cameraDirWS = normalize(g_cameraPos.xyz - inPosWorld);
 
@@ -815,6 +833,8 @@ void PixelShaderEmit(in  float4 inPosition     : POSITION,
                      in  float2 invParallaxOffsetTS  : TEXCOORD8,
                      out float4 outColor       : COLOR)
 {
+    ApplyMirrorClip(inPosWorld);
+
     ApplyAlphaCutout(inTexCoord);
     float3 albedo = SampleBaseTextureColor(inTexCoord) * g_diffuse.rgb;
     float3 normal = normalize(inNormalWorld);

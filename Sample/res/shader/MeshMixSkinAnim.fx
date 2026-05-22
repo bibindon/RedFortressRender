@@ -16,6 +16,8 @@ float g_fShadowDarkness = 1.0f;
 float g_specularPower = 1.0f;
 float g_specularIntensity = 0.1f;
 bool g_treatTextureAsWhite = false;
+bool g_mirrorClipEnable = false;
+float4 g_mirrorClipPlane = { 0.0f, 1.0f, 0.0f, 0.0f };
 
 float3 g_pointLightPos[16];
 float  g_pointLightBrightness[16];
@@ -176,6 +178,14 @@ float CalcFresnelFactor(float3 normal, float3 cameraDir)
     return pow(1.0f - viewDot, 5.0f);
 }
 
+void ApplyMirrorClip(float3 worldPos)
+{
+    if (g_mirrorClipEnable)
+    {
+        clip(dot(float4(worldPos, 1.0f), g_mirrorClipPlane));
+    }
+}
+
 void VertexShader1(in  float4 inPosition     : POSITION,
                    in  float4 inBlendWeights : BLENDWEIGHT,
                    in  float4 inBlendIndices : BLENDINDICES,
@@ -243,6 +253,8 @@ void PixelShader1(in  float3 inPosWorld    : TEXCOORD0,
                   in  float2 inTexCoord    : TEXCOORD2,
                   out float4 outColor      : COLOR)
 {
+    ApplyMirrorClip(inPosWorld);
+
     float3 normal = normalize(inNormalWorld);
     float3 lightDir = normalize(g_lightDir.xyz);
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
@@ -284,6 +296,8 @@ void PixelShaderPointLight(in  float4 inPosition    : POSITION,
                            in  float2 inTexCoord    : TEXCOORD2,
                            out float4 outColor      : COLOR)
 {
+    ApplyMirrorClip(inPosWorld);
+
     float3 N = normalize(inNormalWorld);
     float3 cameraDirWS = normalize(g_cameraPos.xyz - inPosWorld);
     float3 albedo = SampleBaseTextureColor(inTexCoord) * g_diffuse.rgb;

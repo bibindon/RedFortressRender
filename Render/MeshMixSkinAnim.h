@@ -16,6 +16,8 @@ namespace NSRender
 class MeshMixSkinAnim : public IDeviceResettable
 {
 public:
+    static void SetSharedMirrorClipPlane(bool enabled, const D3DXVECTOR4& plane);
+
     MeshMixSkinAnim(const std::wstring& filename,
                     const D3DXVECTOR3& pos,
                     const D3DXVECTOR3& rotate,
