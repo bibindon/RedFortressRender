@@ -66,12 +66,9 @@ void VertexShader1(in  float4 inPosition  : POSITION,
     rotatedNormal.y = inNormal.y;
     rotatedNormal.z = (-inNormal.x * sinY) + (inNormal.z * cosY);
 
-    float3 normal = normalize(rotatedNormal);
-    float3 lightDir = normalize(g_lightDir.xyz);
-    float ndotl = saturate(dot(normal, lightDir));
     float3 ambient = g_ambient.rgb * g_fAmbientIntensity;
-    float3 lambert = g_lightColor.rgb * g_fSunLightIntensity * ndotl;
-    outDiffuse.rgb = saturate(ambient + lambert);
+    float3 sunlight = g_lightColor.rgb * g_fSunLightIntensity;
+    outDiffuse.rgb = saturate(ambient + sunlight);
     outDiffuse.a = 1.0f;
 
     outTexCood = inTexCood;
