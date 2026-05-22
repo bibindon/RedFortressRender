@@ -121,8 +121,8 @@ float SampleCircle(float2 texCoord, float radius)
 
 float4 HaloPassPS(float2 texCoord : TEXCOORD0) : COLOR
 {
-    return float4(SampleCircle(texCoord, 24.0f),
-                  SampleCircle(texCoord, 26.0f),
+    return float4(SampleCircle(texCoord, 20.0f),
+                  SampleCircle(texCoord, 24.0f),
                   SampleCircle(texCoord, 28.0f),
                   1.0f);
 }
