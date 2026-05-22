@@ -8,6 +8,8 @@ float4 g_lightColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 float4 g_specularColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 float g_fSunLightIntensity = 1.0f;
+bool g_fresnelEnable = true;
+float g_fresnelIntensity = 0.08f;
 bool g_bSaturateShadow = false;
 float g_fSaturateShadowIntensity = 0.2f;
 float g_fShadowDarkness = 1.0f;
@@ -168,6 +170,12 @@ void AccumulateSingleLightSample(float3 samplePos,
     specularContribution = lightColor * spec;
 }
 
+float CalcFresnelFactor(float3 normal, float3 cameraDir)
+{
+    float viewDot = saturate(dot(normalize(normal), normalize(cameraDir)));
+    return pow(1.0f - viewDot, 5.0f);
+}
+
 void VertexShader1(in  float4 inPosition     : POSITION,
                    in  float4 inBlendWeights : BLENDWEIGHT,
                    in  float4 inBlendIndices : BLENDINDICES,
@@ -263,8 +271,10 @@ void PixelShader1(in  float3 inPosWorld    : TEXCOORD0,
                     * g_specularIntensity
                     * g_specularColor.rgb
                     * g_lightColor.rgb;
+    float fresnel = g_fresnelEnable ? (CalcFresnelFactor(normal, cameraDir) * g_fresnelIntensity) : 0.0f;
+    float3 fresnelColor = g_specularColor.rgb * fresnel;
 
-    outColor = saturate(float4(ambient + lambert + specular,
+    outColor = saturate(float4(ambient + lambert + specular + fresnelColor,
                                textureColor.a * g_diffuse.a));
 }
 

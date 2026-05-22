@@ -46,6 +46,7 @@ void RefreshHalfLambertShadowSaturationControls(HWND hDlg);
 void RefreshShadowDarknessControls(HWND hDlg);
 void RefreshSpecularIntensityControls(HWND hDlg);
 void RefreshSpecularEdgeControls(HWND hDlg);
+void RefreshFresnelIntensityControls(HWND hDlg);
 void RefreshPhongTreatTextureAsWhiteControls(HWND hDlg);
 void RefreshEnvMapBlendControls(HWND hDlg);
 void RefreshPBRRoughnessControls(HWND hDlg);
@@ -135,6 +136,8 @@ constexpr int SPECULAR_INTENSITY_SLIDER_MIN = 0;
 constexpr int SPECULAR_INTENSITY_SLIDER_MAX = static_cast<int>(SPECULAR_INTENSITY_MAX / SPECULAR_INTENSITY_STEP);
 constexpr int SPECULAR_EDGE_SLIDER_MIN = 0;
 constexpr int SPECULAR_EDGE_SLIDER_MAX = static_cast<int>(SPECULAR_EDGE_MAX / SPECULAR_EDGE_STEP);
+constexpr int FRESNEL_INTENSITY_SLIDER_MIN = 0;
+constexpr int FRESNEL_INTENSITY_SLIDER_MAX = static_cast<int>(FRESNEL_INTENSITY_MAX / FRESNEL_INTENSITY_STEP);
 constexpr int ENV_MAP_BLEND_SLIDER_MIN = 0;
 constexpr int ENV_MAP_BLEND_SLIDER_MAX = static_cast<int>(ENV_MAP_BLEND_MAX / ENV_MAP_BLEND_STEP);
 constexpr int PBR_ROUGHNESS_SLIDER_MIN = 0;
@@ -628,6 +631,7 @@ void InitializeEditableNumericFields(HWND hDlg)
         IDC_EDIT_SHADOW_DARKNESS,
         IDC_EDIT_SPECULAR_INTENSITY,
         IDC_EDIT_SPECULAR_EDGE,
+        IDC_EDIT_FRESNEL_INTENSITY,
         IDC_EDIT_ENVMAP_BLEND,
         IDC_EDIT_SSS_INTENSITY,
         IDC_EDIT_SSS_COLOR_R,
@@ -959,6 +963,14 @@ bool HandleNumericEditCommit(HWND hDlg, const WORD commandId)
             ApplySpecularEdge();
         }
         RefreshSpecularEdgeControls(hDlg);
+        return true;
+    case IDC_EDIT_FRESNEL_INTENSITY:
+        if (TryParseEditFloat(hDlg, commandId, floatValue))
+        {
+            g_fresnelIntensity = floatValue;
+            ApplyFresnelIntensity();
+        }
+        RefreshFresnelIntensityControls(hDlg);
         return true;
     case IDC_EDIT_ENVMAP_BLEND:
         if (TryParseEditFloat(hDlg, commandId, floatValue))
@@ -1957,6 +1969,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshShadowDarknessControls(hDlg);
     RefreshSpecularIntensityControls(hDlg);
     RefreshSpecularEdgeControls(hDlg);
+    RefreshFresnelIntensityControls(hDlg);
     RefreshPhongTreatTextureAsWhiteControls(hDlg);
     RefreshEnvMapBlendControls(hDlg);
     RefreshPBRRoughnessControls(hDlg);
@@ -2126,6 +2139,11 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_SPECULAR_EDGE, TBM_SETRANGEMAX, FALSE, SPECULAR_EDGE_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SPECULAR_EDGE, TBM_SETTICFREQ, 2, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_SPECULAR_EDGE, TBM_SETPAGESIZE, 0, 2);
+
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FRESNEL_INTENSITY, TBM_SETRANGEMIN, FALSE, FRESNEL_INTENSITY_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FRESNEL_INTENSITY, TBM_SETRANGEMAX, FALSE, FRESNEL_INTENSITY_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FRESNEL_INTENSITY, TBM_SETTICFREQ, 4, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_FRESNEL_INTENSITY, TBM_SETPAGESIZE, 0, 4);
 
     SendDlgItemMessage(hDlg, IDC_SLIDER_ENVMAP_BLEND, TBM_SETRANGEMIN, FALSE, ENV_MAP_BLEND_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_ENVMAP_BLEND, TBM_SETRANGEMAX, FALSE, ENV_MAP_BLEND_SLIDER_MAX);
@@ -3086,6 +3104,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_specularEdge = SliderValueToSpecularEdge(sliderValue);
             ApplySpecularEdge();
             RefreshSpecularEdgeControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_FRESNEL_INTENSITY))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_fresnelIntensity = SliderValueToFresnelIntensity(sliderValue);
+            ApplyFresnelIntensity();
+            RefreshFresnelIntensityControls(hDlg);
             return TRUE;
         }
 

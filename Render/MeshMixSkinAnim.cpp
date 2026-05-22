@@ -235,6 +235,8 @@ void MeshMixSkinAnim::Render()
     }
     m_D3DEffect->SetBool("g_bSaturateShadow", useSaturateShadow);
     m_D3DEffect->SetBool("g_treatTextureAsWhite", m_param.treatTextureAsWhite ? TRUE : FALSE);
+    m_D3DEffect->SetBool("g_fresnelEnable", m_param.fresnel ? TRUE : FALSE);
+    m_D3DEffect->SetFloat("g_fresnelIntensity", m_param.fresnelIntensity);
     m_D3DEffect->SetFloat("g_fSaturateShadowIntensity", m_param.saturateShadowIntensity);
     m_D3DEffect->SetFloat("g_fShadowDarkness", m_param.shadowDarkness);
     m_D3DEffect->SetFloat("g_specularIntensity", m_param.specularIntensity);
@@ -683,6 +685,11 @@ void MeshMixSkinAnim::SetSpecularIntensity(const float intensity)
 void MeshMixSkinAnim::SetSpecularEdge(const float edge)
 {
     m_param.specularEdge = edge;
+}
+
+void MeshMixSkinAnim::SetFresnelIntensity(const float intensity)
+{
+    m_param.fresnelIntensity = (std::max)(0.0f, intensity);
 }
 
 void MeshMixSkinAnim::SetSpecularIntensityOverrideEnabled(const bool enabled)

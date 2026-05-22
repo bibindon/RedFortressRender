@@ -43,6 +43,7 @@ public:
     void SetShadowDarkness(const float darkness);
     void SetSpecularIntensity(const float intensity);
     void SetSpecularEdge(const float edge);
+    void SetFresnelIntensity(const float intensity);
     void SetSpecularIntensityOverrideEnabled(const bool enabled);
     void SetSpecularEdgeOverrideEnabled(const bool enabled);
     void SetTreatTextureAsWhite(const bool enabled);

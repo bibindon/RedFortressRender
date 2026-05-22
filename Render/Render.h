@@ -229,6 +229,7 @@ public:
     void SetMeshMixShadowDarkness(const float darkness);
     void SetMeshMixSpecularIntensity(const float intensity);
     void SetMeshMixSpecularEdge(const float edge);
+    void SetMeshMixFresnelIntensity(const float intensity);
     void SetMeshMixEnvMapBlend(const float blend);
     void SetMeshPBRRoughness(const float roughness);
     void SetMeshPBRMetallic(const float metallic);
@@ -571,6 +572,7 @@ private:
     float m_meshMixShadowDarkness = 1.0f;
     float m_meshMixSpecularIntensity = 0.0f;
     float m_meshMixSpecularEdge = 0.0f;
+    float m_meshMixFresnelIntensity = 0.08f;
     float m_meshMixCubeMappingRate = 1.0f;
     float m_meshPBRRoughness = 0.85f;
     float m_meshPBRMetallic = 0.0f;

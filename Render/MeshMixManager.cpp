@@ -1501,6 +1501,11 @@ void MeshMixManager::SetSpecularEdge(const float edge)
     m_param.specularEdge = edge;
 }
 
+void MeshMixManager::SetFresnelIntensity(const float intensity)
+{
+    m_param.fresnelIntensity = (std::max)(0.0f, intensity);
+}
+
 void MeshMixManager::SetCubeMappingRate(const float rate)
 {
     m_param.cubeMappingRate = rate;

@@ -63,6 +63,7 @@ SSGIIndirectLightMaxContribution,1.0
 ,
 SpecularIntensity,0.1
 SpecularIntensityOverride,0
+FresnelIntensity,0.08
 PhongTreatTextureAsWhite,0
 ,
 BloomEnable,0

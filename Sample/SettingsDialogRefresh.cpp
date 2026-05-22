@@ -550,6 +550,18 @@ void RefreshSpecularEdgeControls(HWND hDlg)
     EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_SPECULAR_EDGE), enabled);
 }
 
+void RefreshFresnelIntensityControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_fresnelIntensity);
+    SetDlgItemText(hDlg, IDC_EDIT_FRESNEL_INTENSITY, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_FRESNEL_INTENSITY,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(FresnelIntensityToSliderValue(g_fresnelIntensity)));
+}
+
 void RefreshPhongTreatTextureAsWhiteControls(HWND hDlg)
 {
     UINT checkState = BST_UNCHECKED;

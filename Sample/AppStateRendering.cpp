@@ -176,6 +176,11 @@ float ClampSpecularEdge(const float edge)
     return (std::max)(SPECULAR_EDGE_MIN, (std::min)(edge, SPECULAR_EDGE_MAX));
 }
 
+float ClampFresnelIntensity(const float intensity)
+{
+    return (std::max)(FRESNEL_INTENSITY_MIN, (std::min)(intensity, FRESNEL_INTENSITY_MAX));
+}
+
 float ClampEnvMapBlend(const float blend)
 {
     return (std::max)(ENV_MAP_BLEND_MIN, (std::min)(blend, ENV_MAP_BLEND_MAX));
@@ -771,6 +776,12 @@ void ApplySpecularEdge()
 {
     g_specularEdge = ClampSpecularEdge(g_specularEdge);
     g_Render.SetMeshMixSpecularEdge(g_specularEdge);
+}
+
+void ApplyFresnelIntensity()
+{
+    g_fresnelIntensity = ClampFresnelIntensity(g_fresnelIntensity);
+    g_Render.SetMeshMixFresnelIntensity(g_fresnelIntensity);
 }
 
 void ApplySpecularEdgeOverride()
@@ -1435,6 +1446,16 @@ int SpecularEdgeToSliderValue(const float edge)
 float SliderValueToSpecularEdge(const int sliderValue)
 {
     return ClampSpecularEdge(static_cast<float>(sliderValue) * SPECULAR_EDGE_STEP);
+}
+
+int FresnelIntensityToSliderValue(const float intensity)
+{
+    return static_cast<int>(std::lround(ClampFresnelIntensity(intensity) / FRESNEL_INTENSITY_STEP));
+}
+
+float SliderValueToFresnelIntensity(const int sliderValue)
+{
+    return ClampFresnelIntensity(static_cast<float>(sliderValue) * FRESNEL_INTENSITY_STEP);
 }
 
 int EnvMapBlendToSliderValue(const float blend)

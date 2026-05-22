@@ -2059,6 +2059,7 @@ int Render::AddMeshMixSkinAnim(const std::wstring& filePath,
     param.shadowDarkness = m_meshMixShadowDarkness;
     param.specularIntensity = m_meshMixSpecularIntensity;
     param.specularEdge = m_meshMixSpecularEdge;
+    param.fresnelIntensity = m_meshMixFresnelIntensity;
     param.specularIntensityOverrideEnabled = m_meshMixSpecularIntensityOverrideEnabled;
     param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
     param.treatTextureAsWhite = m_phongTreatTextureAsWhiteEnabled;
@@ -2097,6 +2098,7 @@ int Render::AddMeshMixSkinAnim(const std::wstring& meshFilePath,
     param.shadowDarkness = m_meshMixShadowDarkness;
     param.specularIntensity = m_meshMixSpecularIntensity;
     param.specularEdge = m_meshMixSpecularEdge;
+    param.fresnelIntensity = m_meshMixFresnelIntensity;
     param.specularIntensityOverrideEnabled = m_meshMixSpecularIntensityOverrideEnabled;
     param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
     param.treatTextureAsWhite = m_phongTreatTextureAsWhiteEnabled;
@@ -2214,6 +2216,24 @@ void Render::SetMeshMixSpecularEdge(const float edge)
         if (mesh != nullptr)
         {
             mesh->SetSpecularEdge(edge);
+        }
+    }
+}
+
+void Render::SetMeshMixFresnelIntensity(const float intensity)
+{
+    m_meshMixFresnelIntensity = (std::max)(0.0f, intensity);
+
+    for (auto& mesh : m_meshMixList)
+    {
+        mesh.SetFresnelIntensity(m_meshMixFresnelIntensity);
+    }
+
+    for (auto& mesh : m_meshMixSkinAnimList)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->SetFresnelIntensity(m_meshMixFresnelIntensity);
         }
     }
 }

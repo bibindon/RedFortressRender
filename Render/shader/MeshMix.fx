@@ -829,20 +829,28 @@ void VertexShaderMirror(in  float4 inPosition   : POSITION,
                         in  float4 inBinormal   : BINORMAL0,
                         in  float4 inTexCoord   : TEXCOORD0,
                         out float4 outPosition  : POSITION,
-                        out float4 outMirrorProj : TEXCOORD0)
+                        out float4 outMirrorProj : TEXCOORD0,
+                        out float3 outPosWorld   : TEXCOORD1,
+                        out float3 outNormalWorld : TEXCOORD2)
 {
     float4 worldPos = mul(inPosition, g_matWorld);
     outPosition = mul(inPosition, g_matWorldViewProj);
     outMirrorProj = mul(worldPos, g_matMirrorViewProj);
+    outPosWorld = worldPos.xyz;
+    outNormalWorld = normalize(mul(inNormal.xyz, (float3x3)g_matWorld));
 }
 
 void PixelShaderMirror(in float4 inMirrorProj : TEXCOORD0,
+                       in float3 inPosWorld   : TEXCOORD1,
+                       in float3 inNormalWorld : TEXCOORD2,
                        out float4 outColor    : COLOR)
 {
     float2 uv;
     uv.x = inMirrorProj.x / inMirrorProj.w * 0.5f + 0.5f;
     uv.y = -inMirrorProj.y / inMirrorProj.w * 0.5f + 0.5f;
-    outColor = tex2D(g_mirrorSampler, uv) * 0.8f;
+    float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
+    float fresnel = g_fresnelEnable ? (CalcFresnelFactor(inNormalWorld, cameraDir) * g_fresnelIntensity) : 0.0f;
+    outColor = tex2D(g_mirrorSampler, uv) * saturate(0.8f + fresnel);
 }
 
 float2 CalcUVCoordWithPOM(float3 inNormalizedNormalWS,

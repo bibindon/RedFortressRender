@@ -110,6 +110,7 @@ float g_halfLambertShadowSaturation = 1.0f;
 float g_shadowDarkness = 0.3f;
 float g_specularIntensity = 0.1f;
 float g_specularEdge = 0.0f;
+float g_fresnelIntensity = 0.08f;
 float g_envMapBlend = 1.0f;
 float g_pbrRoughness = 0.85f;
 float g_pbrMetallic = 0.0f;
@@ -342,6 +343,11 @@ float ClampSpecularIntensity(const float intensity)
 float ClampSpecularEdge(const float edge)
 {
     return (std::max)(SPECULAR_EDGE_MIN, (std::min)(edge, SPECULAR_EDGE_MAX));
+}
+
+float ClampFresnelIntensity(const float intensity)
+{
+    return (std::max)(FRESNEL_INTENSITY_MIN, (std::min)(intensity, FRESNEL_INTENSITY_MAX));
 }
 
 float ClampEnvMapBlend(const float blend)
@@ -1961,6 +1967,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_specularEdge = std::stof(value);
             }
+            else if (key == L"FresnelIntensity")
+            {
+                g_fresnelIntensity = std::stof(value);
+            }
             else if (key == L"EnvMapBlend")
             {
                 g_envMapBlend = std::stof(value);
@@ -2229,6 +2239,7 @@ void ApplyAllSampleSettings()
     ApplySpecularIntensity();
     ApplySpecularIntensityOverride();
     ApplySpecularEdge();
+    ApplyFresnelIntensity();
     ApplySpecularEdgeOverride();
     ApplyPhongTreatTextureAsWhite();
     ApplyEnvMapBlend();
