@@ -1525,6 +1525,50 @@ void RefreshResolutionControls(HWND hDlg)
     CheckDlgButton(hDlg, IDC_RADIO_WINDOW_MODE_FULLSCREEN, fullscreenState);
 }
 
+int RenderingQualityToComboIndex(const std::wstring& quality)
+{
+    if (quality == L"MIDDLE")
+    {
+        return 1;
+    }
+
+    if (quality == L"HIGH")
+    {
+        return 2;
+    }
+
+    return 0;
+}
+
+std::wstring ComboIndexToRenderingQuality(const int comboIndex)
+{
+    if (comboIndex == 1)
+    {
+        return L"MIDDLE";
+    }
+
+    if (comboIndex == 2)
+    {
+        return L"HIGH";
+    }
+
+    return L"LOW";
+}
+
+void RefreshRenderingQualityControls(HWND hDlg)
+{
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_RENDERING_QUALITY);
+    if (combo == NULL)
+    {
+        return;
+    }
+
+    SendMessage(combo,
+                CB_SETCURSEL,
+                static_cast<WPARAM>(RenderingQualityToComboIndex(g_renderingQuality)),
+                0);
+}
+
 void PopulateResolutionCombo(HWND hDlg)
 {
     HWND combo = GetDlgItem(hDlg, IDC_COMBO_RESOLUTION);
@@ -1541,6 +1585,24 @@ void PopulateResolutionCombo(HWND hDlg)
         const std::wstring label = FormatResolutionLabel(resolution.first, resolution.second);
         SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(label.c_str()));
     }
+}
+
+void PopulateRenderingQualityCombo(HWND hDlg)
+{
+    HWND combo = GetDlgItem(hDlg, IDC_COMBO_RENDERING_QUALITY);
+    if (combo == NULL)
+    {
+        return;
+    }
+
+    SendMessage(combo, CB_RESETCONTENT, 0, 0);
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"LOW"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"MIDDLE"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"HIGH"));
+    SendMessage(combo,
+                CB_SETCURSEL,
+                static_cast<WPARAM>(RenderingQualityToComboIndex(g_renderingQuality)),
+                0);
 }
 
 int GetListViewIndexFromPoint(HWND listView, POINT screenPoint)
@@ -1846,6 +1908,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshMeshMixRenderMode(hDlg);
     RefreshMeshInstancingRenderMode(hDlg);
     RefreshResolutionControls(hDlg);
+    RefreshRenderingQualityControls(hDlg);
     RefreshLoadedModelListView(hDlg);
     RefreshPointLightListView(hDlg);
     RefreshPointLightControls(hDlg);
@@ -2566,6 +2629,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         InitializeEditableNumericFields(hDlg);
         InitializeTrackbars(hDlg);
         PopulateResolutionCombo(hDlg);
+        PopulateRenderingQualityCombo(hDlg);
         PopulatePointLightTypeCombo(hDlg);
         PopulateParticleEffectCombo(hDlg);
         PopulateZShadowTexSizeCombo(hDlg);
@@ -3456,6 +3520,19 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
                     ApplyResolution();
                     RefreshResolutionControls(hDlg);
                 }
+            }
+            return TRUE;
+        }
+
+        if (commandId == IDC_COMBO_RENDERING_QUALITY && HIWORD(wParam) == CBN_SELCHANGE)
+        {
+            HWND combo = reinterpret_cast<HWND>(lParam);
+            const int index = static_cast<int>(SendMessage(combo, CB_GETCURSEL, 0, 0));
+            if (index != CB_ERR)
+            {
+                g_renderingQuality = ComboIndexToRenderingQuality(index);
+                ApplyRenderingQuality();
+                RefreshRenderingQualityControls(hDlg);
             }
             return TRUE;
         }

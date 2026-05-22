@@ -700,6 +700,11 @@ void ApplyGBufferEnable()
     g_Render.SetGBufferEnable(g_bGBuffer);
 }
 
+void ApplyRenderingQuality()
+{
+    g_renderingQuality = g_Render.SetRenderingQuality(g_renderingQuality);
+}
+
 void ApplyGBufferClipPlanes()
 {
     g_gbufferNearPlane = ClampGBufferNearPlane(g_gbufferNearPlane);

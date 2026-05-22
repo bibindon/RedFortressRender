@@ -1197,6 +1197,12 @@ void Render::ApplySettings()
     {
         SetPostEffectStarBurstDistanceFade(0.0f);
     }
+
+    const auto renderingQuality = m_settings.find(L"RenderQuality");
+    if (renderingQuality != m_settings.end())
+    {
+        SetRenderingQuality(renderingQuality->second);
+    }
 }
 
 void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
@@ -2434,6 +2440,55 @@ void Render::SetGBufferClipPlanes(const float nearPlane, const float farPlane)
     m_postEffectSSGI.SetDepthRange(nearPlane, farPlane);
     m_postEffectSSAO.SetDepthRange(nearPlane, farPlane);
     m_postEffectDepthOfField.SetPositionRange(positionRange);
+}
+
+std::wstring Render::SetRenderingQuality(const std::wstring& quality)
+{
+    std::wstring normalizedQuality = L"LOW";
+    if (quality == L"MIDDLE" || quality == L"HIGH")
+    {
+        normalizedQuality = quality;
+    }
+
+    m_renderingQuality = normalizedQuality;
+    if (m_renderingQuality == L"LOW")
+    {
+        SetGBufferEnable(false);
+        SetPostEffectSaturateEnable(false);
+        SetPostEffectGaussianFilter(false);
+        SetPostEffectMaskedGaussianFilter(false);
+        SetPostEffectAA(false);
+        SetPostEffectFXAA(false);
+        SetPostEffectMotionBlurCamera(false);
+        SetPostEffectDepthBufferShadow(false);
+        SetPostEffectSSAO(false);
+        SetPostEffectSSGI(false);
+        SetPostEffectFog(false);
+        SetPostEffectHeightFog(false);
+        SetPostEffectBloom(false);
+        SetPostEffectDepthOfFieldMode(DepthOfFieldMode::Disabled);
+        SetPostEffectStarBurst(false);
+        SetPostEffectGodRay(false);
+        return m_renderingQuality;
+    }
+
+    SetGBufferEnable(true);
+    SetPostEffectSaturateEnable(true);
+    SetPostEffectGaussianFilter(false);
+    SetPostEffectMaskedGaussianFilter(false);
+    SetPostEffectAA(true);
+    SetPostEffectFXAA(true);
+    SetPostEffectMotionBlurCamera(true);
+    SetPostEffectDepthBufferShadow(true);
+    SetPostEffectSSAO(true);
+    SetPostEffectSSGI(true);
+    SetPostEffectFog(true);
+    SetPostEffectHeightFog(true);
+    SetPostEffectBloom(true);
+    SetPostEffectDepthOfFieldMode(DepthOfFieldMode::Enabled);
+    SetPostEffectStarBurst(true);
+    SetPostEffectGodRay(true);
+    return m_renderingQuality;
 }
 
 void Render::EnsureGBufferInitialized()

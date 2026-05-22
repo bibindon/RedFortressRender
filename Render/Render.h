@@ -229,6 +229,7 @@ public:
     void SetCameraClipPlanes(const float nearPlane, const float farPlane);
     void SetGBufferEnable(const bool enabled);
     void SetGBufferClipPlanes(const float nearPlane, const float farPlane);
+    std::wstring SetRenderingQuality(const std::wstring& quality);
 
     D3DXVECTOR3 GetLookAtPos();
     D3DXVECTOR3 GetCameraPos();
@@ -525,6 +526,7 @@ private:
     int m_motionBlurCameraQuality = 4;
     float m_motionBlurCameraMaxBlurPixels = 24.0f;
     int m_motionBlurCameraSampleCount = 13;
+    std::wstring m_renderingQuality = L"LOW";
     bool m_postEffectSaturateEnabled = false;
     bool m_postEffectGaussEnabled = false;
     bool m_postEffectMaskedGaussEnabled = false;

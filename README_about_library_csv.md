@@ -62,6 +62,7 @@ Sample 側の一部キーは `std::stoi(value) != 0` で判定しているため
 | `MotionBlurCameraQuality` | 品質。1 から 8 に補正される |
 | `MotionBlurCameraMaxBlurPixels` | 最大ブラー量。1 から 64 に補正される |
 | `MotionBlurCameraSampleCount` | サンプル数。2 から 21 に補正される |
+| `RenderQuality` | `LOW` / `MIDDLE` / `HIGH`。それ以外は `LOW` |
 
 ### SSS
 

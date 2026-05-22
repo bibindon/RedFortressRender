@@ -16,6 +16,7 @@ MotionBlurCameraMaxBlurPixels,24
 MotionBlurCameraSampleCount,13
 CameraNear,0.1
 CameraFar,30000.0
+RenderQuality,LOW
 GBufferNear,0.1
 GBufferFar,30000.0
 ,

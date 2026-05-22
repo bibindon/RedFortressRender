@@ -151,6 +151,7 @@ bool g_bSSAOCompositeGaussian3x3 = false;
 int g_sunId = 0;
 int g_resolutionWidth = WINDOW_SIZE_W;
 int g_resolutionHeight = WINDOW_SIZE_H;
+std::wstring g_renderingQuality = L"LOW";
 NSRender::eWindowMode g_windowMode = NSRender::eWindowMode::WINDOW;
 std::vector<ImageInfo> g_imageInfoList;
 std::vector<TextInfo> g_textInfoList;
@@ -1807,6 +1808,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_ssaoBlurKernelSize = std::stoi(value);
             }
+            else if (key == L"RenderQuality")
+            {
+                g_renderingQuality = value;
+            }
             else if (key == L"SSAOSeparableBlurEnable")
             {
                 g_bSSAOSeparableBlur = (std::stoi(value) != 0);
@@ -2253,6 +2258,7 @@ void ApplyAllSampleSettings()
     ApplyGodRayVirtualProximityStrength();
     ApplyGodRayLightPos();
     ApplyGodRay();
+    ApplyRenderingQuality();
 }
 
 bool ReloadRenderSettingsFromCsv(const std::wstring& settingsCsvPath)
