@@ -17,7 +17,6 @@ public:
 
     void SetThreshold(const float threshold) { m_threshold = threshold; }
     void SetIntensity(const float intensity) { m_intensity = intensity; }
-    void SetRadiusPixels(const float radiusPixels) { m_radiusPixels = radiusPixels; }
 
     void OnDeviceLost();
     void OnDeviceReset();
@@ -30,11 +29,10 @@ private:
     bool m_isInitialized = false;
     bool m_isRegisteredForDeviceReset = false;
     LPDIRECT3DTEXTURE9 m_texBright = NULL;
-    LPDIRECT3DTEXTURE9 m_texBlur = NULL;
+    LPDIRECT3DTEXTURE9 m_texHalo = NULL;
 
     float m_threshold = 2.5f;
-    float m_intensity = 0.35f;
-    float m_radiusPixels = 200.0f;
+    float m_intensity = 1.0f;
 
     struct ScreenVertex
     {

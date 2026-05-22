@@ -54,7 +54,7 @@ void PostEffectHalo::CreateTexture()
                       ComputeTextureHeight(),
                       1,
                       D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
+                      D3DFMT_A8R8G8B8,
                       D3DPOOL_DEFAULT,
                       &m_texBright);
 
@@ -63,9 +63,9 @@ void PostEffectHalo::CreateTexture()
                       ComputeTextureHeight(),
                       1,
                       D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A16B16G16R16F,
+                      D3DFMT_A8R8G8B8,
                       D3DPOOL_DEFAULT,
-                      &m_texBlur);
+                      &m_texHalo);
 }
 
 void PostEffectHalo::Draw(LPDIRECT3DTEXTURE9 texSource,
@@ -78,7 +78,7 @@ void PostEffectHalo::Draw(LPDIRECT3DTEXTURE9 texSource,
 
     m_d3dEffect->SetFloat("g_Threshold", m_threshold);
     DrawFullscreenQuad(texSource, m_texBright, "BrightPass");
-    DrawFullscreenQuad(m_texBright, m_texBlur, "Blur5x5");
+    DrawFullscreenQuad(m_texBright, m_texHalo, "HaloPass");
     DrawCombineQuad(texSource, texTarget);
 }
 
@@ -190,15 +190,7 @@ void PostEffectHalo::DrawCombineQuad(LPDIRECT3DTEXTURE9 texScene,
 
     m_d3dEffect->SetTechnique("Combine");
     m_d3dEffect->SetTexture("g_SceneTex", texScene);
-    m_d3dEffect->SetTexture("g_HaloTex", m_texBlur);
-
-    const float screenSize[2] =
-    {
-        static_cast<float>(targetDesc.Width),
-        static_cast<float>(targetDesc.Height)
-    };
-    m_d3dEffect->SetFloatArray("g_ScreenSize", screenSize, 2);
-    m_d3dEffect->SetFloat("g_HaloRadiusPixels", m_radiusPixels);
+    m_d3dEffect->SetTexture("g_HaloTex", m_texHalo);
     m_d3dEffect->SetFloat("g_HaloIntensity", m_intensity);
 
     ScreenVertex quad[4] { };
@@ -247,7 +239,7 @@ void PostEffectHalo::OnDeviceReset()
 void PostEffectHalo::ReleaseTextures()
 {
     SAFE_RELEASE(m_texBright);
-    SAFE_RELEASE(m_texBlur);
+    SAFE_RELEASE(m_texHalo);
 }
 
 }
