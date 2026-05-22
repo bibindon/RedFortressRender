@@ -405,6 +405,7 @@ public:
     void SetDebugGBufferView(const DebugGBufferView view);
 
     void SetShowFPS(const bool arg);
+    void SetShowCameraPosition(const bool arg);
 
     std::vector<std::pair<int, int>> GetResolutionList();
 
@@ -617,12 +618,15 @@ private:
     //-----------------------------------------------------------------
 
     bool m_bShowFPS = true;
+    bool m_bShowCameraPosition = false;
 
     float CalcFPS();
     void ShowFPS(const float arg);
+    void ShowCameraPosition();
     float CalcFrameDeltaSeconds();
 
     int m_fontID = -1;
+    int m_cameraPositionFontId = -1;
     std::vector<std::chrono::steady_clock::time_point> m_vecTime;
     std::chrono::steady_clock::time_point m_lastFrameTime {};
     bool m_hasLastFrameTime = false;

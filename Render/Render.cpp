@@ -3474,6 +3474,11 @@ void Render::SetShowFPS(const bool arg)
     m_bShowFPS = arg;
 }
 
+void Render::SetShowCameraPosition(const bool arg)
+{
+    m_bShowCameraPosition = arg;
+}
+
 std::vector<std::pair<int, int>> Render::GetResolutionList()
 {
     return m_windowManager.GetResolutionList();
@@ -3948,6 +3953,29 @@ void Render::ShowFPS(const float arg)
     DrawText_(m_fontID, fps, 10, 10);
 }
 
+void Render::ShowCameraPosition()
+{
+    if (m_cameraPositionFontId == -1)
+    {
+        m_cameraPositionFontId = SetUpFont(L"BIZ UDゴシック",
+                                           20,
+                                           D3DCOLOR_RGBA(255, 255, 255, 255));
+    }
+
+    const D3DXVECTOR3 cameraPos = Camera::GetEyePos();
+
+    wchar_t buffer[128];
+    std::swprintf(buffer,
+                  sizeof(buffer) / sizeof(buffer[0]),
+                  L"X: %.2f  Y: %.2f  Z: %.2f",
+                  cameraPos.x,
+                  cameraPos.y,
+                  cameraPos.z);
+
+    const int y = m_bShowFPS ? 34 : 10;
+    DrawText_(m_cameraPositionFontId, buffer, 10, y);
+}
+
 float Render::CalcFrameDeltaSeconds()
 {
     using ClockType = std::chrono::steady_clock;
@@ -3968,6 +3996,11 @@ float Render::CalcFrameDeltaSeconds()
 
 void Render::Draw2D()
 {
+    if (m_bShowCameraPosition)
+    {
+        ShowCameraPosition();
+    }
+
     for (auto& elem : m_fontList)
     {
         elem->Draw();

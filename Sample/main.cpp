@@ -121,6 +121,7 @@ void InitializeSampleScene(HWND hWnd)
     LoadSampleSettingsFromCsv(L"RenderSettings.csv");
     g_Render.Initialize(hWnd, L"RenderSettings.csv");
     ApplyResolution();
+    g_Render.SetShowCameraPosition(true);
     g_Render.SetCamera(D3DXVECTOR3(0.0f, 1.7f, -2.0f), D3DXVECTOR3(0.0f, 1.5f, 0.0f));
     g_fontId = g_Render.SetUpFont(L"BIZ UDゴシック", 20, D3DCOLOR_RGBA(255, 255, 255, 255));
     g_fontExId = g_Render.SetUpFontEx(L"BIZ UDゴシック", 20, D3DCOLOR_RGBA(255, 255, 255, 255));
