@@ -3731,6 +3731,19 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
         m_meshMixList[i].Render(renderAsMirror);
     }
 
+    for (auto& elem : m_meshMixSkinAnimList)
+    {
+        if (elem != nullptr)
+        {
+            elem->Render();
+        }
+    }
+
+    for (auto& elem : m_meshInstancingMap)
+    {
+        elem.second->Draw();
+    }
+
     std::stable_sort(transparentWaterMeshIndices.begin(),
                      transparentWaterMeshIndices.end(),
                      [&](const size_t lhs, const size_t rhs)
@@ -3745,19 +3758,6 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
     for (const size_t index : transparentWaterMeshIndices)
     {
         m_meshMixList[index].Render(false);
-    }
-
-    for (auto& elem : m_meshMixSkinAnimList)
-    {
-        if (elem != nullptr)
-        {
-            elem->Render();
-        }
-    }
-
-    for (auto& elem : m_meshInstancingMap)
-    {
-        elem.second->Draw();
     }
 
     m_particleSystem.Draw(Camera::GetViewMatrix(), Camera::GetProjMatrix());
