@@ -267,6 +267,7 @@ extern bool g_bGaussianFilter;
 extern bool g_bMaskedGaussianFilter;
 extern bool g_bPostEffectAA;
 extern bool g_bFXAA;
+extern bool g_bTAA;
 extern bool g_bMotionBlurCamera;
 extern float g_motionBlurCameraMaxBlurPixels;
 extern int g_motionBlurCameraSampleCount;

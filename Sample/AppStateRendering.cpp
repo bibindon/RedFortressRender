@@ -438,6 +438,7 @@ void ApplyPostEffectToggleSettings()
     g_Render.SetPostEffectMaskedGaussianFilter(g_bMaskedGaussianFilter);
     g_Render.SetPostEffectAA(g_bPostEffectAA);
     g_Render.SetPostEffectFXAA(g_bFXAA);
+    g_Render.SetPostEffectTAA(g_bTAA);
     g_Render.SetPostEffectMotionBlurCamera(g_bMotionBlurCamera);
     g_Render.SetMeshMixSSS(g_bSSS);
     g_Render.SetPostEffectBloom(g_bBloom);

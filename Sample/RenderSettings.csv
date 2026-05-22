@@ -11,6 +11,7 @@ MaskedGaussianMaskPath,
 ,
 FXAAEnable,0
 FXAAQuality,4
+TAAEnable,0
 ,
 MotionBlurCameraEnable,0
 MotionBlurCameraQuality,4

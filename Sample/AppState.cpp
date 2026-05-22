@@ -55,6 +55,7 @@ bool g_bGaussianFilter = false;
 bool g_bMaskedGaussianFilter = false;
 bool g_bPostEffectAA = false;
 bool g_bFXAA = false;
+bool g_bTAA = false;
 bool g_bMotionBlurCamera = false;
 float g_motionBlurCameraMaxBlurPixels = 24.0f;
 int g_motionBlurCameraSampleCount = 13;
@@ -2078,6 +2079,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             else if (key == L"FXAAEnable")
             {
                 g_bFXAA = (std::stoi(value) != 0);
+            }
+            else if (key == L"TAAEnable")
+            {
+                g_bTAA = (std::stoi(value) != 0);
             }
             else if (key == L"PostEffectAAEnable")
             {

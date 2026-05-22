@@ -550,6 +550,16 @@ void Render::ApplySettings()
         SetPostEffectFXAAQuality(m_fxaaQuality);
     }
 
+    const auto taaEnable = m_settings.find(L"TAAEnable");
+    if (taaEnable != m_settings.end())
+    {
+        bool enabled = false;
+        if (TryParseBoolSetting(taaEnable->second, enabled))
+        {
+            SetPostEffectTAA(enabled);
+        }
+    }
+
     const auto postEffectAAEnable = m_settings.find(L"PostEffectAAEnable");
     if (postEffectAAEnable != m_settings.end())
     {
@@ -1257,6 +1267,7 @@ void Render::Finalize()
     m_postEffectAA.Finalize();
     m_postEffectMotionBlurCamera.Finalize();
     m_postEffectFXAA.Finalize();
+    m_postEffectTAA.Finalize();
     m_postEffectEnd.Finalize();
     m_particleSystem.Finalize();
 
@@ -1589,6 +1600,13 @@ void Render::Draw()
     {
         EnsurePostEffectFXAAInitialized();
         m_postEffectFXAA.Draw(pTempTexture, pWorkTexture);
+        SwapPostEffectBuffers(pTempTexture, pWorkTexture);
+    }
+
+    if (m_gBufferEnabled && m_postEffectTAAEnabled)
+    {
+        EnsurePostEffectTAAInitialized();
+        m_postEffectTAA.Draw(pTempTexture, pWorkTexture);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
@@ -2804,6 +2822,20 @@ void Render::SetPostEffectFXAAQuality(const int quality)
     m_postEffectFXAA.SetQuality(m_fxaaQuality);
 }
 
+void Render::SetPostEffectTAA(const bool arg)
+{
+    m_postEffectTAAEnabled = arg;
+    if (m_postEffectTAAEnabled)
+    {
+        EnsurePostEffectTAAInitialized();
+        m_postEffectTAA.ResetHistory();
+    }
+    else
+    {
+        m_postEffectTAA.Finalize();
+    }
+}
+
 void Render::SetPostEffectMotionBlurCamera(const bool arg)
 {
     m_postEffectMotionBlurCameraEnabled = arg;
@@ -2903,6 +2935,11 @@ void Render::EnsurePostEffectAAInitialized()
 void Render::EnsurePostEffectFXAAInitialized()
 {
     m_postEffectFXAA.Initialize();
+}
+
+void Render::EnsurePostEffectTAAInitialized()
+{
+    m_postEffectTAA.Initialize();
 }
 
 void Render::EnsurePostEffectMotionBlurCameraInitialized()

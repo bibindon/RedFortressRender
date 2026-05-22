@@ -72,6 +72,9 @@
     <FxCompile Include="..\Render\shader\PostEffectFXAA.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
+    <FxCompile Include="..\Render\shader\PostEffectTAA.fx">
+      <Filter>リソース ファイル</Filter>
+    </FxCompile>
     <FxCompile Include="..\Render\shader\PostEffectEnd.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>

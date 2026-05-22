@@ -1195,6 +1195,16 @@ void RefreshPostEffectAA(HWND hDlg)
     CheckDlgButton(hDlg, IDC_CHECK_POST_EFFECT_AA, checkState);
 }
 
+void RefreshTAA(HWND hDlg)
+{
+    UINT checkState = BST_UNCHECKED;
+    if (g_bTAA)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_TAA, checkState);
+}
+
 void RefreshDepthOfField(HWND hDlg)
 {
     // DOF は OFF / ON / AutoNear の 3 状態をラジオボタンで同期する。

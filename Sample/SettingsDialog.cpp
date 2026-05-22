@@ -87,6 +87,7 @@ void RefreshSSAOTexSizeControls(HWND hDlg);
 void RefreshDepthBufferShadow(HWND hDlg);
 void RefreshBloom(HWND hDlg);
 void RefreshPostEffectAA(HWND hDlg);
+void RefreshTAA(HWND hDlg);
 void RefreshDepthOfField(HWND hDlg);
 void RefreshStarBurst(HWND hDlg);
 void RefreshBloomThresholdControls(HWND hDlg);
@@ -1952,6 +1953,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshSSAOCompositeGaussian3x3Controls(hDlg);
     RefreshBloom(hDlg);
     RefreshPostEffectAA(hDlg);
+    RefreshTAA(hDlg);
     RefreshDepthOfField(hDlg);
     RefreshStarBurst(hDlg);
     RefreshFog(hDlg);
@@ -3843,6 +3845,14 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_bPostEffectAA = (IsDlgButtonChecked(hDlg, IDC_CHECK_POST_EFFECT_AA) == BST_CHECKED);
             g_Render.SetPostEffectAA(g_bPostEffectAA);
             RefreshPostEffectAA(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_TAA)
+        {
+            g_bTAA = (IsDlgButtonChecked(hDlg, IDC_CHECK_TAA) == BST_CHECKED);
+            g_Render.SetPostEffectTAA(g_bTAA);
+            RefreshTAA(hDlg);
             return TRUE;
         }
 

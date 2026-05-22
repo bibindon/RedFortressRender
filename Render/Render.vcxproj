@@ -55,6 +55,7 @@
     <ClCompile Include="PostEffectFog.cpp" />
     <ClCompile Include="PostEffectFont.cpp" />
     <ClCompile Include="PostEffectFXAA.cpp" />
+    <ClCompile Include="PostEffectTAA.cpp" />
     <ClCompile Include="PostEffectHeightFog.cpp" />
     <ClCompile Include="PostEffectGodRay.cpp" />
     <ClCompile Include="PostEffectMotionBlurCamera.cpp" />
@@ -105,6 +106,7 @@
     <ClInclude Include="PostEffectFog.h" />
     <ClInclude Include="PostEffectFont.h" />
     <ClInclude Include="PostEffectFXAA.h" />
+    <ClInclude Include="PostEffectTAA.h" />
     <ClInclude Include="PostEffectHeightFog.h" />
     <ClInclude Include="PostEffectGodRay.h" />
     <ClInclude Include="PostEffectMotionBlurCamera.h" />
@@ -193,6 +195,7 @@
     <FxCompile Include="shader\PostEffectFog.fx" />
     <FxCompile Include="shader\PostEffectFont.fx" />
     <FxCompile Include="shader\PostEffectFXAA.fx" />
+    <FxCompile Include="shader\PostEffectTAA.fx" />
     <FxCompile Include="shader\PostEffectHeightFog.fx" />
     <FxCompile Include="shader\PostEffectMotionBlurCamera.fx" />
     <FxCompile Include="shader\PostEffectSSAO.fx" />

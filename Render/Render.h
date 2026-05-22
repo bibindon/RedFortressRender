@@ -50,6 +50,7 @@
 #include "PostEffectDepthOfField.h"
 #include "PostEffectHeightFog.h"
 #include "PostEffectFXAA.h"
+#include "PostEffectTAA.h"
 
 #include "WindowManager.h"
 #include "Light.h"
@@ -325,6 +326,7 @@ public:
     void SetPostEffectAA(const bool arg);
     void SetPostEffectFXAA(const bool arg);
     void SetPostEffectFXAAQuality(const int quality);
+    void SetPostEffectTAA(const bool arg);
     void SetPostEffectMotionBlurCamera(const bool arg);
     void SetPostEffectMotionBlurCameraQuality(const int quality);
     void SetPostEffectMotionBlurCameraMaxBlurPixels(const float maxBlurPixels);
@@ -502,6 +504,9 @@ private:
     // FXAA
     PostEffectFXAA m_postEffectFXAA;
 
+    // TAA
+    PostEffectTAA m_postEffectTAA;
+
     // カメラモーションブラー
     PostEffectMotionBlurCamera m_postEffectMotionBlurCamera;
 
@@ -524,6 +529,7 @@ private:
     void EnsurePostEffectMaskedGaussInitialized();
     void EnsurePostEffectAAInitialized();
     void EnsurePostEffectFXAAInitialized();
+    void EnsurePostEffectTAAInitialized();
     void EnsurePostEffectMotionBlurCameraInitialized();
     void EnsurePostEffectZShadowInitialized();
     void EnsurePostEffectSSAOInitialized();
@@ -555,6 +561,7 @@ private:
     bool m_postEffectMaskedGaussEnabled = false;
     bool m_postEffectAAEnabled = false;
     bool m_postEffectFXAAEnabled = false;
+    bool m_postEffectTAAEnabled = false;
     bool m_postEffectMotionBlurCameraEnabled = false;
     bool m_gBufferEnabled = true;
     bool m_postEffectZShadowEnabled = true;
