@@ -376,11 +376,22 @@ void MeshInstancing::Draw()
     hResult = m_pEffect->SetMatrix("g_matWorldViewProj", &viewProj);
     assert(hResult == S_OK);
 
+    const D3DXVECTOR4 lightDir = Light::GetLightDir();
+    hResult = m_pEffect->SetVector("g_lightDir", &lightDir);
+    assert(hResult == S_OK);
+
+    const D3DXVECTOR4 lightColor = D3DXVECTOR4(Light::GetLightColor());
+    hResult = m_pEffect->SetVector("g_lightColor", &lightColor);
+    assert(hResult == S_OK);
+
     const D3DXVECTOR4 ambientColor = D3DXVECTOR4(Light::GetAmbientColor());
     hResult = m_pEffect->SetVector("g_ambient", &ambientColor);
     assert(hResult == S_OK);
 
     hResult = m_pEffect->SetFloat("g_fAmbientIntensity", Light::GetAmbientBrightness());
+    assert(hResult == S_OK);
+
+    hResult = m_pEffect->SetFloat("g_fSunLightIntensity", Light::GetBrightness());
     assert(hResult == S_OK);
 
     hResult = m_pEffect->SetInt("g_swayMode", static_cast<int>(m_swayMode));
