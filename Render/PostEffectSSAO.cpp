@@ -152,16 +152,42 @@ void PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
 
     if (m_blurEnabled)
     {
-        Common::D3DDevice()->SetRenderTarget(0, surfAOTemp);
-        Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(255, 255, 255, 255), 1.0f, 0);
-        m_fxSSAO->SetTexture("texAO", m_rtAoTex);
-        m_fxSSAO->SetTechnique(GetBlurTechniqueName());
-        m_fxSSAO->Begin(NULL, 0);
-        m_fxSSAO->BeginPass(0);
-        DrawFullscreenQuad();
-        m_fxSSAO->EndPass();
-        m_fxSSAO->End();
-        aoTextureForComposite = m_rtAoTempTex;
+        if (m_separableBlurEnabled)
+        {
+            Common::D3DDevice()->SetRenderTarget(0, surfAOTemp);
+            Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(255, 255, 255, 255), 1.0f, 0);
+            m_fxSSAO->SetTexture("texAO", m_rtAoTex);
+            m_fxSSAO->SetTechnique(GetHorizontalBlurTechniqueName());
+            m_fxSSAO->Begin(NULL, 0);
+            m_fxSSAO->BeginPass(0);
+            DrawFullscreenQuad();
+            m_fxSSAO->EndPass();
+            m_fxSSAO->End();
+
+            Common::D3DDevice()->SetRenderTarget(0, surfAO);
+            Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(255, 255, 255, 255), 1.0f, 0);
+            m_fxSSAO->SetTexture("texAO", m_rtAoTempTex);
+            m_fxSSAO->SetTechnique(GetVerticalBlurTechniqueName());
+            m_fxSSAO->Begin(NULL, 0);
+            m_fxSSAO->BeginPass(0);
+            DrawFullscreenQuad();
+            m_fxSSAO->EndPass();
+            m_fxSSAO->End();
+            aoTextureForComposite = m_rtAoTex;
+        }
+        else
+        {
+            Common::D3DDevice()->SetRenderTarget(0, surfAOTemp);
+            Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(255, 255, 255, 255), 1.0f, 0);
+            m_fxSSAO->SetTexture("texAO", m_rtAoTex);
+            m_fxSSAO->SetTechnique(GetBlurTechniqueName());
+            m_fxSSAO->Begin(NULL, 0);
+            m_fxSSAO->BeginPass(0);
+            DrawFullscreenQuad();
+            m_fxSSAO->EndPass();
+            m_fxSSAO->End();
+            aoTextureForComposite = m_rtAoTempTex;
+        }
     }
 
     D3DSURFACE_DESC descTarget = { };
@@ -262,6 +288,11 @@ void PostEffectSSAO::SetDepthScaledSampleDistanceEnabled(const bool enabled)
 void PostEffectSSAO::SetBlurEnabled(const bool enabled)
 {
     m_blurEnabled = enabled;
+}
+
+void PostEffectSSAO::SetSeparableBlurEnabled(const bool enabled)
+{
+    m_separableBlurEnabled = enabled;
 }
 
 void PostEffectSSAO::SetBlurKernelSize(const int kernelSize)
@@ -366,6 +397,46 @@ const char* PostEffectSSAO::GetBlurTechniqueName() const
     }
 
     return "TechniqueAO_Blur21x21";
+}
+
+const char* PostEffectSSAO::GetHorizontalBlurTechniqueName() const
+{
+    if (m_blurKernelSize == 3)
+    {
+        return "TechniqueAO_Blur3x1";
+    }
+
+    if (m_blurKernelSize == 5)
+    {
+        return "TechniqueAO_Blur5x1";
+    }
+
+    if (m_blurKernelSize == 11)
+    {
+        return "TechniqueAO_Blur11x1";
+    }
+
+    return "TechniqueAO_Blur21x1";
+}
+
+const char* PostEffectSSAO::GetVerticalBlurTechniqueName() const
+{
+    if (m_blurKernelSize == 3)
+    {
+        return "TechniqueAO_Blur1x3";
+    }
+
+    if (m_blurKernelSize == 5)
+    {
+        return "TechniqueAO_Blur1x5";
+    }
+
+    if (m_blurKernelSize == 11)
+    {
+        return "TechniqueAO_Blur1x11";
+    }
+
+    return "TechniqueAO_Blur1x21";
 }
 
 int PostEffectSSAO::NormalizeSampleCount(const int sampleCount) const

@@ -302,6 +302,16 @@ void Render::ApplySettings()
         }
     }
 
+    const auto ssaoSeparableBlurEnable = m_settings.find(L"SSAOSeparableBlurEnable");
+    if (ssaoSeparableBlurEnable != m_settings.end())
+    {
+        bool enabled = false;
+        if (TryParseBoolSetting(ssaoSeparableBlurEnable->second, enabled))
+        {
+            SetPostEffectSSAOSeparableBlur(enabled);
+        }
+    }
+
     const auto ssaoDepthScaledSampleDistanceEnable = m_settings.find(L"SSAODepthScaledSampleDistanceEnable");
     if (ssaoDepthScaledSampleDistanceEnable != m_settings.end())
     {
@@ -2863,6 +2873,11 @@ void Render::SetPostEffectSSAO(const bool arg)
 void Render::SetPostEffectSSAOBlur(const bool arg)
 {
     m_postEffectSSAO.SetBlurEnabled(arg);
+}
+
+void Render::SetPostEffectSSAOSeparableBlur(const bool enabled)
+{
+    m_postEffectSSAO.SetSeparableBlurEnabled(enabled);
 }
 
 void Render::SetPostEffectSSAOShadowStrength(const float shadowStrength)

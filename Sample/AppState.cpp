@@ -63,6 +63,7 @@ bool g_bGBuffer = true;
 bool g_bSSAO = true;
 bool g_bSSGI = false;
 bool g_bSSAOBlur = false;
+bool g_bSSAOSeparableBlur = false;
 bool g_bSSGIBlur = true;
 bool g_bSSAORandomSamplingDirection = true;
 bool g_bSSAODepthScaledSampleDistance = false;
@@ -1806,6 +1807,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_ssaoBlurKernelSize = std::stoi(value);
             }
+            else if (key == L"SSAOSeparableBlurEnable")
+            {
+                g_bSSAOSeparableBlur = (std::stoi(value) != 0);
+            }
             else if (key == L"SSAODepthScaledSampleDistanceEnable")
             {
                 g_bSSAODepthScaledSampleDistance = (std::stoi(value) != 0);
@@ -2198,6 +2203,7 @@ void ApplyAllSampleSettings()
     ApplySSAOMaxDarknessClamp();
     ApplySSAOSampleRadius();
     ApplySSAOBlurKernelSize();
+    ApplySSAOSeparableBlur();
     ApplySSAOTexSize();
     ApplySSAOCompositeGaussian3x3();
     ApplySSAOBlur();

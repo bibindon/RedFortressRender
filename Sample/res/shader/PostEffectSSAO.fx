@@ -293,7 +293,7 @@ float4 FinalizeAOResult(float occlusionCount, float validSampleCount)
         ao = saturate(1.0f - occlusionRate);
     }
 
-    return float4(ao, ao, ao, 1.0f);
+    return float4(ao, ao, ao, validSampleCount);
 }
 
 void InitializeAOSampling(VS_OUT i,
@@ -540,7 +540,8 @@ void AccumulateBlurSample(float2 baseUv,
                           int x,
                           int y,
                           inout float blurredValue,
-                          inout float weightSum)
+                          inout float weightSum,
+                          inout float sampleCountSum)
 {
     float2 sampleUv = baseUv + float2((float)x * texelSize.x,
                                       (float)y * texelSize.y);
@@ -553,11 +554,15 @@ void AccumulateBlurSample(float2 baseUv,
                                            sampleDepth,
                                            centerNormal,
                                            sampleNormal);
-    blurredValue += tex2D(sampAO, sampleUv).r * weight;
-    weightSum += weight;
+    float4 sampleAO = tex2D(sampAO, sampleUv);
+    float sampleCount = max(sampleAO.a, 1.0f);
+    float confidenceWeight = weight * sampleCount;
+    blurredValue += sampleAO.r * confidenceWeight;
+    weightSum += confidenceWeight;
+    sampleCountSum += sampleCount * weight;
 }
 
-float4 FinalizeBlurResult(float blurredValue, float weightSum)
+float4 FinalizeBlurResult(float blurredValue, float weightSum, float sampleCountSum)
 {
     float ao = 1.0f;
     if (weightSum > 0.0f)
@@ -565,7 +570,36 @@ float4 FinalizeBlurResult(float blurredValue, float weightSum)
         ao = blurredValue / weightSum;
     }
 
-    return float4(ao, ao, ao, 1.0f);
+    return float4(ao, ao, ao, sampleCountSum);
+}
+
+float4 PS_BlurLine(VS_OUT i, int halfSize, float2 axis)
+{
+    float2 texelSize = g_invSize * axis;
+    float centerDepth = GetViewDepth(i.uv);
+    float3 centerNormal = GetViewNormal(i.uv);
+    float blurredValue = 0.0f;
+    float weightSum = 0.0f;
+    float sampleCountSum = 0.0f;
+
+    [loop]
+    for (int offset = -halfSize; offset <= halfSize; ++offset)
+    {
+        if (offset != 0)
+        {
+            AccumulateBlurSample(i.uv,
+                                 texelSize,
+                                 centerDepth,
+                                 centerNormal,
+                                 offset,
+                                 offset,
+                                 blurredValue,
+                                 weightSum,
+                                 sampleCountSum);
+        }
+    }
+
+    return FinalizeBlurResult(blurredValue, weightSum, sampleCountSum);
 }
 
 float4 PS_Blur3x3(VS_OUT i) : COLOR0
@@ -575,6 +609,7 @@ float4 PS_Blur3x3(VS_OUT i) : COLOR0
     float3 centerNormal = GetViewNormal(i.uv);
     float blurredValue = 0.0f;
     float weightSum = 0.0f;
+    float sampleCountSum = 0.0f;
 
     [loop]
     for (int y = -1; y <= 1; ++y)
@@ -591,12 +626,13 @@ float4 PS_Blur3x3(VS_OUT i) : COLOR0
                                      x,
                                      y,
                                      blurredValue,
-                                     weightSum);
+                                     weightSum,
+                                     sampleCountSum);
             }
         }
     }
 
-    return FinalizeBlurResult(blurredValue, weightSum);
+    return FinalizeBlurResult(blurredValue, weightSum, sampleCountSum);
 }
 
 float4 PS_Blur5x5(VS_OUT i) : COLOR0
@@ -606,6 +642,7 @@ float4 PS_Blur5x5(VS_OUT i) : COLOR0
     float3 centerNormal = GetViewNormal(i.uv);
     float blurredValue = 0.0f;
     float weightSum = 0.0f;
+    float sampleCountSum = 0.0f;
 
     [loop]
     for (int y = -2; y <= 2; ++y)
@@ -622,12 +659,13 @@ float4 PS_Blur5x5(VS_OUT i) : COLOR0
                                      x,
                                      y,
                                      blurredValue,
-                                     weightSum);
+                                     weightSum,
+                                     sampleCountSum);
             }
         }
     }
 
-    return FinalizeBlurResult(blurredValue, weightSum);
+    return FinalizeBlurResult(blurredValue, weightSum, sampleCountSum);
 }
 
 float4 PS_Blur11x11(VS_OUT i) : COLOR0
@@ -637,6 +675,7 @@ float4 PS_Blur11x11(VS_OUT i) : COLOR0
     float3 centerNormal = GetViewNormal(i.uv);
     float blurredValue = 0.0f;
     float weightSum = 0.0f;
+    float sampleCountSum = 0.0f;
 
     [loop]
     for (int y = -5; y <= 5; ++y)
@@ -653,12 +692,13 @@ float4 PS_Blur11x11(VS_OUT i) : COLOR0
                                      x,
                                      y,
                                      blurredValue,
-                                     weightSum);
+                                     weightSum,
+                                     sampleCountSum);
             }
         }
     }
 
-    return FinalizeBlurResult(blurredValue, weightSum);
+    return FinalizeBlurResult(blurredValue, weightSum, sampleCountSum);
 }
 
 float4 PS_Blur21x21(VS_OUT i) : COLOR0
@@ -668,6 +708,7 @@ float4 PS_Blur21x21(VS_OUT i) : COLOR0
     float3 centerNormal = GetViewNormal(i.uv);
     float blurredValue = 0.0f;
     float weightSum = 0.0f;
+    float sampleCountSum = 0.0f;
 
     [loop]
     for (int y = -10; y <= 10; ++y)
@@ -684,12 +725,53 @@ float4 PS_Blur21x21(VS_OUT i) : COLOR0
                                      x,
                                      y,
                                      blurredValue,
-                                     weightSum);
+                                     weightSum,
+                                     sampleCountSum);
             }
         }
     }
 
-    return FinalizeBlurResult(blurredValue, weightSum);
+    return FinalizeBlurResult(blurredValue, weightSum, sampleCountSum);
+}
+
+float4 PS_Blur3x1(VS_OUT i) : COLOR0
+{
+    return PS_BlurLine(i, 1, float2(1.0f, 0.0f));
+}
+
+float4 PS_Blur1x3(VS_OUT i) : COLOR0
+{
+    return PS_BlurLine(i, 1, float2(0.0f, 1.0f));
+}
+
+float4 PS_Blur5x1(VS_OUT i) : COLOR0
+{
+    return PS_BlurLine(i, 2, float2(1.0f, 0.0f));
+}
+
+float4 PS_Blur1x5(VS_OUT i) : COLOR0
+{
+    return PS_BlurLine(i, 2, float2(0.0f, 1.0f));
+}
+
+float4 PS_Blur11x1(VS_OUT i) : COLOR0
+{
+    return PS_BlurLine(i, 5, float2(1.0f, 0.0f));
+}
+
+float4 PS_Blur1x11(VS_OUT i) : COLOR0
+{
+    return PS_BlurLine(i, 5, float2(0.0f, 1.0f));
+}
+
+float4 PS_Blur21x1(VS_OUT i) : COLOR0
+{
+    return PS_BlurLine(i, 10, float2(1.0f, 0.0f));
+}
+
+float4 PS_Blur1x21(VS_OUT i) : COLOR0
+{
+    return PS_BlurLine(i, 10, float2(0.0f, 1.0f));
 }
 
 float4 PS_Composite(VS_OUT i) : COLOR0
@@ -820,6 +902,86 @@ technique TechniqueAO_Blur21x21
         CullMode = NONE;
         VertexShader = compile vs_3_0 VS_Fullscreen();
         PixelShader = compile ps_3_0 PS_Blur21x21();
+    }
+}
+
+technique TechniqueAO_Blur3x1
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS_Fullscreen();
+        PixelShader = compile ps_3_0 PS_Blur3x1();
+    }
+}
+
+technique TechniqueAO_Blur1x3
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS_Fullscreen();
+        PixelShader = compile ps_3_0 PS_Blur1x3();
+    }
+}
+
+technique TechniqueAO_Blur5x1
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS_Fullscreen();
+        PixelShader = compile ps_3_0 PS_Blur5x1();
+    }
+}
+
+technique TechniqueAO_Blur1x5
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS_Fullscreen();
+        PixelShader = compile ps_3_0 PS_Blur1x5();
+    }
+}
+
+technique TechniqueAO_Blur11x1
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS_Fullscreen();
+        PixelShader = compile ps_3_0 PS_Blur11x1();
+    }
+}
+
+technique TechniqueAO_Blur1x11
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS_Fullscreen();
+        PixelShader = compile ps_3_0 PS_Blur1x11();
+    }
+}
+
+technique TechniqueAO_Blur21x1
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS_Fullscreen();
+        PixelShader = compile ps_3_0 PS_Blur21x1();
+    }
+}
+
+technique TechniqueAO_Blur1x21
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS_Fullscreen();
+        PixelShader = compile ps_3_0 PS_Blur1x21();
     }
 }
 

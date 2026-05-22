@@ -315,6 +315,7 @@ public:
     void SetPostEffectDepthBufferShadowTexSizeDivisor(const int scaleDivisor);
     void SetPostEffectSSAO(const bool arg);
     void SetPostEffectSSAOBlur(const bool arg);
+    void SetPostEffectSSAOSeparableBlur(const bool enabled);
     void SetPostEffectSSAOShadowStrength(const float shadowStrength);
     void SetPostEffectSSAOSaturationBoost(const float saturationBoost);
     void SetPostEffectSSAOSampleCount(const int sampleCount);

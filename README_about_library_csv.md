@@ -99,6 +99,7 @@ Sample 側の一部キーは `std::stoi(value) != 0` で判定しているため
 | `ShadowBlurTapCount` | Sample 側では PCF / Composite の両方に同値を入れる簡略キー |
 | `SSAOEnable` | SSAO ON/OFF |
 | `SSAOBlurEnable` | SSAO のブラー ON/OFF |
+| `SSAOSeparableBlurEnable` | SSAO のブラーを横/縦の 2 パスへ分離 |
 | `SSAODepthScaledSampleDistanceEnable` | SSAO の深度連動距離 ON/OFF |
 | `SSAOSampleRadius` | SSAO のサンプル半径 |
 | `SSAOShadowStrength` | SSAO の影の強さ |
@@ -183,6 +184,7 @@ MotionBlurCameraSampleCount,13
 
 SSAOEnable,1
 SSAOBlurEnable,1
+SSAOSeparableBlurEnable,0
 SSAODepthScaledSampleDistanceEnable,0
 SSAOSampleRadius,4.0
 SSAOShadowStrength,1.0

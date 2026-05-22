@@ -831,6 +831,17 @@ void RefreshSSAOBlurKernelSizeControls(HWND hDlg)
     EnableWindow(GetDlgItem(hDlg, IDC_COMBO_SSAO_BLUR_KERNEL_SIZE), enabled);
 }
 
+void RefreshSSAOSeparableBlurControls(HWND hDlg)
+{
+    UINT checkState = BST_UNCHECKED;
+    if (g_bSSAOSeparableBlur)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg, IDC_CHECK_SSAO_SEPARABLE_BLUR, checkState);
+    EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SSAO_SEPARABLE_BLUR), g_bSSAO && g_bSSAOBlur);
+}
+
 void RefreshSSAOTexSizeControls(HWND hDlg)
 {
     HWND combo = GetDlgItem(hDlg, IDC_COMBO_SSAO_TEX_SIZE);
@@ -1136,6 +1147,7 @@ void RefreshSSAOBlurControls(HWND hDlg)
     CheckDlgButton(hDlg, IDC_CHECK_SSAO_BLUR, checkState);
     EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SSAO_BLUR), g_bSSAO);
     RefreshSSAOBlurKernelSizeControls(hDlg);
+    RefreshSSAOSeparableBlurControls(hDlg);
 }
 
 void RefreshBloom(HWND hDlg)

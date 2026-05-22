@@ -71,6 +71,7 @@ void RefreshSSAODepthScaledSampleDistanceControls(HWND hDlg);
 void RefreshSSAOMaxDarknessClampControls(HWND hDlg);
 void RefreshSSAOSampleRadiusControls(HWND hDlg);
 void RefreshSSAOBlurKernelSizeControls(HWND hDlg);
+void RefreshSSAOSeparableBlurControls(HWND hDlg);
 void RefreshSSAOCompositeGaussian3x3Controls(HWND hDlg);
 void RefreshCameraShakeControls(HWND hDlg);
 void RefreshCameraClipPlaneControls(HWND hDlg);
@@ -1863,6 +1864,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshSSGIIndirectLightControls(hDlg);
     RefreshSSGIIndirectLightMaxControls(hDlg);
     RefreshSSAOBlurControls(hDlg);
+    RefreshSSAOSeparableBlurControls(hDlg);
     RefreshSSAOShadowStrengthControls(hDlg);
     RefreshSSAOShadowSaturationControls(hDlg);
     RefreshSSAOSampleCountControls(hDlg);
@@ -1906,6 +1908,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshGBufferClipPlaneControls(hDlg);
     RefreshSSAOBlurControls(hDlg);
     RefreshSSAOBlurKernelSizeControls(hDlg);
+    RefreshSSAOSeparableBlurControls(hDlg);
     RefreshSSAOShadowStrengthControls(hDlg);
     RefreshSSAOShadowSaturationControls(hDlg);
     RefreshSSAOSampleCountControls(hDlg);
@@ -3531,6 +3534,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             RefreshSSAORandomSamplingDirectionControls(hDlg);
             RefreshSSAOSampleRadiusControls(hDlg);
             RefreshSSAOBlurKernelSizeControls(hDlg);
+            RefreshSSAOSeparableBlurControls(hDlg);
             RefreshSSAODepthScaledSampleDistanceControls(hDlg);
             RefreshSSAOMaxDarknessClampControls(hDlg);
             RefreshSSAOTexSizeControls(hDlg);
@@ -3567,6 +3571,16 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             ApplySSAOBlur();
             RefreshSSAOBlurControls(hDlg);
             RefreshSSAOBlurKernelSizeControls(hDlg);
+            RefreshSSAOSeparableBlurControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_SSAO_SEPARABLE_BLUR)
+        {
+            g_bSSAOSeparableBlur =
+                (IsDlgButtonChecked(hDlg, IDC_CHECK_SSAO_SEPARABLE_BLUR) == BST_CHECKED);
+            ApplySSAOSeparableBlur();
+            RefreshSSAOSeparableBlurControls(hDlg);
             return TRUE;
         }
 

@@ -1,4 +1,4 @@
-SaturateEnable,1
+﻿SaturateEnable,1
 SaturateLevel,0.4
 ,
 GaussianEnable,0
@@ -37,6 +37,7 @@ ShadowCompositeTapCount,3
 ,
 SSAOEnable,1
 SSAOBlurEnable,0
+SSAOSeparableBlurEnable,0
 SSAORandomSamplingDirectionEnable,1
 SSAODepthScaledSampleDistanceEnable,0
 SSAOMaxDarknessClampEnable,1

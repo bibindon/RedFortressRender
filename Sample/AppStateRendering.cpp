@@ -608,6 +608,11 @@ void ApplySSAOBlurKernelSize()
     g_Render.SetPostEffectSSAOBlurKernelSize(g_ssaoBlurKernelSize);
 }
 
+void ApplySSAOSeparableBlur()
+{
+    g_Render.SetPostEffectSSAOSeparableBlur(g_bSSAOSeparableBlur);
+}
+
 void ApplySSAOTexSize()
 {
     if (g_ssaoTexSizeDivisor != 2 &&
