@@ -1,1 +1,3 @@
 meshtype,mirror
+fresnel,y
+fresnelintensity,0.2
