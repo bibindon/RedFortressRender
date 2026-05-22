@@ -15,6 +15,7 @@ enum class ParticleEffectPreset
     Fire,
     Dust,
     Fog,
+    Rain,
 };
 
 class ParticleSystem
@@ -83,6 +84,7 @@ private:
         float fireSparkAccumulator = 0.0f;
         float fogEmitAccumulator = 0.0f;
         float dustEmitAccumulator = 0.0f;
+        float rainEmitAccumulator = 0.0f;
         unsigned long long generation = 0;
     };
 
@@ -106,6 +108,7 @@ private:
     void EmitFire(EffectInstance& effect, float deltaTime);
     void EmitDust(EffectInstance& effect, float deltaTime);
     void EmitFog(EffectInstance& effect, float deltaTime);
+    void EmitRain(EffectInstance& effect, float deltaTime);
     void UpdateEffect(EffectInstance& effect, float deltaTime);
     void DrawEffect(const EffectInstance& effect, const D3DXMATRIX& view, const D3DXMATRIX& proj);
     int FillDustVertices(const EffectInstance& effectInstance,
@@ -128,6 +131,7 @@ private:
     LPDIRECT3DTEXTURE9 m_dustTexture = NULL;
     LPDIRECT3DTEXTURE9 m_dustTexture2 = NULL;
     LPDIRECT3DTEXTURE9 m_fogTexture = NULL;
+    LPDIRECT3DTEXTURE9 m_rainTexture = NULL;
     LPD3DXEFFECT m_effect = NULL;
     bool m_dustFixedScreenSizeEnabled = true;
 };

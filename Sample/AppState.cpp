@@ -1680,6 +1680,9 @@ void PlaceParticleEffectAtLookAt()
     case NSRender::ParticleEffectPreset::Fog:
         pos.y += 0.80f;
         break;
+    case NSRender::ParticleEffectPreset::Rain:
+        pos = g_Render.GetCameraPos();
+        break;
     default:
         break;
     }

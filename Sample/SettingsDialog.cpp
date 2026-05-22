@@ -309,6 +309,8 @@ int ParticleEffectPresetToComboIndex(const NSRender::ParticleEffectPreset preset
         return 2;
     case NSRender::ParticleEffectPreset::Fog:
         return 3;
+    case NSRender::ParticleEffectPreset::Rain:
+        return 4;
     case NSRender::ParticleEffectPreset::Smoke:
     default:
         return 0;
@@ -325,6 +327,8 @@ NSRender::ParticleEffectPreset ComboIndexToParticleEffectPreset(const int comboI
         return NSRender::ParticleEffectPreset::Dust;
     case 3:
         return NSRender::ParticleEffectPreset::Fog;
+    case 4:
+        return NSRender::ParticleEffectPreset::Rain;
     case 0:
     default:
         return NSRender::ParticleEffectPreset::Smoke;
@@ -344,6 +348,7 @@ void PopulateParticleEffectCombo(HWND hDlg)
     SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Fire"));
     SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Dust"));
     SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Fog"));
+    SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Rain"));
     SendMessage(combo,
                 CB_SETCURSEL,
                 static_cast<WPARAM>(ParticleEffectPresetToComboIndex(g_particleEffectPreset)),

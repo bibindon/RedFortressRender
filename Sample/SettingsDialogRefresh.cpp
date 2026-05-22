@@ -215,6 +215,9 @@ void RefreshParticlePlacementControls(HWND hDlg)
     case NSRender::ParticleEffectPreset::Fog:
         comboIndex = 3;
         break;
+    case NSRender::ParticleEffectPreset::Rain:
+        comboIndex = 4;
+        break;
     case NSRender::ParticleEffectPreset::Smoke:
     default:
         comboIndex = 0;

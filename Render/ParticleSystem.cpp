@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <ctime>
 
+#include "Camera.h"
 #include "Common.h"
 #include "Util.h"
 
@@ -15,6 +16,10 @@ namespace
 constexpr float kDustFixedScreenReferenceDistance = 6.0f;
 constexpr float kDustFixedScreenMinScale = 0.15f;
 constexpr float kDustFixedScreenMaxScale = 1.0f;
+constexpr float kRainSpawnHalfWidth = 8.0f;
+constexpr float kRainSpawnForward = 12.0f;
+constexpr float kRainSpawnTopOffset = 5.0f;
+constexpr float kRainKillBelowCamera = 4.0f;
 }
 
 namespace NSRender
@@ -52,6 +57,7 @@ void ParticleSystem::Finalize()
     SAFE_RELEASE_LOCAL(m_dustTexture);
     SAFE_RELEASE_LOCAL(m_dustTexture2);
     SAFE_RELEASE_LOCAL(m_fogTexture);
+    SAFE_RELEASE_LOCAL(m_rainTexture);
     SAFE_RELEASE_LOCAL(m_effect);
 
     for (auto& effect : m_effects)
@@ -126,6 +132,11 @@ void ParticleSystem::PlaceEffect(const ParticleEffectPreset preset, const D3DXVE
     else if (preset == ParticleEffectPreset::Dust)
     {
         EmitDust(*target, 3.0f);
+    }
+    else if (preset == ParticleEffectPreset::Rain)
+    {
+        target->origin = Camera::GetEyePos();
+        EmitRain(*target, 2.0f);
     }
 
     m_lastPlacedPreset = preset;
@@ -372,6 +383,7 @@ bool ParticleSystem::TryInitializeResources()
     const std::wstring dustPath = BuildAssetPath(L"particle_dust.png");
     const std::wstring dustPath2 = BuildAssetPath(L"particle_dust2.png");
     const std::wstring fogPath = BuildAssetPath(L"particle_fog.png");
+    const std::wstring rainPath = BuildAssetPath(L"particle_rain.png");
     const std::wstring effectPath = Util::GetExeDir() + L"Particle.cso";
 
     HRESULT hr = D3DXCreateTextureFromFile(Common::D3DDevice(), smokePath.c_str(), &m_smokeTexture);
@@ -404,6 +416,12 @@ bool ParticleSystem::TryInitializeResources()
         return false;
     }
 
+    hr = D3DXCreateTextureFromFile(Common::D3DDevice(), rainPath.c_str(), &m_rainTexture);
+    if (FAILED(hr))
+    {
+        return false;
+    }
+
     hr = D3DXCreateEffectFromFile(Common::D3DDevice(),
                                   effectPath.c_str(),
                                   NULL,
@@ -422,6 +440,7 @@ void ParticleSystem::ClearParticles(EffectInstance& effect)
     effect.fireSparkAccumulator = 0.0f;
     effect.fogEmitAccumulator = 0.0f;
     effect.dustEmitAccumulator = 0.0f;
+    effect.rainEmitAccumulator = 0.0f;
 
     for (auto& particle : effect.particles)
     {
@@ -677,6 +696,96 @@ void ParticleSystem::EmitDust(EffectInstance& effect, const float deltaTime)
     }
 }
 
+void ParticleSystem::EmitRain(EffectInstance& effect, const float deltaTime)
+{
+    constexpr int targetRainCount = 520;
+    int activeRainCount = 0;
+
+    const D3DXVECTOR3 cameraPos = Camera::GetEyePos();
+    const D3DXVECTOR3 cameraDelta = cameraPos - effect.origin;
+    effect.origin = cameraPos;
+
+    D3DXVECTOR3 forward = Camera::GetLookAtPos() - cameraPos;
+    if (D3DXVec3LengthSq(&forward) <= 0.0001f)
+    {
+        forward = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
+    }
+    else
+    {
+        D3DXVec3Normalize(&forward, &forward);
+    }
+
+    const D3DXVECTOR3 worldUp(0.0f, 1.0f, 0.0f);
+    D3DXVECTOR3 right;
+    D3DXVec3Cross(&right, &worldUp, &forward);
+    if (D3DXVec3LengthSq(&right) <= 0.0001f)
+    {
+        right = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
+    }
+    else
+    {
+        D3DXVec3Normalize(&right, &right);
+    }
+
+    for (auto& particle : effect.particles)
+    {
+        if (!particle.active)
+        {
+            continue;
+        }
+
+        particle.pos += cameraDelta;
+        particle.basePos += cameraDelta;
+
+        if (particle.pos.y < cameraPos.y - kRainKillBelowCamera)
+        {
+            particle.active = false;
+            continue;
+        }
+
+        ++activeRainCount;
+    }
+
+    if (activeRainCount >= targetRainCount)
+    {
+        return;
+    }
+
+    effect.rainEmitAccumulator += deltaTime * 760.0f;
+
+    while (effect.rainEmitAccumulator >= 1.0f && activeRainCount < targetRainCount)
+    {
+        const float side = RandomCenteredFloat(kRainSpawnHalfWidth);
+        const float depth = RandomFloat(-3.0f, kRainSpawnForward);
+        const D3DXVECTOR3 pos = cameraPos +
+                                right * side +
+                                forward * depth +
+                                D3DXVECTOR3(0.0f, RandomFloat(1.2f, kRainSpawnTopOffset), 0.0f);
+        const D3DXVECTOR3 velocity(RandomFloat(-0.25f, 0.25f),
+                                   RandomFloat(-15.0f, -10.5f),
+                                   RandomFloat(-0.20f, 0.20f));
+        const float life = RandomFloat(0.75f, 1.15f);
+        const float startSize = RandomFloat(0.26f, 0.42f);
+        const float endSize = startSize;
+        const int alpha = static_cast<int>(RandomFloat(95.0f, 150.0f));
+        const int gray = static_cast<int>(RandomFloat(198.0f, 232.0f));
+        const D3DCOLOR color = D3DCOLOR_ARGB(alpha, gray, gray, 255);
+
+        SpawnParticle(effect,
+                      pos,
+                      velocity,
+                      life,
+                      startSize,
+                      endSize,
+                      0.0f,
+                      0.0f,
+                      color);
+
+        ++activeRainCount;
+        effect.rainEmitAccumulator -= 1.0f;
+    }
+}
+
 void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
 {
     if (effect.preset == ParticleEffectPreset::None)
@@ -697,6 +806,9 @@ void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
         break;
     case ParticleEffectPreset::Dust:
         EmitDust(effect, deltaTime);
+        break;
+    case ParticleEffectPreset::Rain:
+        EmitRain(effect, deltaTime);
         break;
     default:
         break;
@@ -820,6 +932,19 @@ void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
             particle.rotation += particle.rotationSpeed * deltaTime;
             continue;
         }
+        else if (effect.preset == ParticleEffectPreset::Rain)
+        {
+            particle.velocity.x += RandomFloat(-0.08f, 0.08f) * deltaTime;
+            particle.velocity.z += RandomFloat(-0.08f, 0.08f) * deltaTime;
+            particle.velocity.y = ClampFloat(particle.velocity.y, -18.0f, -9.0f);
+            particle.size = particle.startSize;
+
+            const float fade = sinf(age * D3DX_PI);
+            const int alpha = static_cast<int>(ClampFloat(170.0f * fade * particle.alphaBias,
+                                                          0.0f,
+                                                          185.0f));
+            particle.color = D3DCOLOR_ARGB(alpha, 210, 222, 255);
+        }
 
         particle.rotation += particle.rotationSpeed * deltaTime;
         particle.pos.x += particle.velocity.x * deltaTime;
@@ -852,6 +977,9 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
     case ParticleEffectPreset::Fog:
         texture = m_fogTexture;
         break;
+    case ParticleEffectPreset::Rain:
+        texture = m_rainTexture;
+        break;
     default:
         return;
     }
@@ -869,6 +997,31 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
     D3DXVECTOR3 cameraUp(invView._21, invView._22, invView._23);
     D3DXVec3Normalize(&cameraRight, &cameraRight);
     D3DXVec3Normalize(&cameraUp, &cameraUp);
+
+    const D3DXVECTOR3 worldDown(0.0f, -1.0f, 0.0f);
+    float rainX = D3DXVec3Dot(&worldDown, &cameraRight);
+    float rainY = D3DXVec3Dot(&worldDown, &cameraUp);
+    D3DXVECTOR3 rainDown = cameraRight * rainX + cameraUp * rainY;
+    if (D3DXVec3LengthSq(&rainDown) <= 0.0001f)
+    {
+        rainDown = cameraUp * -1.0f;
+        rainX = 0.0f;
+        rainY = -1.0f;
+    }
+    else
+    {
+        D3DXVec3Normalize(&rainDown, &rainDown);
+    }
+    D3DXVECTOR3 rainUp = rainDown * -1.0f;
+    D3DXVECTOR3 rainRight = cameraRight * (-rainY) + cameraUp * rainX;
+    if (D3DXVec3LengthSq(&rainRight) <= 0.0001f)
+    {
+        rainRight = cameraRight;
+    }
+    else
+    {
+        D3DXVec3Normalize(&rainRight, &rainRight);
+    }
 
     auto drawBatch = [&](LPDIRECT3DTEXTURE9 batchTexture,
                          const bool useAltTextureFilter,
@@ -923,6 +1076,13 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
                 {
                     halfWidth = particle.size * 0.75f;
                     halfHeight = particle.size * 0.62f;
+                }
+                else if (effectInstance.preset == ParticleEffectPreset::Rain)
+                {
+                    rotatedRight = rainRight;
+                    rotatedUp = rainUp;
+                    halfWidth = particle.size * 0.16f;
+                    halfHeight = particle.size * 1.10f;
                 }
 
                 const D3DXVECTOR3 halfRight(rotatedRight.x * halfWidth,
@@ -1076,6 +1236,8 @@ std::wstring ParticleSystem::BuildAssetPath(const wchar_t* fileName) const
         exeDir + L"assets\\particle\\" + fileName,
         exeDir + L"..\\Render\\assets\\particle\\" + fileName,
         exeDir + L"..\\..\\Render\\assets\\particle\\" + fileName,
+        exeDir + L"..\\Sample\\res\\2D_image\\" + fileName,
+        exeDir + L"..\\..\\Sample\\res\\2D_image\\" + fileName,
     };
 
     for (const auto& candidatePath : candidatePaths)
