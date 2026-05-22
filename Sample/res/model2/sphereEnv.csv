@@ -1,7 +1,7 @@
 EnvMap, y
 EnvMapFileName, "Texture1.dds"
-smooth,n
+smooth,y
 cubemappingrate,1.0
-cubemappinggauss,0.0
+cubemappinggauss,1.0
 ssao,n
 shadow,n

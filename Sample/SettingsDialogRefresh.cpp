@@ -1113,6 +1113,18 @@ void RefreshSSGIBlurKernelSizeControls(HWND hDlg)
     EnableWindow(GetDlgItem(hDlg, IDC_COMBO_SSGI_BLUR_KERNEL_SIZE), enabled);
 }
 
+void RefreshSSGISeparableBlurControls(HWND hDlg)
+{
+    UINT checkState = BST_UNCHECKED;
+    if (g_bSSGISeparableBlur)
+    {
+        checkState = BST_CHECKED;
+    }
+
+    CheckDlgButton(hDlg, IDC_CHECK_SSGI_SEPARABLE_BLUR, checkState);
+    EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SSGI_SEPARABLE_BLUR), g_bSSGI && g_bSSGIBlur);
+}
+
 void RefreshSSGIBlurControls(HWND hDlg)
 {
     UINT checkState = BST_UNCHECKED;
@@ -1124,6 +1136,7 @@ void RefreshSSGIBlurControls(HWND hDlg)
     CheckDlgButton(hDlg, IDC_CHECK_SSGI_BLUR, checkState);
     EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SSGI_BLUR), g_bSSGI);
     RefreshSSGIBlurKernelSizeControls(hDlg);
+    RefreshSSGISeparableBlurControls(hDlg);
 }
 
 void RefreshSSGIIndirectLightMaxControls(HWND hDlg)

@@ -1,4 +1,4 @@
-#include "PostEffectSSGI.h"
+﻿#include "PostEffectSSGI.h"
 
 #include "Camera.h"
 
@@ -146,16 +146,42 @@ void PostEffectSSGI::Draw(LPDIRECT3DTEXTURE9 texSource,
 
     if (m_blurEnabled)
     {
-        Common::D3DDevice()->SetRenderTarget(0, surfGiTemp);
-        Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 0, 0), 1.0f, 0);
-        m_fxSSGI->SetTexture("texGI", m_rtGiTex);
-        m_fxSSGI->SetTechnique(GetBlurTechniqueName());
-        m_fxSSGI->Begin(NULL, 0);
-        m_fxSSGI->BeginPass(0);
-        DrawFullscreenQuad();
-        m_fxSSGI->EndPass();
-        m_fxSSGI->End();
-        giTextureForComposite = m_rtGiTempTex;
+        if (m_separableBlurEnabled)
+        {
+            Common::D3DDevice()->SetRenderTarget(0, surfGiTemp);
+            Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 0, 0), 1.0f, 0);
+            m_fxSSGI->SetTexture("texGI", m_rtGiTex);
+            m_fxSSGI->SetTechnique(GetHorizontalBlurTechniqueName());
+            m_fxSSGI->Begin(NULL, 0);
+            m_fxSSGI->BeginPass(0);
+            DrawFullscreenQuad();
+            m_fxSSGI->EndPass();
+            m_fxSSGI->End();
+
+            Common::D3DDevice()->SetRenderTarget(0, surfGi);
+            Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 0, 0), 1.0f, 0);
+            m_fxSSGI->SetTexture("texGI", m_rtGiTempTex);
+            m_fxSSGI->SetTechnique(GetVerticalBlurTechniqueName());
+            m_fxSSGI->Begin(NULL, 0);
+            m_fxSSGI->BeginPass(0);
+            DrawFullscreenQuad();
+            m_fxSSGI->EndPass();
+            m_fxSSGI->End();
+            giTextureForComposite = m_rtGiTex;
+        }
+        else
+        {
+            Common::D3DDevice()->SetRenderTarget(0, surfGiTemp);
+            Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 0, 0), 1.0f, 0);
+            m_fxSSGI->SetTexture("texGI", m_rtGiTex);
+            m_fxSSGI->SetTechnique(GetBlurTechniqueName());
+            m_fxSSGI->Begin(NULL, 0);
+            m_fxSSGI->BeginPass(0);
+            DrawFullscreenQuad();
+            m_fxSSGI->EndPass();
+            m_fxSSGI->End();
+            giTextureForComposite = m_rtGiTempTex;
+        }
     }
 
     D3DSURFACE_DESC descTarget = { };
@@ -238,6 +264,11 @@ void PostEffectSSGI::SetDepthScaledSampleDistanceEnabled(const bool enabled)
 void PostEffectSSGI::SetBlurEnabled(const bool enabled)
 {
     m_blurEnabled = enabled;
+}
+
+void PostEffectSSGI::SetSeparableBlurEnabled(const bool enabled)
+{
+    m_separableBlurEnabled = enabled;
 }
 
 void PostEffectSSGI::SetBlurKernelSize(const int kernelSize)
@@ -336,6 +367,36 @@ const char* PostEffectSSGI::GetBlurTechniqueName() const
     }
 
     return "TechniqueGI_Blur21x21";
+}
+
+const char* PostEffectSSGI::GetHorizontalBlurTechniqueName() const
+{
+    if (m_blurKernelSize == 5)
+    {
+        return "TechniqueGI_Blur5x1";
+    }
+
+    if (m_blurKernelSize == 11)
+    {
+        return "TechniqueGI_Blur11x1";
+    }
+
+    return "TechniqueGI_Blur21x1";
+}
+
+const char* PostEffectSSGI::GetVerticalBlurTechniqueName() const
+{
+    if (m_blurKernelSize == 5)
+    {
+        return "TechniqueGI_Blur1x5";
+    }
+
+    if (m_blurKernelSize == 11)
+    {
+        return "TechniqueGI_Blur1x11";
+    }
+
+    return "TechniqueGI_Blur1x21";
 }
 
 int PostEffectSSGI::NormalizeSampleCount(const int sampleCount) const

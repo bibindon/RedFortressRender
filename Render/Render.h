@@ -350,6 +350,7 @@ public:
     void SetPostEffectSSAOMaxDarknessClamp(const bool enabled);
     void SetPostEffectSSGI(const bool arg);
     void SetPostEffectSSGIBlur(const bool arg);
+    void SetPostEffectSSGISeparableBlur(const bool enabled);
     void SetPostEffectSSGISampleCount(const int sampleCount);
     void SetPostEffectSSGIDepthScaledSampleDistance(const bool enabled);
     void SetPostEffectSSGISampleRadius(const float sampleRadius);

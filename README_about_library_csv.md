@@ -108,6 +108,7 @@ Sample 側の一部キーは `std::stoi(value) != 0` で判定しているため
 | `SSAOSampleCount` | SSAO サンプル数 |
 | `SSGIEnable` | SSGI ON/OFF |
 | `SSGIBlurEnable` | SSGI のブラー ON/OFF |
+| `SSGISeparableBlurEnable` | SSGI のブラーを横/縦の 2 パスへ分離 |
 | `SSGIDepthScaledSampleDistanceEnable` | SSGI の深度連動距離 ON/OFF |
 | `SSGIUseThickness` | SSGI で厚みテクスチャを使うか |
 | `SSGITexSize` | SSGI バッファ解像度。`1/1`, `1/2`, `1/4` |
@@ -193,6 +194,7 @@ SSAOShadowSaturationBoost,0.30
 SSAOSampleCount,16
 SSGIEnable,1
 SSGIBlurEnable,1
+SSGISeparableBlurEnable,1
 SSGIDepthScaledSampleDistanceEnable,0
 SSGIUseThickness,1
 SSGISampleCount,16

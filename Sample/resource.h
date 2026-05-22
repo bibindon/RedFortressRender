@@ -336,6 +336,7 @@
 #define IDC_SLIDER_GAUSSIAN_STRENGTH 1345
 #define IDC_STATIC_RENDERING_QUALITY_LABEL 1347
 #define IDC_COMBO_RENDERING_QUALITY    1348
+#define IDC_CHECK_SSGI_SEPARABLE_BLUR 1349
 
 // Next default values for new objects
 // 
@@ -343,7 +344,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1349
+#define _APS_NEXT_CONTROL_VALUE         1350
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

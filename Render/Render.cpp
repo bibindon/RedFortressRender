@@ -395,6 +395,16 @@ void Render::ApplySettings()
         }
     }
 
+    const auto ssgiSeparableBlurEnable = m_settings.find(L"SSGISeparableBlurEnable");
+    if (ssgiSeparableBlurEnable != m_settings.end())
+    {
+        bool enabled = true;
+        if (TryParseBoolSetting(ssgiSeparableBlurEnable->second, enabled))
+        {
+            SetPostEffectSSGISeparableBlur(enabled);
+        }
+    }
+
     const auto ssgiDepthScaledSampleDistanceEnable =
         m_settings.find(L"SSGIDepthScaledSampleDistanceEnable");
     if (ssgiDepthScaledSampleDistanceEnable != m_settings.end())
@@ -3023,6 +3033,11 @@ void Render::SetPostEffectSSGI(const bool arg)
 void Render::SetPostEffectSSGIBlur(const bool arg)
 {
     m_postEffectSSGI.SetBlurEnabled(arg);
+}
+
+void Render::SetPostEffectSSGISeparableBlur(const bool enabled)
+{
+    m_postEffectSSGI.SetSeparableBlurEnabled(enabled);
 }
 
 void Render::SetPostEffectSSGISampleCount(const int sampleCount)

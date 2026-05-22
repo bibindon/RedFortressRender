@@ -634,6 +634,11 @@ void ApplySSGIBlur()
     g_Render.SetPostEffectSSGIBlur(g_bSSGIBlur);
 }
 
+void ApplySSGISeparableBlur()
+{
+    g_Render.SetPostEffectSSGISeparableBlur(g_bSSGISeparableBlur);
+}
+
 void ApplySSGISampleCount()
 {
     g_ssgiSampleCount = ClampSSAOSampleCount(g_ssgiSampleCount);
@@ -1011,7 +1016,18 @@ void ApplyWindowMode()
 
 void InitializeRemoteDesktopDefault()
 {
-    g_bRemoteDesktop = IsWeekdayBusinessHours();
+    const bool isRemoteDesktopDefault = IsWeekdayBusinessHours();
+    g_bRemoteDesktop = isRemoteDesktopDefault;
+
+    if (isRemoteDesktopDefault)
+    {
+        g_resolutionWidth = 1600;
+        g_resolutionHeight = 900;
+        return;
+    }
+
+    g_resolutionWidth = 1920;
+    g_resolutionHeight = 1080;
 }
 
 int SaturateLevelToSliderValue(const float level)

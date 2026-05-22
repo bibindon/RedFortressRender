@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Common.h"
 
@@ -23,6 +23,7 @@ public:
     void SetSampleCount(const int sampleCount);
     void SetDepthScaledSampleDistanceEnabled(const bool enabled);
     void SetBlurEnabled(const bool enabled);
+    void SetSeparableBlurEnabled(const bool enabled);
     void SetBlurKernelSize(const int kernelSize);
     void SetDepthRange(const float nearPlane, const float farPlane);
     void SetTextureScaleDivisor(const int scaleDivisor);
@@ -39,6 +40,7 @@ private:
     int m_sampleCount = 16;
     bool m_depthScaledSampleDistanceEnabled = false;
     bool m_blurEnabled = true;
+    bool m_separableBlurEnabled = true;
     int m_blurKernelSize = 21;
     int m_textureScaleDivisor = 1;
     float m_nearPlane = 0.1f;
@@ -69,6 +71,8 @@ private:
     const char* GetCreateTechniqueName() const;
     int NormalizeBlurKernelSize(const int kernelSize) const;
     const char* GetBlurTechniqueName() const;
+    const char* GetHorizontalBlurTechniqueName() const;
+    const char* GetVerticalBlurTechniqueName() const;
     int NormalizeSampleCount(const int sampleCount) const;
     int NormalizeTextureScaleDivisor(const int scaleDivisor) const;
     UINT ComputeTextureSize(const int screenSize) const;

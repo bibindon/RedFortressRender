@@ -54,6 +54,7 @@ SSAOBlurKernelSize,21
 ,
 SSGIEnable,0
 SSGIBlurEnable,1
+SSGISeparableBlurEnable,1
 SSGIDepthScaledSampleDistanceEnable,0
 SSGIUseThickness,1
 SSGITexSize,1/1

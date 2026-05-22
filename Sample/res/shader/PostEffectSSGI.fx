@@ -415,6 +415,44 @@ float4 BlurGI(VS_OUT inputData, int radius) : COLOR0
     return centerGi;
 }
 
+float4 BlurGILine(VS_OUT inputData, int radius, float2 axis) : COLOR0
+{
+    float centerDepth = GetViewDepth(inputData.uv);
+    float3 centerNormal = GetViewNormal(inputData.uv);
+    float4 centerGi = tex2D(sampGI, inputData.uv);
+    float4 blurredValue = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float weightSum = 0.0f;
+
+    [loop]
+    for (int offset = -10; offset <= 10; ++offset)
+    {
+        if (abs(offset) > radius)
+        {
+            continue;
+        }
+
+        float2 sampleUv = inputData.uv + float2((float)offset * g_invSize.x * axis.x,
+                                                (float)offset * g_invSize.y * axis.y);
+        sampleUv = saturate(sampleUv);
+        float sampleDepth = GetViewDepth(sampleUv);
+        float3 sampleNormal = GetViewNormal(sampleUv);
+        float weight = ComputeBlurSampleWeight(1.0f,
+                                               centerDepth,
+                                               sampleDepth,
+                                               centerNormal,
+                                               sampleNormal);
+        blurredValue += tex2D(sampGI, sampleUv) * weight;
+        weightSum += weight;
+    }
+
+    if (weightSum > 0.0f)
+    {
+        return blurredValue / weightSum;
+    }
+
+    return centerGi;
+}
+
 float4 PS_Blur5x5(VS_OUT inputData) : COLOR0
 {
     return BlurGI(inputData, 2);
@@ -428,6 +466,36 @@ float4 PS_Blur11x11(VS_OUT inputData) : COLOR0
 float4 PS_Blur21x21(VS_OUT inputData) : COLOR0
 {
     return BlurGI(inputData, 10);
+}
+
+float4 PS_Blur5x1(VS_OUT inputData) : COLOR0
+{
+    return BlurGILine(inputData, 2, float2(1.0f, 0.0f));
+}
+
+float4 PS_Blur1x5(VS_OUT inputData) : COLOR0
+{
+    return BlurGILine(inputData, 2, float2(0.0f, 1.0f));
+}
+
+float4 PS_Blur11x1(VS_OUT inputData) : COLOR0
+{
+    return BlurGILine(inputData, 5, float2(1.0f, 0.0f));
+}
+
+float4 PS_Blur1x11(VS_OUT inputData) : COLOR0
+{
+    return BlurGILine(inputData, 5, float2(0.0f, 1.0f));
+}
+
+float4 PS_Blur21x1(VS_OUT inputData) : COLOR0
+{
+    return BlurGILine(inputData, 10, float2(1.0f, 0.0f));
+}
+
+float4 PS_Blur1x21(VS_OUT inputData) : COLOR0
+{
+    return BlurGILine(inputData, 10, float2(0.0f, 1.0f));
 }
 
 float4 PS_Composite(VS_OUT inputData) : COLOR0
@@ -521,6 +589,66 @@ technique TechniqueGI_Blur21x21
         CullMode = NONE;
         VertexShader = compile vs_3_0 VS_Fullscreen();
         PixelShader = compile ps_3_0 PS_Blur21x21();
+    }
+}
+
+technique TechniqueGI_Blur5x1
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS_Fullscreen();
+        PixelShader = compile ps_3_0 PS_Blur5x1();
+    }
+}
+
+technique TechniqueGI_Blur1x5
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS_Fullscreen();
+        PixelShader = compile ps_3_0 PS_Blur1x5();
+    }
+}
+
+technique TechniqueGI_Blur11x1
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS_Fullscreen();
+        PixelShader = compile ps_3_0 PS_Blur11x1();
+    }
+}
+
+technique TechniqueGI_Blur1x11
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS_Fullscreen();
+        PixelShader = compile ps_3_0 PS_Blur1x11();
+    }
+}
+
+technique TechniqueGI_Blur21x1
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS_Fullscreen();
+        PixelShader = compile ps_3_0 PS_Blur21x1();
+    }
+}
+
+technique TechniqueGI_Blur1x21
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS_Fullscreen();
+        PixelShader = compile ps_3_0 PS_Blur1x21();
     }
 }
 

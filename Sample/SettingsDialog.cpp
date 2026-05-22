@@ -61,6 +61,7 @@ void RefreshSSGISampleRadiusControls(HWND hDlg);
 void RefreshSSGISampleCountControls(HWND hDlg);
 void RefreshSSGIBlurControls(HWND hDlg);
 void RefreshSSGIBlurKernelSizeControls(HWND hDlg);
+void RefreshSSGISeparableBlurControls(HWND hDlg);
 void RefreshSSGIIndirectLightControls(HWND hDlg);
 void RefreshSSGIIndirectLightMaxControls(HWND hDlg);
 void RefreshSSAOShadowStrengthControls(HWND hDlg);
@@ -1924,6 +1925,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshSSGISampleCountControls(hDlg);
     RefreshSSGIBlurControls(hDlg);
     RefreshSSGIBlurKernelSizeControls(hDlg);
+    RefreshSSGISeparableBlurControls(hDlg);
     RefreshSSGIIndirectLightControls(hDlg);
     RefreshSSGIIndirectLightMaxControls(hDlg);
     RefreshSSAOBlurControls(hDlg);
@@ -3628,6 +3630,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             RefreshSSGISampleRadiusControls(hDlg);
             RefreshSSGISampleCountControls(hDlg);
             RefreshSSGIBlurKernelSizeControls(hDlg);
+            RefreshSSGISeparableBlurControls(hDlg);
             RefreshSSGIIndirectLightControls(hDlg);
             RefreshSSGIIndirectLightMaxControls(hDlg);
             return TRUE;
@@ -3639,6 +3642,16 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             ApplySSGIBlur();
             RefreshSSGIBlurControls(hDlg);
             RefreshSSGIBlurKernelSizeControls(hDlg);
+            RefreshSSGISeparableBlurControls(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_SSGI_SEPARABLE_BLUR)
+        {
+            g_bSSGISeparableBlur =
+                (IsDlgButtonChecked(hDlg, IDC_CHECK_SSGI_SEPARABLE_BLUR) == BST_CHECKED);
+            ApplySSGISeparableBlur();
+            RefreshSSGISeparableBlurControls(hDlg);
             return TRUE;
         }
 

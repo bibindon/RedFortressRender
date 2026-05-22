@@ -65,6 +65,7 @@ bool g_bSSGI = false;
 bool g_bSSAOBlur = false;
 bool g_bSSAOSeparableBlur = false;
 bool g_bSSGIBlur = true;
+bool g_bSSGISeparableBlur = true;
 bool g_bSSAORandomSamplingDirection = true;
 bool g_bSSAODepthScaledSampleDistance = false;
 bool g_bSSAOMaxDarknessClamp = true;
@@ -1816,6 +1817,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_bSSAOSeparableBlur = (std::stoi(value) != 0);
             }
+            else if (key == L"SSGISeparableBlurEnable")
+            {
+                g_bSSGISeparableBlur = (std::stoi(value) != 0);
+            }
             else if (key == L"SSAODepthScaledSampleDistanceEnable")
             {
                 g_bSSAODepthScaledSampleDistance = (std::stoi(value) != 0);
@@ -2218,6 +2223,7 @@ void ApplyAllSampleSettings()
     ApplySSGIBlur();
     ApplySSGIIndirectLightStrength();
     ApplySSGIIndirectLightMax();
+    ApplySSGISeparableBlur();
     ApplyHalfLambertShadowSaturation();
     ApplyShadowDarkness();
     ApplySpecularIntensity();
