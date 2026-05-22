@@ -705,26 +705,27 @@ void ParticleSystem::EmitRain(EffectInstance& effect, const float deltaTime)
     const D3DXVECTOR3 cameraDelta = cameraPos - effect.origin;
     effect.origin = cameraPos;
 
-    D3DXVECTOR3 forward = Camera::GetLookAtPos() - cameraPos;
-    if (D3DXVec3LengthSq(&forward) <= 0.0001f)
+    D3DXVECTOR3 horizontalForward = Camera::GetLookAtPos() - cameraPos;
+    horizontalForward.y = 0.0f;
+    if (D3DXVec3LengthSq(&horizontalForward) <= 0.0001f)
     {
-        forward = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
+        horizontalForward = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
     }
     else
     {
-        D3DXVec3Normalize(&forward, &forward);
+        D3DXVec3Normalize(&horizontalForward, &horizontalForward);
     }
 
     const D3DXVECTOR3 worldUp(0.0f, 1.0f, 0.0f);
-    D3DXVECTOR3 right;
-    D3DXVec3Cross(&right, &worldUp, &forward);
-    if (D3DXVec3LengthSq(&right) <= 0.0001f)
+    D3DXVECTOR3 horizontalRight;
+    D3DXVec3Cross(&horizontalRight, &worldUp, &horizontalForward);
+    if (D3DXVec3LengthSq(&horizontalRight) <= 0.0001f)
     {
-        right = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
+        horizontalRight = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
     }
     else
     {
-        D3DXVec3Normalize(&right, &right);
+        D3DXVec3Normalize(&horizontalRight, &horizontalRight);
     }
 
     for (auto& particle : effect.particles)
@@ -758,14 +759,14 @@ void ParticleSystem::EmitRain(EffectInstance& effect, const float deltaTime)
         const float side = RandomCenteredFloat(kRainSpawnHalfWidth);
         const float depth = RandomFloat(-3.0f, kRainSpawnForward);
         const D3DXVECTOR3 pos = cameraPos +
-                                right * side +
-                                forward * depth +
+                                horizontalRight * side +
+                                horizontalForward * depth +
                                 D3DXVECTOR3(0.0f, RandomFloat(1.2f, kRainSpawnTopOffset), 0.0f);
         const D3DXVECTOR3 velocity(RandomFloat(-0.25f, 0.25f),
                                    RandomFloat(-15.0f, -10.5f),
                                    RandomFloat(-0.20f, 0.20f));
         const float life = RandomFloat(0.75f, 1.15f);
-        const float startSize = RandomFloat(0.26f, 0.42f);
+        const float startSize = RandomFloat(0.020f, 0.040f);
         const float endSize = startSize;
         const int alpha = static_cast<int>(RandomFloat(95.0f, 150.0f));
         const int gray = static_cast<int>(RandomFloat(198.0f, 232.0f));
@@ -1050,6 +1051,15 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
                     continue;
                 }
 
+                if (effectInstance.preset == ParticleEffectPreset::Rain)
+                {
+                    const D3DXVECTOR3 toParticle = particle.pos - cameraPos;
+                    if (D3DXVec3LengthSq(&toParticle) < 4.0f)
+                    {
+                        continue;
+                    }
+                }
+
                 const float cosValue = cosf(particle.rotation);
                 const float sinValue = sinf(particle.rotation);
                 float halfWidth = particle.size * 0.5f;
@@ -1081,8 +1091,8 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
                 {
                     rotatedRight = rainRight;
                     rotatedUp = rainUp;
-                    halfWidth = particle.size * 0.16f;
-                    halfHeight = particle.size * 1.10f;
+                    halfWidth = particle.size * 0.50f;
+                    halfHeight = particle.size * 0.50f;
                 }
 
                 const D3DXVECTOR3 halfRight(rotatedRight.x * halfWidth,
