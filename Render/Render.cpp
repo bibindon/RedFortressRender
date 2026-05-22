@@ -2546,6 +2546,7 @@ RenderingQualitySettings Render::SetRenderQuality(const std::wstring& quality)
         settings.maskedGaussianEnabled = false;
         settings.postEffectAAEnabled = false;
         settings.fxaaEnabled = false;
+        settings.taaEnabled = false;
         settings.motionBlurCameraEnabled = false;
         settings.depthBufferShadowEnabled = false;
         settings.ssaoEnabled = false;
@@ -2563,8 +2564,9 @@ RenderingQualitySettings Render::SetRenderQuality(const std::wstring& quality)
         settings.saturateEnabled = true;
         settings.gaussianEnabled = false;
         settings.maskedGaussianEnabled = false;
-        settings.postEffectAAEnabled = true;
-        settings.fxaaEnabled = true;
+        settings.postEffectAAEnabled = false;
+        settings.fxaaEnabled = false;
+        settings.taaEnabled = true;
         settings.motionBlurCameraEnabled = true;
         settings.depthBufferShadowEnabled = true;
         settings.ssaoEnabled = true;
@@ -2583,6 +2585,7 @@ RenderingQualitySettings Render::SetRenderQuality(const std::wstring& quality)
     SetPostEffectMaskedGaussianFilter(settings.maskedGaussianEnabled);
     SetPostEffectAA(settings.postEffectAAEnabled);
     SetPostEffectFXAA(settings.fxaaEnabled);
+    SetPostEffectTAA(settings.taaEnabled);
     SetPostEffectMotionBlurCamera(settings.motionBlurCameraEnabled);
     SetPostEffectDepthBufferShadow(settings.depthBufferShadowEnabled);
     SetPostEffectSSAO(settings.ssaoEnabled);

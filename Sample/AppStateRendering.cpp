@@ -720,6 +720,7 @@ void ApplyRenderingQuality()
     g_bMaskedGaussianFilter = g_renderingQualitySettings.maskedGaussianEnabled;
     g_bPostEffectAA = g_renderingQualitySettings.postEffectAAEnabled;
     g_bFXAA = g_renderingQualitySettings.fxaaEnabled;
+    g_bTAA = g_renderingQualitySettings.taaEnabled;
     g_bMotionBlurCamera = g_renderingQualitySettings.motionBlurCameraEnabled;
     g_bDepthBufferShadow = g_renderingQualitySettings.depthBufferShadowEnabled;
     g_bSSAO = g_renderingQualitySettings.ssaoEnabled;

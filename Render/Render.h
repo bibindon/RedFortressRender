@@ -81,6 +81,7 @@ struct RenderingQualitySettings
     bool maskedGaussianEnabled = false;
     bool postEffectAAEnabled = false;
     bool fxaaEnabled = false;
+    bool taaEnabled = false;
     bool motionBlurCameraEnabled = false;
     bool depthBufferShadowEnabled = false;
     bool ssaoEnabled = false;
