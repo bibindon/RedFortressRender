@@ -11,17 +11,6 @@ sampler2D sSrc = sampler_state
     AddressV = CLAMP;
 };
 
-texture g_PosTex;
-sampler2D sPos = sampler_state
-{
-    Texture = <g_PosTex>;
-    MinFilter = POINT;
-    MagFilter = POINT;
-    MipFilter = NONE;
-    AddressU = CLAMP;
-    AddressV = CLAMP;
-};
-
 texture g_ZTex;
 sampler2D sZ = sampler_state
 {
@@ -41,13 +30,25 @@ float g_DistanceStart = 0.0;
 float g_DistanceMax = 20.0;
 float g_DepthDecodeNear = 0.1;
 float g_DepthDecodeFar = 30000.0;
-float g_PosRange = 50.0;
 float4 g_CameraPos = float4(0.0, 0.0, 0.0, 1.0);
+float4x4 g_InvView;
+float2 g_ProjectionScale = float2(1.0, 1.0);
+float2 g_ProjectionOffset = float2(0.0, 0.0);
+
+float3 ReconstructWorldPosition(float2 uv)
+{
+    float encodedDepth = tex2D(sZ, uv).r;
+    float viewZ = lerp(g_DepthDecodeNear, g_DepthDecodeFar, saturate(encodedDepth));
+    float2 ndc = float2((uv.x * 2.0f) - 1.0f, 1.0f - (uv.y * 2.0f));
+    float3 viewPos = float3((ndc.x - g_ProjectionOffset.x) * viewZ / g_ProjectionScale.x,
+                            (ndc.y - g_ProjectionOffset.y) * viewZ / g_ProjectionScale.y,
+                            viewZ);
+    return mul(float4(viewPos, 1.0f), g_InvView).xyz;
+}
 
 float HeightFogAmountAt(float2 uv)
 {
-    float3 wp01 = tex2D(sPos, uv).xyz;
-    float3 wp = (wp01 * 2.0f - 1.0f) * g_PosRange;
+    float3 wp = ReconstructWorldPosition(uv);
 
     float amount = 0.0;
     if (g_HeightMax < g_HeightStart)
@@ -62,12 +63,6 @@ float HeightFogAmountAt(float2 uv)
     float fogByHeight = saturate(amount * g_IntensityHeight);
 
     float fogByDistance = 1.0f;
-    if (g_DistanceMax > g_DistanceStart)
-    {
-        float encodedDepth = tex2D(sZ, uv).r;
-        float decodedDepth = lerp(g_DepthDecodeNear, g_DepthDecodeFar, saturate(encodedDepth));
-        fogByDistance = saturate((decodedDepth - g_DistanceStart) / (g_DistanceMax - g_DistanceStart));
-    }
 
     return saturate(fogByHeight * fogByDistance);
 }

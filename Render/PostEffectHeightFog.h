@@ -16,8 +16,7 @@ public:
 
     void Draw(LPDIRECT3DTEXTURE9 texSource,
               LPDIRECT3DTEXTURE9 texTarget,
-              LPDIRECT3DTEXTURE9 texRenderTargetZ,
-              LPDIRECT3DTEXTURE9 texRenderTargetPos);
+              LPDIRECT3DTEXTURE9 texRenderTargetZ);
     void Finalize();
 
     void SetIntensity(const float intensity);
@@ -27,7 +26,6 @@ public:
     void SetDistanceMax(const float distanceMax);
     void SetFogColor(const D3DXCOLOR& color);
     void SetDepthDecodeRange(const float nearPlane, const float farPlane);
-    void SetPositionRange(const float positionRange);
 
     void OnDeviceLost() override;
     void OnDeviceReset() override;
@@ -54,7 +52,6 @@ private:
     float m_distanceMax = 20.0f;
     float m_depthDecodeNear = 0.1f;
     float m_depthDecodeFar = 30'000.0f;
-    float m_positionRange = 30'000.0f;
     D3DXVECTOR4 m_fogColor = D3DXVECTOR4(0.72f, 0.78f, 0.86f, 1.0f);
 };
 

@@ -35,15 +35,14 @@ void PostEffectHeightFog::Initialize()
 
 void PostEffectHeightFog::Draw(LPDIRECT3DTEXTURE9 texSource,
                                LPDIRECT3DTEXTURE9 texTarget,
-                               LPDIRECT3DTEXTURE9 texRenderTargetZ,
-                               LPDIRECT3DTEXTURE9 texRenderTargetPos)
+                               LPDIRECT3DTEXTURE9 texRenderTargetZ)
 {
     if (!m_isInitialized || m_d3dEffect == nullptr)
     {
         return;
     }
 
-    if (texSource == nullptr || texTarget == nullptr || texRenderTargetZ == nullptr || texRenderTargetPos == nullptr)
+    if (texSource == nullptr || texTarget == nullptr || texRenderTargetZ == nullptr)
     {
         return;
     }
@@ -55,13 +54,20 @@ void PostEffectHeightFog::Draw(LPDIRECT3DTEXTURE9 texSource,
     m_d3dEffect->SetFloat("g_DistanceMax", m_distanceMax);
     m_d3dEffect->SetFloat("g_DepthDecodeNear", m_depthDecodeNear);
     m_d3dEffect->SetFloat("g_DepthDecodeFar", m_depthDecodeFar);
-    m_d3dEffect->SetFloat("g_PosRange", m_positionRange);
     const D3DXVECTOR3 eye = Camera::GetEyePos();
     const D3DXVECTOR4 cameraPos(eye.x, eye.y, eye.z, 1.0f);
+    D3DXMATRIX inverseView;
+    const D3DXMATRIX view = Camera::GetViewMatrix();
+    D3DXMatrixInverse(&inverseView, nullptr, &view);
+    const D3DXMATRIX projection = Camera::GetProjMatrix();
+    const float projectionScale[2] = { projection._11, projection._22 };
+    const float projectionOffset[2] = { projection._31, projection._32 };
     m_d3dEffect->SetVector("g_CameraPos", &cameraPos);
+    m_d3dEffect->SetMatrix("g_InvView", &inverseView);
+    m_d3dEffect->SetFloatArray("g_ProjectionScale", projectionScale, 2);
+    m_d3dEffect->SetFloatArray("g_ProjectionOffset", projectionOffset, 2);
     m_d3dEffect->SetVector("g_FogColor", &m_fogColor);
     m_d3dEffect->SetTexture("g_ZTex", texRenderTargetZ);
-    m_d3dEffect->SetTexture("g_PosTex", texRenderTargetPos);
 
     DrawFullscreenQuad(texSource, texTarget, "TechHeightFog");
 }
@@ -111,15 +117,6 @@ void PostEffectHeightFog::SetDepthDecodeRange(const float nearPlane, const float
 {
     m_depthDecodeNear = nearPlane;
     m_depthDecodeFar = farPlane;
-}
-
-void PostEffectHeightFog::SetPositionRange(const float positionRange)
-{
-    m_positionRange = 1.0f;
-    if (positionRange > 1.0f)
-    {
-        m_positionRange = positionRange;
-    }
 }
 
 void PostEffectHeightFog::OnDeviceLost()

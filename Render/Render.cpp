@@ -1524,7 +1524,7 @@ void Render::Draw()
     if (m_gBufferEnabled && m_postEffectFogHeightEnabled)
     {
         EnsurePostEffectHeightFogInitialized();
-        m_postEffectHeightFog.Draw(pTempTexture, pWorkTexture, pTexTempCameraZ, pTexTempPos);
+        m_postEffectHeightFog.Draw(pTempTexture, pWorkTexture, pTexTempCameraZ);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
@@ -2499,13 +2499,11 @@ void Render::TriggerCameraShake()
 void Render::SetCameraClipPlanes(const float nearPlane, const float farPlane)
 {
     Camera::SetClipPlanes(nearPlane, farPlane);
-    const float positionRange = GBuffer::ComputePositionRange(nearPlane, farPlane);
     m_GBuffer.SetFogDepthRange(nearPlane, farPlane);
     m_postEffectFog.SetDepthDecodeRange(nearPlane, farPlane);
     m_postEffectFog.SetFogDepthRange(nearPlane, farPlane);
     m_postEffectHeightFog.SetDepthDecodeRange(nearPlane, farPlane);
     m_postEffectGodRay.SetDepthRange(nearPlane, farPlane);
-    m_postEffectHeightFog.SetPositionRange(positionRange);
 }
 
 void Render::SetGBufferEnable(const bool enabled)
