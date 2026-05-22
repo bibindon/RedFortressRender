@@ -46,6 +46,18 @@ float3 ReconstructWorldPosition(float2 uv)
     return mul(float4(viewPos, 1.0f), g_InvView).xyz;
 }
 
+float HeightFogDistanceAmountAt(float2 uv)
+{
+    if (g_DistanceMax <= g_DistanceStart)
+    {
+        return 1.0f;
+    }
+
+    float encodedDepth = tex2D(sZ, uv).r;
+    float decodedDepth = lerp(g_DepthDecodeNear, g_DepthDecodeFar, saturate(encodedDepth));
+    return saturate((decodedDepth - g_DistanceStart) / (g_DistanceMax - g_DistanceStart));
+}
+
 float HeightFogAmountAt(float2 uv)
 {
     float3 wp = ReconstructWorldPosition(uv);
@@ -62,7 +74,7 @@ float HeightFogAmountAt(float2 uv)
 
     float fogByHeight = saturate(amount * g_IntensityHeight);
 
-    float fogByDistance = 1.0f;
+    float fogByDistance = HeightFogDistanceAmountAt(uv);
 
     return saturate(fogByHeight * fogByDistance);
 }
