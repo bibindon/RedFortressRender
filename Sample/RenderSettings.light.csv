@@ -1,4 +1,4 @@
-﻿SaturateEnable,1
+SaturateEnable,1
 SaturateLevel,0.4
 ,
 GaussianEnable,0
@@ -10,6 +10,7 @@ MaskedGaussianMaskPath,
 FXAAEnable,0
 FXAAQuality,4
 TAAEnable,0
+TAAHistoryWeight,0.85
 ,
 MotionBlurCameraEnable,0
 MotionBlurCameraQuality,4

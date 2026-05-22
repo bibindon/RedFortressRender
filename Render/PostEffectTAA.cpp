@@ -1,5 +1,7 @@
 ﻿#include "PostEffectTAA.h"
 
+#include <algorithm>
+
 #include "Util.h"
 
 namespace NSRender
@@ -83,6 +85,11 @@ void PostEffectTAA::ResetHistory()
     m_hasHistory = false;
 }
 
+void PostEffectTAA::SetHistoryWeight(float historyWeight)
+{
+    m_historyWeight = (std::max)(0.0f, (std::min)(historyWeight, 1.0f));
+}
+
 void PostEffectTAA::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
                                        LPDIRECT3DTEXTURE9 texTarget)
 {
@@ -98,6 +105,7 @@ void PostEffectTAA::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
     };
     m_d3dEffect->SetFloatArray("g_TexelSize", texelSize, 2);
     m_d3dEffect->SetBool("g_HistoryValid", m_hasHistory ? TRUE : FALSE);
+    m_d3dEffect->SetFloat("g_HistoryWeight", m_historyWeight);
     m_d3dEffect->SetTexture("g_CurrentTex", texSource);
     m_d3dEffect->SetTexture("g_HistoryTex", m_historyTexture);
     m_d3dEffect->SetTechnique("Technique1");

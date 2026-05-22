@@ -330,6 +330,7 @@ public:
     void SetPostEffectFXAA(const bool arg);
     void SetPostEffectFXAAQuality(const int quality);
     void SetPostEffectTAA(const bool arg);
+    void SetPostEffectTAAHistoryWeight(const float historyWeight);
     void SetPostEffectMotionBlurCamera(const bool arg);
     void SetPostEffectMotionBlurCameraQuality(const int quality);
     void SetPostEffectMotionBlurCameraMaxBlurPixels(const float maxBlurPixels);
@@ -562,6 +563,7 @@ private:
     int m_fontExGaussianSampleSize = 21;
     std::wstring m_maskedGaussianMaskPath;
     int m_fxaaQuality = 4;
+    float m_taaHistoryWeight = 0.85f;
     int m_motionBlurCameraQuality = 4;
     float m_motionBlurCameraMaxBlurPixels = 24.0f;
     int m_motionBlurCameraSampleCount = 13;

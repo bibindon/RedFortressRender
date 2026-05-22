@@ -1,4 +1,4 @@
-﻿# RenderSettings.csv について
+# RenderSettings.csv について
 
 `Sample\RenderSettings.csv` は、起動時に次の 2 か所から読まれる。
 
@@ -58,6 +58,8 @@ Sample 側の一部キーは `std::stoi(value) != 0` で判定しているため
 | `MaskedGaussianMaskPath` | マスク画像パス |
 | `FXAAEnable` | FXAA ON/OFF |
 | `FXAAQuality` | FXAA 品質。1 から 8 に補正される |
+| `TAAEnable` | TAA ON/OFF |
+| `TAAHistoryWeight` | 前フレーム履歴をどれだけ混ぜるか。0.0 から 1.0 |
 | `MotionBlurCameraEnable` | カメラモーションブラー ON/OFF |
 | `MotionBlurCameraQuality` | 品質。1 から 8 に補正される |
 | `MotionBlurCameraMaxBlurPixels` | 最大ブラー量。1 から 64 に補正される |

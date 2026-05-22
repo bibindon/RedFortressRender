@@ -89,8 +89,11 @@ HWND CreateSampleWindow(const HINSTANCE hInstance)
     const ATOM atom = RegisterClassEx(&wc);
     assert(atom != 0);
 
+    const int windowWidth = (g_resolutionWidth > 0) ? g_resolutionWidth : WINDOW_SIZE_W;
+    const int windowHeight = (g_resolutionHeight > 0) ? g_resolutionHeight : WINDOW_SIZE_H;
+
     RECT rect { };
-    SetRect(&rect, 0, 0, WINDOW_SIZE_W, WINDOW_SIZE_H);
+    SetRect(&rect, 0, 0, windowWidth, windowHeight);
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
     rect.right -= rect.left;
     rect.bottom -= rect.top;
@@ -115,9 +118,9 @@ void InitializeSampleScene(HWND hWnd)
     const bool rawMouseRegistered = RegisterRawMouseInput(hWnd);
     assert(rawMouseRegistered);
 
-    InitializeRemoteDesktopDefault();
     LoadSampleSettingsFromCsv(L"RenderSettings.csv");
     g_Render.Initialize(hWnd, L"RenderSettings.csv");
+    ApplyResolution();
     g_Render.SetCamera(D3DXVECTOR3(0.0f, 1.7f, -2.0f), D3DXVECTOR3(0.0f, 1.5f, 0.0f));
     g_fontId = g_Render.SetUpFont(L"BIZ UDゴシック", 20, D3DCOLOR_RGBA(255, 255, 255, 255));
     g_fontExId = g_Render.SetUpFontEx(L"BIZ UDゴシック", 20, D3DCOLOR_RGBA(255, 255, 255, 255));
@@ -160,6 +163,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
 {
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
     InitializeCommonControlsForSample();
+    InitializeRemoteDesktopDefault();
 
     HWND hWnd = CreateSampleWindow(GetModuleHandle(NULL));
     InitializeSampleScene(hWnd);

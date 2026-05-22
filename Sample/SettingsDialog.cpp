@@ -142,6 +142,9 @@ constexpr int FRESNEL_INTENSITY_SLIDER_MIN = 0;
 constexpr int FRESNEL_INTENSITY_SLIDER_MAX = static_cast<int>(FRESNEL_INTENSITY_MAX / FRESNEL_INTENSITY_STEP);
 constexpr int ENV_MAP_BLEND_SLIDER_MIN = 0;
 constexpr int ENV_MAP_BLEND_SLIDER_MAX = static_cast<int>(ENV_MAP_BLEND_MAX / ENV_MAP_BLEND_STEP);
+constexpr int TAA_HISTORY_WEIGHT_SLIDER_MIN = 0;
+constexpr int TAA_HISTORY_WEIGHT_SLIDER_MAX =
+    static_cast<int>(TAA_HISTORY_WEIGHT_MAX / TAA_HISTORY_WEIGHT_STEP);
 constexpr int PBR_ROUGHNESS_SLIDER_MIN = 0;
 constexpr int PBR_ROUGHNESS_SLIDER_MAX = static_cast<int>((PBR_ROUGHNESS_MAX - PBR_ROUGHNESS_MIN) / PBR_ROUGHNESS_STEP);
 constexpr int PBR_METALLIC_SLIDER_MIN = 0;
@@ -2333,6 +2336,11 @@ void InitializeTrackbars(HWND hDlg)
     SendDlgItemMessage(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_SAMPLE_COUNT, TBM_SETTICFREQ, 1, 0);
     SendDlgItemMessage(hDlg, IDC_SLIDER_MOTION_BLUR_CAMERA_SAMPLE_COUNT, TBM_SETPAGESIZE, 0, 1);
 
+    SendDlgItemMessage(hDlg, IDC_SLIDER_TAA_HISTORY_WEIGHT, TBM_SETRANGEMIN, FALSE, TAA_HISTORY_WEIGHT_SLIDER_MIN);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_TAA_HISTORY_WEIGHT, TBM_SETRANGEMAX, FALSE, TAA_HISTORY_WEIGHT_SLIDER_MAX);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_TAA_HISTORY_WEIGHT, TBM_SETTICFREQ, 10, 0);
+    SendDlgItemMessage(hDlg, IDC_SLIDER_TAA_HISTORY_WEIGHT, TBM_SETPAGESIZE, 0, 5);
+
     SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_R, TBM_SETRANGEMIN, FALSE, GODRAY_COLOR_SLIDER_MIN);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_R, TBM_SETRANGEMAX, FALSE, GODRAY_COLOR_SLIDER_MAX);
     SendDlgItemMessage(hDlg, IDC_SLIDER_GODRAY_COLOR_R, TBM_SETTICFREQ, 5, 0);
@@ -2816,6 +2824,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_motionBlurCameraMaxBlurPixels = SliderValueToMotionBlurCameraMaxBlurPixels(sliderValue);
             ApplyMotionBlurCameraSettings();
             RefreshMotionBlurCameraControls(hDlg);
+            return TRUE;
+        }
+
+        if (slider == GetDlgItem(hDlg, IDC_SLIDER_TAA_HISTORY_WEIGHT))
+        {
+            const int sliderValue = static_cast<int>(SendMessage(slider, TBM_GETPOS, 0, 0));
+            g_taaHistoryWeight = SliderValueToTAAHistoryWeight(sliderValue);
+            ApplyTAAHistoryWeight();
+            RefreshTAA(hDlg);
             return TRUE;
         }
 
@@ -3859,6 +3876,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         {
             g_bTAA = (IsDlgButtonChecked(hDlg, IDC_CHECK_TAA) == BST_CHECKED);
             g_Render.SetPostEffectTAA(g_bTAA);
+            ApplyTAAHistoryWeight();
             RefreshTAA(hDlg);
             return TRUE;
         }

@@ -186,6 +186,11 @@ float ClampEnvMapBlend(const float blend)
     return (std::max)(ENV_MAP_BLEND_MIN, (std::min)(blend, ENV_MAP_BLEND_MAX));
 }
 
+float ClampTAAHistoryWeight(const float historyWeight)
+{
+    return (std::max)(TAA_HISTORY_WEIGHT_MIN, (std::min)(historyWeight, TAA_HISTORY_WEIGHT_MAX));
+}
+
 float ClampPBRRoughness(const float roughness)
 {
     return (std::max)(PBR_ROUGHNESS_MIN, (std::min)(roughness, PBR_ROUGHNESS_MAX));
@@ -439,6 +444,7 @@ void ApplyPostEffectToggleSettings()
     g_Render.SetPostEffectAA(g_bPostEffectAA);
     g_Render.SetPostEffectFXAA(g_bFXAA);
     g_Render.SetPostEffectTAA(g_bTAA);
+    ApplyTAAHistoryWeight();
     g_Render.SetPostEffectMotionBlurCamera(g_bMotionBlurCamera);
     g_Render.SetMeshMixSSS(g_bSSS);
     g_Render.SetPostEffectBloom(g_bBloom);
@@ -1009,6 +1015,12 @@ void ApplyFXAAQuality()
     g_Render.SetPostEffectFXAAQuality(g_fxaaQuality);
 }
 
+void ApplyTAAHistoryWeight()
+{
+    g_taaHistoryWeight = ClampTAAHistoryWeight(g_taaHistoryWeight);
+    g_Render.SetPostEffectTAAHistoryWeight(g_taaHistoryWeight);
+}
+
 void ApplyMotionBlurCameraSettings()
 {
     g_motionBlurCameraQuality = NormalizeMotionBlurCameraQualityLocal(g_motionBlurCameraQuality);
@@ -1476,6 +1488,16 @@ int EnvMapBlendToSliderValue(const float blend)
 float SliderValueToEnvMapBlend(const int sliderValue)
 {
     return ClampEnvMapBlend(static_cast<float>(sliderValue) * ENV_MAP_BLEND_STEP);
+}
+
+int TAAHistoryWeightToSliderValue(const float historyWeight)
+{
+    return static_cast<int>(std::lround(ClampTAAHistoryWeight(historyWeight) / TAA_HISTORY_WEIGHT_STEP));
+}
+
+float SliderValueToTAAHistoryWeight(const int sliderValue)
+{
+    return ClampTAAHistoryWeight(static_cast<float>(sliderValue) * TAA_HISTORY_WEIGHT_STEP);
 }
 
 int PBRRoughnessToSliderValue(const float roughness)

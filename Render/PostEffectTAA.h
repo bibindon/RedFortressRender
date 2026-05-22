@@ -15,6 +15,7 @@ public:
               LPDIRECT3DTEXTURE9 texTarget);
 
     void ResetHistory();
+    void SetHistoryWeight(float historyWeight);
 
     void OnDeviceLost() override;
     void OnDeviceReset() override;
@@ -42,6 +43,7 @@ private:
     bool m_isInitialized = false;
     bool m_isRegisteredForDeviceReset = false;
     bool m_hasHistory = false;
+    float m_historyWeight = 0.85f;
 };
 
 }

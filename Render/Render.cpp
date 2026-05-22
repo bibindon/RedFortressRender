@@ -573,6 +573,23 @@ void Render::ApplySettings()
         }
     }
 
+    const auto taaHistoryWeight = m_settings.find(L"TAAHistoryWeight");
+    if (taaHistoryWeight != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectTAAHistoryWeight(std::stof(taaHistoryWeight->second));
+        }
+        catch (...)
+        {
+            SetPostEffectTAAHistoryWeight(m_taaHistoryWeight);
+        }
+    }
+    else
+    {
+        SetPostEffectTAAHistoryWeight(m_taaHistoryWeight);
+    }
+
     const auto postEffectAAEnable = m_settings.find(L"PostEffectAAEnable");
     if (postEffectAAEnable != m_settings.end())
     {
@@ -2888,6 +2905,7 @@ void Render::SetPostEffectTAA(const bool arg)
     if (m_postEffectTAAEnabled)
     {
         EnsurePostEffectTAAInitialized();
+        m_postEffectTAA.SetHistoryWeight(m_taaHistoryWeight);
         m_taaFrameIndex = 0;
         m_postEffectTAA.ResetHistory();
     }
@@ -2896,6 +2914,12 @@ void Render::SetPostEffectTAA(const bool arg)
         m_taaFrameIndex = 0;
         m_postEffectTAA.Finalize();
     }
+}
+
+void Render::SetPostEffectTAAHistoryWeight(const float historyWeight)
+{
+    m_taaHistoryWeight = (std::max)(0.0f, (std::min)(historyWeight, 1.0f));
+    m_postEffectTAA.SetHistoryWeight(m_taaHistoryWeight);
 }
 
 void Render::SetPostEffectMotionBlurCamera(const bool arg)
@@ -3002,6 +3026,7 @@ void Render::EnsurePostEffectFXAAInitialized()
 void Render::EnsurePostEffectTAAInitialized()
 {
     m_postEffectTAA.Initialize();
+    m_postEffectTAA.SetHistoryWeight(m_taaHistoryWeight);
 }
 
 void Render::EnsurePostEffectMotionBlurCameraInitialized()

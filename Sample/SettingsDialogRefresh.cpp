@@ -1216,6 +1216,16 @@ void RefreshTAA(HWND hDlg)
         checkState = BST_CHECKED;
     }
     CheckDlgButton(hDlg, IDC_CHECK_TAA, checkState);
+
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", g_taaHistoryWeight);
+    SetDlgItemText(hDlg, IDC_EDIT_TAA_HISTORY_WEIGHT, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_TAA_HISTORY_WEIGHT,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(TAAHistoryWeightToSliderValue(g_taaHistoryWeight)));
+    EnableWindow(GetDlgItem(hDlg, IDC_SLIDER_TAA_HISTORY_WEIGHT), g_bTAA);
 }
 
 void RefreshDepthOfField(HWND hDlg)
