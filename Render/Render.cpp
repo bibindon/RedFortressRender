@@ -3504,6 +3504,27 @@ bool Render::RenderMirrorTexture(const int activeMirrorMeshIndex)
     D3DXMATRIX matReflection;
     D3DXMatrixReflect(&matReflection, &mirrorPlane);
 
+    D3DXVECTOR3 clipNormal = planeNormal;
+    const D3DXVECTOR3 eyeToPlane = eye - planePoint;
+    if (D3DXVec3Dot(&clipNormal, &eyeToPlane) < 0.0f)
+    {
+        clipNormal *= -1.0f;
+    }
+
+    const float clipPlane[4] =
+    {
+        clipNormal.x,
+        clipNormal.y,
+        clipNormal.z,
+        -D3DXVec3Dot(&clipNormal, &planePoint)
+    };
+    float oldClipPlane[4] = { };
+    DWORD oldClipPlaneEnable = 0;
+    hResult = Common::D3DDevice()->GetClipPlane(0, oldClipPlane);
+    assert(hResult == S_OK);
+    hResult = Common::D3DDevice()->GetRenderState(D3DRS_CLIPPLANEENABLE, &oldClipPlaneEnable);
+    assert(hResult == S_OK);
+
     D3DXVECTOR3 reflectedEye;
     D3DXVECTOR3 reflectedTarget;
     D3DXVec3TransformCoord(&reflectedEye, &eye, &matReflection);
@@ -3517,7 +3538,17 @@ bool Render::RenderMirrorTexture(const int activeMirrorMeshIndex)
     const D3DXMATRIX mirrorViewProj = Camera::GetViewMatrix() * Camera::GetProjMatrix();
     MeshMixManager::SetSharedMirrorViewProj(mirrorViewProj);
 
+    hResult = Common::D3DDevice()->SetClipPlane(0, clipPlane);
+    assert(hResult == S_OK);
+    hResult = Common::D3DDevice()->SetRenderState(D3DRS_CLIPPLANEENABLE, oldClipPlaneEnable | D3DCLIPPLANE0);
+    assert(hResult == S_OK);
+
     DrawPass1(false, activeMirrorMeshIndex);
+
+    hResult = Common::D3DDevice()->SetRenderState(D3DRS_CLIPPLANEENABLE, oldClipPlaneEnable);
+    assert(hResult == S_OK);
+    hResult = Common::D3DDevice()->SetClipPlane(0, oldClipPlane);
+    assert(hResult == S_OK);
 
     Camera::SetEyePos(originalEye);
     Camera::SetLookAtPos(originalLookAt);
