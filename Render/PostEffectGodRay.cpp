@@ -5,6 +5,45 @@
 namespace NSRender
 {
 
+namespace
+{
+
+float Clamp01(const float value)
+{
+    return max(0.0f, min(1.0f, value));
+}
+
+void ClampProjectedPointToScreenEdge(float& screenU, float& screenV)
+{
+    if (screenU >= 0.0f && screenU <= 1.0f &&
+        screenV >= 0.0f && screenV <= 1.0f)
+    {
+        return;
+    }
+
+    const float du = screenU - 0.5f;
+    const float dv = screenV - 0.5f;
+    float scale = 1.0f;
+
+    if (fabsf(du) > 0.000001f)
+    {
+        const float edgeU = du > 0.0f ? 1.0f : 0.0f;
+        scale = min(scale, (edgeU - 0.5f) / du);
+    }
+
+    if (fabsf(dv) > 0.000001f)
+    {
+        const float edgeV = dv > 0.0f ? 1.0f : 0.0f;
+        scale = min(scale, (edgeV - 0.5f) / dv);
+    }
+
+    scale = Clamp01(scale);
+    screenU = Clamp01(0.5f + du * scale);
+    screenV = Clamp01(0.5f + dv * scale);
+}
+
+}
+
 void PostEffectGodRay::Initialize()
 {
     if (m_isInitialized)
@@ -97,6 +136,7 @@ void PostEffectGodRay::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     {
         screenU = (lightProj.x / lightProj.w) * 0.5f + 0.5f;
         screenV = (-lightProj.y / lightProj.w) * 0.5f + 0.5f;
+        ClampProjectedPointToScreenEdge(screenU, screenV);
         lightVisible = 1.0f;
     }
 
