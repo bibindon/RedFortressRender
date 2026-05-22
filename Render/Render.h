@@ -71,6 +71,27 @@ enum class DebugGBufferView
     Thickness = 4,
 };
 
+struct RenderingQualitySettings
+{
+    std::wstring quality = L"LOW";
+    bool gBufferEnabled = false;
+    bool saturateEnabled = false;
+    bool gaussianEnabled = false;
+    bool maskedGaussianEnabled = false;
+    bool postEffectAAEnabled = false;
+    bool fxaaEnabled = false;
+    bool motionBlurCameraEnabled = false;
+    bool depthBufferShadowEnabled = false;
+    bool ssaoEnabled = false;
+    bool ssgiEnabled = false;
+    bool fogEnabled = false;
+    bool heightFogEnabled = false;
+    bool bloomEnabled = false;
+    DepthOfFieldMode depthOfFieldMode = DepthOfFieldMode::Disabled;
+    bool starBurstEnabled = false;
+    bool godRayEnabled = false;
+};
+
 class Render : public IDeviceResettable
 {
 
@@ -229,7 +250,7 @@ public:
     void SetCameraClipPlanes(const float nearPlane, const float farPlane);
     void SetGBufferEnable(const bool enabled);
     void SetGBufferClipPlanes(const float nearPlane, const float farPlane);
-    std::wstring SetRenderingQuality(const std::wstring& quality);
+    RenderingQualitySettings SetRenderQuality(const std::wstring& quality);
 
     D3DXVECTOR3 GetLookAtPos();
     D3DXVECTOR3 GetCameraPos();
@@ -526,7 +547,7 @@ private:
     int m_motionBlurCameraQuality = 4;
     float m_motionBlurCameraMaxBlurPixels = 24.0f;
     int m_motionBlurCameraSampleCount = 13;
-    std::wstring m_renderingQuality = L"LOW";
+    RenderingQualitySettings m_renderingQualitySettings;
     bool m_postEffectSaturateEnabled = false;
     bool m_postEffectGaussEnabled = false;
     bool m_postEffectMaskedGaussEnabled = false;

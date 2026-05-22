@@ -702,7 +702,23 @@ void ApplyGBufferEnable()
 
 void ApplyRenderingQuality()
 {
-    g_renderingQuality = g_Render.SetRenderingQuality(g_renderingQuality);
+    g_renderingQualitySettings = g_Render.SetRenderQuality(g_renderingQualitySettings.quality);
+    g_bGBuffer = g_renderingQualitySettings.gBufferEnabled;
+    g_bSaturateFilter = g_renderingQualitySettings.saturateEnabled;
+    g_bGaussianFilter = g_renderingQualitySettings.gaussianEnabled;
+    g_bMaskedGaussianFilter = g_renderingQualitySettings.maskedGaussianEnabled;
+    g_bPostEffectAA = g_renderingQualitySettings.postEffectAAEnabled;
+    g_bFXAA = g_renderingQualitySettings.fxaaEnabled;
+    g_bMotionBlurCamera = g_renderingQualitySettings.motionBlurCameraEnabled;
+    g_bDepthBufferShadow = g_renderingQualitySettings.depthBufferShadowEnabled;
+    g_bSSAO = g_renderingQualitySettings.ssaoEnabled;
+    g_bSSGI = g_renderingQualitySettings.ssgiEnabled;
+    g_bFog = g_renderingQualitySettings.fogEnabled;
+    g_bHeightFog = g_renderingQualitySettings.heightFogEnabled;
+    g_bBloom = g_renderingQualitySettings.bloomEnabled;
+    g_depthOfFieldMode = g_renderingQualitySettings.depthOfFieldMode;
+    g_bStarBurst = g_renderingQualitySettings.starBurstEnabled;
+    g_bGodRay = g_renderingQualitySettings.godRayEnabled;
 }
 
 void ApplyGBufferClipPlanes()

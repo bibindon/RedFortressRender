@@ -1565,7 +1565,7 @@ void RefreshRenderingQualityControls(HWND hDlg)
 
     SendMessage(combo,
                 CB_SETCURSEL,
-                static_cast<WPARAM>(RenderingQualityToComboIndex(g_renderingQuality)),
+                static_cast<WPARAM>(RenderingQualityToComboIndex(g_renderingQualitySettings.quality)),
                 0);
 }
 
@@ -1601,7 +1601,7 @@ void PopulateRenderingQualityCombo(HWND hDlg)
     SendMessage(combo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"HIGH"));
     SendMessage(combo,
                 CB_SETCURSEL,
-                static_cast<WPARAM>(RenderingQualityToComboIndex(g_renderingQuality)),
+                static_cast<WPARAM>(RenderingQualityToComboIndex(g_renderingQualitySettings.quality)),
                 0);
 }
 
@@ -3530,9 +3530,9 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             const int index = static_cast<int>(SendMessage(combo, CB_GETCURSEL, 0, 0));
             if (index != CB_ERR)
             {
-                g_renderingQuality = ComboIndexToRenderingQuality(index);
+                g_renderingQualitySettings.quality = ComboIndexToRenderingQuality(index);
                 ApplyRenderingQuality();
-                RefreshRenderingQualityControls(hDlg);
+                RefreshSettingsDialogState();
             }
             return TRUE;
         }

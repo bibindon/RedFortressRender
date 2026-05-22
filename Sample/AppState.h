@@ -362,7 +362,7 @@ extern bool g_bSSAOCompositeGaussian3x3;
 extern int g_sunId;
 extern int g_resolutionWidth;
 extern int g_resolutionHeight;
-extern std::wstring g_renderingQuality;
+extern NSRender::RenderingQualitySettings g_renderingQualitySettings;
 extern NSRender::eWindowMode g_windowMode;
 extern std::vector<ImageInfo> g_imageInfoList;
 extern std::vector<TextInfo> g_textInfoList;

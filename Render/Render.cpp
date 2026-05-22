@@ -1201,7 +1201,7 @@ void Render::ApplySettings()
     const auto renderingQuality = m_settings.find(L"RenderQuality");
     if (renderingQuality != m_settings.end())
     {
-        SetRenderingQuality(renderingQuality->second);
+        SetRenderQuality(renderingQuality->second);
     }
 }
 
@@ -2442,53 +2442,74 @@ void Render::SetGBufferClipPlanes(const float nearPlane, const float farPlane)
     m_postEffectDepthOfField.SetPositionRange(positionRange);
 }
 
-std::wstring Render::SetRenderingQuality(const std::wstring& quality)
+RenderingQualitySettings Render::SetRenderQuality(const std::wstring& quality)
 {
+    RenderingQualitySettings settings;
     std::wstring normalizedQuality = L"LOW";
     if (quality == L"MIDDLE" || quality == L"HIGH")
     {
         normalizedQuality = quality;
     }
 
-    m_renderingQuality = normalizedQuality;
-    if (m_renderingQuality == L"LOW")
+    settings.quality = normalizedQuality;
+    if (settings.quality == L"LOW")
     {
-        SetGBufferEnable(false);
-        SetPostEffectSaturateEnable(false);
-        SetPostEffectGaussianFilter(false);
-        SetPostEffectMaskedGaussianFilter(false);
-        SetPostEffectAA(false);
-        SetPostEffectFXAA(false);
-        SetPostEffectMotionBlurCamera(false);
-        SetPostEffectDepthBufferShadow(false);
-        SetPostEffectSSAO(false);
-        SetPostEffectSSGI(false);
-        SetPostEffectFog(false);
-        SetPostEffectHeightFog(false);
-        SetPostEffectBloom(false);
-        SetPostEffectDepthOfFieldMode(DepthOfFieldMode::Disabled);
-        SetPostEffectStarBurst(false);
-        SetPostEffectGodRay(false);
-        return m_renderingQuality;
+        settings.gBufferEnabled = false;
+        settings.saturateEnabled = false;
+        settings.gaussianEnabled = false;
+        settings.maskedGaussianEnabled = false;
+        settings.postEffectAAEnabled = false;
+        settings.fxaaEnabled = false;
+        settings.motionBlurCameraEnabled = false;
+        settings.depthBufferShadowEnabled = false;
+        settings.ssaoEnabled = false;
+        settings.ssgiEnabled = false;
+        settings.fogEnabled = false;
+        settings.heightFogEnabled = false;
+        settings.bloomEnabled = false;
+        settings.depthOfFieldMode = DepthOfFieldMode::Disabled;
+        settings.starBurstEnabled = false;
+        settings.godRayEnabled = false;
+    }
+    else
+    {
+        settings.gBufferEnabled = true;
+        settings.saturateEnabled = true;
+        settings.gaussianEnabled = false;
+        settings.maskedGaussianEnabled = false;
+        settings.postEffectAAEnabled = true;
+        settings.fxaaEnabled = true;
+        settings.motionBlurCameraEnabled = true;
+        settings.depthBufferShadowEnabled = true;
+        settings.ssaoEnabled = true;
+        settings.ssgiEnabled = true;
+        settings.fogEnabled = true;
+        settings.heightFogEnabled = true;
+        settings.bloomEnabled = true;
+        settings.depthOfFieldMode = DepthOfFieldMode::Enabled;
+        settings.starBurstEnabled = true;
+        settings.godRayEnabled = true;
     }
 
-    SetGBufferEnable(true);
-    SetPostEffectSaturateEnable(true);
-    SetPostEffectGaussianFilter(false);
-    SetPostEffectMaskedGaussianFilter(false);
-    SetPostEffectAA(true);
-    SetPostEffectFXAA(true);
-    SetPostEffectMotionBlurCamera(true);
-    SetPostEffectDepthBufferShadow(true);
-    SetPostEffectSSAO(true);
-    SetPostEffectSSGI(true);
-    SetPostEffectFog(true);
-    SetPostEffectHeightFog(true);
-    SetPostEffectBloom(true);
-    SetPostEffectDepthOfFieldMode(DepthOfFieldMode::Enabled);
-    SetPostEffectStarBurst(true);
-    SetPostEffectGodRay(true);
-    return m_renderingQuality;
+    SetGBufferEnable(settings.gBufferEnabled);
+    SetPostEffectSaturateEnable(settings.saturateEnabled);
+    SetPostEffectGaussianFilter(settings.gaussianEnabled);
+    SetPostEffectMaskedGaussianFilter(settings.maskedGaussianEnabled);
+    SetPostEffectAA(settings.postEffectAAEnabled);
+    SetPostEffectFXAA(settings.fxaaEnabled);
+    SetPostEffectMotionBlurCamera(settings.motionBlurCameraEnabled);
+    SetPostEffectDepthBufferShadow(settings.depthBufferShadowEnabled);
+    SetPostEffectSSAO(settings.ssaoEnabled);
+    SetPostEffectSSGI(settings.ssgiEnabled);
+    SetPostEffectFog(settings.fogEnabled);
+    SetPostEffectHeightFog(settings.heightFogEnabled);
+    SetPostEffectBloom(settings.bloomEnabled);
+    SetPostEffectDepthOfFieldMode(settings.depthOfFieldMode);
+    SetPostEffectStarBurst(settings.starBurstEnabled);
+    SetPostEffectGodRay(settings.godRayEnabled);
+
+    m_renderingQualitySettings = settings;
+    return m_renderingQualitySettings;
 }
 
 void Render::EnsureGBufferInitialized()
