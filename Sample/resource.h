@@ -345,6 +345,8 @@
 #define IDC_STATIC_FRESNEL_INTENSITY_LABEL 1350
 #define IDC_EDIT_FRESNEL_INTENSITY     1351
 #define IDC_SLIDER_FRESNEL_INTENSITY   1352
+#define IDC_STATIC_ANIMATION_LABEL     1358
+#define IDC_LIST_ANIMATIONS            1359
 
 // Next default values for new objects
 // 
@@ -352,7 +354,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1358
+#define _APS_NEXT_CONTROL_VALUE         1360
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

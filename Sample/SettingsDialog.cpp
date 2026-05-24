@@ -1851,6 +1851,32 @@ void InitializePointLightListView(HWND hDlg)
     ListView_InsertColumn(listView, 3, &column);
 }
 
+void InitializeAnimationListView(HWND hDlg)
+{
+    HWND listView = GetDlgItem(hDlg, IDC_LIST_ANIMATIONS);
+    if (listView == NULL)
+    {
+        return;
+    }
+
+    ListView_SetExtendedListViewStyle(listView, LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
+
+    LVCOLUMN column { };
+    column.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
+
+    column.cx = 150;
+    column.pszText = const_cast<LPWSTR>(L"File");
+    ListView_InsertColumn(listView, 0, &column);
+
+    column.cx = 62;
+    column.pszText = const_cast<LPWSTR>(L"Start");
+    ListView_InsertColumn(listView, 1, &column);
+
+    column.cx = 62;
+    column.pszText = const_cast<LPWSTR>(L"End");
+    ListView_InsertColumn(listView, 2, &column);
+}
+
 void RefreshLoadedModelListView(HWND hDlg)
 {
     HWND listView = GetDlgItem(hDlg, IDC_LIST_LOADED_MODELS);
@@ -2678,6 +2704,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         PopulateSSGISampleCountCombo(hDlg);
         PopulateSSGIBlurKernelSizeCombo(hDlg);
         InitializeLoadedModelListView(hDlg);
+        InitializeAnimationListView(hDlg);
         InitializePointLightListView(hDlg);
         RefreshAllControls(hDlg);
         g_settingsDialogScrollPos = 0;
