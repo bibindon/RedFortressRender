@@ -516,7 +516,7 @@ bool IsWeekdayBusinessHours()
     GetLocalTime(&localTime);
 
     const bool isWeekday = localTime.wDayOfWeek >= 1 && localTime.wDayOfWeek <= 5;
-    const bool isBusinessHours = localTime.wHour >= 9 && localTime.wHour < 18;
+    const bool isBusinessHours = localTime.wHour >= 8 && localTime.wHour < 19;
     return isWeekday && isBusinessHours;
 }
 
