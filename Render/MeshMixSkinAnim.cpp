@@ -1,6 +1,7 @@
 ﻿#include "MeshMixSkinAnim.h"
 
 #include <algorithm>
+#include <cmath>
 #include <exception>
 #include <fstream>
 #include <iterator>
@@ -15,6 +16,7 @@ namespace NSRender
 namespace
 {
 constexpr float X_MATERIAL_SPECULAR_INTENSITY_SCALE = 0.5f;
+constexpr double D3DX64_ANIMATION_TIME_SCALE = 160.0;
 
 float ClampSpecularEdge(const float edge)
 {
@@ -205,7 +207,7 @@ double GetAnimationControllerDuration(LPD3DXANIMATIONCONTROLLER controller)
         return 1.0;
     }
 
-    const double duration = (std::max)(animationSet->GetPeriod() / 80.0, 0.0001);
+    const double duration = (std::max)(animationSet->GetPeriod(), 0.0001);
     SAFE_RELEASE(animationSet);
     return duration;
 }
@@ -555,7 +557,7 @@ void MeshMixSkinAnim::UpdateActiveAnimationClip()
         return;
     }
 
-    clip.currentTime += Common::ANIMATION_SPEED / 160.0f;
+    clip.currentTime += Common::ANIMATION_SPEED / D3DX64_ANIMATION_TIME_SCALE;
     if (clip.currentTime >= clip.duration)
     {
         if (clip.stopWhenEnd)
@@ -564,7 +566,7 @@ void MeshMixSkinAnim::UpdateActiveAnimationClip()
         }
         else
         {
-            clip.currentTime = 0.0;
+            clip.currentTime = std::fmod(clip.currentTime, clip.duration);
         }
     }
 
