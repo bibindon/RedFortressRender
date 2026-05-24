@@ -196,6 +196,8 @@ void MeshMixSkinAnim::Initialize()
             SAFE_RELEASE(tempAnimController);
             throw std::exception("Failed to load split animation mesh.");
         }
+
+        ReleaseMeshContainersRecursive(m_animationFrameRoot, m_animationAllocator);
     }
     else if (tempAnimController == nullptr)
     {
@@ -653,6 +655,37 @@ void MeshMixSkinAnim::ReleaseMeshAllocator(const LPD3DXFRAME frame)
     ReleaseMeshAllocatorRecursive(frame, m_allocator);
 }
 
+void MeshMixSkinAnim::ReleaseMeshContainersRecursive(const LPD3DXFRAME frame,
+                                                     SkinAnimMeshAlloc& allocator)
+{
+    if (frame == nullptr)
+    {
+        return;
+    }
+
+    LPD3DXFRAME mutableFrame = frame;
+    LPD3DXMESHCONTAINER container = mutableFrame->pMeshContainer;
+    mutableFrame->pMeshContainer = nullptr;
+
+    while (container != nullptr)
+    {
+        LPD3DXMESHCONTAINER nextContainer = container->pNextMeshContainer;
+        container->pNextMeshContainer = nullptr;
+        allocator.DestroyMeshContainer(container);
+        container = nextContainer;
+    }
+
+    if (frame->pFrameSibling != nullptr)
+    {
+        ReleaseMeshContainersRecursive(frame->pFrameSibling, allocator);
+    }
+
+    if (frame->pFrameFirstChild != nullptr)
+    {
+        ReleaseMeshContainersRecursive(frame->pFrameFirstChild, allocator);
+    }
+}
+
 void MeshMixSkinAnim::ReleaseMeshAllocatorRecursive(const LPD3DXFRAME frame, SkinAnimMeshAlloc& allocator)
 {
     if (frame == nullptr)
@@ -660,9 +693,16 @@ void MeshMixSkinAnim::ReleaseMeshAllocatorRecursive(const LPD3DXFRAME frame, Ski
         return;
     }
 
-    if (frame->pMeshContainer != nullptr)
+    LPD3DXFRAME mutableFrame = frame;
+    LPD3DXMESHCONTAINER container = mutableFrame->pMeshContainer;
+    mutableFrame->pMeshContainer = nullptr;
+
+    while (container != nullptr)
     {
-        allocator.DestroyMeshContainer(frame->pMeshContainer);
+        LPD3DXMESHCONTAINER nextContainer = container->pNextMeshContainer;
+        container->pNextMeshContainer = nullptr;
+        allocator.DestroyMeshContainer(container);
+        container = nextContainer;
     }
 
     if (frame->pFrameSibling != nullptr)

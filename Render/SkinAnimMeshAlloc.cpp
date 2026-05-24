@@ -103,10 +103,17 @@ STDMETHODIMP SkinAnimMeshAlloc::DestroyMeshContainer(LPD3DXMESHCONTAINER meshCon
     auto *meshContainer = (SkinAnimMeshContainer*)meshContainerBase;
 
     SAFE_RELEASE(meshContainer->pSkinInfo);
+    SAFE_RELEASE(meshContainer->m_boneBuffer);
     SAFE_DELETE_ARRAY(meshContainer->Name);
     SAFE_DELETE_ARRAY(meshContainer->pAdjacency);
     SAFE_DELETE_ARRAY(meshContainer->pMaterials);
     SAFE_RELEASE(meshContainer->MeshData.pMesh);
+
+    for (size_t i = 0; i < meshContainer->m_textureList.size(); ++i)
+    {
+        SAFE_RELEASE(meshContainer->m_textureList.at(i));
+    }
+
     SAFE_DELETE(meshContainer);
 
     return S_OK;

@@ -72,6 +72,7 @@ private:
     HRESULT AllocateBoneMatrix(LPD3DXMESHCONTAINER containerBase);
     HRESULT AllocateAllBoneMatrix(LPD3DXFRAME frame);
     void ReleaseMeshAllocator(const LPD3DXFRAME frame);
+    void ReleaseMeshContainersRecursive(const LPD3DXFRAME frame, SkinAnimMeshAlloc& allocator);
     void ReleaseMeshAllocatorRecursive(const LPD3DXFRAME frame, SkinAnimMeshAlloc& allocator);
     const std::wstring SHADER_FILENAME = L".\\MeshMixSkinAnim.cso";
 
