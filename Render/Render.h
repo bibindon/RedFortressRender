@@ -226,6 +226,8 @@ public:
                            const bool useParallaxOcclusionMapping = false,
                            const bool useNormalMapping = false);
     bool RemoveMeshMixSkinAnim(int id);
+    const std::vector<MeshMixSkinAnim::AnimationInfo>* GetMeshMixSkinAnimAnimationInfoList(int id) const;
+    bool PlayMeshMixSkinAnimAnimation(int id, const std::wstring& name);
 
     void SetMeshMixPos(const int id, const D3DXVECTOR3& pos);
     void SetMeshMixSaturateShadow(const bool enabled);

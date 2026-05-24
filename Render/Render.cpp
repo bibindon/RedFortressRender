@@ -2221,6 +2221,26 @@ bool Render::RemoveMeshMixSkinAnim(const int id)
     return true;
 }
 
+const std::vector<MeshMixSkinAnim::AnimationInfo>* Render::GetMeshMixSkinAnimAnimationInfoList(const int id) const
+{
+    if (id < 0 || id >= static_cast<int>(m_meshMixSkinAnimList.size()) || m_meshMixSkinAnimList.at(id) == nullptr)
+    {
+        return nullptr;
+    }
+
+    return &m_meshMixSkinAnimList.at(id)->GetAnimationInfoList();
+}
+
+bool Render::PlayMeshMixSkinAnimAnimation(const int id, const std::wstring& name)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshMixSkinAnimList.size()) || m_meshMixSkinAnimList.at(id) == nullptr)
+    {
+        return false;
+    }
+
+    return m_meshMixSkinAnimList.at(id)->PlayAnimation(name);
+}
+
 void Render::SetMeshMixSaturateShadow(const bool enabled)
 {
     m_meshMixSaturateShadowEnabled = enabled;

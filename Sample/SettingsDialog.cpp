@@ -225,6 +225,7 @@ constexpr int SETTINGS_DIALOG_WHEEL_STEP_PX = 36;
 constexpr UINT ID_POPUP_EXPORT_BINARY = 60001;
 constexpr UINT ID_POPUP_REMOVE_MODEL = 60002;
 constexpr UINT ID_POPUP_REMOVE_POINT_LIGHT = 60003;
+constexpr UINT ID_POPUP_PLAY_ANIMATION = 60004;
 
 int g_settingsDialogScrollPos = 0;
 
@@ -1791,6 +1792,76 @@ bool ShowPointLightContextMenu(HWND hDlg, HWND listView, POINT screenPoint)
     return true;
 }
 
+bool ShowAnimationContextMenu(HWND hDlg, HWND listView, POINT screenPoint)
+{
+    const int itemIndex = GetListViewIndexFromPoint(listView, screenPoint);
+    if (itemIndex < 0)
+    {
+        return false;
+    }
+
+    if (screenPoint.x == -1 && screenPoint.y == -1)
+    {
+        RECT itemRect { };
+        itemRect.left = LVIR_BOUNDS;
+        if (ListView_GetItemRect(listView, itemIndex, &itemRect, LVIR_BOUNDS))
+        {
+            POINT popupPoint { itemRect.left, itemRect.top };
+            ClientToScreen(listView, &popupPoint);
+            screenPoint = popupPoint;
+        }
+    }
+
+    HMENU popupMenu = CreatePopupMenu();
+    if (popupMenu == NULL)
+    {
+        return false;
+    }
+
+    AppendMenuW(popupMenu, MF_STRING, ID_POPUP_PLAY_ANIMATION, L"Play");
+
+    const UINT command = TrackPopupMenu(popupMenu,
+                                        TPM_RETURNCMD | TPM_RIGHTBUTTON,
+                                        screenPoint.x,
+                                        screenPoint.y,
+                                        0,
+                                        hDlg,
+                                        NULL);
+
+    DestroyMenu(popupMenu);
+
+    if (command != ID_POPUP_PLAY_ANIMATION)
+    {
+        return false;
+    }
+
+    LVITEM item { };
+    item.mask = LVIF_PARAM;
+    item.iItem = itemIndex;
+    if (!ListView_GetItem(listView, &item))
+    {
+        return true;
+    }
+
+    const int modelIndex = static_cast<int>(item.lParam);
+    if (modelIndex < 0 || modelIndex >= static_cast<int>(g_loadedModelList.size()))
+    {
+        return true;
+    }
+
+    wchar_t animationName[128] { };
+    ListView_GetItemText(listView, itemIndex, 0, animationName, static_cast<int>(_countof(animationName)));
+    if (!g_Render.PlayMeshMixSkinAnimAnimation(g_loadedModelList.at(modelIndex).m_renderId, animationName))
+    {
+        MessageBoxW(hDlg,
+                    L"Animation play failed.",
+                    L"Animation",
+                    MB_ICONERROR | MB_OK);
+    }
+
+    return true;
+}
+
 void InitializeLoadedModelListView(HWND hDlg)
 {
     HWND listView = GetDlgItem(hDlg, IDC_LIST_LOADED_MODELS);
@@ -1864,17 +1935,92 @@ void InitializeAnimationListView(HWND hDlg)
     LVCOLUMN column { };
     column.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
 
-    column.cx = 150;
-    column.pszText = const_cast<LPWSTR>(L"File");
+    column.cx = 72;
+    column.pszText = const_cast<LPWSTR>(L"Name");
     ListView_InsertColumn(listView, 0, &column);
 
-    column.cx = 62;
-    column.pszText = const_cast<LPWSTR>(L"Start");
+    column.cx = 150;
+    column.pszText = const_cast<LPWSTR>(L"File");
     ListView_InsertColumn(listView, 1, &column);
 
-    column.cx = 62;
-    column.pszText = const_cast<LPWSTR>(L"End");
+    column.cx = 54;
+    column.pszText = const_cast<LPWSTR>(L"Mode");
     ListView_InsertColumn(listView, 2, &column);
+}
+
+int GetAnimationListModelIndex(HWND hDlg)
+{
+    HWND loadedModelList = GetDlgItem(hDlg, IDC_LIST_LOADED_MODELS);
+    int modelIndex = ListView_GetNextItem(loadedModelList, -1, LVNI_SELECTED);
+
+    if (modelIndex >= 0 &&
+        modelIndex < static_cast<int>(g_loadedModelList.size()) &&
+        g_loadedModelList.at(modelIndex).m_type == L"MeshMixSkinAnim")
+    {
+        const auto animationInfoList =
+            g_Render.GetMeshMixSkinAnimAnimationInfoList(g_loadedModelList.at(modelIndex).m_renderId);
+        if (animationInfoList != nullptr && !animationInfoList->empty())
+        {
+            return modelIndex;
+        }
+    }
+
+    for (int i = 0; i < static_cast<int>(g_loadedModelList.size()); ++i)
+    {
+        if (g_loadedModelList.at(i).m_type != L"MeshMixSkinAnim")
+        {
+            continue;
+        }
+
+        const auto animationInfoList =
+            g_Render.GetMeshMixSkinAnimAnimationInfoList(g_loadedModelList.at(i).m_renderId);
+        if (animationInfoList != nullptr && !animationInfoList->empty())
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+void RefreshAnimationListView(HWND hDlg)
+{
+    HWND listView = GetDlgItem(hDlg, IDC_LIST_ANIMATIONS);
+    if (listView == NULL)
+    {
+        return;
+    }
+
+    ListView_DeleteAllItems(listView);
+
+    const int modelIndex = GetAnimationListModelIndex(hDlg);
+    if (modelIndex < 0)
+    {
+        return;
+    }
+
+    const auto animationInfoList =
+        g_Render.GetMeshMixSkinAnimAnimationInfoList(g_loadedModelList.at(modelIndex).m_renderId);
+    if (animationInfoList == nullptr)
+    {
+        return;
+    }
+
+    for (int i = 0; i < static_cast<int>(animationInfoList->size()); ++i)
+    {
+        const auto& animationInfo = animationInfoList->at(i);
+
+        LVITEM item { };
+        item.mask = LVIF_TEXT | LVIF_PARAM;
+        item.iItem = i;
+        item.iSubItem = 0;
+        item.lParam = static_cast<LPARAM>(modelIndex);
+        item.pszText = const_cast<LPWSTR>(animationInfo.name.c_str());
+        ListView_InsertItem(listView, &item);
+
+        ListView_SetItemText(listView, i, 1, const_cast<LPWSTR>(animationInfo.filePath.c_str()));
+        ListView_SetItemText(listView, i, 2, const_cast<LPWSTR>(animationInfo.mode.c_str()));
+    }
 }
 
 void RefreshLoadedModelListView(HWND hDlg)
@@ -1959,6 +2105,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshResolutionControls(hDlg);
     RefreshRenderingQualityControls(hDlg);
     RefreshLoadedModelListView(hDlg);
+    RefreshAnimationListView(hDlg);
     RefreshPointLightListView(hDlg);
     RefreshPointLightControls(hDlg);
     RefreshParticlePlacementControls(hDlg);
@@ -3414,15 +3561,36 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
 
         break;
     }
+    case WM_NOTIFY:
+    {
+        NMHDR* notifyHeader = reinterpret_cast<NMHDR*>(lParam);
+        if (notifyHeader != nullptr &&
+            notifyHeader->idFrom == IDC_LIST_LOADED_MODELS &&
+            notifyHeader->code == LVN_ITEMCHANGED)
+        {
+            RefreshAnimationListView(hDlg);
+            return TRUE;
+        }
+        break;
+    }
     case WM_CONTEXTMENU:
     {
         HWND source = reinterpret_cast<HWND>(wParam);
         HWND loadedModelListView = GetDlgItem(hDlg, IDC_LIST_LOADED_MODELS);
+        HWND animationListView = GetDlgItem(hDlg, IDC_LIST_ANIMATIONS);
         HWND pointLightListView = GetDlgItem(hDlg, IDC_LIST_POINT_LIGHTS);
         if (source == loadedModelListView)
         {
             POINT screenPoint { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
             if (ShowLoadedModelContextMenu(hDlg, loadedModelListView, screenPoint))
+            {
+                return TRUE;
+            }
+        }
+        else if (source == animationListView)
+        {
+            POINT screenPoint { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+            if (ShowAnimationContextMenu(hDlg, animationListView, screenPoint))
             {
                 return TRUE;
             }

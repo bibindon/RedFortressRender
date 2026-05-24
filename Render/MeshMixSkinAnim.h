@@ -16,6 +16,14 @@ namespace NSRender
 class MeshMixSkinAnim : public IDeviceResettable
 {
 public:
+    struct AnimationInfo
+    {
+        std::wstring name;
+        std::wstring filePath;
+        std::wstring mode;
+        bool isDefault = false;
+    };
+
     static void SetSharedMirrorClipPlane(bool enabled, const D3DXVECTOR4& plane);
 
     MeshMixSkinAnim(const std::wstring& filename,
@@ -57,14 +65,33 @@ public:
     bool IsEnabled() const;
     void SetEnabled(const bool enabled);
     std::wstring GetMeshName() const;
+    const std::vector<AnimationInfo>& GetAnimationInfoList() const;
+    bool PlayAnimation(const std::wstring& name);
 
     void OnDeviceLost() override;
     void OnDeviceReset() override;
 
 private:
+    struct AnimationClip
+    {
+        AnimationInfo info;
+        SkinAnimMeshAlloc* allocator = nullptr;
+        LPD3DXFRAME frameRoot = nullptr;
+        LPD3DXANIMATIONCONTROLLER controller = nullptr;
+        double currentTime = 0.0;
+        double duration = 1.0;
+        bool loop = true;
+        bool stopWhenEnd = false;
+    };
+
     D3DXMATRIX BuildWorldMatrix() const;
     void UpdateFrameMatrix(const LPD3DXFRAME frameBase, const LPD3DXMATRIX matParent);
-    void ApplyAnimationFrameTransformsToMeshHierarchy(const LPD3DXFRAME meshFrameBase);
+    void ApplyAnimationFrameTransformsToMeshHierarchy(const LPD3DXFRAME meshFrameBase,
+                                                      const LPD3DXFRAME animationFrameRoot);
+    void UpdateActiveAnimationClip();
+    bool LoadAnimationCsv();
+    bool LoadAnimationClip(const AnimationInfo& info);
+    void ReleaseAnimationClips();
     void RenderFrame(const LPD3DXFRAME frame);
     void RenderMeshContainer(const LPD3DXMESHCONTAINER containerBase);
     void RenderFrameToEffect(const LPD3DXFRAME frame, LPD3DXEFFECT effect);
@@ -92,9 +119,12 @@ private:
     bool m_enabled = true;
     bool m_bLoaded = false;
     bool m_useExternalAnimation = false;
+    int m_activeAnimationClipIndex = -1;
     stMeshParam m_param;
     AnimSetMap m_animSetMap;
     AnimController m_animController;
+    std::vector<AnimationInfo> m_animationInfoList;
+    std::vector<AnimationClip> m_animationClips;
 };
 
 }

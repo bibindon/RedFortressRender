@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <exception>
+#include <fstream>
+#include <iterator>
 
 #include "Camera.h"
 #include "Common.h"
@@ -65,6 +67,148 @@ float GetMaterialSpecularIntensity(const D3DMATERIAL9& material)
                (std::max)(material.Specular.g, material.Specular.b));
     }
 }
+
+std::wstring TrimText(const std::wstring& text)
+{
+    const std::wstring whitespace = L" \t\r\n";
+    const std::size_t first = text.find_first_not_of(whitespace);
+    if (first == std::wstring::npos)
+    {
+        return L"";
+    }
+
+    const std::size_t last = text.find_last_not_of(whitespace);
+    return text.substr(first, last - first + 1);
+}
+
+std::wstring UnquoteText(const std::wstring& text)
+{
+    const std::wstring trimmed = TrimText(text);
+    if (trimmed.size() >= 2 && trimmed.front() == L'"' && trimmed.back() == L'"')
+    {
+        return trimmed.substr(1, trimmed.size() - 2);
+    }
+
+    return trimmed;
+}
+
+std::vector<std::wstring> SplitCsvLineText(const std::wstring& line)
+{
+    std::vector<std::wstring> fields;
+    std::wstring currentField;
+    bool inQuotes = false;
+
+    for (std::size_t i = 0; i < line.size(); ++i)
+    {
+        const wchar_t ch = line[i];
+        if (ch == L'"')
+        {
+            if (inQuotes && (i + 1) < line.size() && line[i + 1] == L'"')
+            {
+                currentField += L'"';
+                ++i;
+            }
+            else
+            {
+                inQuotes = !inQuotes;
+            }
+            continue;
+        }
+
+        if (ch == L',' && !inQuotes)
+        {
+            fields.push_back(currentField);
+            currentField.clear();
+            continue;
+        }
+
+        currentField += ch;
+    }
+
+    fields.push_back(currentField);
+    return fields;
+}
+
+std::wstring GetResolvedPath(const std::wstring& path)
+{
+    if (PathIsRelative(path.c_str()))
+    {
+        return Util::GetExeDir() + path;
+    }
+
+    return path;
+}
+
+std::wstring GetDirectoryPath(const std::wstring& path)
+{
+    const std::size_t pos = path.find_last_of(L"\\/");
+    if (pos == std::wstring::npos)
+    {
+        return L"";
+    }
+
+    return path.substr(0, pos);
+}
+
+std::wstring GetPathWithoutExtension(const std::wstring& path)
+{
+    const std::size_t slashPos = path.find_last_of(L"\\/");
+    const std::size_t dotPos = path.find_last_of(L'.');
+    if (dotPos == std::wstring::npos ||
+        (slashPos != std::wstring::npos && dotPos < slashPos))
+    {
+        return path;
+    }
+
+    return path.substr(0, dotPos);
+}
+
+std::wstring Utf8BytesToWideString(const std::string& bytes)
+{
+    if (bytes.empty())
+    {
+        return L"";
+    }
+
+    const char* data = bytes.data();
+    int size = static_cast<int>(bytes.size());
+    if (size >= 3 &&
+        static_cast<unsigned char>(data[0]) == 0xef &&
+        static_cast<unsigned char>(data[1]) == 0xbb &&
+        static_cast<unsigned char>(data[2]) == 0xbf)
+    {
+        data += 3;
+        size -= 3;
+    }
+
+    const int required = MultiByteToWideChar(CP_UTF8, 0, data, size, nullptr, 0);
+    if (required <= 0)
+    {
+        return L"";
+    }
+
+    std::wstring result(required, L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, data, size, &result[0], required);
+    return result;
+}
+
+double GetAnimationControllerDuration(LPD3DXANIMATIONCONTROLLER controller)
+{
+    if (controller == nullptr || controller->GetMaxNumAnimationSets() == 0)
+    {
+        return 1.0;
+    }
+
+    LPD3DXANIMATIONSET animationSet = nullptr;
+    if (FAILED(controller->GetAnimationSet(0, &animationSet)) || animationSet == nullptr)
+    {
+        return 1.0;
+    }
+
+    const double duration = (std::max)(animationSet->GetPeriod() / 80.0, 0.0001);
+    SAFE_RELEASE(animationSet);
+    return duration;
+}
 }
 
 void MeshMixSkinAnim::SetSharedMirrorClipPlane(const bool enabled, const D3DXVECTOR4& plane)
@@ -115,6 +259,7 @@ MeshMixSkinAnim::~MeshMixSkinAnim()
 {
     SAFE_RELEASE(m_D3DEffect);
     m_animController.Finalize();
+    ReleaseAnimationClips();
 
     if (m_frameRoot != nullptr)
     {
@@ -171,7 +316,14 @@ void MeshMixSkinAnim::Initialize()
         throw std::exception("Failed to load skin animation mesh.");
     }
 
-    if (m_useExternalAnimation)
+    const bool loadedAnimationCsv = LoadAnimationCsv();
+
+    if (loadedAnimationCsv)
+    {
+        SAFE_RELEASE(tempAnimController);
+        m_useExternalAnimation = true;
+    }
+    else if (m_useExternalAnimation)
     {
         SAFE_RELEASE(tempAnimController);
 
@@ -205,7 +357,14 @@ void MeshMixSkinAnim::Initialize()
         throw std::exception("Failed to load animation controller.");
     }
 
-    m_animController.Init(tempAnimController, m_animSetMap);
+    if (m_animationClips.empty())
+    {
+        m_animController.Init(tempAnimController, m_animSetMap);
+    }
+    else
+    {
+        SAFE_RELEASE(tempAnimController);
+    }
     AllocateAllBoneMatrix(m_frameRoot);
 
     Common::AddDeviceLostResource(this);
@@ -219,11 +378,23 @@ void MeshMixSkinAnim::UpdateAnimation()
         return;
     }
 
-    m_animController.Update();
-
-    if (m_useExternalAnimation)
+    if (!m_animationClips.empty())
     {
-        ApplyAnimationFrameTransformsToMeshHierarchy(m_frameRoot);
+        UpdateActiveAnimationClip();
+    }
+    else
+    {
+        m_animController.Update();
+    }
+
+    if (!m_animationClips.empty())
+    {
+        const AnimationClip& clip = m_animationClips.at(m_activeAnimationClipIndex);
+        ApplyAnimationFrameTransformsToMeshHierarchy(m_frameRoot, clip.frameRoot);
+    }
+    else if (m_useExternalAnimation)
+    {
+        ApplyAnimationFrameTransformsToMeshHierarchy(m_frameRoot, m_animationFrameRoot);
     }
 
     D3DXMATRIX worldMatrix = BuildWorldMatrix();
@@ -340,9 +511,10 @@ D3DXMATRIX MeshMixSkinAnim::BuildWorldMatrix() const
     return worldMatrix;
 }
 
-void MeshMixSkinAnim::ApplyAnimationFrameTransformsToMeshHierarchy(const LPD3DXFRAME meshFrameBase)
+void MeshMixSkinAnim::ApplyAnimationFrameTransformsToMeshHierarchy(const LPD3DXFRAME meshFrameBase,
+                                                                   const LPD3DXFRAME animationFrameRoot)
 {
-    if (meshFrameBase == nullptr || m_animationFrameRoot == nullptr)
+    if (meshFrameBase == nullptr || animationFrameRoot == nullptr)
     {
         return;
     }
@@ -350,7 +522,7 @@ void MeshMixSkinAnim::ApplyAnimationFrameTransformsToMeshHierarchy(const LPD3DXF
     auto meshFrame = reinterpret_cast<SkinAnimMeshFrame*>(meshFrameBase);
     if (meshFrame->Name != nullptr)
     {
-        LPD3DXFRAME animationFrameBase = D3DXFrameFind(m_animationFrameRoot, meshFrame->Name);
+        LPD3DXFRAME animationFrameBase = D3DXFrameFind(animationFrameRoot, meshFrame->Name);
         if (animationFrameBase != nullptr)
         {
             auto animationFrame = reinterpret_cast<SkinAnimMeshFrame*>(animationFrameBase);
@@ -360,13 +532,190 @@ void MeshMixSkinAnim::ApplyAnimationFrameTransformsToMeshHierarchy(const LPD3DXF
 
     if (meshFrame->pFrameSibling != nullptr)
     {
-        ApplyAnimationFrameTransformsToMeshHierarchy(meshFrame->pFrameSibling);
+        ApplyAnimationFrameTransformsToMeshHierarchy(meshFrame->pFrameSibling, animationFrameRoot);
     }
 
     if (meshFrame->pFrameFirstChild != nullptr)
     {
-        ApplyAnimationFrameTransformsToMeshHierarchy(meshFrame->pFrameFirstChild);
+        ApplyAnimationFrameTransformsToMeshHierarchy(meshFrame->pFrameFirstChild, animationFrameRoot);
     }
+}
+
+void MeshMixSkinAnim::UpdateActiveAnimationClip()
+{
+    if (m_activeAnimationClipIndex < 0 ||
+        m_activeAnimationClipIndex >= static_cast<int>(m_animationClips.size()))
+    {
+        return;
+    }
+
+    AnimationClip& clip = m_animationClips.at(m_activeAnimationClipIndex);
+    if (clip.controller == nullptr)
+    {
+        return;
+    }
+
+    clip.currentTime += Common::ANIMATION_SPEED / 160.0f;
+    if (clip.currentTime >= clip.duration)
+    {
+        if (clip.stopWhenEnd)
+        {
+            clip.currentTime = clip.duration;
+        }
+        else
+        {
+            clip.currentTime = 0.0;
+        }
+    }
+
+    clip.controller->SetTrackPosition(0, 0.0);
+    clip.controller->AdvanceTime(clip.currentTime, nullptr);
+}
+
+bool MeshMixSkinAnim::LoadAnimationCsv()
+{
+    const std::wstring meshPath = GetResolvedPath(m_meshName);
+    const std::wstring csvPath = GetPathWithoutExtension(meshPath) + L".csv";
+    if (!PathFileExists(csvPath.c_str()))
+    {
+        return false;
+    }
+
+    std::ifstream file(csvPath, std::ios::binary);
+    if (!file)
+    {
+        return false;
+    }
+
+    const std::string bytes((std::istreambuf_iterator<char>(file)),
+                            std::istreambuf_iterator<char>());
+    const std::wstring csvText = Utf8BytesToWideString(bytes);
+    const std::wstring csvDirectory = GetDirectoryPath(csvPath);
+
+    std::vector<AnimationInfo> animationInfoList;
+    std::wstring line;
+    for (std::size_t i = 0; i <= csvText.size(); ++i)
+    {
+        if (i < csvText.size() && csvText[i] != L'\n')
+        {
+            line += csvText[i];
+            continue;
+        }
+
+        const std::wstring trimmedLine = TrimText(line);
+        line.clear();
+        if (trimmedLine.empty())
+        {
+            continue;
+        }
+
+        const std::vector<std::wstring> fields = SplitCsvLineText(trimmedLine);
+        if (fields.size() < 4 || TrimText(fields[0]) != L"Anim")
+        {
+            continue;
+        }
+
+        AnimationInfo info;
+        info.name = UnquoteText(fields[1]);
+        std::wstring filePath = UnquoteText(fields[2]);
+        if (PathIsRelative(filePath.c_str()))
+        {
+            filePath = csvDirectory + L"\\" + filePath;
+        }
+        info.filePath = filePath;
+        info.mode = UnquoteText(fields[3]);
+        info.isDefault = (info.mode == L"default");
+
+        if (!info.name.empty() && PathFileExists(info.filePath.c_str()))
+        {
+            animationInfoList.push_back(info);
+        }
+    }
+
+    if (animationInfoList.empty())
+    {
+        return false;
+    }
+
+    int defaultIndex = 0;
+    for (int i = 0; i < static_cast<int>(animationInfoList.size()); ++i)
+    {
+        if (!LoadAnimationClip(animationInfoList.at(i)))
+        {
+            continue;
+        }
+
+        if (animationInfoList.at(i).isDefault)
+        {
+            defaultIndex = static_cast<int>(m_animationClips.size()) - 1;
+        }
+    }
+
+    if (m_animationClips.empty())
+    {
+        m_animationInfoList.clear();
+        return false;
+    }
+
+    m_animationInfoList.clear();
+    for (const auto& clip : m_animationClips)
+    {
+        m_animationInfoList.push_back(clip.info);
+    }
+
+    m_activeAnimationClipIndex = defaultIndex;
+    return true;
+}
+
+bool MeshMixSkinAnim::LoadAnimationClip(const AnimationInfo& info)
+{
+    AnimationClip clip;
+    clip.info = info;
+    clip.loop = (info.mode == L"loop" || info.mode == L"default");
+    clip.stopWhenEnd = (info.mode == L"stopWhenEnd");
+    clip.allocator = NEW SkinAnimMeshAlloc(info.filePath);
+
+    HRESULT hr = D3DXLoadMeshHierarchyFromX(info.filePath.c_str(),
+                                            D3DXMESH_MANAGED | D3DXMESH_32BIT,
+                                            Common::D3DDevice(),
+                                            clip.allocator,
+                                            nullptr,
+                                            &clip.frameRoot,
+                                            &clip.controller);
+    if (FAILED(hr) || clip.frameRoot == nullptr || clip.controller == nullptr)
+    {
+        SAFE_RELEASE(clip.controller);
+        if (clip.frameRoot != nullptr)
+        {
+            ReleaseMeshAllocatorRecursive(clip.frameRoot, *clip.allocator);
+            clip.frameRoot = nullptr;
+        }
+        SAFE_DELETE(clip.allocator);
+        return false;
+    }
+
+    ReleaseMeshContainersRecursive(clip.frameRoot, *clip.allocator);
+    clip.duration = GetAnimationControllerDuration(clip.controller);
+    m_animationClips.push_back(clip);
+    return true;
+}
+
+void MeshMixSkinAnim::ReleaseAnimationClips()
+{
+    for (auto& clip : m_animationClips)
+    {
+        SAFE_RELEASE(clip.controller);
+        if (clip.frameRoot != nullptr && clip.allocator != nullptr)
+        {
+            ReleaseMeshAllocatorRecursive(clip.frameRoot, *clip.allocator);
+            clip.frameRoot = nullptr;
+        }
+        SAFE_DELETE(clip.allocator);
+    }
+
+    m_animationClips.clear();
+    m_animationInfoList.clear();
+    m_activeAnimationClipIndex = -1;
 }
 
 void MeshMixSkinAnim::UpdateFrameMatrix(const LPD3DXFRAME frameBase, const LPD3DXMATRIX matParent)
@@ -801,6 +1150,33 @@ void MeshMixSkinAnim::SetEnabled(const bool enabled)
 std::wstring MeshMixSkinAnim::GetMeshName() const
 {
     return m_meshName;
+}
+
+const std::vector<MeshMixSkinAnim::AnimationInfo>& MeshMixSkinAnim::GetAnimationInfoList() const
+{
+    return m_animationInfoList;
+}
+
+bool MeshMixSkinAnim::PlayAnimation(const std::wstring& name)
+{
+    for (int i = 0; i < static_cast<int>(m_animationClips.size()); ++i)
+    {
+        if (m_animationClips.at(i).info.name != name)
+        {
+            continue;
+        }
+
+        m_activeAnimationClipIndex = i;
+        m_animationClips.at(i).currentTime = 0.0;
+        if (m_animationClips.at(i).controller != nullptr)
+        {
+            m_animationClips.at(i).controller->SetTrackPosition(0, 0.0);
+            m_animationClips.at(i).controller->AdvanceTime(0.0, nullptr);
+        }
+        return true;
+    }
+
+    return false;
 }
 
 void MeshMixSkinAnim::OnDeviceLost()
