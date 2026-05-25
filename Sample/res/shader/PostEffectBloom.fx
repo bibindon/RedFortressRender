@@ -145,11 +145,14 @@ float4 Blur5x5PS(float2 texCoord : TEXCOORD0) : COLOR
 float4 CombinePS(float2 texCoord : TEXCOORD0) : COLOR
 {
     const float4 scene = tex2D(SceneSampler, texCoord);
-    const float4 bloom =
+    float4 bloom =
         tex2D(BlurSampler0, texCoord) * g_BloomWeightsA.x +
         tex2D(BlurSampler1, texCoord) * g_BloomWeightsA.y +
         tex2D(BlurSampler2, texCoord) * g_BloomWeightsA.z +
         tex2D(BlurSampler3, texCoord) * g_BloomWeightsA.w;
+
+    bloom *= 0.5f;
+    bloom = pow(bloom, 0.5f);
 
     float4 outColor = scene + float4(min(bloom.rgb, float3(0.5f, 0.5f, 0.5f)), 0.0f);
     outColor.a = 1.0f;
