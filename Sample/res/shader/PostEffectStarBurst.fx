@@ -169,8 +169,9 @@ float4 CombinePS(float2 uv : TEXCOORD0) : COLOR
         tex2D(BlurSampler5, uv) * g_BurstWeightsB.y +
         tex2D(BlurSampler6, uv) * g_BurstWeightsB.z;
 
-    burst.rgb *= 0.5f;
-    burst.rgb = pow(burst.rgb, 0.5f);
+//    burst.rgb *= 0.5f;
+//    min(burst.rgb, 0.5);
+//    burst.rgb = pow(burst.rgb, 0.5f);
 
     float4 outColor = scene + burst;
     outColor.a = 1.0f;
