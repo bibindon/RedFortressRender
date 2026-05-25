@@ -132,6 +132,17 @@ void GBuffer::CreateRawResource()
                                 D3DPOOL_DEFAULT,
                                 &m_texRenderTargetThickness);
     assert(hResult == S_OK);
+
+    // バックフェイスパスで実際に描いた線形深度
+    hResult = D3DXCreateTexture(Common::D3DDevice(),
+                                Common::ScreenW(),
+                                Common::ScreenH(),
+                                1,
+                                D3DUSAGE_RENDERTARGET,
+                                D3DFMT_R32F,
+                                D3DPOOL_DEFAULT,
+                                &m_texRenderTargetBackDepth);
+    assert(hResult == S_OK);
 }
 
 void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
@@ -142,7 +153,8 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
                    LPDIRECT3DTEXTURE9* CameraZ,
                    LPDIRECT3DTEXTURE9* Pos,
                    LPDIRECT3DTEXTURE9* Normal,
-                   LPDIRECT3DTEXTURE9* Thickness)
+                   LPDIRECT3DTEXTURE9* Thickness,
+                   LPDIRECT3DTEXTURE9* BackDepth)
 {
     HRESULT hr = E_FAIL;
 
@@ -380,11 +392,14 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
 
     // --- 厚みパス（バックフェイス深度）---
     LPDIRECT3DSURFACE9 surfaceThickness = NULL;
+    LPDIRECT3DSURFACE9 surfaceBackDepth = NULL;
     m_texRenderTargetThickness->GetSurfaceLevel(0, &surfaceThickness);
+    m_texRenderTargetBackDepth->GetSurfaceLevel(0, &surfaceBackDepth);
 
     LPDIRECT3DSURFACE9 surfaceOld2 = NULL;
     Common::D3DDevice()->GetRenderTarget(0, &surfaceOld2);
     Common::D3DDevice()->SetRenderTarget(0, surfaceThickness);
+    Common::D3DDevice()->SetRenderTarget(1, surfaceBackDepth);
 
     Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
                                D3DCOLOR_RGBA(0, 0, 0, 0), 1.0f, 0);
@@ -453,7 +468,9 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     }
 
     Common::D3DDevice()->EndScene();
+    Common::D3DDevice()->SetRenderTarget(1, NULL);
     Common::D3DDevice()->SetRenderTarget(0, surfaceOld2);
+    SAFE_RELEASE(surfaceBackDepth);
     SAFE_RELEASE(surfaceThickness);
     SAFE_RELEASE(surfaceOld2);
 
@@ -462,6 +479,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     *Pos = m_texRenderTargetPos;
     *Normal = m_texRenderTargetNormal;
     *Thickness = m_texRenderTargetThickness;
+    *BackDepth = m_texRenderTargetBackDepth;
 }
 
 void GBuffer::Finalize()
@@ -478,6 +496,7 @@ void GBuffer::Finalize()
     SAFE_RELEASE(m_texRenderTargetPos);
     SAFE_RELEASE(m_texRenderTargetNormal);
     SAFE_RELEASE(m_texRenderTargetThickness);
+    SAFE_RELEASE(m_texRenderTargetBackDepth);
 
     m_isInitialized = false;
 }
@@ -495,6 +514,7 @@ void GBuffer::OnDeviceLost()
     SAFE_RELEASE(m_texRenderTargetPos);
     SAFE_RELEASE(m_texRenderTargetNormal);
     SAFE_RELEASE(m_texRenderTargetThickness);
+    SAFE_RELEASE(m_texRenderTargetBackDepth);
 }
 
 void GBuffer::OnDeviceReset()

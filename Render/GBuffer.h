@@ -34,7 +34,8 @@ public:
               LPDIRECT3DTEXTURE9* CameraZ,
               LPDIRECT3DTEXTURE9* Pos,
               LPDIRECT3DTEXTURE9* Normal,
-              LPDIRECT3DTEXTURE9* Thickness);
+              LPDIRECT3DTEXTURE9* Thickness,
+              LPDIRECT3DTEXTURE9* BackDepth);
 
     void Finalize();
 
@@ -48,6 +49,7 @@ private:
     LPDIRECT3DTEXTURE9 m_texRenderTargetPos = NULL;
     LPDIRECT3DTEXTURE9 m_texRenderTargetNormal = NULL;
     LPDIRECT3DTEXTURE9 m_texRenderTargetThickness = NULL;
+    LPDIRECT3DTEXTURE9 m_texRenderTargetBackDepth = NULL;
 
     LPD3DXEFFECT m_fxGBuffer = NULL;
     float m_nearPlane = 0.1f;

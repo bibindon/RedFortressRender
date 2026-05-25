@@ -224,6 +224,12 @@ bool HandleSampleKeyDown(HWND hWnd, const WPARAM wParam)
         return true;
     }
 
+    if (wParam == VK_F7)
+    {
+        ToggleDebugGBufferView(NSRender::DebugGBufferView::BackDepth);
+        return true;
+    }
+
     if (wParam == VK_ESCAPE)
     {
         if (g_bMouseLookEnabled)

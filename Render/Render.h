@@ -71,6 +71,7 @@ enum class DebugGBufferView
     Normal = 2,
     Depth = 3,
     Thickness = 4,
+    BackDepth = 5,
 };
 
 struct RenderingQualitySettings

@@ -335,18 +335,22 @@ void PS_GBufferParticleFog(VS_OUTPUT inputData,
 }
 
 void PS_GBufferBackFace(VS_OUTPUT inputData,
-                        out float4 outRT0 : COLOR0)
+                        out float4 outRT0 : COLOR0,
+                        out float4 outRT1 : COLOR1)
 {
     float frontLinearZ = tex2D(sampFrontDepth, inputData.screenUV).r;
     float frontViewZ = frontLinearZ * (g_fFar - g_fNear) + g_fNear;
     float thickness = max(inputData.viewSpaceZ - frontViewZ, 0.0f);
+    float backLinearZ = saturate((inputData.viewSpaceZ - g_fNear) / (g_fFar - g_fNear));
     outRT0 = float4(thickness, thickness, thickness, thickness);
+    outRT1 = float4(backLinearZ, 0.0f, 0.0f, 1.0f);
 }
 
 void PS_GBufferSkinBackFace(float  viewSpaceZ : TEXCOORD0,
                             float2 screenUV   : TEXCOORD3,
                             float2 alphaUV    : TEXCOORD4,
-                            out float4 outRT0 : COLOR0)
+                            out float4 outRT0 : COLOR0,
+                            out float4 outRT1 : COLOR1)
 {
     if (g_useSkinAlphaCutout)
     {
@@ -360,7 +364,7 @@ void PS_GBufferSkinBackFace(float  viewSpaceZ : TEXCOORD0,
     inputData.normalWorld = 0.0f;
     inputData.screenUV = screenUV;
     inputData.alphaUV = alphaUV;
-    PS_GBufferBackFace(inputData, outRT0);
+    PS_GBufferBackFace(inputData, outRT0, outRT1);
 }
 
 technique TechniqueGBuffer

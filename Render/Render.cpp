@@ -1475,6 +1475,7 @@ void Render::Draw()
     LPDIRECT3DTEXTURE9 pTexTempPos = NULL;
     LPDIRECT3DTEXTURE9 pTexTempNoral = NULL;
     LPDIRECT3DTEXTURE9 pTexTempThickness = NULL;
+    LPDIRECT3DTEXTURE9 pTexTempBackDepth = NULL;
     if (m_gBufferEnabled)
     {
         EnsureGBufferInitialized();
@@ -1486,7 +1487,8 @@ void Render::Draw()
                        &pTexTempCameraZ,
                        &pTexTempPos,
                        &pTexTempNoral,
-                       &pTexTempThickness);
+                       &pTexTempThickness,
+                       &pTexTempBackDepth);
         MeshMixManager::SetSharedThicknessTexture(pTexTempThickness);
     }
     else
@@ -1702,6 +1704,9 @@ void Render::Draw()
             break;
         case DebugGBufferView::Thickness:
             m_postEffectEnd.DrawSingleChannel(pTexTempThickness);
+            break;
+        case DebugGBufferView::BackDepth:
+            m_postEffectEnd.DrawSingleChannel(pTexTempBackDepth);
             break;
         default:
             m_postEffectEnd.Draw(pTempTexture);
