@@ -120,7 +120,7 @@ private:
     bool m_enabled = true;
     bool m_bLoaded = false;
     bool m_useExternalAnimation = false;
-    bool m_alphaClipEnabled = false;
+    bool m_alphaClipEnabled = true;
     int m_activeAnimationClipIndex = -1;
     stMeshParam m_param;
     AnimSetMap m_animSetMap;

@@ -611,7 +611,7 @@ private:
     bool m_meshMixSpecularIntensityOverrideEnabled = true;
     bool m_meshMixSpecularEdgeOverrideEnabled = true;
     bool m_phongTreatTextureAsWhiteEnabled = false;
-    bool m_meshMixSkinAnimAlphaClipEnabled = false;
+    bool m_meshMixSkinAnimAlphaClipEnabled = true;
     bool m_meshMixSSSEnabled = false;
     float m_meshMixSSSIntensity = 1.0f;
     DWORD m_meshMixSSSColor = 0xffff80;
