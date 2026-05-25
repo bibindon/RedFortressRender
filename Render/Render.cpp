@@ -2183,6 +2183,7 @@ int Render::AddMeshMixSkinAnim(const std::wstring& filePath,
     param.treatTextureAsWhite = m_phongTreatTextureAsWhiteEnabled;
 
     MeshMixSkinAnim* mesh = NEW MeshMixSkinAnim(filePath, pos, rot, scale, param, animSetMap);
+    mesh->SetAlphaClipEnabled(m_meshMixSkinAnimAlphaClipEnabled);
     try
     {
         mesh->Initialize();
@@ -2222,6 +2223,7 @@ int Render::AddMeshMixSkinAnim(const std::wstring& meshFilePath,
     param.treatTextureAsWhite = m_phongTreatTextureAsWhiteEnabled;
 
     MeshMixSkinAnim* mesh = NEW MeshMixSkinAnim(meshFilePath, animationFilePath, pos, rot, scale, param, animSetMap);
+    mesh->SetAlphaClipEnabled(m_meshMixSkinAnimAlphaClipEnabled);
     try
     {
         mesh->Initialize();
@@ -2266,6 +2268,19 @@ bool Render::PlayMeshMixSkinAnimAnimation(const int id, const std::wstring& name
     }
 
     return m_meshMixSkinAnimList.at(id)->PlayAnimation(name);
+}
+
+void Render::SetMeshMixSkinAnimAlphaClip(const bool enabled)
+{
+    m_meshMixSkinAnimAlphaClipEnabled = enabled;
+
+    for (auto& mesh : m_meshMixSkinAnimList)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->SetAlphaClipEnabled(enabled);
+        }
+    }
 }
 
 void Render::SetMeshMixSaturateShadow(const bool enabled)

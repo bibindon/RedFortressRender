@@ -228,6 +228,7 @@ public:
     bool RemoveMeshMixSkinAnim(int id);
     const std::vector<MeshMixSkinAnim::AnimationInfo>* GetMeshMixSkinAnimAnimationInfoList(int id) const;
     bool PlayMeshMixSkinAnimAnimation(int id, const std::wstring& name);
+    void SetMeshMixSkinAnimAlphaClip(const bool enabled);
 
     void SetMeshMixPos(const int id, const D3DXVECTOR3& pos);
     void SetMeshMixSaturateShadow(const bool enabled);
@@ -610,6 +611,7 @@ private:
     bool m_meshMixSpecularIntensityOverrideEnabled = true;
     bool m_meshMixSpecularEdgeOverrideEnabled = true;
     bool m_phongTreatTextureAsWhiteEnabled = false;
+    bool m_meshMixSkinAnimAlphaClipEnabled = false;
     bool m_meshMixSSSEnabled = false;
     float m_meshMixSSSIntensity = 1.0f;
     DWORD m_meshMixSSSColor = 0xffff80;

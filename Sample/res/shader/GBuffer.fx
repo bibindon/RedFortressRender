@@ -48,6 +48,19 @@ sampler sampParticleAlpha = sampler_state
     AddressV = CLAMP;
 };
 
+texture g_texSkinAlpha;
+sampler sampSkinAlpha = sampler_state
+{
+    Texture = (g_texSkinAlpha);
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    MipFilter = LINEAR;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+
+bool g_useSkinAlphaCutout = false;
+
 struct VS_INPUT
 {
     float4 positionObject : POSITION0;
@@ -176,11 +189,13 @@ void VS_GBufferSkin(in  float4 inPosition     : POSITION,
                     in  float4 inBlendWeights : BLENDWEIGHT,
                     in  float4 inBlendIndices : BLENDINDICES,
                     in  float4 inNormal       : NORMAL,
+                    in  float3 inTexCoord     : TEXCOORD0,
                     out float4 outPosition    : POSITION0,
                     out float  outViewSpaceZ  : TEXCOORD0,
                     out float3 outWorldPos    : TEXCOORD1,
                     out float3 outWorldNormal : TEXCOORD2,
                     out float2 outScreenUV    : TEXCOORD3,
+                    out float2 outAlphaUV     : TEXCOORD4,
                     uniform int boneNumber);
 
 VertexShader vsSkinArray[4] =
@@ -195,11 +210,13 @@ void VS_GBufferSkin(in  float4 inPosition     : POSITION,
                     in  float4 inBlendWeights : BLENDWEIGHT,
                     in  float4 inBlendIndices : BLENDINDICES,
                     in  float4 inNormal       : NORMAL,
+                    in  float3 inTexCoord     : TEXCOORD0,
                     out float4 outPosition    : POSITION0,
                     out float  outViewSpaceZ  : TEXCOORD0,
                     out float3 outWorldPos    : TEXCOORD1,
                     out float3 outWorldNormal : TEXCOORD2,
                     out float2 outScreenUV    : TEXCOORD3,
+                    out float2 outAlphaUV     : TEXCOORD4,
                     uniform int boneNumber)
 {
     float3 position = 0.0f;
@@ -230,6 +247,7 @@ void VS_GBufferSkin(in  float4 inPosition     : POSITION,
     outViewSpaceZ = positionView4.z;
     outWorldPos = position;
     outWorldNormal = normal;
+    outAlphaUV = inTexCoord.xy;
 }
 
 void PS_GBuffer(VS_OUTPUT inputData,
@@ -260,6 +278,30 @@ void PS_GBufferInstancing(VS_OUTPUT inputData,
                           out float4 outRT2 : COLOR2)
 {
     clip(tex2D(sampInstancingAlpha, inputData.alphaUV).a - 0.1f);
+    PS_GBuffer(inputData, outRT0, outRT1, outRT2);
+}
+
+void PS_GBufferSkin(float  viewSpaceZ  : TEXCOORD0,
+                    float3 worldPos    : TEXCOORD1,
+                    float3 worldNormal : TEXCOORD2,
+                    float2 screenUV    : TEXCOORD3,
+                    float2 alphaUV     : TEXCOORD4,
+                    out float4 outRT0  : COLOR0,
+                    out float4 outRT1  : COLOR1,
+                    out float4 outRT2  : COLOR2)
+{
+    if (g_useSkinAlphaCutout)
+    {
+        clip(tex2D(sampSkinAlpha, alphaUV).a - 0.5f);
+    }
+
+    VS_OUTPUT inputData;
+    inputData.positionClip = 0.0f;
+    inputData.viewSpaceZ = viewSpaceZ;
+    inputData.positionWorld = worldPos;
+    inputData.normalWorld = worldNormal;
+    inputData.screenUV = screenUV;
+    inputData.alphaUV = alphaUV;
     PS_GBuffer(inputData, outRT0, outRT1, outRT2);
 }
 
@@ -299,6 +341,26 @@ void PS_GBufferBackFace(VS_OUTPUT inputData,
     float frontViewZ = frontLinearZ * (g_fFar - g_fNear) + g_fNear;
     float thickness = max(inputData.viewSpaceZ - frontViewZ, 0.0f);
     outRT0 = float4(thickness, thickness, thickness, thickness);
+}
+
+void PS_GBufferSkinBackFace(float  viewSpaceZ : TEXCOORD0,
+                            float2 screenUV   : TEXCOORD3,
+                            float2 alphaUV    : TEXCOORD4,
+                            out float4 outRT0 : COLOR0)
+{
+    if (g_useSkinAlphaCutout)
+    {
+        clip(tex2D(sampSkinAlpha, alphaUV).a - 0.5f);
+    }
+
+    VS_OUTPUT inputData;
+    inputData.positionClip = 0.0f;
+    inputData.viewSpaceZ = viewSpaceZ;
+    inputData.positionWorld = 0.0f;
+    inputData.normalWorld = 0.0f;
+    inputData.screenUV = screenUV;
+    inputData.alphaUV = alphaUV;
+    PS_GBufferBackFace(inputData, outRT0);
 }
 
 technique TechniqueGBuffer
@@ -396,7 +458,7 @@ technique TechniqueGBufferSkin
         AlphaBlendEnable = FALSE;
 
         VertexShader = (vsSkinArray[g_currentBoneIndex]);
-        PixelShader  = compile ps_3_0 PS_GBuffer();
+        PixelShader  = compile ps_3_0 PS_GBufferSkin();
     }
 }
 
@@ -410,6 +472,6 @@ technique TechniqueGBufferSkinBackFace
         AlphaBlendEnable = FALSE;
 
         VertexShader = (vsSkinArray[g_currentBoneIndex]);
-        PixelShader  = compile ps_3_0 PS_GBufferBackFace();
+        PixelShader  = compile ps_3_0 PS_GBufferSkinBackFace();
     }
 }

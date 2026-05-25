@@ -16,6 +16,7 @@ float g_fShadowDarkness = 1.0f;
 float g_specularPower = 1.0f;
 float g_specularIntensity = 0.1f;
 bool g_treatTextureAsWhite = false;
+bool g_alphaClipEnabled = false;
 bool g_mirrorClipEnable = false;
 float4 g_mirrorClipPlane = { 0.0f, 1.0f, 0.0f, 0.0f };
 
@@ -65,6 +66,14 @@ float3 SampleBaseTextureColor(float2 uv)
     }
 
     return textureColor;
+}
+
+void ApplyAlphaClip(float2 uv)
+{
+    if (g_alphaClipEnabled)
+    {
+        clip(tex2D(g_textureSampler, uv).a - 0.5f);
+    }
 }
 
 float3 RotateVectorXYZ(float3 inputVector, float3 rotation)
@@ -254,6 +263,7 @@ void PixelShader1(in  float3 inPosWorld    : TEXCOORD0,
                   out float4 outColor      : COLOR)
 {
     ApplyMirrorClip(inPosWorld);
+    ApplyAlphaClip(inTexCoord);
 
     float3 normal = normalize(inNormalWorld);
     float3 lightDir = normalize(g_lightDir.xyz);
@@ -297,6 +307,7 @@ void PixelShaderPointLight(in  float4 inPosition    : POSITION,
                            out float4 outColor      : COLOR)
 {
     ApplyMirrorClip(inPosWorld);
+    ApplyAlphaClip(inTexCoord);
 
     float3 N = normalize(inNormalWorld);
     float3 cameraDirWS = normalize(g_cameraPos.xyz - inPosWorld);
@@ -343,6 +354,30 @@ technique Technique1
         AlphaBlendEnable = TRUE;
         SrcBlend = SRCALPHA;
         DestBlend = INVSRCALPHA;
+        CullMode = NONE;
+
+        VertexShader = (vsArray[g_currentBoneIndex]);
+        PixelShader = compile ps_3_0 PixelShader1();
+    }
+
+    pass PassPointLight
+    {
+        AlphaBlendEnable = TRUE;
+        SrcBlend = ONE;
+        DestBlend = ONE;
+        CullMode = NONE;
+
+        VertexShader = (vsArray[g_currentBoneIndex]);
+        PixelShader = compile ps_3_0 PixelShaderPointLight();
+    }
+}
+
+technique TechniqueAlphaClip
+{
+    pass Pass0
+    {
+        AlphaBlendEnable = FALSE;
+        AlphaTestEnable = FALSE;
         CullMode = NONE;
 
         VertexShader = (vsArray[g_currentBoneIndex]);

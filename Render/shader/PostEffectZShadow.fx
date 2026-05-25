@@ -337,8 +337,10 @@ VSOutDepth VS_DepthFromLight(VSInDepth vin)
 void VS_DepthFromLightSkin(in  float4 inPosition     : POSITION,
                            in  float4 inBlendWeights : BLENDWEIGHT,
                            in  float4 inBlendIndices : BLENDINDICES,
+                           in  float2 inUV           : TEXCOORD0,
                            out float4 outPosition    : POSITION0,
                            out float  outDepth       : TEXCOORD0,
+                           out float2 outUV          : TEXCOORD1,
                            uniform int boneNumber);
 
 VertexShader vsDepthSkinArray[4] =
@@ -352,8 +354,10 @@ VertexShader vsDepthSkinArray[4] =
 void VS_DepthFromLightSkin(in  float4 inPosition     : POSITION,
                            in  float4 inBlendWeights : BLENDWEIGHT,
                            in  float4 inBlendIndices : BLENDINDICES,
+                           in  float2 inUV           : TEXCOORD0,
                            out float4 outPosition    : POSITION0,
                            out float  outDepth       : TEXCOORD0,
+                           out float2 outUV          : TEXCOORD1,
                            uniform int boneNumber)
 {
     float3 worldPos = SkinPosition(inPosition, inBlendWeights, inBlendIndices, boneNumber);
@@ -361,6 +365,7 @@ void VS_DepthFromLightSkin(in  float4 inPosition     : POSITION,
 
     outPosition = mul(float4(worldPos, 1.0f), g_matLightViewProj);
     outDepth = saturate((posLightView.z - g_lightNear) / (g_lightFar - g_lightNear));
+    outUV = inUV;
 }
 
 float4 PS_DepthFromLight(VSOutDepth pin) : COLOR0

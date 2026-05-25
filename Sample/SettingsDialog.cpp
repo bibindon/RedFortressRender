@@ -1520,6 +1520,18 @@ void RefreshMeshMixRenderMode(HWND hDlg)
                    checkState);
 }
 
+void RefreshMeshMixSkinAnimAlphaClip(HWND hDlg)
+{
+    UINT checkState = BST_UNCHECKED;
+    if (g_bMeshMixSkinAnimAlphaClip)
+    {
+        checkState = BST_CHECKED;
+    }
+    CheckDlgButton(hDlg,
+                   IDC_CHECK_MIX_SKIN_ANIM_ALPHA_CLIP,
+                   checkState);
+}
+
 void RefreshResolutionControls(HWND hDlg)
 {
     HWND combo = GetDlgItem(hDlg, IDC_COMBO_RESOLUTION);
@@ -2114,6 +2126,7 @@ void RefreshAllControls(HWND hDlg)
     RefreshMixMeshShaderMode(hDlg);
     RefreshMeshMixRenderMode(hDlg);
     RefreshMeshInstancingRenderMode(hDlg);
+    RefreshMeshMixSkinAnimAlphaClip(hDlg);
     RefreshResolutionControls(hDlg);
     RefreshRenderingQualityControls(hDlg);
     RefreshLoadedModelListView(hDlg);
@@ -3694,6 +3707,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             g_bMeshMixHighQuality =
                 (IsDlgButtonChecked(hDlg, IDC_CHECK_MIX_MESH_HIGH_QUALITY) == BST_CHECKED);
             RefreshMeshMixRenderMode(hDlg);
+            return TRUE;
+        }
+
+        if (commandId == IDC_CHECK_MIX_SKIN_ANIM_ALPHA_CLIP)
+        {
+            g_bMeshMixSkinAnimAlphaClip =
+                (IsDlgButtonChecked(hDlg, IDC_CHECK_MIX_SKIN_ANIM_ALPHA_CLIP) == BST_CHECKED);
+            ApplyMeshMixSkinAnimAlphaClip();
+            RefreshMeshMixSkinAnimAlphaClip(hDlg);
             return TRUE;
         }
 

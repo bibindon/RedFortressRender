@@ -57,6 +57,7 @@ public:
     void SetSpecularIntensityOverrideEnabled(const bool enabled);
     void SetSpecularEdgeOverrideEnabled(const bool enabled);
     void SetTreatTextureAsWhite(const bool enabled);
+    void SetAlphaClipEnabled(const bool enabled);
     void SetRotY(const float rotY);
 
     D3DXVECTOR3 GetRot() const;
@@ -119,6 +120,7 @@ private:
     bool m_enabled = true;
     bool m_bLoaded = false;
     bool m_useExternalAnimation = false;
+    bool m_alphaClipEnabled = false;
     int m_activeAnimationClipIndex = -1;
     stMeshParam m_param;
     AnimSetMap m_animSetMap;

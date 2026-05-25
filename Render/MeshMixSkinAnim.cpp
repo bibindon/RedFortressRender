@@ -428,6 +428,7 @@ void MeshMixSkinAnim::Render()
     }
     m_D3DEffect->SetBool("g_bSaturateShadow", useSaturateShadow);
     m_D3DEffect->SetBool("g_treatTextureAsWhite", m_param.treatTextureAsWhite ? TRUE : FALSE);
+    m_D3DEffect->SetBool("g_alphaClipEnabled", m_alphaClipEnabled ? TRUE : FALSE);
     m_D3DEffect->SetBool("g_fresnelEnable", m_param.fresnel ? TRUE : FALSE);
     m_D3DEffect->SetFloat("g_fresnelIntensity", m_param.fresnelIntensity);
     m_D3DEffect->SetBool("g_mirrorClipEnable", GetSharedMirrorClipEnabled() ? TRUE : FALSE);
@@ -487,7 +488,7 @@ void MeshMixSkinAnim::Render()
 
     D3DXMATRIX viewProjectionMatrix = Camera::GetViewMatrix() * Camera::GetProjMatrix();
     m_D3DEffect->SetMatrix("g_matViewProj", &viewProjectionMatrix);
-    m_D3DEffect->SetTechnique("Technique1");
+    m_D3DEffect->SetTechnique(m_alphaClipEnabled ? "TechniqueAlphaClip" : "Technique1");
     RenderFrame(m_frameRoot);
 }
 
@@ -816,10 +817,21 @@ void MeshMixSkinAnim::RenderMeshContainerToEffect(const LPD3DXMESHCONTAINER cont
             }
 
             m_matWorldArray[k] = container->m_boneOffsetMatrices[boneId] *
-                                 (*container->m_frameCombinedMatrix[boneId]);
+                                  (*container->m_frameCombinedMatrix[boneId]);
         }
 
         effect->SetMatrixArray("g_matWorldArray", &m_matWorldArray[0], paletteSize);
+        const DWORD materialIndex = boneCombination[i].AttribId;
+        const bool hasTexture = materialIndex < container->m_textureList.size() &&
+                                container->m_textureList[materialIndex] != nullptr;
+        effect->SetBool("g_useSkinAlphaCutout", m_alphaClipEnabled ? TRUE : FALSE);
+        effect->SetTexture("g_texSkinAlpha", (m_alphaClipEnabled && hasTexture)
+                                           ? container->m_textureList[materialIndex]
+                                           : nullptr);
+        effect->SetBool("g_useMeshAlphaCutout", m_alphaClipEnabled ? TRUE : FALSE);
+        effect->SetTexture("g_texMeshAlpha", (m_alphaClipEnabled && hasTexture)
+                                           ? container->m_textureList[materialIndex]
+                                           : nullptr);
         effect->CommitChanges();
         container->MeshData.pMesh->DrawSubset(i);
     }
@@ -1117,6 +1129,11 @@ void MeshMixSkinAnim::SetSpecularEdgeOverrideEnabled(const bool enabled)
 void MeshMixSkinAnim::SetTreatTextureAsWhite(const bool enabled)
 {
     m_param.treatTextureAsWhite = enabled;
+}
+
+void MeshMixSkinAnim::SetAlphaClipEnabled(const bool enabled)
+{
+    m_alphaClipEnabled = enabled;
 }
 
 void MeshMixSkinAnim::SetRotY(const float rotY)

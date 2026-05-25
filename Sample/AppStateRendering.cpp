@@ -959,6 +959,11 @@ void ApplyMeshInstancingRenderMode()
     g_Render.SetMeshInstancingHighQuality(g_bMeshInstancingHighQuality);
 }
 
+void ApplyMeshMixSkinAnimAlphaClip()
+{
+    g_Render.SetMeshMixSkinAnimAlphaClip(g_bMeshMixSkinAnimAlphaClip);
+}
+
 void ApplyPointLightColor()
 {
     g_pointLightColor.r = ClampPointLightColor(g_pointLightColor.r);

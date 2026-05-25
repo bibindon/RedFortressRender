@@ -41,6 +41,7 @@ std::wstring g_selectedPbrEnvMapPath;
 std::wstring g_selectedMeshInstancingPath;
 bool g_bMeshMixHighQuality = false;
 bool g_bMeshInstancingHighQuality = true;
+bool g_bMeshMixSkinAnimAlphaClip = false;
 std::wstring g_selectedMeshPath;
 std::wstring g_selectedAnimMeshPath;
 std::wstring g_selectedSkinAnimMeshPath;
@@ -2293,6 +2294,7 @@ void ApplyAllSampleSettings()
     ApplyStarBurstDistanceFade();
     ApplyModelLoadScale();
     ApplyMeshInstancingRenderMode();
+    ApplyMeshMixSkinAnimAlphaClip();
     ApplyGaussianSampleSize();
     ApplyGaussianStrength();
     ApplyFontExGaussianSampleSize();
