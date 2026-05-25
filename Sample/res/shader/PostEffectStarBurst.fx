@@ -160,7 +160,7 @@ float4 DiagonalBlur3x3PS(float2 uv : TEXCOORD0) : COLOR
 float4 CombinePS(float2 uv : TEXCOORD0) : COLOR
 {
     const float4 scene = tex2D(SceneSampler, uv);
-    const float4 burst =
+    float4 burst =
         tex2D(BlurSampler0, uv) * g_BurstWeightsA.x +
         tex2D(BlurSampler1, uv) * g_BurstWeightsA.y +
         tex2D(BlurSampler2, uv) * g_BurstWeightsA.z +
@@ -168,6 +168,9 @@ float4 CombinePS(float2 uv : TEXCOORD0) : COLOR
         tex2D(BlurSampler4, uv) * g_BurstWeightsB.x +
         tex2D(BlurSampler5, uv) * g_BurstWeightsB.y +
         tex2D(BlurSampler6, uv) * g_BurstWeightsB.z;
+
+    burst.rgb *= 0.5f;
+    burst.rgb = pow(burst.rgb, 0.5f);
 
     float4 outColor = scene + burst;
     outColor.a = 1.0f;
