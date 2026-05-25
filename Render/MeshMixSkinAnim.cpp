@@ -899,17 +899,35 @@ void MeshMixSkinAnim::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBas
             m_D3DEffect->SetTexture("g_texture", nullptr);
         }
 
+        const bool useAlphaDepthPrePass = !m_alphaClipEnabled && hasTexture;
+        if (useAlphaDepthPrePass)
+        {
+            m_D3DEffect->SetTechnique("TechniqueAlphaDepthPrePass");
+            m_D3DEffect->Begin(nullptr, 0);
+            if (FAILED(m_D3DEffect->BeginPass(0)))
+            {
+                m_D3DEffect->End();
+                throw std::exception("Failed 'BeginPass' function.");
+            }
+
+            m_D3DEffect->CommitChanges();
+            container->MeshData.pMesh->DrawSubset(i);
+            m_D3DEffect->EndPass();
+            m_D3DEffect->End();
+        }
+
         DWORD oldZWriteEnable = TRUE;
-        if (disableZWrite)
+        if (disableZWrite || useAlphaDepthPrePass)
         {
             Common::D3DDevice()->GetRenderState(D3DRS_ZWRITEENABLE, &oldZWriteEnable);
             Common::D3DDevice()->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
         }
 
+        m_D3DEffect->SetTechnique(m_alphaClipEnabled ? "TechniqueAlphaClip" : "Technique1");
         m_D3DEffect->Begin(nullptr, 0);
         if (FAILED(m_D3DEffect->BeginPass(0)))
         {
-            if (disableZWrite)
+            if (disableZWrite || useAlphaDepthPrePass)
             {
                 Common::D3DDevice()->SetRenderState(D3DRS_ZWRITEENABLE, oldZWriteEnable);
             }
@@ -924,7 +942,7 @@ void MeshMixSkinAnim::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBas
 
         if (!m_param.pointLight)
         {
-            if (disableZWrite)
+            if (disableZWrite || useAlphaDepthPrePass)
             {
                 Common::D3DDevice()->SetRenderState(D3DRS_ZWRITEENABLE, oldZWriteEnable);
             }
@@ -934,7 +952,7 @@ void MeshMixSkinAnim::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBas
         m_D3DEffect->Begin(nullptr, 0);
         if (FAILED(m_D3DEffect->BeginPass(1)))
         {
-            if (disableZWrite)
+            if (disableZWrite || useAlphaDepthPrePass)
             {
                 Common::D3DDevice()->SetRenderState(D3DRS_ZWRITEENABLE, oldZWriteEnable);
             }
@@ -947,7 +965,7 @@ void MeshMixSkinAnim::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBas
         m_D3DEffect->EndPass();
         m_D3DEffect->End();
 
-        if (disableZWrite)
+        if (disableZWrite || useAlphaDepthPrePass)
         {
             Common::D3DDevice()->SetRenderState(D3DRS_ZWRITEENABLE, oldZWriteEnable);
         }

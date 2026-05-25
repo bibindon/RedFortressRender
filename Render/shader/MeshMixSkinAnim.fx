@@ -347,6 +347,13 @@ void PixelShaderPointLight(in  float4 inPosition    : POSITION,
     outColor = float4((albedo * diffuseAccum) + specularAccum, 0.0f);
 }
 
+void PixelShaderAlphaDepthPrePass(in  float2 inTexCoord : TEXCOORD2,
+                                  out float4 outColor   : COLOR)
+{
+    clip(tex2D(g_textureSampler, inTexCoord).a - 0.5f);
+    outColor = 0.0f;
+}
+
 technique Technique1
 {
     pass Pass0
@@ -354,6 +361,7 @@ technique Technique1
         AlphaBlendEnable = TRUE;
         SrcBlend = SRCALPHA;
         DestBlend = INVSRCALPHA;
+        ColorWriteEnable = 15;
         CullMode = NONE;
 
         VertexShader = (vsArray[g_currentBoneIndex]);
@@ -365,10 +373,27 @@ technique Technique1
         AlphaBlendEnable = TRUE;
         SrcBlend = ONE;
         DestBlend = ONE;
+        ColorWriteEnable = 15;
         CullMode = NONE;
 
         VertexShader = (vsArray[g_currentBoneIndex]);
         PixelShader = compile ps_3_0 PixelShaderPointLight();
+    }
+}
+
+technique TechniqueAlphaDepthPrePass
+{
+    pass Pass0
+    {
+        ZEnable = TRUE;
+        ZWriteEnable = TRUE;
+        AlphaBlendEnable = FALSE;
+        AlphaTestEnable = FALSE;
+        ColorWriteEnable = 0;
+        CullMode = NONE;
+
+        VertexShader = (vsArray[g_currentBoneIndex]);
+        PixelShader = compile ps_3_0 PixelShaderAlphaDepthPrePass();
     }
 }
 
@@ -380,6 +405,7 @@ technique TechniqueAlphaClip
         ZWriteEnable = TRUE;
         AlphaBlendEnable = FALSE;
         AlphaTestEnable = FALSE;
+        ColorWriteEnable = 15;
         CullMode = NONE;
 
         VertexShader = (vsArray[g_currentBoneIndex]);
@@ -391,6 +417,7 @@ technique TechniqueAlphaClip
         AlphaBlendEnable = TRUE;
         SrcBlend = ONE;
         DestBlend = ONE;
+        ColorWriteEnable = 15;
         CullMode = NONE;
 
         VertexShader = (vsArray[g_currentBoneIndex]);
