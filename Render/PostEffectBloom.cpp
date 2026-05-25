@@ -91,6 +91,13 @@ void PostEffectBloom::CreateTexture()
 void PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource,
                            LPDIRECT3DTEXTURE9 renderTarget)
 {
+    Draw(renderSource, renderSource, renderTarget);
+}
+
+void PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource,
+                           LPDIRECT3DTEXTURE9 renderScene,
+                           LPDIRECT3DTEXTURE9 renderTarget)
+{
     if (!m_isInitialized || m_d3dEffect == NULL)
     {
         return;
@@ -120,7 +127,7 @@ void PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource,
         DrawUpsampleQuad(m_texUpsample[i], m_texBlur[i - 1], m_texUpsample[i - 1]);
     }
 
-    DrawCombineQuad(renderSource, renderTarget);
+    DrawCombineQuad(renderScene, renderTarget);
 }
 
 void PostEffectBloom::Finalize()

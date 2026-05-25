@@ -71,6 +71,13 @@ void PostEffectHalo::CreateTexture()
 void PostEffectHalo::Draw(LPDIRECT3DTEXTURE9 texSource,
                           LPDIRECT3DTEXTURE9 texTarget)
 {
+    Draw(texSource, texSource, texTarget);
+}
+
+void PostEffectHalo::Draw(LPDIRECT3DTEXTURE9 texSource,
+                          LPDIRECT3DTEXTURE9 texScene,
+                          LPDIRECT3DTEXTURE9 texTarget)
+{
     if (!m_isInitialized || m_d3dEffect == NULL)
     {
         return;
@@ -79,7 +86,7 @@ void PostEffectHalo::Draw(LPDIRECT3DTEXTURE9 texSource,
     m_d3dEffect->SetFloat("g_Threshold", m_threshold);
     DrawFullscreenQuad(texSource, m_texBright, "BrightPass");
     DrawFullscreenQuad(m_texBright, m_texHalo, "HaloPass");
-    DrawCombineQuad(texSource, texTarget);
+    DrawCombineQuad(texScene, texTarget);
 }
 
 void PostEffectHalo::Finalize()

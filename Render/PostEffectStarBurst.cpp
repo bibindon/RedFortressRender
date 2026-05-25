@@ -55,6 +55,14 @@ void PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource,
                                LPDIRECT3DTEXTURE9 texZ,
                                LPDIRECT3DTEXTURE9 renderTarget)
 {
+    Draw(renderSource, renderSource, texZ, renderTarget);
+}
+
+void PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource,
+                               LPDIRECT3DTEXTURE9 renderScene,
+                               LPDIRECT3DTEXTURE9 texZ,
+                               LPDIRECT3DTEXTURE9 renderTarget)
+{
     if (!m_isInitialized || m_d3dEffect == NULL)
     {
         return;
@@ -111,7 +119,7 @@ void PostEffectStarBurst::Draw(LPDIRECT3DTEXTURE9 renderSource,
         DrawFullscreenQuad(m_texDownsample[i], m_texBlur[i], "DiagonalBlur3x3");
     }
 
-    DrawCombineQuad(renderSource, renderTarget);
+    DrawCombineQuad(renderScene, renderTarget);
 }
 
 void PostEffectStarBurst::Finalize()

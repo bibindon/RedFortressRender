@@ -15,6 +15,10 @@ public:
     void Draw(LPDIRECT3DTEXTURE9 texSource,
               LPDIRECT3DTEXTURE9 texZ,
               LPDIRECT3DTEXTURE9 texTarget);
+    void Draw(LPDIRECT3DTEXTURE9 texEffectSource,
+              LPDIRECT3DTEXTURE9 texScene,
+              LPDIRECT3DTEXTURE9 texZ,
+              LPDIRECT3DTEXTURE9 texTarget);
     void Finalize();
 
     void SetThreshold(const float arg);

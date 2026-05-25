@@ -557,6 +557,8 @@ private:
     void EnsurePostEffectGodRayInitialized();
     static void SwapPostEffectBuffers(LPDIRECT3DTEXTURE9& texSource,
                                       LPDIRECT3DTEXTURE9& texTarget);
+    static void CopyTexture(LPDIRECT3DTEXTURE9 texSource,
+                            LPDIRECT3DTEXTURE9 texTarget);
     static std::wstring Trim(const std::wstring& text);
     static int NormalizeGaussianSampleSize(const int sampleSize);
     static int NormalizeFontGaussianSampleSize(const int sampleSize);
@@ -614,6 +616,7 @@ private:
 
     LPDIRECT3DTEXTURE9 m_pRenderTarget1 = NULL;
     LPDIRECT3DTEXTURE9 m_pRenderTarget2 = NULL;
+    LPDIRECT3DTEXTURE9 m_pLightEffectSourceTexture = NULL;
     LPDIRECT3DTEXTURE9 m_pMirrorRenderTarget = NULL;
 
     //-----------------------------------------------------------------

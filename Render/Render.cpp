@@ -1432,6 +1432,7 @@ void Render::Finalize()
     m_GBuffer.Finalize();
     SAFE_RELEASE(m_pRenderTarget1);
     SAFE_RELEASE(m_pRenderTarget2);
+    SAFE_RELEASE(m_pLightEffectSourceTexture);
     SAFE_RELEASE(m_pMirrorRenderTarget);
 
     Common::RemoveDeviceLostResource(this);
@@ -1598,24 +1599,33 @@ void Render::Draw()
         }
     }
 
+    const bool lightEffectEnabled = m_gBufferEnabled &&
+        (m_postEffectBloomEnabled || m_postEffectHaloEnabled || m_postEffectStarBurstEnabled);
+    LPDIRECT3DTEXTURE9 pLightEffectSource = pTempTexture;
+    if (lightEffectEnabled)
+    {
+        CopyTexture(pTempTexture, m_pLightEffectSourceTexture);
+        pLightEffectSource = m_pLightEffectSourceTexture;
+    }
+
     if (m_gBufferEnabled && m_postEffectBloomEnabled)
     {
         EnsurePostEffectBloomInitialized();
-        m_PostEffectBloom.Draw(pTempTexture, pWorkTexture);
+        m_PostEffectBloom.Draw(pLightEffectSource, pTempTexture, pWorkTexture);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
     if (m_gBufferEnabled && m_postEffectHaloEnabled)
     {
         EnsurePostEffectHaloInitialized();
-        m_postEffectHalo.Draw(pTempTexture, pWorkTexture);
+        m_postEffectHalo.Draw(pLightEffectSource, pTempTexture, pWorkTexture);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
     if (m_gBufferEnabled && m_postEffectStarBurstEnabled)
     {
         EnsurePostEffectStarBurstInitialized();
-        m_postEffectStarBurst.Draw(pTempTexture, pTexTempCameraZ, pWorkTexture);
+        m_postEffectStarBurst.Draw(pLightEffectSource, pTempTexture, pTexTempCameraZ, pWorkTexture);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
@@ -3129,6 +3139,43 @@ void Render::SwapPostEffectBuffers(LPDIRECT3DTEXTURE9& texSource,
     texTarget = temp;
 }
 
+void Render::CopyTexture(LPDIRECT3DTEXTURE9 texSource,
+                         LPDIRECT3DTEXTURE9 texTarget)
+{
+    if (texSource == NULL || texTarget == NULL)
+    {
+        return;
+    }
+
+    LPDIRECT3DSURFACE9 sourceSurface = NULL;
+    LPDIRECT3DSURFACE9 targetSurface = NULL;
+    LPDIRECT3DSURFACE9 oldRenderTarget = NULL;
+    LPDIRECT3DSURFACE9 backBuffer = NULL;
+    HRESULT hResult = Common::D3DDevice()->GetRenderTarget(0, &oldRenderTarget);
+    assert(hResult == S_OK);
+    hResult = Common::D3DDevice()->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &backBuffer);
+    assert(hResult == S_OK);
+    hResult = Common::D3DDevice()->SetRenderTarget(0, backBuffer);
+    assert(hResult == S_OK);
+
+    hResult = texSource->GetSurfaceLevel(0, &sourceSurface);
+    assert(hResult == S_OK);
+    hResult = texTarget->GetSurfaceLevel(0, &targetSurface);
+    assert(hResult == S_OK);
+    hResult = Common::D3DDevice()->StretchRect(sourceSurface,
+                                              NULL,
+                                              targetSurface,
+                                              NULL,
+                                              D3DTEXF_NONE);
+    assert(hResult == S_OK);
+    hResult = Common::D3DDevice()->SetRenderTarget(0, oldRenderTarget);
+    assert(hResult == S_OK);
+    SAFE_RELEASE(sourceSurface);
+    SAFE_RELEASE(targetSurface);
+    SAFE_RELEASE(backBuffer);
+    SAFE_RELEASE(oldRenderTarget);
+}
+
 void Render::SetPostEffectSSAO(const bool arg)
 {
     m_postEffectSSAOEnabled = arg;
@@ -4061,6 +4108,7 @@ void Render::OnDeviceLost()
 {
     SAFE_RELEASE(m_pRenderTarget1);
     SAFE_RELEASE(m_pRenderTarget2);
+    SAFE_RELEASE(m_pLightEffectSourceTexture);
     SAFE_RELEASE(m_pMirrorRenderTarget);
     m_sprite.OnDeviceLost();
     m_particleSystem.OnDeviceLost();
@@ -4096,6 +4144,16 @@ void Render::CreateTexture()
                            D3DFMT_A16B16G16R16F,
                            D3DPOOL_DEFAULT,
                            &m_pRenderTarget2);
+    assert(hr == S_OK);
+
+    hr = D3DXCreateTexture(Common::D3DDevice(),
+                           Common::ScreenW(),
+                           Common::ScreenH(),
+                           1,
+                           D3DUSAGE_RENDERTARGET,
+                           D3DFMT_A16B16G16R16F,
+                           D3DPOOL_DEFAULT,
+                           &m_pLightEffectSourceTexture);
     assert(hr == S_OK);
 
     hr = D3DXCreateTexture(Common::D3DDevice(),
