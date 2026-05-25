@@ -866,7 +866,7 @@ void MeshMixSkinAnim::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBas
         const D3DMATERIAL9& material = container->pMaterials[materialIndex].MatD3D;
         const bool hasTexture = materialIndex < container->m_textureList.size() &&
                                 container->m_textureList[materialIndex] != nullptr;
-        const bool disableZWrite = hasTexture && material.Diffuse.a <= 0.001f;
+        const bool disableZWrite = !m_alphaClipEnabled && hasTexture && material.Diffuse.a <= 0.001f;
         const float diffuseAlpha = (hasTexture && material.Diffuse.a <= 0.001f)
                                  ? 1.0f
                                  : material.Diffuse.a;

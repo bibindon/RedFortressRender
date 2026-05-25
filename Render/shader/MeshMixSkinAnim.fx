@@ -376,6 +376,8 @@ technique TechniqueAlphaClip
 {
     pass Pass0
     {
+        ZEnable = TRUE;
+        ZWriteEnable = TRUE;
         AlphaBlendEnable = FALSE;
         AlphaTestEnable = FALSE;
         CullMode = NONE;
