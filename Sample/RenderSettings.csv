@@ -75,6 +75,7 @@ BloomEnable,0
 BloomThreshold,1.0
 BloomWeightSum,1.0
 HaloEnable,0
+HaloThreshold,1.0
 PostEffectAAEnable,0
 ,
 StarBurstEnable,0

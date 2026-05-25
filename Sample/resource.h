@@ -347,6 +347,9 @@
 #define IDC_SLIDER_FRESNEL_INTENSITY   1352
 #define IDC_STATIC_ANIMATION_LABEL     1358
 #define IDC_LIST_ANIMATIONS            1359
+#define IDC_STATIC_HALO_THRESHOLD_LABEL 1360
+#define IDC_EDIT_HALO_THRESHOLD        1361
+#define IDC_SLIDER_HALO_THRESHOLD      1362
 
 // Next default values for new objects
 // 
@@ -354,7 +357,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1360
+#define _APS_NEXT_CONTROL_VALUE         1363
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

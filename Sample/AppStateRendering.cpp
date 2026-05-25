@@ -253,6 +253,11 @@ float ClampBloomWeightSum(const float weightSum)
     return (std::max)(BLOOM_WEIGHT_SUM_MIN, (std::min)(weightSum, BLOOM_WEIGHT_SUM_MAX));
 }
 
+float ClampHaloThreshold(const float threshold)
+{
+    return (std::max)(HALO_THRESHOLD_MIN, (std::min)(threshold, HALO_THRESHOLD_MAX));
+}
+
 float ClampDepthOfFieldFocalDistance(const float distance)
 {
     return (std::max)(DOF_FOCAL_DISTANCE_MIN, (std::min)(distance, DOF_FOCAL_DISTANCE_MAX));
@@ -895,6 +900,12 @@ void ApplyHalo()
 {
     g_Render.SetPostEffectHalo(g_bHalo);
     RefreshSettingsDialogState();
+}
+
+void ApplyHaloThreshold()
+{
+    g_haloThreshold = ClampHaloThreshold(g_haloThreshold);
+    g_Render.SetPostEffectHaloThreshold(g_haloThreshold);
 }
 
 void ApplyDepthOfFieldMode()
@@ -1598,6 +1609,16 @@ int BloomWeightSumToSliderValue(const float weightSum)
 float SliderValueToBloomWeightSum(const int sliderValue)
 {
     return ClampBloomWeightSum(static_cast<float>(sliderValue));
+}
+
+int HaloThresholdToSliderValue(const float threshold)
+{
+    return static_cast<int>(std::lround(ClampHaloThreshold(threshold) / HALO_THRESHOLD_STEP));
+}
+
+float SliderValueToHaloThreshold(const int sliderValue)
+{
+    return ClampHaloThreshold(static_cast<float>(sliderValue) * HALO_THRESHOLD_STEP);
 }
 
 int DepthOfFieldFocalDistanceToSliderValue(const float distance)

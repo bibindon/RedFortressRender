@@ -959,6 +959,18 @@ void RefreshBloomWeightSumControls(HWND hDlg)
                        static_cast<LPARAM>(BloomWeightSumToSliderValue(g_bloomWeightSum)));
 }
 
+void RefreshHaloThresholdControls(HWND hDlg)
+{
+    wchar_t buffer[32];
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.1f", g_haloThreshold);
+    SetDlgItemText(hDlg, IDC_EDIT_HALO_THRESHOLD, buffer);
+    SendDlgItemMessage(hDlg,
+                       IDC_SLIDER_HALO_THRESHOLD,
+                       TBM_SETPOS,
+                       TRUE,
+                       static_cast<LPARAM>(HaloThresholdToSliderValue(g_haloThreshold)));
+}
+
 void RefreshStarBurstThresholdControls(HWND hDlg)
 {
     wchar_t buffer[32];

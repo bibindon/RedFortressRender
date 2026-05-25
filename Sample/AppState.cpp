@@ -129,6 +129,7 @@ float g_sssIntensity = 1.0f;
 D3DXCOLOR g_sssColor = D3DXCOLOR(1.0f, 1.0f, 0.5f, 1.0f);
 float g_bloomThreshold = 2.5f;
 float g_bloomWeightSum = 1.0f;
+float g_haloThreshold = 2.5f;
 float g_dofFocalDistance = 1.0f;
 float g_dofStartNear = 0.0f;
 float g_dofMaxBlurDistance = 8.0f;
@@ -384,6 +385,11 @@ float ClampBloomThreshold(const float threshold)
 float ClampBloomWeightSum(const float weightSum)
 {
     return (std::max)(BLOOM_WEIGHT_SUM_MIN, (std::min)(weightSum, BLOOM_WEIGHT_SUM_MAX));
+}
+
+float ClampHaloThreshold(const float threshold)
+{
+    return (std::max)(HALO_THRESHOLD_MIN, (std::min)(threshold, HALO_THRESHOLD_MAX));
 }
 
 float ClampDepthOfFieldFocalDistance(const float distance)
@@ -1997,6 +2003,10 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_bloomWeightSum = std::stof(value);
             }
+            else if (key == L"HaloThreshold")
+            {
+                g_haloThreshold = std::stof(value);
+            }
             else if (key == L"DepthOfFieldFocalDistance")
             {
                 g_dofFocalDistance = std::stof(value);
@@ -2273,6 +2283,7 @@ void ApplyAllSampleSettings()
     ApplyBloomThreshold();
     ApplyBloomWeightSum();
     ApplyHalo();
+    ApplyHaloThreshold();
     ApplyDepthOfFieldMode();
     ApplyDepthOfFieldFocalDistance();
     ApplyDepthOfFieldStartNear();

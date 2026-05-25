@@ -1109,6 +1109,23 @@ void Render::ApplySettings()
         }
     }
 
+    const auto haloThreshold = m_settings.find(L"HaloThreshold");
+    if (haloThreshold != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectHaloThreshold(std::stof(haloThreshold->second));
+        }
+        catch (...)
+        {
+            SetPostEffectHaloThreshold(2.5f);
+        }
+    }
+    else
+    {
+        SetPostEffectHaloThreshold(2.5f);
+    }
+
     const auto depthOfFieldMode = m_settings.find(L"DepthOfFieldMode");
     if (depthOfFieldMode != m_settings.end())
     {
@@ -3361,6 +3378,11 @@ void Render::SetPostEffectHalo(const bool arg)
     {
         m_postEffectHalo.Finalize();
     }
+}
+
+void Render::SetPostEffectHaloThreshold(const float threshold)
+{
+    m_postEffectHalo.SetThreshold(threshold);
 }
 
 void Render::SetPostEffectDepthOfField(const bool arg)

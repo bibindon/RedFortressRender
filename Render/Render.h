@@ -385,6 +385,7 @@ public:
     void SetPostEffectBloomThreshold(const float threshold);
     void SetPostEffectBloomWeightSum(const float weightSum);
     void SetPostEffectHalo(const bool arg);
+    void SetPostEffectHaloThreshold(const float threshold);
     void SetPostEffectDepthOfField(const bool arg);
     void SetPostEffectDepthOfFieldMode(const DepthOfFieldMode mode);
     void SetPostEffectDepthOfFieldFocalDistance(const float distance);
