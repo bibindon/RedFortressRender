@@ -166,7 +166,13 @@ float3 GetViewPosition(float2 uv)
 float3 GetViewNormal(float2 uv)
 {
     float3 worldNormal = DecodeWorldNormal(tex2D(sampNormal, uv).rgb);
-    return normalize(mul(float4(worldNormal, 0.0f), g_matView).xyz);
+    float3 viewNormal = normalize(mul(float4(worldNormal, 0.0f), g_matView).xyz);
+    float3 viewPosition = GetViewPosition(uv);
+    if (dot(viewNormal, viewPosition) > 0.0f)
+    {
+        viewNormal = -viewNormal;
+    }
+    return viewNormal;
 }
 
 float GetViewDepth(float2 uv)
