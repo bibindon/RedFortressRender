@@ -64,6 +64,17 @@ sampler BlurSampler3 = sampler_state
     AddressV = CLAMP;
 };
 
+texture g_AddTex;
+sampler AddSampler = sampler_state
+{
+    Texture = <g_AddTex>;
+    MipFilter = LINEAR;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+
 float g_Threshold = 2.5f;
 float2 g_TexelSize;
 float4 g_BloomWeightsA = float4(0.25f, 0.25f, 0.25f, 0.25f);
@@ -142,6 +153,13 @@ float4 Blur5x5PS(float2 texCoord : TEXCOORD0) : COLOR
     return sum;
 }
 
+float4 UpsampleAdd5x5PS(float2 texCoord : TEXCOORD0) : COLOR
+{
+    const float4 blurredLow = Blur5x5PS(texCoord);
+    const float4 high = tex2D(AddSampler, texCoord);
+    return blurredLow + high;
+}
+
 float4 CombinePS(float2 texCoord : TEXCOORD0) : COLOR
 {
     const float4 scene = tex2D(SceneSampler, texCoord);
@@ -180,6 +198,14 @@ technique Blur5x5
     pass P0
     {
         PixelShader = compile ps_3_0 Blur5x5PS();
+    }
+}
+
+technique UpsampleAdd5x5
+{
+    pass P0
+    {
+        PixelShader = compile ps_3_0 UpsampleAdd5x5PS();
     }
 }
 

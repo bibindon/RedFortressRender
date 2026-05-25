@@ -76,6 +76,15 @@ void PostEffectBloom::CreateTexture()
                           D3DFMT_A16B16G16R16F,
                           D3DPOOL_DEFAULT,
                           &m_texBlur[i]);
+
+        D3DXCreateTexture(Common::D3DDevice(),
+                          width,
+                          height,
+                          1,
+                          D3DUSAGE_RENDERTARGET,
+                          D3DFMT_A16B16G16R16F,
+                          D3DPOOL_DEFAULT,
+                          &m_texUpsample[i]);
     }
 }
 
@@ -89,41 +98,26 @@ void PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource,
 
     m_d3dEffect->SetFloat("g_Threshold", m_threshold);
 
-    const float perLevelWeight = m_weightSum / static_cast<float>(BLOOM_LEVEL_COUNT);
-    const float baseWeights[BLOOM_LEVEL_COUNT] =
-    {
-        perLevelWeight,
-        perLevelWeight,
-        perLevelWeight,
-        perLevelWeight
-    };
     float bloomWeightsA[4] { };
     float bloomWeightsB[4] { };
-    for (int i = 0; i < BLOOM_LEVEL_COUNT; ++i)
-    {
-        const float weight = baseWeights[i] * m_intensity;
-        if (i < 4)
-        {
-            bloomWeightsA[i] = weight;
-        }
-        else
-        {
-            bloomWeightsB[i - 4] = weight;
-        }
-    }
+    bloomWeightsA[0] = m_weightSum * m_intensity;
     m_d3dEffect->SetFloatArray("g_BloomWeightsA", bloomWeightsA, 4);
     m_d3dEffect->SetFloatArray("g_BloomWeightsB", bloomWeightsB, 4);
 
     DrawFullscreenQuad(renderSource, m_texDownsample[0], "BrightPassDownsample");
+    DrawFullscreenQuad(m_texDownsample[0], m_texBlur[0], "Blur5x5");
 
     for (int i = 1; i < BLOOM_LEVEL_COUNT; ++i)
     {
-        DrawFullscreenQuad(m_texDownsample[i - 1], m_texDownsample[i], "Downsample");
+        DrawFullscreenQuad(m_texBlur[i - 1], m_texDownsample[i], "Downsample");
+        DrawFullscreenQuad(m_texDownsample[i], m_texBlur[i], "Blur5x5");
     }
 
-    for (int i = 0; i < BLOOM_LEVEL_COUNT; ++i)
+    const int lastLevel = BLOOM_LEVEL_COUNT - 1;
+    DrawFullscreenQuad(m_texBlur[lastLevel], m_texUpsample[lastLevel], "Blur5x5");
+    for (int i = lastLevel; i >= 1; --i)
     {
-        DrawFullscreenQuad(m_texDownsample[i], m_texBlur[i], "Blur5x5");
+        DrawUpsampleQuad(m_texUpsample[i], m_texBlur[i - 1], m_texUpsample[i - 1]);
     }
 
     DrawCombineQuad(renderSource, renderTarget);
@@ -258,10 +252,97 @@ void PostEffectBloom::DrawCombineQuad(LPDIRECT3DTEXTURE9 texScene,
 
     m_d3dEffect->SetTechnique("Combine");
     m_d3dEffect->SetTexture("g_SceneTex", texScene);
-    m_d3dEffect->SetTexture("g_BlurTex0", m_texBlur[0]);
-    m_d3dEffect->SetTexture("g_BlurTex1", m_texBlur[1]);
-    m_d3dEffect->SetTexture("g_BlurTex2", m_texBlur[2]);
-    m_d3dEffect->SetTexture("g_BlurTex3", m_texBlur[3]);
+    m_d3dEffect->SetTexture("g_BlurTex0", m_texUpsample[0]);
+    m_d3dEffect->SetTexture("g_BlurTex1", nullptr);
+    m_d3dEffect->SetTexture("g_BlurTex2", nullptr);
+    m_d3dEffect->SetTexture("g_BlurTex3", nullptr);
+
+    ScreenVertex quad[4] { };
+
+    quad[0].x   = -0.5f;
+    quad[0].y   = -0.5f;
+    quad[0].z   = 0.0f;
+    quad[0].rhw = 1.0f;
+    quad[0].u   = 0.0f;
+    quad[0].v   = 0.0f;
+
+    quad[1].x   = -0.5f + static_cast<float>(targetDesc.Width);
+    quad[1].y   = -0.5f;
+    quad[1].z   = 0.0f;
+    quad[1].rhw = 1.0f;
+    quad[1].u   = 1.0f;
+    quad[1].v   = 0.0f;
+
+    quad[2].x   = -0.5f;
+    quad[2].y   = -0.5f + static_cast<float>(targetDesc.Height);
+    quad[2].z   = 0.0f;
+    quad[2].rhw = 1.0f;
+    quad[2].u   = 0.0f;
+    quad[2].v   = 1.0f;
+
+    quad[3].x   = -0.5f + static_cast<float>(targetDesc.Width);
+    quad[3].y   = -0.5f + static_cast<float>(targetDesc.Height);
+    quad[3].z   = 0.0f;
+    quad[3].rhw = 1.0f;
+    quad[3].u   = 1.0f;
+    quad[3].v   = 1.0f;
+
+    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
+    Common::D3DDevice()->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
+
+    Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
+    Common::D3DDevice()->BeginScene();
+    m_d3dEffect->Begin(NULL, 0);
+    m_d3dEffect->BeginPass(0);
+
+    Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, quad, sizeof(ScreenVertex));
+
+    m_d3dEffect->EndPass();
+    m_d3dEffect->End();
+    Common::D3DDevice()->EndScene();
+
+    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
+    Common::D3DDevice()->SetViewport(&oldViewport);
+}
+
+void PostEffectBloom::DrawUpsampleQuad(LPDIRECT3DTEXTURE9 texSource,
+                                       LPDIRECT3DTEXTURE9 texAdd,
+                                       LPDIRECT3DTEXTURE9 texTarget)
+{
+    if (texSource == NULL || texAdd == NULL || texTarget == NULL)
+    {
+        return;
+    }
+
+    D3DSURFACE_DESC sourceDesc { };
+    D3DSURFACE_DESC targetDesc { };
+    texSource->GetLevelDesc(0, &sourceDesc);
+    texTarget->GetLevelDesc(0, &targetDesc);
+
+    D3DVIEWPORT9 oldViewport { };
+    Common::D3DDevice()->GetViewport(&oldViewport);
+    D3DVIEWPORT9 targetViewport { };
+    targetViewport.X = 0;
+    targetViewport.Y = 0;
+    targetViewport.Width = targetDesc.Width;
+    targetViewport.Height = targetDesc.Height;
+    targetViewport.MinZ = 0.0f;
+    targetViewport.MaxZ = 1.0f;
+
+    LPDIRECT3DSURFACE9 pSceneRT = NULL;
+    texTarget->GetSurfaceLevel(0, &pSceneRT);
+    Common::D3DDevice()->SetRenderTarget(0, pSceneRT);
+    Common::D3DDevice()->SetViewport(&targetViewport);
+    SAFE_RELEASE(pSceneRT);
+
+    Common::D3DDevice()->SetVertexShader(NULL);
+
+    m_d3dEffect->SetTechnique("UpsampleAdd5x5");
+    m_d3dEffect->SetTexture("g_SrcTex", texSource);
+    m_d3dEffect->SetTexture("g_AddTex", texAdd);
+
+    const float texelSize[2] = { 1.0f / static_cast<float>(sourceDesc.Width), 1.0f / static_cast<float>(sourceDesc.Height) };
+    m_d3dEffect->SetFloatArray("g_TexelSize", texelSize, 2);
 
     ScreenVertex quad[4] { };
 
@@ -359,6 +440,7 @@ void PostEffectBloom::ReleaseTextures()
     {
         SAFE_RELEASE(m_texDownsample[i]);
         SAFE_RELEASE(m_texBlur[i]);
+        SAFE_RELEASE(m_texUpsample[i]);
     }
 }
 

@@ -35,10 +35,14 @@ private:
 
     LPDIRECT3DTEXTURE9 m_texDownsample[BLOOM_LEVEL_COUNT] { };
     LPDIRECT3DTEXTURE9 m_texBlur[BLOOM_LEVEL_COUNT] { };
+    LPDIRECT3DTEXTURE9 m_texUpsample[BLOOM_LEVEL_COUNT] { };
 
     void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
                             LPDIRECT3DTEXTURE9 texTarget,
                             const std::string& technique);
+    void DrawUpsampleQuad(LPDIRECT3DTEXTURE9 texSource,
+                          LPDIRECT3DTEXTURE9 texAdd,
+                          LPDIRECT3DTEXTURE9 texTarget);
     void DrawCombineQuad(LPDIRECT3DTEXTURE9 texScene,
                          LPDIRECT3DTEXTURE9 texTarget);
     void ReleaseTextures();
