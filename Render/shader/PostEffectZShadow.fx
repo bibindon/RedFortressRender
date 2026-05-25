@@ -109,7 +109,7 @@ sampler sampMeshAlpha = sampler_state
 float3 IncreaseSaturation(float3 color, float amount)
 {
     float luminance = dot(color, float3(0.299f, 0.587f, 0.114f));
-    return saturate(lerp(luminance.xxx, color, amount));
+    return max(lerp(luminance.xxx, color, amount), 0.0f);
 }
 
 float3 DecodeWorldNormal(float3 encodedNormal)
@@ -718,7 +718,7 @@ void PS_Composite(in float4 inPos     : POSITION,
         }
     }
 
-    result.a = 1.f;
+    result.a = vBaseColor.a;
     outColor = result;
 }
 
@@ -782,7 +782,7 @@ float4 FinalizeCompositeColorFixed(float2 uv,
         }
     }
 
-    result.a = 1.f;
+    result.a = vBaseColor.a;
     return result;
 }
 

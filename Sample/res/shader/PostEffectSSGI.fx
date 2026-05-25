@@ -509,7 +509,7 @@ float4 PS_Composite(VS_OUT inputData) : COLOR0
     }
 
     float3 resultColor = sourceColor.rgb + (giData.rgb - sourceColor.rgb) * indirectAmount;
-    return float4(saturate(resultColor), sourceColor.a);
+    return float4(max(resultColor, 0.0f), sourceColor.a);
 }
 
 technique TechniqueGI_Create4

@@ -192,7 +192,7 @@ float2 ProjectViewPositionToTexCoord(float3 viewPosition)
 float3 IncreaseSaturation(float3 color, float amount)
 {
     float luminance = dot(color, float3(0.299f, 0.587f, 0.114f));
-    return saturate(lerp(luminance.xxx, color, amount));
+    return max(lerp(luminance.xxx, color, amount), 0.0f);
 }
 
 float2 ComputeOcclusionSample(float2 baseUv,
@@ -776,7 +776,7 @@ float4 PS_Blur1x21(VS_OUT i) : COLOR0
 
 float4 PS_Composite(VS_OUT i) : COLOR0
 {
-    float3 color = tex2D(sampColor, i.uv).rgb;
+    float4 color = tex2D(sampColor, i.uv);
     float ao = tex2D(sampAO, i.uv).r;
     float aoAdjusted = saturate(1.0f - (1.0f - saturate(ao)) * g_shadowStrength);
     if (g_enableMaxDarknessClamp)
@@ -784,14 +784,14 @@ float4 PS_Composite(VS_OUT i) : COLOR0
         aoAdjusted = max(aoAdjusted, 0.5f);
     }
     float shadowPresence = saturate(1.0f - aoAdjusted);
-    float3 shadedColor = color * aoAdjusted;
+    float3 shadedColor = color.rgb * aoAdjusted;
     float saturationAmount = lerp(1.0f, 1.0f + g_aoSaturationBoost, shadowPresence);
-    return float4(IncreaseSaturation(shadedColor, saturationAmount), 1.0f);
+    return float4(IncreaseSaturation(shadedColor, saturationAmount), color.a);
 }
 
 float4 PS_Composite3x3Gaussian(VS_OUT i) : COLOR0
 {
-    float3 color = tex2D(sampColor, i.uv).rgb;
+    float4 color = tex2D(sampColor, i.uv);
     float2 texelSize = g_aoInvSize;
     float ao = 0.0f;
     ao += tex2D(sampAO, i.uv + float2(-texelSize.x, -texelSize.y)).r * 1.0f;
@@ -810,9 +810,9 @@ float4 PS_Composite3x3Gaussian(VS_OUT i) : COLOR0
         aoAdjusted = max(aoAdjusted, 0.5f);
     }
     float shadowPresence = saturate(1.0f - aoAdjusted);
-    float3 shadedColor = color * aoAdjusted;
+    float3 shadedColor = color.rgb * aoAdjusted;
     float saturationAmount = lerp(1.0f, 1.0f + g_aoSaturationBoost, shadowPresence);
-    return float4(IncreaseSaturation(shadedColor, saturationAmount), 1.0f);
+    return float4(IncreaseSaturation(shadedColor, saturationAmount), color.a);
 }
 
 technique TechniqueAO_Create4
