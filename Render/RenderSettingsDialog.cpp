@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <commctrl.h>
+#include <commdlg.h>
 #include <cstdlib>
 #include <cwchar>
 #include <string>
@@ -27,6 +28,9 @@ struct RenderSettingsDialogState
     D3DXVECTOR3 godRayColor = D3DXVECTOR3(1.0f, 0.9f, 0.8f);
     D3DXVECTOR3 godRayPos = D3DXVECTOR3(1000.0f, 100.0f, 1000.0f);
     ParticleEffectPreset particleEffectPreset = ParticleEffectPreset::Smoke;
+    std::wstring pbrMeshPath;
+    std::wstring pbrEnvMapPath;
+    std::wstring maskedGaussianMaskPath;
     struct ChildPlacement
     {
         HWND hWnd = NULL;
@@ -144,7 +148,7 @@ void CreateSettingsButton(HWND parent, const wchar_t* text, const int x, const i
     SetDefaultGuiFont(control);
 }
 
-void CreateSettingsEdit(HWND parent, const wchar_t* text, const int x, const int y, const int w, const int h)
+void CreateSettingsEdit(HWND parent, const wchar_t* text, const int x, const int y, const int w, const int h, const int id = 0)
 {
     HWND control = CreateWindowExW(WS_EX_CLIENTEDGE,
                                    L"EDIT",
@@ -155,7 +159,7 @@ void CreateSettingsEdit(HWND parent, const wchar_t* text, const int x, const int
                                    w,
                                    h,
                                    parent,
-                                   NULL,
+                                   reinterpret_cast<HMENU>(static_cast<INT_PTR>(id)),
                                    GetModuleHandle(NULL),
                                    NULL);
     SetDefaultGuiFont(control);
@@ -520,11 +524,11 @@ void InitializeRenderSettingsControls(HWND hWnd)
     y += 62;
     CreateSettingsGroupBox(hWnd, L"PBR", 8, y, 504, 178);
     CreateSettingsStatic(hWnd, L"MeshPBR (x)", 24, y + 24, 132, 18);
-    CreateSettingsEdit(hWnd, L"", 162, y + 20, 124, 20);
-    CreateSettingsButton(hWnd, L"Open...", 298, y + 18, 42, 24);
+    CreateSettingsEdit(hWnd, L"", 162, y + 20, 124, 20, 32210);
+    CreateSettingsButton(hWnd, L"Open...", 298, y + 18, 42, 24, 32211);
     CreateSettingsStatic(hWnd, L"EnvMap Image", 24, y + 46, 132, 18);
-    CreateSettingsEdit(hWnd, L"", 162, y + 42, 124, 20);
-    CreateSettingsButton(hWnd, L"Open...", 298, y + 40, 42, 24);
+    CreateSettingsEdit(hWnd, L"", 162, y + 42, 124, 20, 32212);
+    CreateSettingsButton(hWnd, L"Open...", 298, y + 40, 42, 24, 32213);
 
     const wchar_t* pbrLabels[] = { L"PBR Roughness", L"PBR Metallic", L"Env Refl Int", L"Env Max Mip", L"Env Diffuse", L"Env Diff Mip" };
     const wchar_t* pbrValues[] = { L"0.850", L"0.000", L"0.050", L"5.000", L"0.800", L"3.000" };
@@ -743,8 +747,8 @@ void InitializeRenderSettingsControls(HWND hWnd)
 
     y += 80;
     CreateSettingsGroupBox(hWnd, L"Masked Gaussian", 8, y, 504, 78);
-    CreateSettingsEdit(hWnd, L"", 162, y + 24, 242, 20);
-    CreateSettingsButton(hWnd, L"Open...", 416, y + 22, 90, 24);
+    CreateSettingsEdit(hWnd, L"", 162, y + 24, 242, 20, 32220);
+    CreateSettingsButton(hWnd, L"Open...", 416, y + 22, 90, 24, 32221);
     CreateSettingsCheckbox(hWnd, 32030, L"Masked G", 408, y + 48, 96, 22);
 
     y += 90;
@@ -841,6 +845,19 @@ int ComboIndexToSampleCount(const int index)
     return counts[index];
 }
 
+std::wstring ComboIndexToRenderingQuality(const int index)
+{
+    if (index == 1)
+    {
+        return L"MIDDLE";
+    }
+    if (index == 2)
+    {
+        return L"HIGH";
+    }
+    return L"LOW";
+}
+
 ParticleEffectPreset ComboIndexToParticleEffectPreset(const int index)
 {
     switch (index)
@@ -856,6 +873,31 @@ ParticleEffectPreset ComboIndexToParticleEffectPreset(const int index)
     default:
         return ParticleEffectPreset::Smoke;
     }
+}
+
+bool ShowSettingsOpenFileDialog(HWND owner, const wchar_t* filter, std::wstring& path)
+{
+    wchar_t fileName[MAX_PATH] { };
+    if (!path.empty())
+    {
+        wcsncpy_s(fileName, path.c_str(), _TRUNCATE);
+    }
+
+    OPENFILENAMEW ofn { };
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = owner;
+    ofn.lpstrFilter = filter;
+    ofn.lpstrFile = fileName;
+    ofn.nMaxFile = static_cast<DWORD>(sizeof(fileName) / sizeof(fileName[0]));
+    ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
+
+    if (!GetOpenFileNameW(&ofn))
+    {
+        return false;
+    }
+
+    path = fileName;
+    return true;
 }
 
 BOOL CALLBACK CaptureRenderSettingsChildPlacementProc(HWND child, LPARAM lParam)
@@ -1074,6 +1116,35 @@ void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
         {
             render->PlaceParticleEffect(state->particleEffectPreset, render->GetLookAtPos());
         }
+        else if (id == 32211)
+        {
+            if (ShowSettingsOpenFileDialog(hWnd,
+                                           L"PBR Mesh Files (*.x;*.blend.x)\0*.x;*.blend.x\0All Files (*.*)\0*.*\0",
+                                           state->pbrMeshPath))
+            {
+                SetDlgItemTextW(hWnd, 32210, state->pbrMeshPath.c_str());
+            }
+        }
+        else if (id == 32213)
+        {
+            if (ShowSettingsOpenFileDialog(hWnd,
+                                           L"Cube Environment Map Files (*.dds)\0*.dds\0All Files (*.*)\0*.*\0",
+                                           state->pbrEnvMapPath))
+            {
+                SetDlgItemTextW(hWnd, 32212, state->pbrEnvMapPath.c_str());
+                render->SetMeshPBREnvMapTexturePath(state->pbrEnvMapPath);
+            }
+        }
+        else if (id == 32221)
+        {
+            if (ShowSettingsOpenFileDialog(hWnd,
+                                           L"Image Files (*.png;*.jpg;*.jpeg;*.bmp;*.dds;*.tga)\0*.png;*.jpg;*.jpeg;*.bmp;*.dds;*.tga\0All Files (*.*)\0*.*\0",
+                                           state->maskedGaussianMaskPath))
+            {
+                SetDlgItemTextW(hWnd, 32220, state->maskedGaussianMaskPath.c_str());
+                render->SetPostEffectMaskedGaussianMaskPath(state->maskedGaussianMaskPath);
+            }
+        }
         else if (id == IDOK || id == IDCANCEL)
         {
             ShowWindow(hWnd, SW_HIDE);
@@ -1098,6 +1169,10 @@ void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
         if (id == 31610)
         {
             render->SetPostEffectDepthBufferShadowPcfTapCount(ComboIndexToTapCount(GetSettingsComboSelection(hWnd, id)));
+        }
+        else if (id == 31001)
+        {
+            render->SetRenderQuality(ComboIndexToRenderingQuality(GetSettingsComboSelection(hWnd, id)));
         }
         else if (id == 31611)
         {
