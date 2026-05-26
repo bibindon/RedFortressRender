@@ -4,6 +4,9 @@
 
 #include <algorithm>
 #include <commctrl.h>
+#include <cstdlib>
+#include <cwchar>
+#include <string>
 #include <vector>
 
 #include "Render.h"
@@ -20,6 +23,10 @@ struct RenderSettingsDialogState
     Render* render = nullptr;
     int scrollPos = 0;
     int contentHeight = 0;
+    D3DXCOLOR fogColor = D3DXCOLOR(0.72f, 0.78f, 0.86f, 1.0f);
+    D3DXVECTOR3 godRayColor = D3DXVECTOR3(1.0f, 0.9f, 0.8f);
+    D3DXVECTOR3 godRayPos = D3DXVECTOR3(1000.0f, 100.0f, 1000.0f);
+    ParticleEffectPreset particleEffectPreset = ParticleEffectPreset::Smoke;
     struct ChildPlacement
     {
         HWND hWnd = NULL;
@@ -120,7 +127,7 @@ void CreateSettingsGroupBox(HWND parent, const wchar_t* text, const int x, const
     SetDefaultGuiFont(control);
 }
 
-void CreateSettingsButton(HWND parent, const wchar_t* text, const int x, const int y, const int w, const int h)
+void CreateSettingsButton(HWND parent, const wchar_t* text, const int x, const int y, const int w, const int h, const int id = 0)
 {
     HWND control = CreateWindowExW(0,
                                    L"BUTTON",
@@ -131,7 +138,7 @@ void CreateSettingsButton(HWND parent, const wchar_t* text, const int x, const i
                                    w,
                                    h,
                                    parent,
-                                   NULL,
+                                   reinterpret_cast<HMENU>(static_cast<INT_PTR>(id)),
                                    GetModuleHandle(NULL),
                                    NULL);
     SetDefaultGuiFont(control);
@@ -152,6 +159,79 @@ void CreateSettingsEdit(HWND parent, const wchar_t* text, const int x, const int
                                    GetModuleHandle(NULL),
                                    NULL);
     SetDefaultGuiFont(control);
+}
+
+void SetNearestValueEditText(HWND hWnd, HWND trackbar, const wchar_t* text)
+{
+    RECT sliderRect { };
+    GetWindowRect(trackbar, &sliderRect);
+    POINT sliderTopLeft { sliderRect.left, sliderRect.top };
+    POINT sliderBottomRight { sliderRect.right, sliderRect.bottom };
+    ScreenToClient(hWnd, &sliderTopLeft);
+    ScreenToClient(hWnd, &sliderBottomRight);
+
+    HWND bestEdit = NULL;
+    int bestDistance = 1000000;
+    for (HWND child = GetWindow(hWnd, GW_CHILD); child != NULL; child = GetWindow(child, GW_HWNDNEXT))
+    {
+        wchar_t className[16] { };
+        GetClassNameW(child, className, static_cast<int>(sizeof(className) / sizeof(className[0])));
+        if (std::wcscmp(className, L"Edit") != 0)
+        {
+            continue;
+        }
+
+        RECT editRect { };
+        GetWindowRect(child, &editRect);
+        POINT editTopLeft { editRect.left, editRect.top };
+        POINT editBottomRight { editRect.right, editRect.bottom };
+        ScreenToClient(hWnd, &editTopLeft);
+        ScreenToClient(hWnd, &editBottomRight);
+
+        const int verticalDistance = std::abs(((editTopLeft.y + editBottomRight.y) / 2) -
+                                              ((sliderTopLeft.y + sliderBottomRight.y) / 2));
+        const int horizontalDistance = editTopLeft.x - sliderBottomRight.x;
+        if (verticalDistance <= 12 && horizontalDistance >= -4)
+        {
+            const int distance = verticalDistance * 1000 + horizontalDistance;
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                bestEdit = child;
+            }
+        }
+    }
+
+    if (bestEdit != NULL)
+    {
+        SetWindowTextW(bestEdit, text);
+    }
+}
+
+float SliderToFloat(const int sliderPos, const float minValue, const float maxValue)
+{
+    const float t = static_cast<float>((std::max)(0, (std::min)(100, sliderPos))) / 100.0f;
+    return minValue + (maxValue - minValue) * t;
+}
+
+int SliderToInt(const int sliderPos, const int minValue, const int maxValue)
+{
+    const float value = SliderToFloat(sliderPos, static_cast<float>(minValue), static_cast<float>(maxValue));
+    return static_cast<int>(value + 0.5f);
+}
+
+void SetEditFloat(HWND hWnd, HWND trackbar, const float value, const wchar_t* format = L"%.2f")
+{
+    wchar_t buffer[32] { };
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), format, value);
+    SetNearestValueEditText(hWnd, trackbar, buffer);
+}
+
+void SetEditInt(HWND hWnd, HWND trackbar, const int value)
+{
+    wchar_t buffer[32] { };
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%d", value);
+    SetNearestValueEditText(hWnd, trackbar, buffer);
 }
 
 HWND CreateSettingsCombo(HWND parent, const int id, const int x, const int y, const int w, const int h)
@@ -321,6 +401,7 @@ void InitializeRenderSettingsControls(HWND hWnd)
     CreateSettingsRadio(hWnd, 31009, L"DOF Off", 160, y + 40, 72, 22);
     CreateSettingsRadio(hWnd, 31010, L"DOF On", 234, y + 40, 72, 22);
     CreateSettingsRadio(hWnd, 31011, L"DOF Aut", 306, y + 40, 76, 22);
+    SendDlgItemMessage(hWnd, 31009, BM_SETCHECK, BST_CHECKED, 0);
     CreateSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_BLOOM_ENABLE, L"Bloom", 384, y + 40, 72, 22);
     CreateSettingsCheckbox(hWnd, 31012, L"StarBurst", 456, y + 40, 92, 22);
     CreateSettingsCheckbox(hWnd, 31013, L"GodRay", 22, y + 62, 88, 22);
@@ -473,6 +554,9 @@ void InitializeRenderSettingsControls(HWND hWnd)
     SendMessage(pcfCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1"));
     SendMessage(pcfCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"3"));
     SendMessage(pcfCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"5"));
+    SendMessage(pcfCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"7"));
+    SendMessage(pcfCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"9"));
+    SendMessage(pcfCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"11"));
     SendMessage(pcfCombo, CB_SETCURSEL, 0, 0);
     zY += 20;
     CreateSettingsStatic(hWnd, L"ZShadow Composite Taps", 24, zY + 4, 176, 18);
@@ -480,12 +564,17 @@ void InitializeRenderSettingsControls(HWND hWnd)
     SendMessage(compositeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1"));
     SendMessage(compositeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"3"));
     SendMessage(compositeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"5"));
+    SendMessage(compositeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"7"));
+    SendMessage(compositeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"9"));
+    SendMessage(compositeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"11"));
     SendMessage(compositeCombo, CB_SETCURSEL, 0, 0);
     CreateSettingsStatic(hWnd, L"ZShadowTexSize", 266, zY + 28, 96, 18);
     HWND zTexSizeCombo = CreateSettingsCombo(hWnd, 31612, 366, zY + 24, 94, 120);
     SendMessage(zTexSizeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/1"));
     SendMessage(zTexSizeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/2"));
     SendMessage(zTexSizeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/4"));
+    SendMessage(zTexSizeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/8"));
+    SendMessage(zTexSizeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/16"));
     SendMessage(zTexSizeCombo, CB_SETCURSEL, 0, 0);
 
     y += 140;
@@ -495,6 +584,7 @@ void InitializeRenderSettingsControls(HWND hWnd)
     SendMessage(ssgiSampleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"8"));
     SendMessage(ssgiSampleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"16"));
     SendMessage(ssgiSampleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"32"));
+    SendMessage(ssgiSampleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"64"));
     SendMessage(ssgiSampleCombo, CB_SETCURSEL, 1, 0);
     CreateSettingsStatic(hWnd, L"Indirect light", 24, y + 46, 138, 18);
     CreateSettingsEdit(hWnd, L"1.00", 266, y + 42, 72, 20);
@@ -538,6 +628,7 @@ void InitializeRenderSettingsControls(HWND hWnd)
     SendMessage(ssaoSampleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"8"));
     SendMessage(ssaoSampleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"16"));
     SendMessage(ssaoSampleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"32"));
+    SendMessage(ssaoSampleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"64"));
     SendMessage(ssaoSampleCombo, CB_SETCURSEL, 0, 0);
     CreateSettingsCheckbox(hWnd, 31806, L"SSAO 3x3 Gauss", 350, y + 76, 144, 22);
     CreateSettingsCheckbox(hWnd, 31807, L"Separable Blur", 350, y + 98, 130, 22);
@@ -689,18 +780,82 @@ void InitializeRenderSettingsControls(HWND hWnd)
     HWND particleCombo = CreateSettingsCombo(hWnd, 32140, 96, y + 2, 242, 120);
     SendMessage(particleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Smoke"));
     SendMessage(particleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Fire"));
-    SendMessage(particleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Spark"));
+    SendMessage(particleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Dust"));
+    SendMessage(particleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Fog"));
+    SendMessage(particleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Rain"));
     SendMessage(particleCombo, CB_SETCURSEL, 0, 0);
-    CreateSettingsButton(hWnd, L"Place At LookAt", 352, y, 154, 24);
+    CreateSettingsButton(hWnd, L"Place At LookAt", 352, y, 154, 24, 32141);
 
     y += 30;
-    CreateSettingsButton(hWnd, L"OK", 310, y, 88, 24);
-    CreateSettingsButton(hWnd, L"Cancel", 424, y, 88, 24);
+    CreateSettingsButton(hWnd, L"OK", 310, y, 88, 24, IDOK);
+    CreateSettingsButton(hWnd, L"Cancel", 424, y, 88, 24, IDCANCEL);
 }
 
 bool IsSettingsCheckboxChecked(HWND hWnd, const int id)
 {
     return SendDlgItemMessage(hWnd, id, BM_GETCHECK, 0, 0) == BST_CHECKED;
+}
+
+int GetSettingsComboSelection(HWND hWnd, const int id)
+{
+    return static_cast<int>(SendDlgItemMessage(hWnd, id, CB_GETCURSEL, 0, 0));
+}
+
+int ComboIndexToTapCount(const int index)
+{
+    const int tapCounts[] = { 1, 3, 5, 7, 9, 11 };
+    if (index < 0 || index >= static_cast<int>(sizeof(tapCounts) / sizeof(tapCounts[0])))
+    {
+        return 1;
+    }
+    return tapCounts[index];
+}
+
+int ComboIndexToTexSizeDivisor(const int index)
+{
+    const int divisors[] = { 1, 2, 4, 8, 16 };
+    if (index < 0 || index >= static_cast<int>(sizeof(divisors) / sizeof(divisors[0])))
+    {
+        return 1;
+    }
+    return divisors[index];
+}
+
+int ComboIndexToSSAOBlurKernelSize(const int index)
+{
+    const int sizes[] = { 21, 11, 5, 3 };
+    if (index < 0 || index >= static_cast<int>(sizeof(sizes) / sizeof(sizes[0])))
+    {
+        return 21;
+    }
+    return sizes[index];
+}
+
+int ComboIndexToSampleCount(const int index)
+{
+    const int counts[] = { 8, 16, 32, 64 };
+    if (index < 0 || index >= static_cast<int>(sizeof(counts) / sizeof(counts[0])))
+    {
+        return 8;
+    }
+    return counts[index];
+}
+
+ParticleEffectPreset ComboIndexToParticleEffectPreset(const int index)
+{
+    switch (index)
+    {
+    case 1:
+        return ParticleEffectPreset::Fire;
+    case 2:
+        return ParticleEffectPreset::Dust;
+    case 3:
+        return ParticleEffectPreset::Fog;
+    case 4:
+        return ParticleEffectPreset::Rain;
+    default:
+        return ParticleEffectPreset::Smoke;
+    }
 }
 
 BOOL CALLBACK CaptureRenderSettingsChildPlacementProc(HWND child, LPARAM lParam)
@@ -803,6 +958,14 @@ void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
         {
             render->SetPostEffectBloom(IsSettingsCheckboxChecked(hWnd, id));
         }
+        else if (id == 31006)
+        {
+            render->SetPostEffectDepthBufferShadow(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 31007)
+        {
+            render->SetPostEffectSSGI(IsSettingsCheckboxChecked(hWnd, id));
+        }
         else if (id == IDC_RENDER_SETTINGS_SSAO_ENABLE)
         {
             render->SetPostEffectSSAO(IsSettingsCheckboxChecked(hWnd, id));
@@ -810,6 +973,110 @@ void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
         else if (id == IDC_RENDER_SETTINGS_FOG_ENABLE)
         {
             render->SetPostEffectFog(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 31008)
+        {
+            render->SetPostEffectHeightFog(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 31009)
+        {
+            render->SetPostEffectDepthOfFieldMode(DepthOfFieldMode::Disabled);
+        }
+        else if (id == 31010)
+        {
+            render->SetPostEffectDepthOfFieldMode(DepthOfFieldMode::Enabled);
+        }
+        else if (id == 31011)
+        {
+            render->SetPostEffectDepthOfFieldMode(DepthOfFieldMode::AutoNear);
+        }
+        else if (id == 31012)
+        {
+            render->SetPostEffectStarBurst(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 31013)
+        {
+            render->SetPostEffectGodRay(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 31014)
+        {
+            render->SetPostEffectHalo(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 31120)
+        {
+            render->SetMeshMixSSS(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 31121)
+        {
+            render->SetPhongTreatTextureAsWhite(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 31122)
+        {
+            render->SetMeshMixSpecularIntensityOverrideEnabled(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 31123)
+        {
+            render->SetMeshMixSpecularEdgeOverrideEnabled(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 31702)
+        {
+            render->SetPostEffectSSGIBlur(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 31704)
+        {
+            render->SetPostEffectSSGISeparableBlur(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 31806)
+        {
+            render->SetPostEffectSSAOCompositeGaussian3x3(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 31807)
+        {
+            render->SetPostEffectSSAOSeparableBlur(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 31808)
+        {
+            render->SetPostEffectSSAOBlur(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 31809)
+        {
+            render->SetPostEffectSSAODepthScaledSampleDistance(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 31810)
+        {
+            render->SetPostEffectSSAORandomSamplingDirection(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 31811)
+        {
+            render->SetPostEffectSSAOMaxDarknessClamp(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 32020)
+        {
+            render->SetPostEffectGaussianFilter(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 32030)
+        {
+            render->SetPostEffectMaskedGaussianFilter(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 32100)
+        {
+            render->SetPostEffectAA(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 32101)
+        {
+            render->SetPostEffectTAA(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 32112)
+        {
+            render->SetPostEffectMotionBlurCamera(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 32141)
+        {
+            render->PlaceParticleEffect(state->particleEffectPreset, render->GetLookAtPos());
+        }
+        else if (id == IDOK || id == IDCANCEL)
+        {
+            ShowWindow(hWnd, SW_HIDE);
         }
         else if (id == IDC_RENDER_SETTINGS_WINDOW_MODE_WINDOW)
         {
@@ -822,6 +1089,47 @@ void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
         else if (id == IDC_RENDER_SETTINGS_WINDOW_MODE_FULLSCREEN)
         {
             render->ChangeWindowMode(eWindowMode::FULLSCREEN);
+        }
+        return;
+    }
+
+    if (notifyCode == CBN_SELCHANGE)
+    {
+        if (id == 31610)
+        {
+            render->SetPostEffectDepthBufferShadowPcfTapCount(ComboIndexToTapCount(GetSettingsComboSelection(hWnd, id)));
+        }
+        else if (id == 31611)
+        {
+            render->SetPostEffectDepthBufferShadowCompositeTapCount(ComboIndexToTapCount(GetSettingsComboSelection(hWnd, id)));
+        }
+        else if (id == 31612)
+        {
+            render->SetPostEffectDepthBufferShadowTexSizeDivisor(ComboIndexToTexSizeDivisor(GetSettingsComboSelection(hWnd, id)));
+        }
+        else if (id == 31700)
+        {
+            render->SetPostEffectSSGISampleCount(ComboIndexToSampleCount(GetSettingsComboSelection(hWnd, id)));
+        }
+        else if (id == 31703)
+        {
+            render->SetPostEffectSSGIBlurKernelSize(ComboIndexToSSAOBlurKernelSize(GetSettingsComboSelection(hWnd, id)));
+        }
+        else if (id == 31801)
+        {
+            render->SetPostEffectSSAOTexSizeDivisor(ComboIndexToTexSizeDivisor(GetSettingsComboSelection(hWnd, id)));
+        }
+        else if (id == 31802)
+        {
+            render->SetPostEffectSSAOBlurKernelSize(ComboIndexToSSAOBlurKernelSize(GetSettingsComboSelection(hWnd, id)));
+        }
+        else if (id == 31805)
+        {
+            render->SetPostEffectSSAOSampleCount(ComboIndexToSampleCount(GetSettingsComboSelection(hWnd, id)));
+        }
+        else if (id == 32140)
+        {
+            state->particleEffectPreset = ComboIndexToParticleEffectPreset(GetSettingsComboSelection(hWnd, id));
         }
         return;
     }
@@ -911,6 +1219,259 @@ void HandleRenderSettingsVScroll(HWND hWnd, const WPARAM wParam)
     ScrollRenderSettingsTo(hWnd, newPos);
 }
 
+void HandleRenderSettingsHScroll(HWND hWnd, const LPARAM lParam)
+{
+    HWND trackbar = reinterpret_cast<HWND>(lParam);
+    if (trackbar == NULL)
+    {
+        return;
+    }
+
+    RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    Render* render = (state != nullptr) ? state->render : nullptr;
+    if (render == nullptr)
+    {
+        return;
+    }
+
+    const int id = GetDlgCtrlID(trackbar);
+    const int pos = static_cast<int>(SendMessage(trackbar, TBM_GETPOS, 0, 0));
+    switch (id)
+    {
+    case IDC_RENDER_SETTINGS_SATURATE_LEVEL:
+    case 31940:
+    {
+        const float value = SliderToFloat(pos, 0.0f, 2.0f);
+        render->SetPostEffectSaturate(value);
+        SetEditFloat(hWnd, trackbar, value, L"%.1f");
+        break;
+    }
+    case 31100:
+        render->SetLightBrightness(SliderToFloat(pos, 0.0f, 5.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 5.0f), L"%.1f");
+        break;
+    case 31101:
+        render->SetAmbientLightBrightness(SliderToFloat(pos, 0.0f, 5.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 5.0f), L"%.1f");
+        break;
+    case 31102:
+        render->SetMeshMixSaturateShadowIntensity(SliderToFloat(pos, 0.0f, 4.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 4.0f));
+        break;
+    case 31103:
+        render->SetMeshMixShadowDarkness(SliderToFloat(pos, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f));
+        break;
+    case 31104:
+        render->SetMeshMixSpecularIntensity(SliderToFloat(pos, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f));
+        break;
+    case 31105:
+        render->SetMeshMixSpecularEdge(SliderToFloat(pos, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f));
+        break;
+    case 31106:
+        render->SetMeshMixEnvMapBlend(SliderToFloat(pos, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f));
+        break;
+    case 31107:
+        render->SetMeshMixSSSIntensity(SliderToFloat(pos, 0.0f, 2.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 2.0f));
+        break;
+    case 31124:
+        render->SetMeshMixFresnelIntensity(SliderToFloat(pos, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f));
+        break;
+    case 31500:
+        render->SetMeshPBRRoughness(SliderToFloat(pos, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f), L"%.3f");
+        break;
+    case 31501:
+        render->SetMeshPBRMetallic(SliderToFloat(pos, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f), L"%.3f");
+        break;
+    case 31502:
+        render->SetMeshPBREnvReflectionIntensity(SliderToFloat(pos, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f), L"%.3f");
+        break;
+    case 31503:
+        render->SetMeshPBREnvMaxMipLevel(SliderToFloat(pos, 0.0f, 10.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 10.0f), L"%.3f");
+        break;
+    case 31504:
+        render->SetMeshPBREnvDiffuseIntensity(SliderToFloat(pos, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f), L"%.3f");
+        break;
+    case 31505:
+        render->SetMeshPBREnvDiffuseMipLevel(SliderToFloat(pos, 0.0f, 10.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 10.0f), L"%.3f");
+        break;
+    case 31600:
+        render->SetPostEffectDepthBufferShadowIntensity(SliderToFloat(pos, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f));
+        break;
+    case 31601:
+        render->SetPostEffectDepthBufferShadowSaturationBoost(SliderToFloat(pos, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f));
+        break;
+    case 31602:
+        render->SetPostEffectDepthBufferShadowCoverage(SliderToFloat(pos, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f));
+        break;
+    case 31701:
+        render->SetPostEffectSSGISampleRadius(SliderToFloat(pos, 0.1f, 10.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.1f, 10.0f));
+        break;
+    case 31800:
+        render->SetPostEffectSSAOSampleRadius(SliderToFloat(pos, 0.1f, 10.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.1f, 10.0f));
+        break;
+    case 31803:
+        render->SetPostEffectSSAOShadowStrength(SliderToFloat(pos, 0.0f, 2.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 2.0f));
+        break;
+    case 31804:
+        render->SetPostEffectSSAOSaturationBoost(SliderToFloat(pos, 0.0f, 2.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 2.0f));
+        break;
+    case 31900:
+        render->SetPostEffectFogIntensity(SliderToFloat(pos, 0.0f, 2.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 2.0f), L"%.1f");
+        break;
+    case 31901:
+    case 31902:
+    case 31903:
+    {
+        const float value = SliderToFloat(pos, 0.0f, 1.0f);
+        if (id == 31901) state->fogColor.r = value;
+        if (id == 31902) state->fogColor.g = value;
+        if (id == 31903) state->fogColor.b = value;
+        render->SetPostEffectFogColor(state->fogColor);
+        SetEditFloat(hWnd, trackbar, value);
+        break;
+    }
+    case 31920:
+        render->SetPostEffectHeightFogIntensity(SliderToFloat(pos, 0.0f, 2.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 2.0f));
+        break;
+    case 31921:
+        render->SetPostEffectHeightFogStart(SliderToFloat(pos, -20.0f, 20.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, -20.0f, 20.0f), L"%.1f");
+        break;
+    case 31922:
+        render->SetPostEffectHeightFogMax(SliderToFloat(pos, -20.0f, 20.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, -20.0f, 20.0f), L"%.1f");
+        break;
+    case 31923:
+        render->SetPostEffectHeightFogDistanceStart(SliderToFloat(pos, 0.0f, 100.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 100.0f), L"%.1f");
+        break;
+    case 31924:
+        render->SetPostEffectHeightFogDistanceMax(SliderToFloat(pos, 0.0f, 100.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 100.0f), L"%.1f");
+        break;
+    case 31950:
+        render->SetPostEffectDepthOfFieldFocalDistance(SliderToFloat(pos, 0.0f, 20.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 20.0f), L"%.1f");
+        break;
+    case 31951:
+        render->SetPostEffectDepthOfFieldMaxBlurDistance(SliderToFloat(pos, 0.0f, 32.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 32.0f), L"%.1f");
+        break;
+    case 31952:
+        render->SetPostEffectDepthOfFieldAutoActivationDistance(SliderToFloat(pos, 0.0f, 20.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 20.0f), L"%.1f");
+        break;
+    case 31953:
+        render->SetPostEffectDepthOfFieldStartNear(SliderToFloat(pos, 0.0f, 20.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 20.0f), L"%.1f");
+        break;
+    case 31970:
+        render->SetPostEffectBloomThreshold(SliderToFloat(pos, 0.0f, 5.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 5.0f), L"%.1f");
+        break;
+    case 31971:
+        render->SetPostEffectBloomWeightSum(SliderToFloat(pos, 0.0f, 4.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 4.0f), L"%.1f");
+        break;
+    case 31972:
+        render->SetPostEffectHaloThreshold(SliderToFloat(pos, 0.0f, 5.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 5.0f), L"%.1f");
+        break;
+    case 31980:
+        render->SetPostEffectStarBurstThreshold(SliderToFloat(pos, 0.0f, 5.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 5.0f), L"%.1f");
+        break;
+    case 31981:
+        render->SetPostEffectStarBurstDistanceFade(SliderToFloat(pos, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f));
+        break;
+    case 32000:
+    case 32001:
+    case 32002:
+    {
+        const float value = SliderToFloat(pos, 0.0f, 1.0f);
+        if (id == 32000) state->godRayColor.x = value;
+        if (id == 32001) state->godRayColor.y = value;
+        if (id == 32002) state->godRayColor.z = value;
+        render->SetPostEffectGodRayLightColor(state->godRayColor);
+        SetEditFloat(hWnd, trackbar, value);
+        break;
+    }
+    case 32003:
+        render->SetPostEffectGodRayIntensity(SliderToFloat(pos, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f));
+        break;
+    case 32004:
+        render->SetPostEffectGodRayVirtualProximityStrength(SliderToFloat(pos, 0.0f, 4.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 4.0f));
+        break;
+    case 32005:
+    case 32006:
+    case 32007:
+    {
+        const float value = SliderToFloat(pos, -2000.0f, 2000.0f);
+        if (id == 32005) state->godRayPos.x = value;
+        if (id == 32006) state->godRayPos.y = value;
+        if (id == 32007) state->godRayPos.z = value;
+        render->SetPostEffectGodRayLightPos(state->godRayPos);
+        SetEditFloat(hWnd, trackbar, value, L"%.1f");
+        break;
+    }
+    case 32021:
+        render->SetPostEffectGaussianStrength(SliderToFloat(pos, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f));
+        break;
+    case 32110:
+        render->SetPostEffectMotionBlurCameraMaxBlurPixels(SliderToFloat(pos, 1.0f, 64.0f));
+        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 1.0f, 64.0f), L"%.0f");
+        break;
+    case 32111:
+    {
+        const int sampleCount = SliderToInt(pos, 1, 32);
+        render->SetPostEffectMotionBlurCameraSampleCount(sampleCount);
+        SetEditInt(hWnd, trackbar, sampleCount);
+        break;
+    }
+    case 32120:
+    {
+        const int quality = SliderToInt(pos, 1, 8);
+        render->SetPostEffectFXAAQuality(quality);
+        SetEditInt(hWnd, trackbar, quality);
+        break;
+    }
+    case 32130:
+    {
+        const int sampleSize = SliderToInt(pos, 1, 31) | 1;
+        render->SetPostEffectFontSampleSize(sampleSize);
+        SetEditInt(hWnd, trackbar, sampleSize);
+        break;
+    }
+    default:
+        break;
+    }
+}
+
 LRESULT CALLBACK RenderSettingsDialogProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
@@ -944,6 +1505,11 @@ LRESULT CALLBACK RenderSettingsDialogProc(HWND hWnd, UINT msg, WPARAM wParam, LP
     case WM_VSCROLL:
     {
         HandleRenderSettingsVScroll(hWnd, wParam);
+        return 0;
+    }
+    case WM_HSCROLL:
+    {
+        HandleRenderSettingsHScroll(hWnd, lParam);
         return 0;
     }
     case WM_MOUSEWHEEL:
