@@ -252,7 +252,7 @@ HWND CreateSettingsCombo(HWND parent, const int id, const int x, const int y, co
     HWND control = CreateWindowExW(0,
                                    L"COMBOBOX",
                                    L"",
-                                   WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST,
+                                   WS_CHILD | WS_VISIBLE | WS_VSCROLL | CBS_DROPDOWNLIST,
                                    x,
                                    y,
                                    w,
@@ -343,7 +343,17 @@ void AddSettingsListViewRow(HWND listView, const int row, const wchar_t* const* 
     }
 }
 
-void InitializeRenderSettingsControls(HWND hWnd)
+std::wstring FormatResolutionLabel(const int width, const int height)
+{
+    return std::to_wstring(width) + L" x " + std::to_wstring(height);
+}
+
+bool TryParseResolutionLabel(const wchar_t* label, int& width, int& height)
+{
+    return swscanf_s(label, L"%d x %d", &width, &height) == 2;
+}
+
+void InitializeRenderSettingsControls(HWND hWnd, Render* render)
 {
     INITCOMMONCONTROLSEX icc { };
     icc.dwSize = sizeof(icc);
@@ -363,9 +373,23 @@ void InitializeRenderSettingsControls(HWND hWnd)
     y += 28;
     CreateSettingsStatic(hWnd, L"Resolution", left, y + 3, 120, 20);
     HWND resolutionCombo = CreateSettingsCombo(hWnd, 31000, 158, y, 128, 120);
-    SendMessage(resolutionCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1920 x 1080"));
-    SendMessage(resolutionCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1600 x 900"));
-    SendMessage(resolutionCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1280 x 720"));
+    bool addedResolution = false;
+    if (render != nullptr)
+    {
+        const auto resolutionList = render->GetResolutionList();
+        for (const auto& resolution : resolutionList)
+        {
+            const std::wstring label = FormatResolutionLabel(resolution.first, resolution.second);
+            SendMessage(resolutionCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(label.c_str()));
+            addedResolution = true;
+        }
+    }
+    if (!addedResolution)
+    {
+        SendMessage(resolutionCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1920 x 1080"));
+        SendMessage(resolutionCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1600 x 900"));
+        SendMessage(resolutionCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1280 x 720"));
+    }
     SendMessage(resolutionCombo, CB_SETCURSEL, 0, 0);
     CreateSettingsStatic(hWnd, L"Quality", 306, y + 3, 60, 20);
     HWND qualityCombo = CreateSettingsCombo(hWnd, 31001, 398, y, 106, 120);
@@ -1534,6 +1558,21 @@ void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
         {
             render->SetPostEffectDepthBufferShadowPcfTapCount(ComboIndexToTapCount(GetSettingsComboSelection(hWnd, id)));
         }
+        else if (id == 31000)
+        {
+            const int index = GetSettingsComboSelection(hWnd, id);
+            if (index != CB_ERR)
+            {
+                wchar_t label[64] { };
+                SendDlgItemMessageW(hWnd, id, CB_GETLBTEXT, static_cast<WPARAM>(index), reinterpret_cast<LPARAM>(label));
+                int width = 0;
+                int height = 0;
+                if (TryParseResolutionLabel(label, width, height))
+                {
+                    render->ChangeResolution(width, height);
+                }
+            }
+        }
         else if (id == 31001)
         {
             render->SetRenderQuality(ComboIndexToRenderingQuality(GetSettingsComboSelection(hWnd, id)));
@@ -1954,7 +1993,8 @@ LRESULT CALLBACK RenderSettingsDialogProc(HWND hWnd, UINT msg, WPARAM wParam, LP
     }
     case WM_CREATE:
     {
-        InitializeRenderSettingsControls(hWnd);
+        RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+        InitializeRenderSettingsControls(hWnd, (state != nullptr) ? state->render : nullptr);
         CaptureRenderSettingsChildPlacements(hWnd);
         UpdateRenderSettingsScrollBar(hWnd);
         return 0;
