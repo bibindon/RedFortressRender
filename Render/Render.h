@@ -109,6 +109,8 @@ public:
     void Initialize(HWND hWnd, const std::wstring& settingsCsvPath = L"");
     void Finalize();
     void Draw();
+    void ShowSettingsDialog(bool activateDialog = true);
+    void ToggleSettingsDialog();
 
     void ChangeResolution(const int W, const int H);
 
@@ -436,6 +438,7 @@ public:
 private:
 
     HWND m_hWnd = NULL;
+    HWND m_hSettingsDialog = NULL;
 
     // ウィンドウ管理
     WindowManager m_windowManager;

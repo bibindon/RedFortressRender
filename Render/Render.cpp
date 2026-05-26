@@ -41,6 +41,8 @@ namespace NSRender
 {
 namespace
 {
+constexpr const wchar_t* RENDER_SETTINGS_DIALOG_CLASS_NAME = L"NSRenderSettingsDialog";
+
 class CameraShakeFrameScope
 {
 public:
@@ -54,6 +56,102 @@ public:
         Camera::EndShakeFrame();
     }
 };
+
+LRESULT CALLBACK RenderSettingsDialogProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    UNREFERENCED_PARAMETER(wParam);
+    UNREFERENCED_PARAMETER(lParam);
+
+    switch (msg)
+    {
+    case WM_CLOSE:
+    {
+        ShowWindow(hWnd, SW_HIDE);
+        return 0;
+    }
+    }
+
+    return DefWindowProc(hWnd, msg, wParam, lParam);
+}
+
+bool EnsureRenderSettingsDialogClass(HINSTANCE hInstance)
+{
+    WNDCLASSEXW existingClass { };
+    existingClass.cbSize = sizeof(existingClass);
+    if (GetClassInfoExW(hInstance, RENDER_SETTINGS_DIALOG_CLASS_NAME, &existingClass))
+    {
+        return true;
+    }
+
+    WNDCLASSEXW wc { };
+    wc.cbSize = sizeof(wc);
+    wc.style = CS_DBLCLKS;
+    wc.lpfnWndProc = RenderSettingsDialogProc;
+    wc.hInstance = hInstance;
+    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_BTNFACE + 1);
+    wc.lpszClassName = RENDER_SETTINGS_DIALOG_CLASS_NAME;
+
+    return RegisterClassExW(&wc) != 0;
+}
+
+void MoveWindowNearParent(HWND hWnd, HWND parent)
+{
+    if (parent == NULL)
+    {
+        return;
+    }
+
+    RECT parentRect { };
+    RECT windowRect { };
+    if (!GetWindowRect(parent, &parentRect) || !GetWindowRect(hWnd, &windowRect))
+    {
+        return;
+    }
+
+    const int windowW = windowRect.right - windowRect.left;
+    const int windowH = windowRect.bottom - windowRect.top;
+    const int gap = 8;
+
+    RECT workArea { };
+    HMONITOR monitor = MonitorFromWindow(parent, MONITOR_DEFAULTTONEAREST);
+    MONITORINFO monitorInfo { };
+    monitorInfo.cbSize = sizeof(monitorInfo);
+    if (GetMonitorInfo(monitor, &monitorInfo))
+    {
+        workArea = monitorInfo.rcWork;
+    }
+    else
+    {
+        SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+    }
+
+    int x = parentRect.right + gap;
+    int y = parentRect.top;
+
+    if (x + windowW > workArea.right)
+    {
+        x = parentRect.left + gap;
+    }
+
+    if (y + windowH > workArea.bottom)
+    {
+        y = workArea.bottom - windowH;
+    }
+
+    x = (std::max)(static_cast<int>(workArea.left),
+                   (std::min)(x, static_cast<int>(workArea.right) - windowW));
+    y = (std::max)(static_cast<int>(workArea.top),
+                   (std::min)(y, static_cast<int>(workArea.bottom) - windowH));
+
+    SetWindowPos(hWnd,
+                 NULL,
+                 x,
+                 y,
+                 windowW,
+                 windowH,
+                 SWP_NOZORDER | SWP_NOACTIVATE);
+}
 
 bool TryParseBoolSetting(const std::wstring& value, bool& result)
 {
@@ -1307,6 +1405,12 @@ void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
 
 void Render::Finalize()
 {
+    if (m_hSettingsDialog != NULL)
+    {
+        DestroyWindow(m_hSettingsDialog);
+        m_hSettingsDialog = NULL;
+    }
+
     MeshMixManager::SetSharedThicknessTexture(NULL);
 
     m_postEffectZShadow.Finalize();
@@ -1443,6 +1547,77 @@ void Render::Finalize()
 
     m_windowManager.Finalize();
     Common::Finalize();
+}
+
+void Render::ShowSettingsDialog(const bool activateDialog)
+{
+    if (m_hWnd == NULL)
+    {
+        return;
+    }
+
+    if (m_hSettingsDialog != NULL && !IsWindow(m_hSettingsDialog))
+    {
+        m_hSettingsDialog = NULL;
+    }
+
+    if (m_hSettingsDialog == NULL)
+    {
+        HINSTANCE hInstance = reinterpret_cast<HINSTANCE>(GetModuleHandle(NULL));
+        if (!EnsureRenderSettingsDialogClass(hInstance))
+        {
+            return;
+        }
+
+        RECT rect { 0, 0, 360, 240 };
+        const DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
+        const DWORD exStyle = WS_EX_TOOLWINDOW | WS_EX_DLGMODALFRAME;
+        AdjustWindowRectEx(&rect, style, FALSE, exStyle);
+
+        m_hSettingsDialog = CreateWindowExW(exStyle,
+                                            RENDER_SETTINGS_DIALOG_CLASS_NAME,
+                                            L"Render Settings",
+                                            style,
+                                            CW_USEDEFAULT,
+                                            CW_USEDEFAULT,
+                                            rect.right - rect.left,
+                                            rect.bottom - rect.top,
+                                            m_hWnd,
+                                            NULL,
+                                            hInstance,
+                                            NULL);
+        if (m_hSettingsDialog == NULL)
+        {
+            return;
+        }
+
+        MoveWindowNearParent(m_hSettingsDialog, m_hWnd);
+    }
+
+    ShowWindow(m_hSettingsDialog, SW_SHOWNORMAL);
+    if (activateDialog)
+    {
+        SetForegroundWindow(m_hSettingsDialog);
+        SetFocus(m_hSettingsDialog);
+    }
+    else
+    {
+        SetForegroundWindow(m_hWnd);
+        SetFocus(m_hWnd);
+    }
+}
+
+void Render::ToggleSettingsDialog()
+{
+    if (m_hSettingsDialog != NULL && IsWindow(m_hSettingsDialog) && IsWindowVisible(m_hSettingsDialog))
+    {
+        ShowWindow(m_hSettingsDialog, SW_HIDE);
+        SetForegroundWindow(m_hWnd);
+        SetFocus(m_hWnd);
+        return;
+    }
+
+    ShowSettingsDialog(true);
 }
 
 void Render::Draw()

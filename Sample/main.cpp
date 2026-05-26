@@ -180,6 +180,12 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
     {
         while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
+            if (msg.message == WM_KEYDOWN && msg.wParam == VK_F8)
+            {
+                g_Render.ToggleSettingsDialog();
+                continue;
+            }
+
             if (g_hSettingsDialog != NULL &&
                 IsWindowVisible(g_hSettingsDialog) &&
                 IsDialogMessage(g_hSettingsDialog, &msg))

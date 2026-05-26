@@ -2353,6 +2353,7 @@ void DrawSampleOverlay()
     text += L"F5 : Depth debug\n";
     text += L"F6 : Thickness debug\n";
     text += L"F7 : Back depth debug\n";
+    text += L"F8 : Render settings dialog\n";
     text += L"\n";
     text += L"8 : Window mode\n";
     text += L"9 : Borderless mode\n";
