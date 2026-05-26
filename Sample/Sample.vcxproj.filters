@@ -35,7 +35,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="RenderSettings.csv">
       <Filter>リソース ファイル</Filter>
     </None>
@@ -43,6 +42,7 @@
       <Filter>リソース ファイル</Filter>
     </None>
     <None Include="..\README_about_sample_x.md" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\Render\shader\MeshMix.fx">
@@ -141,6 +141,8 @@
     <FxCompile Include="..\Render\shader\Particle.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
+    <FxCompile Include="..\Render\shader\MeshPBR.fx" />
+    <FxCompile Include="..\Render\shader\PostEffectSSGI.fx" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sample.rc">
