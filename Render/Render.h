@@ -60,6 +60,7 @@
 #include "PostEffectFog.h"
 #include "PostEffectGodRay.h"
 #include "PostEffectMotionBlurCamera.h"
+#include "RenderSettingsDialog.h"
 
 namespace NSRender
 {
@@ -438,7 +439,7 @@ public:
 private:
 
     HWND m_hWnd = NULL;
-    HWND m_hSettingsDialog = NULL;
+    RenderSettingsDialog m_settingsDialog;
 
     // ウィンドウ管理
     WindowManager m_windowManager;

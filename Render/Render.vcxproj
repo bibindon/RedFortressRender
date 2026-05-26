@@ -70,6 +70,7 @@
     <ClCompile Include="PostEffectStarBurst.cpp" />
     <ClCompile Include="PtrManager.cpp" />
     <ClCompile Include="Render.cpp" />
+    <ClCompile Include="RenderSettingsDialog.cpp" />
     <ClCompile Include="SkinAnimMesh.cpp" />
     <ClCompile Include="SkinAnimMeshAlloc.cpp" />
     <ClCompile Include="Sprite.cpp" />
@@ -122,6 +123,7 @@
     <ClInclude Include="PostEffectStarBurst.h" />
     <ClInclude Include="PtrManager.h" />
     <ClInclude Include="Render.h" />
+    <ClInclude Include="RenderSettingsDialog.h" />
     <ClInclude Include="SkinAnimMesh.h" />
     <ClInclude Include="SkinAnimMeshAlloc.h" />
     <ClInclude Include="Sprite.h" />

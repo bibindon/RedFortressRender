@@ -1,0 +1,559 @@
+﻿#pragma comment(lib, "comctl32.lib")
+
+#include "RenderSettingsDialog.h"
+
+#include <algorithm>
+#include <commctrl.h>
+
+#include "Render.h"
+
+namespace NSRender
+{
+namespace
+{
+constexpr const wchar_t* RENDER_SETTINGS_DIALOG_CLASS_NAME = L"NSRenderSettingsDialog";
+
+enum RenderSettingsControlId
+{
+    IDC_RENDER_SETTINGS_WINDOW_MODE = 30001,
+    IDC_RENDER_SETTINGS_GBUFFER_ENABLE,
+    IDC_RENDER_SETTINGS_SATURATE_ENABLE,
+    IDC_RENDER_SETTINGS_SATURATE_LEVEL,
+    IDC_RENDER_SETTINGS_GAUSSIAN_ENABLE,
+    IDC_RENDER_SETTINGS_BLOOM_ENABLE,
+    IDC_RENDER_SETTINGS_SSAO_ENABLE,
+    IDC_RENDER_SETTINGS_FOG_ENABLE,
+    IDC_RENDER_SETTINGS_DEBUG_VIEW,
+    IDC_RENDER_SETTINGS_WINDOW_MODE_WINDOW,
+    IDC_RENDER_SETTINGS_WINDOW_MODE_BORDERLESS,
+    IDC_RENDER_SETTINGS_WINDOW_MODE_FULLSCREEN,
+};
+
+void SetDefaultGuiFont(HWND hWnd)
+{
+    HFONT font = static_cast<HFONT>(GetStockObject(DEFAULT_GUI_FONT));
+    SendMessage(hWnd, WM_SETFONT, reinterpret_cast<WPARAM>(font), TRUE);
+}
+
+void CreateSettingsStatic(HWND parent, const wchar_t* text, const int x, const int y, const int w, const int h)
+{
+    HWND control = CreateWindowExW(0,
+                                   L"STATIC",
+                                   text,
+                                   WS_CHILD | WS_VISIBLE,
+                                   x,
+                                   y,
+                                   w,
+                                   h,
+                                   parent,
+                                   NULL,
+                                   GetModuleHandle(NULL),
+                                   NULL);
+    SetDefaultGuiFont(control);
+}
+
+HWND CreateSettingsCheckbox(HWND parent, const int id, const wchar_t* text, const int x, const int y, const int w, const int h)
+{
+    HWND control = CreateWindowExW(0,
+                                   L"BUTTON",
+                                   text,
+                                   WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
+                                   x,
+                                   y,
+                                   w,
+                                   h,
+                                   parent,
+                                   reinterpret_cast<HMENU>(static_cast<INT_PTR>(id)),
+                                   GetModuleHandle(NULL),
+                                   NULL);
+    SetDefaultGuiFont(control);
+    return control;
+}
+
+HWND CreateSettingsRadio(HWND parent, const int id, const wchar_t* text, const int x, const int y, const int w, const int h)
+{
+    HWND control = CreateWindowExW(0,
+                                   L"BUTTON",
+                                   text,
+                                   WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON,
+                                   x,
+                                   y,
+                                   w,
+                                   h,
+                                   parent,
+                                   reinterpret_cast<HMENU>(static_cast<INT_PTR>(id)),
+                                   GetModuleHandle(NULL),
+                                   NULL);
+    SetDefaultGuiFont(control);
+    return control;
+}
+
+void CreateSettingsGroupBox(HWND parent, const wchar_t* text, const int x, const int y, const int w, const int h)
+{
+    HWND control = CreateWindowExW(0,
+                                   L"BUTTON",
+                                   text,
+                                   WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
+                                   x,
+                                   y,
+                                   w,
+                                   h,
+                                   parent,
+                                   NULL,
+                                   GetModuleHandle(NULL),
+                                   NULL);
+    SetDefaultGuiFont(control);
+}
+
+void CreateSettingsButton(HWND parent, const wchar_t* text, const int x, const int y, const int w, const int h)
+{
+    HWND control = CreateWindowExW(0,
+                                   L"BUTTON",
+                                   text,
+                                   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                   x,
+                                   y,
+                                   w,
+                                   h,
+                                   parent,
+                                   NULL,
+                                   GetModuleHandle(NULL),
+                                   NULL);
+    SetDefaultGuiFont(control);
+}
+
+void CreateSettingsEdit(HWND parent, const wchar_t* text, const int x, const int y, const int w, const int h)
+{
+    HWND control = CreateWindowExW(WS_EX_CLIENTEDGE,
+                                   L"EDIT",
+                                   text,
+                                   WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+                                   x,
+                                   y,
+                                   w,
+                                   h,
+                                   parent,
+                                   NULL,
+                                   GetModuleHandle(NULL),
+                                   NULL);
+    SetDefaultGuiFont(control);
+}
+
+HWND CreateSettingsCombo(HWND parent, const int id, const int x, const int y, const int w, const int h)
+{
+    HWND control = CreateWindowExW(0,
+                                   L"COMBOBOX",
+                                   L"",
+                                   WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST,
+                                   x,
+                                   y,
+                                   w,
+                                   h,
+                                   parent,
+                                   reinterpret_cast<HMENU>(static_cast<INT_PTR>(id)),
+                                   GetModuleHandle(NULL),
+                                   NULL);
+    SetDefaultGuiFont(control);
+    return control;
+}
+
+void CreateSettingsTrackbar(HWND parent,
+                            const int id,
+                            const int x,
+                            const int y,
+                            const int w,
+                            const int h,
+                            const int minValue,
+                            const int maxValue,
+                            const int currentValue)
+{
+    HWND control = CreateWindowExW(0,
+                                   TRACKBAR_CLASSW,
+                                   L"",
+                                   WS_CHILD | WS_VISIBLE | TBS_AUTOTICKS,
+                                   x,
+                                   y,
+                                   w,
+                                   h,
+                                   parent,
+                                   reinterpret_cast<HMENU>(static_cast<INT_PTR>(id)),
+                                   GetModuleHandle(NULL),
+                                   NULL);
+    SendMessage(control, TBM_SETRANGE, TRUE, MAKELPARAM(minValue, maxValue));
+    SendMessage(control, TBM_SETPOS, TRUE, currentValue);
+    SendMessage(control, TBM_SETTICFREQ, 50, 0);
+}
+
+void InitializeRenderSettingsControls(HWND hWnd)
+{
+    INITCOMMONCONTROLSEX icc { };
+    icc.dwSize = sizeof(icc);
+    icc.dwICC = ICC_BAR_CLASSES;
+    InitCommonControlsEx(&icc);
+
+    constexpr int left = 10;
+    constexpr int width = 494;
+    int y = 12;
+
+    CreateSettingsStatic(hWnd, L"Window Mode", left, y + 3, 120, 20);
+    HWND windowRadio = CreateSettingsRadio(hWnd, IDC_RENDER_SETTINGS_WINDOW_MODE_WINDOW, L"Window", 158, y, 72, 22);
+    CreateSettingsRadio(hWnd, IDC_RENDER_SETTINGS_WINDOW_MODE_BORDERLESS, L"Borderless", 232, y, 88, 22);
+    CreateSettingsRadio(hWnd, IDC_RENDER_SETTINGS_WINDOW_MODE_FULLSCREEN, L"Fullscreen", 328, y, 96, 22);
+    SendMessage(windowRadio, BM_SETCHECK, BST_CHECKED, 0);
+
+    y += 28;
+    CreateSettingsStatic(hWnd, L"Resolution", left, y + 3, 120, 20);
+    HWND resolutionCombo = CreateSettingsCombo(hWnd, 31000, 158, y, 128, 120);
+    SendMessage(resolutionCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1920 x 1080"));
+    SendMessage(resolutionCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1600 x 900"));
+    SendMessage(resolutionCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1280 x 720"));
+    SendMessage(resolutionCombo, CB_SETCURSEL, 0, 0);
+    CreateSettingsStatic(hWnd, L"Quality", 306, y + 3, 60, 20);
+    HWND qualityCombo = CreateSettingsCombo(hWnd, 31001, 398, y, 106, 120);
+    SendMessage(qualityCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"LOW"));
+    SendMessage(qualityCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"MIDDLE"));
+    SendMessage(qualityCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"HIGH"));
+    SendMessage(qualityCombo, CB_SETCURSEL, 0, 0);
+
+    y += 26;
+    CreateSettingsCheckbox(hWnd, 31002, L"Remote Desktop", 158, y, 124, 22);
+    CreateSettingsButton(hWnd, L"Load CSV...", 286, y - 3, 92, 24);
+
+    y += 24;
+    CreateSettingsCheckbox(hWnd, 31003, L"Move x100", 158, y, 124, 22);
+
+    y += 30;
+    CreateSettingsGroupBox(hWnd, L"Camera", left - 4, y, width + 8, 88);
+    CreateSettingsStatic(hWnd, L"Camera Near", 22, y + 24, 100, 20);
+    CreateSettingsEdit(hWnd, L"0.100", 158, y + 22, 72, 20);
+    CreateSettingsStatic(hWnd, L"Camera Far", 264, y + 24, 100, 20);
+    CreateSettingsEdit(hWnd, L"30000.0", 400, y + 22, 104, 20);
+    CreateSettingsButton(hWnd, L"Shake", 22, y + 50, 56, 24);
+    CreateSettingsStatic(hWnd, L"Sec", 88, y + 54, 28, 20);
+    CreateSettingsTrackbar(hWnd, 31004, 122, y + 48, 94, 32, 0, 100, 35);
+    CreateSettingsEdit(hWnd, L"1.0", 226, y + 50, 34, 20);
+    CreateSettingsStatic(hWnd, L"Power", 286, y + 54, 44, 20);
+    CreateSettingsTrackbar(hWnd, 31005, 326, y + 48, 98, 32, 0, 100, 20);
+    CreateSettingsEdit(hWnd, L"0.12", 436, y + 50, 68, 20);
+
+    y += 98;
+    CreateSettingsGroupBox(hWnd, L"GBuffer", left - 4, y, width + 8, 62);
+    CreateSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_GBUFFER_ENABLE, L"GBuffer", 22, y + 18, 110, 22);
+    CreateSettingsStatic(hWnd, L"GBuffer Near", 22, y + 42, 100, 18);
+    CreateSettingsEdit(hWnd, L"0.100", 158, y + 38, 72, 20);
+    CreateSettingsStatic(hWnd, L"GBuffer Far", 264, y + 42, 100, 18);
+    CreateSettingsEdit(hWnd, L"30.0", 400, y + 38, 104, 20);
+
+    y += 72;
+    CreateSettingsGroupBox(hWnd, L"Post Effects", left - 4, y, width + 8, 90);
+    CreateSettingsCheckbox(hWnd, 31006, L"ZShadow", 22, y + 18, 88, 22);
+    CreateSettingsCheckbox(hWnd, 31007, L"SSGI", 118, y + 18, 70, 22);
+    CreateSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_SSAO_ENABLE, L"SSAO", 188, y + 18, 72, 22);
+    CreateSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_FOG_ENABLE, L"Fog", 264, y + 18, 62, 22);
+    CreateSettingsCheckbox(hWnd, 31008, L"Height Fog", 344, y + 18, 104, 22);
+    CreateSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_SATURATE_ENABLE, L"Saturate Filter", 22, y + 40, 116, 22);
+    CreateSettingsRadio(hWnd, 31009, L"DOF Off", 160, y + 40, 72, 22);
+    CreateSettingsRadio(hWnd, 31010, L"DOF On", 234, y + 40, 72, 22);
+    CreateSettingsRadio(hWnd, 31011, L"DOF Aut", 306, y + 40, 76, 22);
+    CreateSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_BLOOM_ENABLE, L"Bloom", 384, y + 40, 72, 22);
+    CreateSettingsCheckbox(hWnd, 31012, L"StarBurst", 456, y + 40, 92, 22);
+    CreateSettingsCheckbox(hWnd, 31013, L"GodRay", 22, y + 62, 88, 22);
+    CreateSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_GAUSSIAN_ENABLE, L"Gaussian blur", 118, y + 62, 124, 22);
+    CreateSettingsCheckbox(hWnd, 31014, L"Halo", 360, y + 62, 72, 22);
+
+    y += 100;
+    CreateSettingsGroupBox(hWnd, L"Common", left - 4, y, width + 8, 38);
+    CreateSettingsCheckbox(hWnd, 31015, L"Animate Light", 22, y + 16, 124, 22);
+
+    y += 48;
+    CreateSettingsGroupBox(hWnd, L"Phong", left - 4, y, width + 8, 330);
+    int row = y + 28;
+    const wchar_t* leftLabels[] = {
+        L"Sun Light", L"Ambient", L"Lambert Sat", L"Lambert Darkness", L"Specular Intensity",
+        L"Specular Edge", L"EnvMap Blend", L"SSS Int", L"SSS R", L"SSS G", L"SSS B", L"Model Load Scale"
+    };
+    const wchar_t* leftValues[] = {
+        L"1.0", L"1.0", L"2.00", L"0.30", L"0.10", L"0.00", L"1.00", L"1.00", L"1.00", L"1.00", L"0.50", L"1.0"
+    };
+    for (int i = 0; i < 12; ++i)
+    {
+        CreateSettingsStatic(hWnd, leftLabels[i], 22, row + 4, 136, 18);
+        CreateSettingsTrackbar(hWnd, 31100 + i, 164, row, 124, 30, 0, 100, 50);
+        CreateSettingsEdit(hWnd, leftValues[i], 296, row + 2, 40, 20);
+        row += 22;
+    }
+
+    CreateSettingsCheckbox(hWnd, 31120, L"SSS", 22, y + 184, 72, 22);
+    CreateSettingsCheckbox(hWnd, 31121, L"Treat Texture As White", 348, y + 128, 154, 22);
+    CreateSettingsCheckbox(hWnd, 31122, L"Use Override", 348, y + 150, 132, 22);
+    CreateSettingsCheckbox(hWnd, 31123, L"Use Override", 348, y + 172, 132, 22);
+    CreateSettingsStatic(hWnd, L"Fresne", 348, y + 202, 52, 18);
+    CreateSettingsTrackbar(hWnd, 31124, 386, y + 194, 82, 30, 0, 100, 8);
+    CreateSettingsEdit(hWnd, L"0.08", 474, y + 198, 30, 20);
+
+    row = y + 28;
+    const wchar_t* colorLabels[] = { L"Sun R", L"Sun G", L"Sun B", L"Amb R", L"Amb G", L"Amb B" };
+    const wchar_t* colorValues[] = { L"1.00", L"1.00", L"1.00", L"0.20", L"0.20", L"0.20" };
+    for (int i = 0; i < 6; ++i)
+    {
+        CreateSettingsStatic(hWnd, colorLabels[i], 348, row + 4, 54, 18);
+        CreateSettingsTrackbar(hWnd, 31200 + i, 438, row, 30, 30, 0, 100, 50);
+        CreateSettingsEdit(hWnd, colorValues[i], 474, row + 2, 30, 20);
+        row += 18;
+    }
+}
+
+bool IsSettingsCheckboxChecked(HWND hWnd, const int id)
+{
+    return SendDlgItemMessage(hWnd, id, BM_GETCHECK, 0, 0) == BST_CHECKED;
+}
+
+void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
+{
+    Render* render = reinterpret_cast<Render*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    if (render == nullptr)
+    {
+        return;
+    }
+
+    const int id = LOWORD(wParam);
+    const int notifyCode = HIWORD(wParam);
+
+    if (notifyCode == BN_CLICKED)
+    {
+        if (id == IDC_RENDER_SETTINGS_SATURATE_ENABLE)
+        {
+            render->SetPostEffectSaturateEnable(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == IDC_RENDER_SETTINGS_GBUFFER_ENABLE)
+        {
+            render->SetGBufferEnable(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == IDC_RENDER_SETTINGS_GAUSSIAN_ENABLE)
+        {
+            render->SetPostEffectGaussianFilter(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == IDC_RENDER_SETTINGS_BLOOM_ENABLE)
+        {
+            render->SetPostEffectBloom(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == IDC_RENDER_SETTINGS_SSAO_ENABLE)
+        {
+            render->SetPostEffectSSAO(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == IDC_RENDER_SETTINGS_FOG_ENABLE)
+        {
+            render->SetPostEffectFog(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == IDC_RENDER_SETTINGS_WINDOW_MODE_WINDOW)
+        {
+            render->ChangeWindowMode(eWindowMode::WINDOW);
+        }
+        else if (id == IDC_RENDER_SETTINGS_WINDOW_MODE_BORDERLESS)
+        {
+            render->ChangeWindowMode(eWindowMode::BORDERLESS);
+        }
+        else if (id == IDC_RENDER_SETTINGS_WINDOW_MODE_FULLSCREEN)
+        {
+            render->ChangeWindowMode(eWindowMode::FULLSCREEN);
+        }
+        return;
+    }
+}
+
+LRESULT CALLBACK RenderSettingsDialogProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch (msg)
+    {
+    case WM_NCCREATE:
+    {
+        const CREATESTRUCT* createStruct = reinterpret_cast<const CREATESTRUCT*>(lParam);
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(createStruct->lpCreateParams));
+        return TRUE;
+    }
+    case WM_CREATE:
+    {
+        InitializeRenderSettingsControls(hWnd);
+        return 0;
+    }
+    case WM_COMMAND:
+    {
+        HandleRenderSettingsCommand(hWnd, wParam);
+        return 0;
+    }
+    case WM_CLOSE:
+    {
+        ShowWindow(hWnd, SW_HIDE);
+        return 0;
+    }
+    case WM_NCDESTROY:
+    {
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, 0);
+        break;
+    }
+    }
+
+    return DefWindowProc(hWnd, msg, wParam, lParam);
+}
+
+bool EnsureRenderSettingsDialogClass(HINSTANCE hInstance)
+{
+    WNDCLASSEXW existingClass { };
+    existingClass.cbSize = sizeof(existingClass);
+    if (GetClassInfoExW(hInstance, RENDER_SETTINGS_DIALOG_CLASS_NAME, &existingClass))
+    {
+        return true;
+    }
+
+    WNDCLASSEXW wc { };
+    wc.cbSize = sizeof(wc);
+    wc.style = CS_DBLCLKS;
+    wc.lpfnWndProc = RenderSettingsDialogProc;
+    wc.hInstance = hInstance;
+    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_BTNFACE + 1);
+    wc.lpszClassName = RENDER_SETTINGS_DIALOG_CLASS_NAME;
+
+    return RegisterClassExW(&wc) != 0;
+}
+
+void MoveWindowNearParent(HWND hWnd, HWND parent)
+{
+    if (parent == NULL)
+    {
+        return;
+    }
+
+    RECT parentRect { };
+    RECT windowRect { };
+    if (!GetWindowRect(parent, &parentRect) || !GetWindowRect(hWnd, &windowRect))
+    {
+        return;
+    }
+
+    const int windowW = windowRect.right - windowRect.left;
+    const int windowH = windowRect.bottom - windowRect.top;
+    const int gap = 8;
+
+    RECT workArea { };
+    HMONITOR monitor = MonitorFromWindow(parent, MONITOR_DEFAULTTONEAREST);
+    MONITORINFO monitorInfo { };
+    monitorInfo.cbSize = sizeof(monitorInfo);
+    if (GetMonitorInfo(monitor, &monitorInfo))
+    {
+        workArea = monitorInfo.rcWork;
+    }
+    else
+    {
+        SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+    }
+
+    int x = parentRect.right + gap;
+    int y = parentRect.top;
+
+    if (x + windowW > workArea.right)
+    {
+        x = parentRect.left + gap;
+    }
+
+    if (y + windowH > workArea.bottom)
+    {
+        y = workArea.bottom - windowH;
+    }
+
+    x = (std::max)(static_cast<int>(workArea.left),
+                   (std::min)(x, static_cast<int>(workArea.right) - windowW));
+    y = (std::max)(static_cast<int>(workArea.top),
+                   (std::min)(y, static_cast<int>(workArea.bottom) - windowH));
+
+    SetWindowPos(hWnd,
+                 NULL,
+                 x,
+                 y,
+                 windowW,
+                 windowH,
+                 SWP_NOZORDER | SWP_NOACTIVATE);
+}
+}
+
+void RenderSettingsDialog::Show(HWND parent, Render* render, const bool activateDialog)
+{
+    if (parent == NULL || render == nullptr)
+    {
+        return;
+    }
+
+    if (m_hWnd != NULL && !IsWindow(m_hWnd))
+    {
+        m_hWnd = NULL;
+    }
+
+    if (m_hWnd == NULL)
+    {
+        HINSTANCE hInstance = reinterpret_cast<HINSTANCE>(GetModuleHandle(NULL));
+        if (!EnsureRenderSettingsDialogClass(hInstance))
+        {
+            return;
+        }
+
+        RECT rect { 0, 0, 520, 780 };
+        const DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_VSCROLL;
+        const DWORD exStyle = WS_EX_TOOLWINDOW | WS_EX_DLGMODALFRAME;
+        AdjustWindowRectEx(&rect, style, FALSE, exStyle);
+
+        m_hWnd = CreateWindowExW(exStyle,
+                                 RENDER_SETTINGS_DIALOG_CLASS_NAME,
+                                 L"Settings",
+                                 style,
+                                 CW_USEDEFAULT,
+                                 CW_USEDEFAULT,
+                                 rect.right - rect.left,
+                                 rect.bottom - rect.top,
+                                 parent,
+                                 NULL,
+                                 hInstance,
+                                 render);
+        if (m_hWnd == NULL)
+        {
+            return;
+        }
+
+        MoveWindowNearParent(m_hWnd, parent);
+    }
+
+    ShowWindow(m_hWnd, SW_SHOWNORMAL);
+    if (activateDialog)
+    {
+        SetForegroundWindow(m_hWnd);
+        SetFocus(m_hWnd);
+    }
+    else
+    {
+        SetForegroundWindow(parent);
+        SetFocus(parent);
+    }
+}
+
+void RenderSettingsDialog::Toggle(HWND parent, Render* render)
+{
+    if (m_hWnd != NULL && IsWindow(m_hWnd) && IsWindowVisible(m_hWnd))
+    {
+        ShowWindow(m_hWnd, SW_HIDE);
+        SetForegroundWindow(parent);
+        SetFocus(parent);
+        return;
+    }
+
+    Show(parent, render, true);
+}
+
+void RenderSettingsDialog::Finalize()
+{
+    if (m_hWnd != NULL)
+    {
+        DestroyWindow(m_hWnd);
+        m_hWnd = NULL;
+    }
+}
+
+}
