@@ -13,12 +13,13 @@ namespace NSRender
 namespace
 {
 constexpr const wchar_t* RENDER_SETTINGS_DIALOG_CLASS_NAME = L"NSRenderSettingsDialog";
-constexpr int RENDER_SETTINGS_CONTENT_HEIGHT = 1220;
+constexpr int RENDER_SETTINGS_CONTENT_BOTTOM_MARGIN = 24;
 
 struct RenderSettingsDialogState
 {
     Render* render = nullptr;
     int scrollPos = 0;
+    int contentHeight = 0;
     struct ChildPlacement
     {
         HWND hWnd = NULL;
@@ -478,6 +479,13 @@ void CaptureRenderSettingsChildPlacements(HWND hWnd)
 
     state->childPlacements.clear();
     EnumChildWindows(hWnd, CaptureRenderSettingsChildPlacementProc, reinterpret_cast<LPARAM>(state));
+
+    int maxBottom = 0;
+    for (const auto& placement : state->childPlacements)
+    {
+        maxBottom = (std::max)(maxBottom, static_cast<int>(placement.rect.bottom));
+    }
+    state->contentHeight = maxBottom + RENDER_SETTINGS_CONTENT_BOTTOM_MARGIN;
 }
 
 void ApplyRenderSettingsChildPositions(HWND hWnd)
@@ -573,7 +581,7 @@ void UpdateRenderSettingsScrollBar(HWND hWnd)
     scrollInfo.cbSize = sizeof(scrollInfo);
     scrollInfo.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
     scrollInfo.nMin = 0;
-    scrollInfo.nMax = RENDER_SETTINGS_CONTENT_HEIGHT;
+    scrollInfo.nMax = (std::max)(0, state->contentHeight - 1);
     scrollInfo.nPage = clientRect.bottom - clientRect.top;
     scrollInfo.nPos = state->scrollPos;
     SetScrollInfo(hWnd, SB_VERT, &scrollInfo, TRUE);
@@ -590,7 +598,7 @@ void ScrollRenderSettingsTo(HWND hWnd, const int newScrollPos)
     RECT clientRect { };
     GetClientRect(hWnd, &clientRect);
     const int clientHeight = static_cast<int>(clientRect.bottom - clientRect.top);
-    const int maxScrollPos = (std::max)(0, RENDER_SETTINGS_CONTENT_HEIGHT - clientHeight);
+    const int maxScrollPos = (std::max)(0, state->contentHeight - clientHeight);
     const int clampedPos = (std::max)(0, (std::min)(newScrollPos, maxScrollPos));
     const int delta = state->scrollPos - clampedPos;
     if (delta == 0)
