@@ -655,6 +655,47 @@ void InitializeRenderSettingsControls(HWND hWnd)
     CreateSettingsEdit(hWnd, L"", 162, y + 24, 242, 20);
     CreateSettingsButton(hWnd, L"Open...", 416, y + 22, 90, 24);
     CreateSettingsCheckbox(hWnd, 32030, L"Masked G", 408, y + 48, 96, 22);
+
+    y += 90;
+    CreateSettingsGroupBox(hWnd, L"PostEffectAA", 8, y, 504, 58);
+    CreateSettingsCheckbox(hWnd, 32100, L"PAA", 366, y + 18, 64, 22);
+    CreateSettingsCheckbox(hWnd, 32101, L"TAA", 438, y + 18, 64, 22);
+    CreateSettingsStatic(hWnd, L"TAA Weight", 384, y + 40, 88, 18);
+    CreateSettingsEdit(hWnd, L"0.85", 474, y + 36, 34, 20);
+
+    y += 70;
+    CreateSettingsGroupBox(hWnd, L"Motion Blur", 8, y, 84 + 420, 82);
+    CreateSettingsStatic(hWnd, L"Max Blur Px", 24, y + 22, 138, 18);
+    CreateSettingsTrackbar(hWnd, 32110, 168, y + 16, 296, 30, 0, 100, 78);
+    CreateSettingsEdit(hWnd, L"24", 478, y + 18, 30, 20);
+    CreateSettingsStatic(hWnd, L"Sample Count", 24, y + 44, 138, 18);
+    CreateSettingsTrackbar(hWnd, 32111, 168, y + 38, 296, 30, 0, 100, 58);
+    CreateSettingsEdit(hWnd, L"13", 478, y + 40, 30, 20);
+    CreateSettingsCheckbox(hWnd, 32112, L"Motion Blur", 372, y + 60, 118, 22);
+
+    y += 96;
+    CreateSettingsGroupBox(hWnd, L"FXAA", 8, y, 504, 58);
+    CreateSettingsStatic(hWnd, L"FXAA Quality", 24, y + 22, 138, 18);
+    CreateSettingsTrackbar(hWnd, 32120, 168, y + 16, 296, 30, 0, 100, 50);
+    CreateSettingsEdit(hWnd, L"4", 478, y + 18, 30, 20);
+
+    y += 64;
+    CreateSettingsStatic(hWnd, L"FontEx Blur Size", 16, y + 6, 140, 18);
+    CreateSettingsTrackbar(hWnd, 32130, 168, y, 122, 30, 0, 100, 50);
+    CreateSettingsEdit(hWnd, L"21", 300, y + 2, 40, 20);
+
+    y += 34;
+    CreateSettingsStatic(hWnd, L"Particle", 16, y + 6, 76, 18);
+    HWND particleCombo = CreateSettingsCombo(hWnd, 32140, 96, y + 2, 242, 120);
+    SendMessage(particleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Smoke"));
+    SendMessage(particleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Fire"));
+    SendMessage(particleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Spark"));
+    SendMessage(particleCombo, CB_SETCURSEL, 0, 0);
+    CreateSettingsButton(hWnd, L"Place At LookAt", 352, y, 154, 24);
+
+    y += 30;
+    CreateSettingsButton(hWnd, L"OK", 310, y, 88, 24);
+    CreateSettingsButton(hWnd, L"Cancel", 424, y, 88, 24);
 }
 
 bool IsSettingsCheckboxChecked(HWND hWnd, const int id)
