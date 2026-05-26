@@ -435,6 +435,226 @@ void InitializeRenderSettingsControls(HWND hWnd)
     SendMessage(pointTypeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Square"));
     SendMessage(pointTypeCombo, CB_SETCURSEL, 0, 0);
     CreateSettingsButton(hWnd, L"Add", 382, y + 12, 54, 24);
+
+    y += 62;
+    CreateSettingsGroupBox(hWnd, L"PBR", 8, y, 504, 178);
+    CreateSettingsStatic(hWnd, L"MeshPBR (x)", 24, y + 24, 132, 18);
+    CreateSettingsEdit(hWnd, L"", 162, y + 20, 124, 20);
+    CreateSettingsButton(hWnd, L"Open...", 298, y + 18, 42, 24);
+    CreateSettingsStatic(hWnd, L"EnvMap Image", 24, y + 46, 132, 18);
+    CreateSettingsEdit(hWnd, L"", 162, y + 42, 124, 20);
+    CreateSettingsButton(hWnd, L"Open...", 298, y + 40, 42, 24);
+
+    const wchar_t* pbrLabels[] = { L"PBR Roughness", L"PBR Metallic", L"Env Refl Int", L"Env Max Mip", L"Env Diffuse", L"Env Diff Mip" };
+    const wchar_t* pbrValues[] = { L"0.850", L"0.000", L"0.050", L"5.000", L"0.800", L"3.000" };
+    int pbrY = y + 68;
+    for (int i = 0; i < 6; ++i)
+    {
+        CreateSettingsStatic(hWnd, pbrLabels[i], 24, pbrY + 4, 132, 18);
+        CreateSettingsTrackbar(hWnd, 31500 + i, 168, pbrY, 122, 30, 0, 100, 50);
+        CreateSettingsEdit(hWnd, pbrValues[i], 298, pbrY + 2, 40, 20);
+        pbrY += 20;
+    }
+
+    y += 190;
+    CreateSettingsGroupBox(hWnd, L"ZShadow", 8, y, 504, 126);
+    const wchar_t* zShadowLabels[] = { L"ZShadow Intensity", L"ZShadow Saturation", L"ZShadow Range" };
+    const wchar_t* zShadowValues[] = { L"0.25", L"0.50", L"0.05" };
+    int zY = y + 28;
+    for (int i = 0; i < 3; ++i)
+    {
+        CreateSettingsStatic(hWnd, zShadowLabels[i], 24, zY + 4, 142, 18);
+        CreateSettingsTrackbar(hWnd, 31600 + i, 168, zY, 122, 30, 0, 100, 50);
+        CreateSettingsEdit(hWnd, zShadowValues[i], 298, zY + 2, 40, 20);
+        zY += 20;
+    }
+    CreateSettingsStatic(hWnd, L"ZShadow PCF Taps", 24, zY + 4, 142, 18);
+    HWND pcfCombo = CreateSettingsCombo(hWnd, 31610, 266, zY, 72, 120);
+    SendMessage(pcfCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1"));
+    SendMessage(pcfCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"3"));
+    SendMessage(pcfCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"5"));
+    SendMessage(pcfCombo, CB_SETCURSEL, 0, 0);
+    zY += 20;
+    CreateSettingsStatic(hWnd, L"ZShadow Composite Taps", 24, zY + 4, 176, 18);
+    HWND compositeCombo = CreateSettingsCombo(hWnd, 31611, 266, zY, 72, 120);
+    SendMessage(compositeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1"));
+    SendMessage(compositeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"3"));
+    SendMessage(compositeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"5"));
+    SendMessage(compositeCombo, CB_SETCURSEL, 0, 0);
+    CreateSettingsStatic(hWnd, L"ZShadowTexSize", 266, zY + 28, 96, 18);
+    HWND zTexSizeCombo = CreateSettingsCombo(hWnd, 31612, 366, zY + 24, 94, 120);
+    SendMessage(zTexSizeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/1"));
+    SendMessage(zTexSizeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/2"));
+    SendMessage(zTexSizeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/4"));
+    SendMessage(zTexSizeCombo, CB_SETCURSEL, 0, 0);
+
+    y += 140;
+    CreateSettingsGroupBox(hWnd, L"SSGI", 8, y, 504, 104);
+    CreateSettingsStatic(hWnd, L"SSGI Sample Count", 24, y + 24, 138, 18);
+    HWND ssgiSampleCombo = CreateSettingsCombo(hWnd, 31700, 266, y + 20, 72, 120);
+    SendMessage(ssgiSampleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"8"));
+    SendMessage(ssgiSampleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"16"));
+    SendMessage(ssgiSampleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"32"));
+    SendMessage(ssgiSampleCombo, CB_SETCURSEL, 1, 0);
+    CreateSettingsStatic(hWnd, L"Indirect light", 24, y + 46, 138, 18);
+    CreateSettingsEdit(hWnd, L"1.00", 266, y + 42, 72, 20);
+    CreateSettingsStatic(hWnd, L"Indirect light max", 24, y + 68, 138, 18);
+    CreateSettingsEdit(hWnd, L"1.00", 266, y + 64, 72, 20);
+    CreateSettingsStatic(hWnd, L"SSGI Dist Scale", 24, y + 90, 138, 18);
+    CreateSettingsTrackbar(hWnd, 31701, 168, y + 84, 122, 30, 0, 100, 50);
+    CreateSettingsEdit(hWnd, L"1.00", 298, y + 86, 40, 20);
+    CreateSettingsCheckbox(hWnd, 31702, L"SSGI Blur", 350, y + 20, 100, 22);
+    CreateSettingsStatic(hWnd, L"SSGI Blur Size", 350, y + 46, 92, 18);
+    HWND ssgiBlurSizeCombo = CreateSettingsCombo(hWnd, 31703, 442, y + 42, 64, 120);
+    SendMessage(ssgiBlurSizeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"21x21"));
+    SendMessage(ssgiBlurSizeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"11x11"));
+    SendMessage(ssgiBlurSizeCombo, CB_SETCURSEL, 0, 0);
+    CreateSettingsCheckbox(hWnd, 31704, L"Separable Blur", 350, y + 68, 130, 22);
+
+    y += 114;
+    CreateSettingsGroupBox(hWnd, L"SSAO", 8, y, 504, 198);
+    CreateSettingsStatic(hWnd, L"SSAO Sample Radius", 24, y + 24, 142, 18);
+    CreateSettingsTrackbar(hWnd, 31800, 168, y + 18, 122, 30, 0, 100, 15);
+    CreateSettingsEdit(hWnd, L"1.00", 298, y + 20, 40, 20);
+    CreateSettingsStatic(hWnd, L"SSAO TexSize", 350, y + 24, 92, 18);
+    HWND ssaoTexSizeCombo = CreateSettingsCombo(hWnd, 31801, 442, y + 20, 64, 120);
+    SendMessage(ssaoTexSizeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/1"));
+    SendMessage(ssaoTexSizeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/2"));
+    SendMessage(ssaoTexSizeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/4"));
+    SendMessage(ssaoTexSizeCombo, CB_SETCURSEL, 0, 0);
+    CreateSettingsStatic(hWnd, L"SSAO Blur Size", 350, y + 54, 92, 18);
+    HWND ssaoBlurSizeCombo = CreateSettingsCombo(hWnd, 31802, 442, y + 50, 64, 120);
+    SendMessage(ssaoBlurSizeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"21x21"));
+    SendMessage(ssaoBlurSizeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"11x11"));
+    SendMessage(ssaoBlurSizeCombo, CB_SETCURSEL, 0, 0);
+    CreateSettingsStatic(hWnd, L"SSAO Shadow Strength", 24, y + 74, 142, 18);
+    CreateSettingsTrackbar(hWnd, 31803, 168, y + 68, 122, 30, 0, 100, 50);
+    CreateSettingsEdit(hWnd, L"1.00", 298, y + 70, 40, 20);
+    CreateSettingsStatic(hWnd, L"SSAO Shadow Saturation", 24, y + 96, 154, 18);
+    CreateSettingsTrackbar(hWnd, 31804, 168, y + 90, 122, 30, 0, 100, 50);
+    CreateSettingsEdit(hWnd, L"0.30", 298, y + 92, 40, 20);
+    CreateSettingsStatic(hWnd, L"SSAO Sample Count", 24, y + 138, 142, 18);
+    HWND ssaoSampleCombo = CreateSettingsCombo(hWnd, 31805, 266, y + 134, 72, 120);
+    SendMessage(ssaoSampleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"8"));
+    SendMessage(ssaoSampleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"16"));
+    SendMessage(ssaoSampleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"32"));
+    SendMessage(ssaoSampleCombo, CB_SETCURSEL, 0, 0);
+    CreateSettingsCheckbox(hWnd, 31806, L"SSAO 3x3 Gauss", 350, y + 76, 144, 22);
+    CreateSettingsCheckbox(hWnd, 31807, L"Separable Blur", 350, y + 98, 130, 22);
+    CreateSettingsCheckbox(hWnd, 31808, L"SSAO Blur", 350, y + 120, 120, 22);
+    CreateSettingsCheckbox(hWnd, 31809, L"Depth Scaled Dist", 350, y + 142, 146, 22);
+    CreateSettingsCheckbox(hWnd, 31810, L"Random Dir", 350, y + 164, 110, 22);
+    CreateSettingsCheckbox(hWnd, 31811, L"Clamp 50% Dark", 350, y + 186, 142, 22);
+
+    y += 210;
+    CreateSettingsGroupBox(hWnd, L"FOG", 8, y, 504, 86);
+    const wchar_t* fogLabels[] = { L"Fog Density", L"Fog Color R", L"Fog Color G", L"Fog Color B" };
+    const wchar_t* fogValues[] = { L"1.0", L"0.72", L"0.78", L"0.86" };
+    int fogY = y + 18;
+    for (int i = 0; i < 4; ++i)
+    {
+        CreateSettingsStatic(hWnd, fogLabels[i], 24, fogY + 4, 138, 18);
+        CreateSettingsTrackbar(hWnd, 31900 + i, 168, fogY, 122, 30, 0, 100, 50);
+        CreateSettingsEdit(hWnd, fogValues[i], 298, fogY + 2, 40, 20);
+        fogY += 16;
+    }
+
+    y += 90;
+    CreateSettingsGroupBox(hWnd, L"HeightFOG", 8, y, 504, 110);
+    const wchar_t* heightFogLabels[] = {
+        L"HeightFog Density",
+        L"HeightFog Start",
+        L"HeightFog Max",
+        L"HeightFog Dist Start",
+        L"HeightFog Dist Max"
+    };
+    const wchar_t* heightFogValues[] = { L"0.30", L"0.0", L"-5.0", L"0.0", L"20.0" };
+    int heightFogY = y + 18;
+    for (int i = 0; i < 5; ++i)
+    {
+        CreateSettingsStatic(hWnd, heightFogLabels[i], 24, heightFogY + 4, 138, 18);
+        CreateSettingsTrackbar(hWnd, 31920 + i, 168, heightFogY, 122, 30, 0, 100, 50);
+        CreateSettingsEdit(hWnd, heightFogValues[i], 298, heightFogY + 2, 40, 20);
+        heightFogY += 18;
+    }
+
+    y += 124;
+    CreateSettingsGroupBox(hWnd, L"Saturate", 8, y, 504, 50);
+    CreateSettingsStatic(hWnd, L"Saturation", 24, y + 22, 54, 18);
+    CreateSettingsEdit(hWnd, L"0.7", 78, y + 18, 80, 20);
+    CreateSettingsTrackbar(hWnd, 31940, 174, y + 14, 96, 30, 0, 100, 30);
+    CreateSettingsButton(hWnd, L"-", 286, y + 16, 20, 22);
+    CreateSettingsButton(hWnd, L"+", 308, y + 16, 20, 22);
+    CreateSettingsButton(hWnd, L"Reset", 330, y + 16, 40, 22);
+
+    y += 64;
+    CreateSettingsGroupBox(hWnd, L"DOF", 8, y, 504, 118);
+    const wchar_t* dofLabels[] = { L"DOF Focal Dist", L"DOF Max Blur Dist", L"DOF Auto Dist", L"DOF Start Near" };
+    const wchar_t* dofValues[] = { L"3.0", L"8.0", L"3.0", L"1.0" };
+    int dofY = y + 42;
+    for (int i = 0; i < 4; ++i)
+    {
+        CreateSettingsStatic(hWnd, dofLabels[i], 24, dofY + 4, 138, 18);
+        CreateSettingsTrackbar(hWnd, 31950 + i, 168, dofY, 122, 30, 0, 100, 50);
+        CreateSettingsEdit(hWnd, dofValues[i], 298, dofY + 2, 40, 20);
+        dofY += 18;
+    }
+
+    y += 132;
+    CreateSettingsGroupBox(hWnd, L"Bloom", 8, y, 504, 58);
+    CreateSettingsStatic(hWnd, L"Bloom Threshold", 24, y + 22, 138, 18);
+    CreateSettingsTrackbar(hWnd, 31970, 168, y + 16, 122, 30, 0, 100, 50);
+    CreateSettingsEdit(hWnd, L"1.0", 298, y + 18, 40, 20);
+    CreateSettingsStatic(hWnd, L"Sum", 350, y + 22, 34, 18);
+    CreateSettingsTrackbar(hWnd, 31971, 386, y + 16, 58, 30, 0, 100, 50);
+    CreateSettingsEdit(hWnd, L"1", 458, y + 18, 46, 20);
+    CreateSettingsStatic(hWnd, L"Halo Threshold", 24, y + 42, 138, 18);
+    CreateSettingsTrackbar(hWnd, 31972, 168, y + 36, 122, 30, 0, 100, 50);
+    CreateSettingsEdit(hWnd, L"1.0", 298, y + 38, 40, 20);
+
+    y += 70;
+    CreateSettingsGroupBox(hWnd, L"StarBurst", 8, y, 504, 68);
+    CreateSettingsStatic(hWnd, L"StarBurst Threshold", 24, y + 22, 138, 18);
+    CreateSettingsTrackbar(hWnd, 31980, 168, y + 16, 122, 30, 0, 100, 30);
+    CreateSettingsEdit(hWnd, L"0.6", 298, y + 18, 40, 20);
+    CreateSettingsStatic(hWnd, L"StarBurst Dist Fade", 24, y + 44, 138, 18);
+    CreateSettingsTrackbar(hWnd, 31981, 168, y + 38, 122, 30, 0, 100, 5);
+    CreateSettingsEdit(hWnd, L"0.00", 298, y + 40, 40, 20);
+
+    y += 82;
+    CreateSettingsGroupBox(hWnd, L"GodRay", 8, y, 504, 158);
+    const wchar_t* godRayLabels[] = {
+        L"GodRay R",
+        L"GodRay G",
+        L"GodRay B",
+        L"GodRay Intensity",
+        L"GodRay Virtual Prox",
+        L"GodRay Pos X",
+        L"GodRay Pos Y",
+        L"GodRay Pos Z"
+    };
+    const wchar_t* godRayValues[] = { L"1.00", L"0.90", L"0.80", L"0.10", L"1.50", L"1000.0", L"100.0", L"1000.0" };
+    int godRayY = y + 20;
+    for (int i = 0; i < 8; ++i)
+    {
+        CreateSettingsStatic(hWnd, godRayLabels[i], 24, godRayY + 4, 138, 18);
+        CreateSettingsTrackbar(hWnd, 32000 + i, 168, godRayY, 122, 30, 0, 100, 50);
+        CreateSettingsEdit(hWnd, godRayValues[i], 298, godRayY + 2, 40, 20);
+        godRayY += 16;
+    }
+
+    y += 170;
+    CreateSettingsGroupBox(hWnd, L"Gaussian", 8, y, 504, 68);
+    CreateSettingsCheckbox(hWnd, 32020, L"Gaussian", 408, y + 16, 96, 22);
+    CreateSettingsStatic(hWnd, L"Blur Strength", 24, y + 46, 138, 18);
+    CreateSettingsTrackbar(hWnd, 32021, 168, y + 40, 292, 30, 0, 100, 96);
+    CreateSettingsEdit(hWnd, L"1.00", 476, y + 42, 30, 20);
+
+    y += 80;
+    CreateSettingsGroupBox(hWnd, L"Masked Gaussian", 8, y, 504, 78);
+    CreateSettingsEdit(hWnd, L"", 162, y + 24, 242, 20);
+    CreateSettingsButton(hWnd, L"Open...", 416, y + 22, 90, 24);
+    CreateSettingsCheckbox(hWnd, 32030, L"Masked G", 408, y + 48, 96, 22);
 }
 
 bool IsSettingsCheckboxChecked(HWND hWnd, const int id)
