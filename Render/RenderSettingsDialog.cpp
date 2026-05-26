@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <commctrl.h>
+#include <vector>
 
 #include "Render.h"
 
@@ -12,6 +13,19 @@ namespace NSRender
 namespace
 {
 constexpr const wchar_t* RENDER_SETTINGS_DIALOG_CLASS_NAME = L"NSRenderSettingsDialog";
+constexpr int RENDER_SETTINGS_CONTENT_HEIGHT = 1220;
+
+struct RenderSettingsDialogState
+{
+    Render* render = nullptr;
+    int scrollPos = 0;
+    struct ChildPlacement
+    {
+        HWND hWnd = NULL;
+        RECT rect { };
+    };
+    std::vector<ChildPlacement> childPlacements;
+};
 
 enum RenderSettingsControlId
 {
@@ -184,11 +198,62 @@ void CreateSettingsTrackbar(HWND parent,
     SendMessage(control, TBM_SETTICFREQ, 50, 0);
 }
 
+HWND CreateSettingsListView(HWND parent,
+                            const int x,
+                            const int y,
+                            const int w,
+                            const int h,
+                            const wchar_t* const* columns,
+                            const int* widths,
+                            const int columnCount)
+{
+    HWND control = CreateWindowExW(WS_EX_CLIENTEDGE,
+                                   WC_LISTVIEWW,
+                                   L"",
+                                   WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SINGLESEL,
+                                   x,
+                                   y,
+                                   w,
+                                   h,
+                                   parent,
+                                   NULL,
+                                   GetModuleHandle(NULL),
+                                   NULL);
+    SetDefaultGuiFont(control);
+    ListView_SetExtendedListViewStyle(control, LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
+
+    for (int i = 0; i < columnCount; ++i)
+    {
+        LVCOLUMNW column { };
+        column.mask = LVCF_TEXT | LVCF_WIDTH;
+        column.pszText = const_cast<LPWSTR>(columns[i]);
+        column.cx = widths[i];
+        ListView_InsertColumn(control, i, &column);
+    }
+
+    return control;
+}
+
+void AddSettingsListViewRow(HWND listView, const int row, const wchar_t* const* values, const int valueCount)
+{
+    LVITEMW item { };
+    item.mask = LVIF_TEXT;
+    item.iItem = row;
+    item.iSubItem = 0;
+    item.pszText = const_cast<LPWSTR>(values[0]);
+    ListView_InsertItem(listView, &item);
+
+    for (int i = 1; i < valueCount; ++i)
+    {
+        ListView_SetItemText(listView, row, i, const_cast<LPWSTR>(values[i]));
+    }
+}
+
 void InitializeRenderSettingsControls(HWND hWnd)
 {
     INITCOMMONCONTROLSEX icc { };
     icc.dwSize = sizeof(icc);
-    icc.dwICC = ICC_BAR_CLASSES;
+    icc.dwICC = ICC_BAR_CLASSES | ICC_LISTVIEW_CLASSES;
     InitCommonControlsEx(&icc);
 
     constexpr int left = 10;
@@ -301,6 +366,74 @@ void InitializeRenderSettingsControls(HWND hWnd)
         CreateSettingsEdit(hWnd, colorValues[i], 474, row + 2, 30, 20);
         row += 18;
     }
+
+    y += 342;
+    CreateSettingsStatic(hWnd, L"MeshMixManager (x)", 24, y + 5, 138, 18);
+    CreateSettingsEdit(hWnd, L"", 162, y, 124, 20);
+    CreateSettingsButton(hWnd, L"Open...", 298, y - 2, 42, 24);
+    CreateSettingsCheckbox(hWnd, 31300, L"HighQuality", 350, y, 104, 22);
+
+    y += 28;
+    CreateSettingsStatic(hWnd, L"Mesh Instancing (x)", 24, y + 5, 138, 18);
+    CreateSettingsEdit(hWnd, L"", 162, y, 124, 20);
+    CreateSettingsButton(hWnd, L"Open...", 298, y - 2, 42, 24);
+    CreateSettingsCheckbox(hWnd, 31301, L"HighQuality", 350, y, 104, 22);
+
+    y += 28;
+    CreateSettingsStatic(hWnd, L"MeshMix Skin Anim (x)", 24, y + 5, 138, 18);
+    CreateSettingsEdit(hWnd, L"", 162, y, 124, 20);
+    CreateSettingsButton(hWnd, L"Open...", 298, y - 2, 42, 24);
+    CreateSettingsButton(hWnd, L"Load XFileList...", 350, y - 2, 116, 24);
+    CreateSettingsCheckbox(hWnd, 31302, L"Clip", 476, y, 52, 22);
+
+    y += 28;
+    CreateSettingsButton(hWnd, L"Open NonAnim...", 24, y, 154, 24);
+    CreateSettingsButton(hWnd, L"Open AnimOnly...", 190, y, 154, 24);
+    CreateSettingsButton(hWnd, L"Load Split Anim", 350, y, 158, 24);
+
+    y += 32;
+    CreateSettingsStatic(hWnd, L"Loaded Models", 24, y + 2, 120, 18);
+    y += 20;
+    const wchar_t* loadedColumns[] = { L"Type", L"File", L"Scale", L"Pos" };
+    const int loadedWidths[] = { 72, 110, 40, 120 };
+    HWND loadedList = CreateSettingsListView(hWnd, 24, y, 482, 80, loadedColumns, loadedWidths, 4);
+    const wchar_t* loadedRow0[] = { L"MeshMixM...", L"..\\..\\Sample\\res\\...", L"1.0", L"(0.0, 0.0, 0.0)" };
+    const wchar_t* loadedRow1[] = { L"MeshMixM...", L"..\\..\\Sample\\res\\...", L"1.0", L"(0.0, 0.0, 0.0)" };
+    AddSettingsListViewRow(loadedList, 0, loadedRow0, 4);
+    AddSettingsListViewRow(loadedList, 1, loadedRow1, 4);
+
+    y += 104;
+    CreateSettingsStatic(hWnd, L"Animation", 24, y + 2, 120, 18);
+    y += 20;
+    const wchar_t* animationColumns[] = { L"Name", L"File", L"Mode" };
+    const int animationWidths[] = { 72, 150, 54 };
+    CreateSettingsListView(hWnd, 24, y, 482, 100, animationColumns, animationWidths, 3);
+
+    y += 124;
+    CreateSettingsStatic(hWnd, L"Point Lights", 24, y + 2, 120, 18);
+    y += 20;
+    const wchar_t* pointLightColumns[] = { L"Pos", L"Type", L"Color", L"Bright..." };
+    const int pointLightWidths[] = { 88, 56, 84, 54 };
+    CreateSettingsListView(hWnd, 24, y, 482, 68, pointLightColumns, pointLightWidths, 4);
+
+    y += 78;
+    const wchar_t* pointLabels[] = { L"PointLight R", L"PointLight G", L"PointLight B", L"PointLight Power" };
+    const wchar_t* pointValues[] = { L"1.00", L"0.35", L"0.10", L"1.00" };
+    for (int i = 0; i < 4; ++i)
+    {
+        CreateSettingsStatic(hWnd, pointLabels[i], 24, y + 4, 132, 18);
+        CreateSettingsTrackbar(hWnd, 31400 + i, 168, y, 122, 30, 0, 100, 50);
+        CreateSettingsEdit(hWnd, pointValues[i], 298, y + 2, 40, 20);
+        y += 20;
+    }
+
+    CreateSettingsStatic(hWnd, L"PointLight Type", 352, y - 74, 96, 18);
+    HWND pointTypeCombo = CreateSettingsCombo(hWnd, 31410, 446, y - 78, 66, 120);
+    SendMessage(pointTypeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Point"));
+    SendMessage(pointTypeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Line"));
+    SendMessage(pointTypeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Square"));
+    SendMessage(pointTypeCombo, CB_SETCURSEL, 0, 0);
+    CreateSettingsButton(hWnd, L"Add", 382, y + 12, 54, 24);
 }
 
 bool IsSettingsCheckboxChecked(HWND hWnd, const int id)
@@ -308,9 +441,73 @@ bool IsSettingsCheckboxChecked(HWND hWnd, const int id)
     return SendDlgItemMessage(hWnd, id, BM_GETCHECK, 0, 0) == BST_CHECKED;
 }
 
+BOOL CALLBACK CaptureRenderSettingsChildPlacementProc(HWND child, LPARAM lParam)
+{
+    RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(lParam);
+    if (state == nullptr)
+    {
+        return TRUE;
+    }
+
+    RECT rect { };
+    GetWindowRect(child, &rect);
+
+    POINT topLeft { rect.left, rect.top };
+    POINT bottomRight { rect.right, rect.bottom };
+    HWND parent = GetParent(child);
+    ScreenToClient(parent, &topLeft);
+    ScreenToClient(parent, &bottomRight);
+
+    RenderSettingsDialogState::ChildPlacement placement;
+    placement.hWnd = child;
+    placement.rect.left = topLeft.x;
+    placement.rect.top = topLeft.y;
+    placement.rect.right = bottomRight.x;
+    placement.rect.bottom = bottomRight.y;
+    state->childPlacements.push_back(placement);
+    return TRUE;
+}
+
+void CaptureRenderSettingsChildPlacements(HWND hWnd)
+{
+    RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    if (state == nullptr)
+    {
+        return;
+    }
+
+    state->childPlacements.clear();
+    EnumChildWindows(hWnd, CaptureRenderSettingsChildPlacementProc, reinterpret_cast<LPARAM>(state));
+}
+
+void ApplyRenderSettingsChildPositions(HWND hWnd)
+{
+    RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    if (state == nullptr)
+    {
+        return;
+    }
+
+    for (const auto& placement : state->childPlacements)
+    {
+        const int width = placement.rect.right - placement.rect.left;
+        const int height = placement.rect.bottom - placement.rect.top;
+        SetWindowPos(placement.hWnd,
+                     NULL,
+                     placement.rect.left,
+                     placement.rect.top - state->scrollPos,
+                     width,
+                     height,
+                     SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+
+    RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN);
+}
+
 void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
 {
-    Render* render = reinterpret_cast<Render*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    Render* render = (state != nullptr) ? state->render : nullptr;
     if (render == nullptr)
     {
         return;
@@ -361,6 +558,90 @@ void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
     }
 }
 
+void UpdateRenderSettingsScrollBar(HWND hWnd)
+{
+    RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    if (state == nullptr)
+    {
+        return;
+    }
+
+    RECT clientRect { };
+    GetClientRect(hWnd, &clientRect);
+
+    SCROLLINFO scrollInfo { };
+    scrollInfo.cbSize = sizeof(scrollInfo);
+    scrollInfo.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
+    scrollInfo.nMin = 0;
+    scrollInfo.nMax = RENDER_SETTINGS_CONTENT_HEIGHT;
+    scrollInfo.nPage = clientRect.bottom - clientRect.top;
+    scrollInfo.nPos = state->scrollPos;
+    SetScrollInfo(hWnd, SB_VERT, &scrollInfo, TRUE);
+}
+
+void ScrollRenderSettingsTo(HWND hWnd, const int newScrollPos)
+{
+    RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    if (state == nullptr)
+    {
+        return;
+    }
+
+    RECT clientRect { };
+    GetClientRect(hWnd, &clientRect);
+    const int clientHeight = static_cast<int>(clientRect.bottom - clientRect.top);
+    const int maxScrollPos = (std::max)(0, RENDER_SETTINGS_CONTENT_HEIGHT - clientHeight);
+    const int clampedPos = (std::max)(0, (std::min)(newScrollPos, maxScrollPos));
+    const int delta = state->scrollPos - clampedPos;
+    if (delta == 0)
+    {
+        return;
+    }
+
+    state->scrollPos = clampedPos;
+    ApplyRenderSettingsChildPositions(hWnd);
+    UpdateRenderSettingsScrollBar(hWnd);
+}
+
+void HandleRenderSettingsVScroll(HWND hWnd, const WPARAM wParam)
+{
+    RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    if (state == nullptr)
+    {
+        return;
+    }
+
+    SCROLLINFO scrollInfo { };
+    scrollInfo.cbSize = sizeof(scrollInfo);
+    scrollInfo.fMask = SIF_ALL;
+    GetScrollInfo(hWnd, SB_VERT, &scrollInfo);
+
+    int newPos = state->scrollPos;
+    switch (LOWORD(wParam))
+    {
+    case SB_LINEUP:
+        newPos -= 24;
+        break;
+    case SB_LINEDOWN:
+        newPos += 24;
+        break;
+    case SB_PAGEUP:
+        newPos -= static_cast<int>(scrollInfo.nPage);
+        break;
+    case SB_PAGEDOWN:
+        newPos += static_cast<int>(scrollInfo.nPage);
+        break;
+    case SB_THUMBTRACK:
+    case SB_THUMBPOSITION:
+        newPos = scrollInfo.nTrackPos;
+        break;
+    default:
+        break;
+    }
+
+    ScrollRenderSettingsTo(hWnd, newPos);
+}
+
 LRESULT CALLBACK RenderSettingsDialogProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
@@ -368,17 +649,42 @@ LRESULT CALLBACK RenderSettingsDialogProc(HWND hWnd, UINT msg, WPARAM wParam, LP
     case WM_NCCREATE:
     {
         const CREATESTRUCT* createStruct = reinterpret_cast<const CREATESTRUCT*>(lParam);
-        SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(createStruct->lpCreateParams));
+        RenderSettingsDialogState* state = new RenderSettingsDialogState;
+        state->render = reinterpret_cast<Render*>(createStruct->lpCreateParams);
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(state));
         return TRUE;
     }
     case WM_CREATE:
     {
         InitializeRenderSettingsControls(hWnd);
+        CaptureRenderSettingsChildPlacements(hWnd);
+        UpdateRenderSettingsScrollBar(hWnd);
+        return 0;
+    }
+    case WM_SIZE:
+    {
+        ApplyRenderSettingsChildPositions(hWnd);
+        UpdateRenderSettingsScrollBar(hWnd);
         return 0;
     }
     case WM_COMMAND:
     {
         HandleRenderSettingsCommand(hWnd, wParam);
+        return 0;
+    }
+    case WM_VSCROLL:
+    {
+        HandleRenderSettingsVScroll(hWnd, wParam);
+        return 0;
+    }
+    case WM_MOUSEWHEEL:
+    {
+        const short wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+        RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+        if (state != nullptr)
+        {
+            ScrollRenderSettingsTo(hWnd, state->scrollPos - ((wheelDelta / WHEEL_DELTA) * 72));
+        }
         return 0;
     }
     case WM_CLOSE:
@@ -388,6 +694,8 @@ LRESULT CALLBACK RenderSettingsDialogProc(HWND hWnd, UINT msg, WPARAM wParam, LP
     }
     case WM_NCDESTROY:
     {
+        RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+        delete state;
         SetWindowLongPtr(hWnd, GWLP_USERDATA, 0);
         break;
     }
