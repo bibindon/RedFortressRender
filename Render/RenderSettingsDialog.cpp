@@ -21,9 +21,28 @@ constexpr int RENDER_SETTINGS_CONTENT_BOTTOM_MARGIN = 24;
 
 struct RenderSettingsDialogState
 {
+    enum class LoadedModelType
+    {
+        MeshMix,
+        MeshPBR,
+        MeshInstancing,
+        MeshMixSkinAnim
+    };
+
+    struct LoadedModelRecord
+    {
+        LoadedModelType type = LoadedModelType::MeshMix;
+        int renderId = -1;
+        std::wstring filePath;
+        float scale = 1.0f;
+        D3DXVECTOR3 pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+    };
+
     Render* render = nullptr;
     int scrollPos = 0;
     int contentHeight = 0;
+    HWND loadedModelsList = NULL;
+    HWND animationList = NULL;
     D3DXCOLOR fogColor = D3DXCOLOR(0.72f, 0.78f, 0.86f, 1.0f);
     D3DXVECTOR3 godRayColor = D3DXVECTOR3(1.0f, 0.9f, 0.8f);
     D3DXVECTOR3 godRayPos = D3DXVECTOR3(1000.0f, 100.0f, 1000.0f);
@@ -44,6 +63,8 @@ struct RenderSettingsDialogState
     std::wstring meshInstancingPath;
     std::wstring meshMixSkinAnimPath;
     std::wstring maskedGaussianMaskPath;
+    std::vector<LoadedModelRecord> loadedModels;
+    int activeAnimationModelId = -1;
     struct ChildPlacement
     {
         HWND hWnd = NULL;
@@ -297,6 +318,7 @@ void CreateSettingsTrackbar(HWND parent,
 }
 
 HWND CreateSettingsListView(HWND parent,
+                            const int id,
                             const int x,
                             const int y,
                             const int w,
@@ -314,7 +336,7 @@ HWND CreateSettingsListView(HWND parent,
                                    w,
                                    h,
                                    parent,
-                                   NULL,
+                                   reinterpret_cast<HMENU>(static_cast<INT_PTR>(id)),
                                    GetModuleHandle(NULL),
                                    NULL);
     SetDefaultGuiFont(control);
@@ -347,6 +369,241 @@ void AddSettingsListViewRow(HWND listView, const int row, const wchar_t* const* 
     }
 }
 
+std::wstring GetDisplayFileName(const std::wstring& filePath)
+{
+    const std::wstring::size_type pos = filePath.find_last_of(L"\\/");
+    if (pos == std::wstring::npos)
+    {
+        return filePath;
+    }
+    return filePath.substr(pos + 1);
+}
+
+const wchar_t* LoadedModelTypeToText(const RenderSettingsDialogState::LoadedModelType type)
+{
+    switch (type)
+    {
+    case RenderSettingsDialogState::LoadedModelType::MeshMix:
+        return L"MeshMix";
+    case RenderSettingsDialogState::LoadedModelType::MeshPBR:
+        return L"MeshPBR";
+    case RenderSettingsDialogState::LoadedModelType::MeshInstancing:
+        return L"Instancing";
+    case RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim:
+        return L"SkinAnim";
+    default:
+        return L"Model";
+    }
+}
+
+void UpdateLoadedModelsList(RenderSettingsDialogState* state)
+{
+    if (state == nullptr || state->loadedModelsList == NULL)
+    {
+        return;
+    }
+
+    ListView_DeleteAllItems(state->loadedModelsList);
+    for (int i = 0; i < static_cast<int>(state->loadedModels.size()); ++i)
+    {
+        const auto& model = state->loadedModels.at(i);
+        const std::wstring fileName = GetDisplayFileName(model.filePath);
+        wchar_t scaleText[32] { };
+        wchar_t posText[96] { };
+        std::swprintf(scaleText, sizeof(scaleText) / sizeof(scaleText[0]), L"%.2f", model.scale);
+        std::swprintf(posText,
+                      sizeof(posText) / sizeof(posText[0]),
+                      L"(%.1f, %.1f, %.1f)",
+                      model.pos.x,
+                      model.pos.y,
+                      model.pos.z);
+
+        LVITEMW item { };
+        item.mask = LVIF_TEXT | LVIF_PARAM;
+        item.iItem = i;
+        item.iSubItem = 0;
+        item.pszText = const_cast<LPWSTR>(LoadedModelTypeToText(model.type));
+        item.lParam = i;
+        ListView_InsertItem(state->loadedModelsList, &item);
+        ListView_SetItemText(state->loadedModelsList, i, 1, const_cast<LPWSTR>(fileName.c_str()));
+        ListView_SetItemText(state->loadedModelsList, i, 2, scaleText);
+        ListView_SetItemText(state->loadedModelsList, i, 3, posText);
+    }
+}
+
+int GetSelectedListViewIndex(HWND listView)
+{
+    if (listView == NULL)
+    {
+        return -1;
+    }
+    return ListView_GetNextItem(listView, -1, LVNI_SELECTED);
+}
+
+void ClearAnimationList(RenderSettingsDialogState* state)
+{
+    if (state == nullptr)
+    {
+        return;
+    }
+    state->activeAnimationModelId = -1;
+    if (state->animationList != NULL)
+    {
+        ListView_DeleteAllItems(state->animationList);
+    }
+}
+
+void PopulateAnimationListForModel(RenderSettingsDialogState* state, const int modelIndex)
+{
+    ClearAnimationList(state);
+    if (state == nullptr || state->render == nullptr || state->animationList == NULL ||
+        modelIndex < 0 || modelIndex >= static_cast<int>(state->loadedModels.size()))
+    {
+        return;
+    }
+
+    const auto& model = state->loadedModels.at(modelIndex);
+    if (model.type != RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim)
+    {
+        return;
+    }
+
+    const auto* animationInfoList = state->render->GetMeshMixSkinAnimAnimationInfoList(model.renderId);
+    if (animationInfoList == nullptr)
+    {
+        return;
+    }
+
+    state->activeAnimationModelId = model.renderId;
+    for (int i = 0; i < static_cast<int>(animationInfoList->size()); ++i)
+    {
+        const auto& animation = animationInfoList->at(i);
+        const std::wstring fileName = GetDisplayFileName(animation.filePath);
+        LVITEMW item { };
+        item.mask = LVIF_TEXT | LVIF_PARAM;
+        item.iItem = i;
+        item.iSubItem = 0;
+        item.pszText = const_cast<LPWSTR>(animation.name.c_str());
+        item.lParam = i;
+        ListView_InsertItem(state->animationList, &item);
+        ListView_SetItemText(state->animationList, i, 1, const_cast<LPWSTR>(fileName.c_str()));
+        ListView_SetItemText(state->animationList, i, 2, const_cast<LPWSTR>(animation.mode.c_str()));
+    }
+}
+
+void AddLoadedModelRecord(RenderSettingsDialogState* state,
+                          const RenderSettingsDialogState::LoadedModelType type,
+                          const int renderId,
+                          const std::wstring& filePath,
+                          const D3DXVECTOR3& pos)
+{
+    if (state == nullptr)
+    {
+        return;
+    }
+
+    RenderSettingsDialogState::LoadedModelRecord record;
+    record.type = type;
+    record.renderId = renderId;
+    record.filePath = filePath;
+    record.scale = state->modelLoadScale;
+    record.pos = pos;
+    state->loadedModels.push_back(record);
+    UpdateLoadedModelsList(state);
+    if (type == RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim)
+    {
+        PopulateAnimationListForModel(state, static_cast<int>(state->loadedModels.size()) - 1);
+    }
+}
+
+void AdjustLoadedModelIdsAfterRemove(RenderSettingsDialogState* state,
+                                     const RenderSettingsDialogState::LoadedModelType type,
+                                     const int removedRenderId)
+{
+    if (state == nullptr)
+    {
+        return;
+    }
+
+    for (auto& model : state->loadedModels)
+    {
+        if (model.type == type && model.renderId > removedRenderId)
+        {
+            --model.renderId;
+        }
+    }
+}
+
+void RemoveSelectedLoadedModel(HWND hWnd)
+{
+    RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    if (state == nullptr || state->render == nullptr)
+    {
+        return;
+    }
+
+    const int index = GetSelectedListViewIndex(state->loadedModelsList);
+    if (index < 0 || index >= static_cast<int>(state->loadedModels.size()))
+    {
+        return;
+    }
+
+    const auto record = state->loadedModels.at(index);
+    bool removed = false;
+    switch (record.type)
+    {
+    case RenderSettingsDialogState::LoadedModelType::MeshMix:
+        removed = state->render->RemoveMeshMix(record.renderId);
+        break;
+    case RenderSettingsDialogState::LoadedModelType::MeshPBR:
+        removed = state->render->RemoveMeshPBR(record.renderId);
+        break;
+    case RenderSettingsDialogState::LoadedModelType::MeshInstancing:
+        removed = state->render->RemoveMeshInstancing(record.filePath);
+        break;
+    case RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim:
+        removed = state->render->RemoveMeshMixSkinAnim(record.renderId);
+        break;
+    default:
+        break;
+    }
+
+    if (!removed)
+    {
+        return;
+    }
+
+    state->loadedModels.erase(state->loadedModels.begin() + index);
+    if (record.type != RenderSettingsDialogState::LoadedModelType::MeshInstancing)
+    {
+        AdjustLoadedModelIdsAfterRemove(state, record.type, record.renderId);
+    }
+    UpdateLoadedModelsList(state);
+    ClearAnimationList(state);
+}
+
+void PlaySelectedAnimation(HWND hWnd)
+{
+    RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    if (state == nullptr || state->render == nullptr || state->animationList == NULL || state->activeAnimationModelId < 0)
+    {
+        return;
+    }
+
+    const int index = GetSelectedListViewIndex(state->animationList);
+    if (index < 0)
+    {
+        return;
+    }
+
+    wchar_t animationName[256] { };
+    ListView_GetItemText(state->animationList, index, 0, animationName, static_cast<int>(sizeof(animationName) / sizeof(animationName[0])));
+    if (animationName[0] != L'\0')
+    {
+        state->render->PlayMeshMixSkinAnimAnimation(state->activeAnimationModelId, animationName);
+    }
+}
+
 std::wstring FormatResolutionLabel(const int width, const int height)
 {
     return std::to_wstring(width) + L" x " + std::to_wstring(height);
@@ -357,7 +614,7 @@ bool TryParseResolutionLabel(const wchar_t* label, int& width, int& height)
     return swscanf_s(label, L"%d x %d", &width, &height) == 2;
 }
 
-void InitializeRenderSettingsControls(HWND hWnd, Render* render)
+void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* state)
 {
     INITCOMMONCONTROLSEX icc { };
     icc.dwSize = sizeof(icc);
@@ -378,9 +635,9 @@ void InitializeRenderSettingsControls(HWND hWnd, Render* render)
     CreateSettingsStatic(hWnd, L"Resolution", left, y + 3, 120, 20);
     HWND resolutionCombo = CreateSettingsCombo(hWnd, 31000, 158, y, 128, 120);
     bool addedResolution = false;
-    if (render != nullptr)
+    if (state != nullptr && state->render != nullptr)
     {
-        const auto resolutionList = render->GetResolutionList();
+        const auto resolutionList = state->render->GetResolutionList();
         for (const auto& resolution : resolutionList)
         {
             const std::wstring label = FormatResolutionLabel(resolution.first, resolution.second);
@@ -516,28 +773,34 @@ void InitializeRenderSettingsControls(HWND hWnd, Render* render)
 
     y += 32;
     CreateSettingsStatic(hWnd, L"Loaded Models", 24, y + 2, 120, 18);
+    CreateSettingsButton(hWnd, L"Remove", 430, y - 2, 76, 22, 31350);
     y += 20;
     const wchar_t* loadedColumns[] = { L"Type", L"File", L"Scale", L"Pos" };
     const int loadedWidths[] = { 72, 110, 40, 120 };
-    HWND loadedList = CreateSettingsListView(hWnd, 24, y, 482, 80, loadedColumns, loadedWidths, 4);
-    const wchar_t* loadedRow0[] = { L"MeshMixM...", L"..\\..\\Sample\\res\\...", L"1.0", L"(0.0, 0.0, 0.0)" };
-    const wchar_t* loadedRow1[] = { L"MeshMixM...", L"..\\..\\Sample\\res\\...", L"1.0", L"(0.0, 0.0, 0.0)" };
-    AddSettingsListViewRow(loadedList, 0, loadedRow0, 4);
-    AddSettingsListViewRow(loadedList, 1, loadedRow1, 4);
+    HWND loadedList = CreateSettingsListView(hWnd, 31340, 24, y, 482, 80, loadedColumns, loadedWidths, 4);
+    if (state != nullptr)
+    {
+        state->loadedModelsList = loadedList;
+    }
 
     y += 104;
     CreateSettingsStatic(hWnd, L"Animation", 24, y + 2, 120, 18);
+    CreateSettingsButton(hWnd, L"Play", 430, y - 2, 76, 22, 31351);
     y += 20;
     const wchar_t* animationColumns[] = { L"Name", L"File", L"Mode" };
     const int animationWidths[] = { 72, 150, 54 };
-    CreateSettingsListView(hWnd, 24, y, 482, 100, animationColumns, animationWidths, 3);
+    HWND animationList = CreateSettingsListView(hWnd, 31341, 24, y, 482, 100, animationColumns, animationWidths, 3);
+    if (state != nullptr)
+    {
+        state->animationList = animationList;
+    }
 
     y += 124;
     CreateSettingsStatic(hWnd, L"Point Lights", 24, y + 2, 120, 18);
     y += 20;
     const wchar_t* pointLightColumns[] = { L"Pos", L"Type", L"Color", L"Bright..." };
     const int pointLightWidths[] = { 88, 56, 84, 54 };
-    CreateSettingsListView(hWnd, 24, y, 482, 68, pointLightColumns, pointLightWidths, 4);
+    CreateSettingsListView(hWnd, 31342, 24, y, 482, 68, pointLightColumns, pointLightWidths, 4);
 
     y += 78;
     const wchar_t* pointLabels[] = { L"PointLight R", L"PointLight G", L"PointLight B", L"PointLight Power" };
@@ -1528,10 +1791,12 @@ void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
                                            state->meshMixPath))
             {
                 SetDlgItemTextW(hWnd, 31310, state->meshMixPath.c_str());
-                render->AddMeshMix(state->meshMixPath,
-                                   render->GetLookAtPos(),
-                                   D3DXVECTOR3(0.0f, 0.0f, 0.0f),
-                                   state->modelLoadScale);
+                const D3DXVECTOR3 pos = render->GetLookAtPos();
+                const int renderId = render->AddMeshMix(state->meshMixPath,
+                                                        pos,
+                                                        D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                                                        state->modelLoadScale);
+                AddLoadedModelRecord(state, RenderSettingsDialogState::LoadedModelType::MeshMix, renderId, state->meshMixPath, pos);
             }
         }
         else if (id == 32211)
@@ -1541,12 +1806,14 @@ void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
                                            state->pbrMeshPath))
             {
                 SetDlgItemTextW(hWnd, 32210, state->pbrMeshPath.c_str());
-                render->AddMeshPBR(state->pbrMeshPath,
-                                   render->GetLookAtPos(),
-                                   D3DXVECTOR3(0.0f, 0.0f, 0.0f),
-                                   state->modelLoadScale,
-                                   -1.0f,
-                                   state->pbrEnvMapPath);
+                const D3DXVECTOR3 pos = render->GetLookAtPos();
+                const int renderId = render->AddMeshPBR(state->pbrMeshPath,
+                                                        pos,
+                                                        D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                                                        state->modelLoadScale,
+                                                        -1.0f,
+                                                        state->pbrEnvMapPath);
+                AddLoadedModelRecord(state, RenderSettingsDialogState::LoadedModelType::MeshPBR, renderId, state->pbrMeshPath, pos);
             }
         }
         else if (id == 31321)
@@ -1556,10 +1823,16 @@ void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
                                            state->meshInstancingPath))
             {
                 SetDlgItemTextW(hWnd, 31320, state->meshInstancingPath.c_str());
+                const D3DXVECTOR3 pos = render->GetLookAtPos();
                 render->AddMeshInstansing(state->meshInstancingPath,
-                                          render->GetLookAtPos(),
+                                          pos,
                                           D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                                           state->modelLoadScale);
+                AddLoadedModelRecord(state,
+                                     RenderSettingsDialogState::LoadedModelType::MeshInstancing,
+                                     -1,
+                                     state->meshInstancingPath,
+                                     pos);
             }
         }
         else if (id == 31331)
@@ -1569,11 +1842,17 @@ void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
                                            state->meshMixSkinAnimPath))
             {
                 SetDlgItemTextW(hWnd, 31330, state->meshMixSkinAnimPath.c_str());
-                render->AddMeshMixSkinAnim(state->meshMixSkinAnimPath,
-                                           render->GetLookAtPos(),
-                                           D3DXVECTOR3(0.0f, 0.0f, 0.0f),
-                                           state->modelLoadScale,
-                                           AnimSetMap());
+                const D3DXVECTOR3 pos = render->GetLookAtPos();
+                const int renderId = render->AddMeshMixSkinAnim(state->meshMixSkinAnimPath,
+                                                                pos,
+                                                                D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                                                                state->modelLoadScale,
+                                                                AnimSetMap());
+                AddLoadedModelRecord(state,
+                                     RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim,
+                                     renderId,
+                                     state->meshMixSkinAnimPath,
+                                     pos);
             }
         }
         else if (id == 32213)
@@ -1599,6 +1878,14 @@ void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
         else if (id == IDOK || id == IDCANCEL)
         {
             ShowWindow(hWnd, SW_HIDE);
+        }
+        else if (id == 31350)
+        {
+            RemoveSelectedLoadedModel(hWnd);
+        }
+        else if (id == 31351)
+        {
+            PlaySelectedAnimation(hWnd);
         }
         else if (id == IDC_RENDER_SETTINGS_WINDOW_MODE_WINDOW)
         {
@@ -2046,6 +2333,30 @@ void HandleRenderSettingsHScroll(HWND hWnd, const LPARAM lParam)
     }
 }
 
+void HandleRenderSettingsNotify(HWND hWnd, const LPARAM lParam)
+{
+    const NMHDR* header = reinterpret_cast<const NMHDR*>(lParam);
+    if (header == nullptr)
+    {
+        return;
+    }
+
+    if (header->idFrom == 31340 && header->code == LVN_ITEMCHANGED)
+    {
+        const NMLISTVIEW* listView = reinterpret_cast<const NMLISTVIEW*>(lParam);
+        if ((listView->uChanged & LVIF_STATE) != 0 &&
+            (listView->uNewState & LVIS_SELECTED) != 0)
+        {
+            RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+            PopulateAnimationListForModel(state, listView->iItem);
+        }
+    }
+    else if (header->idFrom == 31341 && header->code == NM_DBLCLK)
+    {
+        PlaySelectedAnimation(hWnd);
+    }
+}
+
 LRESULT CALLBACK RenderSettingsDialogProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
@@ -2061,7 +2372,7 @@ LRESULT CALLBACK RenderSettingsDialogProc(HWND hWnd, UINT msg, WPARAM wParam, LP
     case WM_CREATE:
     {
         RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
-        InitializeRenderSettingsControls(hWnd, (state != nullptr) ? state->render : nullptr);
+        InitializeRenderSettingsControls(hWnd, state);
         CaptureRenderSettingsChildPlacements(hWnd);
         UpdateRenderSettingsScrollBar(hWnd);
         return 0;
@@ -2075,6 +2386,11 @@ LRESULT CALLBACK RenderSettingsDialogProc(HWND hWnd, UINT msg, WPARAM wParam, LP
     case WM_COMMAND:
     {
         HandleRenderSettingsCommand(hWnd, wParam);
+        return 0;
+    }
+    case WM_NOTIFY:
+    {
+        HandleRenderSettingsNotify(hWnd, lParam);
         return 0;
     }
     case WM_VSCROLL:
