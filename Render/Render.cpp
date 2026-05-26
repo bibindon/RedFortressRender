@@ -1,4 +1,5 @@
 ﻿#pragma comment( lib, "d3d9.lib" )
+#pragma comment( lib, "comctl32.lib" )
 #if defined(DEBUG) || defined(_DEBUG)
 #pragma comment( lib, "d3dx9d.lib" )
 #else
@@ -7,6 +8,7 @@
 
 #include "Render.h"
 
+#include <commctrl.h>
 #include <d3d9.h>
 #include <d3dx9.h>
 #include <string>
@@ -43,6 +45,19 @@ namespace
 {
 constexpr const wchar_t* RENDER_SETTINGS_DIALOG_CLASS_NAME = L"NSRenderSettingsDialog";
 
+enum RenderSettingsControlId
+{
+    IDC_RENDER_SETTINGS_WINDOW_MODE = 30001,
+    IDC_RENDER_SETTINGS_GBUFFER_ENABLE,
+    IDC_RENDER_SETTINGS_SATURATE_ENABLE,
+    IDC_RENDER_SETTINGS_SATURATE_LEVEL,
+    IDC_RENDER_SETTINGS_GAUSSIAN_ENABLE,
+    IDC_RENDER_SETTINGS_BLOOM_ENABLE,
+    IDC_RENDER_SETTINGS_SSAO_ENABLE,
+    IDC_RENDER_SETTINGS_FOG_ENABLE,
+    IDC_RENDER_SETTINGS_DEBUG_VIEW,
+};
+
 class CameraShakeFrameScope
 {
 public:
@@ -57,17 +72,264 @@ public:
     }
 };
 
+void SetDefaultGuiFont(HWND hWnd)
+{
+    HFONT font = static_cast<HFONT>(GetStockObject(DEFAULT_GUI_FONT));
+    SendMessage(hWnd, WM_SETFONT, reinterpret_cast<WPARAM>(font), TRUE);
+}
+
+void CreateSettingsStatic(HWND parent, const wchar_t* text, const int x, const int y, const int w, const int h)
+{
+    HWND control = CreateWindowExW(0,
+                                   L"STATIC",
+                                   text,
+                                   WS_CHILD | WS_VISIBLE,
+                                   x,
+                                   y,
+                                   w,
+                                   h,
+                                   parent,
+                                   NULL,
+                                   GetModuleHandle(NULL),
+                                   NULL);
+    SetDefaultGuiFont(control);
+}
+
+HWND CreateSettingsCheckbox(HWND parent, const int id, const wchar_t* text, const int x, const int y, const int w, const int h)
+{
+    HWND control = CreateWindowExW(0,
+                                   L"BUTTON",
+                                   text,
+                                   WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
+                                   x,
+                                   y,
+                                   w,
+                                   h,
+                                   parent,
+                                   reinterpret_cast<HMENU>(static_cast<INT_PTR>(id)),
+                                   GetModuleHandle(NULL),
+                                   NULL);
+    SetDefaultGuiFont(control);
+    return control;
+}
+
+HWND CreateSettingsCombo(HWND parent, const int id, const int x, const int y, const int w, const int h)
+{
+    HWND control = CreateWindowExW(0,
+                                   L"COMBOBOX",
+                                   L"",
+                                   WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST,
+                                   x,
+                                   y,
+                                   w,
+                                   h,
+                                   parent,
+                                   reinterpret_cast<HMENU>(static_cast<INT_PTR>(id)),
+                                   GetModuleHandle(NULL),
+                                   NULL);
+    SetDefaultGuiFont(control);
+    return control;
+}
+
+void CreateSettingsTrackbar(HWND parent,
+                            const int id,
+                            const int x,
+                            const int y,
+                            const int w,
+                            const int h,
+                            const int minValue,
+                            const int maxValue,
+                            const int currentValue)
+{
+    HWND control = CreateWindowExW(0,
+                                   TRACKBAR_CLASSW,
+                                   L"",
+                                   WS_CHILD | WS_VISIBLE | TBS_AUTOTICKS,
+                                   x,
+                                   y,
+                                   w,
+                                   h,
+                                   parent,
+                                   reinterpret_cast<HMENU>(static_cast<INT_PTR>(id)),
+                                   GetModuleHandle(NULL),
+                                   NULL);
+    SendMessage(control, TBM_SETRANGE, TRUE, MAKELPARAM(minValue, maxValue));
+    SendMessage(control, TBM_SETPOS, TRUE, currentValue);
+    SendMessage(control, TBM_SETTICFREQ, 50, 0);
+}
+
+void InitializeRenderSettingsControls(HWND hWnd)
+{
+    INITCOMMONCONTROLSEX icc { };
+    icc.dwSize = sizeof(icc);
+    icc.dwICC = ICC_BAR_CLASSES;
+    InitCommonControlsEx(&icc);
+
+    constexpr int labelX = 16;
+    constexpr int controlX = 150;
+    constexpr int yStep = 34;
+    int y = 18;
+
+    CreateSettingsStatic(hWnd, L"Window mode", labelX, y + 4, 120, 24);
+    HWND windowModeCombo = CreateSettingsCombo(hWnd, IDC_RENDER_SETTINGS_WINDOW_MODE, controlX, y, 220, 120);
+    SendMessage(windowModeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Window"));
+    SendMessage(windowModeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Borderless"));
+    SendMessage(windowModeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Fullscreen"));
+    SendMessage(windowModeCombo, CB_SETCURSEL, 0, 0);
+
+    y += yStep;
+    CreateSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_GBUFFER_ENABLE, L"GBuffer", labelX, y, 130, 24);
+
+    y += yStep;
+    CreateSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_SATURATE_ENABLE, L"Saturate", labelX, y, 130, 24);
+    CreateSettingsTrackbar(hWnd, IDC_RENDER_SETTINGS_SATURATE_LEVEL, controlX, y - 4, 220, 34, 0, 300, 100);
+
+    y += yStep;
+    CreateSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_GAUSSIAN_ENABLE, L"Gaussian blur", labelX, y, 180, 24);
+
+    y += yStep;
+    CreateSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_BLOOM_ENABLE, L"Bloom", labelX, y, 180, 24);
+
+    y += yStep;
+    CreateSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_SSAO_ENABLE, L"SSAO", labelX, y, 180, 24);
+
+    y += yStep;
+    CreateSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_FOG_ENABLE, L"Fog", labelX, y, 180, 24);
+
+    y += yStep;
+    CreateSettingsStatic(hWnd, L"Debug view", labelX, y + 4, 120, 24);
+    HWND debugViewCombo = CreateSettingsCombo(hWnd, IDC_RENDER_SETTINGS_DEBUG_VIEW, controlX, y, 220, 160);
+    SendMessage(debugViewCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"None"));
+    SendMessage(debugViewCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"World position"));
+    SendMessage(debugViewCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Normal"));
+    SendMessage(debugViewCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Depth"));
+    SendMessage(debugViewCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Thickness"));
+    SendMessage(debugViewCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Back depth"));
+    SendMessage(debugViewCombo, CB_SETCURSEL, 0, 0);
+}
+
+bool IsSettingsCheckboxChecked(HWND hWnd, const int id)
+{
+    return SendDlgItemMessage(hWnd, id, BM_GETCHECK, 0, 0) == BST_CHECKED;
+}
+
+void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
+{
+    Render* render = reinterpret_cast<Render*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    if (render == nullptr)
+    {
+        return;
+    }
+
+    const int id = LOWORD(wParam);
+    const int notifyCode = HIWORD(wParam);
+
+    if (notifyCode == BN_CLICKED)
+    {
+        if (id == IDC_RENDER_SETTINGS_SATURATE_ENABLE)
+        {
+            render->SetPostEffectSaturateEnable(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == IDC_RENDER_SETTINGS_GBUFFER_ENABLE)
+        {
+            render->SetGBufferEnable(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == IDC_RENDER_SETTINGS_GAUSSIAN_ENABLE)
+        {
+            render->SetPostEffectGaussianFilter(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == IDC_RENDER_SETTINGS_BLOOM_ENABLE)
+        {
+            render->SetPostEffectBloom(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == IDC_RENDER_SETTINGS_SSAO_ENABLE)
+        {
+            render->SetPostEffectSSAO(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == IDC_RENDER_SETTINGS_FOG_ENABLE)
+        {
+            render->SetPostEffectFog(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        return;
+    }
+
+    if (notifyCode == CBN_SELCHANGE && id == IDC_RENDER_SETTINGS_WINDOW_MODE)
+    {
+        const int index = static_cast<int>(SendDlgItemMessage(hWnd, id, CB_GETCURSEL, 0, 0));
+        if (index == 0)
+        {
+            render->ChangeWindowMode(eWindowMode::WINDOW);
+        }
+        else if (index == 1)
+        {
+            render->ChangeWindowMode(eWindowMode::BORDERLESS);
+        }
+        else if (index == 2)
+        {
+            render->ChangeWindowMode(eWindowMode::FULLSCREEN);
+        }
+        return;
+    }
+
+    if (notifyCode == CBN_SELCHANGE && id == IDC_RENDER_SETTINGS_DEBUG_VIEW)
+    {
+        const int index = static_cast<int>(SendDlgItemMessage(hWnd, id, CB_GETCURSEL, 0, 0));
+        render->SetDebugGBufferView(static_cast<DebugGBufferView>(index));
+    }
+}
+
+void HandleRenderSettingsScroll(HWND hWnd, const LPARAM lParam)
+{
+    HWND control = reinterpret_cast<HWND>(lParam);
+    if (control == NULL || GetDlgCtrlID(control) != IDC_RENDER_SETTINGS_SATURATE_LEVEL)
+    {
+        return;
+    }
+
+    Render* render = reinterpret_cast<Render*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    if (render == nullptr)
+    {
+        return;
+    }
+
+    const int pos = static_cast<int>(SendMessage(control, TBM_GETPOS, 0, 0));
+    render->SetPostEffectSaturate(static_cast<float>(pos) / 100.0f);
+}
+
 LRESULT CALLBACK RenderSettingsDialogProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    UNREFERENCED_PARAMETER(wParam);
-    UNREFERENCED_PARAMETER(lParam);
-
     switch (msg)
     {
+    case WM_NCCREATE:
+    {
+        const CREATESTRUCT* createStruct = reinterpret_cast<const CREATESTRUCT*>(lParam);
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(createStruct->lpCreateParams));
+        return TRUE;
+    }
+    case WM_CREATE:
+    {
+        InitializeRenderSettingsControls(hWnd);
+        return 0;
+    }
+    case WM_COMMAND:
+    {
+        HandleRenderSettingsCommand(hWnd, wParam);
+        return 0;
+    }
+    case WM_HSCROLL:
+    {
+        HandleRenderSettingsScroll(hWnd, lParam);
+        return 0;
+    }
     case WM_CLOSE:
     {
         ShowWindow(hWnd, SW_HIDE);
         return 0;
+    }
+    case WM_NCDESTROY:
+    {
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, 0);
+        break;
     }
     }
 
@@ -1569,7 +1831,7 @@ void Render::ShowSettingsDialog(const bool activateDialog)
             return;
         }
 
-        RECT rect { 0, 0, 360, 240 };
+        RECT rect { 0, 0, 400, 320 };
         const DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
         const DWORD exStyle = WS_EX_TOOLWINDOW | WS_EX_DLGMODALFRAME;
         AdjustWindowRectEx(&rect, style, FALSE, exStyle);
@@ -1585,7 +1847,7 @@ void Render::ShowSettingsDialog(const bool activateDialog)
                                             m_hWnd,
                                             NULL,
                                             hInstance,
-                                            NULL);
+                                            this);
         if (m_hSettingsDialog == NULL)
         {
             return;
