@@ -30,6 +30,12 @@ struct RenderSettingsDialogState
     D3DXCOLOR pointLightColor = D3DXCOLOR(1.0f, 0.35f, 0.10f, 1.0f);
     float pointLightBrightness = 1.0f;
     PointLightShape pointLightShape = PointLightShape::Point;
+    float cameraNearPlane = 0.1f;
+    float cameraFarPlane = 30000.0f;
+    float cameraShakeDuration = 1.0f;
+    float cameraShakeIntensity = 0.12f;
+    float gBufferNearPlane = 0.1f;
+    float gBufferFarPlane = 30.0f;
     ParticleEffectPreset particleEffectPreset = ParticleEffectPreset::Smoke;
     std::wstring pbrMeshPath;
     std::wstring pbrEnvMapPath;
@@ -378,24 +384,24 @@ void InitializeRenderSettingsControls(HWND hWnd)
     y += 30;
     CreateSettingsGroupBox(hWnd, L"Camera", left - 4, y, width + 8, 88);
     CreateSettingsStatic(hWnd, L"Camera Near", 22, y + 24, 100, 20);
-    CreateSettingsEdit(hWnd, L"0.100", 158, y + 22, 72, 20);
+    CreateSettingsEdit(hWnd, L"0.100", 158, y + 22, 72, 20, 41000);
     CreateSettingsStatic(hWnd, L"Camera Far", 264, y + 24, 100, 20);
-    CreateSettingsEdit(hWnd, L"30000.0", 400, y + 22, 104, 20);
-    CreateSettingsButton(hWnd, L"Shake", 22, y + 50, 56, 24);
+    CreateSettingsEdit(hWnd, L"30000.0", 400, y + 22, 104, 20, 41001);
+    CreateSettingsButton(hWnd, L"Shake", 22, y + 50, 56, 24, 41002);
     CreateSettingsStatic(hWnd, L"Sec", 88, y + 54, 28, 20);
     CreateSettingsTrackbar(hWnd, 31004, 122, y + 48, 94, 32, 0, 100, 35);
-    CreateSettingsEdit(hWnd, L"1.0", 226, y + 50, 34, 20);
+    CreateSettingsEdit(hWnd, L"1.0", 226, y + 50, 34, 20, 41004);
     CreateSettingsStatic(hWnd, L"Power", 286, y + 54, 44, 20);
     CreateSettingsTrackbar(hWnd, 31005, 326, y + 48, 98, 32, 0, 100, 20);
-    CreateSettingsEdit(hWnd, L"0.12", 436, y + 50, 68, 20);
+    CreateSettingsEdit(hWnd, L"0.12", 436, y + 50, 68, 20, 41005);
 
     y += 98;
     CreateSettingsGroupBox(hWnd, L"GBuffer", left - 4, y, width + 8, 62);
     CreateSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_GBUFFER_ENABLE, L"GBuffer", 22, y + 18, 110, 22);
     CreateSettingsStatic(hWnd, L"GBuffer Near", 22, y + 42, 100, 18);
-    CreateSettingsEdit(hWnd, L"0.100", 158, y + 38, 72, 20);
+    CreateSettingsEdit(hWnd, L"0.100", 158, y + 38, 72, 20, 41010);
     CreateSettingsStatic(hWnd, L"GBuffer Far", 264, y + 42, 100, 18);
-    CreateSettingsEdit(hWnd, L"30.0", 400, y + 38, 104, 20);
+    CreateSettingsEdit(hWnd, L"30.0", 400, y + 38, 104, 20, 41011);
 
     y += 72;
     CreateSettingsGroupBox(hWnd, L"Post Effects", left - 4, y, width + 8, 90);
@@ -1098,6 +1104,43 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, const int id)
         return true;
     }
 
+    if (id >= 41000 && id <= 41011 && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    {
+        if (id == 41000)
+        {
+            state->cameraNearPlane = floatValue;
+            render->SetCameraClipPlanes(state->cameraNearPlane, state->cameraFarPlane);
+        }
+        else if (id == 41001)
+        {
+            state->cameraFarPlane = floatValue;
+            render->SetCameraClipPlanes(state->cameraNearPlane, state->cameraFarPlane);
+        }
+        else if (id == 41004)
+        {
+            state->cameraShakeDuration = floatValue;
+            render->SetCameraShakeDuration(state->cameraShakeDuration);
+            SetTrackbarFromFloat(hWnd, 31004, state->cameraShakeDuration, 0.0f, 5.0f);
+        }
+        else if (id == 41005)
+        {
+            state->cameraShakeIntensity = floatValue;
+            render->SetCameraShakeIntensity(state->cameraShakeIntensity);
+            SetTrackbarFromFloat(hWnd, 31005, state->cameraShakeIntensity, 0.0f, 1.0f);
+        }
+        else if (id == 41010)
+        {
+            state->gBufferNearPlane = floatValue;
+            render->SetGBufferClipPlanes(state->gBufferNearPlane, state->gBufferFarPlane);
+        }
+        else if (id == 41011)
+        {
+            state->gBufferFarPlane = floatValue;
+            render->SetGBufferClipPlanes(state->gBufferNearPlane, state->gBufferFarPlane);
+        }
+        return true;
+    }
+
     if (id >= 41400 && id <= 41403 && TryGetSettingsEditFloat(hWnd, id, floatValue))
     {
         if (id == 41400) state->pointLightColor.r = floatValue;
@@ -1431,6 +1474,12 @@ void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
                                   state->pointLightColor,
                                   state->pointLightShape);
         }
+        else if (id == 41002)
+        {
+            render->SetCameraShakeDuration(state->cameraShakeDuration);
+            render->SetCameraShakeIntensity(state->cameraShakeIntensity);
+            render->TriggerCameraShake();
+        }
         else if (id == 32211)
         {
             if (ShowSettingsOpenFileDialog(hWnd,
@@ -1632,6 +1681,16 @@ void HandleRenderSettingsHScroll(HWND hWnd, const LPARAM lParam)
     const int pos = static_cast<int>(SendMessage(trackbar, TBM_GETPOS, 0, 0));
     switch (id)
     {
+    case 31004:
+        state->cameraShakeDuration = SliderToFloat(pos, 0.0f, 5.0f);
+        render->SetCameraShakeDuration(state->cameraShakeDuration);
+        SetEditFloat(hWnd, trackbar, state->cameraShakeDuration, L"%.1f");
+        break;
+    case 31005:
+        state->cameraShakeIntensity = SliderToFloat(pos, 0.0f, 1.0f);
+        render->SetCameraShakeIntensity(state->cameraShakeIntensity);
+        SetEditFloat(hWnd, trackbar, state->cameraShakeIntensity, L"%.2f");
+        break;
     case IDC_RENDER_SETTINGS_SATURATE_LEVEL:
     case 31940:
     {
