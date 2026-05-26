@@ -27,6 +27,9 @@ struct RenderSettingsDialogState
     D3DXCOLOR fogColor = D3DXCOLOR(0.72f, 0.78f, 0.86f, 1.0f);
     D3DXVECTOR3 godRayColor = D3DXVECTOR3(1.0f, 0.9f, 0.8f);
     D3DXVECTOR3 godRayPos = D3DXVECTOR3(1000.0f, 100.0f, 1000.0f);
+    D3DXCOLOR pointLightColor = D3DXCOLOR(1.0f, 0.35f, 0.10f, 1.0f);
+    float pointLightBrightness = 1.0f;
+    PointLightShape pointLightShape = PointLightShape::Point;
     ParticleEffectPreset particleEffectPreset = ParticleEffectPreset::Smoke;
     std::wstring pbrMeshPath;
     std::wstring pbrEnvMapPath;
@@ -518,8 +521,10 @@ void InitializeRenderSettingsControls(HWND hWnd)
     SendMessage(pointTypeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Point"));
     SendMessage(pointTypeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Line"));
     SendMessage(pointTypeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Square"));
+    SendMessage(pointTypeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Cube"));
+    SendMessage(pointTypeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Sphere"));
     SendMessage(pointTypeCombo, CB_SETCURSEL, 0, 0);
-    CreateSettingsButton(hWnd, L"Add", 382, y + 12, 54, 24);
+    CreateSettingsButton(hWnd, L"Add", 382, y + 12, 54, 24, 31411);
 
     y += 62;
     CreateSettingsGroupBox(hWnd, L"PBR", 8, y, 504, 178);
@@ -875,6 +880,23 @@ ParticleEffectPreset ComboIndexToParticleEffectPreset(const int index)
     }
 }
 
+PointLightShape ComboIndexToPointLightShape(const int index)
+{
+    switch (index)
+    {
+    case 1:
+        return PointLightShape::Line;
+    case 2:
+        return PointLightShape::Square;
+    case 3:
+        return PointLightShape::Cube;
+    case 4:
+        return PointLightShape::Sphere;
+    default:
+        return PointLightShape::Point;
+    }
+}
+
 bool ShowSettingsOpenFileDialog(HWND owner, const wchar_t* filter, std::wstring& path)
 {
     wchar_t fileName[MAX_PATH] { };
@@ -1116,6 +1138,13 @@ void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
         {
             render->PlaceParticleEffect(state->particleEffectPreset, render->GetLookAtPos());
         }
+        else if (id == 31411)
+        {
+            render->AddPointLight(render->GetLookAtPos(),
+                                  state->pointLightBrightness,
+                                  state->pointLightColor,
+                                  state->pointLightShape);
+        }
         else if (id == 32211)
         {
             if (ShowSettingsOpenFileDialog(hWnd,
@@ -1205,6 +1234,10 @@ void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
         else if (id == 32140)
         {
             state->particleEffectPreset = ComboIndexToParticleEffectPreset(GetSettingsComboSelection(hWnd, id));
+        }
+        else if (id == 31410)
+        {
+            state->pointLightShape = ComboIndexToPointLightShape(GetSettingsComboSelection(hWnd, id));
         }
         return;
     }
@@ -1356,6 +1389,21 @@ void HandleRenderSettingsHScroll(HWND hWnd, const LPARAM lParam)
     case 31124:
         render->SetMeshMixFresnelIntensity(SliderToFloat(pos, 0.0f, 1.0f));
         SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f));
+        break;
+    case 31400:
+    case 31401:
+    case 31402:
+    {
+        const float value = SliderToFloat(pos, 0.0f, 1.0f);
+        if (id == 31400) state->pointLightColor.r = value;
+        if (id == 31401) state->pointLightColor.g = value;
+        if (id == 31402) state->pointLightColor.b = value;
+        SetEditFloat(hWnd, trackbar, value);
+        break;
+    }
+    case 31403:
+        state->pointLightBrightness = SliderToFloat(pos, 0.0f, 4.0f);
+        SetEditFloat(hWnd, trackbar, state->pointLightBrightness);
         break;
     case 31500:
         render->SetMeshPBRRoughness(SliderToFloat(pos, 0.0f, 1.0f));
