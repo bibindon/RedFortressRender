@@ -43,6 +43,7 @@ struct RenderSettingsDialogState
     int contentHeight = 0;
     HWND loadedModelsList = NULL;
     HWND animationList = NULL;
+    HWND pointLightsList = NULL;
     D3DXCOLOR fogColor = D3DXCOLOR(0.72f, 0.78f, 0.86f, 1.0f);
     D3DXVECTOR3 godRayColor = D3DXVECTOR3(1.0f, 0.9f, 0.8f);
     D3DXVECTOR3 godRayPos = D3DXVECTOR3(1000.0f, 100.0f, 1000.0f);
@@ -62,7 +63,10 @@ struct RenderSettingsDialogState
     std::wstring pbrEnvMapPath;
     std::wstring meshInstancingPath;
     std::wstring meshMixSkinAnimPath;
+    std::wstring meshMixSkinNonAnimPath;
+    std::wstring meshMixSkinAnimOnlyPath;
     std::wstring maskedGaussianMaskPath;
+    std::wstring settingsCsvPath;
     std::vector<LoadedModelRecord> loadedModels;
     int activeAnimationModelId = -1;
     struct ChildPlacement
@@ -431,6 +435,67 @@ void UpdateLoadedModelsList(RenderSettingsDialogState* state)
     }
 }
 
+const wchar_t* PointLightShapeToText(const PointLightShape shape)
+{
+    switch (shape)
+    {
+    case PointLightShape::Point:
+        return L"Point";
+    case PointLightShape::Line:
+        return L"Line";
+    case PointLightShape::Square:
+        return L"Square";
+    case PointLightShape::Cube:
+        return L"Cube";
+    case PointLightShape::Sphere:
+        return L"Sphere";
+    default:
+        return L"Unknown";
+    }
+}
+
+void UpdatePointLightsList(RenderSettingsDialogState* state)
+{
+    if (state == nullptr || state->pointLightsList == NULL)
+    {
+        return;
+    }
+
+    ListView_DeleteAllItems(state->pointLightsList);
+    const auto pointLights = Light::GetPointLightList();
+    for (int i = 0; i < static_cast<int>(pointLights.size()); ++i)
+    {
+        const auto& light = pointLights.at(i);
+        wchar_t posText[96] { };
+        wchar_t colorText[96] { };
+        wchar_t brightnessText[32] { };
+        std::swprintf(posText,
+                      sizeof(posText) / sizeof(posText[0]),
+                      L"(%.1f, %.1f, %.1f)",
+                      light.m_pos.x,
+                      light.m_pos.y,
+                      light.m_pos.z);
+        std::swprintf(colorText,
+                      sizeof(colorText) / sizeof(colorText[0]),
+                      L"%.2f, %.2f, %.2f",
+                      light.m_color.r,
+                      light.m_color.g,
+                      light.m_color.b);
+        std::swprintf(brightnessText, sizeof(brightnessText) / sizeof(brightnessText[0]), L"%.2f", light.m_brightness);
+
+        LVITEMW item { };
+        item.mask = LVIF_TEXT | LVIF_PARAM;
+        item.iItem = i;
+        item.iSubItem = 0;
+        item.pszText = posText;
+        item.lParam = i;
+        ListView_InsertItem(state->pointLightsList, &item);
+        ListView_SetItemText(state->pointLightsList, i, 1, const_cast<LPWSTR>(PointLightShapeToText(light.m_shape)));
+        ListView_SetItemText(state->pointLightsList, i, 2, colorText);
+        ListView_SetItemText(state->pointLightsList, i, 3, brightnessText);
+    }
+}
+
 int GetSelectedListViewIndex(HWND listView)
 {
     if (listView == NULL)
@@ -438,6 +503,26 @@ int GetSelectedListViewIndex(HWND listView)
         return -1;
     }
     return ListView_GetNextItem(listView, -1, LVNI_SELECTED);
+}
+
+void RemoveSelectedPointLight(HWND hWnd)
+{
+    RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    if (state == nullptr)
+    {
+        return;
+    }
+
+    const int index = GetSelectedListViewIndex(state->pointLightsList);
+    if (index < 0)
+    {
+        return;
+    }
+
+    if (Light::RemovePointLight(static_cast<size_t>(index)))
+    {
+        UpdatePointLightsList(state);
+    }
 }
 
 void ClearAnimationList(RenderSettingsDialogState* state)
@@ -661,7 +746,7 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
 
     y += 26;
     CreateSettingsCheckbox(hWnd, 31002, L"Remote Desktop", 158, y, 124, 22);
-    CreateSettingsButton(hWnd, L"Load CSV...", 286, y - 3, 92, 24);
+    CreateSettingsButton(hWnd, L"Load CSV...", 286, y - 3, 92, 24, 31016);
 
     y += 24;
     CreateSettingsCheckbox(hWnd, 31003, L"Move x100", 158, y, 124, 22);
@@ -767,9 +852,9 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     CreateSettingsCheckbox(hWnd, 31302, L"Clip", 476, y, 52, 22);
 
     y += 28;
-    CreateSettingsButton(hWnd, L"Open NonAnim...", 24, y, 154, 24);
-    CreateSettingsButton(hWnd, L"Open AnimOnly...", 190, y, 154, 24);
-    CreateSettingsButton(hWnd, L"Load Split Anim", 350, y, 158, 24);
+    CreateSettingsButton(hWnd, L"Open NonAnim...", 24, y, 154, 24, 31360);
+    CreateSettingsButton(hWnd, L"Open AnimOnly...", 190, y, 154, 24, 31361);
+    CreateSettingsButton(hWnd, L"Load Split Anim", 350, y, 158, 24, 31362);
 
     y += 32;
     CreateSettingsStatic(hWnd, L"Loaded Models", 24, y + 2, 120, 18);
@@ -797,10 +882,16 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
 
     y += 124;
     CreateSettingsStatic(hWnd, L"Point Lights", 24, y + 2, 120, 18);
+    CreateSettingsButton(hWnd, L"Remove", 430, y - 2, 76, 22, 31412);
     y += 20;
     const wchar_t* pointLightColumns[] = { L"Pos", L"Type", L"Color", L"Bright..." };
     const int pointLightWidths[] = { 88, 56, 84, 54 };
-    CreateSettingsListView(hWnd, 31342, 24, y, 482, 68, pointLightColumns, pointLightWidths, 4);
+    HWND pointLightList = CreateSettingsListView(hWnd, 31342, 24, y, 482, 68, pointLightColumns, pointLightWidths, 4);
+    if (state != nullptr)
+    {
+        state->pointLightsList = pointLightList;
+        UpdatePointLightsList(state);
+    }
 
     y += 78;
     const wchar_t* pointLabels[] = { L"PointLight R", L"PointLight G", L"PointLight B", L"PointLight Power" };
@@ -1777,6 +1868,11 @@ void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
                                   state->pointLightBrightness,
                                   state->pointLightColor,
                                   state->pointLightShape);
+            UpdatePointLightsList(state);
+        }
+        else if (id == 31412)
+        {
+            RemoveSelectedPointLight(hWnd);
         }
         else if (id == 41002)
         {
@@ -1853,6 +1949,46 @@ void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
                                      renderId,
                                      state->meshMixSkinAnimPath,
                                      pos);
+            }
+        }
+        else if (id == 31360)
+        {
+            ShowSettingsOpenFileDialog(hWnd,
+                                       L"MeshMix Non Animation Files (*.x)\0*.x\0All Files (*.*)\0*.*\0",
+                                       state->meshMixSkinNonAnimPath);
+        }
+        else if (id == 31361)
+        {
+            ShowSettingsOpenFileDialog(hWnd,
+                                       L"MeshMix Animation Only Files (*.x)\0*.x\0All Files (*.*)\0*.*\0",
+                                       state->meshMixSkinAnimOnlyPath);
+        }
+        else if (id == 31362)
+        {
+            if (!state->meshMixSkinNonAnimPath.empty() && !state->meshMixSkinAnimOnlyPath.empty())
+            {
+                const D3DXVECTOR3 pos = render->GetLookAtPos();
+                const int renderId = render->AddMeshMixSkinAnim(state->meshMixSkinNonAnimPath,
+                                                                state->meshMixSkinAnimOnlyPath,
+                                                                pos,
+                                                                D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                                                                state->modelLoadScale,
+                                                                AnimSetMap());
+                AddLoadedModelRecord(state,
+                                     RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim,
+                                     renderId,
+                                     state->meshMixSkinNonAnimPath,
+                                     pos);
+            }
+        }
+        else if (id == 31016)
+        {
+            if (ShowSettingsOpenFileDialog(hWnd,
+                                           L"CSV Files (*.csv)\0*.csv\0All Files (*.*)\0*.*\0",
+                                           state->settingsCsvPath))
+            {
+                render->ReloadSettingsCsv(state->settingsCsvPath);
+                UpdatePointLightsList(state);
             }
         }
         else if (id == 32213)
