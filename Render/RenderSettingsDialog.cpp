@@ -433,7 +433,7 @@ void InitializeRenderSettingsControls(HWND hWnd)
     {
         CreateSettingsStatic(hWnd, leftLabels[i], 22, row + 4, 136, 18);
         CreateSettingsTrackbar(hWnd, 31100 + i, 164, row, 124, 30, 0, 100, 50);
-        CreateSettingsEdit(hWnd, leftValues[i], 296, row + 2, 40, 20);
+        CreateSettingsEdit(hWnd, leftValues[i], 296, row + 2, 40, 20, 41100 + i);
         row += 22;
     }
 
@@ -443,7 +443,7 @@ void InitializeRenderSettingsControls(HWND hWnd)
     CreateSettingsCheckbox(hWnd, 31123, L"Use Override", 348, y + 172, 132, 22);
     CreateSettingsStatic(hWnd, L"Fresne", 348, y + 202, 52, 18);
     CreateSettingsTrackbar(hWnd, 31124, 386, y + 194, 82, 30, 0, 100, 8);
-    CreateSettingsEdit(hWnd, L"0.08", 474, y + 198, 30, 20);
+    CreateSettingsEdit(hWnd, L"0.08", 474, y + 198, 30, 20, 41124);
 
     row = y + 28;
     const wchar_t* colorLabels[] = { L"Sun R", L"Sun G", L"Sun B", L"Amb R", L"Amb G", L"Amb B" };
@@ -452,7 +452,7 @@ void InitializeRenderSettingsControls(HWND hWnd)
     {
         CreateSettingsStatic(hWnd, colorLabels[i], 348, row + 4, 54, 18);
         CreateSettingsTrackbar(hWnd, 31200 + i, 438, row, 30, 30, 0, 100, 50);
-        CreateSettingsEdit(hWnd, colorValues[i], 474, row + 2, 30, 20);
+        CreateSettingsEdit(hWnd, colorValues[i], 474, row + 2, 30, 20, 41200 + i);
         row += 18;
     }
 
@@ -512,7 +512,7 @@ void InitializeRenderSettingsControls(HWND hWnd)
     {
         CreateSettingsStatic(hWnd, pointLabels[i], 24, y + 4, 132, 18);
         CreateSettingsTrackbar(hWnd, 31400 + i, 168, y, 122, 30, 0, 100, 50);
-        CreateSettingsEdit(hWnd, pointValues[i], 298, y + 2, 40, 20);
+        CreateSettingsEdit(hWnd, pointValues[i], 298, y + 2, 40, 20, 41400 + i);
         y += 20;
     }
 
@@ -542,7 +542,7 @@ void InitializeRenderSettingsControls(HWND hWnd)
     {
         CreateSettingsStatic(hWnd, pbrLabels[i], 24, pbrY + 4, 132, 18);
         CreateSettingsTrackbar(hWnd, 31500 + i, 168, pbrY, 122, 30, 0, 100, 50);
-        CreateSettingsEdit(hWnd, pbrValues[i], 298, pbrY + 2, 40, 20);
+        CreateSettingsEdit(hWnd, pbrValues[i], 298, pbrY + 2, 40, 20, 41500 + i);
         pbrY += 20;
     }
 
@@ -555,7 +555,7 @@ void InitializeRenderSettingsControls(HWND hWnd)
     {
         CreateSettingsStatic(hWnd, zShadowLabels[i], 24, zY + 4, 142, 18);
         CreateSettingsTrackbar(hWnd, 31600 + i, 168, zY, 122, 30, 0, 100, 50);
-        CreateSettingsEdit(hWnd, zShadowValues[i], 298, zY + 2, 40, 20);
+        CreateSettingsEdit(hWnd, zShadowValues[i], 298, zY + 2, 40, 20, 41600 + i);
         zY += 20;
     }
     CreateSettingsStatic(hWnd, L"ZShadow PCF Taps", 24, zY + 4, 142, 18);
@@ -596,12 +596,12 @@ void InitializeRenderSettingsControls(HWND hWnd)
     SendMessage(ssgiSampleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"64"));
     SendMessage(ssgiSampleCombo, CB_SETCURSEL, 1, 0);
     CreateSettingsStatic(hWnd, L"Indirect light", 24, y + 46, 138, 18);
-    CreateSettingsEdit(hWnd, L"1.00", 266, y + 42, 72, 20);
+    CreateSettingsEdit(hWnd, L"1.00", 266, y + 42, 72, 20, 41710);
     CreateSettingsStatic(hWnd, L"Indirect light max", 24, y + 68, 138, 18);
-    CreateSettingsEdit(hWnd, L"1.00", 266, y + 64, 72, 20);
+    CreateSettingsEdit(hWnd, L"1.00", 266, y + 64, 72, 20, 41711);
     CreateSettingsStatic(hWnd, L"SSGI Dist Scale", 24, y + 90, 138, 18);
     CreateSettingsTrackbar(hWnd, 31701, 168, y + 84, 122, 30, 0, 100, 50);
-    CreateSettingsEdit(hWnd, L"1.00", 298, y + 86, 40, 20);
+    CreateSettingsEdit(hWnd, L"1.00", 298, y + 86, 40, 20, 41701);
     CreateSettingsCheckbox(hWnd, 31702, L"SSGI Blur", 350, y + 20, 100, 22);
     CreateSettingsStatic(hWnd, L"SSGI Blur Size", 350, y + 46, 92, 18);
     HWND ssgiBlurSizeCombo = CreateSettingsCombo(hWnd, 31703, 442, y + 42, 64, 120);
@@ -614,7 +614,7 @@ void InitializeRenderSettingsControls(HWND hWnd)
     CreateSettingsGroupBox(hWnd, L"SSAO", 8, y, 504, 198);
     CreateSettingsStatic(hWnd, L"SSAO Sample Radius", 24, y + 24, 142, 18);
     CreateSettingsTrackbar(hWnd, 31800, 168, y + 18, 122, 30, 0, 100, 15);
-    CreateSettingsEdit(hWnd, L"1.00", 298, y + 20, 40, 20);
+    CreateSettingsEdit(hWnd, L"1.00", 298, y + 20, 40, 20, 41800);
     CreateSettingsStatic(hWnd, L"SSAO TexSize", 350, y + 24, 92, 18);
     HWND ssaoTexSizeCombo = CreateSettingsCombo(hWnd, 31801, 442, y + 20, 64, 120);
     SendMessage(ssaoTexSizeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/1"));
@@ -628,10 +628,10 @@ void InitializeRenderSettingsControls(HWND hWnd)
     SendMessage(ssaoBlurSizeCombo, CB_SETCURSEL, 0, 0);
     CreateSettingsStatic(hWnd, L"SSAO Shadow Strength", 24, y + 74, 142, 18);
     CreateSettingsTrackbar(hWnd, 31803, 168, y + 68, 122, 30, 0, 100, 50);
-    CreateSettingsEdit(hWnd, L"1.00", 298, y + 70, 40, 20);
+    CreateSettingsEdit(hWnd, L"1.00", 298, y + 70, 40, 20, 41803);
     CreateSettingsStatic(hWnd, L"SSAO Shadow Saturation", 24, y + 96, 154, 18);
     CreateSettingsTrackbar(hWnd, 31804, 168, y + 90, 122, 30, 0, 100, 50);
-    CreateSettingsEdit(hWnd, L"0.30", 298, y + 92, 40, 20);
+    CreateSettingsEdit(hWnd, L"0.30", 298, y + 92, 40, 20, 41804);
     CreateSettingsStatic(hWnd, L"SSAO Sample Count", 24, y + 138, 142, 18);
     HWND ssaoSampleCombo = CreateSettingsCombo(hWnd, 31805, 266, y + 134, 72, 120);
     SendMessage(ssaoSampleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"8"));
@@ -655,7 +655,7 @@ void InitializeRenderSettingsControls(HWND hWnd)
     {
         CreateSettingsStatic(hWnd, fogLabels[i], 24, fogY + 4, 138, 18);
         CreateSettingsTrackbar(hWnd, 31900 + i, 168, fogY, 122, 30, 0, 100, 50);
-        CreateSettingsEdit(hWnd, fogValues[i], 298, fogY + 2, 40, 20);
+        CreateSettingsEdit(hWnd, fogValues[i], 298, fogY + 2, 40, 20, 41900 + i);
         fogY += 16;
     }
 
@@ -674,14 +674,14 @@ void InitializeRenderSettingsControls(HWND hWnd)
     {
         CreateSettingsStatic(hWnd, heightFogLabels[i], 24, heightFogY + 4, 138, 18);
         CreateSettingsTrackbar(hWnd, 31920 + i, 168, heightFogY, 122, 30, 0, 100, 50);
-        CreateSettingsEdit(hWnd, heightFogValues[i], 298, heightFogY + 2, 40, 20);
+        CreateSettingsEdit(hWnd, heightFogValues[i], 298, heightFogY + 2, 40, 20, 41920 + i);
         heightFogY += 18;
     }
 
     y += 124;
     CreateSettingsGroupBox(hWnd, L"Saturate", 8, y, 504, 50);
     CreateSettingsStatic(hWnd, L"Saturation", 24, y + 22, 54, 18);
-    CreateSettingsEdit(hWnd, L"0.7", 78, y + 18, 80, 20);
+    CreateSettingsEdit(hWnd, L"0.7", 78, y + 18, 80, 20, 41940);
     CreateSettingsTrackbar(hWnd, 31940, 174, y + 14, 96, 30, 0, 100, 30);
     CreateSettingsButton(hWnd, L"-", 286, y + 16, 20, 22);
     CreateSettingsButton(hWnd, L"+", 308, y + 16, 20, 22);
@@ -696,7 +696,7 @@ void InitializeRenderSettingsControls(HWND hWnd)
     {
         CreateSettingsStatic(hWnd, dofLabels[i], 24, dofY + 4, 138, 18);
         CreateSettingsTrackbar(hWnd, 31950 + i, 168, dofY, 122, 30, 0, 100, 50);
-        CreateSettingsEdit(hWnd, dofValues[i], 298, dofY + 2, 40, 20);
+        CreateSettingsEdit(hWnd, dofValues[i], 298, dofY + 2, 40, 20, 41950 + i);
         dofY += 18;
     }
 
@@ -704,22 +704,22 @@ void InitializeRenderSettingsControls(HWND hWnd)
     CreateSettingsGroupBox(hWnd, L"Bloom", 8, y, 504, 58);
     CreateSettingsStatic(hWnd, L"Bloom Threshold", 24, y + 22, 138, 18);
     CreateSettingsTrackbar(hWnd, 31970, 168, y + 16, 122, 30, 0, 100, 50);
-    CreateSettingsEdit(hWnd, L"1.0", 298, y + 18, 40, 20);
+    CreateSettingsEdit(hWnd, L"1.0", 298, y + 18, 40, 20, 41970);
     CreateSettingsStatic(hWnd, L"Sum", 350, y + 22, 34, 18);
     CreateSettingsTrackbar(hWnd, 31971, 386, y + 16, 58, 30, 0, 100, 50);
-    CreateSettingsEdit(hWnd, L"1", 458, y + 18, 46, 20);
+    CreateSettingsEdit(hWnd, L"1", 458, y + 18, 46, 20, 41971);
     CreateSettingsStatic(hWnd, L"Halo Threshold", 24, y + 42, 138, 18);
     CreateSettingsTrackbar(hWnd, 31972, 168, y + 36, 122, 30, 0, 100, 50);
-    CreateSettingsEdit(hWnd, L"1.0", 298, y + 38, 40, 20);
+    CreateSettingsEdit(hWnd, L"1.0", 298, y + 38, 40, 20, 41972);
 
     y += 70;
     CreateSettingsGroupBox(hWnd, L"StarBurst", 8, y, 504, 68);
     CreateSettingsStatic(hWnd, L"StarBurst Threshold", 24, y + 22, 138, 18);
     CreateSettingsTrackbar(hWnd, 31980, 168, y + 16, 122, 30, 0, 100, 30);
-    CreateSettingsEdit(hWnd, L"0.6", 298, y + 18, 40, 20);
+    CreateSettingsEdit(hWnd, L"0.6", 298, y + 18, 40, 20, 41980);
     CreateSettingsStatic(hWnd, L"StarBurst Dist Fade", 24, y + 44, 138, 18);
     CreateSettingsTrackbar(hWnd, 31981, 168, y + 38, 122, 30, 0, 100, 5);
-    CreateSettingsEdit(hWnd, L"0.00", 298, y + 40, 40, 20);
+    CreateSettingsEdit(hWnd, L"0.00", 298, y + 40, 40, 20, 41981);
 
     y += 82;
     CreateSettingsGroupBox(hWnd, L"GodRay", 8, y, 504, 158);
@@ -739,7 +739,7 @@ void InitializeRenderSettingsControls(HWND hWnd)
     {
         CreateSettingsStatic(hWnd, godRayLabels[i], 24, godRayY + 4, 138, 18);
         CreateSettingsTrackbar(hWnd, 32000 + i, 168, godRayY, 122, 30, 0, 100, 50);
-        CreateSettingsEdit(hWnd, godRayValues[i], 298, godRayY + 2, 40, 20);
+        CreateSettingsEdit(hWnd, godRayValues[i], 298, godRayY + 2, 40, 20, 42000 + i);
         godRayY += 16;
     }
 
@@ -748,7 +748,7 @@ void InitializeRenderSettingsControls(HWND hWnd)
     CreateSettingsCheckbox(hWnd, 32020, L"Gaussian", 408, y + 16, 96, 22);
     CreateSettingsStatic(hWnd, L"Blur Strength", 24, y + 46, 138, 18);
     CreateSettingsTrackbar(hWnd, 32021, 168, y + 40, 292, 30, 0, 100, 96);
-    CreateSettingsEdit(hWnd, L"1.00", 476, y + 42, 30, 20);
+    CreateSettingsEdit(hWnd, L"1.00", 476, y + 42, 30, 20, 42021);
 
     y += 80;
     CreateSettingsGroupBox(hWnd, L"Masked Gaussian", 8, y, 504, 78);
@@ -761,28 +761,28 @@ void InitializeRenderSettingsControls(HWND hWnd)
     CreateSettingsCheckbox(hWnd, 32100, L"PAA", 366, y + 18, 64, 22);
     CreateSettingsCheckbox(hWnd, 32101, L"TAA", 438, y + 18, 64, 22);
     CreateSettingsStatic(hWnd, L"TAA Weight", 384, y + 40, 88, 18);
-    CreateSettingsEdit(hWnd, L"0.85", 474, y + 36, 34, 20);
+    CreateSettingsEdit(hWnd, L"0.85", 474, y + 36, 34, 20, 42101);
 
     y += 70;
     CreateSettingsGroupBox(hWnd, L"Motion Blur", 8, y, 84 + 420, 82);
     CreateSettingsStatic(hWnd, L"Max Blur Px", 24, y + 22, 138, 18);
     CreateSettingsTrackbar(hWnd, 32110, 168, y + 16, 296, 30, 0, 100, 78);
-    CreateSettingsEdit(hWnd, L"24", 478, y + 18, 30, 20);
+    CreateSettingsEdit(hWnd, L"24", 478, y + 18, 30, 20, 42110);
     CreateSettingsStatic(hWnd, L"Sample Count", 24, y + 44, 138, 18);
     CreateSettingsTrackbar(hWnd, 32111, 168, y + 38, 296, 30, 0, 100, 58);
-    CreateSettingsEdit(hWnd, L"13", 478, y + 40, 30, 20);
+    CreateSettingsEdit(hWnd, L"13", 478, y + 40, 30, 20, 42111);
     CreateSettingsCheckbox(hWnd, 32112, L"Motion Blur", 372, y + 60, 118, 22);
 
     y += 96;
     CreateSettingsGroupBox(hWnd, L"FXAA", 8, y, 504, 58);
     CreateSettingsStatic(hWnd, L"FXAA Quality", 24, y + 22, 138, 18);
     CreateSettingsTrackbar(hWnd, 32120, 168, y + 16, 296, 30, 0, 100, 50);
-    CreateSettingsEdit(hWnd, L"4", 478, y + 18, 30, 20);
+    CreateSettingsEdit(hWnd, L"4", 478, y + 18, 30, 20, 42120);
 
     y += 64;
     CreateSettingsStatic(hWnd, L"FontEx Blur Size", 16, y + 6, 140, 18);
     CreateSettingsTrackbar(hWnd, 32130, 168, y, 122, 30, 0, 100, 50);
-    CreateSettingsEdit(hWnd, L"21", 300, y + 2, 40, 20);
+    CreateSettingsEdit(hWnd, L"21", 300, y + 2, 40, 20, 42130);
 
     y += 34;
     CreateSettingsStatic(hWnd, L"Particle", 16, y + 6, 76, 18);
@@ -922,6 +922,48 @@ bool ShowSettingsOpenFileDialog(HWND owner, const wchar_t* filter, std::wstring&
     return true;
 }
 
+bool TryGetSettingsEditFloat(HWND hWnd, const int id, float& value)
+{
+    wchar_t buffer[64] { };
+    GetDlgItemTextW(hWnd, id, buffer, static_cast<int>(sizeof(buffer) / sizeof(buffer[0])));
+    try
+    {
+        value = std::stof(buffer);
+        return true;
+    }
+    catch (...)
+    {
+        return false;
+    }
+}
+
+bool TryGetSettingsEditInt(HWND hWnd, const int id, int& value)
+{
+    wchar_t buffer[64] { };
+    GetDlgItemTextW(hWnd, id, buffer, static_cast<int>(sizeof(buffer) / sizeof(buffer[0])));
+    try
+    {
+        value = std::stoi(buffer);
+        return true;
+    }
+    catch (...)
+    {
+        return false;
+    }
+}
+
+void SetTrackbarFromFloat(HWND hWnd, const int trackbarId, const float value, const float minValue, const float maxValue)
+{
+    const float normalized = (maxValue != minValue) ? ((value - minValue) / (maxValue - minValue)) : 0.0f;
+    const int sliderPos = (std::max)(0, (std::min)(100, static_cast<int>(normalized * 100.0f + 0.5f)));
+    SendDlgItemMessageW(hWnd, trackbarId, TBM_SETPOS, TRUE, sliderPos);
+}
+
+void SetTrackbarFromInt(HWND hWnd, const int trackbarId, const int value, const int minValue, const int maxValue)
+{
+    SetTrackbarFromFloat(hWnd, trackbarId, static_cast<float>(value), static_cast<float>(minValue), static_cast<float>(maxValue));
+}
+
 BOOL CALLBACK CaptureRenderSettingsChildPlacementProc(HWND child, LPARAM lParam)
 {
     RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(lParam);
@@ -992,6 +1034,245 @@ void ApplyRenderSettingsChildPositions(HWND hWnd)
     RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN);
 }
 
+bool HandleRenderSettingsEditCommit(HWND hWnd, const int id)
+{
+    RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    Render* render = (state != nullptr) ? state->render : nullptr;
+    if (render == nullptr)
+    {
+        return false;
+    }
+
+    float floatValue = 0.0f;
+    int intValue = 0;
+    if (id >= 41100 && id <= 41107 && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    {
+        const int index = id - 41100;
+        if (index == 0)
+        {
+            render->SetLightBrightness(floatValue);
+            SetTrackbarFromFloat(hWnd, 31100, floatValue, 0.0f, 5.0f);
+        }
+        else if (index == 1)
+        {
+            render->SetAmbientLightBrightness(floatValue);
+            SetTrackbarFromFloat(hWnd, 31101, floatValue, 0.0f, 5.0f);
+        }
+        else if (index == 2)
+        {
+            render->SetMeshMixSaturateShadowIntensity(floatValue);
+            SetTrackbarFromFloat(hWnd, 31102, floatValue, 0.0f, 4.0f);
+        }
+        else if (index == 3)
+        {
+            render->SetMeshMixShadowDarkness(floatValue);
+            SetTrackbarFromFloat(hWnd, 31103, floatValue, 0.0f, 1.0f);
+        }
+        else if (index == 4)
+        {
+            render->SetMeshMixSpecularIntensity(floatValue);
+            SetTrackbarFromFloat(hWnd, 31104, floatValue, 0.0f, 1.0f);
+        }
+        else if (index == 5)
+        {
+            render->SetMeshMixSpecularEdge(floatValue);
+            SetTrackbarFromFloat(hWnd, 31105, floatValue, 0.0f, 1.0f);
+        }
+        else if (index == 6)
+        {
+            render->SetMeshMixEnvMapBlend(floatValue);
+            SetTrackbarFromFloat(hWnd, 31106, floatValue, 0.0f, 1.0f);
+        }
+        else if (index == 7)
+        {
+            render->SetMeshMixSSSIntensity(floatValue);
+            SetTrackbarFromFloat(hWnd, 31107, floatValue, 0.0f, 2.0f);
+        }
+        return true;
+    }
+
+    if (id == 41124 && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    {
+        render->SetMeshMixFresnelIntensity(floatValue);
+        SetTrackbarFromFloat(hWnd, 31124, floatValue, 0.0f, 1.0f);
+        return true;
+    }
+
+    if (id >= 41400 && id <= 41403 && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    {
+        if (id == 41400) state->pointLightColor.r = floatValue;
+        if (id == 41401) state->pointLightColor.g = floatValue;
+        if (id == 41402) state->pointLightColor.b = floatValue;
+        if (id == 41403) state->pointLightBrightness = floatValue;
+        SetTrackbarFromFloat(hWnd, id - 10000, floatValue, 0.0f, (id == 41403) ? 4.0f : 1.0f);
+        return true;
+    }
+
+    if (id >= 41500 && id <= 41505 && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    {
+        const int index = id - 41500;
+        if (index == 0) render->SetMeshPBRRoughness(floatValue);
+        if (index == 1) render->SetMeshPBRMetallic(floatValue);
+        if (index == 2) render->SetMeshPBREnvReflectionIntensity(floatValue);
+        if (index == 3) render->SetMeshPBREnvMaxMipLevel(floatValue);
+        if (index == 4) render->SetMeshPBREnvDiffuseIntensity(floatValue);
+        if (index == 5) render->SetMeshPBREnvDiffuseMipLevel(floatValue);
+        SetTrackbarFromFloat(hWnd, id - 10000, floatValue, 0.0f, (index == 3 || index == 5) ? 10.0f : 1.0f);
+        return true;
+    }
+
+    if (id >= 41600 && id <= 41602 && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    {
+        if (id == 41600) render->SetPostEffectDepthBufferShadowIntensity(floatValue);
+        if (id == 41601) render->SetPostEffectDepthBufferShadowSaturationBoost(floatValue);
+        if (id == 41602) render->SetPostEffectDepthBufferShadowCoverage(floatValue);
+        SetTrackbarFromFloat(hWnd, id - 10000, floatValue, 0.0f, 1.0f);
+        return true;
+    }
+
+    if (id == 41710 && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    {
+        render->SetPostEffectSSGIIndirectLightStrength(floatValue);
+        return true;
+    }
+    if (id == 41711 && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    {
+        render->SetPostEffectSSGIIndirectLightMaxContribution(floatValue);
+        return true;
+    }
+    if (id == 41701 && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    {
+        render->SetPostEffectSSGISampleRadius(floatValue);
+        SetTrackbarFromFloat(hWnd, 31701, floatValue, 0.1f, 10.0f);
+        return true;
+    }
+
+    if ((id == 41800 || id == 41803 || id == 41804) && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    {
+        if (id == 41800) render->SetPostEffectSSAOSampleRadius(floatValue);
+        if (id == 41803) render->SetPostEffectSSAOShadowStrength(floatValue);
+        if (id == 41804) render->SetPostEffectSSAOSaturationBoost(floatValue);
+        SetTrackbarFromFloat(hWnd, id - 10000, floatValue, (id == 41800) ? 0.1f : 0.0f, (id == 41800) ? 10.0f : 2.0f);
+        return true;
+    }
+
+    if (id >= 41900 && id <= 41903 && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    {
+        if (id == 41900)
+        {
+            render->SetPostEffectFogIntensity(floatValue);
+            SetTrackbarFromFloat(hWnd, 31900, floatValue, 0.0f, 2.0f);
+        }
+        else
+        {
+            if (id == 41901) state->fogColor.r = floatValue;
+            if (id == 41902) state->fogColor.g = floatValue;
+            if (id == 41903) state->fogColor.b = floatValue;
+            render->SetPostEffectFogColor(state->fogColor);
+            SetTrackbarFromFloat(hWnd, id - 10000, floatValue, 0.0f, 1.0f);
+        }
+        return true;
+    }
+
+    if (id >= 41920 && id <= 41924 && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    {
+        if (id == 41920) render->SetPostEffectHeightFogIntensity(floatValue);
+        if (id == 41921) render->SetPostEffectHeightFogStart(floatValue);
+        if (id == 41922) render->SetPostEffectHeightFogMax(floatValue);
+        if (id == 41923) render->SetPostEffectHeightFogDistanceStart(floatValue);
+        if (id == 41924) render->SetPostEffectHeightFogDistanceMax(floatValue);
+        if (id == 41920) SetTrackbarFromFloat(hWnd, 31920, floatValue, 0.0f, 2.0f);
+        if (id == 41921 || id == 41922) SetTrackbarFromFloat(hWnd, id - 10000, floatValue, -20.0f, 20.0f);
+        if (id == 41923 || id == 41924) SetTrackbarFromFloat(hWnd, id - 10000, floatValue, 0.0f, 100.0f);
+        return true;
+    }
+
+    if (id == 41940 && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    {
+        render->SetPostEffectSaturate(floatValue);
+        SetTrackbarFromFloat(hWnd, 31940, floatValue, 0.0f, 2.0f);
+        return true;
+    }
+
+    if (id >= 41950 && id <= 41953 && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    {
+        if (id == 41950) render->SetPostEffectDepthOfFieldFocalDistance(floatValue);
+        if (id == 41951) render->SetPostEffectDepthOfFieldMaxBlurDistance(floatValue);
+        if (id == 41952) render->SetPostEffectDepthOfFieldAutoActivationDistance(floatValue);
+        if (id == 41953) render->SetPostEffectDepthOfFieldStartNear(floatValue);
+        SetTrackbarFromFloat(hWnd, id - 10000, floatValue, 0.0f, (id == 41951) ? 32.0f : 20.0f);
+        return true;
+    }
+
+    if ((id >= 41970 && id <= 41972 || id >= 41980 && id <= 41981) && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    {
+        if (id == 41970) render->SetPostEffectBloomThreshold(floatValue);
+        if (id == 41971) render->SetPostEffectBloomWeightSum(floatValue);
+        if (id == 41972) render->SetPostEffectHaloThreshold(floatValue);
+        if (id == 41980) render->SetPostEffectStarBurstThreshold(floatValue);
+        if (id == 41981) render->SetPostEffectStarBurstDistanceFade(floatValue);
+        SetTrackbarFromFloat(hWnd, id - 10000, floatValue, 0.0f, (id == 41971) ? 4.0f : ((id == 41981) ? 1.0f : 5.0f));
+        return true;
+    }
+
+    if (id >= 42000 && id <= 42007 && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    {
+        if (id == 42000) state->godRayColor.x = floatValue;
+        if (id == 42001) state->godRayColor.y = floatValue;
+        if (id == 42002) state->godRayColor.z = floatValue;
+        if (id >= 42000 && id <= 42002) render->SetPostEffectGodRayLightColor(state->godRayColor);
+        if (id == 42003) render->SetPostEffectGodRayIntensity(floatValue);
+        if (id == 42004) render->SetPostEffectGodRayVirtualProximityStrength(floatValue);
+        if (id == 42005) state->godRayPos.x = floatValue;
+        if (id == 42006) state->godRayPos.y = floatValue;
+        if (id == 42007) state->godRayPos.z = floatValue;
+        if (id >= 42005 && id <= 42007) render->SetPostEffectGodRayLightPos(state->godRayPos);
+        if (id <= 42003) SetTrackbarFromFloat(hWnd, id - 10000, floatValue, 0.0f, 1.0f);
+        if (id == 42004) SetTrackbarFromFloat(hWnd, 32004, floatValue, 0.0f, 4.0f);
+        if (id >= 42005) SetTrackbarFromFloat(hWnd, id - 10000, floatValue, -2000.0f, 2000.0f);
+        return true;
+    }
+
+    if (id == 42021 && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    {
+        render->SetPostEffectGaussianStrength(floatValue);
+        SetTrackbarFromFloat(hWnd, 32021, floatValue, 0.0f, 1.0f);
+        return true;
+    }
+
+    if (id == 42101 && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    {
+        render->SetPostEffectTAAHistoryWeight(floatValue);
+        return true;
+    }
+    if (id == 42110 && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    {
+        render->SetPostEffectMotionBlurCameraMaxBlurPixels(floatValue);
+        SetTrackbarFromFloat(hWnd, 32110, floatValue, 1.0f, 64.0f);
+        return true;
+    }
+    if (id == 42111 && TryGetSettingsEditInt(hWnd, id, intValue))
+    {
+        render->SetPostEffectMotionBlurCameraSampleCount(intValue);
+        SetTrackbarFromInt(hWnd, 32111, intValue, 1, 32);
+        return true;
+    }
+    if (id == 42120 && TryGetSettingsEditInt(hWnd, id, intValue))
+    {
+        render->SetPostEffectFXAAQuality(intValue);
+        SetTrackbarFromInt(hWnd, 32120, intValue, 1, 8);
+        return true;
+    }
+    if (id == 42130 && TryGetSettingsEditInt(hWnd, id, intValue))
+    {
+        render->SetPostEffectFontSampleSize(intValue);
+        SetTrackbarFromInt(hWnd, 32130, intValue, 1, 31);
+        return true;
+    }
+
+    return false;
+}
+
 void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
 {
     RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
@@ -1003,6 +1284,11 @@ void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
 
     const int id = LOWORD(wParam);
     const int notifyCode = HIWORD(wParam);
+
+    if (notifyCode == EN_KILLFOCUS && HandleRenderSettingsEditCommit(hWnd, id))
+    {
+        return;
+    }
 
     if (notifyCode == BN_CLICKED)
     {
