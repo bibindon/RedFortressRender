@@ -36,9 +36,13 @@ struct RenderSettingsDialogState
     float cameraShakeIntensity = 0.12f;
     float gBufferNearPlane = 0.1f;
     float gBufferFarPlane = 30.0f;
+    float modelLoadScale = 1.0f;
     ParticleEffectPreset particleEffectPreset = ParticleEffectPreset::Smoke;
+    std::wstring meshMixPath;
     std::wstring pbrMeshPath;
     std::wstring pbrEnvMapPath;
+    std::wstring meshInstancingPath;
+    std::wstring meshMixSkinAnimPath;
     std::wstring maskedGaussianMaskPath;
     struct ChildPlacement
     {
@@ -488,20 +492,20 @@ void InitializeRenderSettingsControls(HWND hWnd, Render* render)
 
     y += 342;
     CreateSettingsStatic(hWnd, L"MeshMixManager (x)", 24, y + 5, 138, 18);
-    CreateSettingsEdit(hWnd, L"", 162, y, 124, 20);
-    CreateSettingsButton(hWnd, L"Open...", 298, y - 2, 42, 24);
+    CreateSettingsEdit(hWnd, L"", 162, y, 124, 20, 31310);
+    CreateSettingsButton(hWnd, L"Open...", 298, y - 2, 42, 24, 31311);
     CreateSettingsCheckbox(hWnd, 31300, L"HighQuality", 350, y, 104, 22);
 
     y += 28;
     CreateSettingsStatic(hWnd, L"Mesh Instancing (x)", 24, y + 5, 138, 18);
-    CreateSettingsEdit(hWnd, L"", 162, y, 124, 20);
-    CreateSettingsButton(hWnd, L"Open...", 298, y - 2, 42, 24);
+    CreateSettingsEdit(hWnd, L"", 162, y, 124, 20, 31320);
+    CreateSettingsButton(hWnd, L"Open...", 298, y - 2, 42, 24, 31321);
     CreateSettingsCheckbox(hWnd, 31301, L"HighQuality", 350, y, 104, 22);
 
     y += 28;
     CreateSettingsStatic(hWnd, L"MeshMix Skin Anim (x)", 24, y + 5, 138, 18);
-    CreateSettingsEdit(hWnd, L"", 162, y, 124, 20);
-    CreateSettingsButton(hWnd, L"Open...", 298, y - 2, 42, 24);
+    CreateSettingsEdit(hWnd, L"", 162, y, 124, 20, 31330);
+    CreateSettingsButton(hWnd, L"Open...", 298, y - 2, 42, 24, 31331);
     CreateSettingsButton(hWnd, L"Load XFileList...", 350, y - 2, 116, 24);
     CreateSettingsCheckbox(hWnd, 31302, L"Clip", 476, y, 52, 22);
 
@@ -1075,7 +1079,7 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, const int id)
 
     float floatValue = 0.0f;
     int intValue = 0;
-    if (id >= 41100 && id <= 41107 && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    if (id >= 41100 && id <= 41111 && TryGetSettingsEditFloat(hWnd, id, floatValue))
     {
         const int index = id - 41100;
         if (index == 0)
@@ -1117,6 +1121,11 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, const int id)
         {
             render->SetMeshMixSSSIntensity(floatValue);
             SetTrackbarFromFloat(hWnd, 31107, floatValue, 0.0f, 2.0f);
+        }
+        else if (index == 11)
+        {
+            state->modelLoadScale = floatValue;
+            SetTrackbarFromFloat(hWnd, 31111, floatValue, 0.01f, 10.0f);
         }
         return true;
     }
@@ -1435,6 +1444,14 @@ void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
         {
             render->SetMeshMixSpecularEdgeOverrideEnabled(IsSettingsCheckboxChecked(hWnd, id));
         }
+        else if (id == 31301)
+        {
+            render->SetMeshInstancingHighQuality(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == 31302)
+        {
+            render->SetMeshMixSkinAnimAlphaClip(IsSettingsCheckboxChecked(hWnd, id));
+        }
         else if (id == 31702)
         {
             render->SetPostEffectSSGIBlur(IsSettingsCheckboxChecked(hWnd, id));
@@ -1504,6 +1521,19 @@ void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
             render->SetCameraShakeIntensity(state->cameraShakeIntensity);
             render->TriggerCameraShake();
         }
+        else if (id == 31311)
+        {
+            if (ShowSettingsOpenFileDialog(hWnd,
+                                           L"Mix Mesh Files (*.x;*.blend.x)\0*.x;*.blend.x\0All Files (*.*)\0*.*\0",
+                                           state->meshMixPath))
+            {
+                SetDlgItemTextW(hWnd, 31310, state->meshMixPath.c_str());
+                render->AddMeshMix(state->meshMixPath,
+                                   render->GetLookAtPos(),
+                                   D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                                   state->modelLoadScale);
+            }
+        }
         else if (id == 32211)
         {
             if (ShowSettingsOpenFileDialog(hWnd,
@@ -1511,6 +1541,39 @@ void HandleRenderSettingsCommand(HWND hWnd, const WPARAM wParam)
                                            state->pbrMeshPath))
             {
                 SetDlgItemTextW(hWnd, 32210, state->pbrMeshPath.c_str());
+                render->AddMeshPBR(state->pbrMeshPath,
+                                   render->GetLookAtPos(),
+                                   D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                                   state->modelLoadScale,
+                                   -1.0f,
+                                   state->pbrEnvMapPath);
+            }
+        }
+        else if (id == 31321)
+        {
+            if (ShowSettingsOpenFileDialog(hWnd,
+                                           L"Mesh Instancing Files (*.x)\0*.x\0All Files (*.*)\0*.*\0",
+                                           state->meshInstancingPath))
+            {
+                SetDlgItemTextW(hWnd, 31320, state->meshInstancingPath.c_str());
+                render->AddMeshInstansing(state->meshInstancingPath,
+                                          render->GetLookAtPos(),
+                                          D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                                          state->modelLoadScale);
+            }
+        }
+        else if (id == 31331)
+        {
+            if (ShowSettingsOpenFileDialog(hWnd,
+                                           L"MeshMix Skin Anim Files (*.x)\0*.x\0All Files (*.*)\0*.*\0",
+                                           state->meshMixSkinAnimPath))
+            {
+                SetDlgItemTextW(hWnd, 31330, state->meshMixSkinAnimPath.c_str());
+                render->AddMeshMixSkinAnim(state->meshMixSkinAnimPath,
+                                           render->GetLookAtPos(),
+                                           D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                                           state->modelLoadScale,
+                                           AnimSetMap());
             }
         }
         else if (id == 32213)
@@ -1769,6 +1832,10 @@ void HandleRenderSettingsHScroll(HWND hWnd, const LPARAM lParam)
     case 31107:
         render->SetMeshMixSSSIntensity(SliderToFloat(pos, 0.0f, 2.0f));
         SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 2.0f));
+        break;
+    case 31111:
+        state->modelLoadScale = SliderToFloat(pos, 0.01f, 10.0f);
+        SetEditFloat(hWnd, trackbar, state->modelLoadScale, L"%.2f");
         break;
     case 31124:
         render->SetMeshMixFresnelIntensity(SliderToFloat(pos, 0.0f, 1.0f));
