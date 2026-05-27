@@ -172,6 +172,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance,
     ShowWindow(hWnd, SW_SHOWDEFAULT);
     UpdateWindow(hWnd);
     ShowSettingsDialog(hWnd, false);
+    g_Render.ShowSettingsDialog(false);
     ShowMouseCursor();
 
     MSG msg { };
