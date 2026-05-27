@@ -286,8 +286,10 @@ public:
     void SetCameraShakeIntensity(const float intensity);
     void TriggerCameraShake();
     void SetCameraClipPlanes(const float nearPlane, const float farPlane);
+    void SetCameraHorizontalFovDegrees(const float horizontalFovDegrees);
     float GetCameraNearPlane() const;
     float GetCameraFarPlane() const;
+    float GetCameraHorizontalFovDegrees() const;
     float GetCameraShakeDuration() const;
     float GetCameraShakeIntensity() const;
     void SetGBufferEnable(const bool enabled);

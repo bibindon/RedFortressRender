@@ -141,6 +141,13 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
             state->cameraFarPlane = floatValue;
             render->SetCameraClipPlanes(state->cameraNearPlane, state->cameraFarPlane);
         }
+        else if (id == 41003)
+        {
+            render->SetCameraHorizontalFovDegrees(floatValue);
+            state->cameraHorizontalFovDegrees = render->GetCameraHorizontalFovDegrees();
+            SetSettingsEditFloat(hWnd, 41003, state->cameraHorizontalFovDegrees, L"%.0f");
+            SetTrackbarFromFloat(hWnd, 31003, state->cameraHorizontalFovDegrees, 1.0f, 360.0f);
+        }
         else if (id == 41004)
         {
             state->cameraShakeDuration = floatValue;
@@ -869,6 +876,13 @@ void HandleRenderSettingsHScroll(HWND hWnd, LPARAM lParam)
     int id = GetDlgCtrlID(trackbar);
     switch (id)
     {
+    case 31003:
+        state->cameraHorizontalFovDegrees = TrackbarToFloat(trackbar, 1.0f, 360.0f);
+        render->SetCameraHorizontalFovDegrees(state->cameraHorizontalFovDegrees);
+        state->cameraHorizontalFovDegrees = render->GetCameraHorizontalFovDegrees();
+        SetEditFloat(hWnd, trackbar, state->cameraHorizontalFovDegrees, L"%.0f");
+        SetTrackbarFromFloat(hWnd, 31003, state->cameraHorizontalFovDegrees, 1.0f, 360.0f);
+        break;
     case 31004:
         state->cameraShakeDuration = TrackbarToFloat(trackbar, 0.1f, 5.0f);
         render->SetCameraShakeDuration(state->cameraShakeDuration);

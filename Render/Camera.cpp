@@ -7,12 +7,34 @@
 
 #include "Common.h"
 
+namespace
+{
+constexpr float CAMERA_ASPECT_RATIO = 1920.0f / 1080.0f;
+constexpr float CAMERA_DEFAULT_HORIZONTAL_FOV_DEGREES = 90.0f;
+constexpr float CAMERA_MIN_HORIZONTAL_FOV_DEGREES = 1.0f;
+constexpr float CAMERA_MAX_HORIZONTAL_FOV_DEGREES = 179.0f;
+
+float ClampHorizontalFovDegrees(const float horizontalFovDegrees)
+{
+    return (std::max)(CAMERA_MIN_HORIZONTAL_FOV_DEGREES,
+                      (std::min)(CAMERA_MAX_HORIZONTAL_FOV_DEGREES, horizontalFovDegrees));
+}
+
+float HorizontalFovDegreesToVerticalAngle(const float horizontalFovDegrees)
+{
+    const float clampedHorizontalFov = ClampHorizontalFovDegrees(horizontalFovDegrees);
+    const float horizontalFovRadians = clampedHorizontalFov * D3DX_PI / 180.0f;
+    return 2.0f * std::atan(std::tan(horizontalFovRadians * 0.5f) / CAMERA_ASPECT_RATIO);
+}
+}
+
 const D3DXVECTOR3 NSRender::Camera::UPWARD (0.0f, 1.0f, 0.0f);
 
 // m_eyePosに何をセットしても視点は変わらない。視点はm_radianによって決まる。
 D3DXVECTOR3 NSRender::Camera::m_eyePos(0.f, 1.f, -2.f);
 D3DXVECTOR3 NSRender::Camera::m_lookAtPos(0.0f, 0.0f, 0.0f);
-float NSRender::Camera::m_viewAngle = (D3DX_PI / 4);
+float NSRender::Camera::m_horizontalFovDegrees = CAMERA_DEFAULT_HORIZONTAL_FOV_DEGREES;
+float NSRender::Camera::m_viewAngle = HorizontalFovDegreesToVerticalAngle(m_horizontalFovDegrees);
 float NSRender::Camera::m_nearPlane = 0.1f;
 float NSRender::Camera::m_farPlane = 30'000.0f;
 float NSRender::Camera::m_projectionJitterX = 0.0f;
@@ -49,7 +71,7 @@ D3DXMATRIX NSRender::Camera::GetProjMatrix()
     D3DXMATRIX projection_matrix { };
     D3DXMatrixPerspectiveFovLH(&projection_matrix,
                                m_viewAngle,
-                               static_cast<float>(1920) / 1080, /* TODO */
+                               CAMERA_ASPECT_RATIO,
                                m_nearPlane,
                                m_farPlane);
     projection_matrix._31 += m_projectionJitterX;
@@ -218,6 +240,17 @@ float NSRender::Camera::GetNear()
 float NSRender::Camera::GetFar()
 {
     return m_farPlane;
+}
+
+void NSRender::Camera::SetHorizontalFovDegrees(const float horizontalFovDegrees)
+{
+    m_horizontalFovDegrees = ClampHorizontalFovDegrees(horizontalFovDegrees);
+    m_viewAngle = HorizontalFovDegreesToVerticalAngle(m_horizontalFovDegrees);
+}
+
+float NSRender::Camera::GetHorizontalFovDegrees()
+{
+    return m_horizontalFovDegrees;
 }
 
 void NSRender::Camera::SetProjectionJitter(const float jitterX, const float jitterY)

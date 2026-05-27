@@ -43,6 +43,8 @@ public:
     static void SetClipPlanes(const float nearPlane, const float farPlane);
     static float GetNear();
     static float GetFar();
+    static void SetHorizontalFovDegrees(const float horizontalFovDegrees);
+    static float GetHorizontalFovDegrees();
     static void SetProjectionJitter(const float jitterX, const float jitterY);
     static void SetShakeDuration(const float durationSeconds);
     static void SetShakeIntensity(const float intensity);
@@ -55,6 +57,7 @@ private:
     const static D3DXVECTOR3 UPWARD;
     static D3DXVECTOR3 m_eyePos;
     static D3DXVECTOR3 m_lookAtPos;
+    static float m_horizontalFovDegrees;
     static float m_viewAngle;
     static float m_nearPlane;
     static float m_farPlane;

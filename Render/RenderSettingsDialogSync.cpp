@@ -49,6 +49,7 @@ void SyncRenderSettingsDialogFromRender(HWND hWnd)
     SetSettingsCheckbox(hWnd, 31011, dofMode == DepthOfFieldMode::AutoNear);
     state->cameraNearPlane = render->GetCameraNearPlane();
     state->cameraFarPlane = render->GetCameraFarPlane();
+    state->cameraHorizontalFovDegrees = render->GetCameraHorizontalFovDegrees();
     state->cameraShakeDuration = render->GetCameraShakeDuration();
     state->cameraShakeIntensity = render->GetCameraShakeIntensity();
     state->gBufferNearPlane = render->GetGBufferNearPlane();
@@ -60,8 +61,10 @@ void SyncRenderSettingsDialogFromRender(HWND hWnd)
     state->godRayPos = render->GetPostEffectGodRayLightPos();
     SetSettingsEditFloat(hWnd, 41000, state->cameraNearPlane, L"%.3f");
     SetSettingsEditFloat(hWnd, 41001, state->cameraFarPlane, L"%.1f");
+    SetSettingsEditFloat(hWnd, 41003, state->cameraHorizontalFovDegrees, L"%.0f");
     SetSettingsEditFloat(hWnd, 41004, state->cameraShakeDuration, L"%.1f");
     SetSettingsEditFloat(hWnd, 41005, state->cameraShakeIntensity, L"%.2f");
+    SetTrackbarFromFloat(hWnd, 31003, state->cameraHorizontalFovDegrees, 1.0f, 360.0f);
     SetTrackbarFromFloat(hWnd, 31004, state->cameraShakeDuration, 0.1f, 5.0f);
     SetTrackbarFromFloat(hWnd, 31005, state->cameraShakeIntensity, 0.0f, 1.0f);
     SetSettingsEditFloat(hWnd, 41010, state->gBufferNearPlane, L"%.3f");

@@ -221,6 +221,18 @@ void Render::ApplySettings()
 {
     const auto cameraNear = m_settings.find(L"CameraNear");
     const auto cameraFar = m_settings.find(L"CameraFar");
+    const auto cameraHorizontalFov = m_settings.find(L"CameraHorizontalFov");
+    if (cameraHorizontalFov != m_settings.end())
+    {
+        try
+        {
+            SetCameraHorizontalFovDegrees(std::stof(cameraHorizontalFov->second));
+        }
+        catch (...)
+        {
+        }
+    }
+
     if (cameraNear != m_settings.end() || cameraFar != m_settings.end())
     {
         float nearPlane = Camera::GetNear();
@@ -2715,6 +2727,11 @@ void Render::SetCameraClipPlanes(const float nearPlane, const float farPlane)
     m_postEffectGodRay.SetDepthRange(nearPlane, farPlane);
 }
 
+void Render::SetCameraHorizontalFovDegrees(const float horizontalFovDegrees)
+{
+    Camera::SetHorizontalFovDegrees(horizontalFovDegrees);
+}
+
 void Render::SetGBufferEnable(const bool enabled)
 {
     m_gBufferEnabled = enabled;
@@ -2745,6 +2762,11 @@ float Render::GetCameraNearPlane() const
 float Render::GetCameraFarPlane() const
 {
     return Camera::GetFar();
+}
+
+float Render::GetCameraHorizontalFovDegrees() const
+{
+    return Camera::GetHorizontalFovDegrees();
 }
 
 float Render::GetCameraShakeDuration() const
