@@ -2485,6 +2485,7 @@ void Render::SetMeshPBREnvDiffuseMipLevel(const float mipLevel)
 
 bool Render::SetMeshPBREnvMapTexturePath(const std::wstring& envMapTexturePath)
 {
+    m_pbrEnvMapPath = envMapTexturePath;
     bool allSucceeded = true;
     for (auto& mesh : m_meshPBRList)
     {
@@ -2580,6 +2581,26 @@ void Render::SetMeshMixSSSColor(const DWORD color)
     }
 }
 
+bool Render::IsMeshMixSSSEnabled() const { return m_meshMixSSSEnabled; }
+float Render::GetMeshMixSSSIntensity() const { return m_meshMixSSSIntensity; }
+float Render::GetMeshMixSaturateShadowIntensity() const { return m_meshMixSaturateShadowIntensity; }
+float Render::GetMeshMixShadowDarkness() const { return m_meshMixShadowDarkness; }
+float Render::GetMeshMixSpecularIntensity() const { return m_meshMixSpecularIntensity; }
+float Render::GetMeshMixSpecularEdge() const { return m_meshMixSpecularEdge; }
+float Render::GetMeshMixFresnelIntensity() const { return m_meshMixFresnelIntensity; }
+float Render::GetMeshMixEnvMapBlend() const { return m_meshMixCubeMappingRate; }
+bool Render::IsMeshMixSpecularIntensityOverrideEnabled() const { return m_meshMixSpecularIntensityOverrideEnabled; }
+bool Render::IsMeshMixSpecularEdgeOverrideEnabled() const { return m_meshMixSpecularEdgeOverrideEnabled; }
+bool Render::IsPhongTreatTextureAsWhiteEnabled() const { return m_phongTreatTextureAsWhiteEnabled; }
+bool Render::IsMeshMixSkinAnimAlphaClipEnabled() const { return m_meshMixSkinAnimAlphaClipEnabled; }
+float Render::GetMeshPBRRoughness() const { return m_meshPBRRoughness; }
+float Render::GetMeshPBRMetallic() const { return m_meshPBRMetallic; }
+float Render::GetMeshPBREnvReflectionIntensity() const { return m_meshPBREnvReflectionIntensity; }
+float Render::GetMeshPBREnvMaxMipLevel() const { return m_meshPBREnvMaxMipLevel; }
+float Render::GetMeshPBREnvDiffuseIntensity() const { return m_meshPBREnvDiffuseIntensity; }
+float Render::GetMeshPBREnvDiffuseMipLevel() const { return m_meshPBREnvDiffuseMipLevel; }
+std::wstring Render::GetMeshPBREnvMapTexturePath() const { return m_pbrEnvMapPath; }
+
 void Render::SetCamera(const D3DXVECTOR3& pos, const D3DXVECTOR3& lookAt)
 {
     Camera::SetEyePos(pos);
@@ -2597,11 +2618,13 @@ void Render::MoveCamera(const D3DXVECTOR3& pos)
 
 void Render::SetCameraShakeDuration(const float durationSeconds)
 {
+    m_cameraShakeDurationSeconds = durationSeconds;
     Camera::SetShakeDuration(durationSeconds);
 }
 
 void Render::SetCameraShakeIntensity(const float intensity)
 {
+    m_cameraShakeIntensity = intensity;
     Camera::SetShakeIntensity(intensity);
 }
 
@@ -2633,11 +2656,48 @@ void Render::SetGBufferEnable(const bool enabled)
 
 void Render::SetGBufferClipPlanes(const float nearPlane, const float farPlane)
 {
+    m_gBufferNearPlane = nearPlane;
+    m_gBufferFarPlane = farPlane;
     const float positionRange = GBuffer::ComputePositionRange(nearPlane, farPlane);
     m_GBuffer.SetDepthRange(nearPlane, farPlane);
     m_postEffectSSGI.SetDepthRange(nearPlane, farPlane);
     m_postEffectSSAO.SetDepthRange(nearPlane, farPlane);
     m_postEffectDepthOfField.SetPositionRange(positionRange);
+}
+
+float Render::GetCameraNearPlane() const
+{
+    return Camera::GetNear();
+}
+
+float Render::GetCameraFarPlane() const
+{
+    return Camera::GetFar();
+}
+
+float Render::GetCameraShakeDuration() const
+{
+    return m_cameraShakeDurationSeconds;
+}
+
+float Render::GetCameraShakeIntensity() const
+{
+    return m_cameraShakeIntensity;
+}
+
+bool Render::IsGBufferEnabled() const
+{
+    return m_gBufferEnabled;
+}
+
+float Render::GetGBufferNearPlane() const
+{
+    return m_gBufferNearPlane;
+}
+
+float Render::GetGBufferFarPlane() const
+{
+    return m_gBufferFarPlane;
 }
 
 RenderingQualitySettings Render::SetRenderQuality(const std::wstring& quality)
@@ -2714,6 +2774,11 @@ RenderingQualitySettings Render::SetRenderQuality(const std::wstring& quality)
 
     m_renderingQualitySettings = settings;
     return m_renderingQualitySettings;
+}
+
+std::wstring Render::GetRenderQuality() const
+{
+    return m_renderingQualitySettings.quality;
 }
 
 void Render::EnsureGBufferInitialized()
@@ -2862,6 +2927,7 @@ void Render::DrawImage(const std::wstring& text,
 
 void Render::SetPostEffectSaturate(const float level)
 {
+    m_postEffectSaturateLevel = level;
     m_postEffectSaturate.SetPostEffectSaturate(level);
     if (m_postEffectSaturateEnabled)
     {
@@ -3049,33 +3115,63 @@ void Render::SetPostEffectDepthBufferShadow(const bool arg)
 
 void Render::SetPostEffectDepthBufferShadowIntensity(const float intensity)
 {
+    m_postEffectDepthBufferShadowIntensity = intensity;
     m_postEffectZShadow.SetShadowIntensity(intensity);
 }
 
 void Render::SetPostEffectDepthBufferShadowSaturationBoost(const float saturationBoost)
 {
+    m_postEffectDepthBufferShadowSaturationBoost = saturationBoost;
     m_postEffectZShadow.SetShadowSaturationBoost(saturationBoost);
 }
 
 void Render::SetPostEffectDepthBufferShadowCoverage(const float coverage)
 {
+    m_postEffectDepthBufferShadowCoverage = coverage;
     m_postEffectZShadow.SetCoverage(coverage);
 }
 
 void Render::SetPostEffectDepthBufferShadowPcfTapCount(const int tapCount)
 {
+    m_postEffectDepthBufferShadowPcfTapCount = tapCount;
     m_postEffectZShadow.SetPcfTapCount(tapCount);
 }
 
 void Render::SetPostEffectDepthBufferShadowCompositeTapCount(const int tapCount)
 {
+    m_postEffectDepthBufferShadowCompositeTapCount = tapCount;
     m_postEffectZShadow.SetCompositeTapCount(tapCount);
 }
 
 void Render::SetPostEffectDepthBufferShadowTexSizeDivisor(const int scaleDivisor)
 {
+    m_postEffectDepthBufferShadowTexSizeDivisor = scaleDivisor;
     m_postEffectZShadow.SetShadowTextureScaleDivisor(scaleDivisor);
 }
+
+float Render::GetPostEffectSaturate() const { return m_postEffectSaturateLevel; }
+bool Render::IsPostEffectSaturateEnabled() const { return m_postEffectSaturateEnabled; }
+bool Render::IsPostEffectGaussianFilterEnabled() const { return m_postEffectGaussEnabled; }
+int Render::GetPostEffectGaussianSampleSize() const { return m_gaussianSampleSize; }
+float Render::GetPostEffectGaussianStrength() const { return m_gaussianStrength; }
+int Render::GetPostEffectFontSampleSize() const { return m_fontExGaussianSampleSize; }
+bool Render::IsPostEffectMaskedGaussianFilterEnabled() const { return m_postEffectMaskedGaussEnabled; }
+std::wstring Render::GetPostEffectMaskedGaussianMaskPath() const { return m_maskedGaussianMaskPath; }
+bool Render::IsPostEffectAAEnabled() const { return m_postEffectAAEnabled; }
+bool Render::IsPostEffectFXAAEnabled() const { return m_postEffectFXAAEnabled; }
+int Render::GetPostEffectFXAAQuality() const { return m_fxaaQuality; }
+bool Render::IsPostEffectTAAEnabled() const { return m_postEffectTAAEnabled; }
+float Render::GetPostEffectTAAHistoryWeight() const { return m_taaHistoryWeight; }
+bool Render::IsPostEffectMotionBlurCameraEnabled() const { return m_postEffectMotionBlurCameraEnabled; }
+float Render::GetPostEffectMotionBlurCameraMaxBlurPixels() const { return m_motionBlurCameraMaxBlurPixels; }
+int Render::GetPostEffectMotionBlurCameraSampleCount() const { return m_motionBlurCameraSampleCount; }
+bool Render::IsPostEffectDepthBufferShadowEnabled() const { return m_postEffectZShadowEnabled; }
+float Render::GetPostEffectDepthBufferShadowIntensity() const { return m_postEffectDepthBufferShadowIntensity; }
+float Render::GetPostEffectDepthBufferShadowSaturationBoost() const { return m_postEffectDepthBufferShadowSaturationBoost; }
+float Render::GetPostEffectDepthBufferShadowCoverage() const { return m_postEffectDepthBufferShadowCoverage; }
+int Render::GetPostEffectDepthBufferShadowPcfTapCount() const { return m_postEffectDepthBufferShadowPcfTapCount; }
+int Render::GetPostEffectDepthBufferShadowCompositeTapCount() const { return m_postEffectDepthBufferShadowCompositeTapCount; }
+int Render::GetPostEffectDepthBufferShadowTexSizeDivisor() const { return m_postEffectDepthBufferShadowTexSizeDivisor; }
 
 void Render::EnsurePostEffectSaturateInitialized()
 {
@@ -3223,62 +3319,74 @@ void Render::SetPostEffectSSAO(const bool arg)
 
 void Render::SetPostEffectSSAOBlur(const bool arg)
 {
+    m_postEffectSSAOBlurEnabled = arg;
     m_postEffectSSAO.SetBlurEnabled(arg);
 }
 
 void Render::SetPostEffectSSAOSeparableBlur(const bool enabled)
 {
+    m_postEffectSSAOSeparableBlurEnabled = enabled;
     m_postEffectSSAO.SetSeparableBlurEnabled(enabled);
 }
 
 void Render::SetPostEffectSSAOShadowStrength(const float shadowStrength)
 {
+    m_postEffectSSAOShadowStrength = shadowStrength;
     m_postEffectSSAO.SetShadowStrength(shadowStrength);
 }
 
 void Render::SetPostEffectSSAOSaturationBoost(const float saturationBoost)
 {
+    m_postEffectSSAOSaturationBoost = saturationBoost;
     m_postEffectSSAO.SetSaturationBoost(saturationBoost);
 }
 
 void Render::SetPostEffectSSAOSampleCount(const int sampleCount)
 {
     const int normalizedSampleCount = (std::max)(1, (std::min)(sampleCount, 64));
+    m_postEffectSSAOSampleCount = normalizedSampleCount;
     m_postEffectSSAO.SetSampleCount(normalizedSampleCount);
 }
 
 void Render::SetPostEffectSSAORandomSamplingDirection(const bool enabled)
 {
+    m_postEffectSSAORandomSamplingDirectionEnabled = enabled;
     m_postEffectSSAO.SetRandomSamplingDirectionEnabled(enabled);
 }
 
 void Render::SetPostEffectSSAODepthScaledSampleDistance(const bool enabled)
 {
+    m_postEffectSSAODepthScaledSampleDistanceEnabled = enabled;
     m_postEffectSSAO.SetDepthScaledSampleDistanceEnabled(enabled);
 }
 
 void Render::SetPostEffectSSAOSampleRadius(const float sampleRadius)
 {
+    m_postEffectSSAOSampleRadius = sampleRadius;
     m_postEffectSSAO.SetSampleRadius(sampleRadius);
 }
 
 void Render::SetPostEffectSSAOBlurKernelSize(const int kernelSize)
 {
+    m_postEffectSSAOBlurKernelSize = kernelSize;
     m_postEffectSSAO.SetBlurKernelSize(kernelSize);
 }
 
 void Render::SetPostEffectSSAOTexSizeDivisor(const int scaleDivisor)
 {
+    m_postEffectSSAOTexSizeDivisor = scaleDivisor;
     m_postEffectSSAO.SetTextureScaleDivisor(scaleDivisor);
 }
 
 void Render::SetPostEffectSSAOCompositeGaussian3x3(const bool enabled)
 {
+    m_postEffectSSAOCompositeGaussian3x3Enabled = enabled;
     m_postEffectSSAO.SetCompositeGaussian3x3Enabled(enabled);
 }
 
 void Render::SetPostEffectSSAOMaxDarknessClamp(const bool enabled)
 {
+    m_postEffectSSAOMaxDarknessClampEnabled = enabled;
     m_postEffectSSAO.SetMaxDarknessClampEnabled(enabled);
 }
 
@@ -3297,52 +3405,62 @@ void Render::SetPostEffectSSGI(const bool arg)
 
 void Render::SetPostEffectSSGIBlur(const bool arg)
 {
+    m_postEffectSSGIBlurEnabled = arg;
     m_postEffectSSGI.SetBlurEnabled(arg);
 }
 
 void Render::SetPostEffectSSGISeparableBlur(const bool enabled)
 {
+    m_postEffectSSGISeparableBlurEnabled = enabled;
     m_postEffectSSGI.SetSeparableBlurEnabled(enabled);
 }
 
 void Render::SetPostEffectSSGISampleCount(const int sampleCount)
 {
     const int normalizedSampleCount = (std::max)(1, (std::min)(sampleCount, 64));
+    m_postEffectSSGISampleCount = normalizedSampleCount;
     m_postEffectSSGI.SetSampleCount(normalizedSampleCount);
 }
 
 void Render::SetPostEffectSSGIDepthScaledSampleDistance(const bool enabled)
 {
+    m_postEffectSSGIDepthScaledSampleDistanceEnabled = enabled;
     m_postEffectSSGI.SetDepthScaledSampleDistanceEnabled(enabled);
 }
 
 void Render::SetPostEffectSSGISampleRadius(const float sampleRadius)
 {
+    m_postEffectSSGISampleRadius = sampleRadius;
     m_postEffectSSGI.SetSampleRadius(sampleRadius);
 }
 
 void Render::SetPostEffectSSGIBlurKernelSize(const int kernelSize)
 {
+    m_postEffectSSGIBlurKernelSize = kernelSize;
     m_postEffectSSGI.SetBlurKernelSize(kernelSize);
 }
 
 void Render::SetPostEffectSSGITexSizeDivisor(const int scaleDivisor)
 {
+    m_postEffectSSGITexSizeDivisor = scaleDivisor;
     m_postEffectSSGI.SetTextureScaleDivisor(scaleDivisor);
 }
 
 void Render::SetPostEffectSSGIIndirectLightStrength(const float strength)
 {
+    m_postEffectSSGIIndirectLightStrength = strength;
     m_postEffectSSGI.SetIndirectLightStrength(strength);
 }
 
 void Render::SetPostEffectSSGIIndirectLightMaxContribution(const float maxContribution)
 {
+    m_postEffectSSGIIndirectLightMaxContribution = maxContribution;
     m_postEffectSSGI.SetIndirectLightMaxContribution(maxContribution);
 }
 
 void Render::SetPostEffectSSGIUseThickness(const bool enabled)
 {
+    m_postEffectSSGIUseThicknessEnabled = enabled;
     m_postEffectSSGI.SetUseThicknessEnabled(enabled);
 }
 
@@ -3361,11 +3479,13 @@ void Render::SetPostEffectFog(const bool arg)
 
 void Render::SetPostEffectFogIntensity(const float intensity)
 {
+    m_postEffectFogIntensity = intensity;
     m_postEffectFog.SetIntensityZ(intensity);
 }
 
 void Render::SetPostEffectFogColor(const D3DXCOLOR& color)
 {
+    m_postEffectFogColor = color;
     m_postEffectFog.SetFogColor(color);
     m_postEffectHeightFog.SetFogColor(color);
 }
@@ -3385,26 +3505,31 @@ void Render::SetPostEffectHeightFog(const bool arg)
 
 void Render::SetPostEffectHeightFogIntensity(const float intensity)
 {
+    m_postEffectHeightFogIntensity = intensity;
     m_postEffectHeightFog.SetIntensity(intensity);
 }
 
 void Render::SetPostEffectHeightFogStart(const float start)
 {
+    m_postEffectHeightFogStart = start;
     m_postEffectHeightFog.SetStartHeight(start);
 }
 
 void Render::SetPostEffectHeightFogMax(const float maxHeight)
 {
+    m_postEffectHeightFogMax = maxHeight;
     m_postEffectHeightFog.SetMaxHeight(maxHeight);
 }
 
 void Render::SetPostEffectHeightFogDistanceStart(const float distanceStart)
 {
+    m_postEffectHeightFogDistanceStart = distanceStart;
     m_postEffectHeightFog.SetDistanceStart(distanceStart);
 }
 
 void Render::SetPostEffectHeightFogDistanceMax(const float distanceMax)
 {
+    m_postEffectHeightFogDistanceMax = distanceMax;
     m_postEffectHeightFog.SetDistanceMax(distanceMax);
 }
 
@@ -3438,11 +3563,13 @@ void Render::SetPostEffectBloom(const bool arg)
 
 void Render::SetPostEffectBloomThreshold(const float threshold)
 {
+    m_postEffectBloomThreshold = threshold;
     m_PostEffectBloom.SetThreshold(threshold);
 }
 
 void Render::SetPostEffectBloomWeightSum(const float weightSum)
 {
+    m_postEffectBloomWeightSum = weightSum;
     m_PostEffectBloom.SetWeightSum(weightSum);
 }
 
@@ -3461,6 +3588,7 @@ void Render::SetPostEffectHalo(const bool arg)
 
 void Render::SetPostEffectHaloThreshold(const float threshold)
 {
+    m_postEffectHaloThreshold = threshold;
     m_postEffectHalo.SetThreshold(threshold);
 }
 
@@ -3496,21 +3624,25 @@ void Render::SetPostEffectDepthOfFieldMode(const DepthOfFieldMode mode)
 
 void Render::SetPostEffectDepthOfFieldFocalDistance(const float distance)
 {
+    m_postEffectDepthOfFieldFocalDistance = distance;
     m_postEffectDepthOfField.SetFocalDistance(distance);
 }
 
 void Render::SetPostEffectDepthOfFieldStartNear(const float distance)
 {
+    m_postEffectDepthOfFieldStartNear = distance;
     m_postEffectDepthOfField.SetStartNear(distance);
 }
 
 void Render::SetPostEffectDepthOfFieldMaxBlurDistance(const float distance)
 {
+    m_postEffectDepthOfFieldMaxBlurDistance = distance;
     m_postEffectDepthOfField.SetMaxBlurDistance(distance);
 }
 
 void Render::SetPostEffectDepthOfFieldAutoActivationDistance(const float distance)
 {
+    m_postEffectDepthOfFieldAutoActivationDistance = distance;
     m_postEffectDepthOfField.SetAutoActivationDistance(distance);
 }
 
@@ -3529,11 +3661,13 @@ void Render::SetPostEffectStarBurst(const bool arg)
 
 void Render::SetPostEffectStarBurstThreshold(const float threshold)
 {
+    m_postEffectStarBurstThreshold = threshold;
     m_postEffectStarBurst.SetThreshold(threshold);
 }
 
 void Render::SetPostEffectStarBurstDistanceFade(const float fade)
 {
+    m_postEffectStarBurstDistanceFade = fade;
     m_postEffectStarBurst.SetDistanceFade(fade);
 }
 
@@ -3552,6 +3686,7 @@ void Render::SetPostEffectGodRay(const bool arg)
 
 void Render::SetPostEffectGodRayLightPos(const D3DXVECTOR3& pos)
 {
+    m_postEffectGodRayLightPos = pos;
     m_postEffectGodRay.SetLightPos(pos);
 }
 
@@ -3567,11 +3702,13 @@ void Render::SetPostEffectGodRayRayLength(const float arg)
 
 void Render::SetPostEffectGodRayIntensity(const float arg)
 {
+    m_postEffectGodRayIntensity = arg;
     m_postEffectGodRay.SetRayIntensity(arg);
 }
 
 void Render::SetPostEffectGodRayVirtualProximityStrength(const float arg)
 {
+    m_postEffectGodRayVirtualProximityStrength = arg;
     m_postEffectGodRay.SetVirtualProximityStrength(arg);
 }
 
@@ -3582,6 +3719,7 @@ void Render::SetPostEffectGodRayOcclusionFalloff(const float arg)
 
 void Render::SetPostEffectGodRayLightColor(const D3DXVECTOR3& color)
 {
+    m_postEffectGodRayLightColor = color;
     m_postEffectGodRay.SetLightColor(color);
 }
 
@@ -3589,6 +3727,59 @@ void Render::SetDebugGBufferView(const DebugGBufferView view)
 {
     m_debugGBufferView = view;
 }
+
+bool Render::IsPostEffectSSAOEnabled() const { return m_postEffectSSAOEnabled; }
+bool Render::IsPostEffectSSAOBlurEnabled() const { return m_postEffectSSAOBlurEnabled; }
+bool Render::IsPostEffectSSAOSeparableBlurEnabled() const { return m_postEffectSSAOSeparableBlurEnabled; }
+float Render::GetPostEffectSSAOShadowStrength() const { return m_postEffectSSAOShadowStrength; }
+float Render::GetPostEffectSSAOSaturationBoost() const { return m_postEffectSSAOSaturationBoost; }
+int Render::GetPostEffectSSAOSampleCount() const { return m_postEffectSSAOSampleCount; }
+bool Render::IsPostEffectSSAORandomSamplingDirectionEnabled() const { return m_postEffectSSAORandomSamplingDirectionEnabled; }
+bool Render::IsPostEffectSSAODepthScaledSampleDistanceEnabled() const { return m_postEffectSSAODepthScaledSampleDistanceEnabled; }
+float Render::GetPostEffectSSAOSampleRadius() const { return m_postEffectSSAOSampleRadius; }
+int Render::GetPostEffectSSAOBlurKernelSize() const { return m_postEffectSSAOBlurKernelSize; }
+int Render::GetPostEffectSSAOTexSizeDivisor() const { return m_postEffectSSAOTexSizeDivisor; }
+bool Render::IsPostEffectSSAOCompositeGaussian3x3Enabled() const { return m_postEffectSSAOCompositeGaussian3x3Enabled; }
+bool Render::IsPostEffectSSAOMaxDarknessClampEnabled() const { return m_postEffectSSAOMaxDarknessClampEnabled; }
+bool Render::IsPostEffectSSGIEnabled() const { return m_postEffectSSGIEnabled; }
+bool Render::IsPostEffectSSGIBlurEnabled() const { return m_postEffectSSGIBlurEnabled; }
+bool Render::IsPostEffectSSGISeparableBlurEnabled() const { return m_postEffectSSGISeparableBlurEnabled; }
+int Render::GetPostEffectSSGISampleCount() const { return m_postEffectSSGISampleCount; }
+bool Render::IsPostEffectSSGIDepthScaledSampleDistanceEnabled() const { return m_postEffectSSGIDepthScaledSampleDistanceEnabled; }
+float Render::GetPostEffectSSGISampleRadius() const { return m_postEffectSSGISampleRadius; }
+int Render::GetPostEffectSSGIBlurKernelSize() const { return m_postEffectSSGIBlurKernelSize; }
+int Render::GetPostEffectSSGITexSizeDivisor() const { return m_postEffectSSGITexSizeDivisor; }
+float Render::GetPostEffectSSGIIndirectLightStrength() const { return m_postEffectSSGIIndirectLightStrength; }
+float Render::GetPostEffectSSGIIndirectLightMaxContribution() const { return m_postEffectSSGIIndirectLightMaxContribution; }
+bool Render::IsPostEffectSSGIUseThicknessEnabled() const { return m_postEffectSSGIUseThicknessEnabled; }
+bool Render::IsPostEffectFogEnabled() const { return m_postEffectFogZEnabled; }
+float Render::GetPostEffectFogIntensity() const { return m_postEffectFogIntensity; }
+D3DXCOLOR Render::GetPostEffectFogColor() const { return m_postEffectFogColor; }
+bool Render::IsPostEffectHeightFogEnabled() const { return m_postEffectFogHeightEnabled; }
+float Render::GetPostEffectHeightFogIntensity() const { return m_postEffectHeightFogIntensity; }
+float Render::GetPostEffectHeightFogStart() const { return m_postEffectHeightFogStart; }
+float Render::GetPostEffectHeightFogMax() const { return m_postEffectHeightFogMax; }
+float Render::GetPostEffectHeightFogDistanceStart() const { return m_postEffectHeightFogDistanceStart; }
+float Render::GetPostEffectHeightFogDistanceMax() const { return m_postEffectHeightFogDistanceMax; }
+bool Render::IsPostEffectBloomEnabled() const { return m_postEffectBloomEnabled; }
+float Render::GetPostEffectBloomThreshold() const { return m_postEffectBloomThreshold; }
+float Render::GetPostEffectBloomWeightSum() const { return m_postEffectBloomWeightSum; }
+bool Render::IsPostEffectHaloEnabled() const { return m_postEffectHaloEnabled; }
+float Render::GetPostEffectHaloThreshold() const { return m_postEffectHaloThreshold; }
+DepthOfFieldMode Render::GetPostEffectDepthOfFieldMode() const { return m_postEffectDepthOfFieldMode; }
+float Render::GetPostEffectDepthOfFieldFocalDistance() const { return m_postEffectDepthOfFieldFocalDistance; }
+float Render::GetPostEffectDepthOfFieldStartNear() const { return m_postEffectDepthOfFieldStartNear; }
+float Render::GetPostEffectDepthOfFieldMaxBlurDistance() const { return m_postEffectDepthOfFieldMaxBlurDistance; }
+float Render::GetPostEffectDepthOfFieldAutoActivationDistance() const { return m_postEffectDepthOfFieldAutoActivationDistance; }
+bool Render::IsPostEffectStarBurstEnabled() const { return m_postEffectStarBurstEnabled; }
+float Render::GetPostEffectStarBurstThreshold() const { return m_postEffectStarBurstThreshold; }
+float Render::GetPostEffectStarBurstDistanceFade() const { return m_postEffectStarBurstDistanceFade; }
+bool Render::IsPostEffectGodRayEnabled() const { return m_postEffectGodRayEnabled; }
+D3DXVECTOR3 Render::GetPostEffectGodRayLightPos() const { return m_postEffectGodRayLightPos; }
+float Render::GetPostEffectGodRayIntensity() const { return m_postEffectGodRayIntensity; }
+float Render::GetPostEffectGodRayVirtualProximityStrength() const { return m_postEffectGodRayVirtualProximityStrength; }
+D3DXVECTOR3 Render::GetPostEffectGodRayLightColor() const { return m_postEffectGodRayLightColor; }
+DebugGBufferView Render::GetDebugGBufferView() const { return m_debugGBufferView; }
 
 void Render::SetShowFPS(const bool arg)
 {
@@ -3630,6 +3821,16 @@ void Render::SetAmbientLightColor(const D3DXCOLOR& color)
 void Render::SetAmbientLightBrightness(const float brightness)
 {
     Light::SetAmbientBrightness(brightness);
+}
+
+float Render::GetLightBrightness() const
+{
+    return Light::GetBrightness();
+}
+
+float Render::GetAmbientLightBrightness() const
+{
+    return Light::GetAmbientBrightness();
 }
 
 void Render::AddPointLight(const D3DXVECTOR3& pos,

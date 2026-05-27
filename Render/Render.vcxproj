@@ -71,6 +71,11 @@
     <ClCompile Include="PtrManager.cpp" />
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="RenderSettingsDialog.cpp" />
+    <ClCompile Include="RenderSettingsDialogControls.cpp" />
+    <ClCompile Include="RenderSettingsDialogHandlers.cpp" />
+    <ClCompile Include="RenderSettingsDialogModels.cpp" />
+    <ClCompile Include="RenderSettingsDialogSync.cpp" />
+    <ClCompile Include="RenderSettingsDialogUtils.cpp" />
     <ClCompile Include="SkinAnimMesh.cpp" />
     <ClCompile Include="SkinAnimMeshAlloc.cpp" />
     <ClCompile Include="Sprite.cpp" />
@@ -124,6 +129,7 @@
     <ClInclude Include="PtrManager.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="RenderSettingsDialog.h" />
+    <ClInclude Include="RenderSettingsDialogInternal.h" />
     <ClInclude Include="SkinAnimMesh.h" />
     <ClInclude Include="SkinAnimMeshAlloc.h" />
     <ClInclude Include="Sprite.h" />
