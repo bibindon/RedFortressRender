@@ -349,9 +349,6 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     CreateSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_GAUSSIAN_ENABLE, L"Gaussian blur", 118, y + 62, 124, 22);
     CreateSettingsCheckbox(hWnd, 31014, L"Halo", 360, y + 62, 72, 22);
     y += 100;
-    CreateSettingsGroupBox(hWnd, L"Common", left - 4, y, width + 8, 38);
-    CreateSettingsCheckbox(hWnd, 31015, L"Animate Light", 22, y + 16, 124, 22);
-    y += 48;
     CreateSettingsGroupBox(hWnd, L"Phong", left - 4, y, width + 8, 330);
     int row = y + 28;
     const wchar_t* leftLabels[] = {
