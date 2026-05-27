@@ -92,6 +92,8 @@ void CreateSettingsButton(HWND parent, const wchar_t* text, int x, int y, int w,
 }
 void CreateSettingsEdit(HWND parent, const wchar_t* text, int x, int y, int w, int h, int id)
 {
+    (void)h;
+    constexpr int EDIT_HEIGHT = 14;
     HWND control = CreateWindowExW(WS_EX_CLIENTEDGE,
                                    L"EDIT",
                                    text,
@@ -99,7 +101,7 @@ void CreateSettingsEdit(HWND parent, const wchar_t* text, int x, int y, int w, i
                                    x,
                                    y,
                                    w,
-                                   h,
+                                   EDIT_HEIGHT,
                                    parent,
                                    reinterpret_cast<HMENU>(static_cast<INT_PTR>(id)),
                                    GetModuleHandle(NULL),
