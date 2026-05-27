@@ -202,9 +202,18 @@ bool TryGetSettingsEditInt(HWND hWnd, int id, int& value)
 }
 void SetTrackbarFromFloat(HWND hWnd, int trackbarId, float value, float minValue, float maxValue)
 {
+    HWND trackbar = GetDlgItem(hWnd, trackbarId);
+    if (trackbar == NULL)
+    {
+        return;
+    }
+
+    const int sliderMin = static_cast<int>(SendMessageW(trackbar, TBM_GETRANGEMIN, 0, 0));
+    const int sliderMax = static_cast<int>(SendMessageW(trackbar, TBM_GETRANGEMAX, 0, 0));
     float normalized = (maxValue != minValue) ? ((value - minValue) / (maxValue - minValue)) : 0.0f;
-    int sliderPos = (std::max)(0, (std::min)(100, static_cast<int>(normalized * 100.0f + 0.5f)));
-    SendDlgItemMessageW(hWnd, trackbarId, TBM_SETPOS, TRUE, sliderPos);
+    normalized = (std::max)(0.0f, (std::min)(1.0f, normalized));
+    int sliderPos = sliderMin + static_cast<int>(normalized * static_cast<float>(sliderMax - sliderMin) + 0.5f);
+    SendMessageW(trackbar, TBM_SETPOS, TRUE, sliderPos);
 }
 void SetTrackbarFromInt(HWND hWnd, int trackbarId, int value, int minValue, int maxValue)
 {

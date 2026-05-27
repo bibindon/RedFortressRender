@@ -96,6 +96,8 @@ void CreateSettingsEdit(HWND parent, const wchar_t* text, int x, int y, int w, i
 void SetNearestValueEditText(HWND hWnd, HWND trackbar, const wchar_t* text);
 float SliderToFloat(int sliderPos, float minValue, float maxValue);
 int SliderToInt(int sliderPos, int minValue, int maxValue);
+float TrackbarToFloat(HWND trackbar, float minValue, float maxValue);
+int TrackbarToInt(HWND trackbar, int minValue, int maxValue);
 void SetEditFloat(HWND hWnd, HWND trackbar, float value, const wchar_t* format = L"%.2f");
 void SetEditInt(HWND hWnd, HWND trackbar, int value);
 HWND CreateSettingsCombo(HWND parent, int id, int x, int y, int w, int h);

@@ -158,6 +158,31 @@ int SliderToInt(int sliderPos, int minValue, int maxValue)
     float value = SliderToFloat(sliderPos, static_cast<float>(minValue), static_cast<float>(maxValue));
     return static_cast<int>(value + 0.5f);
 }
+
+float TrackbarToFloat(HWND trackbar, float minValue, float maxValue)
+{
+    if (trackbar == NULL)
+    {
+        return minValue;
+    }
+
+    const int sliderPos = static_cast<int>(SendMessageW(trackbar, TBM_GETPOS, 0, 0));
+    const int sliderMin = static_cast<int>(SendMessageW(trackbar, TBM_GETRANGEMIN, 0, 0));
+    const int sliderMax = static_cast<int>(SendMessageW(trackbar, TBM_GETRANGEMAX, 0, 0));
+    const int clampedPos = (std::max)(sliderMin, (std::min)(sliderMax, sliderPos));
+    const float t = (sliderMax != sliderMin) ?
+        (static_cast<float>(clampedPos - sliderMin) / static_cast<float>(sliderMax - sliderMin)) :
+        0.0f;
+
+    return minValue + (maxValue - minValue) * t;
+}
+
+int TrackbarToInt(HWND trackbar, int minValue, int maxValue)
+{
+    const float value = TrackbarToFloat(trackbar, static_cast<float>(minValue), static_cast<float>(maxValue));
+    return static_cast<int>(value + 0.5f);
+}
+
 void SetEditFloat(HWND hWnd, HWND trackbar, float value, const wchar_t* format)
 {
     wchar_t buffer[32] { };
@@ -211,7 +236,20 @@ void CreateSettingsTrackbar(HWND parent,
                                    NULL);
     SendMessage(control, TBM_SETRANGE, TRUE, MAKELPARAM(minValue, maxValue));
     SendMessage(control, TBM_SETPOS, TRUE, currentValue);
-    SendMessage(control, TBM_SETTICFREQ, 50, 0);
+    SendMessage(control, TBM_SETTICFREQ, (std::max)(1, (maxValue - minValue) / 10), 0);
+}
+
+void SetSettingsTrackbarRange(HWND parent, int id, int minValue, int maxValue)
+{
+    HWND trackbar = GetDlgItem(parent, id);
+    if (trackbar == NULL)
+    {
+        return;
+    }
+
+    SendMessageW(trackbar, TBM_SETRANGEMIN, FALSE, minValue);
+    SendMessageW(trackbar, TBM_SETRANGEMAX, TRUE, maxValue);
+    SendMessageW(trackbar, TBM_SETTICFREQ, (std::max)(1, (maxValue - minValue) / 10), 0);
 }
 HWND CreateSettingsListView(HWND parent,
                             int id,
@@ -706,6 +744,74 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     SendMessage(particleCombo, CB_SETCURSEL, 0, 0);
     CreateSettingsButton(hWnd, L"Place At LookAt", 352, y, 154, 24, 32141);
     y += 30;
+
+    SetSettingsTrackbarRange(hWnd, 31004, 0, 49);
+    SetSettingsTrackbarRange(hWnd, 31005, 0, 100);
+    SetSettingsTrackbarRange(hWnd, 31100, 0, 50);
+    SetSettingsTrackbarRange(hWnd, 31101, 0, 50);
+    SetSettingsTrackbarRange(hWnd, 31102, 0, 200);
+    SetSettingsTrackbarRange(hWnd, 31103, 0, 20);
+    SetSettingsTrackbarRange(hWnd, 31104, 0, 40);
+    SetSettingsTrackbarRange(hWnd, 31105, 0, 20);
+    SetSettingsTrackbarRange(hWnd, 31106, 0, 20);
+    SetSettingsTrackbarRange(hWnd, 31107, 0, 120);
+    SetSettingsTrackbarRange(hWnd, 31111, 0, 99);
+    SetSettingsTrackbarRange(hWnd, 31124, 0, 40);
+    for (int i = 0; i < 6; ++i)
+    {
+        SetSettingsTrackbarRange(hWnd, 31200 + i, 0, 20);
+    }
+    for (int i = 0; i < 3; ++i)
+    {
+        SetSettingsTrackbarRange(hWnd, 31400 + i, 0, 20);
+    }
+    SetSettingsTrackbarRange(hWnd, 31403, 0, 1000);
+    SetSettingsTrackbarRange(hWnd, 31500, 0, 96);
+    SetSettingsTrackbarRange(hWnd, 31501, 0, 100);
+    SetSettingsTrackbarRange(hWnd, 31502, 0, 60);
+    SetSettingsTrackbarRange(hWnd, 31503, 0, 100);
+    SetSettingsTrackbarRange(hWnd, 31504, 0, 60);
+    SetSettingsTrackbarRange(hWnd, 31505, 0, 100);
+    SetSettingsTrackbarRange(hWnd, 31600, 0, 20);
+    SetSettingsTrackbarRange(hWnd, 31601, 0, 20);
+    SetSettingsTrackbarRange(hWnd, 31602, 0, 20);
+    SetSettingsTrackbarRange(hWnd, 31701, 0, 99);
+    SetSettingsTrackbarRange(hWnd, 31800, 0, 199);
+    SetSettingsTrackbarRange(hWnd, 31803, 0, 80);
+    SetSettingsTrackbarRange(hWnd, 31804, 0, 100);
+    SetSettingsTrackbarRange(hWnd, 31900, 0, 200);
+    SetSettingsTrackbarRange(hWnd, 31901, 0, 20);
+    SetSettingsTrackbarRange(hWnd, 31902, 0, 20);
+    SetSettingsTrackbarRange(hWnd, 31903, 0, 20);
+    SetSettingsTrackbarRange(hWnd, 31920, 0, 100);
+    SetSettingsTrackbarRange(hWnd, 31921, 0, 200000);
+    SetSettingsTrackbarRange(hWnd, 31922, 0, 200000);
+    SetSettingsTrackbarRange(hWnd, 31923, 0, 200000);
+    SetSettingsTrackbarRange(hWnd, 31924, 0, 200000);
+    SetSettingsTrackbarRange(hWnd, 31940, 0, 40);
+    SetSettingsTrackbarRange(hWnd, 31950, 0, 495);
+    SetSettingsTrackbarRange(hWnd, 31951, 0, 495);
+    SetSettingsTrackbarRange(hWnd, 31952, 0, 495);
+    SetSettingsTrackbarRange(hWnd, 31953, 0, 500);
+    SetSettingsTrackbarRange(hWnd, 31970, 0, 50);
+    SetSettingsTrackbarRange(hWnd, 31971, 1, 100);
+    SetSettingsTrackbarRange(hWnd, 31972, 0, 50);
+    SetSettingsTrackbarRange(hWnd, 31980, 0, 50);
+    SetSettingsTrackbarRange(hWnd, 31981, 0, 20);
+    SetSettingsTrackbarRange(hWnd, 32000, 0, 20);
+    SetSettingsTrackbarRange(hWnd, 32001, 0, 20);
+    SetSettingsTrackbarRange(hWnd, 32002, 0, 20);
+    SetSettingsTrackbarRange(hWnd, 32003, 0, 60);
+    SetSettingsTrackbarRange(hWnd, 32004, 0, 100);
+    SetSettingsTrackbarRange(hWnd, 32005, -200, 200);
+    SetSettingsTrackbarRange(hWnd, 32006, -200, 200);
+    SetSettingsTrackbarRange(hWnd, 32007, -200, 200);
+    SetSettingsTrackbarRange(hWnd, 32021, 0, 100);
+    SetSettingsTrackbarRange(hWnd, 32110, 1, 64);
+    SetSettingsTrackbarRange(hWnd, 32111, 2, 21);
+    SetSettingsTrackbarRange(hWnd, 32120, 1, 8);
+    SetSettingsTrackbarRange(hWnd, 32130, 1, 21);
+
     CreateSettingsButton(hWnd, L"OK", 310, y, 88, 24, IDOK);
     CreateSettingsButton(hWnd, L"Cancel", 424, y, 88, 24, IDCANCEL);
 }

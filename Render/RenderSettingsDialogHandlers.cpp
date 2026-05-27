@@ -89,7 +89,7 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
         else if (index == 2)
         {
             render->SetMeshMixSaturateShadowIntensity(floatValue);
-            SetTrackbarFromFloat(hWnd, 31102, floatValue, 0.0f, 4.0f);
+            SetTrackbarFromFloat(hWnd, 31102, floatValue, 0.0f, 10.0f);
         }
         else if (index == 3)
         {
@@ -99,7 +99,7 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
         else if (index == 4)
         {
             render->SetMeshMixSpecularIntensity(floatValue);
-            SetTrackbarFromFloat(hWnd, 31104, floatValue, 0.0f, 1.0f);
+            SetTrackbarFromFloat(hWnd, 31104, floatValue, 0.0f, 2.0f);
         }
         else if (index == 5)
         {
@@ -114,19 +114,19 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
         else if (index == 7)
         {
             render->SetMeshMixSSSIntensity(floatValue);
-            SetTrackbarFromFloat(hWnd, 31107, floatValue, 0.0f, 2.0f);
+            SetTrackbarFromFloat(hWnd, 31107, floatValue, 0.0f, 30.0f);
         }
         else if (index == 11)
         {
             state->modelLoadScale = floatValue;
-            SetTrackbarFromFloat(hWnd, 31111, floatValue, 0.01f, 10.0f);
+            SetTrackbarFromFloat(hWnd, 31111, floatValue, 0.1f, 10.0f);
         }
         return true;
     }
     if (id == 41124 && TryGetSettingsEditFloat(hWnd, id, floatValue))
     {
         render->SetMeshMixFresnelIntensity(floatValue);
-        SetTrackbarFromFloat(hWnd, 31124, floatValue, 0.0f, 1.0f);
+        SetTrackbarFromFloat(hWnd, 31124, floatValue, 0.0f, 2.0f);
         return true;
     }
     if (id >= 41000 && id <= 41011 && TryGetSettingsEditFloat(hWnd, id, floatValue))
@@ -145,7 +145,7 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
         {
             state->cameraShakeDuration = floatValue;
             render->SetCameraShakeDuration(state->cameraShakeDuration);
-            SetTrackbarFromFloat(hWnd, 31004, state->cameraShakeDuration, 0.0f, 5.0f);
+            SetTrackbarFromFloat(hWnd, 31004, state->cameraShakeDuration, 0.1f, 5.0f);
         }
         else if (id == 41005)
         {
@@ -171,7 +171,7 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
         if (id == 41401) state->pointLightColor.g = floatValue;
         if (id == 41402) state->pointLightColor.b = floatValue;
         if (id == 41403) state->pointLightBrightness = floatValue;
-        SetTrackbarFromFloat(hWnd, id - 10000, floatValue, 0.0f, (id == 41403) ? 4.0f : 1.0f);
+        SetTrackbarFromFloat(hWnd, id - 10000, floatValue, 0.0f, (id == 41403) ? 100.0f : 1.0f);
         return true;
     }
     if (id >= 41500 && id <= 41505 && TryGetSettingsEditFloat(hWnd, id, floatValue))
@@ -183,7 +183,9 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
         if (index == 3) render->SetMeshPBREnvMaxMipLevel(floatValue);
         if (index == 4) render->SetMeshPBREnvDiffuseIntensity(floatValue);
         if (index == 5) render->SetMeshPBREnvDiffuseMipLevel(floatValue);
-        SetTrackbarFromFloat(hWnd, id - 10000, floatValue, 0.0f, (index == 3 || index == 5) ? 10.0f : 1.0f);
+        const float minValue = (index == 0) ? 0.04f : 0.0f;
+        const float maxValue = (index == 2 || index == 4) ? 3.0f : ((index == 3 || index == 5) ? 10.0f : 1.0f);
+        SetTrackbarFromFloat(hWnd, id - 10000, floatValue, minValue, maxValue);
         return true;
     }
     if (id >= 41600 && id <= 41602 && TryGetSettingsEditFloat(hWnd, id, floatValue))
@@ -215,7 +217,9 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
         if (id == 41800) render->SetPostEffectSSAOSampleRadius(floatValue);
         if (id == 41803) render->SetPostEffectSSAOShadowStrength(floatValue);
         if (id == 41804) render->SetPostEffectSSAOSaturationBoost(floatValue);
-        SetTrackbarFromFloat(hWnd, id - 10000, floatValue, (id == 41800) ? 0.1f : 0.0f, (id == 41800) ? 10.0f : 2.0f);
+        const float minValue = (id == 41800) ? 0.05f : 0.0f;
+        const float maxValue = (id == 41800) ? 10.0f : ((id == 41803) ? 4.0f : 5.0f);
+        SetTrackbarFromFloat(hWnd, id - 10000, floatValue, minValue, maxValue);
         return true;
     }
     if (id >= 41900 && id <= 41903 && TryGetSettingsEditFloat(hWnd, id, floatValue))
@@ -223,7 +227,7 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
         if (id == 41900)
         {
             render->SetPostEffectFogIntensity(floatValue);
-            SetTrackbarFromFloat(hWnd, 31900, floatValue, 0.0f, 2.0f);
+            SetTrackbarFromFloat(hWnd, 31900, floatValue, 0.0f, 20.0f);
         }
         else
         {
@@ -242,15 +246,15 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
         if (id == 41922) render->SetPostEffectHeightFogMax(floatValue);
         if (id == 41923) render->SetPostEffectHeightFogDistanceStart(floatValue);
         if (id == 41924) render->SetPostEffectHeightFogDistanceMax(floatValue);
-        if (id == 41920) SetTrackbarFromFloat(hWnd, 31920, floatValue, 0.0f, 2.0f);
-        if (id == 41921 || id == 41922) SetTrackbarFromFloat(hWnd, id - 10000, floatValue, -20.0f, 20.0f);
-        if (id == 41923 || id == 41924) SetTrackbarFromFloat(hWnd, id - 10000, floatValue, 0.0f, 100.0f);
+        if (id == 41920) SetTrackbarFromFloat(hWnd, 31920, floatValue, 0.0f, 5.0f);
+        if (id == 41921 || id == 41922) SetTrackbarFromFloat(hWnd, id - 10000, floatValue, -50000.0f, 50000.0f);
+        if (id == 41923 || id == 41924) SetTrackbarFromFloat(hWnd, id - 10000, floatValue, 0.0f, 100000.0f);
         return true;
     }
     if (id == 41940 && TryGetSettingsEditFloat(hWnd, id, floatValue))
     {
         render->SetPostEffectSaturate(floatValue);
-        SetTrackbarFromFloat(hWnd, 31940, floatValue, 0.0f, 2.0f);
+        SetTrackbarFromFloat(hWnd, 31940, floatValue, 0.0f, 4.0f);
         return true;
     }
     if (id >= 41950 && id <= 41953 && TryGetSettingsEditFloat(hWnd, id, floatValue))
@@ -259,7 +263,8 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
         if (id == 41951) render->SetPostEffectDepthOfFieldMaxBlurDistance(floatValue);
         if (id == 41952) render->SetPostEffectDepthOfFieldAutoActivationDistance(floatValue);
         if (id == 41953) render->SetPostEffectDepthOfFieldStartNear(floatValue);
-        SetTrackbarFromFloat(hWnd, id - 10000, floatValue, 0.0f, (id == 41951) ? 32.0f : 20.0f);
+        const float minValue = (id == 41953) ? 0.0f : 0.5f;
+        SetTrackbarFromFloat(hWnd, id - 10000, floatValue, minValue, 50.0f);
         return true;
     }
     if ((id >= 41970 && id <= 41972 || id >= 41980 && id <= 41981) && TryGetSettingsEditFloat(hWnd, id, floatValue))
@@ -269,7 +274,7 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
         if (id == 41972) render->SetPostEffectHaloThreshold(floatValue);
         if (id == 41980) render->SetPostEffectStarBurstThreshold(floatValue);
         if (id == 41981) render->SetPostEffectStarBurstDistanceFade(floatValue);
-        SetTrackbarFromFloat(hWnd, id - 10000, floatValue, 0.0f, (id == 41971) ? 4.0f : ((id == 41981) ? 1.0f : 5.0f));
+        SetTrackbarFromFloat(hWnd, id - 10000, floatValue, (id == 41971) ? 1.0f : 0.0f, (id == 41971) ? 100.0f : ((id == 41981) ? 1.0f : 5.0f));
         return true;
     }
     if (id >= 42000 && id <= 42007 && TryGetSettingsEditFloat(hWnd, id, floatValue))
@@ -284,9 +289,10 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
         if (id == 42006) state->godRayPos.y = floatValue;
         if (id == 42007) state->godRayPos.z = floatValue;
         if (id >= 42005 && id <= 42007) render->SetPostEffectGodRayLightPos(state->godRayPos);
-        if (id <= 42003) SetTrackbarFromFloat(hWnd, id - 10000, floatValue, 0.0f, 1.0f);
-        if (id == 42004) SetTrackbarFromFloat(hWnd, 32004, floatValue, 0.0f, 4.0f);
-        if (id >= 42005) SetTrackbarFromFloat(hWnd, id - 10000, floatValue, -2000.0f, 2000.0f);
+        if (id <= 42002) SetTrackbarFromFloat(hWnd, id - 10000, floatValue, 0.0f, 1.0f);
+        if (id == 42003) SetTrackbarFromFloat(hWnd, 32003, floatValue, 0.0f, 3.0f);
+        if (id == 42004) SetTrackbarFromFloat(hWnd, 32004, floatValue, 0.0f, 5.0f);
+        if (id >= 42005) SetTrackbarFromFloat(hWnd, id - 10000, floatValue, -200.0f, 200.0f);
         return true;
     }
     if (id == 42021 && TryGetSettingsEditFloat(hWnd, id, floatValue))
@@ -309,7 +315,7 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
     if (id == 42111 && TryGetSettingsEditInt(hWnd, id, intValue))
     {
         render->SetPostEffectMotionBlurCameraSampleCount(intValue);
-        SetTrackbarFromInt(hWnd, 32111, intValue, 1, 32);
+        SetTrackbarFromInt(hWnd, 32111, intValue, 2, 21);
         return true;
     }
     if (id == 42120 && TryGetSettingsEditInt(hWnd, id, intValue))
@@ -321,7 +327,7 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
     if (id == 42130 && TryGetSettingsEditInt(hWnd, id, intValue))
     {
         render->SetPostEffectFontSampleSize(intValue);
-        SetTrackbarFromInt(hWnd, 32130, intValue, 1, 31);
+        SetTrackbarFromInt(hWnd, 32130, intValue, 1, 21);
         return true;
     }
     return false;
@@ -810,72 +816,71 @@ void HandleRenderSettingsHScroll(HWND hWnd, LPARAM lParam)
         return;
     }
     int id = GetDlgCtrlID(trackbar);
-    int pos = static_cast<int>(SendMessage(trackbar, TBM_GETPOS, 0, 0));
     switch (id)
     {
     case 31004:
-        state->cameraShakeDuration = SliderToFloat(pos, 0.0f, 5.0f);
+        state->cameraShakeDuration = TrackbarToFloat(trackbar, 0.1f, 5.0f);
         render->SetCameraShakeDuration(state->cameraShakeDuration);
         SetEditFloat(hWnd, trackbar, state->cameraShakeDuration, L"%.1f");
         break;
     case 31005:
-        state->cameraShakeIntensity = SliderToFloat(pos, 0.0f, 1.0f);
+        state->cameraShakeIntensity = TrackbarToFloat(trackbar, 0.0f, 1.0f);
         render->SetCameraShakeIntensity(state->cameraShakeIntensity);
         SetEditFloat(hWnd, trackbar, state->cameraShakeIntensity, L"%.2f");
         break;
     case IDC_RENDER_SETTINGS_SATURATE_LEVEL:
     case 31940:
     {
-        float value = SliderToFloat(pos, 0.0f, 2.0f);
+        float value = TrackbarToFloat(trackbar, 0.0f, 4.0f);
         render->SetPostEffectSaturate(value);
         SetEditFloat(hWnd, trackbar, value, L"%.1f");
         break;
     }
     case 31100:
-        render->SetLightBrightness(SliderToFloat(pos, 0.0f, 5.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 5.0f), L"%.1f");
+        render->SetLightBrightness(TrackbarToFloat(trackbar, 0.0f, 5.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 5.0f), L"%.1f");
         break;
     case 31101:
-        render->SetAmbientLightBrightness(SliderToFloat(pos, 0.0f, 5.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 5.0f), L"%.1f");
+        render->SetAmbientLightBrightness(TrackbarToFloat(trackbar, 0.0f, 5.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 5.0f), L"%.1f");
         break;
     case 31102:
-        render->SetMeshMixSaturateShadowIntensity(SliderToFloat(pos, 0.0f, 4.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 4.0f));
+        render->SetMeshMixSaturateShadowIntensity(TrackbarToFloat(trackbar, 0.0f, 10.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 10.0f));
         break;
     case 31103:
-        render->SetMeshMixShadowDarkness(SliderToFloat(pos, 0.0f, 1.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f));
+        render->SetMeshMixShadowDarkness(TrackbarToFloat(trackbar, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 1.0f));
         break;
     case 31104:
-        render->SetMeshMixSpecularIntensity(SliderToFloat(pos, 0.0f, 1.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f));
+        render->SetMeshMixSpecularIntensity(TrackbarToFloat(trackbar, 0.0f, 2.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 2.0f));
         break;
     case 31105:
-        render->SetMeshMixSpecularEdge(SliderToFloat(pos, 0.0f, 1.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f));
+        render->SetMeshMixSpecularEdge(TrackbarToFloat(trackbar, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 1.0f));
         break;
     case 31106:
-        render->SetMeshMixEnvMapBlend(SliderToFloat(pos, 0.0f, 1.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f));
+        render->SetMeshMixEnvMapBlend(TrackbarToFloat(trackbar, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 1.0f));
         break;
     case 31107:
-        render->SetMeshMixSSSIntensity(SliderToFloat(pos, 0.0f, 2.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 2.0f));
+        render->SetMeshMixSSSIntensity(TrackbarToFloat(trackbar, 0.0f, 30.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 30.0f));
         break;
     case 31111:
-        state->modelLoadScale = SliderToFloat(pos, 0.01f, 10.0f);
+        state->modelLoadScale = TrackbarToFloat(trackbar, 0.1f, 10.0f);
         SetEditFloat(hWnd, trackbar, state->modelLoadScale, L"%.2f");
         break;
     case 31124:
-        render->SetMeshMixFresnelIntensity(SliderToFloat(pos, 0.0f, 1.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f));
+        render->SetMeshMixFresnelIntensity(TrackbarToFloat(trackbar, 0.0f, 2.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 2.0f));
         break;
     case 31400:
     case 31401:
     case 31402:
     {
-        float value = SliderToFloat(pos, 0.0f, 1.0f);
+        float value = TrackbarToFloat(trackbar, 0.0f, 1.0f);
         if (id == 31400) state->pointLightColor.r = value;
         if (id == 31401) state->pointLightColor.g = value;
         if (id == 31402) state->pointLightColor.b = value;
@@ -883,70 +888,70 @@ void HandleRenderSettingsHScroll(HWND hWnd, LPARAM lParam)
         break;
     }
     case 31403:
-        state->pointLightBrightness = SliderToFloat(pos, 0.0f, 4.0f);
+        state->pointLightBrightness = TrackbarToFloat(trackbar, 0.0f, 100.0f);
         SetEditFloat(hWnd, trackbar, state->pointLightBrightness);
         break;
     case 31500:
-        render->SetMeshPBRRoughness(SliderToFloat(pos, 0.0f, 1.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f), L"%.3f");
+        render->SetMeshPBRRoughness(TrackbarToFloat(trackbar, 0.04f, 1.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.04f, 1.0f), L"%.3f");
         break;
     case 31501:
-        render->SetMeshPBRMetallic(SliderToFloat(pos, 0.0f, 1.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f), L"%.3f");
+        render->SetMeshPBRMetallic(TrackbarToFloat(trackbar, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 1.0f), L"%.3f");
         break;
     case 31502:
-        render->SetMeshPBREnvReflectionIntensity(SliderToFloat(pos, 0.0f, 1.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f), L"%.3f");
+        render->SetMeshPBREnvReflectionIntensity(TrackbarToFloat(trackbar, 0.0f, 3.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 3.0f), L"%.3f");
         break;
     case 31503:
-        render->SetMeshPBREnvMaxMipLevel(SliderToFloat(pos, 0.0f, 10.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 10.0f), L"%.3f");
+        render->SetMeshPBREnvMaxMipLevel(TrackbarToFloat(trackbar, 0.0f, 10.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 10.0f), L"%.3f");
         break;
     case 31504:
-        render->SetMeshPBREnvDiffuseIntensity(SliderToFloat(pos, 0.0f, 1.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f), L"%.3f");
+        render->SetMeshPBREnvDiffuseIntensity(TrackbarToFloat(trackbar, 0.0f, 3.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 3.0f), L"%.3f");
         break;
     case 31505:
-        render->SetMeshPBREnvDiffuseMipLevel(SliderToFloat(pos, 0.0f, 10.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 10.0f), L"%.3f");
+        render->SetMeshPBREnvDiffuseMipLevel(TrackbarToFloat(trackbar, 0.0f, 10.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 10.0f), L"%.3f");
         break;
     case 31600:
-        render->SetPostEffectDepthBufferShadowIntensity(SliderToFloat(pos, 0.0f, 1.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f));
+        render->SetPostEffectDepthBufferShadowIntensity(TrackbarToFloat(trackbar, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 1.0f));
         break;
     case 31601:
-        render->SetPostEffectDepthBufferShadowSaturationBoost(SliderToFloat(pos, 0.0f, 1.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f));
+        render->SetPostEffectDepthBufferShadowSaturationBoost(TrackbarToFloat(trackbar, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 1.0f));
         break;
     case 31602:
-        render->SetPostEffectDepthBufferShadowCoverage(SliderToFloat(pos, 0.0f, 1.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f));
+        render->SetPostEffectDepthBufferShadowCoverage(TrackbarToFloat(trackbar, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 1.0f));
         break;
     case 31701:
-        render->SetPostEffectSSGISampleRadius(SliderToFloat(pos, 0.1f, 10.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.1f, 10.0f));
+        render->SetPostEffectSSGISampleRadius(TrackbarToFloat(trackbar, 0.1f, 10.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.1f, 10.0f));
         break;
     case 31800:
-        render->SetPostEffectSSAOSampleRadius(SliderToFloat(pos, 0.1f, 10.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.1f, 10.0f));
+        render->SetPostEffectSSAOSampleRadius(TrackbarToFloat(trackbar, 0.05f, 10.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.05f, 10.0f));
         break;
     case 31803:
-        render->SetPostEffectSSAOShadowStrength(SliderToFloat(pos, 0.0f, 2.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 2.0f));
+        render->SetPostEffectSSAOShadowStrength(TrackbarToFloat(trackbar, 0.0f, 4.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 4.0f));
         break;
     case 31804:
-        render->SetPostEffectSSAOSaturationBoost(SliderToFloat(pos, 0.0f, 2.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 2.0f));
+        render->SetPostEffectSSAOSaturationBoost(TrackbarToFloat(trackbar, 0.0f, 5.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 5.0f));
         break;
     case 31900:
-        render->SetPostEffectFogIntensity(SliderToFloat(pos, 0.0f, 2.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 2.0f), L"%.1f");
+        render->SetPostEffectFogIntensity(TrackbarToFloat(trackbar, 0.0f, 20.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 20.0f), L"%.1f");
         break;
     case 31901:
     case 31902:
     case 31903:
     {
-        float value = SliderToFloat(pos, 0.0f, 1.0f);
+        float value = TrackbarToFloat(trackbar, 0.0f, 1.0f);
         if (id == 31901) state->fogColor.r = value;
         if (id == 31902) state->fogColor.g = value;
         if (id == 31903) state->fogColor.b = value;
@@ -955,66 +960,66 @@ void HandleRenderSettingsHScroll(HWND hWnd, LPARAM lParam)
         break;
     }
     case 31920:
-        render->SetPostEffectHeightFogIntensity(SliderToFloat(pos, 0.0f, 2.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 2.0f));
+        render->SetPostEffectHeightFogIntensity(TrackbarToFloat(trackbar, 0.0f, 5.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 5.0f));
         break;
     case 31921:
-        render->SetPostEffectHeightFogStart(SliderToFloat(pos, -20.0f, 20.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, -20.0f, 20.0f), L"%.1f");
+        render->SetPostEffectHeightFogStart(TrackbarToFloat(trackbar, -50000.0f, 50000.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, -50000.0f, 50000.0f), L"%.1f");
         break;
     case 31922:
-        render->SetPostEffectHeightFogMax(SliderToFloat(pos, -20.0f, 20.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, -20.0f, 20.0f), L"%.1f");
+        render->SetPostEffectHeightFogMax(TrackbarToFloat(trackbar, -50000.0f, 50000.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, -50000.0f, 50000.0f), L"%.1f");
         break;
     case 31923:
-        render->SetPostEffectHeightFogDistanceStart(SliderToFloat(pos, 0.0f, 100.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 100.0f), L"%.1f");
+        render->SetPostEffectHeightFogDistanceStart(TrackbarToFloat(trackbar, 0.0f, 100000.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 100000.0f), L"%.1f");
         break;
     case 31924:
-        render->SetPostEffectHeightFogDistanceMax(SliderToFloat(pos, 0.0f, 100.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 100.0f), L"%.1f");
+        render->SetPostEffectHeightFogDistanceMax(TrackbarToFloat(trackbar, 0.0f, 100000.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 100000.0f), L"%.1f");
         break;
     case 31950:
-        render->SetPostEffectDepthOfFieldFocalDistance(SliderToFloat(pos, 0.0f, 20.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 20.0f), L"%.1f");
+        render->SetPostEffectDepthOfFieldFocalDistance(TrackbarToFloat(trackbar, 0.5f, 50.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.5f, 50.0f), L"%.1f");
         break;
     case 31951:
-        render->SetPostEffectDepthOfFieldMaxBlurDistance(SliderToFloat(pos, 0.0f, 32.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 32.0f), L"%.1f");
+        render->SetPostEffectDepthOfFieldMaxBlurDistance(TrackbarToFloat(trackbar, 0.5f, 50.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.5f, 50.0f), L"%.1f");
         break;
     case 31952:
-        render->SetPostEffectDepthOfFieldAutoActivationDistance(SliderToFloat(pos, 0.0f, 20.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 20.0f), L"%.1f");
+        render->SetPostEffectDepthOfFieldAutoActivationDistance(TrackbarToFloat(trackbar, 0.5f, 50.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.5f, 50.0f), L"%.1f");
         break;
     case 31953:
-        render->SetPostEffectDepthOfFieldStartNear(SliderToFloat(pos, 0.0f, 20.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 20.0f), L"%.1f");
+        render->SetPostEffectDepthOfFieldStartNear(TrackbarToFloat(trackbar, 0.0f, 50.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 50.0f), L"%.1f");
         break;
     case 31970:
-        render->SetPostEffectBloomThreshold(SliderToFloat(pos, 0.0f, 5.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 5.0f), L"%.1f");
+        render->SetPostEffectBloomThreshold(TrackbarToFloat(trackbar, 0.0f, 5.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 5.0f), L"%.1f");
         break;
     case 31971:
-        render->SetPostEffectBloomWeightSum(SliderToFloat(pos, 0.0f, 4.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 4.0f), L"%.1f");
+        render->SetPostEffectBloomWeightSum(TrackbarToFloat(trackbar, 1.0f, 100.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 1.0f, 100.0f), L"%.1f");
         break;
     case 31972:
-        render->SetPostEffectHaloThreshold(SliderToFloat(pos, 0.0f, 5.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 5.0f), L"%.1f");
+        render->SetPostEffectHaloThreshold(TrackbarToFloat(trackbar, 0.0f, 5.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 5.0f), L"%.1f");
         break;
     case 31980:
-        render->SetPostEffectStarBurstThreshold(SliderToFloat(pos, 0.0f, 5.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 5.0f), L"%.1f");
+        render->SetPostEffectStarBurstThreshold(TrackbarToFloat(trackbar, 0.0f, 5.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 5.0f), L"%.1f");
         break;
     case 31981:
-        render->SetPostEffectStarBurstDistanceFade(SliderToFloat(pos, 0.0f, 1.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f));
+        render->SetPostEffectStarBurstDistanceFade(TrackbarToFloat(trackbar, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 1.0f));
         break;
     case 32000:
     case 32001:
     case 32002:
     {
-        float value = SliderToFloat(pos, 0.0f, 1.0f);
+        float value = TrackbarToFloat(trackbar, 0.0f, 1.0f);
         if (id == 32000) state->godRayColor.x = value;
         if (id == 32001) state->godRayColor.y = value;
         if (id == 32002) state->godRayColor.z = value;
@@ -1023,18 +1028,18 @@ void HandleRenderSettingsHScroll(HWND hWnd, LPARAM lParam)
         break;
     }
     case 32003:
-        render->SetPostEffectGodRayIntensity(SliderToFloat(pos, 0.0f, 1.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f));
+        render->SetPostEffectGodRayIntensity(TrackbarToFloat(trackbar, 0.0f, 3.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 3.0f));
         break;
     case 32004:
-        render->SetPostEffectGodRayVirtualProximityStrength(SliderToFloat(pos, 0.0f, 4.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 4.0f));
+        render->SetPostEffectGodRayVirtualProximityStrength(TrackbarToFloat(trackbar, 0.0f, 5.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 5.0f));
         break;
     case 32005:
     case 32006:
     case 32007:
     {
-        float value = SliderToFloat(pos, -2000.0f, 2000.0f);
+        float value = TrackbarToFloat(trackbar, -200.0f, 200.0f);
         if (id == 32005) state->godRayPos.x = value;
         if (id == 32006) state->godRayPos.y = value;
         if (id == 32007) state->godRayPos.z = value;
@@ -1043,30 +1048,30 @@ void HandleRenderSettingsHScroll(HWND hWnd, LPARAM lParam)
         break;
     }
     case 32021:
-        render->SetPostEffectGaussianStrength(SliderToFloat(pos, 0.0f, 1.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 0.0f, 1.0f));
+        render->SetPostEffectGaussianStrength(TrackbarToFloat(trackbar, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 1.0f));
         break;
     case 32110:
-        render->SetPostEffectMotionBlurCameraMaxBlurPixels(SliderToFloat(pos, 1.0f, 64.0f));
-        SetEditFloat(hWnd, trackbar, SliderToFloat(pos, 1.0f, 64.0f), L"%.0f");
+        render->SetPostEffectMotionBlurCameraMaxBlurPixels(TrackbarToFloat(trackbar, 1.0f, 64.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 1.0f, 64.0f), L"%.0f");
         break;
     case 32111:
     {
-        int sampleCount = SliderToInt(pos, 1, 32);
+        int sampleCount = TrackbarToInt(trackbar, 2, 21);
         render->SetPostEffectMotionBlurCameraSampleCount(sampleCount);
         SetEditInt(hWnd, trackbar, sampleCount);
         break;
     }
     case 32120:
     {
-        int quality = SliderToInt(pos, 1, 8);
+        int quality = TrackbarToInt(trackbar, 1, 8);
         render->SetPostEffectFXAAQuality(quality);
         SetEditInt(hWnd, trackbar, quality);
         break;
     }
     case 32130:
     {
-        int sampleSize = SliderToInt(pos, 1, 31) | 1;
+        int sampleSize = TrackbarToInt(trackbar, 1, 21) | 1;
         render->SetPostEffectFontSampleSize(sampleSize);
         SetEditInt(hWnd, trackbar, sampleSize);
         break;
