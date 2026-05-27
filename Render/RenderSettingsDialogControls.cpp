@@ -222,6 +222,8 @@ void CreateSettingsTrackbar(HWND parent,
                             int maxValue,
                             int currentValue)
 {
+    (void)h;
+    constexpr int TRACKBAR_HEIGHT = 12;
     HWND control = CreateWindowExW(0,
                                    TRACKBAR_CLASSW,
                                    L"",
@@ -229,7 +231,7 @@ void CreateSettingsTrackbar(HWND parent,
                                    x,
                                    y,
                                    w,
-                                   h,
+                                   TRACKBAR_HEIGHT,
                                    parent,
                                    reinterpret_cast<HMENU>(static_cast<INT_PTR>(id)),
                                    GetModuleHandle(NULL),
@@ -415,8 +417,8 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     const wchar_t* colorValues[] = { L"1.00", L"1.00", L"1.00", L"0.20", L"0.20", L"0.20" };
     for (int i = 0; i < 6; ++i)
     {
-        CreateSettingsStatic(hWnd, colorLabels[i], 348, row + 4, 54, 18);
-        CreateSettingsTrackbar(hWnd, 31200 + i, 438, row, 30, 30, 0, 100, 50);
+        CreateSettingsStatic(hWnd, colorLabels[i], 348, row + 4, 36, 18);
+        CreateSettingsTrackbar(hWnd, 31200 + i, 386, row, 82, 30, 0, 100, 50);
         CreateSettingsEdit(hWnd, colorValues[i], 474, row + 2, 30, 20, 41200 + i);
         row += 18;
     }
