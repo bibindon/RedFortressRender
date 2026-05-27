@@ -338,6 +338,11 @@ public:
                         const int Height,
                         const UINT color);
 
+    void AddSettingsDialogText(const std::wstring& text,
+                               const int X,
+                               const int Y,
+                               const bool decorated);
+
     void DrawImage(const std::wstring& text,
                    const int X,
                    const int Y,
@@ -595,6 +600,16 @@ private:
     // ポインターにしないとデバイスロストを扱う機能が機能しなくなる
     std::vector<Font*> m_fontList;
     std::vector<FontEx*> m_fontExList;
+    struct SettingsDialogTextInfo
+    {
+        std::wstring text;
+        int x = 0;
+        int y = 0;
+        bool decorated = false;
+    };
+    std::vector<SettingsDialogTextInfo> m_settingsDialogTextList;
+    int m_settingsDialogTextFontId = -1;
+    int m_settingsDialogTextFontExId = -1;
     Sprite m_sprite;
     ParticleSystem m_particleSystem;
 
@@ -664,6 +679,8 @@ private:
     PostEffectGodRay m_postEffectGodRay;
 
     void Draw2D();
+    void EnsureSettingsDialogTextFonts();
+    void DrawSettingsDialogText();
     void UpdateSkinAnimationState();
     void LoadSettingsCsv(const std::wstring& settingsCsvPath);
     void ApplySettings();

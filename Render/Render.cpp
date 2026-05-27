@@ -2973,6 +2973,24 @@ void Render::DrawTextCenter(const int fontId,
     m_fontList.at(fontId)->AddTextCenter(text, X, Y, Width, Height, color);
 }
 
+void Render::AddSettingsDialogText(const std::wstring& text,
+                                   const int X,
+                                   const int Y,
+                                   const bool decorated)
+{
+    if (text.empty())
+    {
+        return;
+    }
+
+    SettingsDialogTextInfo textInfo;
+    textInfo.text = text;
+    textInfo.x = X;
+    textInfo.y = Y;
+    textInfo.decorated = decorated;
+    m_settingsDialogTextList.push_back(textInfo);
+}
+
 void Render::DrawImage(const std::wstring& text,
                                  const int X,
                                  const int Y,
@@ -4390,6 +4408,8 @@ void Render::Draw2D()
         ShowCameraPosition();
     }
 
+    DrawSettingsDialogText();
+
     for (auto& elem : m_fontList)
     {
         elem->Draw();
@@ -4402,6 +4422,39 @@ void Render::Draw2D()
 
     m_sprite.Draw();
 
+}
+
+void Render::EnsureSettingsDialogTextFonts()
+{
+    if (m_settingsDialogTextFontId < 0)
+    {
+        m_settingsDialogTextFontId = SetUpFont(L"BIZ UDゴシック", 20, D3DCOLOR_RGBA(255, 255, 255, 255));
+    }
+    if (m_settingsDialogTextFontExId < 0)
+    {
+        m_settingsDialogTextFontExId = SetUpFontEx(L"BIZ UDゴシック", 20, D3DCOLOR_RGBA(255, 255, 255, 255));
+    }
+}
+
+void Render::DrawSettingsDialogText()
+{
+    if (m_settingsDialogTextList.empty())
+    {
+        return;
+    }
+
+    EnsureSettingsDialogTextFonts();
+    for (const auto& textInfo : m_settingsDialogTextList)
+    {
+        if (textInfo.decorated)
+        {
+            DrawTextEx(m_settingsDialogTextFontExId, textInfo.text, textInfo.x, textInfo.y);
+        }
+        else
+        {
+            DrawText_(m_settingsDialogTextFontId, textInfo.text, textInfo.x, textInfo.y);
+        }
+    }
 }
 
 void Render::OnDeviceLost()

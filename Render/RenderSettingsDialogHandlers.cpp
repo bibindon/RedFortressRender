@@ -343,6 +343,20 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
         SetTrackbarFromInt(hWnd, 32130, intValue, 1, 21);
         return true;
     }
+    if (id == 42150 && TryGetSettingsEditInt(hWnd, id, intValue))
+    {
+        state->settingsTextX = (std::max)(0, (std::min)(intValue, 1300));
+        SetSettingsEditInt(hWnd, id, state->settingsTextX);
+        SetTrackbarFromInt(hWnd, 32150, state->settingsTextX, 0, 1300);
+        return true;
+    }
+    if (id == 42151 && TryGetSettingsEditInt(hWnd, id, intValue))
+    {
+        state->settingsTextY = (std::max)(0, (std::min)(intValue, 700));
+        SetSettingsEditInt(hWnd, id, state->settingsTextY);
+        SetTrackbarFromInt(hWnd, 32151, state->settingsTextY, 0, 700);
+        return true;
+    }
     return false;
 }
 void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
@@ -500,6 +514,15 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
         else if (id == 32141)
         {
             render->PlaceParticleEffect(state->particleEffectPreset, render->GetLookAtPos());
+        }
+        else if (id == 32154)
+        {
+            wchar_t text[512] { };
+            GetDlgItemTextW(hWnd, 32152, text, static_cast<int>(_countof(text)));
+            render->AddSettingsDialogText(text,
+                                          state->settingsTextX,
+                                          state->settingsTextY,
+                                          IsSettingsCheckboxChecked(hWnd, 32153));
         }
         else if (id == 31411)
         {
@@ -1113,6 +1136,14 @@ void HandleRenderSettingsHScroll(HWND hWnd, LPARAM lParam)
         SetEditInt(hWnd, trackbar, sampleSize);
         break;
     }
+    case 32150:
+        state->settingsTextX = TrackbarToInt(trackbar, 0, 1300);
+        SetEditInt(hWnd, trackbar, state->settingsTextX);
+        break;
+    case 32151:
+        state->settingsTextY = TrackbarToInt(trackbar, 0, 700);
+        SetEditInt(hWnd, trackbar, state->settingsTextY);
+        break;
     default:
         break;
     }
