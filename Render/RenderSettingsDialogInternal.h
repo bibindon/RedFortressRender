@@ -1,7 +1,5 @@
 ﻿#pragma once
-
 #include "RenderSettingsDialog.h"
-
 #include <algorithm>
 #include <commctrl.h>
 #include <commdlg.h>
@@ -9,9 +7,7 @@
 #include <cwchar>
 #include <string>
 #include <vector>
-
 #include "Render.h"
-
 namespace NSRender
 {
 namespace RenderSettingsDialogInternal
@@ -20,7 +16,6 @@ static constexpr const wchar_t* RENDER_SETTINGS_DIALOG_CLASS_NAME = L"NSRenderSe
 static constexpr int RENDER_SETTINGS_CONTENT_BOTTOM_MARGIN = 24;
 static constexpr UINT_PTR RENDER_SETTINGS_SYNC_TIMER_ID = 1;
 static constexpr UINT RENDER_SETTINGS_SYNC_INTERVAL_MS = 1000;
-
 struct RenderSettingsDialogState
 {
     enum class LoadedModelType
@@ -30,7 +25,6 @@ struct RenderSettingsDialogState
         MeshInstancing,
         MeshMixSkinAnim
     };
-
     struct LoadedModelRecord
     {
         LoadedModelType type = LoadedModelType::MeshMix;
@@ -39,7 +33,6 @@ struct RenderSettingsDialogState
         float scale = 1.0f;
         D3DXVECTOR3 pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
     };
-
     Render* render = nullptr;
     int scrollPos = 0;
     int contentHeight = 0;
@@ -78,7 +71,6 @@ struct RenderSettingsDialogState
     };
     std::vector<ChildPlacement> childPlacements;
 };
-
 enum RenderSettingsControlId
 {
     IDC_RENDER_SETTINGS_WINDOW_MODE = 30001,
@@ -94,7 +86,6 @@ enum RenderSettingsControlId
     IDC_RENDER_SETTINGS_WINDOW_MODE_BORDERLESS,
     IDC_RENDER_SETTINGS_WINDOW_MODE_FULLSCREEN,
 };
-
 void SetDefaultGuiFont(HWND hWnd);
 void CreateSettingsStatic(HWND parent, const wchar_t* text, int x, int y, int w, int h);
 HWND CreateSettingsCheckbox(HWND parent, int id, const wchar_t* text, int x, int y, int w, int h);
@@ -114,7 +105,6 @@ void AddSettingsListViewRow(HWND listView, int row, const wchar_t* const* values
 std::wstring FormatResolutionLabel(int width, int height);
 bool TryParseResolutionLabel(const wchar_t* label, int& width, int& height);
 void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* state);
-
 std::wstring GetDisplayFileName(const std::wstring& filePath);
 const wchar_t* LoadedModelTypeToText(RenderSettingsDialogState::LoadedModelType type);
 void UpdateLoadedModelsList(RenderSettingsDialogState* state);
@@ -128,7 +118,6 @@ void AddLoadedModelRecord(RenderSettingsDialogState* state, RenderSettingsDialog
 void AdjustLoadedModelIdsAfterRemove(RenderSettingsDialogState* state, RenderSettingsDialogState::LoadedModelType type, int removedRenderId);
 void RemoveSelectedLoadedModel(HWND hWnd);
 void PlaySelectedAnimation(HWND hWnd);
-
 bool IsSettingsCheckboxChecked(HWND hWnd, int id);
 int GetSettingsComboSelection(HWND hWnd, int id);
 int ComboIndexToTapCount(int index);
@@ -154,7 +143,6 @@ void SetSettingsEditFloat(HWND hWnd, int id, float value, const wchar_t* format 
 void SetSettingsEditInt(HWND hWnd, int id, int value);
 void SetSettingsComboSelection(HWND hWnd, int id, int index);
 void SetSettingsComboTextSelection(HWND hWnd, int id, const std::wstring& text);
-
 BOOL CALLBACK CaptureRenderSettingsChildPlacementProc(HWND child, LPARAM lParam);
 void CaptureRenderSettingsChildPlacements(HWND hWnd);
 void ApplyRenderSettingsChildPositions(HWND hWnd);
@@ -165,7 +153,6 @@ void ScrollRenderSettingsTo(HWND hWnd, int newScrollPos);
 void HandleRenderSettingsVScroll(HWND hWnd, WPARAM wParam);
 void HandleRenderSettingsHScroll(HWND hWnd, LPARAM lParam);
 void HandleRenderSettingsNotify(HWND hWnd, LPARAM lParam);
-
 void SyncRenderSettingsDialogFromRender(HWND hWnd);
 LRESULT CALLBACK RenderSettingsDialogProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 bool EnsureRenderSettingsDialogClass(HINSTANCE hInstance);
