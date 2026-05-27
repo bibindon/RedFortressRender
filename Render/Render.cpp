@@ -3880,9 +3880,19 @@ void Render::SetAmbientLightBrightness(const float brightness)
     Light::SetAmbientBrightness(brightness);
 }
 
+D3DXCOLOR Render::GetLightColor() const
+{
+    return Light::GetLightColor();
+}
+
 float Render::GetLightBrightness() const
 {
     return Light::GetBrightness();
+}
+
+D3DXCOLOR Render::GetAmbientLightColor() const
+{
+    return Light::GetAmbientColor();
 }
 
 float Render::GetAmbientLightBrightness() const

@@ -39,6 +39,8 @@ struct RenderSettingsDialogState
     HWND loadedModelsList = NULL;
     HWND animationList = NULL;
     HWND pointLightsList = NULL;
+    D3DXCOLOR lightColor = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
+    D3DXCOLOR ambientLightColor = D3DXCOLOR(0.2f, 0.2f, 0.2f, 1.0f);
     D3DXCOLOR fogColor = D3DXCOLOR(0.72f, 0.78f, 0.86f, 1.0f);
     D3DXVECTOR3 godRayColor = D3DXVECTOR3(1.0f, 0.9f, 0.8f);
     D3DXVECTOR3 godRayPos = D3DXVECTOR3(1000.0f, 100.0f, 1000.0f);

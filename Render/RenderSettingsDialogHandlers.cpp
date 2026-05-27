@@ -174,6 +174,19 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
         SetTrackbarFromFloat(hWnd, id - 10000, floatValue, 0.0f, (id == 41403) ? 100.0f : 1.0f);
         return true;
     }
+    if (id >= 41200 && id <= 41205 && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    {
+        if (id == 41200) state->lightColor.r = floatValue;
+        if (id == 41201) state->lightColor.g = floatValue;
+        if (id == 41202) state->lightColor.b = floatValue;
+        if (id == 41203) state->ambientLightColor.r = floatValue;
+        if (id == 41204) state->ambientLightColor.g = floatValue;
+        if (id == 41205) state->ambientLightColor.b = floatValue;
+        render->SetLightColor(state->lightColor);
+        render->SetAmbientLightColor(state->ambientLightColor);
+        SetTrackbarFromFloat(hWnd, id - 10000, floatValue, 0.0f, 1.0f);
+        return true;
+    }
     if (id >= 41500 && id <= 41505 && TryGetSettingsEditFloat(hWnd, id, floatValue))
     {
         int index = id - 41500;
@@ -876,6 +889,30 @@ void HandleRenderSettingsHScroll(HWND hWnd, LPARAM lParam)
         render->SetMeshMixFresnelIntensity(TrackbarToFloat(trackbar, 0.0f, 2.0f));
         SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 2.0f));
         break;
+    case 31200:
+    case 31201:
+    case 31202:
+    {
+        float value = TrackbarToFloat(trackbar, 0.0f, 1.0f);
+        if (id == 31200) state->lightColor.r = value;
+        if (id == 31201) state->lightColor.g = value;
+        if (id == 31202) state->lightColor.b = value;
+        render->SetLightColor(state->lightColor);
+        SetEditFloat(hWnd, trackbar, value);
+        break;
+    }
+    case 31203:
+    case 31204:
+    case 31205:
+    {
+        float value = TrackbarToFloat(trackbar, 0.0f, 1.0f);
+        if (id == 31203) state->ambientLightColor.r = value;
+        if (id == 31204) state->ambientLightColor.g = value;
+        if (id == 31205) state->ambientLightColor.b = value;
+        render->SetAmbientLightColor(state->ambientLightColor);
+        SetEditFloat(hWnd, trackbar, value);
+        break;
+    }
     case 31400:
     case 31401:
     case 31402:

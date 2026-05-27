@@ -53,6 +53,8 @@ void SyncRenderSettingsDialogFromRender(HWND hWnd)
     state->cameraShakeIntensity = render->GetCameraShakeIntensity();
     state->gBufferNearPlane = render->GetGBufferNearPlane();
     state->gBufferFarPlane = render->GetGBufferFarPlane();
+    state->lightColor = render->GetLightColor();
+    state->ambientLightColor = render->GetAmbientLightColor();
     state->fogColor = render->GetPostEffectFogColor();
     state->godRayColor = render->GetPostEffectGodRayLightColor();
     state->godRayPos = render->GetPostEffectGodRayLightPos();
@@ -82,6 +84,18 @@ void SyncRenderSettingsDialogFromRender(HWND hWnd)
     SetTrackbarFromFloat(hWnd, 31106, render->GetMeshMixEnvMapBlend(), 0.0f, 1.0f);
     SetTrackbarFromFloat(hWnd, 31107, render->GetMeshMixSSSIntensity(), 0.0f, 30.0f);
     SetTrackbarFromFloat(hWnd, 31124, render->GetMeshMixFresnelIntensity(), 0.0f, 2.0f);
+    SetSettingsEditFloat(hWnd, 41200, state->lightColor.r);
+    SetSettingsEditFloat(hWnd, 41201, state->lightColor.g);
+    SetSettingsEditFloat(hWnd, 41202, state->lightColor.b);
+    SetSettingsEditFloat(hWnd, 41203, state->ambientLightColor.r);
+    SetSettingsEditFloat(hWnd, 41204, state->ambientLightColor.g);
+    SetSettingsEditFloat(hWnd, 41205, state->ambientLightColor.b);
+    SetTrackbarFromFloat(hWnd, 31200, state->lightColor.r, 0.0f, 1.0f);
+    SetTrackbarFromFloat(hWnd, 31201, state->lightColor.g, 0.0f, 1.0f);
+    SetTrackbarFromFloat(hWnd, 31202, state->lightColor.b, 0.0f, 1.0f);
+    SetTrackbarFromFloat(hWnd, 31203, state->ambientLightColor.r, 0.0f, 1.0f);
+    SetTrackbarFromFloat(hWnd, 31204, state->ambientLightColor.g, 0.0f, 1.0f);
+    SetTrackbarFromFloat(hWnd, 31205, state->ambientLightColor.b, 0.0f, 1.0f);
     SetSettingsEditFloat(hWnd, 41500, render->GetMeshPBRRoughness(), L"%.3f");
     SetSettingsEditFloat(hWnd, 41501, render->GetMeshPBRMetallic(), L"%.3f");
     SetSettingsEditFloat(hWnd, 41502, render->GetMeshPBREnvReflectionIntensity(), L"%.3f");

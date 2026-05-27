@@ -527,7 +527,9 @@ public:
     void SetMeshMixSSS(const bool enabled);
     void SetMeshMixSSSIntensity(const float intensity);
     void SetMeshMixSSSColor(const DWORD color);
+    D3DXCOLOR GetLightColor() const;
     float GetLightBrightness() const;
+    D3DXCOLOR GetAmbientLightColor() const;
     float GetAmbientLightBrightness() const;
     bool IsMeshMixSSSEnabled() const;
     float GetMeshMixSSSIntensity() const;
