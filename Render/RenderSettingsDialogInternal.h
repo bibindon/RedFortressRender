@@ -39,6 +39,7 @@ struct RenderSettingsDialogState
     HWND loadedModelsList = NULL;
     HWND animationList = NULL;
     HWND pointLightsList = NULL;
+    HWND settingsTextList = NULL;
     D3DXCOLOR lightColor = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
     D3DXCOLOR ambientLightColor = D3DXCOLOR(0.2f, 0.2f, 0.2f, 1.0f);
     D3DXCOLOR fogColor = D3DXCOLOR(0.72f, 0.78f, 0.86f, 1.0f);
@@ -117,6 +118,9 @@ void UpdateLoadedModelsList(RenderSettingsDialogState* state);
 void SyncLoadedModelsFromRender(RenderSettingsDialogState* state);
 const wchar_t* PointLightShapeToText(PointLightShape shape);
 void UpdatePointLightsList(RenderSettingsDialogState* state);
+void UpdateSettingsTextList(RenderSettingsDialogState* state);
+void SelectSettingsTextListItem(RenderSettingsDialogState* state, int index);
+void LoadSelectedSettingsTextPosition(HWND hWnd);
 int GetSelectedListViewIndex(HWND listView);
 void RemoveSelectedPointLight(HWND hWnd);
 void ClearAnimationList(RenderSettingsDialogState* state);

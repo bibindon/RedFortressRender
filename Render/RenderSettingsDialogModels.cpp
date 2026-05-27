@@ -201,6 +201,65 @@ void UpdatePointLightsList(RenderSettingsDialogState* state)
         ListView_SetItemText(state->pointLightsList, i, 3, brightnessText);
     }
 }
+
+void UpdateSettingsTextList(RenderSettingsDialogState* state)
+{
+    if (state == nullptr || state->render == nullptr || state->settingsTextList == NULL)
+    {
+        return;
+    }
+
+    const int selectedIndex = GetSelectedListViewIndex(state->settingsTextList);
+    const auto textList = state->render->GetSettingsDialogTextList();
+    ListView_DeleteAllItems(state->settingsTextList);
+    for (int i = 0; i < static_cast<int>(textList.size()); ++i)
+    {
+        wchar_t xText[32] { };
+        wchar_t yText[32] { };
+        const wchar_t* decoratedText = textList[i].decorated ? L"Yes" : L"No";
+        std::swprintf(xText, sizeof(xText) / sizeof(xText[0]), L"%.2f", textList[i].x);
+        std::swprintf(yText, sizeof(yText) / sizeof(yText[0]), L"%.2f", textList[i].y);
+        const wchar_t* values[] = { textList[i].text.c_str(), xText, yText, decoratedText };
+        AddSettingsListViewRow(state->settingsTextList, i, values, 4);
+    }
+
+    if (selectedIndex >= 0 && selectedIndex < static_cast<int>(textList.size()))
+    {
+        SelectSettingsTextListItem(state, selectedIndex);
+    }
+}
+
+void SelectSettingsTextListItem(RenderSettingsDialogState* state, int index)
+{
+    if (state == nullptr || state->settingsTextList == NULL || index < 0)
+    {
+        return;
+    }
+    ListView_SetItemState(state->settingsTextList, index, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
+    ListView_EnsureVisible(state->settingsTextList, index, FALSE);
+}
+
+void LoadSelectedSettingsTextPosition(HWND hWnd)
+{
+    RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    if (state == nullptr || state->render == nullptr)
+    {
+        return;
+    }
+    const int index = GetSelectedListViewIndex(state->settingsTextList);
+    const auto textList = state->render->GetSettingsDialogTextList();
+    if (index < 0 || index >= static_cast<int>(textList.size()))
+    {
+        return;
+    }
+    state->settingsTextX = textList[index].x;
+    state->settingsTextY = textList[index].y;
+    SetSettingsEditFloat(hWnd, 42150, state->settingsTextX);
+    SetSettingsEditFloat(hWnd, 42151, state->settingsTextY);
+    SetTrackbarFromFloat(hWnd, 32150, state->settingsTextX, 0.0f, 1.0f);
+    SetTrackbarFromFloat(hWnd, 32151, state->settingsTextY, 0.0f, 1.0f);
+}
+
 int GetSelectedListViewIndex(HWND listView)
 {
     if (listView == NULL)

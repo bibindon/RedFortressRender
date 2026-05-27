@@ -115,6 +115,14 @@ struct RenderLoadedModelInfo
     D3DXVECTOR3 pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 };
 
+struct RenderSettingsDialogTextInfo
+{
+    std::wstring text;
+    float x = 0.0f;
+    float y = 0.0f;
+    bool decorated = false;
+};
+
 class Render : public IDeviceResettable
 {
 
@@ -364,6 +372,10 @@ public:
                                const float X,
                                const float Y,
                                const bool decorated);
+    std::vector<RenderSettingsDialogTextInfo> GetSettingsDialogTextList() const;
+    bool SetSettingsDialogTextPosition(const size_t index,
+                                       const float X,
+                                       const float Y);
 
     void DrawImage(const std::wstring& text,
                    const int X,
@@ -622,14 +634,7 @@ private:
     // ポインターにしないとデバイスロストを扱う機能が機能しなくなる
     std::vector<Font*> m_fontList;
     std::vector<FontEx*> m_fontExList;
-    struct SettingsDialogTextInfo
-    {
-        std::wstring text;
-        float x = 0.0f;
-        float y = 0.0f;
-        bool decorated = false;
-    };
-    std::vector<SettingsDialogTextInfo> m_settingsDialogTextList;
+    std::vector<RenderSettingsDialogTextInfo> m_settingsDialogTextList;
     int m_settingsDialogTextFontId = -1;
     int m_settingsDialogTextFontExId = -1;
     Sprite m_sprite;

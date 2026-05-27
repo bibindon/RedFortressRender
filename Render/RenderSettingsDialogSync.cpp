@@ -201,6 +201,7 @@ void SyncRenderSettingsDialogFromRender(HWND hWnd)
     SetTrackbarFromInt(hWnd, 32130, render->GetPostEffectFontSampleSize(), 1, 21);
     SyncLoadedModelsFromRender(state);
     UpdatePointLightsList(state);
+    UpdateSettingsTextList(state);
 }
 }
 }

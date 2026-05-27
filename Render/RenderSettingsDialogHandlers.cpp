@@ -348,6 +348,12 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
         state->settingsTextX = (std::max)(0.0f, (std::min)(floatValue, 1.0f));
         SetSettingsEditFloat(hWnd, id, state->settingsTextX);
         SetTrackbarFromFloat(hWnd, 32150, state->settingsTextX, 0.0f, 1.0f);
+        const int index = GetSelectedListViewIndex(state->settingsTextList);
+        if (render->SetSettingsDialogTextPosition(static_cast<size_t>(index), state->settingsTextX, state->settingsTextY))
+        {
+            UpdateSettingsTextList(state);
+            SelectSettingsTextListItem(state, index);
+        }
         return true;
     }
     if (id == 42151 && TryGetSettingsEditFloat(hWnd, id, floatValue))
@@ -355,6 +361,12 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
         state->settingsTextY = (std::max)(0.0f, (std::min)(floatValue, 1.0f));
         SetSettingsEditFloat(hWnd, id, state->settingsTextY);
         SetTrackbarFromFloat(hWnd, 32151, state->settingsTextY, 0.0f, 1.0f);
+        const int index = GetSelectedListViewIndex(state->settingsTextList);
+        if (render->SetSettingsDialogTextPosition(static_cast<size_t>(index), state->settingsTextX, state->settingsTextY))
+        {
+            UpdateSettingsTextList(state);
+            SelectSettingsTextListItem(state, index);
+        }
         return true;
     }
     return false;
@@ -523,6 +535,9 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
                                           state->settingsTextX,
                                           state->settingsTextY,
                                           IsSettingsCheckboxChecked(hWnd, 32153));
+            UpdateSettingsTextList(state);
+            const auto textList = render->GetSettingsDialogTextList();
+            SelectSettingsTextListItem(state, static_cast<int>(textList.size()) - 1);
         }
         else if (id == 31411)
         {
@@ -1139,10 +1154,26 @@ void HandleRenderSettingsHScroll(HWND hWnd, LPARAM lParam)
     case 32150:
         state->settingsTextX = TrackbarToFloat(trackbar, 0.0f, 1.0f);
         SetEditFloat(hWnd, trackbar, state->settingsTextX);
+        {
+            const int index = GetSelectedListViewIndex(state->settingsTextList);
+            if (render->SetSettingsDialogTextPosition(static_cast<size_t>(index), state->settingsTextX, state->settingsTextY))
+            {
+                UpdateSettingsTextList(state);
+                SelectSettingsTextListItem(state, index);
+            }
+        }
         break;
     case 32151:
         state->settingsTextY = TrackbarToFloat(trackbar, 0.0f, 1.0f);
         SetEditFloat(hWnd, trackbar, state->settingsTextY);
+        {
+            const int index = GetSelectedListViewIndex(state->settingsTextList);
+            if (render->SetSettingsDialogTextPosition(static_cast<size_t>(index), state->settingsTextX, state->settingsTextY))
+            {
+                UpdateSettingsTextList(state);
+                SelectSettingsTextListItem(state, index);
+            }
+        }
         break;
     default:
         break;
@@ -1163,6 +1194,15 @@ void HandleRenderSettingsNotify(HWND hWnd, LPARAM lParam)
         {
             RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
             PopulateAnimationListForModel(state, listView->iItem);
+        }
+    }
+    else if (header->idFrom == 32155 && header->code == LVN_ITEMCHANGED)
+    {
+        const NMLISTVIEW* listView = reinterpret_cast<const NMLISTVIEW*>(lParam);
+        if ((listView->uChanged & LVIF_STATE) != 0 &&
+            (listView->uNewState & LVIS_SELECTED) != 0)
+        {
+            LoadSelectedSettingsTextPosition(hWnd);
         }
     }
     else if (header->idFrom == 31341 && header->code == NM_DBLCLK)

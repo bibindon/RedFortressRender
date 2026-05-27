@@ -748,7 +748,7 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     SendMessage(particleCombo, CB_SETCURSEL, 0, 0);
     CreateSettingsButton(hWnd, L"Place At LookAt", 352, y, 154, 24, 32141);
     y += 30;
-    CreateSettingsGroupBox(hWnd, L"Text", 8, y, 504, 112);
+    CreateSettingsGroupBox(hWnd, L"Text", 8, y, 504, 216);
     CreateSettingsStatic(hWnd, L"Text", 24, y + 24, 48, 18);
     CreateSettingsEdit(hWnd, L"サンプルテキスト", 96, y + 22, 268, 20, 32152);
     CreateSettingsCheckbox(hWnd, 32153, L"FontEx", 382, y + 20, 82, 22);
@@ -759,7 +759,11 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     CreateSettingsStatic(hWnd, L"Y", 24, y + 78, 24, 18);
     CreateSettingsTrackbar(hWnd, 32151, 96, y + 72, 268, 30, 0, 1000, 100);
     CreateSettingsEdit(hWnd, L"0.10", 374, y + 74, 48, 20, 42151);
-    y += 124;
+    y += 108;
+    const wchar_t* textColumns[] = { L"Text", L"X", L"Y", L"FontEx" };
+    const int textWidths[] = { 270, 60, 60, 70 };
+    state->settingsTextList = CreateSettingsListView(hWnd, 32155, 24, y, 482, 92, textColumns, textWidths, 4);
+    y += 108;
 
     SetSettingsTrackbarRange(hWnd, 31004, 0, 49);
     SetSettingsTrackbarRange(hWnd, 31005, 0, 100);

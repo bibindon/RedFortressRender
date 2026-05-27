@@ -3032,12 +3032,31 @@ void Render::AddSettingsDialogText(const std::wstring& text,
         return;
     }
 
-    SettingsDialogTextInfo textInfo;
+    RenderSettingsDialogTextInfo textInfo;
     textInfo.text = text;
     textInfo.x = ClampNormalizedTextPosition(X);
     textInfo.y = ClampNormalizedTextPosition(Y);
     textInfo.decorated = decorated;
     m_settingsDialogTextList.push_back(textInfo);
+}
+
+std::vector<RenderSettingsDialogTextInfo> Render::GetSettingsDialogTextList() const
+{
+    return m_settingsDialogTextList;
+}
+
+bool Render::SetSettingsDialogTextPosition(const size_t index,
+                                           const float X,
+                                           const float Y)
+{
+    if (index >= m_settingsDialogTextList.size())
+    {
+        return false;
+    }
+
+    m_settingsDialogTextList[index].x = ClampNormalizedTextPosition(X);
+    m_settingsDialogTextList[index].y = ClampNormalizedTextPosition(Y);
+    return true;
 }
 
 void Render::DrawImage(const std::wstring& text,
