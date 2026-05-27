@@ -108,6 +108,7 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
 std::wstring GetDisplayFileName(const std::wstring& filePath);
 const wchar_t* LoadedModelTypeToText(RenderSettingsDialogState::LoadedModelType type);
 void UpdateLoadedModelsList(RenderSettingsDialogState* state);
+void SyncLoadedModelsFromRender(RenderSettingsDialogState* state);
 const wchar_t* PointLightShapeToText(PointLightShape shape);
 void UpdatePointLightsList(RenderSettingsDialogState* state);
 int GetSelectedListViewIndex(HWND listView);

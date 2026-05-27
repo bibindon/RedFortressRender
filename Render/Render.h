@@ -98,6 +98,23 @@ struct RenderingQualitySettings
     bool godRayEnabled = false;
 };
 
+enum class RenderLoadedModelType
+{
+    MeshMix,
+    MeshPBR,
+    MeshInstancing,
+    MeshMixSkinAnim
+};
+
+struct RenderLoadedModelInfo
+{
+    RenderLoadedModelType type = RenderLoadedModelType::MeshMix;
+    int renderId = -1;
+    std::wstring filePath;
+    float scale = 1.0f;
+    D3DXVECTOR3 pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+};
+
 class Render : public IDeviceResettable
 {
 
@@ -233,6 +250,7 @@ public:
     const std::vector<MeshMixSkinAnim::AnimationInfo>* GetMeshMixSkinAnimAnimationInfoList(int id) const;
     bool PlayMeshMixSkinAnimAnimation(int id, const std::wstring& name);
     void SetMeshMixSkinAnimAlphaClip(const bool enabled);
+    std::vector<RenderLoadedModelInfo> GetLoadedModelInfoList();
 
     void SetMeshMixPos(const int id, const D3DXVECTOR3& pos);
     void SetMeshMixSaturateShadow(const bool enabled);

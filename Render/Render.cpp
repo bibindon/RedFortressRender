@@ -2287,6 +2287,63 @@ bool Render::PlayMeshMixSkinAnimAnimation(const int id, const std::wstring& name
     return m_meshMixSkinAnimList.at(id)->PlayAnimation(name);
 }
 
+std::vector<RenderLoadedModelInfo> Render::GetLoadedModelInfoList()
+{
+    std::vector<RenderLoadedModelInfo> models;
+
+    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
+    {
+        RenderLoadedModelInfo info;
+        info.type = RenderLoadedModelType::MeshMix;
+        info.renderId = i;
+        info.filePath = m_meshMixList.at(i).GetMeshName();
+        info.scale = m_meshMixList.at(i).GetScale();
+        info.pos = m_meshMixList.at(i).GetPos();
+        models.push_back(info);
+    }
+
+    for (int i = 0; i < static_cast<int>(m_meshPBRList.size()); ++i)
+    {
+        RenderLoadedModelInfo info;
+        info.type = RenderLoadedModelType::MeshPBR;
+        info.renderId = i;
+        info.filePath = m_meshPBRList.at(i).GetMeshName();
+        info.scale = m_meshPBRList.at(i).GetScale();
+        info.pos = m_meshPBRList.at(i).GetPos();
+        models.push_back(info);
+    }
+
+    int instancingIndex = 0;
+    for (const auto& mesh : m_meshInstancingMap)
+    {
+        RenderLoadedModelInfo info;
+        info.type = RenderLoadedModelType::MeshInstancing;
+        info.renderId = instancingIndex;
+        info.filePath = mesh.first;
+        models.push_back(info);
+        ++instancingIndex;
+    }
+
+    for (int i = 0; i < static_cast<int>(m_meshMixSkinAnimList.size()); ++i)
+    {
+        const MeshMixSkinAnim* mesh = m_meshMixSkinAnimList.at(i);
+        if (mesh == nullptr)
+        {
+            continue;
+        }
+
+        RenderLoadedModelInfo info;
+        info.type = RenderLoadedModelType::MeshMixSkinAnim;
+        info.renderId = i;
+        info.filePath = mesh->GetMeshName();
+        info.scale = mesh->GetScale();
+        info.pos = mesh->GetPos();
+        models.push_back(info);
+    }
+
+    return models;
+}
+
 void Render::SetMeshMixSkinAnimAlphaClip(const bool enabled)
 {
     m_meshMixSkinAnimAlphaClipEnabled = enabled;

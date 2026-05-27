@@ -185,6 +185,7 @@ void SyncRenderSettingsDialogFromRender(HWND hWnd)
     SetTrackbarFromInt(hWnd, 32120, render->GetPostEffectFXAAQuality(), 1, 8);
     SetSettingsEditInt(hWnd, 42130, render->GetPostEffectFontSampleSize());
     SetTrackbarFromInt(hWnd, 32130, render->GetPostEffectFontSampleSize(), 1, 31);
+    SyncLoadedModelsFromRender(state);
     UpdatePointLightsList(state);
 }
 }

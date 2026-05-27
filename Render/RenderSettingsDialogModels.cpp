@@ -60,6 +60,90 @@ void UpdateLoadedModelsList(RenderSettingsDialogState* state)
         ListView_SetItemText(state->loadedModelsList, i, 3, posText);
     }
 }
+
+RenderSettingsDialogState::LoadedModelType ToDialogLoadedModelType(const RenderLoadedModelType type)
+{
+    switch (type)
+    {
+    case RenderLoadedModelType::MeshMix:
+        return RenderSettingsDialogState::LoadedModelType::MeshMix;
+    case RenderLoadedModelType::MeshPBR:
+        return RenderSettingsDialogState::LoadedModelType::MeshPBR;
+    case RenderLoadedModelType::MeshInstancing:
+        return RenderSettingsDialogState::LoadedModelType::MeshInstancing;
+    case RenderLoadedModelType::MeshMixSkinAnim:
+        return RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim;
+    default:
+        return RenderSettingsDialogState::LoadedModelType::MeshMix;
+    }
+}
+
+bool LoadedModelRecordsEqual(const RenderSettingsDialogState::LoadedModelRecord& left,
+                             const RenderSettingsDialogState::LoadedModelRecord& right)
+{
+    return left.type == right.type &&
+           left.renderId == right.renderId &&
+           left.filePath == right.filePath &&
+           left.scale == right.scale &&
+           left.pos.x == right.pos.x &&
+           left.pos.y == right.pos.y &&
+           left.pos.z == right.pos.z;
+}
+
+void SyncLoadedModelsFromRender(RenderSettingsDialogState* state)
+{
+    if (state == nullptr || state->render == nullptr)
+    {
+        return;
+    }
+
+    const auto renderModels = state->render->GetLoadedModelInfoList();
+    std::vector<RenderSettingsDialogState::LoadedModelRecord> syncedModels;
+    syncedModels.reserve(renderModels.size());
+
+    for (const auto& renderModel : renderModels)
+    {
+        RenderSettingsDialogState::LoadedModelRecord record;
+        record.type = ToDialogLoadedModelType(renderModel.type);
+        record.renderId = renderModel.renderId;
+        record.filePath = renderModel.filePath;
+        record.scale = renderModel.scale;
+        record.pos = renderModel.pos;
+        syncedModels.push_back(record);
+    }
+
+    bool changed = state->loadedModels.size() != syncedModels.size();
+    if (!changed)
+    {
+        for (size_t i = 0; i < syncedModels.size(); ++i)
+        {
+            if (!LoadedModelRecordsEqual(state->loadedModels.at(i), syncedModels.at(i)))
+            {
+                changed = true;
+                break;
+            }
+        }
+    }
+
+    if (!changed)
+    {
+        return;
+    }
+
+    const int selectedIndex = GetSelectedListViewIndex(state->loadedModelsList);
+    state->loadedModels = syncedModels;
+    UpdateLoadedModelsList(state);
+
+    if (selectedIndex >= 0 && selectedIndex < static_cast<int>(state->loadedModels.size()))
+    {
+        ListView_SetItemState(state->loadedModelsList, selectedIndex, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
+        PopulateAnimationListForModel(state, selectedIndex);
+    }
+    else
+    {
+        ClearAnimationList(state);
+    }
+}
 const wchar_t* PointLightShapeToText(const PointLightShape shape)
 {
     switch (shape)
