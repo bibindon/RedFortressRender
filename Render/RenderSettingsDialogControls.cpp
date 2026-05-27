@@ -754,11 +754,11 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     CreateSettingsCheckbox(hWnd, 32153, L"FontEx", 382, y + 20, 82, 22);
     CreateSettingsButton(hWnd, L"Add", 464, y + 18, 44, 24, 32154);
     CreateSettingsStatic(hWnd, L"X", 24, y + 52, 24, 18);
-    CreateSettingsTrackbar(hWnd, 32150, 96, y + 46, 268, 30, 0, 1300, 30);
-    CreateSettingsEdit(hWnd, L"30", 374, y + 48, 48, 20, 42150);
+    CreateSettingsTrackbar(hWnd, 32150, 96, y + 46, 268, 30, 0, 1000, 100);
+    CreateSettingsEdit(hWnd, L"0.10", 374, y + 48, 48, 20, 42150);
     CreateSettingsStatic(hWnd, L"Y", 24, y + 78, 24, 18);
-    CreateSettingsTrackbar(hWnd, 32151, 96, y + 72, 268, 30, 0, 700, 60);
-    CreateSettingsEdit(hWnd, L"60", 374, y + 74, 48, 20, 42151);
+    CreateSettingsTrackbar(hWnd, 32151, 96, y + 72, 268, 30, 0, 1000, 100);
+    CreateSettingsEdit(hWnd, L"0.10", 374, y + 74, 48, 20, 42151);
     y += 124;
 
     SetSettingsTrackbarRange(hWnd, 31004, 0, 49);
@@ -827,8 +827,8 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     SetSettingsTrackbarRange(hWnd, 32111, 2, 21);
     SetSettingsTrackbarRange(hWnd, 32120, 1, 8);
     SetSettingsTrackbarRange(hWnd, 32130, 1, 21);
-    SetSettingsTrackbarRange(hWnd, 32150, 0, 1300);
-    SetSettingsTrackbarRange(hWnd, 32151, 0, 700);
+    SetSettingsTrackbarRange(hWnd, 32150, 0, 1000);
+    SetSettingsTrackbarRange(hWnd, 32151, 0, 1000);
 
     CreateSettingsButton(hWnd, L"OK", 310, y, 88, 24, IDOK);
     CreateSettingsButton(hWnd, L"Cancel", 424, y, 88, 24, IDCANCEL);

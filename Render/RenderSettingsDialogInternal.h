@@ -47,8 +47,8 @@ struct RenderSettingsDialogState
     D3DXCOLOR pointLightColor = D3DXCOLOR(1.0f, 0.35f, 0.10f, 1.0f);
     float pointLightBrightness = 1.0f;
     PointLightShape pointLightShape = PointLightShape::Point;
-    int settingsTextX = 30;
-    int settingsTextY = 60;
+    float settingsTextX = 0.1f;
+    float settingsTextY = 0.1f;
     float cameraNearPlane = 0.1f;
     float cameraFarPlane = 30000.0f;
     float cameraShakeDuration = 1.0f;

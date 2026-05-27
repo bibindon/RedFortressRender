@@ -343,18 +343,18 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
         SetTrackbarFromInt(hWnd, 32130, intValue, 1, 21);
         return true;
     }
-    if (id == 42150 && TryGetSettingsEditInt(hWnd, id, intValue))
+    if (id == 42150 && TryGetSettingsEditFloat(hWnd, id, floatValue))
     {
-        state->settingsTextX = (std::max)(0, (std::min)(intValue, 1300));
-        SetSettingsEditInt(hWnd, id, state->settingsTextX);
-        SetTrackbarFromInt(hWnd, 32150, state->settingsTextX, 0, 1300);
+        state->settingsTextX = (std::max)(0.0f, (std::min)(floatValue, 1.0f));
+        SetSettingsEditFloat(hWnd, id, state->settingsTextX);
+        SetTrackbarFromFloat(hWnd, 32150, state->settingsTextX, 0.0f, 1.0f);
         return true;
     }
-    if (id == 42151 && TryGetSettingsEditInt(hWnd, id, intValue))
+    if (id == 42151 && TryGetSettingsEditFloat(hWnd, id, floatValue))
     {
-        state->settingsTextY = (std::max)(0, (std::min)(intValue, 700));
-        SetSettingsEditInt(hWnd, id, state->settingsTextY);
-        SetTrackbarFromInt(hWnd, 32151, state->settingsTextY, 0, 700);
+        state->settingsTextY = (std::max)(0.0f, (std::min)(floatValue, 1.0f));
+        SetSettingsEditFloat(hWnd, id, state->settingsTextY);
+        SetTrackbarFromFloat(hWnd, 32151, state->settingsTextY, 0.0f, 1.0f);
         return true;
     }
     return false;
@@ -1137,12 +1137,12 @@ void HandleRenderSettingsHScroll(HWND hWnd, LPARAM lParam)
         break;
     }
     case 32150:
-        state->settingsTextX = TrackbarToInt(trackbar, 0, 1300);
-        SetEditInt(hWnd, trackbar, state->settingsTextX);
+        state->settingsTextX = TrackbarToFloat(trackbar, 0.0f, 1.0f);
+        SetEditFloat(hWnd, trackbar, state->settingsTextX);
         break;
     case 32151:
-        state->settingsTextY = TrackbarToInt(trackbar, 0, 700);
-        SetEditInt(hWnd, trackbar, state->settingsTextY);
+        state->settingsTextY = TrackbarToFloat(trackbar, 0.0f, 1.0f);
+        SetEditFloat(hWnd, trackbar, state->settingsTextY);
         break;
     default:
         break;

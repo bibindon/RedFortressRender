@@ -41,6 +41,21 @@ namespace NSRender
 {
 namespace
 {
+float ClampNormalizedTextPosition(const float value)
+{
+    return (std::max)(0.0f, (std::min)(value, 1.0f));
+}
+
+int NormalizedTextXToBaseX(const float x)
+{
+    return static_cast<int>(ClampNormalizedTextPosition(x) * static_cast<float>(Common::BASE_W));
+}
+
+int NormalizedTextYToBaseY(const float y)
+{
+    return static_cast<int>(ClampNormalizedTextPosition(y) * static_cast<float>(Common::BASE_H));
+}
+
 class CameraShakeFrameScope
 {
 public:
@@ -2915,6 +2930,23 @@ void Render::DrawText_(const int fontId,
     m_fontList.at(fontId)->AddText(text, X, Y, color);
 }
 
+void Render::DrawTextNormalized(const int fontId,
+                                const std::wstring& text,
+                                const float X,
+                                const float Y)
+{
+    DrawText_(fontId, text, NormalizedTextXToBaseX(X), NormalizedTextYToBaseY(Y));
+}
+
+void Render::DrawTextNormalized(const int fontId,
+                                const std::wstring& text,
+                                const float X,
+                                const float Y,
+                                const UINT color)
+{
+    DrawText_(fontId, text, NormalizedTextXToBaseX(X), NormalizedTextYToBaseY(Y), color);
+}
+
 void Render::DrawTextEx(const int fontId,
                         const std::wstring& text,
                         const int X,
@@ -2940,6 +2972,23 @@ void Render::DrawTextEx(const int fontId,
     }
 
     m_fontExList.at(fontId)->AddText(text, X, Y, color);
+}
+
+void Render::DrawTextExNormalized(const int fontId,
+                                  const std::wstring& text,
+                                  const float X,
+                                  const float Y)
+{
+    DrawTextEx(fontId, text, NormalizedTextXToBaseX(X), NormalizedTextYToBaseY(Y));
+}
+
+void Render::DrawTextExNormalized(const int fontId,
+                                  const std::wstring& text,
+                                  const float X,
+                                  const float Y,
+                                  const UINT color)
+{
+    DrawTextEx(fontId, text, NormalizedTextXToBaseX(X), NormalizedTextYToBaseY(Y), color);
 }
 
 void Render::DrawTextCenter(const int fontId,
@@ -2974,8 +3023,8 @@ void Render::DrawTextCenter(const int fontId,
 }
 
 void Render::AddSettingsDialogText(const std::wstring& text,
-                                   const int X,
-                                   const int Y,
+                                   const float X,
+                                   const float Y,
                                    const bool decorated)
 {
     if (text.empty())
@@ -2985,8 +3034,8 @@ void Render::AddSettingsDialogText(const std::wstring& text,
 
     SettingsDialogTextInfo textInfo;
     textInfo.text = text;
-    textInfo.x = X;
-    textInfo.y = Y;
+    textInfo.x = ClampNormalizedTextPosition(X);
+    textInfo.y = ClampNormalizedTextPosition(Y);
     textInfo.decorated = decorated;
     m_settingsDialogTextList.push_back(textInfo);
 }
@@ -4448,11 +4497,11 @@ void Render::DrawSettingsDialogText()
     {
         if (textInfo.decorated)
         {
-            DrawTextEx(m_settingsDialogTextFontExId, textInfo.text, textInfo.x, textInfo.y);
+            DrawTextExNormalized(m_settingsDialogTextFontExId, textInfo.text, textInfo.x, textInfo.y);
         }
         else
         {
-            DrawText_(m_settingsDialogTextFontId, textInfo.text, textInfo.x, textInfo.y);
+            DrawTextNormalized(m_settingsDialogTextFontId, textInfo.text, textInfo.x, textInfo.y);
         }
     }
 }

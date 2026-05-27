@@ -312,6 +312,17 @@ public:
                    const int Y,
                    const UINT color);
 
+    void DrawTextNormalized(const int fontId,
+                            const std::wstring& text,
+                            const float X,
+                            const float Y);
+
+    void DrawTextNormalized(const int fontId,
+                            const std::wstring& text,
+                            const float X,
+                            const float Y,
+                            const UINT color);
+
     void DrawTextEx(const int fontId,
                     const std::wstring& text,
                     const int X,
@@ -322,6 +333,17 @@ public:
                     const int X,
                     const int Y,
                     const UINT color);
+
+    void DrawTextExNormalized(const int fontId,
+                              const std::wstring& text,
+                              const float X,
+                              const float Y);
+
+    void DrawTextExNormalized(const int fontId,
+                              const std::wstring& text,
+                              const float X,
+                              const float Y,
+                              const UINT color);
 
     void DrawTextCenter(const int fontId,
                         const std::wstring& text,
@@ -339,8 +361,8 @@ public:
                         const UINT color);
 
     void AddSettingsDialogText(const std::wstring& text,
-                               const int X,
-                               const int Y,
+                               const float X,
+                               const float Y,
                                const bool decorated);
 
     void DrawImage(const std::wstring& text,
@@ -603,8 +625,8 @@ private:
     struct SettingsDialogTextInfo
     {
         std::wstring text;
-        int x = 0;
-        int y = 0;
+        float x = 0.0f;
+        float y = 0.0f;
         bool decorated = false;
     };
     std::vector<SettingsDialogTextInfo> m_settingsDialogTextList;
