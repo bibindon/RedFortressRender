@@ -64,7 +64,7 @@ void SyncRenderSettingsDialogFromRender(HWND hWnd)
     SetSettingsEditFloat(hWnd, 41003, state->cameraHorizontalFovDegrees, L"%.0f");
     SetSettingsEditFloat(hWnd, 41004, state->cameraShakeDuration, L"%.1f");
     SetSettingsEditFloat(hWnd, 41005, state->cameraShakeIntensity, L"%.2f");
-    SetTrackbarFromFloat(hWnd, 31003, state->cameraHorizontalFovDegrees, 1.0f, 360.0f);
+    SetTrackbarFromFloat(hWnd, 31003, state->cameraHorizontalFovDegrees, 1.0f, 180.0f);
     SetTrackbarFromFloat(hWnd, 31004, state->cameraShakeDuration, 0.1f, 5.0f);
     SetTrackbarFromFloat(hWnd, 31005, state->cameraShakeIntensity, 0.0f, 1.0f);
     SetSettingsEditFloat(hWnd, 41010, state->gBufferNearPlane, L"%.3f");
