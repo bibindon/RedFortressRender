@@ -141,8 +141,12 @@
     <FxCompile Include="..\Render\shader\Particle.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
-    <FxCompile Include="..\Render\shader\MeshPBR.fx" />
-    <FxCompile Include="..\Render\shader\PostEffectSSGI.fx" />
+    <FxCompile Include="..\Render\shader\PostEffectSSGI.fx">
+      <Filter>リソース ファイル</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Render\shader\MeshPBR.fx">
+      <Filter>リソース ファイル</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sample.rc">
