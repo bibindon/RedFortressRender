@@ -262,6 +262,8 @@ public:
     const std::vector<MeshMixSkinAnim::AnimationInfo>* GetMeshMixSkinAnimAnimationInfoList(int id) const;
     bool PlayMeshMixSkinAnimAnimation(int id, const std::wstring& name);
     void SetMeshMixSkinAnimAlphaClip(const bool enabled);
+    void SetMeshMixSkinAnimPos(const int id, const D3DXVECTOR3& pos);
+    void SetMeshMixSkinAnimRotY(const int id, const float rotY);
     std::vector<RenderLoadedModelInfo> GetLoadedModelInfoList();
 
     void SetMeshMixPos(const int id, const D3DXVECTOR3& pos);

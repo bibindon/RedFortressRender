@@ -2546,6 +2546,26 @@ void Render::SetMeshMixPos(const int id, const D3DXVECTOR3& pos)
     m_meshMixList.at(id).SetPos(pos);
 }
 
+void Render::SetMeshMixSkinAnimPos(const int id, const D3DXVECTOR3& pos)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshMixSkinAnimList.size()))
+    {
+        return;
+    }
+
+    m_meshMixSkinAnimList.at(id)->SetPos(pos);
+}
+
+void Render::SetMeshMixSkinAnimRotY(const int id, const float rotY)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshMixSkinAnimList.size()))
+    {
+        return;
+    }
+
+    m_meshMixSkinAnimList.at(id)->SetRotY(rotY);
+}
+
 int Render::AddMeshMixSkinAnim(const std::wstring& filePath,
                                const D3DXVECTOR3& pos,
                                const D3DXVECTOR3& rot,
