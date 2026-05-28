@@ -1,4 +1,4 @@
-# RenderSettings.csv について
+﻿# RenderSettings.csv について
 
 `Sample\RenderSettings.csv` は、起動時に次の 2 か所から読まれる。
 
@@ -43,6 +43,13 @@ Sample 側の一部キーは `std::stoi(value) != 0` で判定しているため
 |---|---|
 | `CameraNear` | カメラ Near |
 | `CameraFar` | カメラ Far |
+| `CameraHorizontalFov` | カメラ横 FOV 度数 |
+| `CameraPosX` | カメラ位置 X |
+| `CameraPosY` | カメラ位置 Y |
+| `CameraPosZ` | カメラ位置 Z |
+| `CameraLookAtX` | カメラ注視点 X |
+| `CameraLookAtY` | カメラ注視点 Y |
+| `CameraLookAtZ` | カメラ注視点 Z |
 | `GBufferNear` | GBuffer Near |
 | `GBufferFar` | GBuffer Far |
 

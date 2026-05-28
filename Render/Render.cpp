@@ -421,6 +421,25 @@ void Render::ApplySettings()
     const auto cameraNear = m_settings.find(L"CameraNear");
     const auto cameraFar = m_settings.find(L"CameraFar");
     const auto cameraHorizontalFov = m_settings.find(L"CameraHorizontalFov");
+    auto tryReadFloatSetting = [this](const wchar_t* key, float& outValue)
+    {
+        const auto setting = m_settings.find(key);
+        if (setting == m_settings.end())
+        {
+            return false;
+        }
+
+        try
+        {
+            outValue = std::stof(setting->second);
+            return true;
+        }
+        catch (...)
+        {
+        }
+
+        return false;
+    };
     if (cameraHorizontalFov != m_settings.end())
     {
         try
@@ -451,6 +470,21 @@ void Render::ApplySettings()
         catch (...)
         {
         }
+    }
+
+    D3DXVECTOR3 cameraPos = Camera::GetEyePos();
+    D3DXVECTOR3 lookAtPos = Camera::GetLookAtPos();
+    bool hasCameraPosSetting = false;
+    bool hasLookAtPosSetting = false;
+    hasCameraPosSetting = tryReadFloatSetting(L"CameraPosX", cameraPos.x) || hasCameraPosSetting;
+    hasCameraPosSetting = tryReadFloatSetting(L"CameraPosY", cameraPos.y) || hasCameraPosSetting;
+    hasCameraPosSetting = tryReadFloatSetting(L"CameraPosZ", cameraPos.z) || hasCameraPosSetting;
+    hasLookAtPosSetting = tryReadFloatSetting(L"CameraLookAtX", lookAtPos.x) || hasLookAtPosSetting;
+    hasLookAtPosSetting = tryReadFloatSetting(L"CameraLookAtY", lookAtPos.y) || hasLookAtPosSetting;
+    hasLookAtPosSetting = tryReadFloatSetting(L"CameraLookAtZ", lookAtPos.z) || hasLookAtPosSetting;
+    if (hasCameraPosSetting || hasLookAtPosSetting)
+    {
+        SetCamera(cameraPos, lookAtPos);
     }
 
     const auto gbufferNear = m_settings.find(L"GBufferNear");
