@@ -3,6 +3,187 @@ namespace NSRender
 {
 namespace RenderSettingsDialogInternal
 {
+namespace
+{
+std::wstring TrimCsvField(const std::wstring& text)
+{
+    const auto first = std::find_if_not(text.begin(), text.end(), [](wchar_t ch)
+    {
+        return std::iswspace(ch) != 0;
+    });
+    const auto last = std::find_if_not(text.rbegin(), text.rend(), [](wchar_t ch)
+    {
+        return std::iswspace(ch) != 0;
+    }).base();
+    if (first >= last)
+    {
+        return L"";
+    }
+    return std::wstring(first, last);
+}
+
+std::wstring UnquoteCsvField(const std::wstring& text)
+{
+    if (text.size() >= 2 && text.front() == L'"' && text.back() == L'"')
+    {
+        return text.substr(1, text.size() - 2);
+    }
+    return text;
+}
+
+bool IsAbsoluteCsvPath(const std::wstring& path)
+{
+    if (path.size() >= 2 && path[1] == L':')
+    {
+        return true;
+    }
+    if (path.size() >= 2 && path[0] == L'\\' && path[1] == L'\\')
+    {
+        return true;
+    }
+    return !path.empty() && (path[0] == L'\\' || path[0] == L'/');
+}
+
+std::wstring GetCsvParentDirectoryPath(const std::wstring& filePath)
+{
+    wchar_t fullPath[MAX_PATH] { };
+    const DWORD length = GetFullPathNameW(filePath.c_str(), static_cast<DWORD>(_countof(fullPath)), fullPath, nullptr);
+    if (length == 0 || length >= _countof(fullPath))
+    {
+        return L"";
+    }
+    std::wstring directoryPath = fullPath;
+    const std::size_t slashPos = directoryPath.find_last_of(L"\\/");
+    if (slashPos == std::wstring::npos)
+    {
+        return L"";
+    }
+    directoryPath.erase(slashPos);
+    return directoryPath;
+}
+
+std::vector<std::wstring> SplitCsvLineText(const std::wstring& line)
+{
+    std::vector<std::wstring> fields;
+    std::wstring currentField;
+    bool inQuotes = false;
+    for (std::size_t i = 0; i < line.size(); ++i)
+    {
+        const wchar_t ch = line[i];
+        if (ch == L'"')
+        {
+            if (inQuotes && (i + 1) < line.size() && line[i + 1] == L'"')
+            {
+                currentField += L'"';
+                ++i;
+            }
+            else
+            {
+                inQuotes = !inQuotes;
+            }
+            continue;
+        }
+        if (ch == L',' && !inQuotes)
+        {
+            fields.push_back(currentField);
+            currentField.clear();
+            continue;
+        }
+        currentField += ch;
+    }
+    fields.push_back(currentField);
+    return fields;
+}
+
+bool ResolveXFileListPath(const std::wstring& csvDirectoryPath,
+                          const std::wstring& sourcePath,
+                          std::wstring& resolvedPath)
+{
+    std::wstring candidatePath = UnquoteCsvField(TrimCsvField(sourcePath));
+    if (candidatePath.empty())
+    {
+        return false;
+    }
+    if (!IsAbsoluteCsvPath(candidatePath) && !csvDirectoryPath.empty())
+    {
+        candidatePath = csvDirectoryPath + L"\\" + candidatePath;
+    }
+    wchar_t fullPath[MAX_PATH] { };
+    const DWORD length = GetFullPathNameW(candidatePath.c_str(), static_cast<DWORD>(_countof(fullPath)), fullPath, nullptr);
+    if (length == 0 || length >= _countof(fullPath))
+    {
+        return false;
+    }
+    const DWORD attributes = GetFileAttributesW(fullPath);
+    if (attributes == INVALID_FILE_ATTRIBUTES || (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
+    {
+        return false;
+    }
+    resolvedPath = fullPath;
+    return true;
+}
+
+bool LoadXFileListCsv(RenderSettingsDialogState* state,
+                      const std::wstring& csvPath,
+                      int& loadedCount,
+                      int& skippedCount)
+{
+    loadedCount = 0;
+    skippedCount = 0;
+    if (state == nullptr || state->render == nullptr || csvPath.empty())
+    {
+        return false;
+    }
+    std::wifstream file(csvPath);
+    if (!file)
+    {
+        return false;
+    }
+    const std::wstring csvDirectoryPath = GetCsvParentDirectoryPath(csvPath);
+    std::wstring line;
+    while (std::getline(file, line))
+    {
+        const std::wstring trimmedLine = TrimCsvField(line);
+        if (trimmedLine.empty() || trimmedLine.front() == L'#')
+        {
+            continue;
+        }
+        const std::vector<std::wstring> fields = SplitCsvLineText(trimmedLine);
+        if (fields.size() < 5)
+        {
+            ++skippedCount;
+            continue;
+        }
+        try
+        {
+            std::wstring resolvedPath;
+            if (!ResolveXFileListPath(csvDirectoryPath, fields[0], resolvedPath))
+            {
+                ++skippedCount;
+                continue;
+            }
+            const D3DXVECTOR3 pos(std::stof(TrimCsvField(fields[1])),
+                                  std::stof(TrimCsvField(fields[2])),
+                                  std::stof(TrimCsvField(fields[3])));
+            const D3DXVECTOR3 rot(0.0f, D3DXToRadian(std::stof(TrimCsvField(fields[4]))), 0.0f);
+            const int renderId = state->render->AddMeshMix(resolvedPath, pos, rot, state->modelLoadScale);
+            AddLoadedModelRecord(state,
+                                 RenderSettingsDialogState::LoadedModelType::MeshMix,
+                                 renderId,
+                                 resolvedPath,
+                                 pos);
+            ++loadedCount;
+        }
+        catch (...)
+        {
+            ++skippedCount;
+        }
+    }
+    UpdateLoadedModelsList(state);
+    return loadedCount > 0;
+}
+}
+
 BOOL CALLBACK CaptureRenderSettingsChildPlacementProc(HWND child, LPARAM lParam)
 {
     RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(lParam);
@@ -633,6 +814,25 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
                                      renderId,
                                      state->meshMixSkinAnimPath,
                                      pos);
+            }
+        }
+        else if (id == 31332)
+        {
+            if (ShowSettingsOpenFileDialog(hWnd,
+                                           L"CSV Files (*.csv)\0*.csv\0All Files (*.*)\0*.*\0",
+                                           state->xFileListPath))
+            {
+                int loadedCount = 0;
+                int skippedCount = 0;
+                LoadXFileListCsv(state, state->xFileListPath, loadedCount, skippedCount);
+
+                wchar_t message[160] { };
+                std::swprintf(message,
+                              _countof(message),
+                              L"Loaded: %d\nSkipped: %d",
+                              loadedCount,
+                              skippedCount);
+                MessageBoxW(hWnd, message, L"Load XFileList", MB_OK | MB_ICONINFORMATION);
             }
         }
         else if (id == 31360)

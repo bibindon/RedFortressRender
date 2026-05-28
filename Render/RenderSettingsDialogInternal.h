@@ -5,6 +5,8 @@
 #include <commdlg.h>
 #include <cstdlib>
 #include <cwchar>
+#include <cwctype>
+#include <fstream>
 #include <string>
 #include <vector>
 #include "Render.h"
@@ -66,6 +68,7 @@ struct RenderSettingsDialogState
     std::wstring meshMixSkinAnimPath;
     std::wstring meshMixSkinNonAnimPath;
     std::wstring meshMixSkinAnimOnlyPath;
+    std::wstring xFileListPath;
     std::wstring maskedGaussianMaskPath;
     std::wstring settingsCsvPath;
     std::vector<LoadedModelRecord> loadedModels;

@@ -442,7 +442,7 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     CreateSettingsStatic(hWnd, L"MeshMix Skin Anim (x)", 24, y + 5, 138, 18);
     CreateSettingsEdit(hWnd, L"", 162, y, 124, 20, 31330);
     CreateSettingsButton(hWnd, L"Open...", 298, y - 2, 42, 24, 31331);
-    CreateSettingsButton(hWnd, L"Load XFileList...", 350, y - 2, 116, 24);
+    CreateSettingsButton(hWnd, L"Load XFileList...", 350, y - 2, 116, 24, 31332);
     CreateSettingsCheckbox(hWnd, 31302, L"Clip", 476, y, 52, 22);
     y += 28;
     CreateSettingsButton(hWnd, L"Open NonAnim...", 24, y, 154, 24, 31360);
