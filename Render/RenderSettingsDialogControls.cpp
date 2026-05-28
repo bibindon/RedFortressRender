@@ -189,12 +189,26 @@ void SetEditFloat(HWND hWnd, HWND trackbar, float value, const wchar_t* format)
 {
     wchar_t buffer[32] { };
     std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), format, value);
+    const int trackbarId = GetDlgCtrlID(trackbar);
+    HWND edit = GetDlgItem(hWnd, trackbarId + 10000);
+    if (edit != NULL)
+    {
+        SetWindowTextW(edit, buffer);
+        return;
+    }
     SetNearestValueEditText(hWnd, trackbar, buffer);
 }
 void SetEditInt(HWND hWnd, HWND trackbar, int value)
 {
     wchar_t buffer[32] { };
     std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%d", value);
+    const int trackbarId = GetDlgCtrlID(trackbar);
+    HWND edit = GetDlgItem(hWnd, trackbarId + 10000);
+    if (edit != NULL)
+    {
+        SetWindowTextW(edit, buffer);
+        return;
+    }
     SetNearestValueEditText(hWnd, trackbar, buffer);
 }
 HWND CreateSettingsCombo(HWND parent, int id, int x, int y, int w, int h)

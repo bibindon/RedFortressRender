@@ -44,4 +44,5 @@ Sample/res/model/yyb
 /.VSCodeCounter/2025-10-20_00-33-46/results.json
 /.VSCodeCounter/2025-10-20_00-33-46/results.md
 /.VSCodeCounter/2025-10-20_00-33-46/results.txt
-/Render/Render/x64/Release
+Release
+Debug

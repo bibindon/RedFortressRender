@@ -680,6 +680,116 @@ void Render::ApplySettings()
         }
     }
 
+    const auto sunLightIntensity = m_settings.find(L"SunLightIntensity");
+    if (sunLightIntensity != m_settings.end())
+    {
+        try
+        {
+            SetLightBrightness((std::max)(0.0f, std::stof(sunLightIntensity->second)));
+        }
+        catch (...)
+        {
+        }
+    }
+
+    D3DXCOLOR sunLightColor = GetLightColor();
+    bool sunLightColorChanged = false;
+    const auto sunLightColorR = m_settings.find(L"SunLightColorR");
+    if (sunLightColorR != m_settings.end())
+    {
+        try
+        {
+            sunLightColor.r = ClampUnitSetting(std::stof(sunLightColorR->second));
+            sunLightColorChanged = true;
+        }
+        catch (...)
+        {
+        }
+    }
+    const auto sunLightColorG = m_settings.find(L"SunLightColorG");
+    if (sunLightColorG != m_settings.end())
+    {
+        try
+        {
+            sunLightColor.g = ClampUnitSetting(std::stof(sunLightColorG->second));
+            sunLightColorChanged = true;
+        }
+        catch (...)
+        {
+        }
+    }
+    const auto sunLightColorB = m_settings.find(L"SunLightColorB");
+    if (sunLightColorB != m_settings.end())
+    {
+        try
+        {
+            sunLightColor.b = ClampUnitSetting(std::stof(sunLightColorB->second));
+            sunLightColorChanged = true;
+        }
+        catch (...)
+        {
+        }
+    }
+    if (sunLightColorChanged)
+    {
+        SetLightColor(sunLightColor);
+    }
+
+    const auto ambientLightIntensity = m_settings.find(L"AmbientLightIntensity");
+    if (ambientLightIntensity != m_settings.end())
+    {
+        try
+        {
+            SetAmbientLightBrightness((std::max)(0.0f, std::stof(ambientLightIntensity->second)));
+        }
+        catch (...)
+        {
+        }
+    }
+
+    D3DXCOLOR ambientLightColor = GetAmbientLightColor();
+    bool ambientLightColorChanged = false;
+    const auto ambientLightColorR = m_settings.find(L"AmbientLightColorR");
+    if (ambientLightColorR != m_settings.end())
+    {
+        try
+        {
+            ambientLightColor.r = ClampUnitSetting(std::stof(ambientLightColorR->second));
+            ambientLightColorChanged = true;
+        }
+        catch (...)
+        {
+        }
+    }
+    const auto ambientLightColorG = m_settings.find(L"AmbientLightColorG");
+    if (ambientLightColorG != m_settings.end())
+    {
+        try
+        {
+            ambientLightColor.g = ClampUnitSetting(std::stof(ambientLightColorG->second));
+            ambientLightColorChanged = true;
+        }
+        catch (...)
+        {
+        }
+    }
+    const auto ambientLightColorB = m_settings.find(L"AmbientLightColorB");
+    if (ambientLightColorB != m_settings.end())
+    {
+        try
+        {
+            ambientLightColor.b = ClampUnitSetting(std::stof(ambientLightColorB->second));
+            ambientLightColorChanged = true;
+        }
+        catch (...)
+        {
+        }
+    }
+    if (ambientLightColorChanged)
+    {
+        SetAmbientLightColor(ambientLightColor);
+    }
+
     const auto sssEnable = m_settings.find(L"SSSEnable");
     if (sssEnable != m_settings.end())
     {
