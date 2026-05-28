@@ -229,6 +229,10 @@ public:
                    const bool useNormalMapping = false,
                    const bool async = true);
     bool RemoveMeshMix(int id);
+    bool LoadXFileListFromCsv(const std::wstring& csvPath,
+                              const float scale = 1.0f,
+                              int* loadedCount = nullptr,
+                              int* skippedCount = nullptr);
     int AddMeshPBR(const std::wstring& filePath,
                    const D3DXVECTOR3& pos,
                    const D3DXVECTOR3& rot,
