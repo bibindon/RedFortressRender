@@ -41,6 +41,8 @@ namespace NSRender
 {
 namespace
 {
+constexpr std::chrono::duration<double> kTargetFrameDuration(1.0 / 60.0);
+
 float ClampNormalizedTextPosition(const float value)
 {
     return (std::max)(0.0f, (std::min)(value, 1.0f));
@@ -1672,6 +1674,9 @@ void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
     // 画面転送
     m_postEffectEnd.Initialize();
 
+    m_hasLastFrameTime = false;
+    m_hasLastFramePacingTime = false;
+
     Common::AddDeviceLostResource(this);
 }
 
@@ -1700,6 +1705,9 @@ void Render::Finalize()
     m_postEffectTAA.Finalize();
     m_postEffectEnd.Finalize();
     m_particleSystem.Finalize();
+
+    m_hasLastFrameTime = false;
+    m_hasLastFramePacingTime = false;
 
     for (auto& mesh : m_meshList)
     {
@@ -2121,6 +2129,7 @@ void Render::Draw()
     assert(hResult == S_OK);
 
     m_windowManager.ChangeWindowMode();
+    WaitForTargetFrameRate();
 
 }
 
@@ -4852,6 +4861,37 @@ float Render::CalcFrameDeltaSeconds()
         static_cast<float>(std::chrono::duration<double>(now - m_lastFrameTime).count());
     m_lastFrameTime = now;
     return (std::max)(0.0f, (std::min)(deltaSeconds, 0.033f));
+}
+
+void Render::WaitForTargetFrameRate()
+{
+    using ClockType = std::chrono::steady_clock;
+    const ClockType::time_point now = ClockType::now();
+
+    if (!m_hasLastFramePacingTime)
+    {
+        m_lastFramePacingTime = now;
+        m_hasLastFramePacingTime = true;
+        return;
+    }
+
+    ClockType::time_point currentTime = now;
+    std::chrono::duration<double> elapsed = currentTime - m_lastFramePacingTime;
+    while (elapsed < kTargetFrameDuration)
+    {
+        const std::chrono::duration<double> remaining = kTargetFrameDuration - elapsed;
+        const DWORD sleepMilliseconds = (remaining > std::chrono::milliseconds(2))
+                                            ? static_cast<DWORD>(
+                                                  std::chrono::duration_cast<std::chrono::milliseconds>(
+                                                      remaining - std::chrono::milliseconds(1))
+                                                      .count())
+                                            : 0;
+        Sleep(sleepMilliseconds);
+        currentTime = ClockType::now();
+        elapsed = currentTime - m_lastFramePacingTime;
+    }
+
+    m_lastFramePacingTime = currentTime;
 }
 
 void Render::Draw2D()

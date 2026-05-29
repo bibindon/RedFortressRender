@@ -867,12 +867,15 @@ private:
     void ShowFPS(const float arg);
     void ShowCameraPosition();
     float CalcFrameDeltaSeconds();
+    void WaitForTargetFrameRate();
 
     int m_fontID = -1;
     int m_cameraPositionFontId = -1;
     std::vector<std::chrono::steady_clock::time_point> m_vecTime;
     std::chrono::steady_clock::time_point m_lastFrameTime {};
     bool m_hasLastFrameTime = false;
+    std::chrono::steady_clock::time_point m_lastFramePacingTime {};
+    bool m_hasLastFramePacingTime = false;
 
     //-----------------------------------------------------------------
     // デバイスロスト関連処理
