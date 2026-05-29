@@ -2130,6 +2130,7 @@ void Render::Draw()
         }
     }
 
+    WaitForTargetFrameRate();
     hResult = Common::D3DDevice()->Present(NULL, NULL, NULL, NULL);
     ClearTAAProjectionJitter();
     if (hResult == D3DERR_DEVICELOST)
@@ -2140,7 +2141,6 @@ void Render::Draw()
     assert(hResult == S_OK);
 
     m_windowManager.ChangeWindowMode();
-    WaitForTargetFrameRate();
 
 }
 
