@@ -4,4 +4,5 @@ res\model2\monkey.blend.x, 8, 0, 0, 45
 res\model2\monkey.blend.x, -8, 0, 0, -45
 res\model2\monkey.blend.x, 0, 0, 8, 90
 res\model2\monkey.blend.x, 0, 0, -8, 180
-res\model2\grass\grass.x,0,0,0,0,instancing
+res\model2\grass\grass.x, 0, 0, 0, 0, instancing
+res\model\wolf2\wolfAnim.x, 1, 0, 0, 0, skinanim

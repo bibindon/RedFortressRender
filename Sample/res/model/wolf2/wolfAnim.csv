@@ -1,0 +1,6 @@
+Anim, "000", "wolfAnim.000.x", default
+Anim, "idle", "wolfAnim.idle.x", loop
+Anim, "run", "wolfAnim.run.x", loop
+Anim, "creep", "wolfAnim.creep.x", loop
+Anim, "walk", "wolfAnim.walk.x", loop
+Anim, "seat", "wolfAnim.seat.x", stopWhenEnd
