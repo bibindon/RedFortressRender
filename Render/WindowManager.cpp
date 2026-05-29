@@ -55,8 +55,11 @@ void WindowManager::Initialize(const HWND hWnd)
     d3dpp.AutoDepthStencilFormat = D3DFMT_D24S8;
     d3dpp.hDeviceWindow = m_hWnd;
     d3dpp.Flags = 0;
-    d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
-    d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
+
+    /* FullScreen_RefreshRateInHz must be zero for Windowed mode */
+    d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_INTERVAL_DEFAULT;
+
+    d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
 
     LPDIRECT3DDEVICE9 D3DDevice = NULL;
 
@@ -233,8 +236,17 @@ D3DPRESENT_PARAMETERS WindowManager::CreatePresentParameters(const eWindowMode m
     d3dpp.AutoDepthStencilFormat = D3DFMT_D24S8;
     d3dpp.hDeviceWindow = m_hWnd;
     d3dpp.Flags = 0;
-    d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
-    d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
+
+    if (mode == eWindowMode::FULLSCREEN)
+    {
+        d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_INTERVAL_IMMEDIATE;
+    }
+    else
+    {
+        d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
+    }
+
+    d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
 
     return d3dpp;
 }
