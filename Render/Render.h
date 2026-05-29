@@ -876,6 +876,7 @@ private:
     bool m_hasLastFrameTime = false;
     std::chrono::steady_clock::time_point m_lastFramePacingTime {};
     bool m_hasLastFramePacingTime = false;
+    bool m_hasRequestedTimerResolution = false;
 
     //-----------------------------------------------------------------
     // デバイスロスト関連処理

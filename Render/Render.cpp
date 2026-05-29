@@ -1,4 +1,5 @@
 ﻿#pragma comment( lib, "d3d9.lib" )
+#pragma comment( lib, "winmm.lib" )
 #if defined(DEBUG) || defined(_DEBUG)
 #pragma comment( lib, "d3dx9d.lib" )
 #else
@@ -9,6 +10,7 @@
 
 #include <d3d9.h>
 #include <d3dx9.h>
+#include <mmsystem.h>
 #include <string>
 #include <tchar.h>
 #include <algorithm>
@@ -1674,6 +1676,9 @@ void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
     // 画面転送
     m_postEffectEnd.Initialize();
 
+    const MMRESULT timerResolutionResult = timeBeginPeriod(1);
+    m_hasRequestedTimerResolution = (timerResolutionResult == TIMERR_NOERROR);
+
     m_hasLastFrameTime = false;
     m_hasLastFramePacingTime = false;
 
@@ -1705,6 +1710,12 @@ void Render::Finalize()
     m_postEffectTAA.Finalize();
     m_postEffectEnd.Finalize();
     m_particleSystem.Finalize();
+
+    if (m_hasRequestedTimerResolution)
+    {
+        timeEndPeriod(1);
+        m_hasRequestedTimerResolution = false;
+    }
 
     m_hasLastFrameTime = false;
     m_hasLastFramePacingTime = false;
