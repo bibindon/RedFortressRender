@@ -561,6 +561,7 @@ public:
     DebugGBufferView GetDebugGBufferView() const;
 
     void SetShowFPS(const bool arg);
+    bool IsShowFPS() const;
     void SetShowCameraPosition(const bool arg);
 
     std::vector<std::pair<int, int>> GetResolutionList();

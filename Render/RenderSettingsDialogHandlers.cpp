@@ -575,7 +575,11 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
     }
     if (notifyCode == BN_CLICKED)
     {
-        if (id == IDC_RENDER_SETTINGS_SATURATE_ENABLE)
+        if (id == 31002)
+        {
+            render->SetShowFPS(IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == IDC_RENDER_SETTINGS_SATURATE_ENABLE)
         {
             render->SetPostEffectSaturateEnable(IsSettingsCheckboxChecked(hWnd, id));
         }

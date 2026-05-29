@@ -4334,6 +4334,11 @@ void Render::SetShowFPS(const bool arg)
     m_bShowFPS = arg;
 }
 
+bool Render::IsShowFPS() const
+{
+    return m_bShowFPS;
+}
+
 void Render::SetShowCameraPosition(const bool arg)
 {
     m_bShowCameraPosition = arg;
