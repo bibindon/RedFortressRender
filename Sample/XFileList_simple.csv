@@ -1,4 +1,4 @@
-# path, x, y, z, yawDegrees
+# path, x, y, z, yawDegrees, loadType(normal|instancing|skinanim)
 res\model2\monkey.blend.x, 0, 0, 0, 0
 res\model2\monkey.blend.x, 8, 0, 0, 45
 res\model2\monkey.blend.x, -8, 0, 0, -45

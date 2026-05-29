@@ -886,6 +886,44 @@ bool SpawnMeshMixAtTransform(const std::wstring& filePath,
     return true;
 }
 
+bool SpawnMeshInstancingAtTransform(const std::wstring& filePath,
+                                     const D3DXVECTOR3& pos,
+                                     const float yawDegrees)
+{
+    if (filePath.empty())
+    {
+        return false;
+    }
+
+    const D3DXVECTOR3 rotationRadians(0.0f, D3DXToRadian(yawDegrees), 0.0f);
+    const int renderId = g_Render.AddMeshInstansing(filePath,
+                                                     pos,
+                                                     rotationRadians,
+                                                     g_modelLoadScale);
+    RegisterLoadedModel(L"MeshInstancing", filePath, pos, g_modelLoadScale, renderId);
+    return true;
+}
+
+bool SpawnMeshMixSkinAnimAtTransform(const std::wstring& filePath,
+                                      const D3DXVECTOR3& pos,
+                                      const float yawDegrees)
+{
+    if (filePath.empty())
+    {
+        return false;
+    }
+
+    const D3DXVECTOR3 rotationRadians(0.0f, D3DXToRadian(yawDegrees), 0.0f);
+    NSRender::AnimSetMap emptyAnimSetMap;
+    const int renderId = g_Render.AddMeshMixSkinAnim(filePath,
+                                                      pos,
+                                                      rotationRadians,
+                                                      g_modelLoadScale,
+                                                      emptyAnimSetMap);
+    RegisterLoadedModel(L"MeshMixSkinAnim", filePath, pos, g_modelLoadScale, renderId);
+    return true;
+}
+
 bool SpawnMeshPBRAtTransform(const std::wstring& filePath,
                              const D3DXVECTOR3& pos,
                              const float yawDegrees)
@@ -1603,6 +1641,16 @@ bool LoadXFileListFromCsv(const std::wstring& csvPath, int* loadedCount, int* sk
             continue;
         }
 
+        std::wstring loadType = L"normal";
+        if (fields.size() >= 6)
+        {
+            loadType = Trim(fields[5]);
+            if (loadType != L"normal" && loadType != L"instancing" && loadType != L"skinanim")
+            {
+                loadType = L"normal";
+            }
+        }
+
         try
         {
             std::wstring resolvedPath;
@@ -1616,7 +1664,22 @@ bool LoadXFileListFromCsv(const std::wstring& csvPath, int* loadedCount, int* sk
             const float y = std::stof(Trim(fields[2]));
             const float z = std::stof(Trim(fields[3]));
             const float yawDegrees = std::stof(Trim(fields[4]));
-            if (!SpawnMeshMixAtTransform(resolvedPath, D3DXVECTOR3(x, y, z), yawDegrees))
+
+            bool spawned = false;
+            if (loadType == L"instancing")
+            {
+                spawned = SpawnMeshInstancingAtTransform(resolvedPath, D3DXVECTOR3(x, y, z), yawDegrees);
+            }
+            else if (loadType == L"skinanim")
+            {
+                spawned = SpawnMeshMixSkinAnimAtTransform(resolvedPath, D3DXVECTOR3(x, y, z), yawDegrees);
+            }
+            else
+            {
+                spawned = SpawnMeshMixAtTransform(resolvedPath, D3DXVECTOR3(x, y, z), yawDegrees);
+            }
+
+            if (!spawned)
             {
                 ++localSkippedCount;
                 continue;

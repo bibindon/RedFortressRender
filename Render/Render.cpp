@@ -335,6 +335,16 @@ bool Render::LoadXFileListFromCsv(const std::wstring& csvPath,
             continue;
         }
 
+        std::wstring loadType = L"normal";
+        if (fields.size() >= 6)
+        {
+            loadType = TrimCsvField(fields[5]);
+            if (loadType != L"normal" && loadType != L"instancing" && loadType != L"skinanim")
+            {
+                loadType = L"normal";
+            }
+        }
+
         try
         {
             std::wstring resolvedPath;
@@ -348,7 +358,22 @@ bool Render::LoadXFileListFromCsv(const std::wstring& csvPath,
                                   std::stof(TrimCsvField(fields[2])),
                                   std::stof(TrimCsvField(fields[3])));
             const D3DXVECTOR3 rot(0.0f, D3DXToRadian(std::stof(TrimCsvField(fields[4]))), 0.0f);
-            const int renderId = AddMeshMix(resolvedPath, pos, rot, scale, 1.0f);
+
+            int renderId = -1;
+            if (loadType == L"instancing")
+            {
+                renderId = AddMeshInstansing(resolvedPath, pos, rot, scale);
+            }
+            else if (loadType == L"skinanim")
+            {
+                AnimSetMap emptyAnimSetMap;
+                renderId = AddMeshMixSkinAnim(resolvedPath, pos, rot, scale, emptyAnimSetMap);
+            }
+            else
+            {
+                renderId = AddMeshMix(resolvedPath, pos, rot, scale, 1.0f);
+            }
+
             if (renderId < 0)
             {
                 ++localSkippedCount;

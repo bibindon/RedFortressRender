@@ -154,6 +154,17 @@ bool LoadXFileListCsv(RenderSettingsDialogState* state,
             ++skippedCount;
             continue;
         }
+
+        std::wstring loadType = L"normal";
+        if (fields.size() >= 6)
+        {
+            loadType = TrimCsvField(fields[5]);
+            if (loadType != L"normal" && loadType != L"instancing" && loadType != L"skinanim")
+            {
+                loadType = L"normal";
+            }
+        }
+
         try
         {
             std::wstring resolvedPath;
@@ -166,9 +177,29 @@ bool LoadXFileListCsv(RenderSettingsDialogState* state,
                                   std::stof(TrimCsvField(fields[2])),
                                   std::stof(TrimCsvField(fields[3])));
             const D3DXVECTOR3 rot(0.0f, D3DXToRadian(std::stof(TrimCsvField(fields[4]))), 0.0f);
-            const int renderId = state->render->AddMeshMix(resolvedPath, pos, rot, state->modelLoadScale);
+
+            int renderId = -1;
+            RenderSettingsDialogState::LoadedModelType modelType = RenderSettingsDialogState::LoadedModelType::MeshMix;
+
+            if (loadType == L"instancing")
+            {
+                renderId = state->render->AddMeshInstansing(resolvedPath, pos, rot, state->modelLoadScale);
+                modelType = RenderSettingsDialogState::LoadedModelType::MeshInstancing;
+            }
+            else if (loadType == L"skinanim")
+            {
+                AnimSetMap emptyAnimSetMap;
+                renderId = state->render->AddMeshMixSkinAnim(resolvedPath, pos, rot, state->modelLoadScale, emptyAnimSetMap);
+                modelType = RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim;
+            }
+            else
+            {
+                renderId = state->render->AddMeshMix(resolvedPath, pos, rot, state->modelLoadScale);
+                modelType = RenderSettingsDialogState::LoadedModelType::MeshMix;
+            }
+
             AddLoadedModelRecord(state,
-                                 RenderSettingsDialogState::LoadedModelType::MeshMix,
+                                 modelType,
                                  renderId,
                                  resolvedPath,
                                  pos);
