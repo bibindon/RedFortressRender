@@ -262,6 +262,7 @@ public:
     const std::vector<MeshMixSkinAnim::AnimationInfo>* GetMeshMixSkinAnimAnimationInfoList(int id) const;
     bool PlayMeshMixSkinAnimAnimation(int id, const std::wstring& name);
     void SetMeshMixSkinAnimAlphaClip(const bool enabled);
+    void SetMeshMixSkinAnimIgnoreTransparentMaterial(const bool enabled);
     void SetMeshMixSkinAnimPos(const int id, const D3DXVECTOR3& pos);
     void SetMeshMixSkinAnimRotY(const int id, const float rotY);
     std::vector<RenderLoadedModelInfo> GetLoadedModelInfoList();
@@ -591,6 +592,7 @@ public:
     bool IsMeshMixSpecularEdgeOverrideEnabled() const;
     bool IsPhongTreatTextureAsWhiteEnabled() const;
     bool IsMeshMixSkinAnimAlphaClipEnabled() const;
+    bool IsMeshMixSkinAnimIgnoreTransparentMaterialEnabled() const;
     float GetMeshPBRRoughness() const;
     float GetMeshPBRMetallic() const;
     float GetMeshPBREnvReflectionIntensity() const;
@@ -848,6 +850,7 @@ private:
     bool m_meshMixSpecularEdgeOverrideEnabled = true;
     bool m_phongTreatTextureAsWhiteEnabled = false;
     bool m_meshMixSkinAnimAlphaClipEnabled = true;
+    bool m_meshMixSkinAnimIgnoreTransparentMaterialEnabled = false;
     bool m_meshMixSSSEnabled = false;
     float m_meshMixSSSIntensity = 1.0f;
     DWORD m_meshMixSSSColor = 0xffff80;

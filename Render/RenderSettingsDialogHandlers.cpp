@@ -694,6 +694,10 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
         {
             render->SetMeshMixSkinAnimAlphaClip(IsSettingsCheckboxChecked(hWnd, id));
         }
+        else if (id == 31303)
+        {
+            render->SetMeshMixSkinAnimIgnoreTransparentMaterial(IsSettingsCheckboxChecked(hWnd, id));
+        }
         else if (id == 31702)
         {
             render->SetPostEffectSSGIBlur(IsSettingsCheckboxChecked(hWnd, id));

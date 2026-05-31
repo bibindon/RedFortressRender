@@ -2636,6 +2636,7 @@ int Render::AddMeshMixSkinAnim(const std::wstring& filePath,
 
     MeshMixSkinAnim* mesh = NEW MeshMixSkinAnim(filePath, pos, rot, scale, param, animSetMap);
     mesh->SetAlphaClipEnabled(m_meshMixSkinAnimAlphaClipEnabled);
+    mesh->SetIgnoreTransparentMaterial(m_meshMixSkinAnimIgnoreTransparentMaterialEnabled);
     try
     {
         mesh->Initialize();
@@ -2676,6 +2677,7 @@ int Render::AddMeshMixSkinAnim(const std::wstring& meshFilePath,
 
     MeshMixSkinAnim* mesh = NEW MeshMixSkinAnim(meshFilePath, animationFilePath, pos, rot, scale, param, animSetMap);
     mesh->SetAlphaClipEnabled(m_meshMixSkinAnimAlphaClipEnabled);
+    mesh->SetIgnoreTransparentMaterial(m_meshMixSkinAnimIgnoreTransparentMaterialEnabled);
     try
     {
         mesh->Initialize();
@@ -2788,6 +2790,19 @@ void Render::SetMeshMixSkinAnimAlphaClip(const bool enabled)
         if (mesh != nullptr)
         {
             mesh->SetAlphaClipEnabled(enabled);
+        }
+    }
+}
+
+void Render::SetMeshMixSkinAnimIgnoreTransparentMaterial(const bool enabled)
+{
+    m_meshMixSkinAnimIgnoreTransparentMaterialEnabled = enabled;
+
+    for (auto& mesh : m_meshMixSkinAnimList)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->SetIgnoreTransparentMaterial(enabled);
         }
     }
 }
@@ -3085,6 +3100,7 @@ bool Render::IsMeshMixSpecularIntensityOverrideEnabled() const { return m_meshMi
 bool Render::IsMeshMixSpecularEdgeOverrideEnabled() const { return m_meshMixSpecularEdgeOverrideEnabled; }
 bool Render::IsPhongTreatTextureAsWhiteEnabled() const { return m_phongTreatTextureAsWhiteEnabled; }
 bool Render::IsMeshMixSkinAnimAlphaClipEnabled() const { return m_meshMixSkinAnimAlphaClipEnabled; }
+bool Render::IsMeshMixSkinAnimIgnoreTransparentMaterialEnabled() const { return m_meshMixSkinAnimIgnoreTransparentMaterialEnabled; }
 float Render::GetMeshPBRRoughness() const { return m_meshPBRRoughness; }
 float Render::GetMeshPBRMetallic() const { return m_meshPBRMetallic; }
 float Render::GetMeshPBREnvReflectionIntensity() const { return m_meshPBREnvReflectionIntensity; }
