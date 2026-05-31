@@ -4,3 +4,4 @@ ID,FileName,PosX,PosY,PosZ,RotX,RotY,RotZ,Scale,loadType
 3,res\model2\monkey.blend.x,-8,0,0,0,-45,0,1,normal
 4,res\model2\monkey.blend.x,0,0,8,0,90,0,1,normal
 5,res\model2\monkey.blend.x,0,0,-8,0,180,0,1,normal
+6,res\model2\collision_moving_platform.x,0,0,0,0,0,0,1,normal

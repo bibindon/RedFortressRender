@@ -382,6 +382,10 @@ bool Render::LoadXFileListFromCsv(const std::wstring& csvPath,
                 ++localSkippedCount;
                 continue;
             }
+
+            const int csvId = std::stoi(TrimCsvField(fields[0]));
+            m_csvIdToRenderId[csvId] = renderId;
+
             ++localLoadedCount;
         }
         catch (...)
@@ -399,6 +403,106 @@ bool Render::LoadXFileListFromCsv(const std::wstring& csvPath,
         *skippedCount = localSkippedCount;
     }
     return localLoadedCount > 0;
+}
+
+bool Render::LoadXFileListMoveFromCsv(const std::wstring& csvPath,
+                                       int* loadedCount,
+                                       int* skippedCount)
+{
+    if (loadedCount != nullptr)
+    {
+        *loadedCount = 0;
+    }
+    if (skippedCount != nullptr)
+    {
+        *skippedCount = 0;
+    }
+    if (csvPath.empty())
+    {
+        return false;
+    }
+
+    std::wifstream file(csvPath);
+    if (!file)
+    {
+        return false;
+    }
+
+    int localLoadedCount = 0;
+    int localSkippedCount = 0;
+    std::wstring line;
+    while (std::getline(file, line))
+    {
+        const std::wstring trimmedLine = TrimCsvField(line);
+        if (trimmedLine.empty() || trimmedLine.front() == L'#')
+        {
+            continue;
+        }
+
+        const std::vector<std::wstring> fields = SplitCsvLineText(trimmedLine);
+        if (fields.size() < 17)
+        {
+            ++localSkippedCount;
+            continue;
+        }
+
+        try
+        {
+            const int renderId = std::stoi(TrimCsvField(fields[1]));
+            const auto found = m_csvIdToRenderId.find(renderId);
+            if (found == m_csvIdToRenderId.end())
+            {
+                ++localSkippedCount;
+                continue;
+            }
+
+            MovingPlatform platform;
+            platform.renderId = found->second;
+            platform.startPos = D3DXVECTOR3(std::stof(TrimCsvField(fields[10])),
+                                            std::stof(TrimCsvField(fields[11])),
+                                            std::stof(TrimCsvField(fields[12])));
+            platform.endPos = D3DXVECTOR3(std::stof(TrimCsvField(fields[13])),
+                                          std::stof(TrimCsvField(fields[14])),
+                                          std::stof(TrimCsvField(fields[15])));
+            platform.duration = std::stof(TrimCsvField(fields[16]));
+            platform.elapsed = 0.0f;
+
+            m_movingPlatforms.push_back(platform);
+            ++localLoadedCount;
+        }
+        catch (...)
+        {
+            ++localSkippedCount;
+        }
+    }
+
+    if (loadedCount != nullptr)
+    {
+        *loadedCount = localLoadedCount;
+    }
+    if (skippedCount != nullptr)
+    {
+        *skippedCount = localSkippedCount;
+    }
+    return localLoadedCount > 0;
+}
+
+void Render::UpdateMovingPlatforms(const float deltaSeconds)
+{
+    for (auto& platform : m_movingPlatforms)
+    {
+        platform.elapsed += deltaSeconds;
+        if (platform.duration <= 0.0f)
+        {
+            continue;
+        }
+
+        const float t = platform.elapsed / platform.duration;
+        const float pingPong = (std::sin(t * D3DX_PI * 2.0f) + 1.0f) * 0.5f;
+        const D3DXVECTOR3 pos = platform.startPos + (platform.endPos - platform.startPos) * pingPong;
+
+        SetMeshMixPos(platform.renderId, pos);
+    }
 }
 
 void Render::LoadSettingsCsv(const std::wstring& settingsCsvPath)
@@ -1891,6 +1995,7 @@ void Render::Draw()
 
     const float frameDeltaSeconds = CalcFrameDeltaSeconds();
     m_particleSystem.Update(frameDeltaSeconds);
+    UpdateMovingPlatforms(frameDeltaSeconds);
     UpdateSkinAnimationState();
     CameraShakeFrameScope cameraShakeFrameScope;
     ApplyTAAProjectionJitter();

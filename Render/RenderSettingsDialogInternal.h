@@ -69,6 +69,7 @@ struct RenderSettingsDialogState
     std::wstring meshMixSkinNonAnimPath;
     std::wstring meshMixSkinAnimOnlyPath;
     std::wstring xFileListPath;
+    std::wstring xFileListMovePath;
     std::wstring maskedGaussianMaskPath;
     std::wstring settingsCsvPath;
     std::vector<LoadedModelRecord> loadedModels;

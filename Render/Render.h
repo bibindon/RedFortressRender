@@ -267,6 +267,11 @@ public:
     void SetMeshMixSkinAnimRotY(const int id, const float rotY);
     std::vector<RenderLoadedModelInfo> GetLoadedModelInfoList();
 
+    bool LoadXFileListMoveFromCsv(const std::wstring& csvPath,
+                                  int* loadedCount = nullptr,
+                                  int* skippedCount = nullptr);
+    void UpdateMovingPlatforms(float deltaSeconds);
+
     void SetMeshMixPos(const int id, const D3DXVECTOR3& pos);
     void SetMeshMixSaturateShadow(const bool enabled);
     void SetMeshMixSaturateShadowIntensity(const float intensity);
@@ -641,6 +646,17 @@ private:
 
     std::unordered_map<std::wstring, MeshInstancing*> m_meshInstancingMap;
     bool m_meshInstancingHighQualityEnabled = true;
+
+    struct MovingPlatform
+    {
+        int renderId = -1;
+        D3DXVECTOR3 startPos;
+        D3DXVECTOR3 endPos;
+        float duration = 10.0f;
+        float elapsed = 0.0f;
+    };
+    std::unordered_map<int, int> m_csvIdToRenderId;
+    std::vector<MovingPlatform> m_movingPlatforms;
 
     // ポインターにしないとデバイスロストを扱う機能が機能しなくなる
     std::vector<Font*> m_fontList;

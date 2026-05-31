@@ -877,6 +877,25 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
                 MessageBoxW(hWnd, message, L"Load XFileList", MB_OK | MB_ICONINFORMATION);
             }
         }
+        else if (id == 31333)
+        {
+            if (ShowSettingsOpenFileDialog(hWnd,
+                                           L"CSV Files (*.csv)\0*.csv\0All Files (*.*)\0*.*\0",
+                                           state->xFileListMovePath))
+            {
+                int loadedCount = 0;
+                int skippedCount = 0;
+                state->render->LoadXFileListMoveFromCsv(state->xFileListMovePath, &loadedCount, &skippedCount);
+
+                wchar_t message[160] { };
+                std::swprintf(message,
+                              _countof(message),
+                              L"Move: %d\nSkip: %d",
+                              loadedCount,
+                              skippedCount);
+                MessageBoxW(hWnd, message, L"Load XFileList Move", MB_OK | MB_ICONINFORMATION);
+            }
+        }
         else if (id == 31360)
         {
             ShowSettingsOpenFileDialog(hWnd,

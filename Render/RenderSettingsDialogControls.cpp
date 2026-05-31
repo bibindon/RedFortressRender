@@ -461,6 +461,8 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     CreateSettingsCheckbox(hWnd, 31302, L"Clip", 476, y, 52, 22);
     CreateSettingsCheckbox(hWnd, 31303, L"NoAlpha0", 534, y, 76, 22);
     y += 28;
+    CreateSettingsButton(hWnd, L"Load Move...", 24, y, 116, 24, 31333);
+    y += 28;
     CreateSettingsButton(hWnd, L"Open NonAnim...", 24, y, 154, 24, 31360);
     CreateSettingsButton(hWnd, L"Open AnimOnly...", 190, y, 154, 24, 31361);
     CreateSettingsButton(hWnd, L"Load Split Anim", 350, y, 158, 24, 31362);
