@@ -803,6 +803,11 @@ void MeshMixSkinAnim::RenderMeshContainerToEffect(const LPD3DXMESHCONTAINER cont
 
     effect->SetInt("g_currentBoneIndex", container->m_influenceCount - 1);
 
+    const D3DXHANDLE skinAlphaCutoutHandle = effect->GetParameterByName(nullptr, "g_useSkinAlphaCutout");
+    const D3DXHANDLE skinAlphaTextureHandle = effect->GetParameterByName(nullptr, "g_texSkinAlpha");
+    const D3DXHANDLE meshAlphaCutoutHandle = effect->GetParameterByName(nullptr, "g_useMeshAlphaCutout");
+    const D3DXHANDLE meshAlphaTextureHandle = effect->GetParameterByName(nullptr, "g_texMeshAlpha");
+
     effect->Begin(nullptr, 0);
     effect->BeginPass(0);
 
@@ -843,10 +848,22 @@ void MeshMixSkinAnim::RenderMeshContainerToEffect(const LPD3DXMESHCONTAINER cont
             alphaTexture = container->m_textureList[materialIndex];
         }
 
-        effect->SetBool("g_useSkinAlphaCutout", useAlphaCutoutValue);
-        effect->SetTexture("g_texSkinAlpha", alphaTexture);
-        effect->SetBool("g_useMeshAlphaCutout", useAlphaCutoutValue);
-        effect->SetTexture("g_texMeshAlpha", alphaTexture);
+        if (skinAlphaCutoutHandle != nullptr)
+        {
+            effect->SetBool(skinAlphaCutoutHandle, useAlphaCutoutValue);
+        }
+        if (skinAlphaTextureHandle != nullptr)
+        {
+            effect->SetTexture(skinAlphaTextureHandle, alphaTexture);
+        }
+        if (meshAlphaCutoutHandle != nullptr)
+        {
+            effect->SetBool(meshAlphaCutoutHandle, useAlphaCutoutValue);
+        }
+        if (meshAlphaTextureHandle != nullptr)
+        {
+            effect->SetTexture(meshAlphaTextureHandle, alphaTexture);
+        }
         effect->CommitChanges();
         container->MeshData.pMesh->DrawSubset(i);
     }
