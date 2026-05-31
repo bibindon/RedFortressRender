@@ -822,16 +822,31 @@ void MeshMixSkinAnim::RenderMeshContainerToEffect(const LPD3DXMESHCONTAINER cont
 
         effect->SetMatrixArray("g_matWorldArray", &m_matWorldArray[0], paletteSize);
         const DWORD materialIndex = boneCombination[i].AttribId;
+        const D3DMATERIAL9& material = container->pMaterials[materialIndex].MatD3D;
         const bool hasTexture = materialIndex < container->m_textureList.size() &&
                                 container->m_textureList[materialIndex] != nullptr;
-        effect->SetBool("g_useSkinAlphaCutout", m_alphaClipEnabled ? TRUE : FALSE);
-        effect->SetTexture("g_texSkinAlpha", (m_alphaClipEnabled && hasTexture)
-                                           ? container->m_textureList[materialIndex]
-                                           : nullptr);
-        effect->SetBool("g_useMeshAlphaCutout", m_alphaClipEnabled ? TRUE : FALSE);
-        effect->SetTexture("g_texMeshAlpha", (m_alphaClipEnabled && hasTexture)
-                                           ? container->m_textureList[materialIndex]
-                                           : nullptr);
+        bool useAlphaCutout = m_alphaClipEnabled;
+        if (m_ignoreTransparentMaterial && material.Diffuse.a <= 0.001f)
+        {
+            useAlphaCutout = false;
+        }
+
+        BOOL useAlphaCutoutValue = FALSE;
+        if (useAlphaCutout)
+        {
+            useAlphaCutoutValue = TRUE;
+        }
+
+        LPDIRECT3DTEXTURE9 alphaTexture = nullptr;
+        if (useAlphaCutout && hasTexture)
+        {
+            alphaTexture = container->m_textureList[materialIndex];
+        }
+
+        effect->SetBool("g_useSkinAlphaCutout", useAlphaCutoutValue);
+        effect->SetTexture("g_texSkinAlpha", alphaTexture);
+        effect->SetBool("g_useMeshAlphaCutout", useAlphaCutoutValue);
+        effect->SetTexture("g_texMeshAlpha", alphaTexture);
         effect->CommitChanges();
         container->MeshData.pMesh->DrawSubset(i);
     }
