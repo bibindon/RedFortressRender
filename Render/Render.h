@@ -271,6 +271,7 @@ public:
                                   int* loadedCount = nullptr,
                                   int* skippedCount = nullptr);
     void UpdateMovingPlatforms(float deltaSeconds);
+    void RegisterCsvIdMapping(int csvId, int renderId);
 
     void SetMeshMixPos(const int id, const D3DXVECTOR3& pos);
     void SetMeshMixSaturateShadow(const bool enabled);

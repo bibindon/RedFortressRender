@@ -206,6 +206,10 @@ bool LoadXFileListCsv(RenderSettingsDialogState* state,
                                  renderId,
                                  resolvedPath,
                                  pos);
+
+            const int csvId = std::stoi(TrimCsvField(fields[0]));
+            state->render->RegisterCsvIdMapping(csvId, renderId);
+
             ++loadedCount;
         }
         catch (...)

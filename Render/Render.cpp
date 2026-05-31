@@ -505,6 +505,11 @@ void Render::UpdateMovingPlatforms(const float deltaSeconds)
     }
 }
 
+void Render::RegisterCsvIdMapping(const int csvId, const int renderId)
+{
+    m_csvIdToRenderId[csvId] = renderId;
+}
+
 void Render::LoadSettingsCsv(const std::wstring& settingsCsvPath)
 {
     m_settings.clear();
