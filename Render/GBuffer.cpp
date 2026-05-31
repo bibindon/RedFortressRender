@@ -36,7 +36,8 @@ void GBuffer::Initialize()
                                   effectPath.c_str(),
                                   NULL,
                                   NULL,
-                                  D3DXSHADER_DEBUG,
+                                  //D3DXSHADER_DEBUG,
+                                  0,
                                   NULL,
                                   &m_fxGBuffer,
                                   NULL);
