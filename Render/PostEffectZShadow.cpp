@@ -419,19 +419,13 @@ void PostEffectZShadow::RenderTechnique2()
 
     // カメラ行列
     D3DXMATRIX mView;
-    D3DXMATRIX mProj;
-
-    D3DXMatrixPerspectiveFovLH(&mProj,
-                               D3DXToRadian(45.0f),
-                               static_cast<float>(descShadow.Width) / static_cast<float>(descShadow.Height),
-                               0.1f,
-                               100.0f);
-
     D3DXVECTOR3 vEye(Camera::GetEyePos());
     D3DXVECTOR3 vAt(Camera::GetLookAtPos());
     D3DXVECTOR3 vUp(0, 1, 0);
 
     D3DXMatrixLookAtLH(&mView, &vEye, &vAt, &vUp);
+
+    D3DXMATRIX mProj = Camera::GetProjMatrix();
 
     D3DXMATRIX mLightViewProj = mLightView * mLightProj;
 
