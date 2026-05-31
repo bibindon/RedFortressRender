@@ -4925,6 +4925,8 @@ void Render::WaitForTargetFrameRate()
     using ClockType = std::chrono::steady_clock;
     const ClockType::time_point now = ClockType::now();
 
+    m_lastSleepMs = 0;
+
     if (!m_hasLastFramePacingTime)
     {
         m_lastFramePacingTime = now;
@@ -4944,7 +4946,10 @@ void Render::WaitForTargetFrameRate()
                                                       .count())
                                             : 0;
         Sleep(sleepMilliseconds);
-        m_lastSleepMs = sleepMilliseconds;
+        if (sleepMilliseconds > 0)
+        {
+            m_lastSleepMs = sleepMilliseconds;
+        }
         currentTime = ClockType::now();
         elapsed = currentTime - m_lastFramePacingTime;
     }
