@@ -4872,7 +4872,7 @@ void Render::ShowFPS(const float arg)
     }
 
     wchar_t buffer[64];
-    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f", arg);
+    std::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%.2f (sleep %ums)", arg, m_lastSleepMs);
 
     std::wstring fps(buffer);
 
@@ -4944,6 +4944,7 @@ void Render::WaitForTargetFrameRate()
                                                       .count())
                                             : 0;
         Sleep(sleepMilliseconds);
+        m_lastSleepMs = sleepMilliseconds;
         currentTime = ClockType::now();
         elapsed = currentTime - m_lastFramePacingTime;
     }
