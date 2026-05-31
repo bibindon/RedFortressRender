@@ -149,16 +149,16 @@ bool LoadXFileListCsv(RenderSettingsDialogState* state,
             continue;
         }
         const std::vector<std::wstring> fields = SplitCsvLineText(trimmedLine);
-        if (fields.size() < 5)
+        if (fields.size() < 9)
         {
             ++skippedCount;
             continue;
         }
 
         std::wstring loadType = L"normal";
-        if (fields.size() >= 6)
+        if (fields.size() >= 10)
         {
-            loadType = TrimCsvField(fields[5]);
+            loadType = TrimCsvField(fields[9]);
             if (loadType != L"normal" && loadType != L"instancing" && loadType != L"skinanim")
             {
                 loadType = L"normal";
@@ -168,33 +168,36 @@ bool LoadXFileListCsv(RenderSettingsDialogState* state,
         try
         {
             std::wstring resolvedPath;
-            if (!ResolveXFileListPath(csvDirectoryPath, fields[0], resolvedPath))
+            if (!ResolveXFileListPath(csvDirectoryPath, fields[1], resolvedPath))
             {
                 ++skippedCount;
                 continue;
             }
-            const D3DXVECTOR3 pos(std::stof(TrimCsvField(fields[1])),
-                                  std::stof(TrimCsvField(fields[2])),
-                                  std::stof(TrimCsvField(fields[3])));
-            const D3DXVECTOR3 rot(0.0f, D3DXToRadian(std::stof(TrimCsvField(fields[4]))), 0.0f);
+            const D3DXVECTOR3 pos(std::stof(TrimCsvField(fields[2])),
+                                  std::stof(TrimCsvField(fields[3])),
+                                  std::stof(TrimCsvField(fields[4])));
+            const D3DXVECTOR3 rot(D3DXToRadian(std::stof(TrimCsvField(fields[5]))),
+                                  D3DXToRadian(std::stof(TrimCsvField(fields[6]))),
+                                  D3DXToRadian(std::stof(TrimCsvField(fields[7]))));
+            const float modelScale = std::stof(TrimCsvField(fields[8]));
 
             int renderId = -1;
             RenderSettingsDialogState::LoadedModelType modelType = RenderSettingsDialogState::LoadedModelType::MeshMix;
 
             if (loadType == L"instancing")
             {
-                renderId = state->render->AddMeshInstansing(resolvedPath, pos, rot, state->modelLoadScale);
+                renderId = state->render->AddMeshInstansing(resolvedPath, pos, rot, modelScale);
                 modelType = RenderSettingsDialogState::LoadedModelType::MeshInstancing;
             }
             else if (loadType == L"skinanim")
             {
                 AnimSetMap emptyAnimSetMap;
-                renderId = state->render->AddMeshMixSkinAnim(resolvedPath, pos, rot, state->modelLoadScale, emptyAnimSetMap);
+                renderId = state->render->AddMeshMixSkinAnim(resolvedPath, pos, rot, modelScale, emptyAnimSetMap);
                 modelType = RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim;
             }
             else
             {
-                renderId = state->render->AddMeshMix(resolvedPath, pos, rot, state->modelLoadScale);
+                renderId = state->render->AddMeshMix(resolvedPath, pos, rot, modelScale);
                 modelType = RenderSettingsDialogState::LoadedModelType::MeshMix;
             }
 

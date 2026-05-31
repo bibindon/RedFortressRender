@@ -1,6 +1,6 @@
-# path, x, y, z, yawDegrees, loadType(normal|instancing|skinanim)
-res\model2\monkey.blend.x, 0, 0, 0, 0
-res\model2\monkey.blend.x, 8, 0, 0, 45
-res\model2\monkey.blend.x, -8, 0, 0, -45
-res\model2\monkey.blend.x, 0, 0, 8, 90
-res\model2\monkey.blend.x, 0, 0, -8, 180
+ID,FileName,PosX,PosY,PosZ,RotX,RotY,RotZ,Scale,loadType
+1,res\model2\monkey.blend.x,0,0,0,0,0,0,1,normal
+2,res\model2\monkey.blend.x,8,0,0,0,45,0,1,normal
+3,res\model2\monkey.blend.x,-8,0,0,0,-45,0,1,normal
+4,res\model2\monkey.blend.x,0,0,8,0,90,0,1,normal
+5,res\model2\monkey.blend.x,0,0,-8,0,180,0,1,normal
