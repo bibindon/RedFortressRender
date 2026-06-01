@@ -505,6 +505,14 @@ void Render::UpdateMovingPlatforms(const float deltaSeconds)
     }
 }
 
+void Render::ResetMovingPlatforms()
+{
+    for (auto& platform : m_movingPlatforms)
+    {
+        platform.elapsed = 0.0f;
+    }
+}
+
 void Render::RegisterCsvIdMapping(const int csvId, const int renderId)
 {
     m_csvIdToRenderId[csvId] = renderId;

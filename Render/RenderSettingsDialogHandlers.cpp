@@ -900,6 +900,10 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
                 MessageBoxW(hWnd, message, L"Load XFileList Move", MB_OK | MB_ICONINFORMATION);
             }
         }
+        else if (id == 31334)
+        {
+            render->ResetMovingPlatforms();
+        }
         else if (id == 31360)
         {
             ShowSettingsOpenFileDialog(hWnd,
