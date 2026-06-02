@@ -5220,6 +5220,8 @@ void Render::Draw2D()
         ShowCameraPosition();
     }
 
+    m_sprite.Draw();
+
     DrawSettingsDialogText();
     DrawWorldTexts();
 
@@ -5232,8 +5234,6 @@ void Render::Draw2D()
     {
         elem->Draw();
     }
-
-    m_sprite.Draw();
 
 }
 
