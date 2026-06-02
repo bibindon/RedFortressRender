@@ -17,7 +17,7 @@ void Sprite::Finalize()
     {
         elem.second->Release();
     }
-    
+
     m_textureMap.clear();
 }
 
@@ -27,7 +27,7 @@ void Sprite::LoadImage_(const std::wstring& filename)
     {
         return;
     }
-    
+
     HRESULT hResult = E_FAIL;
     LPDIRECT3DTEXTURE9 pTexture;
     hResult = D3DXCreateTextureFromFile(Common::D3DDevice(),
@@ -45,8 +45,39 @@ void Sprite::PlaceImage(const std::wstring& filename, const int X, const int Y, 
     spriteInfo.m_rect.top = Y;
     spriteInfo.m_imageName = filename;
     spriteInfo.m_transparency = transparency;
+    spriteInfo.m_scaled = false;
 
     m_spriteInfoList.push_back(spriteInfo);
+}
+
+void Sprite::PlaceImage(const std::wstring& filename,
+                         const int X,
+                         const int Y,
+                         const int width,
+                         const int height,
+                         const int transparency)
+{
+    SpriteInfo spriteInfo;
+
+    spriteInfo.m_rect.left = X;
+    spriteInfo.m_rect.top = Y;
+    spriteInfo.m_rect.right = width;
+    spriteInfo.m_rect.bottom = height;
+    spriteInfo.m_imageName = filename;
+    spriteInfo.m_transparency = transparency;
+    spriteInfo.m_scaled = true;
+
+    m_spriteInfoList.push_back(spriteInfo);
+}
+
+void Sprite::RegisterTexture(const std::wstring& key, LPDIRECT3DTEXTURE9 texture)
+{
+    if (m_textureMap.find(key) != m_textureMap.end())
+    {
+        return;
+    }
+
+    m_textureMap[key] = texture;
 }
 
 void Sprite::RemoveImage(const std::wstring& filename)
@@ -84,23 +115,57 @@ void Sprite::Draw()
 
     m_pSprite->Begin(D3DXSPRITE_ALPHABLEND);
 
-    // Begin�̌�Ɏ��s���邱��
     Common::D3DDevice()->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
     Common::D3DDevice()->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-
-    // �~�b�v�L��̂Ƃ�
-//    Common::D3DDevice()->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
     Common::D3DDevice()->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
-
 
     for (auto& elem : m_spriteInfoList)
     {
         D3DXVECTOR3 pos((float)elem.m_rect.left, (float)elem.m_rect.top, 0);
-        m_pSprite->Draw(m_textureMap.at(elem.m_imageName),
-                        NULL,
-                        NULL,
-                        &pos,
-                        D3DCOLOR_RGBA(255, 255, 255, elem.m_transparency));
+
+        if (elem.m_scaled)
+        {
+            const SIZE imageSize = GetImageSize(elem.m_imageName);
+            if (imageSize.cx > 0 && imageSize.cy > 0)
+            {
+                const float scaleXVal = static_cast<float>(elem.m_rect.right) / static_cast<float>(imageSize.cx);
+                const float scaleYVal = static_cast<float>(elem.m_rect.bottom) / static_cast<float>(imageSize.cy);
+
+                D3DXMATRIX perImageScale;
+                D3DXMatrixScaling(&perImageScale, scaleXVal, scaleYVal, 1.0f);
+                perImageScale = perImageScale * mScale;
+
+                m_pSprite->SetTransform(&perImageScale);
+
+                D3DXVECTOR3 scaledPos(static_cast<float>(elem.m_rect.left) / scaleXVal,
+                                      static_cast<float>(elem.m_rect.top) / scaleYVal,
+                                      0.0f);
+
+                m_pSprite->Draw(m_textureMap.at(elem.m_imageName),
+                                NULL,
+                                NULL,
+                                &scaledPos,
+                                D3DCOLOR_RGBA(255, 255, 255, elem.m_transparency));
+
+                m_pSprite->SetTransform(&mScale);
+            }
+            else
+            {
+                m_pSprite->Draw(m_textureMap.at(elem.m_imageName),
+                                NULL,
+                                NULL,
+                                &pos,
+                                D3DCOLOR_RGBA(255, 255, 255, elem.m_transparency));
+            }
+        }
+        else
+        {
+            m_pSprite->Draw(m_textureMap.at(elem.m_imageName),
+                            NULL,
+                            NULL,
+                            &pos,
+                            D3DCOLOR_RGBA(255, 255, 255, elem.m_transparency));
+        }
     }
 
     m_pSprite->End();

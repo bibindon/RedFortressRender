@@ -5281,6 +5281,8 @@ void Render::EnsureFadeTexture()
         }
         m_fadeTexture->UnlockRect(0);
     }
+
+    m_sprite.RegisterTexture(L"__fade_black__", m_fadeTexture);
 }
 
 void Render::UpdateFade(const float deltaSeconds)
@@ -5306,22 +5308,6 @@ void Render::StartFadeIn(const float durationSeconds)
 {
     if (durationSeconds <= 0.0f)
     {
-        m_fadeAlpha = 1.0f;
-        m_fadeActive = false;
-        return;
-    }
-
-    m_fadeDuration = durationSeconds;
-    m_fadeStartAlpha = m_fadeAlpha;
-    m_fadeTargetAlpha = 1.0f;
-    m_fadeElapsed = 0.0f;
-    m_fadeActive = true;
-}
-
-void Render::StartFadeOut(const float durationSeconds)
-{
-    if (durationSeconds <= 0.0f)
-    {
         m_fadeAlpha = 0.0f;
         m_fadeActive = false;
         return;
@@ -5330,6 +5316,22 @@ void Render::StartFadeOut(const float durationSeconds)
     m_fadeDuration = durationSeconds;
     m_fadeStartAlpha = m_fadeAlpha;
     m_fadeTargetAlpha = 0.0f;
+    m_fadeElapsed = 0.0f;
+    m_fadeActive = true;
+}
+
+void Render::StartFadeOut(const float durationSeconds)
+{
+    if (durationSeconds <= 0.0f)
+    {
+        m_fadeAlpha = 1.0f;
+        m_fadeActive = false;
+        return;
+    }
+
+    m_fadeDuration = durationSeconds;
+    m_fadeStartAlpha = m_fadeAlpha;
+    m_fadeTargetAlpha = 1.0f;
     m_fadeElapsed = 0.0f;
     m_fadeActive = true;
 }
@@ -5373,36 +5375,16 @@ void Render::DrawFadeOverlay()
         return;
     }
 
-    LPDIRECT3DDEVICE9 device = Common::D3DDevice();
-
-    device->SetTexture(0, m_fadeTexture);
-    device->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-    device->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-    device->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
-    device->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
-
-    device->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1 | D3DFVF_DIFFUSE);
-
     const float screenW = static_cast<float>(Common::ScreenW());
     const float screenH = static_cast<float>(Common::ScreenH());
-    const DWORD color = D3DCOLOR_ARGB(alpha255, 0, 0, 0);
+    const float baseW = static_cast<float>(Common::BASE_W);
+    const float baseH = static_cast<float>(Common::BASE_H);
 
-    struct FadeVertex
-    {
-        float x, y, z, rhw;
-        float u, v;
-        DWORD diffuse;
-    };
+    const int w = static_cast<int>(baseW);
+    const int h = static_cast<int>(baseH);
 
-    FadeVertex vertices[4] =
-    {
-        { 0.0f,     0.0f,      0.0f, 1.0f, 0.0f, 0.0f, color },
-        { screenW,  0.0f,      0.0f, 1.0f, screenW / 2.0f, 0.0f, color },
-        { 0.0f,     screenH,   0.0f, 1.0f, 0.0f, screenH / 2.0f, color },
-        { screenW,  screenH,   0.0f, 1.0f, screenW / 2.0f, screenH / 2.0f, color },
-    };
-
-    device->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, vertices, sizeof(FadeVertex));
+    m_sprite.PlaceImage(L"__fade_black__", 0, 0, w, h, alpha255);
+    m_sprite.Draw();
 }
 
 void Render::EnsureSettingsDialogTextFonts()
