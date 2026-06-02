@@ -21,6 +21,7 @@ public:
 
     // TODO rotate, scale
     void AddInstance(const D3DXVECTOR3& pos);
+    void SetInstanceOffset(const D3DXVECTOR3& offset);
 
     void SetHighQuality(bool enabled);
 
@@ -88,6 +89,7 @@ private:
     bool m_highQualityEnabled = true;
     bool m_autoHide = false;
     SwayMode m_swayMode = SwayMode::Off;
+    D3DXVECTOR3 m_instanceOffset = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 
 };
 

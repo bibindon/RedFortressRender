@@ -333,6 +333,7 @@ void MeshInstancing::AddInstance(const D3DXVECTOR3& pos)
 {
     if (m_loadedPlacementCsv && !m_allInstances.empty())
     {
+        SetInstanceOffset(pos);
         return;
     }
 
@@ -345,6 +346,12 @@ void MeshInstancing::AddInstance(const D3DXVECTOR3& pos)
 
     m_allInstances.clear();
     m_allInstances.push_back(instance);
+    UpdateVisibleInstances();
+}
+
+void MeshInstancing::SetInstanceOffset(const D3DXVECTOR3& offset)
+{
+    m_instanceOffset = offset;
     UpdateVisibleInstances();
 }
 
@@ -699,7 +706,18 @@ void MeshInstancing::UpdateInstanceBuffer()
         return;
     }
 
-    HRESULT hResult = Common::D3DDevice()->CreateVertexBuffer(sizeof(InstanceData) * static_cast<UINT>(m_instances.size()),
+    std::vector<InstanceData> offsetInstances;
+    offsetInstances.reserve(m_instances.size());
+    for (const InstanceData& instance : m_instances)
+    {
+        InstanceData offsetInstance = instance;
+        offsetInstance.x += m_instanceOffset.x;
+        offsetInstance.y += m_instanceOffset.y;
+        offsetInstance.z += m_instanceOffset.z;
+        offsetInstances.push_back(offsetInstance);
+    }
+
+    HRESULT hResult = Common::D3DDevice()->CreateVertexBuffer(sizeof(InstanceData) * static_cast<UINT>(offsetInstances.size()),
                                                               0,
                                                               0,
                                                               D3DPOOL_MANAGED,
@@ -707,8 +725,8 @@ void MeshInstancing::UpdateInstanceBuffer()
                                                               0);
     assert(hResult == S_OK);
 
-    copyBuf(sizeof(InstanceData) * static_cast<unsigned>(m_instances.size()),
-            m_instances.data(),
+    copyBuf(sizeof(InstanceData) * static_cast<unsigned>(offsetInstances.size()),
+            offsetInstances.data(),
             m_worldPosBuf);
 }
 
