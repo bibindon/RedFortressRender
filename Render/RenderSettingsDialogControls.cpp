@@ -814,6 +814,13 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     state->worldTextList = CreateSettingsListView(hWnd, 32256, 24, y, 482, 92, worldTextColumns, worldTextWidths, 9);
     y += 108;
 
+    CreateSettingsGroupBox(hWnd, L"Fade", 8, y, 504, 52);
+    CreateSettingsButton(hWnd, L"FadeIn", 24, y + 22, 74, 24, 32300);
+    CreateSettingsButton(hWnd, L"FadeOut", 108, y + 22, 74, 24, 32301);
+    CreateSettingsStatic(hWnd, L"Sec", 192, y + 26, 42, 18);
+    CreateSettingsEdit(hWnd, L"2.0", 240, y + 22, 48, 20, 42300);
+    y += 60;
+
     SetSettingsTrackbarRange(hWnd, 31004, 0, 49);
     SetSettingsTrackbarRange(hWnd, 31005, 0, 100);
     SetSettingsTrackbarRange(hWnd, 31100, 0, 50);

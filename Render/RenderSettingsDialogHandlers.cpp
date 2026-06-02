@@ -814,6 +814,18 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
                 UpdateWorldTextList(state);
             }
         }
+        else if (id == 32300)
+        {
+            float duration = 2.0f;
+            TryGetSettingsEditFloat(hWnd, 42300, duration);
+            render->StartFadeIn(duration);
+        }
+        else if (id == 32301)
+        {
+            float duration = 2.0f;
+            TryGetSettingsEditFloat(hWnd, 42300, duration);
+            render->StartFadeOut(duration);
+        }
         else if (id == 31411)
         {
             render->AddPointLight(render->GetLookAtPos(),

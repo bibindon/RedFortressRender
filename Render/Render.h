@@ -421,6 +421,11 @@ public:
                         const D3DXVECTOR3& worldPos,
                         const int transparency = 255);
 
+    void StartFadeIn(const float durationSeconds);
+    void StartFadeOut(const float durationSeconds);
+    void SetFadeAlpha(const float alpha);
+    float GetFadeAlpha() const;
+
     void PlaceParticleEffect(const ParticleEffectPreset preset, const D3DXVECTOR3& origin);
     void ClearParticleEffect();
     void SetDustFixedScreenSize(bool enabled);
@@ -765,6 +770,9 @@ private:
     void EnsureSettingsDialogTextFonts();
     void DrawSettingsDialogText();
     void DrawWorldTexts();
+    void DrawFadeOverlay();
+    void UpdateFade(float deltaSeconds);
+    void EnsureFadeTexture();
     void UpdateSkinAnimationState();
     void LoadSettingsCsv(const std::wstring& settingsCsvPath);
     void ApplySettings();
@@ -928,6 +936,15 @@ private:
     bool m_hasLastFramePacingTime = false;
     DWORD m_lastSleepMs = 0;
     bool m_hasRequestedTimerResolution = false;
+
+    D3DXVECTOR3 m_fadeColor = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+    float m_fadeAlpha = 0.0f;
+    float m_fadeStartAlpha = 0.0f;
+    float m_fadeTargetAlpha = 0.0f;
+    float m_fadeDuration = 0.0f;
+    float m_fadeElapsed = 0.0f;
+    bool m_fadeActive = false;
+    LPDIRECT3DTEXTURE9 m_fadeTexture = NULL;
 
     //-----------------------------------------------------------------
     // デバイスロスト関連処理

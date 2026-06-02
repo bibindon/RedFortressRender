@@ -2009,6 +2009,7 @@ void Render::Draw()
     const float frameDeltaSeconds = CalcFrameDeltaSeconds();
     m_particleSystem.Update(frameDeltaSeconds);
     UpdateMovingPlatforms(frameDeltaSeconds);
+    UpdateFade(frameDeltaSeconds);
     UpdateSkinAnimationState();
     CameraShakeFrameScope cameraShakeFrameScope;
     ApplyTAAProjectionJitter();
@@ -5245,6 +5246,163 @@ void Render::Draw2D()
         elem->Draw();
     }
 
+    DrawFadeOverlay();
+}
+
+void Render::EnsureFadeTexture()
+{
+    if (m_fadeTexture != NULL)
+    {
+        return;
+    }
+
+    HRESULT hr = Common::D3DDevice()->CreateTexture(
+        2,
+        2,
+        1,
+        0,
+        D3DFMT_A8R8G8B8,
+        D3DPOOL_MANAGED,
+        &m_fadeTexture,
+        NULL);
+    if (FAILED(hr) || m_fadeTexture == NULL)
+    {
+        return;
+    }
+
+    D3DLOCKED_RECT lockedRect;
+    hr = m_fadeTexture->LockRect(0, &lockedRect, NULL, 0);
+    if (SUCCEEDED(hr))
+    {
+        DWORD* pixels = static_cast<DWORD*>(lockedRect.pBits);
+        for (int i = 0; i < 4; ++i)
+        {
+            pixels[i] = D3DCOLOR_ARGB(255, 0, 0, 0);
+        }
+        m_fadeTexture->UnlockRect(0);
+    }
+}
+
+void Render::UpdateFade(const float deltaSeconds)
+{
+    if (!m_fadeActive)
+    {
+        return;
+    }
+
+    m_fadeElapsed += deltaSeconds;
+    if (m_fadeElapsed >= m_fadeDuration)
+    {
+        m_fadeAlpha = m_fadeTargetAlpha;
+        m_fadeActive = false;
+        return;
+    }
+
+    const float t = m_fadeElapsed / m_fadeDuration;
+    m_fadeAlpha = m_fadeStartAlpha + (m_fadeTargetAlpha - m_fadeStartAlpha) * t;
+}
+
+void Render::StartFadeIn(const float durationSeconds)
+{
+    if (durationSeconds <= 0.0f)
+    {
+        m_fadeAlpha = 1.0f;
+        m_fadeActive = false;
+        return;
+    }
+
+    m_fadeDuration = durationSeconds;
+    m_fadeStartAlpha = m_fadeAlpha;
+    m_fadeTargetAlpha = 1.0f;
+    m_fadeElapsed = 0.0f;
+    m_fadeActive = true;
+}
+
+void Render::StartFadeOut(const float durationSeconds)
+{
+    if (durationSeconds <= 0.0f)
+    {
+        m_fadeAlpha = 0.0f;
+        m_fadeActive = false;
+        return;
+    }
+
+    m_fadeDuration = durationSeconds;
+    m_fadeStartAlpha = m_fadeAlpha;
+    m_fadeTargetAlpha = 0.0f;
+    m_fadeElapsed = 0.0f;
+    m_fadeActive = true;
+}
+
+void Render::SetFadeAlpha(const float alpha)
+{
+    float clamped = alpha;
+    if (clamped < 0.0f)
+    {
+        clamped = 0.0f;
+    }
+    if (clamped > 1.0f)
+    {
+        clamped = 1.0f;
+    }
+    m_fadeAlpha = clamped;
+    m_fadeActive = false;
+}
+
+float Render::GetFadeAlpha() const
+{
+    return m_fadeAlpha;
+}
+
+void Render::DrawFadeOverlay()
+{
+    if (m_fadeAlpha <= 0.0f)
+    {
+        return;
+    }
+
+    const int alpha255 = static_cast<int>(m_fadeAlpha * 255.0f);
+    if (alpha255 <= 0)
+    {
+        return;
+    }
+
+    EnsureFadeTexture();
+    if (m_fadeTexture == NULL)
+    {
+        return;
+    }
+
+    LPDIRECT3DDEVICE9 device = Common::D3DDevice();
+
+    device->SetTexture(0, m_fadeTexture);
+    device->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+    device->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+    device->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
+    device->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
+
+    device->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1 | D3DFVF_DIFFUSE);
+
+    const float screenW = static_cast<float>(Common::ScreenW());
+    const float screenH = static_cast<float>(Common::ScreenH());
+    const DWORD color = D3DCOLOR_ARGB(alpha255, 0, 0, 0);
+
+    struct FadeVertex
+    {
+        float x, y, z, rhw;
+        float u, v;
+        DWORD diffuse;
+    };
+
+    FadeVertex vertices[4] =
+    {
+        { 0.0f,     0.0f,      0.0f, 1.0f, 0.0f, 0.0f, color },
+        { screenW,  0.0f,      0.0f, 1.0f, screenW / 2.0f, 0.0f, color },
+        { 0.0f,     screenH,   0.0f, 1.0f, 0.0f, screenH / 2.0f, color },
+        { screenW,  screenH,   0.0f, 1.0f, screenW / 2.0f, screenH / 2.0f, color },
+    };
+
+    device->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, vertices, sizeof(FadeVertex));
 }
 
 void Render::EnsureSettingsDialogTextFonts()
