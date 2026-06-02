@@ -80,6 +80,17 @@ struct RenderSettingsDialogState
         RECT rect { };
     };
     std::vector<ChildPlacement> childPlacements;
+
+    HWND worldTextList = NULL;
+    std::wstring worldTextText = L"Hello";
+    float worldTextX = 0.0f;
+    float worldTextY = 0.0f;
+    float worldTextZ = 0.0f;
+    int worldTextFontSize = 20;
+    int worldTextColorR = 255;
+    int worldTextColorG = 255;
+    int worldTextColorB = 255;
+    bool worldTextDecorated = false;
 };
 enum RenderSettingsControlId
 {
@@ -124,6 +135,7 @@ void SyncLoadedModelsFromRender(RenderSettingsDialogState* state);
 const wchar_t* PointLightShapeToText(PointLightShape shape);
 void UpdatePointLightsList(RenderSettingsDialogState* state);
 void UpdateSettingsTextList(RenderSettingsDialogState* state);
+void UpdateWorldTextList(RenderSettingsDialogState* state);
 void SelectSettingsTextListItem(RenderSettingsDialogState* state, int index);
 void LoadSelectedSettingsTextPosition(HWND hWnd);
 int GetSelectedListViewIndex(HWND listView);

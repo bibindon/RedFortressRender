@@ -788,6 +788,32 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     state->settingsTextList = CreateSettingsListView(hWnd, 32155, 24, y, 482, 92, textColumns, textWidths, 4);
     y += 108;
 
+    CreateSettingsGroupBox(hWnd, L"World Text", 8, y, 504, 216);
+    CreateSettingsStatic(hWnd, L"Text", 24, y + 24, 48, 18);
+    CreateSettingsEdit(hWnd, L"Hello", 96, y + 22, 268, 20, 32252);
+    CreateSettingsCheckbox(hWnd, 32253, L"FontEx", 382, y + 20, 82, 22);
+    CreateSettingsButton(hWnd, L"Add", 464, y + 18, 44, 24, 32254);
+    CreateSettingsStatic(hWnd, L"X", 24, y + 52, 24, 18);
+    CreateSettingsEdit(hWnd, L"0.00", 64, y + 48, 64, 20, 42250);
+    CreateSettingsStatic(hWnd, L"Y", 138, y + 52, 24, 18);
+    CreateSettingsEdit(hWnd, L"0.00", 178, y + 48, 64, 20, 42251);
+    CreateSettingsStatic(hWnd, L"Z", 252, y + 52, 24, 18);
+    CreateSettingsEdit(hWnd, L"0.00", 292, y + 48, 64, 20, 42252);
+    CreateSettingsStatic(hWnd, L"Size", 370, y + 52, 42, 18);
+    CreateSettingsEdit(hWnd, L"20", 420, y + 48, 48, 20, 42253);
+    CreateSettingsStatic(hWnd, L"R", 24, y + 78, 24, 18);
+    CreateSettingsEdit(hWnd, L"255", 64, y + 74, 48, 20, 42254);
+    CreateSettingsStatic(hWnd, L"G", 122, y + 78, 24, 18);
+    CreateSettingsEdit(hWnd, L"255", 162, y + 74, 48, 20, 42255);
+    CreateSettingsStatic(hWnd, L"B", 220, y + 78, 24, 18);
+    CreateSettingsEdit(hWnd, L"255", 260, y + 74, 48, 20, 42256);
+    CreateSettingsButton(hWnd, L"Remove", 378, y + 72, 88, 24, 32255);
+    y += 108;
+    const wchar_t* worldTextColumns[] = { L"Text", L"X", L"Y", L"Z", L"Sz", L"R", L"G", L"B", L"Ex" };
+    const int worldTextWidths[] = { 120, 45, 45, 45, 30, 30, 30, 30, 30 };
+    state->worldTextList = CreateSettingsListView(hWnd, 32256, 24, y, 482, 92, worldTextColumns, worldTextWidths, 9);
+    y += 108;
+
     SetSettingsTrackbarRange(hWnd, 31004, 0, 49);
     SetSettingsTrackbarRange(hWnd, 31005, 0, 100);
     SetSettingsTrackbarRange(hWnd, 31100, 0, 50);

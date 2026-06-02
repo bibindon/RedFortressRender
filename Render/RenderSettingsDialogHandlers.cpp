@@ -773,6 +773,47 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
             const auto textList = render->GetSettingsDialogTextList();
             SelectSettingsTextListItem(state, static_cast<int>(textList.size()) - 1);
         }
+        else if (id == 32254)
+        {
+            wchar_t text[512] { };
+            GetDlgItemTextW(hWnd, 32252, text, static_cast<int>(_countof(text)));
+
+            float posX = 0.0f;
+            float posY = 0.0f;
+            float posZ = 0.0f;
+            int fontSize = 20;
+            int r = 255;
+            int g = 255;
+            int b = 255;
+            TryGetSettingsEditFloat(hWnd, 42250, posX);
+            TryGetSettingsEditFloat(hWnd, 42251, posY);
+            TryGetSettingsEditFloat(hWnd, 42252, posZ);
+            TryGetSettingsEditInt(hWnd, 42253, fontSize);
+            TryGetSettingsEditInt(hWnd, 42254, r);
+            TryGetSettingsEditInt(hWnd, 42255, g);
+            TryGetSettingsEditInt(hWnd, 42256, b);
+            const D3DXCOLOR color(static_cast<float>(r) / 255.0f,
+                                  static_cast<float>(g) / 255.0f,
+                                  static_cast<float>(b) / 255.0f,
+                                  1.0f);
+            const bool decorated = IsSettingsCheckboxChecked(hWnd, 32253);
+
+            render->AddWorldText(text,
+                                 D3DXVECTOR3(posX, posY, posZ),
+                                 fontSize,
+                                 color,
+                                 decorated);
+            UpdateWorldTextList(state);
+        }
+        else if (id == 32255)
+        {
+            const int index = GetSelectedListViewIndex(state->worldTextList);
+            if (index >= 0)
+            {
+                render->RemoveWorldText(index);
+                UpdateWorldTextList(state);
+            }
+        }
         else if (id == 31411)
         {
             render->AddPointLight(render->GetLookAtPos(),

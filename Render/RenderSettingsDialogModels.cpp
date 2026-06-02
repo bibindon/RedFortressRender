@@ -260,6 +260,44 @@ void LoadSelectedSettingsTextPosition(HWND hWnd)
     SetTrackbarFromFloat(hWnd, 32151, state->settingsTextY, 0.0f, 1.0f);
 }
 
+void UpdateWorldTextList(RenderSettingsDialogState* state)
+{
+    if (state == nullptr || state->render == nullptr || state->worldTextList == NULL)
+    {
+        return;
+    }
+
+    const int selectedIndex = GetSelectedListViewIndex(state->worldTextList);
+    const auto& worldTextList = state->render->GetWorldTextList();
+    ListView_DeleteAllItems(state->worldTextList);
+    for (int i = 0; i < static_cast<int>(worldTextList.size()); ++i)
+    {
+        const auto& entry = worldTextList[i];
+        wchar_t xText[16];
+        wchar_t yText[16];
+        wchar_t zText[16];
+        wchar_t szText[16];
+        wchar_t rText[8];
+        wchar_t gText[8];
+        wchar_t bText[8];
+        std::swprintf(xText, 16, L"%.1f", entry.worldPos.x);
+        std::swprintf(yText, 16, L"%.1f", entry.worldPos.y);
+        std::swprintf(zText, 16, L"%.1f", entry.worldPos.z);
+        std::swprintf(szText, 16, L"%d", entry.fontSize);
+        std::swprintf(rText, 8, L"%d", static_cast<int>(entry.color.r * 255.0f));
+        std::swprintf(gText, 8, L"%d", static_cast<int>(entry.color.g * 255.0f));
+        std::swprintf(bText, 8, L"%d", static_cast<int>(entry.color.b * 255.0f));
+        const wchar_t* exText = entry.decorated ? L"Y" : L"N";
+        const wchar_t* values[] = { entry.text.c_str(), xText, yText, zText, szText, rText, gText, bText, exText };
+        AddSettingsListViewRow(state->worldTextList, i, values, 9);
+    }
+
+    if (selectedIndex >= 0 && selectedIndex < static_cast<int>(worldTextList.size()))
+    {
+        ListView_SetItemState(state->worldTextList, selectedIndex, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
+    }
+}
+
 int GetSelectedListViewIndex(HWND listView)
 {
     if (listView == NULL)

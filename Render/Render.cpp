@@ -3626,6 +3626,43 @@ bool Render::SetSettingsDialogTextPosition(const size_t index,
     return true;
 }
 
+int Render::AddWorldText(const std::wstring& text,
+                          const D3DXVECTOR3& worldPos,
+                          const int fontSize,
+                          const D3DXCOLOR& color,
+                          const bool decorated)
+{
+    WorldTextInfo info;
+    info.text = text;
+    info.worldPos = worldPos;
+    info.fontSize = fontSize;
+    info.color = color;
+    info.decorated = decorated;
+    m_worldTextList.push_back(info);
+    return static_cast<int>(m_worldTextList.size()) - 1;
+}
+
+bool Render::RemoveWorldText(const int index)
+{
+    if (index < 0 || index >= static_cast<int>(m_worldTextList.size()))
+    {
+        return false;
+    }
+
+    m_worldTextList.erase(m_worldTextList.begin() + index);
+    return true;
+}
+
+void Render::ClearWorldTexts()
+{
+    m_worldTextList.clear();
+}
+
+const std::vector<WorldTextInfo>& Render::GetWorldTextList() const
+{
+    return m_worldTextList;
+}
+
 void Render::DrawImage(const std::wstring& text,
                                  const int X,
                                  const int Y,
@@ -5078,6 +5115,45 @@ void Render::WaitForTargetFrameRate()
     m_lastFramePacingTime = currentTime;
 }
 
+void Render::DrawWorldTexts()
+{
+    if (m_worldTextList.empty())
+    {
+        return;
+    }
+
+    const float scaleX = static_cast<float>(Common::BASE_W) / static_cast<float>(Common::ScreenW());
+    const float scaleY = static_cast<float>(Common::BASE_H) / static_cast<float>(Common::ScreenH());
+
+    for (const auto& worldText : m_worldTextList)
+    {
+        const POINT screenPos = Camera::GetScreenPos(worldText.worldPos);
+        if (screenPos.x < 0 || screenPos.y < 0)
+        {
+            continue;
+        }
+
+        const int baseX = static_cast<int>(static_cast<float>(screenPos.x) * scaleX);
+        const int baseY = static_cast<int>(static_cast<float>(screenPos.y) * scaleY);
+
+        auto found = m_worldTextFontIdBySize.find(worldText.fontSize);
+        if (found == m_worldTextFontIdBySize.end())
+        {
+            const int newId = SetUpFont(L"BIZ UDゴシック", worldText.fontSize, D3DCOLOR_ARGB(255, 255, 255, 255));
+            m_worldTextFontIdBySize[worldText.fontSize] = newId;
+            found = m_worldTextFontIdBySize.find(worldText.fontSize);
+        }
+
+        const UINT drawColor = D3DCOLOR_ARGB(
+            static_cast<int>(worldText.color.a * 255.0f),
+            static_cast<int>(worldText.color.r * 255.0f),
+            static_cast<int>(worldText.color.g * 255.0f),
+            static_cast<int>(worldText.color.b * 255.0f));
+
+        DrawText_(found->second, worldText.text, baseX, baseY, drawColor);
+    }
+}
+
 void Render::Draw2D()
 {
     if (m_bShowCameraPosition)
@@ -5086,6 +5162,7 @@ void Render::Draw2D()
     }
 
     DrawSettingsDialogText();
+    DrawWorldTexts();
 
     for (auto& elem : m_fontList)
     {

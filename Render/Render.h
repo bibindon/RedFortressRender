@@ -123,6 +123,15 @@ struct RenderSettingsDialogTextInfo
     bool decorated = false;
 };
 
+struct WorldTextInfo
+{
+    std::wstring text;
+    D3DXVECTOR3 worldPos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+    int fontSize = 20;
+    D3DXCOLOR color = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
+    bool decorated = false;
+};
+
 class Render : public IDeviceResettable
 {
 
@@ -392,6 +401,15 @@ public:
     bool SetSettingsDialogTextPosition(const size_t index,
                                        const float X,
                                        const float Y);
+
+    int AddWorldText(const std::wstring& text,
+                     const D3DXVECTOR3& worldPos,
+                     const int fontSize,
+                     const D3DXCOLOR& color,
+                     const bool decorated = false);
+    bool RemoveWorldText(int index);
+    void ClearWorldTexts();
+    const std::vector<WorldTextInfo>& GetWorldTextList() const;
 
     void DrawImage(const std::wstring& text,
                    const int X,
@@ -664,6 +682,9 @@ private:
     std::vector<Font*> m_fontList;
     std::vector<FontEx*> m_fontExList;
     std::vector<RenderSettingsDialogTextInfo> m_settingsDialogTextList;
+    std::vector<WorldTextInfo> m_worldTextList;
+    int m_worldTextFontId = -1;
+    std::unordered_map<int, int> m_worldTextFontIdBySize;
     int m_settingsDialogTextFontId = -1;
     int m_settingsDialogTextFontExId = -1;
     Sprite m_sprite;
@@ -737,6 +758,7 @@ private:
     void Draw2D();
     void EnsureSettingsDialogTextFonts();
     void DrawSettingsDialogText();
+    void DrawWorldTexts();
     void UpdateSkinAnimationState();
     void LoadSettingsCsv(const std::wstring& settingsCsvPath);
     void ApplySettings();
