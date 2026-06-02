@@ -963,7 +963,7 @@ void MeshMixManager::InitializeInternal()
     }
 
     hResult = D3DXLoadMeshFromX(tempPath.c_str(),
-                                D3DXMESH_MANAGED,
+                                D3DXMESH_MANAGED | D3DXMESH_32BIT,
                                 Common::D3DDevice(),
                                 &adjacencyBuffer,
                                 &materialBuffer,
