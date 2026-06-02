@@ -3672,6 +3672,33 @@ void Render::DrawImage(const std::wstring& text,
     m_sprite.PlaceImage(text, X, Y, transparency);
 }
 
+void Render::DrawWorldImage(const std::wstring& filename,
+                            const D3DXVECTOR3& worldPos,
+                            const int transparency)
+{
+    const POINT screenPos = Camera::GetScreenPos(worldPos);
+    if (screenPos.x < 0 || screenPos.y < 0)
+    {
+        return;
+    }
+
+    m_sprite.LoadImage_(filename);
+    const SIZE imageSize = m_sprite.GetImageSize(filename);
+    if (imageSize.cx <= 0 || imageSize.cy <= 0)
+    {
+        return;
+    }
+
+    const float scaleX = static_cast<float>(Common::BASE_W) / static_cast<float>(Common::ScreenW());
+    const float scaleY = static_cast<float>(Common::BASE_H) / static_cast<float>(Common::ScreenH());
+    const int baseX = static_cast<int>(static_cast<float>(screenPos.x) * scaleX);
+    const int baseY = static_cast<int>(static_cast<float>(screenPos.y) * scaleY);
+    const int imageBaseW = static_cast<int>(static_cast<float>(imageSize.cx) * scaleX);
+    const int imageBaseH = static_cast<int>(static_cast<float>(imageSize.cy) * scaleY);
+
+    m_sprite.PlaceImage(filename, baseX - imageBaseW / 2, baseY - imageBaseH / 2, transparency);
+}
+
 void Render::SetPostEffectSaturate(const float level)
 {
     m_postEffectSaturateLevel = level;

@@ -416,6 +416,10 @@ public:
                    const int Y,
                    const int transparency = 255);
 
+    void DrawWorldImage(const std::wstring& filename,
+                        const D3DXVECTOR3& worldPos,
+                        const int transparency = 255);
+
     void PlaceParticleEffect(const ParticleEffectPreset preset, const D3DXVECTOR3& origin);
     void ClearParticleEffect();
     void SetDustFixedScreenSize(bool enabled);

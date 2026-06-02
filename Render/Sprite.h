@@ -4,13 +4,6 @@
 namespace NSRender
 {
 
-//-------------------------------------------------------------------
-// スプライトを沢山作って使うと激重になる、という問題がある。
-// スプライトは描画するときにテクスチャを指定することができるので
-// 一つのスプライトで沢山のテクスチャを表示できる。
-// 問題が起きるまでは、スプライト1枚だけを使うようにする
-// LoadImage_は1回でいいけど、PlaceImage関数は毎フレーム実行する必要がある。
-//-------------------------------------------------------------------
 class Sprite : public IDeviceResettable
 {
 public:
@@ -25,6 +18,8 @@ public:
                     const int transparency = 255);
 
     void RemoveImage(const std::wstring& filename);
+
+    SIZE GetImageSize(const std::wstring& filename);
 
     void Draw();
 

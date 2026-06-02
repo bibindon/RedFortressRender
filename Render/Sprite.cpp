@@ -60,6 +60,22 @@ void Sprite::RemoveImage(const std::wstring& filename)
     m_textureMap.erase(filename);
 }
 
+SIZE Sprite::GetImageSize(const std::wstring& filename)
+{
+    SIZE size = { 0, 0 };
+    const auto found = m_textureMap.find(filename);
+    if (found == m_textureMap.end())
+    {
+        return size;
+    }
+
+    D3DSURFACE_DESC desc;
+    found->second->GetLevelDesc(0, &desc);
+    size.cx = static_cast<LONG>(desc.Width);
+    size.cy = static_cast<LONG>(desc.Height);
+    return size;
+}
+
 void Sprite::Draw()
 {
     D3DXMATRIX mScale;
@@ -68,11 +84,11 @@ void Sprite::Draw()
 
     m_pSprite->Begin(D3DXSPRITE_ALPHABLEND);
 
-    // Begin‚ÌŒã‚ÉÀs‚·‚é‚±‚Æ
+    // Beginï¿½ÌŒï¿½Éï¿½ï¿½sï¿½ï¿½ï¿½é‚±ï¿½ï¿½
     Common::D3DDevice()->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
     Common::D3DDevice()->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
 
-    // ƒ~ƒbƒv—L‚è‚Ì‚Æ‚«
+    // ï¿½~ï¿½bï¿½vï¿½Lï¿½ï¿½Ì‚Æ‚ï¿½
 //    Common::D3DDevice()->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
     Common::D3DDevice()->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
 
@@ -81,21 +97,9 @@ void Sprite::Draw()
     {
         D3DXVECTOR3 pos((float)elem.m_rect.left, (float)elem.m_rect.top, 0);
         m_pSprite->Draw(m_textureMap.at(elem.m_imageName),
-
-                        // Ø‚è”²‚­ƒGƒŠƒA
-                        // NULL‚¾‚Á‚½‚ç‘S‘Ì‚ğg‚¤
                         NULL,
-
-                        // ‚Ç‚±‚ğ’†S‚Æ‚İ‚È‚·‚©
-                        // NULL‚¾‚Á‚½‚ç¶ã
                         NULL,
-
-                        // ƒXƒNƒŠ[ƒ“ã‚Ì‚Ç‚±‚É•\¦‚·‚é‚©
                         &pos,
-
-                        // æZ‚·‚é’l
-                        // (255, 0, 0, 255)‚¾‚Á‚½‚çÔF‚¾‚¯c‚é
-                        // (255, 255, 255, 127)‚¾‚Á‚½‚ç”¼“§–¾
                         D3DCOLOR_RGBA(255, 255, 255, elem.m_transparency));
     }
 
