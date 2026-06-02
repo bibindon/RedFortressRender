@@ -40,6 +40,8 @@ public:
     void Draw();
     void Finalize();
 
+    SIZE GetTextSize(const std::wstring& text);
+
     void SetGaussianSampleSize(const int sampleSize);
 
 private:

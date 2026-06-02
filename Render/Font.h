@@ -52,6 +52,8 @@ public:
     void Draw();
     void Finalize();
 
+    SIZE GetTextSize(const std::wstring& text);
+
     void OnDeviceLost();
     void OnDeviceReset();
 

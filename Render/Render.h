@@ -685,6 +685,7 @@ private:
     std::vector<WorldTextInfo> m_worldTextList;
     int m_worldTextFontId = -1;
     std::unordered_map<int, int> m_worldTextFontIdBySize;
+    std::unordered_map<int, int> m_worldTextFontExIdBySize;
     int m_settingsDialogTextFontId = -1;
     int m_settingsDialogTextFontExId = -1;
     Sprite m_sprite;

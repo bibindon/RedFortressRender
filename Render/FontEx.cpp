@@ -64,6 +64,11 @@ void FontEx::Finalize()
     m_mainFont.Finalize();
 }
 
+SIZE FontEx::GetTextSize(const std::wstring& text)
+{
+    return m_mainFont.GetTextSize(text);
+}
+
 void FontEx::SetGaussianSampleSize(const int sampleSize)
 {
     m_postEffectFont.SetGaussianSampleSize(sampleSize);

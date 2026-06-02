@@ -5136,21 +5136,53 @@ void Render::DrawWorldTexts()
         const int baseX = static_cast<int>(static_cast<float>(screenPos.x) * scaleX);
         const int baseY = static_cast<int>(static_cast<float>(screenPos.y) * scaleY);
 
-        auto found = m_worldTextFontIdBySize.find(worldText.fontSize);
-        if (found == m_worldTextFontIdBySize.end())
+        SIZE textSize = { 0, 0 };
+        if (worldText.decorated)
         {
-            const int newId = SetUpFont(L"BIZ UDゴシック", worldText.fontSize, D3DCOLOR_ARGB(255, 255, 255, 255));
-            m_worldTextFontIdBySize[worldText.fontSize] = newId;
-            found = m_worldTextFontIdBySize.find(worldText.fontSize);
+            auto found = m_worldTextFontExIdBySize.find(worldText.fontSize);
+            if (found == m_worldTextFontExIdBySize.end())
+            {
+                const int newId = SetUpFontEx(L"BIZ UDゴシック", worldText.fontSize, D3DCOLOR_ARGB(255, 255, 255, 255));
+                m_worldTextFontExIdBySize[worldText.fontSize] = newId;
+                found = m_worldTextFontExIdBySize.find(worldText.fontSize);
+            }
+
+            textSize = m_fontExList.at(found->second)->GetTextSize(worldText.text);
+
+            const UINT drawColor = D3DCOLOR_ARGB(
+                static_cast<int>(worldText.color.a * 255.0f),
+                static_cast<int>(worldText.color.r * 255.0f),
+                static_cast<int>(worldText.color.g * 255.0f),
+                static_cast<int>(worldText.color.b * 255.0f));
+
+            const int centerX = baseX - textSize.cx / 2;
+            const int centerY = baseY - textSize.cy / 2;
+
+            DrawTextEx(found->second, worldText.text, centerX, centerY, drawColor);
         }
+        else
+        {
+            auto found = m_worldTextFontIdBySize.find(worldText.fontSize);
+            if (found == m_worldTextFontIdBySize.end())
+            {
+                const int newId = SetUpFont(L"BIZ UDゴシック", worldText.fontSize, D3DCOLOR_ARGB(255, 255, 255, 255));
+                m_worldTextFontIdBySize[worldText.fontSize] = newId;
+                found = m_worldTextFontIdBySize.find(worldText.fontSize);
+            }
 
-        const UINT drawColor = D3DCOLOR_ARGB(
-            static_cast<int>(worldText.color.a * 255.0f),
-            static_cast<int>(worldText.color.r * 255.0f),
-            static_cast<int>(worldText.color.g * 255.0f),
-            static_cast<int>(worldText.color.b * 255.0f));
+            textSize = m_fontList.at(found->second)->GetTextSize(worldText.text);
 
-        DrawText_(found->second, worldText.text, baseX, baseY, drawColor);
+            const UINT drawColor = D3DCOLOR_ARGB(
+                static_cast<int>(worldText.color.a * 255.0f),
+                static_cast<int>(worldText.color.r * 255.0f),
+                static_cast<int>(worldText.color.g * 255.0f),
+                static_cast<int>(worldText.color.b * 255.0f));
+
+            const int centerX = baseX - textSize.cx / 2;
+            const int centerY = baseY - textSize.cy / 2;
+
+            DrawText_(found->second, worldText.text, centerX, centerY, drawColor);
+        }
     }
 }
 

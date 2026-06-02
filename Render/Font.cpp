@@ -190,6 +190,21 @@ void Font::Draw()
     m_textList.clear();
 }
 
+SIZE Font::GetTextSize(const std::wstring& text)
+{
+    SIZE size = { 0, 0 };
+    if (m_pFont == NULL)
+    {
+        return size;
+    }
+
+    RECT rect = { 0, 0, 0, 0 };
+    m_pFont->DrawText(NULL, text.c_str(), -1, &rect, DT_CALCRECT | DT_LEFT | DT_NOCLIP, 0);
+    size.cx = rect.right - rect.left;
+    size.cy = rect.bottom - rect.top;
+    return size;
+}
+
 void Font::Finalize()
 {
     SAFE_RELEASE(m_pFont);
