@@ -816,13 +816,13 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
         }
         else if (id == 32300)
         {
-            float duration = 2.0f;
+            float duration = 0.5f;
             TryGetSettingsEditFloat(hWnd, 42300, duration);
             render->StartFadeIn(duration);
         }
         else if (id == 32301)
         {
-            float duration = 2.0f;
+            float duration = 0.5f;
             TryGetSettingsEditFloat(hWnd, 42300, duration);
             render->StartFadeOut(duration);
         }

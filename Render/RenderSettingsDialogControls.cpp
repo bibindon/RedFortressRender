@@ -818,7 +818,7 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     CreateSettingsButton(hWnd, L"FadeIn", 24, y + 22, 74, 24, 32300);
     CreateSettingsButton(hWnd, L"FadeOut", 108, y + 22, 74, 24, 32301);
     CreateSettingsStatic(hWnd, L"Sec", 192, y + 26, 42, 18);
-    CreateSettingsEdit(hWnd, L"2.0", 240, y + 22, 48, 20, 42300);
+    CreateSettingsEdit(hWnd, L"0.5", 240, y + 22, 48, 20, 42300);
     y += 60;
 
     SetSettingsTrackbarRange(hWnd, 31004, 0, 49);
