@@ -2712,6 +2712,16 @@ void Render::SetMeshMixPos(const int id, const D3DXVECTOR3& pos)
     m_meshMixList.at(id).SetPos(pos);
 }
 
+D3DXVECTOR3 Render::GetMeshMixPos(const int id) const
+{
+    if (id < 0 || id >= static_cast<int>(m_meshMixList.size()))
+    {
+        return D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+    }
+
+    return m_meshMixList.at(id).GetPos();
+}
+
 void Render::SetMeshMixSkinAnimPos(const int id, const D3DXVECTOR3& pos)
 {
     if (id < 0 || id >= static_cast<int>(m_meshMixSkinAnimList.size()))

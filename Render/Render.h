@@ -284,6 +284,7 @@ public:
     void RegisterCsvIdMapping(int csvId, int renderId);
 
     void SetMeshMixPos(const int id, const D3DXVECTOR3& pos);
+    D3DXVECTOR3 GetMeshMixPos(const int id) const;
     void SetMeshMixSaturateShadow(const bool enabled);
     void SetMeshMixSaturateShadowIntensity(const float intensity);
     void SetMeshMixShadowDarkness(const float darkness);
