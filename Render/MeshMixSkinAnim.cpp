@@ -1263,7 +1263,9 @@ bool MeshMixSkinAnim::LoadAnimationClip(const AnimationInfo& info)
                                    *clip.allocator,
                                    &clip.frameRoot,
                                    &clip.controller);
-    if (FAILED(hr) || clip.frameRoot == nullptr || clip.controller == nullptr)
+    const bool needsAnimationController = m_loadMode != MeshMixSkinAnimLoadMode::Custom;
+    if (FAILED(hr) || clip.frameRoot == nullptr ||
+        (needsAnimationController && clip.controller == nullptr))
     {
         SAFE_RELEASE(clip.controller);
         if (clip.frameRoot != nullptr)
@@ -1276,7 +1278,10 @@ bool MeshMixSkinAnim::LoadAnimationClip(const AnimationInfo& info)
     }
 
     ReleaseMeshContainersRecursive(clip.frameRoot, *clip.allocator);
-    clip.duration = GetAnimationControllerDuration(clip.controller);
+    if (clip.controller != nullptr)
+    {
+        clip.duration = GetAnimationControllerDuration(clip.controller);
+    }
     m_animationClips.push_back(clip);
     return true;
 }
