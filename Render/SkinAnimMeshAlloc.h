@@ -2,6 +2,7 @@
 
 #include <d3d9.h>
 #include <d3dx9.h>
+#include <map>
 #include <string>
 #include <vector>
 #include <memory>
@@ -17,6 +18,7 @@ class SkinAnimMeshAlloc : public ID3DXAllocateHierarchy
 
 public:
     SkinAnimMeshAlloc(const std::wstring &);
+    ~SkinAnimMeshAlloc();
 
     STDMETHOD(CreateFrame)(THIS_ LPCSTR, LPD3DXFRAME *);
     STDMETHOD(CreateMeshContainer)(THIS_ LPCSTR,
@@ -40,8 +42,15 @@ public:
 private:
 
     std::wstring m_xFilename;
+    std::wstring m_baseDirectory;
 
     SkinAnimMeshContainer* m_container = nullptr;
+
+    std::map<std::wstring, LPDIRECT3DTEXTURE9> m_textureCache;
+
+    LPDIRECT3DTEXTURE9 LoadTextureCached(const std::wstring& texturePath);
+    std::wstring ResolveTexturePath(const char* textureFilename) const;
+    void ClearTextureCache();
 };
 
 struct SkinAnimMeshFrame : public D3DXFRAME

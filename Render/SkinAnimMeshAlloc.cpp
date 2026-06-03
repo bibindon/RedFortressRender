@@ -14,7 +14,26 @@ namespace NSRender
 SkinAnimMeshAlloc::SkinAnimMeshAlloc(const std::wstring &xFilename)
     : m_xFilename(xFilename)
 {
-    // Nothing to do.
+    std::wstring resolvedPath;
+    if (PathIsRelative(xFilename.c_str()))
+    {
+        resolvedPath = Util::GetExeDir() + xFilename;
+    }
+    else
+    {
+        resolvedPath = xFilename;
+    }
+
+    size_t pos = resolvedPath.find_last_of(L"\\/");
+    if (pos != std::string::npos)
+    {
+        m_baseDirectory = resolvedPath.substr(0, pos);
+    }
+}
+
+SkinAnimMeshAlloc::~SkinAnimMeshAlloc()
+{
+    ClearTextureCache();
 }
 
 STDMETHODIMP SkinAnimMeshAlloc::CreateFrame(LPCSTR name, LPD3DXFRAME *newFrame)
@@ -134,26 +153,6 @@ void SkinAnimMeshAlloc::InitializeMaterials(const DWORD materialCount,
     m_container->NumMaterials = materialCount;
     m_container->pMaterials = NEW D3DXMATERIAL[m_container->NumMaterials];
 
-    std::wstring dirPath;
-
-    if (PathIsRelative(xFilename.c_str()))
-    {
-        dirPath = Util::GetExeDir() + xFilename;
-    }
-    else
-    {
-        dirPath = xFilename;
-    }
-
-    size_t pos = dirPath.find_last_of(L"\\/");
-
-    if (pos == std::string::npos)
-    {
-        throw std::exception("xFilename is wrong.");
-    }
-
-    dirPath = dirPath.substr(0, pos);
-
     for (DWORD i = 0; i < materialCount; ++i)
     {
         m_container->pMaterials[i] = materials[i];
@@ -161,18 +160,11 @@ void SkinAnimMeshAlloc::InitializeMaterials(const DWORD materialCount,
 
         if (m_container->pMaterials[i].pTextureFilename != nullptr)
         {
-            std::wstring filename = Util::Utf8ToWstring(m_container->pMaterials[i].pTextureFilename);
+            const std::wstring resolvedPath = ResolveTexturePath(m_container->pMaterials[i].pTextureFilename);
 
-            filename = dirPath + L'\\' + filename;
-
-            HRESULT hResult = E_FAIL;
-            hResult = D3DXCreateTextureFromFile(Common::D3DDevice(),
-                                                filename.c_str(),
-                                                &tempTexture);
-
-            if (FAILED(hResult))
+            if (!resolvedPath.empty())
             {
-                throw std::exception("texture file is not found.");
+                tempTexture = LoadTextureCached(resolvedPath);
             }
         }
 
@@ -196,7 +188,7 @@ void SkinAnimMeshAlloc::InitializeBone(const LPD3DXSKININFO skinInfo,
         m_container->m_boneOffsetMatrices[i] = *skinInfo->GetBoneOffsetMatrix(i);
     }
 
-    DWORD MAX_MATRICES = 8;
+    DWORD MAX_MATRICES = 16;
     auto boneNum = skinInfo->GetNumBones();
 
     if (boneNum >= MAX_MATRICES)
@@ -231,6 +223,76 @@ void SkinAnimMeshAlloc::InitializeBone(const LPD3DXSKININFO skinInfo,
     m_container->pSkinInfo = skinInfo;
     m_container->pSkinInfo->AddRef();
 
+}
+
+void SkinAnimMeshAlloc::ClearTextureCache()
+{
+    for (auto& texturePair : m_textureCache)
+    {
+        SAFE_RELEASE(texturePair.second);
+    }
+
+    m_textureCache.clear();
+}
+
+std::wstring SkinAnimMeshAlloc::ResolveTexturePath(const char* textureFilename) const
+{
+    if (textureFilename == nullptr || textureFilename[0] == '\0')
+    {
+        return L"";
+    }
+
+    std::wstring textureName = Util::Utf8ToWstring(textureFilename);
+
+    std::wstring combinedPath;
+    if (PathIsRelative(textureName.c_str()))
+    {
+        combinedPath = m_baseDirectory + L"\\" + textureName;
+    }
+    else
+    {
+        combinedPath = textureName;
+    }
+
+    wchar_t fullPath[MAX_PATH] { };
+    const DWORD length = GetFullPathNameW(
+        combinedPath.c_str(),
+        _countof(fullPath),
+        fullPath,
+        nullptr);
+
+    if (length > 0 && length < _countof(fullPath))
+    {
+        return fullPath;
+    }
+
+    return combinedPath;
+}
+
+LPDIRECT3DTEXTURE9 SkinAnimMeshAlloc::LoadTextureCached(const std::wstring& texturePath)
+{
+    auto foundTexture = m_textureCache.find(texturePath);
+    if (foundTexture != m_textureCache.end())
+    {
+        OutputDebugStringW((L"[SkinAnimMeshAlloc] Texture cache HIT: " + texturePath + L"\n").c_str());
+        foundTexture->second->AddRef();
+        return foundTexture->second;
+    }
+
+    OutputDebugStringW((L"[SkinAnimMeshAlloc] Texture cache MISS: " + texturePath + L"\n").c_str());
+
+    LPDIRECT3DTEXTURE9 texture = nullptr;
+    HRESULT hr = D3DXCreateTextureFromFile(Common::D3DDevice(),
+                                           texturePath.c_str(),
+                                           &texture);
+    if (FAILED(hr) || texture == nullptr)
+    {
+        return nullptr;
+    }
+
+    texture->AddRef();
+    m_textureCache[texturePath] = texture;
+    return texture;
 }
 
 }

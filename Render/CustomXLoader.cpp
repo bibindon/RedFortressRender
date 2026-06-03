@@ -1050,7 +1050,6 @@ bool CreateCustomXMeshContainer(const std::string& meshName,
     return SUCCEEDED(hr) && *meshContainer != nullptr;
 }
 
-//constexpr DWORD MAX_SKININFO_BONES_PER_PART = 240;
 constexpr DWORD MAX_SKININFO_BONES_PER_PART = 32;
 
 void OutputDebugLog(const std::wstring& message)
@@ -1231,7 +1230,34 @@ bool SplitCustomXMeshDataByBoneLimit(const CustomXMeshData& sourceMeshData,
         CustomXMeshData partMeshData;
         partMeshData.positions = partPositions;
         partMeshData.texCoords = partTexCoords;
-        partMeshData.materials = sourceMeshData.materials;
+
+        std::map<DWORD, DWORD> oldMaterialToLocalMaterial;
+        for (const TriangleInfo& tri : partTriangles)
+        {
+            const DWORD oldMaterialIndex = tri.materialIndex;
+            if (oldMaterialToLocalMaterial.count(oldMaterialIndex) == 0)
+            {
+                const DWORD localMaterialIndex =
+                    static_cast<DWORD>(partMeshData.materials.size());
+                oldMaterialToLocalMaterial[oldMaterialIndex] = localMaterialIndex;
+
+                if (oldMaterialIndex < sourceMeshData.materials.size())
+                {
+                    partMeshData.materials.push_back(sourceMeshData.materials[oldMaterialIndex]);
+                }
+                else
+                {
+                    CustomXMaterialData fallbackMaterial;
+                    ZeroMemory(&fallbackMaterial.material, sizeof(fallbackMaterial.material));
+                    fallbackMaterial.material.Diffuse.r = 1.0f;
+                    fallbackMaterial.material.Diffuse.g = 1.0f;
+                    fallbackMaterial.material.Diffuse.b = 1.0f;
+                    fallbackMaterial.material.Diffuse.a = 1.0f;
+                    fallbackMaterial.material.Ambient = fallbackMaterial.material.Diffuse;
+                    partMeshData.materials.push_back(fallbackMaterial);
+                }
+            }
+        }
 
         for (const TriangleInfo& tri : partTriangles)
         {
@@ -1240,7 +1266,7 @@ bool SplitCustomXMeshDataByBoneLimit(const CustomXMeshData& sourceMeshData,
             face.push_back(vertexRemap[tri.v1]);
             face.push_back(vertexRemap[tri.v2]);
             partMeshData.faces.push_back(face);
-            partMeshData.faceMaterialIndices.push_back(tri.materialIndex);
+            partMeshData.faceMaterialIndices.push_back(oldMaterialToLocalMaterial[tri.materialIndex]);
         }
 
         std::map<DWORD, DWORD> oldBoneToLocalBone;
@@ -1282,7 +1308,8 @@ bool SplitCustomXMeshDataByBoneLimit(const CustomXMeshData& sourceMeshData,
         OutputDebugLog(L"SplitMesh: part[" + std::to_wstring(partIndex) + L"] vertices=" +
                        std::to_wstring(partMeshData.positions.size()) +
                        L" triangles=" + std::to_wstring(partTriangles.size()) +
-                       L" bones=" + std::to_wstring(partMeshData.skinWeights.size()));
+                       L" bones=" + std::to_wstring(partMeshData.skinWeights.size()) +
+                       L" materials=" + std::to_wstring(partMeshData.materials.size()));
 
         if (partMeshData.skinWeights.size() > maxBonesPerPart)
         {
