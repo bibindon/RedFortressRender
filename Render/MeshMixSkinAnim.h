@@ -19,6 +19,16 @@ enum class MeshMixSkinAnimLoadMode
     Custom,
 };
 
+struct CustomXFrameHierarchyLoadResult
+{
+    HRESULT hr = E_FAIL;
+    int frameCount = 0;
+    std::wstring rootFrameName;
+    std::wstring message;
+};
+
+CustomXFrameHierarchyLoadResult LoadCustomXFrameHierarchyForTest(const std::wstring& filePath);
+
 class MeshMixSkinAnim : public IDeviceResettable
 {
 public:

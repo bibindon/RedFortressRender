@@ -326,10 +326,56 @@ private:
 
     void SkipWhitespace()
     {
-        while (m_pos < m_text.size() && IsWhitespace(m_text[m_pos]))
+        bool skipped = true;
+        while (skipped)
         {
-            ++m_pos;
+            skipped = false;
+            while (m_pos < m_text.size() && IsWhitespace(m_text[m_pos]))
+            {
+                ++m_pos;
+                skipped = true;
+            }
+
+            if (SkipComment())
+            {
+                skipped = true;
+            }
         }
+    }
+
+    bool SkipComment()
+    {
+        if (m_pos + 1 >= m_text.size() || m_text[m_pos] != '/')
+        {
+            return false;
+        }
+
+        if (m_text[m_pos + 1] == '/')
+        {
+            m_pos += 2;
+            while (m_pos < m_text.size() && m_text[m_pos] != '\r' && m_text[m_pos] != '\n')
+            {
+                ++m_pos;
+            }
+            return true;
+        }
+
+        if (m_text[m_pos + 1] == '*')
+        {
+            m_pos += 2;
+            while (m_pos + 1 < m_text.size() && (m_text[m_pos] != '*' || m_text[m_pos + 1] != '/'))
+            {
+                ++m_pos;
+            }
+
+            if (m_pos + 1 < m_text.size())
+            {
+                m_pos += 2;
+            }
+            return true;
+        }
+
+        return false;
     }
 
     bool ReadQuotedToken(std::string& token)
@@ -528,6 +574,11 @@ bool ParseCustomXFrameBody(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame)
     std::string token;
     while (tokenizer.ReadToken(token))
     {
+        if (IsXTextSeparatorToken(token))
+        {
+            continue;
+        }
+
         if (token == "}")
         {
             return true;
@@ -578,6 +629,11 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText, LPD3DXFRA
     std::string token;
     while (tokenizer.ReadToken(token))
     {
+        if (IsXTextSeparatorToken(token))
+        {
+            continue;
+        }
+
         if (token != "Frame")
         {
             if (token == "template")
@@ -612,6 +668,69 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText, LPD3DXFRA
     WriteMeshMixSkinAnimLoadLog(L"Custom parser failed: no Frame token was found.");
     return E_FAIL;
 }
+
+int CountCustomXFrames(const LPD3DXFRAME frame)
+{
+    if (frame == nullptr)
+    {
+        return 0;
+    }
+
+    return 1 + CountCustomXFrames(frame->pFrameFirstChild) + CountCustomXFrames(frame->pFrameSibling);
+}
+
+void DestroyCustomXFrameHierarchy(LPD3DXFRAME frame)
+{
+    if (frame == nullptr)
+    {
+        return;
+    }
+
+    LPD3DXFRAME sibling = frame->pFrameSibling;
+    LPD3DXFRAME child = frame->pFrameFirstChild;
+    frame->pFrameSibling = nullptr;
+    frame->pFrameFirstChild = nullptr;
+
+    DestroyCustomXFrameHierarchy(child);
+    DestroyCustomXFrameHierarchy(sibling);
+
+    SAFE_DELETE_ARRAY(frame->Name);
+    SAFE_DELETE(frame);
+}
+}
+
+CustomXFrameHierarchyLoadResult LoadCustomXFrameHierarchyForTest(const std::wstring& filePath)
+{
+    CustomXFrameHierarchyLoadResult result;
+
+    std::ifstream file(filePath, std::ios::binary);
+    if (!file)
+    {
+        result.hr = E_FAIL;
+        result.message = L"File open failed: " + filePath;
+        return result;
+    }
+
+    const std::string fileText((std::istreambuf_iterator<char>(file)),
+                               std::istreambuf_iterator<char>());
+    LPD3DXFRAME frameRoot = nullptr;
+    result.hr = LoadCustomXFrameHierarchyFromText(fileText, &frameRoot);
+    if (SUCCEEDED(result.hr) && frameRoot != nullptr)
+    {
+        result.frameCount = CountCustomXFrames(frameRoot);
+        if (frameRoot->Name != nullptr)
+        {
+            result.rootFrameName = AnsiTextToWideText(frameRoot->Name);
+        }
+        result.message = L"Loaded successfully.";
+    }
+    else
+    {
+        result.message = L"Parser failed. Bytes=" + std::to_wstring(fileText.size());
+    }
+
+    DestroyCustomXFrameHierarchy(frameRoot);
+    return result;
 }
 
 void MeshMixSkinAnim::SetSharedMirrorClipPlane(const bool enabled, const D3DXVECTOR4& plane)
