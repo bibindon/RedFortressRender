@@ -775,7 +775,26 @@ bool ParseCustomXSkinWeights(XTextTokenizer& tokenizer, CustomXMeshData& meshDat
         return false;
     }
 
-    meshData.skinWeights.push_back(weightsData);
+    CustomXSkinWeightsData filteredWeightsData;
+    filteredWeightsData.boneName = weightsData.boneName;
+    filteredWeightsData.offsetMatrix = weightsData.offsetMatrix;
+
+    for (DWORD weightIndex = 0; weightIndex < weightCount; ++weightIndex)
+    {
+        if (weightsData.weights[weightIndex] <= 0.000001f)
+        {
+            continue;
+        }
+
+        filteredWeightsData.vertexIndices.push_back(weightsData.vertexIndices[weightIndex]);
+        filteredWeightsData.weights.push_back(weightsData.weights[weightIndex]);
+    }
+
+    if (!filteredWeightsData.vertexIndices.empty())
+    {
+        meshData.skinWeights.push_back(filteredWeightsData);
+    }
+
     return true;
 }
 
@@ -877,14 +896,22 @@ bool CreateCustomXSkinInfo(const CustomXMeshData& meshData,
     }
 
     *skinInfo = nullptr;
+    const UINT numBones = static_cast<UINT>(meshData.skinWeights.size());
+    CUSTOM_X_LOADER_LOG(L"CreateSkinInfo: NumBones=" + std::to_wstring(numBones) +
+                        L" VertexCount=" + std::to_wstring(meshData.positions.size()));
+
     HRESULT hr = D3DXCreateSkinInfoFVF(static_cast<UINT>(meshData.positions.size()),
-                                       fvf,
-                                       static_cast<UINT>(meshData.skinWeights.size()),
-                                       skinInfo);
+                                        fvf,
+                                        numBones,
+                                        skinInfo);
     if (FAILED(hr) || *skinInfo == nullptr)
     {
+        CUSTOM_X_LOADER_LOG(L"CreateSkinInfo FAILED. NumBones=" + std::to_wstring(numBones) +
+                            L" HR=" + FormatHRESULT(hr));
         return false;
     }
+
+    CUSTOM_X_LOADER_LOG(L"CreateSkinInfo OK. NumBones=" + std::to_wstring(numBones));
 
     for (DWORD i = 0; i < static_cast<DWORD>(meshData.skinWeights.size()); ++i)
     {
