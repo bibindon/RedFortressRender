@@ -1050,7 +1050,8 @@ bool CreateCustomXMeshContainer(const std::string& meshName,
     return SUCCEEDED(hr) && *meshContainer != nullptr;
 }
 
-constexpr DWORD MAX_SKININFO_BONES_PER_PART = 240;
+//constexpr DWORD MAX_SKININFO_BONES_PER_PART = 240;
+constexpr DWORD MAX_SKININFO_BONES_PER_PART = 32;
 
 void OutputDebugLog(const std::wstring& message)
 {

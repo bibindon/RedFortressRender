@@ -1,4 +1,4 @@
-﻿#include "MeshMixSkinAnim.h"
+#include "MeshMixSkinAnim.h"
 
 #include <algorithm>
 #include <cmath>
