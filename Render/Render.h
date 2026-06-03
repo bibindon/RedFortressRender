@@ -257,7 +257,8 @@ public:
                            const AnimSetMap& animSetMap,
                            const float radius = -1.f,
                            const bool useParallaxOcclusionMapping = false,
-                           const bool useNormalMapping = false);
+                           const bool useNormalMapping = false,
+                           const MeshMixSkinAnimLoadMode loadMode = MeshMixSkinAnimLoadMode::DirectX);
     int AddMeshMixSkinAnim(const std::wstring& meshFilePath,
                            const std::wstring& animationFilePath,
                            const D3DXVECTOR3& pos,
@@ -266,7 +267,8 @@ public:
                            const AnimSetMap& animSetMap,
                            const float radius = -1.f,
                            const bool useParallaxOcclusionMapping = false,
-                           const bool useNormalMapping = false);
+                           const bool useNormalMapping = false,
+                           const MeshMixSkinAnimLoadMode loadMode = MeshMixSkinAnimLoadMode::DirectX);
     bool RemoveMeshMixSkinAnim(int id);
     const std::vector<MeshMixSkinAnim::AnimationInfo>* GetMeshMixSkinAnimAnimationInfoList(int id) const;
     bool PlayMeshMixSkinAnimAnimation(int id, const std::wstring& name);

@@ -2750,7 +2750,8 @@ int Render::AddMeshMixSkinAnim(const std::wstring& filePath,
                                const AnimSetMap& animSetMap,
                                const float radius,
                                const bool useParallaxOcclusionMapping,
-                               const bool useNormalMapping)
+                               const bool useNormalMapping,
+                               const MeshMixSkinAnimLoadMode loadMode)
 {
     auto param = GetMeshParamPreset(eMeshParamPreset::GRASS);
     param.smooth = false;
@@ -2766,7 +2767,7 @@ int Render::AddMeshMixSkinAnim(const std::wstring& filePath,
     param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
     param.treatTextureAsWhite = m_phongTreatTextureAsWhiteEnabled;
 
-    MeshMixSkinAnim* mesh = NEW MeshMixSkinAnim(filePath, pos, rot, scale, param, animSetMap);
+    MeshMixSkinAnim* mesh = NEW MeshMixSkinAnim(filePath, pos, rot, scale, param, animSetMap, loadMode);
     mesh->SetAlphaClipEnabled(m_meshMixSkinAnimAlphaClipEnabled);
     mesh->SetIgnoreTransparentMaterial(m_meshMixSkinAnimIgnoreTransparentMaterialEnabled);
     try
@@ -2791,7 +2792,8 @@ int Render::AddMeshMixSkinAnim(const std::wstring& meshFilePath,
                                const AnimSetMap& animSetMap,
                                const float radius,
                                const bool useParallaxOcclusionMapping,
-                               const bool useNormalMapping)
+                               const bool useNormalMapping,
+                               const MeshMixSkinAnimLoadMode loadMode)
 {
     auto param = GetMeshParamPreset(eMeshParamPreset::GRASS);
     param.smooth = false;
@@ -2807,7 +2809,14 @@ int Render::AddMeshMixSkinAnim(const std::wstring& meshFilePath,
     param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
     param.treatTextureAsWhite = m_phongTreatTextureAsWhiteEnabled;
 
-    MeshMixSkinAnim* mesh = NEW MeshMixSkinAnim(meshFilePath, animationFilePath, pos, rot, scale, param, animSetMap);
+    MeshMixSkinAnim* mesh = NEW MeshMixSkinAnim(meshFilePath,
+                                               animationFilePath,
+                                               pos,
+                                               rot,
+                                               scale,
+                                               param,
+                                               animSetMap,
+                                               loadMode);
     mesh->SetAlphaClipEnabled(m_meshMixSkinAnimAlphaClipEnabled);
     mesh->SetIgnoreTransparentMaterial(m_meshMixSkinAnimIgnoreTransparentMaterialEnabled);
     try

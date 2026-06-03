@@ -224,7 +224,8 @@ MeshMixSkinAnim::MeshMixSkinAnim(const std::wstring& filename,
                                  const D3DXVECTOR3& rotate,
                                  const float scale,
                                  const stMeshParam& param,
-                                 const AnimSetMap& animSetMap)
+                                 const AnimSetMap& animSetMap,
+                                 const MeshMixSkinAnimLoadMode loadMode)
     : m_meshName(filename)
     , m_animationMeshName(filename)
     , m_allocator(filename)
@@ -232,6 +233,7 @@ MeshMixSkinAnim::MeshMixSkinAnim(const std::wstring& filename,
     , m_pos(pos)
     , m_rotate(rotate)
     , m_scale(scale)
+    , m_loadMode(loadMode)
     , m_param(param)
     , m_animSetMap(animSetMap)
 {
@@ -243,7 +245,8 @@ MeshMixSkinAnim::MeshMixSkinAnim(const std::wstring& meshFilename,
                                  const D3DXVECTOR3& rotate,
                                  const float scale,
                                  const stMeshParam& param,
-                                 const AnimSetMap& animSetMap)
+                                 const AnimSetMap& animSetMap,
+                                 const MeshMixSkinAnimLoadMode loadMode)
     : m_meshName(meshFilename)
     , m_animationMeshName(animationFilename)
     , m_allocator(meshFilename)
@@ -251,6 +254,7 @@ MeshMixSkinAnim::MeshMixSkinAnim(const std::wstring& meshFilename,
     , m_pos(pos)
     , m_rotate(rotate)
     , m_scale(scale)
+    , m_loadMode(loadMode)
     , m_param(param)
     , m_animSetMap(animSetMap)
 {
@@ -305,13 +309,10 @@ void MeshMixSkinAnim::Initialize()
         tempPath = m_meshName;
     }
 
-    hr = D3DXLoadMeshHierarchyFromX(tempPath.c_str(),
-                                    D3DXMESH_MANAGED | D3DXMESH_32BIT,
-                                    Common::D3DDevice(),
-                                    &m_allocator,
-                                    nullptr,
-                                    &m_frameRoot,
-                                    &tempAnimController);
+    hr = LoadMeshHierarchy(tempPath,
+                           m_allocator,
+                           &m_frameRoot,
+                           &tempAnimController);
     if (FAILED(hr) || m_frameRoot == nullptr)
     {
         SAFE_RELEASE(tempAnimController);
@@ -338,13 +339,10 @@ void MeshMixSkinAnim::Initialize()
             tempPath = m_animationMeshName;
         }
 
-        hr = D3DXLoadMeshHierarchyFromX(tempPath.c_str(),
-                                        D3DXMESH_MANAGED | D3DXMESH_32BIT,
-                                        Common::D3DDevice(),
-                                        &m_animationAllocator,
-                                        nullptr,
-                                        &m_animationFrameRoot,
-                                        &tempAnimController);
+        hr = LoadMeshHierarchy(tempPath,
+                               m_animationAllocator,
+                               &m_animationFrameRoot,
+                               &tempAnimController);
         if (FAILED(hr) || m_animationFrameRoot == nullptr || tempAnimController == nullptr)
         {
             SAFE_RELEASE(tempAnimController);
@@ -678,13 +676,10 @@ bool MeshMixSkinAnim::LoadAnimationClip(const AnimationInfo& info)
     clip.stopWhenEnd = (info.mode == L"stopWhenEnd");
     clip.allocator = NEW SkinAnimMeshAlloc(info.filePath);
 
-    HRESULT hr = D3DXLoadMeshHierarchyFromX(info.filePath.c_str(),
-                                            D3DXMESH_MANAGED | D3DXMESH_32BIT,
-                                            Common::D3DDevice(),
-                                            clip.allocator,
-                                            nullptr,
-                                            &clip.frameRoot,
-                                            &clip.controller);
+    HRESULT hr = LoadMeshHierarchy(info.filePath,
+                                   *clip.allocator,
+                                   &clip.frameRoot,
+                                   &clip.controller);
     if (FAILED(hr) || clip.frameRoot == nullptr || clip.controller == nullptr)
     {
         SAFE_RELEASE(clip.controller);
@@ -701,6 +696,57 @@ bool MeshMixSkinAnim::LoadAnimationClip(const AnimationInfo& info)
     clip.duration = GetAnimationControllerDuration(clip.controller);
     m_animationClips.push_back(clip);
     return true;
+}
+
+HRESULT MeshMixSkinAnim::LoadMeshHierarchy(const std::wstring& filePath,
+                                           SkinAnimMeshAlloc& allocator,
+                                           LPD3DXFRAME* frameRoot,
+                                           LPD3DXANIMATIONCONTROLLER* animationController)
+{
+    if (m_loadMode == MeshMixSkinAnimLoadMode::Custom)
+    {
+        return LoadMeshHierarchyWithCustomLoader(filePath,
+                                                 allocator,
+                                                 frameRoot,
+                                                 animationController);
+    }
+
+    return LoadMeshHierarchyWithDirectX(filePath,
+                                        allocator,
+                                        frameRoot,
+                                        animationController);
+}
+
+HRESULT MeshMixSkinAnim::LoadMeshHierarchyWithDirectX(const std::wstring& filePath,
+                                                      SkinAnimMeshAlloc& allocator,
+                                                      LPD3DXFRAME* frameRoot,
+                                                      LPD3DXANIMATIONCONTROLLER* animationController)
+{
+    return D3DXLoadMeshHierarchyFromX(filePath.c_str(),
+                                      D3DXMESH_MANAGED | D3DXMESH_32BIT,
+                                      Common::D3DDevice(),
+                                      &allocator,
+                                      nullptr,
+                                      frameRoot,
+                                      animationController);
+}
+
+HRESULT MeshMixSkinAnim::LoadMeshHierarchyWithCustomLoader(const std::wstring&,
+                                                           SkinAnimMeshAlloc&,
+                                                           LPD3DXFRAME* frameRoot,
+                                                           LPD3DXANIMATIONCONTROLLER* animationController)
+{
+    if (frameRoot != nullptr)
+    {
+        *frameRoot = nullptr;
+    }
+
+    if (animationController != nullptr)
+    {
+        *animationController = nullptr;
+    }
+
+    return E_NOTIMPL;
 }
 
 void MeshMixSkinAnim::ReleaseAnimationClips()

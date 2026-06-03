@@ -13,6 +13,12 @@
 namespace NSRender
 {
 
+enum class MeshMixSkinAnimLoadMode
+{
+    DirectX,
+    Custom,
+};
+
 class MeshMixSkinAnim : public IDeviceResettable
 {
 public:
@@ -31,14 +37,16 @@ public:
                     const D3DXVECTOR3& rotate,
                     const float scale,
                     const stMeshParam& param,
-                    const AnimSetMap& animSetMap);
+                    const AnimSetMap& animSetMap,
+                    const MeshMixSkinAnimLoadMode loadMode = MeshMixSkinAnimLoadMode::DirectX);
     MeshMixSkinAnim(const std::wstring& meshFilename,
                     const std::wstring& animationFilename,
                     const D3DXVECTOR3& pos,
                     const D3DXVECTOR3& rotate,
                     const float scale,
                     const stMeshParam& param,
-                    const AnimSetMap& animSetMap);
+                    const AnimSetMap& animSetMap,
+                    const MeshMixSkinAnimLoadMode loadMode = MeshMixSkinAnimLoadMode::DirectX);
 
     ~MeshMixSkinAnim();
 
@@ -98,6 +106,18 @@ private:
     void RenderMeshContainer(const LPD3DXMESHCONTAINER containerBase);
     void RenderFrameToEffect(const LPD3DXFRAME frame, LPD3DXEFFECT effect);
     void RenderMeshContainerToEffect(const LPD3DXMESHCONTAINER containerBase, LPD3DXEFFECT effect);
+    HRESULT LoadMeshHierarchy(const std::wstring& filePath,
+                              SkinAnimMeshAlloc& allocator,
+                              LPD3DXFRAME* frameRoot,
+                              LPD3DXANIMATIONCONTROLLER* animationController);
+    HRESULT LoadMeshHierarchyWithDirectX(const std::wstring& filePath,
+                                         SkinAnimMeshAlloc& allocator,
+                                         LPD3DXFRAME* frameRoot,
+                                         LPD3DXANIMATIONCONTROLLER* animationController);
+    HRESULT LoadMeshHierarchyWithCustomLoader(const std::wstring& filePath,
+                                              SkinAnimMeshAlloc& allocator,
+                                              LPD3DXFRAME* frameRoot,
+                                              LPD3DXANIMATIONCONTROLLER* animationController);
     HRESULT AllocateBoneMatrix(LPD3DXMESHCONTAINER containerBase);
     HRESULT AllocateAllBoneMatrix(LPD3DXFRAME frame);
     void ReleaseMeshAllocator(const LPD3DXFRAME frame);
@@ -124,6 +144,7 @@ private:
     bool m_alphaClipEnabled = true;
     bool m_ignoreTransparentMaterial = false;
     int m_activeAnimationClipIndex = -1;
+    MeshMixSkinAnimLoadMode m_loadMode = MeshMixSkinAnimLoadMode::DirectX;
     stMeshParam m_param;
     AnimSetMap m_animSetMap;
     AnimController m_animController;
