@@ -171,6 +171,99 @@ public:
         return false;
     }
 
+    bool SkipObjectBodyFast()
+    {
+        int depth = 1;
+        bool inString = false;
+        bool inLineComment = false;
+        bool inBlockComment = false;
+
+        while (m_pos < m_text.size())
+        {
+            const char current = m_text[m_pos];
+
+            if (inLineComment)
+            {
+                ++m_pos;
+                if (current == '\r' || current == '\n')
+                {
+                    inLineComment = false;
+                }
+                continue;
+            }
+
+            if (inBlockComment)
+            {
+                if (current == '*' && (m_pos + 1) < m_text.size() && m_text[m_pos + 1] == '/')
+                {
+                    m_pos += 2;
+                    inBlockComment = false;
+                    continue;
+                }
+
+                ++m_pos;
+                continue;
+            }
+
+            if (inString)
+            {
+                ++m_pos;
+                if (current == '"')
+                {
+                    inString = false;
+                }
+                continue;
+            }
+
+            if (current == '"')
+            {
+                ++m_pos;
+                inString = true;
+                continue;
+            }
+
+            if (current == '/' && (m_pos + 1) < m_text.size())
+            {
+                const char next = m_text[m_pos + 1];
+                if (next == '/')
+                {
+                    m_pos += 2;
+                    inLineComment = true;
+                    continue;
+                }
+
+                if (next == '*')
+                {
+                    m_pos += 2;
+                    inBlockComment = true;
+                    continue;
+                }
+            }
+
+            if (current == '{')
+            {
+                ++depth;
+                ++m_pos;
+                continue;
+            }
+
+            if (current == '}')
+            {
+                --depth;
+                ++m_pos;
+                if (depth == 0)
+                {
+                    return true;
+                }
+                continue;
+            }
+
+            ++m_pos;
+        }
+
+        return false;
+    }
+
 private:
     static bool IsWhitespace(const char ch)
     {
@@ -879,7 +972,7 @@ bool CreateCustomXMeshContainer(const std::string& meshName,
     hr = mesh->GenerateAdjacency(0.0001f, &adjacency[0]);
     if (FAILED(hr))
     {
-        WriteMeshMixSkinAnimLoadLog(L"Custom mesh failed: GenerateAdjacency failed. HR=" +
+        CUSTOM_X_LOADER_LOG(L"Custom mesh failed: GenerateAdjacency failed. HR=" +
                                     FormatHRESULT(hr));
         SAFE_RELEASE(mesh);
         return false;
@@ -888,7 +981,7 @@ bool CreateCustomXMeshContainer(const std::string& meshName,
     hr = D3DXComputeNormals(mesh, &adjacency[0]);
     if (FAILED(hr))
     {
-        WriteMeshMixSkinAnimLoadLog(L"Custom mesh failed: D3DXComputeNormals failed. HR=" +
+        CUSTOM_X_LOADER_LOG(L"Custom mesh failed: D3DXComputeNormals failed. HR=" +
                                     FormatHRESULT(hr));
         SAFE_RELEASE(mesh);
         return false;
@@ -1125,7 +1218,21 @@ bool ParseCustomXFrameBody(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame, 
         {
             if (loadPurpose == CustomXLoadPurpose::AnimationOnly)
             {
-                if (!SkipCustomXObject(tokenizer))
+                std::string meshToken;
+                if (!tokenizer.ReadToken(meshToken))
+                {
+                    return false;
+                }
+
+                if (meshToken != "{")
+                {
+                    if (!ReadExpectedXToken(tokenizer, "{"))
+                    {
+                        return false;
+                    }
+                }
+
+                if (!tokenizer.SkipObjectBodyFast())
                 {
                     return false;
                 }
@@ -1439,7 +1546,7 @@ HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimati
 
     if (animationSets.empty() || frameRoot == nullptr)
     {
-        WriteMeshMixSkinAnimLoadLog(L"BuildCtrl: skipping, animSets=" +
+        CUSTOM_X_LOADER_LOG(L"BuildCtrl: skipping, animSets=" +
                                     std::to_wstring(animationSets.size()) +
                                     L" frameRoot=" + std::to_wstring(reinterpret_cast<std::uintptr_t>(frameRoot)));
         return S_OK;
@@ -1457,12 +1564,12 @@ HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimati
         }
     }
 
-    WriteMeshMixSkinAnimLoadLog(L"BuildCtrl: uniqueAnimatedFrames=" +
+    CUSTOM_X_LOADER_LOG(L"BuildCtrl: uniqueAnimatedFrames=" +
                                 std::to_wstring(animatedFrameNames.size()));
 
     if (animatedFrameNames.empty())
     {
-        WriteMeshMixSkinAnimLoadLog(L"BuildCtrl: no animated frame names, skipping.");
+        CUSTOM_X_LOADER_LOG(L"BuildCtrl: no animated frame names, skipping.");
         return S_OK;
     }
 
@@ -1473,7 +1580,7 @@ HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimati
 
     LPD3DXANIMATIONCONTROLLER controller = nullptr;
     HRESULT hr = D3DXCreateAnimationController(maxOutputs, maxSets, maxTracks, maxEvents, &controller);
-    WriteMeshMixSkinAnimLoadLog(L"BuildCtrl: D3DXCreateAnimationController HR=" + FormatHRESULT(hr) +
+    CUSTOM_X_LOADER_LOG(L"BuildCtrl: D3DXCreateAnimationController HR=" + FormatHRESULT(hr) +
                                 L" ptr=" + std::to_wstring(reinterpret_cast<std::uintptr_t>(controller)) +
                                 L" maxOutputs=" + std::to_wstring(maxOutputs) +
                                 L" maxSets=" + std::to_wstring(maxSets) +
@@ -1484,7 +1591,7 @@ HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimati
         return E_FAIL;
     }
 
-    WriteMeshMixSkinAnimLoadLog(L"BuildCtrl: controller created OK. Registering " +
+    CUSTOM_X_LOADER_LOG(L"BuildCtrl: controller created OK. Registering " +
                                 std::to_wstring(maxOutputs) + L" outputs...");
 
     int registeredOutputs = 0;
@@ -1495,7 +1602,7 @@ HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimati
         if (rawFrame == nullptr)
         {
             ++failedOutputs;
-            WriteMeshMixSkinAnimLoadLog(L"BuildCtrl: frame NOT FOUND for output '" +
+            CUSTOM_X_LOADER_LOG(L"BuildCtrl: frame NOT FOUND for output '" +
                                         AnsiTextToWideText(name) + L"'");
             continue;
         }
@@ -1509,7 +1616,7 @@ HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimati
         if (FAILED(hr))
         {
             ++failedOutputs;
-            WriteMeshMixSkinAnimLoadLog(L"BuildCtrl: RegisterAnimationOutput FAILED for '" +
+            CUSTOM_X_LOADER_LOG(L"BuildCtrl: RegisterAnimationOutput FAILED for '" +
                                         AnsiTextToWideText(name) +
                                         L"'. HR=" + FormatHRESULT(hr));
             continue;
@@ -1518,13 +1625,13 @@ HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimati
         ++registeredOutputs;
     }
 
-    WriteMeshMixSkinAnimLoadLog(L"BuildCtrl: output registration done. OK=" +
+    CUSTOM_X_LOADER_LOG(L"BuildCtrl: output registration done. OK=" +
                                 std::to_wstring(registeredOutputs) +
                                 L" FAIL=" + std::to_wstring(failedOutputs));
 
     if (registeredOutputs == 0)
     {
-        WriteMeshMixSkinAnimLoadLog(L"BuildCtrl: zero outputs registered, aborting.");
+        CUSTOM_X_LOADER_LOG(L"BuildCtrl: zero outputs registered, aborting.");
         SAFE_RELEASE(controller);
         return E_FAIL;
     }
@@ -1533,7 +1640,7 @@ HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimati
     for (const auto& animSet : animationSets)
     {
         const DWORD numAnimations = static_cast<DWORD>(animSet.animations.size());
-        WriteMeshMixSkinAnimLoadLog(L"BuildCtrl: creating animSet '" +
+        CUSTOM_X_LOADER_LOG(L"BuildCtrl: creating animSet '" +
                                     AnsiTextToWideText(animSet.name) +
                                     L"' numAnimations=" + std::to_wstring(numAnimations) +
                                     L" tps=" + std::to_wstring(animSet.ticksPerSecond));
@@ -1548,7 +1655,7 @@ HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimati
                                               &d3dxAnimSet);
         if (FAILED(hr) || d3dxAnimSet == nullptr)
         {
-            WriteMeshMixSkinAnimLoadLog(L"BuildCtrl: D3DXCreateKeyframedAnimationSet FAILED. HR=" +
+            CUSTOM_X_LOADER_LOG(L"BuildCtrl: D3DXCreateKeyframedAnimationSet FAILED. HR=" +
                                         FormatHRESULT(hr));
             SAFE_RELEASE(controller);
             if (FAILED(hr))
@@ -1671,7 +1778,7 @@ HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimati
                                                         &registeredIndex);
             if (FAILED(hr))
             {
-                WriteMeshMixSkinAnimLoadLog(L"BuildCtrl: RegisterAnimationSRTKeys FAILED for '" +
+                CUSTOM_X_LOADER_LOG(L"BuildCtrl: RegisterAnimationSRTKeys FAILED for '" +
                                             AnsiTextToWideText(anim.frameName) +
                                             L"' HR=" + FormatHRESULT(hr));
                 anySrtKeyFailed = true;
@@ -1680,7 +1787,7 @@ HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimati
 
         if (anySrtKeyFailed)
         {
-            WriteMeshMixSkinAnimLoadLog(L"BuildCtrl: one or more RegisterAnimationSRTKeys failed, aborting animSet '" +
+            CUSTOM_X_LOADER_LOG(L"BuildCtrl: one or more RegisterAnimationSRTKeys failed, aborting animSet '" +
                                         AnsiTextToWideText(animSet.name) + L"'");
             SAFE_RELEASE(d3dxAnimSet);
             SAFE_RELEASE(controller);
@@ -1688,12 +1795,12 @@ HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimati
         }
 
         hr = controller->RegisterAnimationSet(d3dxAnimSet);
-        WriteMeshMixSkinAnimLoadLog(L"BuildCtrl: RegisterAnimationSet '" +
+        CUSTOM_X_LOADER_LOG(L"BuildCtrl: RegisterAnimationSet '" +
                                     AnsiTextToWideText(animSet.name) +
                                     L"' HR=" + FormatHRESULT(hr));
         if (FAILED(hr))
         {
-            WriteMeshMixSkinAnimLoadLog(L"BuildCtrl: RegisterAnimationSet FAILED, aborting.");
+            CUSTOM_X_LOADER_LOG(L"BuildCtrl: RegisterAnimationSet FAILED, aborting.");
             SAFE_RELEASE(d3dxAnimSet);
             SAFE_RELEASE(controller);
             return hr;
@@ -1702,14 +1809,14 @@ HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimati
         if (animSetIndex == 0)
         {
             hr = controller->SetTrackAnimationSet(0, d3dxAnimSet);
-            WriteMeshMixSkinAnimLoadLog(L"BuildCtrl: SetTrackAnimationSet(0) HR=" + FormatHRESULT(hr));
+            CUSTOM_X_LOADER_LOG(L"BuildCtrl: SetTrackAnimationSet(0) HR=" + FormatHRESULT(hr));
 
             controller->SetTrackEnable(0, TRUE);
             controller->SetTrackWeight(0, 1.0f);
             controller->SetTrackSpeed(0, 1.0f);
             controller->SetTrackPosition(0, 0.0);
 
-            WriteMeshMixSkinAnimLoadLog(L"BuildCtrl: Track 0 initialized with animSet '" +
+            CUSTOM_X_LOADER_LOG(L"BuildCtrl: Track 0 initialized with animSet '" +
                                         AnsiTextToWideText(animSet.name) + L"'");
         }
 
@@ -1717,7 +1824,7 @@ HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimati
         ++animSetIndex;
     }
 
-    WriteMeshMixSkinAnimLoadLog(L"BuildCtrl: SUCCESS. controller=" +
+    CUSTOM_X_LOADER_LOG(L"BuildCtrl: SUCCESS. controller=" +
                                 std::to_wstring(reinterpret_cast<std::uintptr_t>(controller)) +
                                 L" animSets=" + std::to_wstring(animSetIndex));
     *outController = controller;
@@ -1732,7 +1839,7 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
 {
     if (frameRoot == nullptr)
     {
-        WriteMeshMixSkinAnimLoadLog(L"Custom parser failed: frameRoot output pointer is null.");
+        CUSTOM_X_LOADER_LOG(L"Custom parser failed: frameRoot output pointer is null.");
         return E_POINTER;
     }
 
@@ -1742,7 +1849,7 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
         outAnimationSets->clear();
     }
 
-    WriteMeshMixSkinAnimLoadLog(L"Custom parser start. Bytes=" + std::to_wstring(fileText.size()));
+    CUSTOM_X_LOADER_LOG(L"Custom parser start. Bytes=" + std::to_wstring(fileText.size()));
 
     XTextTokenizer tokenizer(fileText);
     std::string token;
@@ -1756,11 +1863,11 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
 
         if (token == "Frame")
         {
-            WriteMeshMixSkinAnimLoadLog(L"Custom parser found top-level Frame.");
+            CUSTOM_X_LOADER_LOG(L"Custom parser found top-level Frame.");
             SkinAnimMeshFrame* frame = ParseCustomXFrame(tokenizer, allocator, loadPurpose);
             if (frame == nullptr)
             {
-                WriteMeshMixSkinAnimLoadLog(L"Custom parser failed while parsing top-level Frame.");
+                CUSTOM_X_LOADER_LOG(L"Custom parser failed while parsing top-level Frame.");
                 return E_FAIL;
             }
 
@@ -1769,7 +1876,7 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
             {
                 frameName = AnsiTextToWideText(frame->Name);
             }
-            WriteMeshMixSkinAnimLoadLog(L"Custom parser loaded top-level Frame: " + frameName);
+            CUSTOM_X_LOADER_LOG(L"Custom parser loaded top-level Frame: " + frameName);
             *frameRoot = frame;
             frameFound = true;
             continue;
@@ -1780,13 +1887,13 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
             CustomXAnimationSet animSet;
             if (ParseCustomXAnimationSet(tokenizer, animSet))
             {
-                WriteMeshMixSkinAnimLoadLog(L"Custom parser loaded AnimationSet: " +
+                CUSTOM_X_LOADER_LOG(L"Custom parser loaded AnimationSet: " +
                                             AnsiTextToWideText(animSet.name));
                 outAnimationSets->push_back(animSet);
             }
             else
             {
-                WriteMeshMixSkinAnimLoadLog(L"Custom parser failed while parsing AnimationSet.");
+                CUSTOM_X_LOADER_LOG(L"Custom parser failed while parsing AnimationSet.");
             }
             continue;
         }
@@ -1795,7 +1902,7 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
         {
             if (!SkipCustomXObject(tokenizer))
             {
-                WriteMeshMixSkinAnimLoadLog(L"Custom parser failed while skipping template.");
+                CUSTOM_X_LOADER_LOG(L"Custom parser failed while skipping template.");
                 return E_FAIL;
             }
             continue;
@@ -1804,7 +1911,7 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
 
     if (!frameFound)
     {
-        WriteMeshMixSkinAnimLoadLog(L"Custom parser failed: no Frame token was found.");
+        CUSTOM_X_LOADER_LOG(L"Custom parser failed: no Frame token was found.");
         return E_FAIL;
     }
 
