@@ -930,7 +930,7 @@ void MeshMixSkinAnim::Initialize()
 
         ReleaseMeshContainersRecursive(m_animationFrameRoot, m_animationAllocator);
     }
-    else if (tempAnimController == nullptr)
+    else if (tempAnimController == nullptr && m_loadMode != MeshMixSkinAnimLoadMode::Custom)
     {
         SAFE_RELEASE(tempAnimController);
         throw std::exception("Failed to load animation controller.");
