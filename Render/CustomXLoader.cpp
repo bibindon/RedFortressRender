@@ -888,7 +888,18 @@ bool CreateCustomXMeshContainer(const std::string& meshName,
         return false;
     }
 
-    hr = D3DXComputeNormals(mesh, nullptr);
+    std::vector<DWORD> adjacency(triangleCount * 3, 0xffffffff);
+
+    hr = mesh->GenerateAdjacency(0.0001f, &adjacency[0]);
+    if (FAILED(hr))
+    {
+        WriteMeshMixSkinAnimLoadLog(L"Custom mesh failed: GenerateAdjacency failed. HR=" +
+                                    FormatHRESULT(hr));
+        SAFE_RELEASE(mesh);
+        return false;
+    }
+
+    hr = D3DXComputeNormals(mesh, &adjacency[0]);
     if (FAILED(hr))
     {
         WriteMeshMixSkinAnimLoadLog(L"Custom mesh failed: D3DXComputeNormals failed. HR=" +
@@ -915,7 +926,6 @@ bool CreateCustomXMeshContainer(const std::string& meshName,
         }
     }
 
-    std::vector<DWORD> adjacency(triangleCount * 3, 0xffffffff);
     D3DXMESHDATA meshDataForAllocator { };
     meshDataForAllocator.Type = D3DXMESHTYPE_MESH;
     meshDataForAllocator.pMesh = mesh;
