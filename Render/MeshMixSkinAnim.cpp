@@ -146,6 +146,56 @@ std::wstring GetResolvedPath(const std::wstring& path)
     return path;
 }
 
+bool FileExists(const std::wstring& filePath)
+{
+    const DWORD attributes = GetFileAttributesW(filePath.c_str());
+    if (attributes == INVALID_FILE_ATTRIBUTES)
+    {
+        return false;
+    }
+
+    return (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
+}
+
+std::wstring GetCurrentDirectoryPath()
+{
+    wchar_t currentDirectory[MAX_PATH] { };
+    const DWORD length = GetCurrentDirectoryW(_countof(currentDirectory), currentDirectory);
+    if (length == 0 || length >= _countof(currentDirectory))
+    {
+        return L"";
+    }
+
+    std::wstring result(currentDirectory);
+    if (!result.empty() && result.back() != L'\\' && result.back() != L'/')
+    {
+        result += L"\\";
+    }
+
+    return result;
+}
+
+std::wstring ResolveRuntimeFilePath(const std::wstring& fileName)
+{
+    const std::wstring exePath = Util::GetExeDir() + fileName;
+    if (FileExists(exePath))
+    {
+        return exePath;
+    }
+
+    const std::wstring currentDirectory = GetCurrentDirectoryPath();
+    if (!currentDirectory.empty())
+    {
+        const std::wstring currentDirectoryPath = currentDirectory + fileName;
+        if (FileExists(currentDirectoryPath))
+        {
+            return currentDirectoryPath;
+        }
+    }
+
+    return exePath;
+}
+
 std::wstring GetDirectoryPath(const std::wstring& path)
 {
     const std::size_t pos = path.find_last_of(L"\\/");
@@ -803,7 +853,7 @@ MeshMixSkinAnim::~MeshMixSkinAnim()
 void MeshMixSkinAnim::Initialize()
 {
     HRESULT hr = E_FAIL;
-    std::wstring tempPath = Util::GetExeDir() + SHADER_FILENAME;
+    std::wstring tempPath = ResolveRuntimeFilePath(SHADER_FILENAME);
 
     hr = D3DXCreateEffectFromFile(Common::D3DDevice(),
                                   tempPath.c_str(),
