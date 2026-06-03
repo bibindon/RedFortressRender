@@ -12,22 +12,8 @@
 namespace NSRender
 {
 
-void WriteMeshMixSkinAnimLoadLog(const std::wstring& message)
+void WriteMeshMixSkinAnimLoadLog(const std::wstring& /*message*/)
 {
-    const std::wstring line = L"[MeshMixSkinAnim] " + message + L"\r\n";
-    OutputDebugStringW(line.c_str());
-
-    static std::wofstream file;
-    if (!file.is_open())
-    {
-        file.open(Util::GetExeDir() + L"MeshMixSkinAnimLoad.log", std::ios::app);
-    }
-
-    if (file.is_open())
-    {
-        file << line;
-        file.flush();
-    }
 }
 
 std::wstring FormatHRESULT(const HRESULT hr)
