@@ -866,8 +866,8 @@ bool FillCustomXMeshBuffers(const CustomXMeshData& meshData,
         for (std::size_t i = 1; i + 1 < face.size(); ++i)
         {
             indices[(triangleIndex * 3) + 0] = face[0];
-            indices[(triangleIndex * 3) + 1] = face[i];
-            indices[(triangleIndex * 3) + 2] = face[i + 1];
+            indices[(triangleIndex * 3) + 1] = face[i + 1];
+            indices[(triangleIndex * 3) + 2] = face[i];
             ++triangleIndex;
         }
     }
