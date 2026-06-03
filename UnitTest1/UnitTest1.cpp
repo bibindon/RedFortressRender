@@ -365,6 +365,11 @@ namespace UnitTest1
             const std::wstring meshPath = GetWolfFilePath(L"wolf.x");
             const NSRender::AnimSetMap animSetMap;
 
+            const NSRender::CustomXFrameHierarchyLoadResult loadResult =
+                NSRender::LoadCustomXFrameHierarchyForTest(meshPath, true);
+            Assert::IsTrue(SUCCEEDED(loadResult.hr), loadResult.message.c_str());
+            Assert::IsTrue(loadResult.meshContainerCount > 0);
+
             int renderId = -1;
             try
             {

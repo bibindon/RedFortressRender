@@ -455,6 +455,30 @@ bool IsXTextSeparatorToken(const std::string& token)
     return token == "," || token == ";";
 }
 
+struct CustomXMaterialData
+{
+    D3DMATERIAL9 material { };
+    std::string textureFilename;
+};
+
+struct CustomXSkinWeightsData
+{
+    std::string boneName;
+    std::vector<DWORD> vertexIndices;
+    std::vector<float> weights;
+    D3DXMATRIX offsetMatrix;
+};
+
+struct CustomXMeshData
+{
+    std::vector<D3DXVECTOR3> positions;
+    std::vector<std::vector<DWORD>> faces;
+    std::vector<D3DXVECTOR2> texCoords;
+    std::vector<DWORD> faceMaterialIndices;
+    std::vector<CustomXMaterialData> materials;
+    std::vector<CustomXSkinWeightsData> skinWeights;
+};
+
 SkinAnimMeshFrame* CreateCustomXFrame(const std::string& name)
 {
     SkinAnimMeshFrame* frame = NEW SkinAnimMeshFrame();
@@ -485,6 +509,24 @@ void AppendCustomXChildFrame(SkinAnimMeshFrame* parent, SkinAnimMeshFrame* child
     sibling->pFrameSibling = child;
 }
 
+void AppendCustomXMeshContainer(SkinAnimMeshFrame* frame, LPD3DXMESHCONTAINER meshContainer)
+{
+    if (frame->pMeshContainer == nullptr)
+    {
+        frame->pMeshContainer = meshContainer;
+        return;
+    }
+
+    LPD3DXMESHCONTAINER container = frame->pMeshContainer;
+    while (container->pNextMeshContainer != nullptr)
+    {
+        container = container->pNextMeshContainer;
+    }
+
+    container->pNextMeshContainer = meshContainer;
+}
+
+
 bool ReadExpectedXToken(XTextTokenizer& tokenizer, const char* expected)
 {
     std::string token;
@@ -509,6 +551,47 @@ bool ReadXFloatToken(XTextTokenizer& tokenizer, float& value)
         char* endPtr = nullptr;
         value = std::strtof(token.c_str(), &endPtr);
         return endPtr != token.c_str();
+    }
+
+    return false;
+}
+
+bool ReadXUIntToken(XTextTokenizer& tokenizer, DWORD& value)
+{
+    std::string token;
+    while (tokenizer.ReadToken(token))
+    {
+        if (IsXTextSeparatorToken(token))
+        {
+            continue;
+        }
+
+        char* endPtr = nullptr;
+        const unsigned long parsed = std::strtoul(token.c_str(), &endPtr, 10);
+        if (endPtr == token.c_str())
+        {
+            return false;
+        }
+
+        value = static_cast<DWORD>(parsed);
+        return true;
+    }
+
+    return false;
+}
+
+bool ReadXStringToken(XTextTokenizer& tokenizer, std::string& value)
+{
+    std::string token;
+    while (tokenizer.ReadToken(token))
+    {
+        if (IsXTextSeparatorToken(token))
+        {
+            continue;
+        }
+
+        value = token;
+        return true;
     }
 
     return false;
@@ -593,9 +676,594 @@ bool SkipCustomXObject(XTextTokenizer& tokenizer)
     return true;
 }
 
-bool ParseCustomXFrameBody(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame);
+bool ReadCustomXOpenBrace(XTextTokenizer& tokenizer)
+{
+    std::string token;
+    if (!tokenizer.ReadToken(token))
+    {
+        return false;
+    }
 
-SkinAnimMeshFrame* ParseCustomXFrame(XTextTokenizer& tokenizer)
+    if (token == "{")
+    {
+        return true;
+    }
+
+    return ReadExpectedXToken(tokenizer, "{");
+}
+
+bool ReadCustomXMatrix(XTextTokenizer& tokenizer, D3DXMATRIX& matrix)
+{
+    float values[16] { };
+    for (int i = 0; i < 16; ++i)
+    {
+        if (!ReadXFloatToken(tokenizer, values[i]))
+        {
+            return false;
+        }
+    }
+
+    for (int row = 0; row < 4; ++row)
+    {
+        for (int column = 0; column < 4; ++column)
+        {
+            matrix(row, column) = values[(row * 4) + column];
+        }
+    }
+
+    return true;
+}
+
+bool ParseCustomXMaterial(XTextTokenizer& tokenizer, CustomXMaterialData& materialData)
+{
+    if (!ReadCustomXOpenBrace(tokenizer))
+    {
+        return false;
+    }
+
+    ZeroMemory(&materialData.material, sizeof(materialData.material));
+    materialData.material.Diffuse.a = 1.0f;
+    materialData.material.Ambient.a = 1.0f;
+
+    if (!ReadXFloatToken(tokenizer, materialData.material.Diffuse.r) ||
+        !ReadXFloatToken(tokenizer, materialData.material.Diffuse.g) ||
+        !ReadXFloatToken(tokenizer, materialData.material.Diffuse.b) ||
+        !ReadXFloatToken(tokenizer, materialData.material.Diffuse.a) ||
+        !ReadXFloatToken(tokenizer, materialData.material.Power) ||
+        !ReadXFloatToken(tokenizer, materialData.material.Specular.r) ||
+        !ReadXFloatToken(tokenizer, materialData.material.Specular.g) ||
+        !ReadXFloatToken(tokenizer, materialData.material.Specular.b) ||
+        !ReadXFloatToken(tokenizer, materialData.material.Emissive.r) ||
+        !ReadXFloatToken(tokenizer, materialData.material.Emissive.g) ||
+        !ReadXFloatToken(tokenizer, materialData.material.Emissive.b))
+    {
+        return false;
+    }
+
+    materialData.material.Ambient = materialData.material.Diffuse;
+
+    std::string token;
+    while (tokenizer.ReadToken(token))
+    {
+        if (IsXTextSeparatorToken(token))
+        {
+            continue;
+        }
+
+        if (token == "}")
+        {
+            return true;
+        }
+
+        if (token == "TextureFilename")
+        {
+            if (!ReadExpectedXToken(tokenizer, "{") ||
+                !ReadXStringToken(tokenizer, materialData.textureFilename) ||
+                !SkipCustomXObjectBody(tokenizer))
+            {
+                return false;
+            }
+            continue;
+        }
+
+        if (!SkipCustomXObject(tokenizer))
+        {
+            return false;
+        }
+    }
+
+    return false;
+}
+
+bool ParseCustomXMeshMaterialList(XTextTokenizer& tokenizer, CustomXMeshData& meshData)
+{
+    if (!ReadExpectedXToken(tokenizer, "{"))
+    {
+        return false;
+    }
+
+    DWORD materialCount = 0;
+    DWORD faceMaterialCount = 0;
+    if (!ReadXUIntToken(tokenizer, materialCount) ||
+        !ReadXUIntToken(tokenizer, faceMaterialCount))
+    {
+        return false;
+    }
+
+    meshData.faceMaterialIndices.clear();
+    meshData.faceMaterialIndices.reserve(faceMaterialCount);
+    for (DWORD i = 0; i < faceMaterialCount; ++i)
+    {
+        DWORD materialIndex = 0;
+        if (!ReadXUIntToken(tokenizer, materialIndex))
+        {
+            return false;
+        }
+        meshData.faceMaterialIndices.push_back(materialIndex);
+    }
+
+    std::string token;
+    while (tokenizer.ReadToken(token))
+    {
+        if (IsXTextSeparatorToken(token))
+        {
+            continue;
+        }
+
+        if (token == "}")
+        {
+            return true;
+        }
+
+        if (token == "Material")
+        {
+            CustomXMaterialData materialData;
+            if (!ParseCustomXMaterial(tokenizer, materialData))
+            {
+                return false;
+            }
+            meshData.materials.push_back(materialData);
+            continue;
+        }
+
+        if (!SkipCustomXObject(tokenizer))
+        {
+            return false;
+        }
+    }
+
+    return meshData.materials.size() == materialCount;
+}
+
+bool ParseCustomXMeshTextureCoords(XTextTokenizer& tokenizer, CustomXMeshData& meshData)
+{
+    if (!ReadExpectedXToken(tokenizer, "{"))
+    {
+        return false;
+    }
+
+    DWORD textureCoordCount = 0;
+    if (!ReadXUIntToken(tokenizer, textureCoordCount))
+    {
+        return false;
+    }
+
+    meshData.texCoords.resize(textureCoordCount);
+    for (DWORD i = 0; i < textureCoordCount; ++i)
+    {
+        if (!ReadXFloatToken(tokenizer, meshData.texCoords[i].x) ||
+            !ReadXFloatToken(tokenizer, meshData.texCoords[i].y))
+        {
+            return false;
+        }
+    }
+
+    return SkipCustomXObjectBody(tokenizer);
+}
+
+bool ParseCustomXSkinWeights(XTextTokenizer& tokenizer, CustomXMeshData& meshData)
+{
+    if (!ReadExpectedXToken(tokenizer, "{"))
+    {
+        return false;
+    }
+
+    CustomXSkinWeightsData weightsData;
+    D3DXMatrixIdentity(&weightsData.offsetMatrix);
+    if (!ReadXStringToken(tokenizer, weightsData.boneName))
+    {
+        return false;
+    }
+
+    DWORD weightCount = 0;
+    if (!ReadXUIntToken(tokenizer, weightCount))
+    {
+        return false;
+    }
+
+    weightsData.vertexIndices.resize(weightCount);
+    for (DWORD i = 0; i < weightCount; ++i)
+    {
+        if (!ReadXUIntToken(tokenizer, weightsData.vertexIndices[i]))
+        {
+            return false;
+        }
+    }
+
+    weightsData.weights.resize(weightCount);
+    for (DWORD i = 0; i < weightCount; ++i)
+    {
+        if (!ReadXFloatToken(tokenizer, weightsData.weights[i]))
+        {
+            return false;
+        }
+    }
+
+    if (!ReadCustomXMatrix(tokenizer, weightsData.offsetMatrix))
+    {
+        return false;
+    }
+
+    if (!SkipCustomXObjectBody(tokenizer))
+    {
+        return false;
+    }
+
+    meshData.skinWeights.push_back(weightsData);
+    return true;
+}
+
+bool ParseCustomXMeshNormals(XTextTokenizer& tokenizer)
+{
+    if (!ReadExpectedXToken(tokenizer, "{"))
+    {
+        return false;
+    }
+
+    return SkipCustomXObjectBody(tokenizer);
+}
+
+bool FillCustomXMeshBuffers(const CustomXMeshData& meshData,
+                            LPD3DXMESH mesh,
+                            const std::vector<DWORD>& triangleMaterialIndices)
+{
+    struct CustomXVertex
+    {
+        float x;
+        float y;
+        float z;
+        float u;
+        float v;
+    };
+
+    CustomXVertex* vertices = nullptr;
+    if (FAILED(mesh->LockVertexBuffer(0, reinterpret_cast<void**>(&vertices))))
+    {
+        return false;
+    }
+
+    for (DWORD i = 0; i < static_cast<DWORD>(meshData.positions.size()); ++i)
+    {
+        vertices[i].x = meshData.positions[i].x;
+        vertices[i].y = meshData.positions[i].y;
+        vertices[i].z = meshData.positions[i].z;
+        vertices[i].u = 0.0f;
+        vertices[i].v = 0.0f;
+        if (i < meshData.texCoords.size())
+        {
+            vertices[i].u = meshData.texCoords[i].x;
+            vertices[i].v = meshData.texCoords[i].y;
+        }
+    }
+    mesh->UnlockVertexBuffer();
+
+    DWORD* indices = nullptr;
+    if (FAILED(mesh->LockIndexBuffer(0, reinterpret_cast<void**>(&indices))))
+    {
+        return false;
+    }
+
+    DWORD triangleIndex = 0;
+    for (const auto& face : meshData.faces)
+    {
+        if (face.size() < 3)
+        {
+            continue;
+        }
+
+        for (std::size_t i = 1; i + 1 < face.size(); ++i)
+        {
+            indices[(triangleIndex * 3) + 0] = face[0];
+            indices[(triangleIndex * 3) + 1] = face[i];
+            indices[(triangleIndex * 3) + 2] = face[i + 1];
+            ++triangleIndex;
+        }
+    }
+    mesh->UnlockIndexBuffer();
+
+    DWORD* attributes = nullptr;
+    if (FAILED(mesh->LockAttributeBuffer(0, &attributes)))
+    {
+        return false;
+    }
+
+    for (DWORD i = 0; i < static_cast<DWORD>(triangleMaterialIndices.size()); ++i)
+    {
+        attributes[i] = triangleMaterialIndices[i];
+    }
+    mesh->UnlockAttributeBuffer();
+    return true;
+}
+
+bool CreateCustomXSkinInfo(const CustomXMeshData& meshData,
+                           const DWORD fvf,
+                           LPD3DXSKININFO* skinInfo)
+{
+    if (skinInfo == nullptr || meshData.skinWeights.empty())
+    {
+        return false;
+    }
+
+    *skinInfo = nullptr;
+    HRESULT hr = D3DXCreateSkinInfoFVF(static_cast<UINT>(meshData.positions.size()),
+                                       fvf,
+                                       static_cast<UINT>(meshData.skinWeights.size()),
+                                       skinInfo);
+    if (FAILED(hr) || *skinInfo == nullptr)
+    {
+        return false;
+    }
+
+    for (DWORD i = 0; i < static_cast<DWORD>(meshData.skinWeights.size()); ++i)
+    {
+        const CustomXSkinWeightsData& weightsData = meshData.skinWeights[i];
+        (*skinInfo)->SetBoneName(i, weightsData.boneName.c_str());
+        (*skinInfo)->SetBoneOffsetMatrix(i, &weightsData.offsetMatrix);
+        if (!weightsData.vertexIndices.empty())
+        {
+            hr = (*skinInfo)->SetBoneInfluence(i,
+                                               static_cast<DWORD>(weightsData.vertexIndices.size()),
+                                               &weightsData.vertexIndices[0],
+                                               &weightsData.weights[0]);
+            if (FAILED(hr))
+            {
+                SAFE_RELEASE(*skinInfo);
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+bool CreateCustomXMeshContainer(const std::string& meshName,
+                                const CustomXMeshData& meshData,
+                                SkinAnimMeshAlloc* allocator,
+                                LPD3DXMESHCONTAINER* meshContainer)
+{
+    if (allocator == nullptr || meshContainer == nullptr ||
+        meshData.positions.empty() || meshData.faces.empty() ||
+        meshData.materials.empty() || meshData.skinWeights.empty())
+    {
+        return false;
+    }
+
+    std::vector<DWORD> triangleMaterialIndices;
+    DWORD triangleCount = 0;
+    for (std::size_t faceIndex = 0; faceIndex < meshData.faces.size(); ++faceIndex)
+    {
+        const std::vector<DWORD>& face = meshData.faces[faceIndex];
+        if (face.size() < 3)
+        {
+            continue;
+        }
+
+        DWORD materialIndex = 0;
+        if (faceIndex < meshData.faceMaterialIndices.size())
+        {
+            materialIndex = meshData.faceMaterialIndices[faceIndex];
+        }
+
+        for (std::size_t i = 1; i + 1 < face.size(); ++i)
+        {
+            triangleMaterialIndices.push_back(materialIndex);
+            ++triangleCount;
+        }
+    }
+
+    if (triangleCount == 0)
+    {
+        return false;
+    }
+
+    const DWORD fvf = D3DFVF_XYZ | D3DFVF_TEX1;
+    LPD3DXMESH mesh = nullptr;
+    HRESULT hr = D3DXCreateMeshFVF(triangleCount,
+                                   static_cast<DWORD>(meshData.positions.size()),
+                                   D3DXMESH_MANAGED | D3DXMESH_32BIT,
+                                   fvf,
+                                   Common::D3DDevice(),
+                                   &mesh);
+    if (FAILED(hr) || mesh == nullptr)
+    {
+        return false;
+    }
+
+    if (!FillCustomXMeshBuffers(meshData, mesh, triangleMaterialIndices))
+    {
+        SAFE_RELEASE(mesh);
+        return false;
+    }
+
+    LPD3DXSKININFO skinInfo = nullptr;
+    if (!CreateCustomXSkinInfo(meshData, fvf, &skinInfo))
+    {
+        SAFE_RELEASE(mesh);
+        return false;
+    }
+
+    std::vector<D3DXMATERIAL> materials(meshData.materials.size());
+    for (std::size_t i = 0; i < meshData.materials.size(); ++i)
+    {
+        materials[i].MatD3D = meshData.materials[i].material;
+        materials[i].pTextureFilename = nullptr;
+        if (!meshData.materials[i].textureFilename.empty())
+        {
+            materials[i].pTextureFilename = const_cast<char*>(meshData.materials[i].textureFilename.c_str());
+        }
+    }
+
+    std::vector<DWORD> adjacency(triangleCount * 3, 0xffffffff);
+    D3DXMESHDATA meshDataForAllocator { };
+    meshDataForAllocator.Type = D3DXMESHTYPE_MESH;
+    meshDataForAllocator.pMesh = mesh;
+
+    hr = allocator->CreateMeshContainer(meshName.c_str(),
+                                        &meshDataForAllocator,
+                                        &materials[0],
+                                        nullptr,
+                                        static_cast<DWORD>(materials.size()),
+                                        &adjacency[0],
+                                        skinInfo,
+                                        meshContainer);
+    SAFE_RELEASE(skinInfo);
+    SAFE_RELEASE(mesh);
+    return SUCCEEDED(hr) && *meshContainer != nullptr;
+}
+
+bool ParseCustomXMesh(XTextTokenizer& tokenizer,
+                      SkinAnimMeshFrame* frame,
+                      SkinAnimMeshAlloc* allocator)
+{
+    std::string token;
+    std::string meshName = "CustomXMesh";
+    if (!tokenizer.ReadToken(token))
+    {
+        return false;
+    }
+
+    if (token != "{")
+    {
+        meshName = token;
+        if (!ReadExpectedXToken(tokenizer, "{"))
+        {
+            return false;
+        }
+    }
+
+    CustomXMeshData meshData;
+    DWORD vertexCount = 0;
+    if (!ReadXUIntToken(tokenizer, vertexCount))
+    {
+        return false;
+    }
+
+    meshData.positions.resize(vertexCount);
+    for (DWORD i = 0; i < vertexCount; ++i)
+    {
+        if (!ReadXFloatToken(tokenizer, meshData.positions[i].x) ||
+            !ReadXFloatToken(tokenizer, meshData.positions[i].y) ||
+            !ReadXFloatToken(tokenizer, meshData.positions[i].z))
+        {
+            return false;
+        }
+    }
+
+    DWORD faceCount = 0;
+    if (!ReadXUIntToken(tokenizer, faceCount))
+    {
+        return false;
+    }
+
+    meshData.faces.resize(faceCount);
+    for (DWORD faceIndex = 0; faceIndex < faceCount; ++faceIndex)
+    {
+        DWORD indexCount = 0;
+        if (!ReadXUIntToken(tokenizer, indexCount))
+        {
+            return false;
+        }
+
+        meshData.faces[faceIndex].resize(indexCount);
+        for (DWORD i = 0; i < indexCount; ++i)
+        {
+            if (!ReadXUIntToken(tokenizer, meshData.faces[faceIndex][i]))
+            {
+                return false;
+            }
+        }
+    }
+
+    while (tokenizer.ReadToken(token))
+    {
+        if (IsXTextSeparatorToken(token))
+        {
+            continue;
+        }
+
+        if (token == "}")
+        {
+            LPD3DXMESHCONTAINER meshContainer = nullptr;
+            if (allocator != nullptr)
+            {
+                if (!CreateCustomXMeshContainer(meshName, meshData, allocator, &meshContainer))
+                {
+                    return false;
+                }
+
+                AppendCustomXMeshContainer(frame, meshContainer);
+            }
+            return true;
+        }
+
+        if (token == "MeshNormals")
+        {
+            if (!ParseCustomXMeshNormals(tokenizer))
+            {
+                return false;
+            }
+            continue;
+        }
+
+        if (token == "MeshTextureCoords")
+        {
+            if (!ParseCustomXMeshTextureCoords(tokenizer, meshData))
+            {
+                return false;
+            }
+            continue;
+        }
+
+        if (token == "MeshMaterialList")
+        {
+            if (!ParseCustomXMeshMaterialList(tokenizer, meshData))
+            {
+                return false;
+            }
+            continue;
+        }
+
+        if (token == "SkinWeights")
+        {
+            if (!ParseCustomXSkinWeights(tokenizer, meshData))
+            {
+                return false;
+            }
+            continue;
+        }
+
+        if (!SkipCustomXObject(tokenizer))
+        {
+            return false;
+        }
+    }
+
+    return false;
+}
+
+bool ParseCustomXFrameBody(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame, SkinAnimMeshAlloc* allocator);
+
+SkinAnimMeshFrame* ParseCustomXFrame(XTextTokenizer& tokenizer, SkinAnimMeshAlloc* allocator)
 {
     std::string frameName;
     if (!tokenizer.ReadToken(frameName))
@@ -609,7 +1277,7 @@ SkinAnimMeshFrame* ParseCustomXFrame(XTextTokenizer& tokenizer)
     }
 
     SkinAnimMeshFrame* frame = CreateCustomXFrame(frameName);
-    if (!ParseCustomXFrameBody(tokenizer, frame))
+    if (!ParseCustomXFrameBody(tokenizer, frame, allocator))
     {
         SAFE_DELETE_ARRAY(frame->Name);
         SAFE_DELETE(frame);
@@ -619,7 +1287,7 @@ SkinAnimMeshFrame* ParseCustomXFrame(XTextTokenizer& tokenizer)
     return frame;
 }
 
-bool ParseCustomXFrameBody(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame)
+bool ParseCustomXFrameBody(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame, SkinAnimMeshAlloc* allocator)
 {
     std::string token;
     while (tokenizer.ReadToken(token))
@@ -636,7 +1304,7 @@ bool ParseCustomXFrameBody(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame)
 
         if (token == "Frame")
         {
-            SkinAnimMeshFrame* child = ParseCustomXFrame(tokenizer);
+            SkinAnimMeshFrame* child = ParseCustomXFrame(tokenizer, allocator);
             if (child == nullptr)
             {
                 return false;
@@ -655,6 +1323,15 @@ bool ParseCustomXFrameBody(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame)
             continue;
         }
 
+        if (token == "Mesh")
+        {
+            if (!ParseCustomXMesh(tokenizer, frame, allocator))
+            {
+                return false;
+            }
+            continue;
+        }
+
         if (!SkipCustomXObject(tokenizer))
         {
             return false;
@@ -664,7 +1341,9 @@ bool ParseCustomXFrameBody(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame)
     return false;
 }
 
-HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText, LPD3DXFRAME* frameRoot)
+HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
+                                          SkinAnimMeshAlloc* allocator,
+                                          LPD3DXFRAME* frameRoot)
 {
     if (frameRoot == nullptr)
     {
@@ -698,7 +1377,7 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText, LPD3DXFRA
         }
 
         WriteMeshMixSkinAnimLoadLog(L"Custom parser found top-level Frame.");
-        SkinAnimMeshFrame* frame = ParseCustomXFrame(tokenizer);
+        SkinAnimMeshFrame* frame = ParseCustomXFrame(tokenizer, allocator);
         if (frame == nullptr)
         {
             WriteMeshMixSkinAnimLoadLog(L"Custom parser failed while parsing top-level Frame.");
@@ -729,6 +1408,26 @@ int CountCustomXFrames(const LPD3DXFRAME frame)
     return 1 + CountCustomXFrames(frame->pFrameFirstChild) + CountCustomXFrames(frame->pFrameSibling);
 }
 
+int CountCustomXMeshContainers(const LPD3DXFRAME frame)
+{
+    if (frame == nullptr)
+    {
+        return 0;
+    }
+
+    int count = 0;
+    LPD3DXMESHCONTAINER container = frame->pMeshContainer;
+    while (container != nullptr)
+    {
+        ++count;
+        container = container->pNextMeshContainer;
+    }
+
+    return count +
+           CountCustomXMeshContainers(frame->pFrameFirstChild) +
+           CountCustomXMeshContainers(frame->pFrameSibling);
+}
+
 void DestroyCustomXFrameHierarchy(LPD3DXFRAME frame)
 {
     if (frame == nullptr)
@@ -747,9 +1446,38 @@ void DestroyCustomXFrameHierarchy(LPD3DXFRAME frame)
     SAFE_DELETE_ARRAY(frame->Name);
     SAFE_DELETE(frame);
 }
+
+void DestroyCustomXFrameHierarchyWithAllocator(LPD3DXFRAME frame, SkinAnimMeshAlloc& allocator)
+{
+    if (frame == nullptr)
+    {
+        return;
+    }
+
+    LPD3DXFRAME sibling = frame->pFrameSibling;
+    LPD3DXFRAME child = frame->pFrameFirstChild;
+    LPD3DXMESHCONTAINER container = frame->pMeshContainer;
+    frame->pFrameSibling = nullptr;
+    frame->pFrameFirstChild = nullptr;
+    frame->pMeshContainer = nullptr;
+
+    DestroyCustomXFrameHierarchyWithAllocator(child, allocator);
+    DestroyCustomXFrameHierarchyWithAllocator(sibling, allocator);
+
+    while (container != nullptr)
+    {
+        LPD3DXMESHCONTAINER next = container->pNextMeshContainer;
+        container->pNextMeshContainer = nullptr;
+        allocator.DestroyMeshContainer(container);
+        container = next;
+    }
+
+    allocator.DestroyFrame(frame);
+}
 }
 
-CustomXFrameHierarchyLoadResult LoadCustomXFrameHierarchyForTest(const std::wstring& filePath)
+CustomXFrameHierarchyLoadResult LoadCustomXFrameHierarchyForTest(const std::wstring& filePath,
+                                                                 const bool loadMeshContainers)
 {
     CustomXFrameHierarchyLoadResult result;
 
@@ -764,10 +1492,18 @@ CustomXFrameHierarchyLoadResult LoadCustomXFrameHierarchyForTest(const std::wstr
     const std::string fileText((std::istreambuf_iterator<char>(file)),
                                std::istreambuf_iterator<char>());
     LPD3DXFRAME frameRoot = nullptr;
-    result.hr = LoadCustomXFrameHierarchyFromText(fileText, &frameRoot);
+    SkinAnimMeshAlloc allocator(filePath);
+    SkinAnimMeshAlloc* allocatorPtr = nullptr;
+    if (loadMeshContainers)
+    {
+        allocatorPtr = &allocator;
+    }
+
+    result.hr = LoadCustomXFrameHierarchyFromText(fileText, allocatorPtr, &frameRoot);
     if (SUCCEEDED(result.hr) && frameRoot != nullptr)
     {
         result.frameCount = CountCustomXFrames(frameRoot);
+        result.meshContainerCount = CountCustomXMeshContainers(frameRoot);
         if (frameRoot->Name != nullptr)
         {
             result.rootFrameName = AnsiTextToWideText(frameRoot->Name);
@@ -779,7 +1515,14 @@ CustomXFrameHierarchyLoadResult LoadCustomXFrameHierarchyForTest(const std::wstr
         result.message = L"Parser failed. Bytes=" + std::to_wstring(fileText.size());
     }
 
-    DestroyCustomXFrameHierarchy(frameRoot);
+    if (loadMeshContainers)
+    {
+        DestroyCustomXFrameHierarchyWithAllocator(frameRoot, allocator);
+    }
+    else
+    {
+        DestroyCustomXFrameHierarchy(frameRoot);
+    }
     return result;
 }
 
@@ -1322,7 +2065,7 @@ HRESULT MeshMixSkinAnim::LoadMeshHierarchyWithDirectX(const std::wstring& filePa
 }
 
 HRESULT MeshMixSkinAnim::LoadMeshHierarchyWithCustomLoader(const std::wstring& filePath,
-                                                           SkinAnimMeshAlloc&,
+                                                           SkinAnimMeshAlloc& allocator,
                                                            LPD3DXFRAME* frameRoot,
                                                            LPD3DXANIMATIONCONTROLLER* animationController)
 {
@@ -1348,7 +2091,7 @@ HRESULT MeshMixSkinAnim::LoadMeshHierarchyWithCustomLoader(const std::wstring& f
 
     const std::string fileText((std::istreambuf_iterator<char>(file)),
                                std::istreambuf_iterator<char>());
-    const HRESULT hr = LoadCustomXFrameHierarchyFromText(fileText, frameRoot);
+    const HRESULT hr = LoadCustomXFrameHierarchyFromText(fileText, &allocator, frameRoot);
     WriteMeshMixSkinAnimLoadLog(L"Custom loader result. Path=" + filePath +
                                 L" HR=" + FormatHRESULT(hr) +
                                 L" FrameRoot=" + std::to_wstring(reinterpret_cast<std::uintptr_t>(*frameRoot)));

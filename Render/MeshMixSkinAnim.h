@@ -23,11 +23,13 @@ struct CustomXFrameHierarchyLoadResult
 {
     HRESULT hr = E_FAIL;
     int frameCount = 0;
+    int meshContainerCount = 0;
     std::wstring rootFrameName;
     std::wstring message;
 };
 
-CustomXFrameHierarchyLoadResult LoadCustomXFrameHierarchyForTest(const std::wstring& filePath);
+CustomXFrameHierarchyLoadResult LoadCustomXFrameHierarchyForTest(const std::wstring& filePath,
+                                                                 bool loadMeshContainers = false);
 
 class MeshMixSkinAnim : public IDeviceResettable
 {
