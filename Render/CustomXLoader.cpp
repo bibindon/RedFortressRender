@@ -719,6 +719,9 @@ bool FillCustomXMeshBuffers(const CustomXMeshData& meshData,
         float x;
         float y;
         float z;
+        float nx;
+        float ny;
+        float nz;
         float u;
         float v;
     };
@@ -734,6 +737,9 @@ bool FillCustomXMeshBuffers(const CustomXMeshData& meshData,
         vertices[i].x = meshData.positions[i].x;
         vertices[i].y = meshData.positions[i].y;
         vertices[i].z = meshData.positions[i].z;
+        vertices[i].nx = 0.0f;
+        vertices[i].ny = 1.0f;
+        vertices[i].nz = 0.0f;
         vertices[i].u = 0.0f;
         vertices[i].v = 0.0f;
         if (i < meshData.texCoords.size())
@@ -863,7 +869,7 @@ bool CreateCustomXMeshContainer(const std::string& meshName,
         return false;
     }
 
-    const DWORD fvf = D3DFVF_XYZ | D3DFVF_TEX1;
+    const DWORD fvf = D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1;
     LPD3DXMESH mesh = nullptr;
     HRESULT hr = D3DXCreateMeshFVF(triangleCount,
                                     static_cast<DWORD>(meshData.positions.size()),
@@ -878,6 +884,15 @@ bool CreateCustomXMeshContainer(const std::string& meshName,
 
     if (!FillCustomXMeshBuffers(meshData, mesh, triangleMaterialIndices))
     {
+        SAFE_RELEASE(mesh);
+        return false;
+    }
+
+    hr = D3DXComputeNormals(mesh, nullptr);
+    if (FAILED(hr))
+    {
+        WriteMeshMixSkinAnimLoadLog(L"Custom mesh failed: D3DXComputeNormals failed. HR=" +
+                                    FormatHRESULT(hr));
         SAFE_RELEASE(mesh);
         return false;
     }
