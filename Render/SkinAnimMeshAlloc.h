@@ -47,6 +47,9 @@ private:
 struct SkinAnimMeshFrame : public D3DXFRAME
 {
     D3DXMATRIX m_combinedMatrix;
+    D3DXVECTOR3 m_animationScale;
+    D3DXQUATERNION m_animationRotation;
+    D3DXVECTOR3 m_animationPosition;
 };
 
 struct SkinAnimMeshContainer : public D3DXMESHCONTAINER

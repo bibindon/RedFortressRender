@@ -27,6 +27,9 @@ STDMETHODIMP SkinAnimMeshAlloc::CreateFrame(LPCSTR name, LPD3DXFRAME *newFrame)
 
     D3DXMatrixIdentity(&animMeshFrame->TransformationMatrix);
     D3DXMatrixIdentity(&animMeshFrame->m_combinedMatrix);
+    D3DXQuaternionIdentity(&animMeshFrame->m_animationRotation);
+    animMeshFrame->m_animationScale = D3DXVECTOR3(1.0f, 1.0f, 1.0f);
+    animMeshFrame->m_animationPosition = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 
     *newFrame = animMeshFrame;
 

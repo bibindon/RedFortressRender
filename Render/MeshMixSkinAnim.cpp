@@ -9,6 +9,8 @@
 #include <exception>
 #include <fstream>
 #include <iterator>
+#include <map>
+#include <set>
 #include <string>
 
 #include "Camera.h"
@@ -479,6 +481,27 @@ struct CustomXMeshData
     std::vector<CustomXSkinWeightsData> skinWeights;
 };
 
+struct CustomXAnimationKey
+{
+    DWORD keyType = 0;
+    DWORD valueCount = 0;
+    std::vector<double> times;
+    std::vector<float> values;
+};
+
+struct CustomXAnimation
+{
+    std::string frameName;
+    std::vector<CustomXAnimationKey> keys;
+};
+
+struct CustomXAnimationSet
+{
+    std::string name;
+    double ticksPerSecond = 4800.0;
+    std::vector<CustomXAnimation> animations;
+};
+
 SkinAnimMeshFrame* CreateCustomXFrame(const std::string& name)
 {
     SkinAnimMeshFrame* frame = NEW SkinAnimMeshFrame();
@@ -489,6 +512,9 @@ SkinAnimMeshFrame* CreateCustomXFrame(const std::string& name)
 
     D3DXMatrixIdentity(&frame->TransformationMatrix);
     D3DXMatrixIdentity(&frame->m_combinedMatrix);
+    D3DXQuaternionIdentity(&frame->m_animationRotation);
+    frame->m_animationScale = D3DXVECTOR3(1.0f, 1.0f, 1.0f);
+    frame->m_animationPosition = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
     return frame;
 }
 
@@ -1341,20 +1367,178 @@ bool ParseCustomXFrameBody(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame, 
     return false;
 }
 
-HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
-                                          SkinAnimMeshAlloc* allocator,
-                                          LPD3DXFRAME* frameRoot)
+bool ParseCustomXAnimationKeyBody(XTextTokenizer& tokenizer, CustomXAnimationKey& key)
 {
-    if (frameRoot == nullptr)
+    DWORD keyType = 0;
+    if (!ReadXUIntToken(tokenizer, keyType))
     {
-        WriteMeshMixSkinAnimLoadLog(L"Custom parser failed: frameRoot output pointer is null.");
-        return E_POINTER;
+        return false;
+    }
+    key.keyType = keyType;
+
+    switch (keyType)
+    {
+        case 0: key.valueCount = 4; break;
+        case 1: key.valueCount = 3; break;
+        case 2: key.valueCount = 3; break;
+        case 4: key.valueCount = 16; break;
+        default: return false;
     }
 
-    *frameRoot = nullptr;
-    WriteMeshMixSkinAnimLoadLog(L"Custom parser start. Bytes=" + std::to_wstring(fileText.size()));
+    DWORD keyCount = 0;
+    if (!ReadXUIntToken(tokenizer, keyCount))
+    {
+        return false;
+    }
 
-    XTextTokenizer tokenizer(fileText);
+    key.times.resize(keyCount);
+    key.values.resize(static_cast<std::size_t>(keyCount) * key.valueCount);
+
+    for (DWORD i = 0; i < keyCount; ++i)
+    {
+        float timeFloat = 0.0f;
+        if (!ReadXFloatToken(tokenizer, timeFloat))
+        {
+            return false;
+        }
+        key.times[i] = static_cast<double>(timeFloat);
+
+        DWORD valueCount = 0;
+        if (!ReadXUIntToken(tokenizer, valueCount))
+        {
+            return false;
+        }
+
+        if (valueCount != key.valueCount)
+        {
+            return false;
+        }
+
+        for (DWORD v = 0; v < key.valueCount; ++v)
+        {
+            float value = 0.0f;
+            if (!ReadXFloatToken(tokenizer, value))
+            {
+                return false;
+            }
+            key.values[static_cast<std::size_t>(i) * key.valueCount + v] = value;
+        }
+    }
+
+    return true;
+}
+
+bool ParseCustomXAnimationKey(XTextTokenizer& tokenizer, CustomXAnimationKey& key)
+{
+    if (!ReadCustomXOpenBrace(tokenizer))
+    {
+        return false;
+    }
+
+    if (!ParseCustomXAnimationKeyBody(tokenizer, key))
+    {
+        return false;
+    }
+
+    return SkipCustomXObjectBody(tokenizer);
+}
+
+bool ParseCustomXAnimation(XTextTokenizer& tokenizer, CustomXAnimation& anim)
+{
+    std::string token;
+    if (!tokenizer.ReadToken(token))
+    {
+        return false;
+    }
+
+    if (token == "{")
+    {
+        anim.frameName.clear();
+    }
+    else
+    {
+        anim.frameName = token;
+        if (!ReadExpectedXToken(tokenizer, "{"))
+        {
+            return false;
+        }
+    }
+
+    while (tokenizer.ReadToken(token))
+    {
+        if (IsXTextSeparatorToken(token))
+        {
+            continue;
+        }
+
+        if (token == "}")
+        {
+            return true;
+        }
+
+        if (token == "AnimationKey")
+        {
+            CustomXAnimationKey key;
+            if (!ParseCustomXAnimationKey(tokenizer, key))
+            {
+                return false;
+            }
+            anim.keys.push_back(key);
+            continue;
+        }
+
+        if (token == "{")
+        {
+            if (!SkipCustomXObjectBody(tokenizer))
+            {
+                return false;
+            }
+            continue;
+        }
+
+        if (!SkipCustomXObject(tokenizer))
+        {
+            return false;
+        }
+    }
+
+    return false;
+}
+
+bool ParseCustomXAnimationOptions(XTextTokenizer& tokenizer, double& ticksPerSecond)
+{
+    if (!ReadExpectedXToken(tokenizer, "{"))
+    {
+        return false;
+    }
+
+    DWORD openClosed = 0;
+    if (!ReadXUIntToken(tokenizer, openClosed))
+    {
+        return false;
+    }
+
+    DWORD positionQuality = 0;
+    if (!ReadXUIntToken(tokenizer, positionQuality))
+    {
+        return false;
+    }
+
+    return SkipCustomXObjectBody(tokenizer);
+}
+
+bool ParseCustomXAnimationSet(XTextTokenizer& tokenizer, CustomXAnimationSet& animSet)
+{
+    if (!ReadXStringToken(tokenizer, animSet.name))
+    {
+        return false;
+    }
+
+    if (!ReadExpectedXToken(tokenizer, "{"))
+    {
+        return false;
+    }
+
     std::string token;
     while (tokenizer.ReadToken(token))
     {
@@ -1363,39 +1547,353 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
             continue;
         }
 
-        if (token != "Frame")
+        if (token == "}")
         {
-            if (token == "template")
+            return true;
+        }
+
+        if (token == "Animation")
+        {
+            CustomXAnimation anim;
+            if (!ParseCustomXAnimation(tokenizer, anim))
             {
-                if (!SkipCustomXObject(tokenizer))
-                {
-                    WriteMeshMixSkinAnimLoadLog(L"Custom parser failed while skipping template.");
-                    return E_FAIL;
-                }
+                return false;
+            }
+            animSet.animations.push_back(anim);
+            continue;
+        }
+
+        if (token == "AnimationOptions")
+        {
+            ParseCustomXAnimationOptions(tokenizer, animSet.ticksPerSecond);
+            continue;
+        }
+
+        if (token == "{")
+        {
+            if (!SkipCustomXObjectBody(tokenizer))
+            {
+                return false;
             }
             continue;
         }
 
-        WriteMeshMixSkinAnimLoadLog(L"Custom parser found top-level Frame.");
-        SkinAnimMeshFrame* frame = ParseCustomXFrame(tokenizer, allocator);
-        if (frame == nullptr)
+        if (!SkipCustomXObject(tokenizer))
         {
-            WriteMeshMixSkinAnimLoadLog(L"Custom parser failed while parsing top-level Frame.");
-            return E_FAIL;
+            return false;
         }
+    }
 
-        std::wstring frameName = L"(null)";
-        if (frame->Name != nullptr)
-        {
-            frameName = AnsiTextToWideText(frame->Name);
-        }
-        WriteMeshMixSkinAnimLoadLog(L"Custom parser loaded top-level Frame: " + frameName);
-        *frameRoot = frame;
+    return false;
+}
+
+HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimationSet>& animationSets,
+                                                 LPD3DXFRAME frameRoot,
+                                                 LPD3DXANIMATIONCONTROLLER* outController)
+{
+    if (outController == nullptr)
+    {
+        return E_POINTER;
+    }
+
+    *outController = nullptr;
+
+    if (animationSets.empty() || frameRoot == nullptr)
+    {
         return S_OK;
     }
 
-    WriteMeshMixSkinAnimLoadLog(L"Custom parser failed: no Frame token was found.");
-    return E_FAIL;
+    std::set<std::string> animatedFrameNames;
+    for (const auto& animSet : animationSets)
+    {
+        for (const auto& anim : animSet.animations)
+        {
+            if (!anim.frameName.empty())
+            {
+                animatedFrameNames.insert(anim.frameName);
+            }
+        }
+    }
+
+    const UINT maxOutputs = static_cast<UINT>(animatedFrameNames.size());
+    if (maxOutputs == 0)
+    {
+        return S_OK;
+    }
+
+    const UINT maxSets = static_cast<UINT>(animationSets.size());
+    const UINT maxTracks = maxSets;
+
+    LPD3DXANIMATIONCONTROLLER controller = nullptr;
+    HRESULT hr = D3DXCreateAnimationController(maxOutputs, maxSets, maxTracks, 0, &controller);
+    if (FAILED(hr) || controller == nullptr)
+    {
+        return FAILED(hr) ? hr : E_FAIL;
+    }
+
+    std::map<std::string, SkinAnimMeshFrame*> frameMap;
+    for (const auto& name : animatedFrameNames)
+    {
+        LPD3DXFRAME rawFrame = D3DXFrameFind(frameRoot, name.c_str());
+        if (rawFrame == nullptr)
+        {
+            continue;
+        }
+
+        SkinAnimMeshFrame* skinFrame = reinterpret_cast<SkinAnimMeshFrame*>(rawFrame);
+        hr = controller->RegisterAnimationOutput(name.c_str(),
+                                                  &skinFrame->TransformationMatrix,
+                                                  &skinFrame->m_animationScale,
+                                                  &skinFrame->m_animationRotation,
+                                                  &skinFrame->m_animationPosition);
+        if (SUCCEEDED(hr))
+        {
+            frameMap[name] = skinFrame;
+        }
+    }
+
+    for (const auto& animSet : animationSets)
+    {
+        const DWORD numAnimations = static_cast<DWORD>(animSet.animations.size());
+
+        LPD3DXKEYFRAMEDANIMATIONSET d3dxAnimSet = nullptr;
+        hr = D3DXCreateKeyframedAnimationSet(animSet.name.c_str(),
+                                              animSet.ticksPerSecond,
+                                              D3DXPLAY_LOOP,
+                                              numAnimations,
+                                              0,
+                                              nullptr,
+                                              &d3dxAnimSet);
+        if (FAILED(hr) || d3dxAnimSet == nullptr)
+        {
+            continue;
+        }
+
+        for (DWORD animIndex = 0; animIndex < numAnimations; ++animIndex)
+        {
+            const CustomXAnimation& anim = animSet.animations[animIndex];
+
+            std::vector<D3DXKEY_QUATERNION> rotationKeys;
+            std::vector<D3DXKEY_VECTOR3> scaleKeys;
+            std::vector<D3DXKEY_VECTOR3> positionKeys;
+            std::vector<D3DXKEY_VECTOR3> matrixKeysTempForScale;
+            std::vector<D3DXKEY_VECTOR3> matrixKeysTempForPosition;
+            std::vector<D3DXKEY_QUATERNION> matrixKeysTempForRotation;
+
+            bool hasValidData = false;
+
+            for (const auto& key : anim.keys)
+            {
+                for (std::size_t k = 0; k < key.times.size(); ++k)
+                {
+                    const double t = key.times[k];
+                    const float* vals = &key.values[k * key.valueCount];
+
+                    switch (key.keyType)
+                    {
+                        case 0:
+                        {
+                            D3DXKEY_QUATERNION qKey;
+                            qKey.Time = static_cast<float>(t);
+                            qKey.Value.w = vals[0];
+                            qKey.Value.x = vals[1];
+                            qKey.Value.y = vals[2];
+                            qKey.Value.z = vals[3];
+                            rotationKeys.push_back(qKey);
+                            hasValidData = true;
+                            break;
+                        }
+                        case 1:
+                        {
+                            D3DXKEY_VECTOR3 vKey;
+                            vKey.Time = static_cast<float>(t);
+                            vKey.Value.x = vals[0];
+                            vKey.Value.y = vals[1];
+                            vKey.Value.z = vals[2];
+                            scaleKeys.push_back(vKey);
+                            hasValidData = true;
+                            break;
+                        }
+                        case 2:
+                        {
+                            D3DXKEY_VECTOR3 vKey;
+                            vKey.Time = static_cast<float>(t);
+                            vKey.Value.x = vals[0];
+                            vKey.Value.y = vals[1];
+                            vKey.Value.z = vals[2];
+                            positionKeys.push_back(vKey);
+                            hasValidData = true;
+                            break;
+                        }
+                        case 4:
+                        {
+                            D3DXMATRIX mat;
+                            for (int row = 0; row < 4; ++row)
+                            {
+                                for (int col = 0; col < 4; ++col)
+                                {
+                                    mat(row, col) = vals[row * 4 + col];
+                                }
+                            }
+
+                            D3DXVECTOR3 scale;
+                            D3DXQUATERNION rotation;
+                            D3DXVECTOR3 position;
+                            D3DXMatrixDecompose(&scale, &rotation, &position, &mat);
+
+                            D3DXKEY_VECTOR3 sKey;
+                            sKey.Time = static_cast<float>(t);
+                            sKey.Value.x = scale.x;
+                            sKey.Value.y = scale.y;
+                            sKey.Value.z = scale.z;
+                            matrixKeysTempForScale.push_back(sKey);
+
+                            D3DXKEY_QUATERNION rKey;
+                            rKey.Time = static_cast<float>(t);
+                            rKey.Value.w = rotation.w;
+                            rKey.Value.x = rotation.x;
+                            rKey.Value.y = rotation.y;
+                            rKey.Value.z = rotation.z;
+                            matrixKeysTempForRotation.push_back(rKey);
+
+                            D3DXKEY_VECTOR3 pKey;
+                            pKey.Time = static_cast<float>(t);
+                            pKey.Value.x = position.x;
+                            pKey.Value.y = position.y;
+                            pKey.Value.z = position.z;
+                            matrixKeysTempForPosition.push_back(pKey);
+
+                            hasValidData = true;
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                }
+            }
+
+            if (!hasValidData)
+            {
+                continue;
+            }
+
+            DWORD registeredAnimIndex = 0;
+            if (!rotationKeys.empty() && !matrixKeysTempForRotation.empty())
+            {
+                d3dxAnimSet->RegisterAnimationSRTKeys(anim.frameName.c_str(),
+                                                       static_cast<UINT>(matrixKeysTempForScale.size()),
+                                                       static_cast<UINT>(matrixKeysTempForRotation.size()),
+                                                       static_cast<UINT>(matrixKeysTempForPosition.size()),
+                                                       &matrixKeysTempForScale[0],
+                                                       &matrixKeysTempForRotation[0],
+                                                       &matrixKeysTempForPosition[0],
+                                                       &registeredAnimIndex);
+            }
+            else
+            {
+                d3dxAnimSet->RegisterAnimationSRTKeys(anim.frameName.c_str(),
+                                                       static_cast<UINT>(scaleKeys.size()),
+                                                       static_cast<UINT>(rotationKeys.size()),
+                                                       static_cast<UINT>(positionKeys.size()),
+                                                       scaleKeys.empty() ? nullptr : &scaleKeys[0],
+                                                       rotationKeys.empty() ? nullptr : &rotationKeys[0],
+                                                       positionKeys.empty() ? nullptr : &positionKeys[0],
+                                                       &registeredAnimIndex);
+            }
+        }
+
+        hr = controller->RegisterAnimationSet(d3dxAnimSet);
+        SAFE_RELEASE(d3dxAnimSet);
+    }
+
+    *outController = controller;
+    return S_OK;
+}
+
+HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
+                                          SkinAnimMeshAlloc* allocator,
+                                          LPD3DXFRAME* frameRoot,
+                                          std::vector<CustomXAnimationSet>* outAnimationSets = nullptr)
+{
+    if (frameRoot == nullptr)
+    {
+        WriteMeshMixSkinAnimLoadLog(L"Custom parser failed: frameRoot output pointer is null.");
+        return E_POINTER;
+    }
+
+    *frameRoot = nullptr;
+    if (outAnimationSets != nullptr)
+    {
+        outAnimationSets->clear();
+    }
+
+    WriteMeshMixSkinAnimLoadLog(L"Custom parser start. Bytes=" + std::to_wstring(fileText.size()));
+
+    XTextTokenizer tokenizer(fileText);
+    std::string token;
+    bool frameFound = false;
+    while (tokenizer.ReadToken(token))
+    {
+        if (IsXTextSeparatorToken(token))
+        {
+            continue;
+        }
+
+        if (token == "Frame")
+        {
+            WriteMeshMixSkinAnimLoadLog(L"Custom parser found top-level Frame.");
+            SkinAnimMeshFrame* frame = ParseCustomXFrame(tokenizer, allocator);
+            if (frame == nullptr)
+            {
+                WriteMeshMixSkinAnimLoadLog(L"Custom parser failed while parsing top-level Frame.");
+                return E_FAIL;
+            }
+
+            std::wstring frameName = L"(null)";
+            if (frame->Name != nullptr)
+            {
+                frameName = AnsiTextToWideText(frame->Name);
+            }
+            WriteMeshMixSkinAnimLoadLog(L"Custom parser loaded top-level Frame: " + frameName);
+            *frameRoot = frame;
+            frameFound = true;
+            continue;
+        }
+
+        if (token == "AnimationSet" && outAnimationSets != nullptr)
+        {
+            CustomXAnimationSet animSet;
+            if (ParseCustomXAnimationSet(tokenizer, animSet))
+            {
+                WriteMeshMixSkinAnimLoadLog(L"Custom parser loaded AnimationSet: " +
+                                            AnsiTextToWideText(animSet.name));
+                outAnimationSets->push_back(animSet);
+            }
+            else
+            {
+                WriteMeshMixSkinAnimLoadLog(L"Custom parser failed while parsing AnimationSet.");
+            }
+            continue;
+        }
+
+        if (token == "template")
+        {
+            if (!SkipCustomXObject(tokenizer))
+            {
+                WriteMeshMixSkinAnimLoadLog(L"Custom parser failed while skipping template.");
+                return E_FAIL;
+            }
+            continue;
+        }
+    }
+
+    if (!frameFound)
+    {
+        WriteMeshMixSkinAnimLoadLog(L"Custom parser failed: no Frame token was found.");
+        return E_FAIL;
+    }
+
+    return S_OK;
 }
 
 int CountCustomXFrames(const LPD3DXFRAME frame)
@@ -2065,9 +2563,9 @@ HRESULT MeshMixSkinAnim::LoadMeshHierarchyWithDirectX(const std::wstring& filePa
 }
 
 HRESULT MeshMixSkinAnim::LoadMeshHierarchyWithCustomLoader(const std::wstring& filePath,
-                                                           SkinAnimMeshAlloc& allocator,
-                                                           LPD3DXFRAME* frameRoot,
-                                                           LPD3DXANIMATIONCONTROLLER* animationController)
+                                                        SkinAnimMeshAlloc& allocator,
+                                                        LPD3DXFRAME* frameRoot,
+                                                        LPD3DXANIMATIONCONTROLLER* animationController)
 {
     if (animationController != nullptr)
     {
@@ -2090,11 +2588,34 @@ HRESULT MeshMixSkinAnim::LoadMeshHierarchyWithCustomLoader(const std::wstring& f
     }
 
     const std::string fileText((std::istreambuf_iterator<char>(file)),
-                               std::istreambuf_iterator<char>());
-    const HRESULT hr = LoadCustomXFrameHierarchyFromText(fileText, &allocator, frameRoot);
+                                std::istreambuf_iterator<char>());
+
+    std::vector<CustomXAnimationSet> animationSets;
+    const HRESULT hr = LoadCustomXFrameHierarchyFromText(fileText, &allocator, frameRoot, &animationSets);
     WriteMeshMixSkinAnimLoadLog(L"Custom loader result. Path=" + filePath +
                                 L" HR=" + FormatHRESULT(hr) +
-                                L" FrameRoot=" + std::to_wstring(reinterpret_cast<std::uintptr_t>(*frameRoot)));
+                                L" FrameRoot=" + std::to_wstring(reinterpret_cast<std::uintptr_t>(*frameRoot)) +
+                                L" AnimationSets=" + std::to_wstring(animationSets.size()));
+
+    if (SUCCEEDED(hr) && animationController != nullptr && !animationSets.empty())
+    {
+        LPD3DXANIMATIONCONTROLLER controller = nullptr;
+        const HRESULT controllerHr = CreateAnimationControllerFromParsedData(animationSets,
+                                                                              *frameRoot,
+                                                                              &controller);
+        if (SUCCEEDED(controllerHr) && controller != nullptr)
+        {
+            *animationController = controller;
+            WriteMeshMixSkinAnimLoadLog(L"Custom loader built animation controller. Sets=" +
+                                        std::to_wstring(animationSets.size()));
+        }
+        else
+        {
+            WriteMeshMixSkinAnimLoadLog(L"Custom loader animation controller build failed. HR=" +
+                                        FormatHRESULT(controllerHr));
+        }
+    }
+
     return hr;
 }
 
