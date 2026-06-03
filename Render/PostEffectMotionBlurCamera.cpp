@@ -26,55 +26,6 @@ int ClampMotionBlurSampleCount(const int sampleCount)
 {
     return (std::max)(2, (std::min)(sampleCount, 21));
 }
-
-float ClampUnit(const float value)
-{
-    return (std::max)(-1.0f, (std::min)(value, 1.0f));
-}
-
-D3DXVECTOR3 GetCameraDirection(const D3DXVECTOR3& eye, const D3DXVECTOR3& lookAt)
-{
-    D3DXVECTOR3 direction = lookAt - eye;
-    const float length = D3DXVec3Length(&direction);
-    if (length <= 0.0001f)
-    {
-        return D3DXVECTOR3(0.0f, 0.0f, 1.0f);
-    }
-
-    D3DXVec3Normalize(&direction, &direction);
-    return direction;
-}
-
-float NormalizeAngle(const float angle)
-{
-    float normalized = angle;
-    while (normalized > D3DX_PI)
-    {
-        normalized -= D3DX_PI * 2.0f;
-    }
-
-    while (normalized < -D3DX_PI)
-    {
-        normalized += D3DX_PI * 2.0f;
-    }
-
-    return normalized;
-}
-
-void GetYawPitchFromDirection(const D3DXVECTOR3& direction, float& yaw, float& pitch)
-{
-    yaw = atan2f(direction.x, direction.z);
-    pitch = asinf(ClampUnit(-direction.y));
-}
-
-D3DXVECTOR3 GetDirectionFromYawPitch(const float yaw, const float pitch)
-{
-    D3DXVECTOR3 direction(cosf(pitch) * sinf(yaw),
-                          -sinf(pitch),
-                          cosf(pitch) * cosf(yaw));
-    D3DXVec3Normalize(&direction, &direction);
-    return direction;
-}
 }
 
 void PostEffectMotionBlurCamera::Initialize()
@@ -96,7 +47,6 @@ void PostEffectMotionBlurCamera::Initialize()
     assert(SUCCEEDED(hResult));
 
     D3DXMatrixIdentity(&m_prevViewProj);
-    D3DXMatrixIdentity(&m_motionBlurPrevViewProj);
     m_prevFrameTick = GetTickCount64();
     if (!m_isRegisteredForDeviceReset)
     {
@@ -137,7 +87,6 @@ void PostEffectMotionBlurCamera::Draw(LPDIRECT3DTEXTURE9 renderTarget,
         return;
     }
 
-    UpdateMotionBlurPrevViewProj();
     DrawFullscreenQuad(renderTarget, depthTexture, texTarget);
     UpdateFrameMatrices();
     applied = true;
@@ -146,8 +95,6 @@ void PostEffectMotionBlurCamera::Draw(LPDIRECT3DTEXTURE9 renderTarget,
 void PostEffectMotionBlurCamera::UpdateFrameMatrices()
 {
     m_prevViewProj = Camera::GetViewMatrix() * Camera::GetProjMatrix();
-    m_prevEye = Camera::GetEyePos();
-    m_prevLookAt = Camera::GetLookAtPos();
     m_hasPrevViewProj = true;
 }
 
@@ -191,32 +138,18 @@ bool PostEffectMotionBlurCamera::ShouldApplyMotionBlur(const D3DXMATRIX& current
         return false;
     }
 
-    const D3DXVECTOR3 currentEye = Camera::GetEyePos();
-    const D3DXVECTOR3 currentLookAt = Camera::GetLookAtPos();
+    for (int row = 0; row < 4; ++row)
+    {
+        for (int col = 0; col < 4; ++col)
+        {
+            if (fabsf(currentViewProj(row, col) - m_prevViewProj(row, col)) > 0.0001f)
+            {
+                return true;
+            }
+        }
+    }
 
-    D3DXVECTOR3 lookAtMotion = currentLookAt - m_prevLookAt;
-    const float lookAtMotionLength = D3DXVec3Length(&lookAtMotion);
-    const D3DXVECTOR3 prevEyeOffset = m_prevEye - m_prevLookAt;
-    const D3DXVECTOR3 currentEyeOffset = currentEye - currentLookAt;
-    const float distanceMotion = fabsf(D3DXVec3Length(&currentEyeOffset) - D3DXVec3Length(&prevEyeOffset));
-
-    const D3DXVECTOR3 prevDirection = GetCameraDirection(m_prevEye, m_prevLookAt);
-    const D3DXVECTOR3 currentDirection = GetCameraDirection(currentEye, currentLookAt);
-    float prevYaw = 0.0f;
-    float prevPitch = 0.0f;
-    float currentYaw = 0.0f;
-    float currentPitch = 0.0f;
-    GetYawPitchFromDirection(prevDirection, prevYaw, prevPitch);
-    GetYawPitchFromDirection(currentDirection, currentYaw, currentPitch);
-    const float yawMotion = NormalizeAngle(currentYaw - prevYaw);
-    const float pitchMotion = currentPitch - prevPitch;
-    const float rotationMotion = (std::max)(fabsf(yawMotion), fabsf(pitchMotion));
-
-    static const float kMotionBlurTranslationThreshold = 0.001f;
-    static const float kMotionBlurRotationThreshold = 0.01f;
-    return (lookAtMotionLength > kMotionBlurTranslationThreshold) ||
-           (distanceMotion > kMotionBlurTranslationThreshold) ||
-           (rotationMotion > kMotionBlurRotationThreshold);
+    return false;
 }
 
 float PostEffectMotionBlurCamera::UpdateFrameMotionScale()
@@ -232,66 +165,6 @@ float PostEffectMotionBlurCamera::UpdateFrameMotionScale()
 
     static const float kMotionVectorFrameSeconds = 1.0f / 60.0f;
     return (std::min)(1.0f, kMotionVectorFrameSeconds / (std::max)(deltaSeconds, 0.0001f));
-}
-
-void PostEffectMotionBlurCamera::UpdateMotionBlurPrevViewProj()
-{
-    const float motionScale = m_frameMotionScale;
-    const D3DXVECTOR3 currentEye = Camera::GetEyePos();
-    const D3DXVECTOR3 currentLookAt = Camera::GetLookAtPos();
-
-    const D3DXVECTOR3 targetMotion = currentLookAt - m_prevLookAt;
-    const float targetMotionLength = D3DXVec3Length(&targetMotion);
-    const D3DXVECTOR3 prevEyeOffset = m_prevEye - m_prevLookAt;
-    const D3DXVECTOR3 currentEyeOffset = currentEye - currentLookAt;
-    const float prevDistance = D3DXVec3Length(&prevEyeOffset);
-    const float currentDistance = D3DXVec3Length(&currentEyeOffset);
-    const float distanceMotion = currentDistance - prevDistance;
-
-    const D3DXVECTOR3 prevDirection = GetCameraDirection(m_prevEye, m_prevLookAt);
-    const D3DXVECTOR3 currentDirection = GetCameraDirection(currentEye, currentLookAt);
-    float prevYaw = 0.0f;
-    float prevPitch = 0.0f;
-    float currentYaw = 0.0f;
-    float currentPitch = 0.0f;
-    GetYawPitchFromDirection(prevDirection, prevYaw, prevPitch);
-    GetYawPitchFromDirection(currentDirection, currentYaw, currentPitch);
-    const float yawMotion = NormalizeAngle(currentYaw - prevYaw);
-    const float pitchMotion = currentPitch - prevPitch;
-    const float rotationMotion = (std::max)(fabsf(yawMotion), fabsf(pitchMotion));
-
-    static const float kMotionBlurTranslationThreshold = 0.001f;
-    static const float kMotionBlurRotationThreshold = 0.01f;
-    static const float kRotationOnlyBlurScale = 0.3f;
-    const bool hasTranslationMotion =
-        (targetMotionLength > kMotionBlurTranslationThreshold) ||
-        (fabsf(distanceMotion) > kMotionBlurTranslationThreshold);
-    const bool hasRotationMotion = (rotationMotion > kMotionBlurRotationThreshold);
-
-    if (hasTranslationMotion)
-    {
-        m_motionBlurScaleThisFrame = 1.0f;
-    }
-    else
-    {
-        m_motionBlurScaleThisFrame = kRotationOnlyBlurScale;
-    }
-
-    const D3DXVECTOR3 prevTargetForBlur = currentLookAt - targetMotion * motionScale;
-    const float prevDistanceForBlur = currentDistance - distanceMotion * motionScale;
-    const float prevYawForBlur = currentYaw - yawMotion * motionScale;
-    const float prevPitchForBlur = currentPitch - pitchMotion * motionScale;
-    D3DXVECTOR3 prevDirectionForBlur = currentDirection;
-    if (hasRotationMotion)
-    {
-        prevDirectionForBlur = GetDirectionFromYawPitch(prevYawForBlur, prevPitchForBlur);
-    }
-    const D3DXVECTOR3 prevEyeForBlur = prevTargetForBlur - prevDirectionForBlur * prevDistanceForBlur;
-    const D3DXVECTOR3 up(0.0f, 1.0f, 0.0f);
-
-    D3DXMATRIX prevView { };
-    D3DXMatrixLookAtLH(&prevView, &prevEyeForBlur, &prevTargetForBlur, &up);
-    m_motionBlurPrevViewProj = prevView * Camera::GetProjMatrix();
 }
 
 void PostEffectMotionBlurCamera::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
@@ -310,7 +183,6 @@ void PostEffectMotionBlurCamera::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource
     if (!m_hasPrevViewProj)
     {
         m_prevViewProj = currentViewProj;
-        m_motionBlurPrevViewProj = currentViewProj;
     }
 
     const D3DXVECTOR4 texelSize(1.0f / static_cast<float>(Common::ScreenW()),
@@ -318,12 +190,11 @@ void PostEffectMotionBlurCamera::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource
                                 static_cast<float>(Common::ScreenW()),
                                 static_cast<float>(Common::ScreenH()));
 
-    const float blurScale = 2.0f * m_motionBlurScaleThisFrame;
     m_d3dEffect->SetTexture("texture1", texSource);
     m_d3dEffect->SetTexture("depthTexture", depthTexture);
     m_d3dEffect->SetMatrix("g_matInvCurrentViewProj", &invCurrentViewProj);
-    m_d3dEffect->SetMatrix("g_matPrevViewProj", &m_motionBlurPrevViewProj);
-    m_d3dEffect->SetFloat("g_fBlurScale", blurScale);
+    m_d3dEffect->SetMatrix("g_matPrevViewProj", &m_prevViewProj);
+    m_d3dEffect->SetFloat("g_fBlurScale", 2.0f);
     m_d3dEffect->SetFloat("g_fMaxBlurPixels", m_maxBlurPixels);
     m_d3dEffect->SetInt("g_iSampleCount", m_sampleCount);
     m_d3dEffect->SetInt("g_iMotionBlurEnabled", 1);
