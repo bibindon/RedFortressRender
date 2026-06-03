@@ -987,6 +987,24 @@ void MeshMixSkinAnim::RenderMeshContainerToEffect(const LPD3DXMESHCONTAINER cont
                 continue;
             }
 
+            if (boneId >= container->m_boneOffsetMatrices.size())
+            {
+                OutputDebugStringW(L"RenderMeshContainerToEffect: boneId >= m_boneOffsetMatrices.size()\n");
+                continue;
+            }
+
+            if (boneId >= container->m_frameCombinedMatrix.size())
+            {
+                OutputDebugStringW(L"RenderMeshContainerToEffect: boneId >= m_frameCombinedMatrix.size()\n");
+                continue;
+            }
+
+            if (container->m_frameCombinedMatrix[boneId] == nullptr)
+            {
+                OutputDebugStringW(L"RenderMeshContainerToEffect: frame matrix pointer is null\n");
+                continue;
+            }
+
             m_matWorldArray[k] = container->m_boneOffsetMatrices[boneId] *
                                   (*container->m_frameCombinedMatrix[boneId]);
         }
@@ -1051,6 +1069,24 @@ void MeshMixSkinAnim::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBas
             const DWORD boneId = boneCombination[i].BoneId[k];
             if (boneId == UINT_MAX)
             {
+                continue;
+            }
+
+            if (boneId >= container->m_boneOffsetMatrices.size())
+            {
+                OutputDebugStringW(L"RenderMeshContainer: boneId >= m_boneOffsetMatrices.size()\n");
+                continue;
+            }
+
+            if (boneId >= container->m_frameCombinedMatrix.size())
+            {
+                OutputDebugStringW(L"RenderMeshContainer: boneId >= m_frameCombinedMatrix.size()\n");
+                continue;
+            }
+
+            if (container->m_frameCombinedMatrix[boneId] == nullptr)
+            {
+                OutputDebugStringW(L"RenderMeshContainer: frame matrix pointer is null\n");
                 continue;
             }
 
@@ -1179,14 +1215,19 @@ HRESULT MeshMixSkinAnim::AllocateBoneMatrix(LPD3DXMESHCONTAINER containerBase)
     DWORD boneCount = container->pSkinInfo->GetNumBones();
     container->m_frameCombinedMatrix.resize(boneCount);
 
-    DWORD MAX_MATRICES = 16;
-    if (boneCount > MAX_MATRICES)
+    DWORD requiredSize = container->m_paletteSize;
+    if (requiredSize == 0)
     {
-        m_matWorldArray.resize(MAX_MATRICES);
+        requiredSize = boneCount;
     }
-    else
+    if (requiredSize == 0)
     {
-        m_matWorldArray.resize(boneCount);
+        requiredSize = 1;
+    }
+
+    if (m_matWorldArray.size() < requiredSize)
+    {
+        m_matWorldArray.resize(requiredSize);
     }
 
     m_D3DEffect->SetInt("g_currentBoneIndex", container->m_influenceCount - 1);
@@ -1211,9 +1252,20 @@ HRESULT MeshMixSkinAnim::AllocateBoneMatrix(LPD3DXMESHCONTAINER containerBase)
 
 HRESULT MeshMixSkinAnim::AllocateAllBoneMatrix(LPD3DXFRAME frame)
 {
-    if (frame->pMeshContainer != nullptr && FAILED(AllocateBoneMatrix(frame->pMeshContainer)))
+    if (frame == nullptr)
     {
-        return E_FAIL;
+        return S_OK;
+    }
+
+    LPD3DXMESHCONTAINER container = frame->pMeshContainer;
+    while (container != nullptr)
+    {
+        if (FAILED(AllocateBoneMatrix(container)))
+        {
+            return E_FAIL;
+        }
+
+        container = container->pNextMeshContainer;
     }
 
     if (frame->pFrameSibling != nullptr && FAILED(AllocateAllBoneMatrix(frame->pFrameSibling)))
