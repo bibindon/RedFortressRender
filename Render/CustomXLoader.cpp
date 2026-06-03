@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <iterator>
+#include <map>
 #include <set>
 #include <string>
 
@@ -1049,6 +1050,253 @@ bool CreateCustomXMeshContainer(const std::string& meshName,
     return SUCCEEDED(hr) && *meshContainer != nullptr;
 }
 
+constexpr DWORD MAX_SKININFO_BONES_PER_PART = 240;
+
+void OutputDebugLog(const std::wstring& message)
+{
+    OutputDebugStringW((L"[CustomXLoader] " + message + L"\n").c_str());
+}
+
+bool SplitCustomXMeshDataByBoneLimit(const CustomXMeshData& sourceMeshData,
+                                     const DWORD maxBonesPerPart,
+                                     std::vector<CustomXMeshData>& outMeshParts)
+{
+    if (sourceMeshData.positions.empty() || sourceMeshData.faces.empty() ||
+        sourceMeshData.skinWeights.empty())
+    {
+        return false;
+    }
+
+    OutputDebugLog(L"SplitMesh: skinWeights=" + std::to_wstring(sourceMeshData.skinWeights.size()) +
+                   L" faces=" + std::to_wstring(sourceMeshData.faces.size()) +
+                   L" vertices=" + std::to_wstring(sourceMeshData.positions.size()));
+
+    std::vector<std::vector<DWORD>> vertexToBones(sourceMeshData.positions.size());
+    for (DWORD boneIndex = 0; boneIndex < static_cast<DWORD>(sourceMeshData.skinWeights.size()); ++boneIndex)
+    {
+        const CustomXSkinWeightsData& sw = sourceMeshData.skinWeights[boneIndex];
+        for (std::size_t weightIndex = 0; weightIndex < sw.vertexIndices.size(); ++weightIndex)
+        {
+            if (sw.weights[weightIndex] <= 0.000001f)
+            {
+                continue;
+            }
+
+            const DWORD vertexIndex = sw.vertexIndices[weightIndex];
+            if (vertexIndex < sourceMeshData.positions.size())
+            {
+                vertexToBones[vertexIndex].push_back(boneIndex);
+            }
+        }
+    }
+
+    struct TriangleInfo
+    {
+        DWORD v0;
+        DWORD v1;
+        DWORD v2;
+        DWORD materialIndex;
+    };
+
+    std::vector<TriangleInfo> triangles;
+    for (std::size_t faceIndex = 0; faceIndex < sourceMeshData.faces.size(); ++faceIndex)
+    {
+        const std::vector<DWORD>& face = sourceMeshData.faces[faceIndex];
+        if (face.size() < 3)
+        {
+            continue;
+        }
+
+        DWORD materialIndex = 0;
+        if (faceIndex < sourceMeshData.faceMaterialIndices.size())
+        {
+            materialIndex = sourceMeshData.faceMaterialIndices[faceIndex];
+        }
+
+        for (std::size_t i = 1; i + 1 < face.size(); ++i)
+        {
+            TriangleInfo tri;
+            tri.v0 = face[0];
+            tri.v1 = face[i];
+            tri.v2 = face[i + 1];
+            tri.materialIndex = materialIndex;
+            triangles.push_back(tri);
+        }
+    }
+
+    std::vector<std::vector<TriangleInfo>> partTrianglesList;
+    {
+        std::vector<TriangleInfo> currentPartTriangles;
+        std::set<DWORD> currentPartBones;
+        std::size_t triangleIndex = 0;
+
+        while (triangleIndex < triangles.size())
+        {
+            const TriangleInfo& tri = triangles[triangleIndex];
+            std::set<DWORD> triBones;
+            for (DWORD vertexIndex : {tri.v0, tri.v1, tri.v2})
+            {
+                for (DWORD boneIndex : vertexToBones[vertexIndex])
+                {
+                    triBones.insert(boneIndex);
+                }
+            }
+
+            if (triBones.size() > maxBonesPerPart)
+            {
+                OutputDebugLog(L"SplitMesh FAILED: triangle has " +
+                               std::to_wstring(triBones.size()) +
+                               L" bones, exceeds maxBonesPerPart=" +
+                               std::to_wstring(maxBonesPerPart));
+                return false;
+            }
+
+            std::set<DWORD> mergedBones = currentPartBones;
+            for (DWORD boneIndex : triBones)
+            {
+                mergedBones.insert(boneIndex);
+            }
+
+            if (mergedBones.size() <= maxBonesPerPart && !currentPartTriangles.empty())
+            {
+                currentPartBones = mergedBones;
+                currentPartTriangles.push_back(tri);
+                ++triangleIndex;
+                continue;
+            }
+
+            if (!currentPartTriangles.empty())
+            {
+                partTrianglesList.push_back(currentPartTriangles);
+                currentPartTriangles.clear();
+                currentPartBones.clear();
+            }
+
+            currentPartBones = triBones;
+            currentPartTriangles.push_back(tri);
+            ++triangleIndex;
+        }
+
+        if (!currentPartTriangles.empty())
+        {
+            partTrianglesList.push_back(currentPartTriangles);
+        }
+    }
+
+    OutputDebugLog(L"SplitMesh: parts=" + std::to_wstring(partTrianglesList.size()));
+
+    for (std::size_t partIndex = 0; partIndex < partTrianglesList.size(); ++partIndex)
+    {
+        const std::vector<TriangleInfo>& partTriangles = partTrianglesList[partIndex];
+
+        std::map<DWORD, DWORD> vertexRemap;
+        std::vector<D3DXVECTOR3> partPositions;
+        std::vector<D3DXVECTOR2> partTexCoords;
+
+        for (const TriangleInfo& tri : partTriangles)
+        {
+            for (DWORD vertexIndex : {tri.v0, tri.v1, tri.v2})
+            {
+                if (vertexRemap.count(vertexIndex) == 0)
+                {
+                    DWORD localIndex = static_cast<DWORD>(partPositions.size());
+                    vertexRemap[vertexIndex] = localIndex;
+                    partPositions.push_back(sourceMeshData.positions[vertexIndex]);
+
+                    if (vertexIndex < sourceMeshData.texCoords.size())
+                    {
+                        partTexCoords.push_back(sourceMeshData.texCoords[vertexIndex]);
+                    }
+                    else
+                    {
+                        partTexCoords.push_back(D3DXVECTOR2(0.0f, 0.0f));
+                    }
+                }
+            }
+        }
+
+        std::set<DWORD> partBones;
+        for (const TriangleInfo& tri : partTriangles)
+        {
+            for (DWORD vertexIndex : {tri.v0, tri.v1, tri.v2})
+            {
+                for (DWORD boneIndex : vertexToBones[vertexIndex])
+                {
+                    partBones.insert(boneIndex);
+                }
+            }
+        }
+
+        CustomXMeshData partMeshData;
+        partMeshData.positions = partPositions;
+        partMeshData.texCoords = partTexCoords;
+        partMeshData.materials = sourceMeshData.materials;
+
+        for (const TriangleInfo& tri : partTriangles)
+        {
+            std::vector<DWORD> face;
+            face.push_back(vertexRemap[tri.v0]);
+            face.push_back(vertexRemap[tri.v1]);
+            face.push_back(vertexRemap[tri.v2]);
+            partMeshData.faces.push_back(face);
+            partMeshData.faceMaterialIndices.push_back(tri.materialIndex);
+        }
+
+        std::map<DWORD, DWORD> oldBoneToLocalBone;
+        DWORD localBoneIndex = 0;
+        for (DWORD oldBoneIndex : partBones)
+        {
+            oldBoneToLocalBone[oldBoneIndex] = localBoneIndex;
+            ++localBoneIndex;
+        }
+
+        for (DWORD oldBoneIndex : partBones)
+        {
+            const CustomXSkinWeightsData& sw = sourceMeshData.skinWeights[oldBoneIndex];
+            CustomXSkinWeightsData localSw;
+            localSw.boneName = sw.boneName;
+            localSw.offsetMatrix = sw.offsetMatrix;
+
+            for (std::size_t weightIndex = 0; weightIndex < sw.vertexIndices.size(); ++weightIndex)
+            {
+                if (sw.weights[weightIndex] <= 0.000001f)
+                {
+                    continue;
+                }
+
+                DWORD oldVertexIndex = sw.vertexIndices[weightIndex];
+                if (vertexRemap.count(oldVertexIndex) > 0)
+                {
+                    localSw.vertexIndices.push_back(vertexRemap[oldVertexIndex]);
+                    localSw.weights.push_back(sw.weights[weightIndex]);
+                }
+            }
+
+            if (!localSw.vertexIndices.empty())
+            {
+                partMeshData.skinWeights.push_back(localSw);
+            }
+        }
+
+        OutputDebugLog(L"SplitMesh: part[" + std::to_wstring(partIndex) + L"] vertices=" +
+                       std::to_wstring(partMeshData.positions.size()) +
+                       L" triangles=" + std::to_wstring(partTriangles.size()) +
+                       L" bones=" + std::to_wstring(partMeshData.skinWeights.size()));
+
+        if (partMeshData.skinWeights.size() > maxBonesPerPart)
+        {
+            OutputDebugLog(L"SplitMesh FAILED: part[" + std::to_wstring(partIndex) +
+                           L"] has " + std::to_wstring(partMeshData.skinWeights.size()) +
+                           L" bones, exceeds limit");
+            return false;
+        }
+
+        outMeshParts.push_back(partMeshData);
+    }
+
+    return true;
+}
+
 bool ParseCustomXMesh(XTextTokenizer& tokenizer,
                       SkinAnimMeshFrame* frame,
                       SkinAnimMeshAlloc* allocator)
@@ -1121,15 +1369,45 @@ bool ParseCustomXMesh(XTextTokenizer& tokenizer,
 
         if (token == "}")
         {
-            LPD3DXMESHCONTAINER meshContainer = nullptr;
             if (allocator != nullptr)
             {
-                if (!CreateCustomXMeshContainer(meshName, meshData, allocator, &meshContainer))
+                if (meshData.skinWeights.size() <= MAX_SKININFO_BONES_PER_PART)
                 {
-                    return false;
-                }
+                    LPD3DXMESHCONTAINER meshContainer = nullptr;
+                    if (!CreateCustomXMeshContainer(meshName, meshData, allocator, &meshContainer))
+                    {
+                        return false;
+                    }
 
-                AppendCustomXMeshContainer(frame, meshContainer);
+                    AppendCustomXMeshContainer(frame, meshContainer);
+                }
+                else
+                {
+                    std::vector<CustomXMeshData> meshParts;
+                    if (!SplitCustomXMeshDataByBoneLimit(meshData,
+                                                         MAX_SKININFO_BONES_PER_PART,
+                                                         meshParts))
+                    {
+                        return false;
+                    }
+
+                    for (std::size_t partIndex = 0; partIndex < meshParts.size(); ++partIndex)
+                    {
+                        LPD3DXMESHCONTAINER meshContainer = nullptr;
+                        const std::string partMeshName =
+                            meshName + "_part_" + std::to_string(partIndex);
+
+                        if (!CreateCustomXMeshContainer(partMeshName,
+                                                        meshParts[partIndex],
+                                                        allocator,
+                                                        &meshContainer))
+                        {
+                            return false;
+                        }
+
+                        AppendCustomXMeshContainer(frame, meshContainer);
+                    }
+                }
             }
             return true;
         }
