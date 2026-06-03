@@ -17,10 +17,16 @@ void WriteMeshMixSkinAnimLoadLog(const std::wstring& message)
     const std::wstring line = L"[MeshMixSkinAnim] " + message + L"\r\n";
     OutputDebugStringW(line.c_str());
 
-    std::wofstream file(Util::GetExeDir() + L"MeshMixSkinAnimLoad.log", std::ios::app);
-    if (file)
+    static std::wofstream file;
+    if (!file.is_open())
+    {
+        file.open(Util::GetExeDir() + L"MeshMixSkinAnimLoad.log", std::ios::app);
+    }
+
+    if (file.is_open())
     {
         file << line;
+        file.flush();
     }
 }
 
@@ -114,6 +120,69 @@ public:
 
         token.assign(m_text.begin() + begin, m_text.begin() + m_pos);
         return !token.empty();
+    }
+
+    bool SkipSeparatorsAndReadFloat(float& value)
+    {
+        while (m_pos < m_text.size())
+        {
+            SkipWhitespace();
+            if (m_pos >= m_text.size())
+            {
+                return false;
+            }
+
+            const char ch = m_text[m_pos];
+            if (ch == ',' || ch == ';')
+            {
+                ++m_pos;
+                continue;
+            }
+
+            char* endPtr = nullptr;
+            value = std::strtof(m_text.c_str() + m_pos, &endPtr);
+            if (endPtr == m_text.c_str() + m_pos)
+            {
+                return false;
+            }
+
+            m_pos = static_cast<std::size_t>(endPtr - m_text.c_str());
+            return true;
+        }
+
+        return false;
+    }
+
+    bool SkipSeparatorsAndReadUInt(DWORD& value)
+    {
+        while (m_pos < m_text.size())
+        {
+            SkipWhitespace();
+            if (m_pos >= m_text.size())
+            {
+                return false;
+            }
+
+            const char ch = m_text[m_pos];
+            if (ch == ',' || ch == ';')
+            {
+                ++m_pos;
+                continue;
+            }
+
+            char* endPtr = nullptr;
+            const unsigned long parsed = std::strtoul(m_text.c_str() + m_pos, &endPtr, 10);
+            if (endPtr == m_text.c_str() + m_pos)
+            {
+                return false;
+            }
+
+            m_pos = static_cast<std::size_t>(endPtr - m_text.c_str());
+            value = static_cast<DWORD>(parsed);
+            return true;
+        }
+
+        return false;
     }
 
 private:
@@ -290,44 +359,12 @@ bool ReadExpectedXToken(XTextTokenizer& tokenizer, const char* expected)
 
 bool ReadXFloatToken(XTextTokenizer& tokenizer, float& value)
 {
-    std::string token;
-    while (tokenizer.ReadToken(token))
-    {
-        if (IsXTextSeparatorToken(token))
-        {
-            continue;
-        }
-
-        char* endPtr = nullptr;
-        value = std::strtof(token.c_str(), &endPtr);
-        return endPtr != token.c_str();
-    }
-
-    return false;
+    return tokenizer.SkipSeparatorsAndReadFloat(value);
 }
 
 bool ReadXUIntToken(XTextTokenizer& tokenizer, DWORD& value)
 {
-    std::string token;
-    while (tokenizer.ReadToken(token))
-    {
-        if (IsXTextSeparatorToken(token))
-        {
-            continue;
-        }
-
-        char* endPtr = nullptr;
-        const unsigned long parsed = std::strtoul(token.c_str(), &endPtr, 10);
-        if (endPtr == token.c_str())
-        {
-            return false;
-        }
-
-        value = static_cast<DWORD>(parsed);
-        return true;
-    }
-
-    return false;
+    return tokenizer.SkipSeparatorsAndReadUInt(value);
 }
 
 bool ReadXStringToken(XTextTokenizer& tokenizer, std::string& value)
