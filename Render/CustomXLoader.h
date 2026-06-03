@@ -10,6 +10,12 @@
 namespace NSRender
 {
 
+enum class CustomXLoadPurpose
+{
+    MeshAndAnimation,
+    AnimationOnly
+};
+
 struct CustomXFrameHierarchyLoadResult
 {
     HRESULT hr = E_FAIL;
@@ -50,7 +56,8 @@ CustomXFrameHierarchyLoadResult LoadCustomXFrameHierarchyForTest(const std::wstr
 HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
                                           SkinAnimMeshAlloc* allocator,
                                           LPD3DXFRAME* frameRoot,
-                                          std::vector<CustomXAnimationSet>* outAnimationSets = nullptr);
+                                          std::vector<CustomXAnimationSet>* outAnimationSets = nullptr,
+                                          CustomXLoadPurpose loadPurpose = CustomXLoadPurpose::MeshAndAnimation);
 
 HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimationSet>& animationSets,
                                                  LPD3DXFRAME frameRoot,

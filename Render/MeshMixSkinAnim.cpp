@@ -751,7 +751,8 @@ bool MeshMixSkinAnim::LoadAnimationClip(const AnimationInfo& info)
     HRESULT hr = LoadMeshHierarchy(info.filePath,
                                    *clip.allocator,
                                    &clip.frameRoot,
-                                   &clip.controller);
+                                   &clip.controller,
+                                   CustomXLoadPurpose::AnimationOnly);
     if (FAILED(hr) || clip.frameRoot == nullptr || clip.controller == nullptr)
     {
         SAFE_RELEASE(clip.controller);
@@ -776,7 +777,8 @@ bool MeshMixSkinAnim::LoadAnimationClip(const AnimationInfo& info)
 HRESULT MeshMixSkinAnim::LoadMeshHierarchy(const std::wstring& filePath,
                                            SkinAnimMeshAlloc& allocator,
                                            LPD3DXFRAME* frameRoot,
-                                           LPD3DXANIMATIONCONTROLLER* animationController)
+                                           LPD3DXANIMATIONCONTROLLER* animationController,
+                                           CustomXLoadPurpose loadPurpose)
 {
     if (m_loadMode == MeshMixSkinAnimLoadMode::Custom)
     {
@@ -784,7 +786,8 @@ HRESULT MeshMixSkinAnim::LoadMeshHierarchy(const std::wstring& filePath,
         return LoadMeshHierarchyWithCustomLoader(filePath,
                                                  allocator,
                                                  frameRoot,
-                                                 animationController);
+                                                 animationController,
+                                                 loadPurpose);
     }
 
     WriteMeshMixSkinAnimLoadLog(L"LoadMeshHierarchy route=DirectX Path=" + filePath);
@@ -809,9 +812,10 @@ HRESULT MeshMixSkinAnim::LoadMeshHierarchyWithDirectX(const std::wstring& filePa
 }
 
 HRESULT MeshMixSkinAnim::LoadMeshHierarchyWithCustomLoader(const std::wstring& filePath,
-                                                        SkinAnimMeshAlloc& allocator,
-                                                        LPD3DXFRAME* frameRoot,
-                                                        LPD3DXANIMATIONCONTROLLER* animationController)
+                                                         SkinAnimMeshAlloc& allocator,
+                                                         LPD3DXFRAME* frameRoot,
+                                                         LPD3DXANIMATIONCONTROLLER* animationController,
+                                                         CustomXLoadPurpose loadPurpose)
 {
     if (animationController != nullptr)
     {
@@ -837,7 +841,7 @@ HRESULT MeshMixSkinAnim::LoadMeshHierarchyWithCustomLoader(const std::wstring& f
                                 std::istreambuf_iterator<char>());
 
     std::vector<CustomXAnimationSet> animationSets;
-    const HRESULT hr = LoadCustomXFrameHierarchyFromText(fileText, &allocator, frameRoot, &animationSets);
+    const HRESULT hr = LoadCustomXFrameHierarchyFromText(fileText, &allocator, frameRoot, &animationSets, loadPurpose);
     WriteMeshMixSkinAnimLoadLog(L"Custom loader result. Path=" + filePath +
                                 L" HR=" + FormatHRESULT(hr) +
                                 L" FrameRoot=" + std::to_wstring(reinterpret_cast<std::uintptr_t>(*frameRoot)) +

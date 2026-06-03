@@ -108,17 +108,19 @@ private:
     void RenderFrameToEffect(const LPD3DXFRAME frame, LPD3DXEFFECT effect);
     void RenderMeshContainerToEffect(const LPD3DXMESHCONTAINER containerBase, LPD3DXEFFECT effect);
     HRESULT LoadMeshHierarchy(const std::wstring& filePath,
-                              SkinAnimMeshAlloc& allocator,
-                              LPD3DXFRAME* frameRoot,
-                              LPD3DXANIMATIONCONTROLLER* animationController);
+                               SkinAnimMeshAlloc& allocator,
+                               LPD3DXFRAME* frameRoot,
+                               LPD3DXANIMATIONCONTROLLER* animationController,
+                               CustomXLoadPurpose loadPurpose = CustomXLoadPurpose::MeshAndAnimation);
     HRESULT LoadMeshHierarchyWithDirectX(const std::wstring& filePath,
-                                         SkinAnimMeshAlloc& allocator,
-                                         LPD3DXFRAME* frameRoot,
-                                         LPD3DXANIMATIONCONTROLLER* animationController);
+                                          SkinAnimMeshAlloc& allocator,
+                                          LPD3DXFRAME* frameRoot,
+                                          LPD3DXANIMATIONCONTROLLER* animationController);
     HRESULT LoadMeshHierarchyWithCustomLoader(const std::wstring& filePath,
-                                              SkinAnimMeshAlloc& allocator,
-                                              LPD3DXFRAME* frameRoot,
-                                              LPD3DXANIMATIONCONTROLLER* animationController);
+                                               SkinAnimMeshAlloc& allocator,
+                                               LPD3DXFRAME* frameRoot,
+                                               LPD3DXANIMATIONCONTROLLER* animationController,
+                                               CustomXLoadPurpose loadPurpose = CustomXLoadPurpose::MeshAndAnimation);
     HRESULT AllocateBoneMatrix(LPD3DXMESHCONTAINER containerBase);
     HRESULT AllocateAllBoneMatrix(LPD3DXFRAME frame);
     void ReleaseMeshAllocator(const LPD3DXFRAME frame);

@@ -1059,9 +1059,9 @@ bool ParseCustomXMesh(XTextTokenizer& tokenizer,
     return false;
 }
 
-bool ParseCustomXFrameBody(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame, SkinAnimMeshAlloc* allocator);
+bool ParseCustomXFrameBody(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame, SkinAnimMeshAlloc* allocator, CustomXLoadPurpose loadPurpose);
 
-SkinAnimMeshFrame* ParseCustomXFrame(XTextTokenizer& tokenizer, SkinAnimMeshAlloc* allocator)
+SkinAnimMeshFrame* ParseCustomXFrame(XTextTokenizer& tokenizer, SkinAnimMeshAlloc* allocator, CustomXLoadPurpose loadPurpose)
 {
     std::string frameName;
     if (!tokenizer.ReadToken(frameName))
@@ -1075,7 +1075,7 @@ SkinAnimMeshFrame* ParseCustomXFrame(XTextTokenizer& tokenizer, SkinAnimMeshAllo
     }
 
     SkinAnimMeshFrame* frame = CreateCustomXFrame(frameName);
-    if (!ParseCustomXFrameBody(tokenizer, frame, allocator))
+    if (!ParseCustomXFrameBody(tokenizer, frame, allocator, loadPurpose))
     {
         SAFE_DELETE_ARRAY(frame->Name);
         SAFE_DELETE(frame);
@@ -1085,7 +1085,7 @@ SkinAnimMeshFrame* ParseCustomXFrame(XTextTokenizer& tokenizer, SkinAnimMeshAllo
     return frame;
 }
 
-bool ParseCustomXFrameBody(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame, SkinAnimMeshAlloc* allocator)
+bool ParseCustomXFrameBody(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame, SkinAnimMeshAlloc* allocator, CustomXLoadPurpose loadPurpose)
 {
     std::string token;
     while (tokenizer.ReadToken(token))
@@ -1102,7 +1102,7 @@ bool ParseCustomXFrameBody(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame, 
 
         if (token == "Frame")
         {
-            SkinAnimMeshFrame* child = ParseCustomXFrame(tokenizer, allocator);
+            SkinAnimMeshFrame* child = ParseCustomXFrame(tokenizer, allocator, loadPurpose);
             if (child == nullptr)
             {
                 return false;
@@ -1123,6 +1123,15 @@ bool ParseCustomXFrameBody(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame, 
 
         if (token == "Mesh")
         {
+            if (loadPurpose == CustomXLoadPurpose::AnimationOnly)
+            {
+                if (!SkipCustomXObject(tokenizer))
+                {
+                    return false;
+                }
+                continue;
+            }
+
             if (!ParseCustomXMesh(tokenizer, frame, allocator))
             {
                 return false;
@@ -1718,7 +1727,8 @@ HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimati
 HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
                                           SkinAnimMeshAlloc* allocator,
                                           LPD3DXFRAME* frameRoot,
-                                          std::vector<CustomXAnimationSet>* outAnimationSets)
+                                          std::vector<CustomXAnimationSet>* outAnimationSets,
+                                          CustomXLoadPurpose loadPurpose)
 {
     if (frameRoot == nullptr)
     {
@@ -1747,7 +1757,7 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
         if (token == "Frame")
         {
             WriteMeshMixSkinAnimLoadLog(L"Custom parser found top-level Frame.");
-            SkinAnimMeshFrame* frame = ParseCustomXFrame(tokenizer, allocator);
+            SkinAnimMeshFrame* frame = ParseCustomXFrame(tokenizer, allocator, loadPurpose);
             if (frame == nullptr)
             {
                 WriteMeshMixSkinAnimLoadLog(L"Custom parser failed while parsing top-level Frame.");
