@@ -145,6 +145,7 @@ private:
     bool m_ignoreTransparentMaterial = false;
     int m_activeAnimationClipIndex = -1;
     MeshMixSkinAnimLoadMode m_loadMode = MeshMixSkinAnimLoadMode::DirectX;
+    bool m_hasAnimationController = false;
     stMeshParam m_param;
     AnimSetMap m_animSetMap;
     AnimController m_animController;

@@ -461,6 +461,8 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     CreateSettingsCheckbox(hWnd, 31302, L"Clip", 476, y, 52, 22);
     CreateSettingsCheckbox(hWnd, 31303, L"NoAlpha0", 534, y, 76, 22);
     y += 28;
+    CreateSettingsCheckbox(hWnd, 31304, L"Use Custom X Loader", 24, y, 170, 22);
+    y += 28;
     CreateSettingsButton(hWnd, L"Load Move...", 24, y, 116, 24, 31333);
     CreateSettingsButton(hWnd, L"Reset Move", 148, y, 88, 24, 31334);
     y += 28;

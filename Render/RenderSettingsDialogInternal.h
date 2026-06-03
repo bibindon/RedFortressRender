@@ -68,6 +68,7 @@ struct RenderSettingsDialogState
     std::wstring meshMixSkinAnimPath;
     std::wstring meshMixSkinNonAnimPath;
     std::wstring meshMixSkinAnimOnlyPath;
+    bool useCustomMeshMixSkinAnimLoader = false;
     std::wstring xFileListPath;
     std::wstring xFileListMovePath;
     std::wstring maskedGaussianMaskPath;

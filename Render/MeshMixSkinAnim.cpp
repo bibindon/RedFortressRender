@@ -2,9 +2,14 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <cstdio>
+#include <cstdint>
+#include <cstdlib>
 #include <exception>
 #include <fstream>
 #include <iterator>
+#include <string>
 
 #include "Camera.h"
 #include "Common.h"
@@ -211,6 +216,402 @@ double GetAnimationControllerDuration(LPD3DXANIMATIONCONTROLLER controller)
     SAFE_RELEASE(animationSet);
     return duration;
 }
+
+void WriteMeshMixSkinAnimLoadLog(const std::wstring& message)
+{
+    const std::wstring line = L"[MeshMixSkinAnim] " + message + L"\r\n";
+    OutputDebugStringW(line.c_str());
+
+    std::wofstream file(Util::GetExeDir() + L"MeshMixSkinAnimLoad.log", std::ios::app);
+    if (file)
+    {
+        file << line;
+    }
+}
+
+std::wstring FormatHRESULT(const HRESULT hr)
+{
+    wchar_t buffer[32] { };
+    std::swprintf(buffer, _countof(buffer), L"0x%08X", static_cast<unsigned int>(hr));
+    return buffer;
+}
+
+std::wstring AnsiTextToWideText(const std::string& text)
+{
+    if (text.empty())
+    {
+        return L"";
+    }
+
+    const int required = MultiByteToWideChar(CP_UTF8, 0, text.c_str(), static_cast<int>(text.size()), nullptr, 0);
+    if (required <= 0)
+    {
+        std::wstring fallback;
+        fallback.reserve(text.size());
+        for (char ch : text)
+        {
+            fallback.push_back(static_cast<unsigned char>(ch));
+        }
+        return fallback;
+    }
+
+    std::wstring result(required, L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, text.c_str(), static_cast<int>(text.size()), &result[0], required);
+    return result;
+}
+
+class XTextTokenizer
+{
+public:
+    explicit XTextTokenizer(const std::string& text)
+        : m_text(text)
+    {
+    }
+
+    bool ReadToken(std::string& token)
+    {
+        token.clear();
+        SkipWhitespace();
+        if (m_pos >= m_text.size())
+        {
+            return false;
+        }
+
+        const char ch = m_text[m_pos];
+        if (ch == '{' || ch == '}')
+        {
+            token.push_back(ch);
+            ++m_pos;
+            return true;
+        }
+
+        if (ch == ',' || ch == ';')
+        {
+            token.push_back(ch);
+            ++m_pos;
+            return true;
+        }
+
+        if (ch == '"')
+        {
+            return ReadQuotedToken(token);
+        }
+
+        const std::size_t begin = m_pos;
+        while (m_pos < m_text.size())
+        {
+            const char current = m_text[m_pos];
+            if (current == '{' ||
+                current == '}' ||
+                current == ',' ||
+                current == ';' ||
+                current == '"' ||
+                IsWhitespace(current))
+            {
+                break;
+            }
+
+            ++m_pos;
+        }
+
+        token.assign(m_text.begin() + begin, m_text.begin() + m_pos);
+        return !token.empty();
+    }
+
+private:
+    static bool IsWhitespace(const char ch)
+    {
+        return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
+    }
+
+    void SkipWhitespace()
+    {
+        while (m_pos < m_text.size() && IsWhitespace(m_text[m_pos]))
+        {
+            ++m_pos;
+        }
+    }
+
+    bool ReadQuotedToken(std::string& token)
+    {
+        ++m_pos;
+        const std::size_t begin = m_pos;
+        while (m_pos < m_text.size() && m_text[m_pos] != '"')
+        {
+            ++m_pos;
+        }
+
+        token.assign(m_text.begin() + begin, m_text.begin() + m_pos);
+        if (m_pos < m_text.size() && m_text[m_pos] == '"')
+        {
+            ++m_pos;
+        }
+
+        return true;
+    }
+
+    const std::string& m_text;
+    std::size_t m_pos = 0;
+};
+
+bool IsXTextSeparatorToken(const std::string& token)
+{
+    return token == "," || token == ";";
+}
+
+SkinAnimMeshFrame* CreateCustomXFrame(const std::string& name)
+{
+    SkinAnimMeshFrame* frame = NEW SkinAnimMeshFrame();
+    ZeroMemory(frame, sizeof(SkinAnimMeshFrame));
+
+    frame->Name = NEW char[name.size() + 1];
+    strcpy_s(frame->Name, name.size() + 1, name.c_str());
+
+    D3DXMatrixIdentity(&frame->TransformationMatrix);
+    D3DXMatrixIdentity(&frame->m_combinedMatrix);
+    return frame;
+}
+
+void AppendCustomXChildFrame(SkinAnimMeshFrame* parent, SkinAnimMeshFrame* child)
+{
+    if (parent->pFrameFirstChild == nullptr)
+    {
+        parent->pFrameFirstChild = child;
+        return;
+    }
+
+    LPD3DXFRAME sibling = parent->pFrameFirstChild;
+    while (sibling->pFrameSibling != nullptr)
+    {
+        sibling = sibling->pFrameSibling;
+    }
+
+    sibling->pFrameSibling = child;
+}
+
+bool ReadExpectedXToken(XTextTokenizer& tokenizer, const char* expected)
+{
+    std::string token;
+    if (!tokenizer.ReadToken(token))
+    {
+        return false;
+    }
+
+    return token == expected;
+}
+
+bool ReadXFloatToken(XTextTokenizer& tokenizer, float& value)
+{
+    std::string token;
+    while (tokenizer.ReadToken(token))
+    {
+        if (IsXTextSeparatorToken(token))
+        {
+            continue;
+        }
+
+        char* endPtr = nullptr;
+        value = std::strtof(token.c_str(), &endPtr);
+        return endPtr != token.c_str();
+    }
+
+    return false;
+}
+
+bool ParseCustomXFrameTransformMatrix(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame)
+{
+    if (!ReadExpectedXToken(tokenizer, "{"))
+    {
+        return false;
+    }
+
+    float values[16] { };
+    for (int i = 0; i < 16; ++i)
+    {
+        if (!ReadXFloatToken(tokenizer, values[i]))
+        {
+            return false;
+        }
+    }
+
+    for (int row = 0; row < 4; ++row)
+    {
+        for (int column = 0; column < 4; ++column)
+        {
+            frame->TransformationMatrix(row, column) = values[(row * 4) + column];
+        }
+    }
+
+    int depth = 1;
+    std::string token;
+    while (depth > 0 && tokenizer.ReadToken(token))
+    {
+        if (token == "{")
+        {
+            ++depth;
+        }
+        else if (token == "}")
+        {
+            --depth;
+        }
+    }
+
+    return depth == 0;
+}
+
+bool SkipCustomXObjectBody(XTextTokenizer& tokenizer)
+{
+    int depth = 1;
+    std::string token;
+    while (depth > 0 && tokenizer.ReadToken(token))
+    {
+        if (token == "{")
+        {
+            ++depth;
+        }
+        else if (token == "}")
+        {
+            --depth;
+        }
+    }
+
+    return depth == 0;
+}
+
+bool SkipCustomXObject(XTextTokenizer& tokenizer)
+{
+    std::string token;
+    while (tokenizer.ReadToken(token))
+    {
+        if (token == "{")
+        {
+            return SkipCustomXObjectBody(tokenizer);
+        }
+
+        if (token == "}")
+        {
+            return true;
+        }
+    }
+
+    return true;
+}
+
+bool ParseCustomXFrameBody(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame);
+
+SkinAnimMeshFrame* ParseCustomXFrame(XTextTokenizer& tokenizer)
+{
+    std::string frameName;
+    if (!tokenizer.ReadToken(frameName))
+    {
+        return nullptr;
+    }
+
+    if (!ReadExpectedXToken(tokenizer, "{"))
+    {
+        return nullptr;
+    }
+
+    SkinAnimMeshFrame* frame = CreateCustomXFrame(frameName);
+    if (!ParseCustomXFrameBody(tokenizer, frame))
+    {
+        SAFE_DELETE_ARRAY(frame->Name);
+        SAFE_DELETE(frame);
+        return nullptr;
+    }
+
+    return frame;
+}
+
+bool ParseCustomXFrameBody(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame)
+{
+    std::string token;
+    while (tokenizer.ReadToken(token))
+    {
+        if (token == "}")
+        {
+            return true;
+        }
+
+        if (token == "Frame")
+        {
+            SkinAnimMeshFrame* child = ParseCustomXFrame(tokenizer);
+            if (child == nullptr)
+            {
+                return false;
+            }
+
+            AppendCustomXChildFrame(frame, child);
+            continue;
+        }
+
+        if (token == "FrameTransformMatrix")
+        {
+            if (!ParseCustomXFrameTransformMatrix(tokenizer, frame))
+            {
+                return false;
+            }
+            continue;
+        }
+
+        if (!SkipCustomXObject(tokenizer))
+        {
+            return false;
+        }
+    }
+
+    return false;
+}
+
+HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText, LPD3DXFRAME* frameRoot)
+{
+    if (frameRoot == nullptr)
+    {
+        WriteMeshMixSkinAnimLoadLog(L"Custom parser failed: frameRoot output pointer is null.");
+        return E_POINTER;
+    }
+
+    *frameRoot = nullptr;
+    WriteMeshMixSkinAnimLoadLog(L"Custom parser start. Bytes=" + std::to_wstring(fileText.size()));
+
+    XTextTokenizer tokenizer(fileText);
+    std::string token;
+    while (tokenizer.ReadToken(token))
+    {
+        if (token != "Frame")
+        {
+            if (token == "template")
+            {
+                if (!SkipCustomXObject(tokenizer))
+                {
+                    WriteMeshMixSkinAnimLoadLog(L"Custom parser failed while skipping template.");
+                    return E_FAIL;
+                }
+            }
+            continue;
+        }
+
+        WriteMeshMixSkinAnimLoadLog(L"Custom parser found top-level Frame.");
+        SkinAnimMeshFrame* frame = ParseCustomXFrame(tokenizer);
+        if (frame == nullptr)
+        {
+            WriteMeshMixSkinAnimLoadLog(L"Custom parser failed while parsing top-level Frame.");
+            return E_FAIL;
+        }
+
+        std::wstring frameName = L"(null)";
+        if (frame->Name != nullptr)
+        {
+            frameName = AnsiTextToWideText(frame->Name);
+        }
+        WriteMeshMixSkinAnimLoadLog(L"Custom parser loaded top-level Frame: " + frameName);
+        *frameRoot = frame;
+        return S_OK;
+    }
+
+    WriteMeshMixSkinAnimLoadLog(L"Custom parser failed: no Frame token was found.");
+    return E_FAIL;
+}
 }
 
 void MeshMixSkinAnim::SetSharedMirrorClipPlane(const bool enabled, const D3DXVECTOR4& plane)
@@ -313,6 +714,10 @@ void MeshMixSkinAnim::Initialize()
                            m_allocator,
                            &m_frameRoot,
                            &tempAnimController);
+    WriteMeshMixSkinAnimLoadLog(L"Primary mesh load result. Path=" + tempPath +
+                                L" HR=" + FormatHRESULT(hr) +
+                                L" FrameRoot=" + std::to_wstring(reinterpret_cast<std::uintptr_t>(m_frameRoot)) +
+                                L" AnimController=" + std::to_wstring(reinterpret_cast<std::uintptr_t>(tempAnimController)));
     if (FAILED(hr) || m_frameRoot == nullptr)
     {
         SAFE_RELEASE(tempAnimController);
@@ -343,7 +748,12 @@ void MeshMixSkinAnim::Initialize()
                                m_animationAllocator,
                                &m_animationFrameRoot,
                                &tempAnimController);
-        if (FAILED(hr) || m_animationFrameRoot == nullptr || tempAnimController == nullptr)
+        WriteMeshMixSkinAnimLoadLog(L"Split animation load result. Path=" + tempPath +
+                                    L" HR=" + FormatHRESULT(hr) +
+                                    L" FrameRoot=" + std::to_wstring(reinterpret_cast<std::uintptr_t>(m_animationFrameRoot)) +
+                                    L" AnimController=" + std::to_wstring(reinterpret_cast<std::uintptr_t>(tempAnimController)));
+        if (FAILED(hr) || m_animationFrameRoot == nullptr ||
+            (tempAnimController == nullptr && m_loadMode != MeshMixSkinAnimLoadMode::Custom))
         {
             SAFE_RELEASE(tempAnimController);
             throw std::exception("Failed to load split animation mesh.");
@@ -357,9 +767,10 @@ void MeshMixSkinAnim::Initialize()
         throw std::exception("Failed to load animation controller.");
     }
 
-    if (m_animationClips.empty())
+    if (m_animationClips.empty() && tempAnimController != nullptr)
     {
         m_animController.Init(tempAnimController, m_animSetMap);
+        m_hasAnimationController = true;
     }
     else
     {
@@ -384,7 +795,10 @@ void MeshMixSkinAnim::UpdateAnimation()
     }
     else
     {
-        m_animController.Update();
+        if (m_hasAnimationController)
+        {
+            m_animController.Update();
+        }
     }
 
     if (!m_animationClips.empty())
@@ -705,12 +1119,14 @@ HRESULT MeshMixSkinAnim::LoadMeshHierarchy(const std::wstring& filePath,
 {
     if (m_loadMode == MeshMixSkinAnimLoadMode::Custom)
     {
+        WriteMeshMixSkinAnimLoadLog(L"LoadMeshHierarchy route=Custom Path=" + filePath);
         return LoadMeshHierarchyWithCustomLoader(filePath,
                                                  allocator,
                                                  frameRoot,
                                                  animationController);
     }
 
+    WriteMeshMixSkinAnimLoadLog(L"LoadMeshHierarchy route=DirectX Path=" + filePath);
     return LoadMeshHierarchyWithDirectX(filePath,
                                         allocator,
                                         frameRoot,
@@ -731,22 +1147,38 @@ HRESULT MeshMixSkinAnim::LoadMeshHierarchyWithDirectX(const std::wstring& filePa
                                       animationController);
 }
 
-HRESULT MeshMixSkinAnim::LoadMeshHierarchyWithCustomLoader(const std::wstring&,
+HRESULT MeshMixSkinAnim::LoadMeshHierarchyWithCustomLoader(const std::wstring& filePath,
                                                            SkinAnimMeshAlloc&,
                                                            LPD3DXFRAME* frameRoot,
                                                            LPD3DXANIMATIONCONTROLLER* animationController)
 {
-    if (frameRoot != nullptr)
-    {
-        *frameRoot = nullptr;
-    }
-
     if (animationController != nullptr)
     {
         *animationController = nullptr;
     }
 
-    return E_NOTIMPL;
+    if (frameRoot == nullptr)
+    {
+        WriteMeshMixSkinAnimLoadLog(L"Custom loader failed: frameRoot output pointer is null.");
+        return E_POINTER;
+    }
+
+    *frameRoot = nullptr;
+
+    std::ifstream file(filePath, std::ios::binary);
+    if (!file)
+    {
+        WriteMeshMixSkinAnimLoadLog(L"Custom loader failed: file open failed. Path=" + filePath);
+        return E_FAIL;
+    }
+
+    const std::string fileText((std::istreambuf_iterator<char>(file)),
+                               std::istreambuf_iterator<char>());
+    const HRESULT hr = LoadCustomXFrameHierarchyFromText(fileText, frameRoot);
+    WriteMeshMixSkinAnimLoadLog(L"Custom loader result. Path=" + filePath +
+                                L" HR=" + FormatHRESULT(hr) +
+                                L" FrameRoot=" + std::to_wstring(reinterpret_cast<std::uintptr_t>(*frameRoot)));
+    return hr;
 }
 
 void MeshMixSkinAnim::ReleaseAnimationClips()
