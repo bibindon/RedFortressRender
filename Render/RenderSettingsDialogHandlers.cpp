@@ -925,9 +925,12 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
             {
                 SetDlgItemTextW(hWnd, 31330, state->meshMixSkinAnimPath.c_str());
                 const D3DXVECTOR3 pos = render->GetLookAtPos();
+                D3DXVECTOR3 forward = render->GetCameraRotate();
+                D3DXVec3Normalize(&forward, &forward);
+                const float yaw = atan2f(forward.x, forward.z);
                 int renderId = render->AddMeshMixSkinAnim(state->meshMixSkinAnimPath,
                                                           pos,
-                                                          D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                                                          D3DXVECTOR3(0.0f, yaw, 0.0f),
                                                           state->modelLoadScale,
                                                           AnimSetMap(),
                                                           -1.0f,
@@ -1000,10 +1003,13 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
             if (!state->meshMixSkinNonAnimPath.empty() && !state->meshMixSkinAnimOnlyPath.empty())
             {
                 const D3DXVECTOR3 pos = render->GetLookAtPos();
+                D3DXVECTOR3 forward = render->GetCameraRotate();
+                D3DXVec3Normalize(&forward, &forward);
+                const float yaw = atan2f(forward.x, forward.z);
                 int renderId = render->AddMeshMixSkinAnim(state->meshMixSkinNonAnimPath,
                                                           state->meshMixSkinAnimOnlyPath,
                                                           pos,
-                                                          D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                                                          D3DXVECTOR3(0.0f, yaw, 0.0f),
                                                           state->modelLoadScale,
                                                           AnimSetMap(),
                                                           -1.0f,
