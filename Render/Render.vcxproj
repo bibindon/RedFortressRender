@@ -32,6 +32,7 @@
     <ClCompile Include="AnimMeshAlloc.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Common.cpp" />
+    <ClCompile Include="CustomXLoader.cpp" />
     <ClCompile Include="GBuffer.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="MeshOld.cpp" />
@@ -90,6 +91,7 @@
     <ClInclude Include="AnimMeshAlloc.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Common.h" />
+    <ClInclude Include="CustomXLoader.h" />
     <ClInclude Include="GBuffer.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="MeshOld.h" />
