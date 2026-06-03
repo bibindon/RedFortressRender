@@ -280,5 +280,43 @@ namespace UnitTest1
             Assert::IsTrue(renderId >= 0);
             Assert::IsTrue(render.RemoveMeshMixSkinAnim(renderId));
         }
+
+        TEST_METHOD(AddMeshMixSkinAnimSingleFileWithCustomLoader)
+        {
+            const std::wstring shaderDirectory = GetCompiledShaderDirectory();
+            Assert::IsFalse(shaderDirectory.empty(), L"MeshMixSkinAnim.cso was not found.");
+
+            CurrentDirectoryScope currentDirectoryScope(shaderDirectory);
+            HiddenWindowScope windowScope;
+            Assert::IsNotNull(windowScope.GetHWnd(), L"Failed to create a hidden test window.");
+
+            D3DDeviceScope deviceScope(windowScope.GetHWnd());
+            Assert::IsTrue(deviceScope.IsValid(), L"Failed to create a Direct3D9 test device.");
+
+            NSRender::Render render;
+            const std::wstring meshPath = GetWolf2FilePath(L"wolfAnim.x");
+            const NSRender::AnimSetMap animSetMap;
+
+            int renderId = -1;
+            try
+            {
+                renderId = render.AddMeshMixSkinAnim(meshPath,
+                                                     D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                                                     D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                                                     1.0f,
+                                                     animSetMap,
+                                                     -1.0f,
+                                                     false,
+                                                     false,
+                                                     NSRender::MeshMixSkinAnimLoadMode::Custom);
+            }
+            catch (...)
+            {
+                Assert::Fail(L"AddMeshMixSkinAnim(wolfAnim.x) should load animations from wolfAnim.csv.");
+            }
+
+            Assert::IsTrue(renderId >= 0);
+            Assert::IsTrue(render.RemoveMeshMixSkinAnim(renderId));
+        }
     };
 }
