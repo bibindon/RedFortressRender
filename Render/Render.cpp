@@ -3693,6 +3693,19 @@ void Render::DrawImage(const std::wstring& text,
     m_sprite.PlaceImage(text, X, Y, transparency);
 }
 
+void Render::DrawImageAutoResize(const std::wstring& text,
+                                             const float X,
+                                             const float Y,
+                                             const int transparency)
+{
+    m_sprite.LoadImage_(text);
+
+    const int baseX = static_cast<int>(X * Common::BASE_W);
+    const int baseY = static_cast<int>(Y * Common::BASE_H);
+
+    m_sprite.PlaceImage(text, baseX, baseY, Common::BASE_W, Common::BASE_H, transparency);
+}
+
 void Render::DrawWorldImage(const std::wstring& filename,
                             const D3DXVECTOR3& worldPos,
                             const int transparency)

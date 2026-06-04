@@ -419,6 +419,11 @@ public:
                    const int Y,
                    const int transparency = 255);
 
+    void DrawImageAutoResize(const std::wstring& text,
+                             const float X,
+                             const float Y,
+                             const int transparency = 255);
+
     void DrawWorldImage(const std::wstring& filename,
                         const D3DXVECTOR3& worldPos,
                         const int transparency = 255);
