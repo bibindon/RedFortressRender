@@ -2772,7 +2772,7 @@ int Render::AddMeshMixSkinAnim(const std::wstring& filePath,
     mesh->SetIgnoreTransparentMaterial(m_meshMixSkinAnimIgnoreTransparentMaterialEnabled);
     try
     {
-        mesh->Initialize();
+        mesh->Initialize(true);
         m_meshMixSkinAnimList.push_back(mesh);
     }
     catch (...)
@@ -2821,7 +2821,7 @@ int Render::AddMeshMixSkinAnim(const std::wstring& meshFilePath,
     mesh->SetIgnoreTransparentMaterial(m_meshMixSkinAnimIgnoreTransparentMaterialEnabled);
     try
     {
-        mesh->Initialize();
+        mesh->Initialize(true);
         m_meshMixSkinAnimList.push_back(mesh);
     }
     catch (...)

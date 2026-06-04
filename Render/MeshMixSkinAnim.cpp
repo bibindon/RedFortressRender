@@ -320,6 +320,11 @@ MeshMixSkinAnim::MeshMixSkinAnim(const std::wstring& meshFilename,
 
 MeshMixSkinAnim::~MeshMixSkinAnim()
 {
+    if (m_loadThread.joinable())
+    {
+        m_loadThread.join();
+    }
+
     SAFE_RELEASE(m_D3DEffect);
     m_animController.Finalize();
     ReleaseAnimationClips();
@@ -337,7 +342,36 @@ MeshMixSkinAnim::~MeshMixSkinAnim()
     }
 }
 
-void MeshMixSkinAnim::Initialize()
+void MeshMixSkinAnim::Initialize(bool async)
+{
+    if (m_bLoaded)
+    {
+        return;
+    }
+
+    if (async)
+    {
+        if (m_loadThread.joinable())
+        {
+            m_loadThread.join();
+        }
+        m_loadThread = std::thread([this]() { InitializeInternal(); });
+    }
+    else
+    {
+        InitializeInternal();
+    }
+}
+
+void MeshMixSkinAnim::WaitForLoad()
+{
+    if (m_loadThread.joinable())
+    {
+        m_loadThread.join();
+    }
+}
+
+void MeshMixSkinAnim::InitializeInternal()
 {
     HRESULT hr = E_FAIL;
     std::wstring tempPath = ResolveRuntimeFilePath(SHADER_FILENAME);

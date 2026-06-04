@@ -2,7 +2,9 @@
 
 #include <d3d9.h>
 #include <d3dx9.h>
+#include <atomic>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "Common.h"
@@ -51,7 +53,8 @@ public:
 
     ~MeshMixSkinAnim();
 
-    void Initialize();
+    void Initialize(bool async = true);
+    void WaitForLoad();
     void UpdateAnimation();
     void Render();
     void RenderToEffect(LPD3DXEFFECT effect);
@@ -84,6 +87,8 @@ public:
     void OnDeviceReset() override;
 
 private:
+    void InitializeInternal();
+
     struct AnimationClip
     {
         AnimationInfo info;
@@ -143,7 +148,8 @@ private:
     D3DXVECTOR3 m_rotate = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
     float m_scale = 1.0f;
     bool m_enabled = true;
-    bool m_bLoaded = false;
+    std::atomic<bool> m_bLoaded { false };
+    std::thread m_loadThread;
     bool m_useExternalAnimation = false;
     bool m_alphaClipEnabled = true;
     bool m_ignoreTransparentMaterial = false;
