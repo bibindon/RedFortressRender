@@ -242,6 +242,10 @@ public:
                               const float scale = 1.0f,
                               int* loadedCount = nullptr,
                               int* skippedCount = nullptr);
+
+    // すべての非同期メッシュ読み込みが完了したかどうかを確認する。
+    bool IsAllMeshLoaded() const;
+
     int AddMeshPBR(const std::wstring& filePath,
                    const D3DXVECTOR3& pos,
                    const D3DXVECTOR3& rot,

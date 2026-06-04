@@ -405,6 +405,27 @@ bool Render::LoadXFileListFromCsv(const std::wstring& csvPath,
     return localLoadedCount > 0;
 }
 
+bool Render::IsAllMeshLoaded() const
+{
+    for (const auto& mesh : m_meshMixList)
+    {
+        if (!mesh.IsLoaded())
+        {
+            return false;
+        }
+    }
+
+    for (const auto* mesh : m_meshMixSkinAnimList)
+    {
+        if (mesh != nullptr && !mesh->IsLoaded())
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool Render::LoadXFileListMoveFromCsv(const std::wstring& csvPath,
                                        int* loadedCount,
                                        int* skippedCount)

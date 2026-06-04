@@ -651,6 +651,11 @@ void MeshMixSkinAnim::SetAnimationSpeed(const float speed)
     m_animationSpeed = speed;
 }
 
+bool MeshMixSkinAnim::IsLoaded() const
+{
+    return m_bLoaded.load();
+}
+
 void MeshMixSkinAnim::UpdateActiveAnimationClip()
 {
     if (m_activeAnimationClipIndex < 0 ||

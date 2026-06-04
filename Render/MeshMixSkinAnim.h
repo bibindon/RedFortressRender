@@ -82,6 +82,7 @@ public:
     const std::vector<AnimationInfo>& GetAnimationInfoList() const;
     bool PlayAnimation(const std::wstring& name);
     void SetAnimationSpeed(float speed);
+    bool IsLoaded() const;
 
     void OnDeviceLost() override;
     void OnDeviceReset() override;
