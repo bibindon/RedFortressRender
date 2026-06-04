@@ -332,7 +332,7 @@ bool HandleSampleKeyDown(HWND hWnd, const WPARAM wParam)
 
     if (wParam == 'P')
     {
-        AddImageOrPointLight(shift, control);
+        g_bShowTitleImage = !g_bShowTitleImage;
     }
 
     if (wParam == 'C')

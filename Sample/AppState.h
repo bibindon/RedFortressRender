@@ -299,6 +299,7 @@ extern NSRender::DepthOfFieldMode g_depthOfFieldMode;
 extern bool g_bStarBurst;
 extern NSRender::DebugGBufferView g_debugGBufferView;
 extern bool g_bShowOverlay;
+extern bool g_bShowTitleImage;
 extern bool g_bUseFontExOverlay;
 extern float g_fogIntensity;
 extern D3DXCOLOR g_fogColor;

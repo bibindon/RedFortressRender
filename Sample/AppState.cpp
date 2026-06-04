@@ -562,6 +562,11 @@ void DrawRandomized2DContent()
     {
         g_Render.DrawImage(elem.m_imageName, elem.m_rect.left, elem.m_rect.top);
     }
+
+    if (g_bShowTitleImage)
+    {
+        g_Render.DrawImageAutoResize(L"..\\Sample\\res\\2D_image\\title.png", 0.5f, 0.5f);
+    }
 }
 
 char* DuplicateAnsiString(const char* text)
@@ -2394,6 +2399,7 @@ bool ReloadRenderSettingsFromCsv(const std::wstring& settingsCsvPath)
 }
 
 bool g_bShowOverlay = true; // グローバル変数
+bool g_bShowTitleImage = false;
 bool g_bUseFontExOverlay = false;
 
 void DrawSampleOverlay()
