@@ -138,6 +138,12 @@ std::vector<std::pair<int, int>> WindowManager::GetResolutionList()
         }
     }
 
+    const std::pair<int, int> targetResolution(1600, 900);
+    if (uniqueResolutions.find(targetResolution) == uniqueResolutions.end())
+    {
+        resolutionList.push_back(targetResolution);
+    }
+
     return resolutionList;
 }
 
