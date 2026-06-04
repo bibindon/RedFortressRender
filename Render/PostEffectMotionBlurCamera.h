@@ -25,6 +25,7 @@ public:
     float GetMaxBlurPixels() const;
     void SetSampleCount(const int sampleCount);
     int GetSampleCount() const;
+    void SetDepthRange(const float nearPlane, const float farPlane);
 
     void OnDeviceLost() override;
     void OnDeviceReset() override;
@@ -41,6 +42,8 @@ private:
     int m_quality = 4;
     float m_maxBlurPixels = 24.0f;
     int m_sampleCount = 13;
+    float m_depthNearPlane = 0.1f;
+    float m_depthFarPlane = 30'000.0f;
 
     bool ShouldApplyMotionBlur(const D3DXMATRIX& currentViewProj);
     float UpdateFrameMotionScale();

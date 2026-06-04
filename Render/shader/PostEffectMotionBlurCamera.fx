@@ -8,6 +8,8 @@ int g_iDebugGridEnabled = 0;
 float4 g_vTexelSize = { 1.0f / 1600.0f, 1.0f / 900.0f, 1600.0f, 900.0f };
 float g_fNear = 0.1f;
 float g_fFar = 30000.0f;
+float g_fDepthNear = 0.1f;
+float g_fDepthFar = 30000.0f;
 
 texture texture1;
 sampler colorSampler = sampler_state
@@ -42,7 +44,7 @@ void VertexShader1(in  float4 inPosition  : POSITION,
 
 float LinearDepthToProjectionDepth(float linearDepth)
 {
-    float viewZ = lerp(g_fNear, g_fFar, saturate(linearDepth));
+    float viewZ = lerp(g_fDepthNear, g_fDepthFar, saturate(linearDepth));
     float a = g_fFar / (g_fFar - g_fNear);
     float b = -g_fNear * g_fFar / (g_fFar - g_fNear);
     return saturate(a + b / max(viewZ, 0.0001f));

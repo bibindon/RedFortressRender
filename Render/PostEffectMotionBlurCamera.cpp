@@ -130,6 +130,12 @@ int PostEffectMotionBlurCamera::GetSampleCount() const
     return m_sampleCount;
 }
 
+void PostEffectMotionBlurCamera::SetDepthRange(const float nearPlane, const float farPlane)
+{
+    m_depthNearPlane = nearPlane;
+    m_depthFarPlane = farPlane;
+}
+
 bool PostEffectMotionBlurCamera::ShouldApplyMotionBlur(const D3DXMATRIX& currentViewProj)
 {
     if (!m_hasPrevViewProj)
@@ -194,7 +200,7 @@ void PostEffectMotionBlurCamera::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource
     m_d3dEffect->SetTexture("depthTexture", depthTexture);
     m_d3dEffect->SetMatrix("g_matInvCurrentViewProj", &invCurrentViewProj);
     m_d3dEffect->SetMatrix("g_matPrevViewProj", &m_prevViewProj);
-    m_d3dEffect->SetFloat("g_fBlurScale", 2.0f);
+    m_d3dEffect->SetFloat("g_fBlurScale", m_frameMotionScale);
     m_d3dEffect->SetFloat("g_fMaxBlurPixels", m_maxBlurPixels);
     m_d3dEffect->SetInt("g_iSampleCount", m_sampleCount);
     m_d3dEffect->SetInt("g_iMotionBlurEnabled", 1);
@@ -202,6 +208,8 @@ void PostEffectMotionBlurCamera::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource
     m_d3dEffect->SetVector("g_vTexelSize", &texelSize);
     m_d3dEffect->SetFloat("g_fNear", Camera::GetNear());
     m_d3dEffect->SetFloat("g_fFar", Camera::GetFar());
+    m_d3dEffect->SetFloat("g_fDepthNear", m_depthNearPlane);
+    m_d3dEffect->SetFloat("g_fDepthFar", m_depthFarPlane);
 
     LPDIRECT3DSURFACE9 pSceneRT = NULL;
     texTarget->GetSurfaceLevel(0, &pSceneRT);

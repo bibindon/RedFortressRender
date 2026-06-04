@@ -3314,6 +3314,7 @@ void Render::SetGBufferClipPlanes(const float nearPlane, const float farPlane)
     m_gBufferFarPlane = farPlane;
     const float positionRange = GBuffer::ComputePositionRange(nearPlane, farPlane);
     m_GBuffer.SetDepthRange(nearPlane, farPlane);
+    m_postEffectMotionBlurCamera.SetDepthRange(nearPlane, farPlane);
     m_postEffectSSGI.SetDepthRange(nearPlane, farPlane);
     m_postEffectSSAO.SetDepthRange(nearPlane, farPlane);
     m_postEffectDepthOfField.SetPositionRange(positionRange);
