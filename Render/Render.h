@@ -272,6 +272,7 @@ public:
     bool RemoveMeshMixSkinAnim(int id);
     const std::vector<MeshMixSkinAnim::AnimationInfo>* GetMeshMixSkinAnimAnimationInfoList(int id) const;
     bool PlayMeshMixSkinAnimAnimation(int id, const std::wstring& name);
+    void SetMeshMixSkinAnimSpeed(int id, float speed);
     void SetMeshMixSkinAnimAlphaClip(const bool enabled);
     void SetMeshMixSkinAnimIgnoreTransparentMaterial(const bool enabled);
     void SetMeshMixSkinAnimPos(const int id, const D3DXVECTOR3& pos);

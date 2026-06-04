@@ -612,6 +612,11 @@ void MeshMixSkinAnim::ApplyAnimationFrameTransformsToMeshHierarchy(const LPD3DXF
     }
 }
 
+void MeshMixSkinAnim::SetAnimationSpeed(const float speed)
+{
+    m_animationSpeed = speed;
+}
+
 void MeshMixSkinAnim::UpdateActiveAnimationClip()
 {
     if (m_activeAnimationClipIndex < 0 ||
@@ -626,7 +631,7 @@ void MeshMixSkinAnim::UpdateActiveAnimationClip()
         return;
     }
 
-    const double deltaTime = Common::ANIMATION_SPEED / D3DX64_ANIMATION_TIME_SCALE;
+    const double deltaTime = m_animationSpeed * Common::ANIMATION_SPEED / D3DX64_ANIMATION_TIME_SCALE;
     clip.currentTime += deltaTime;
 
     if (clip.currentTime >= clip.duration)

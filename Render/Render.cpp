@@ -2865,6 +2865,16 @@ bool Render::PlayMeshMixSkinAnimAnimation(const int id, const std::wstring& name
     return m_meshMixSkinAnimList.at(id)->PlayAnimation(name);
 }
 
+void Render::SetMeshMixSkinAnimSpeed(const int id, const float speed)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshMixSkinAnimList.size()) || m_meshMixSkinAnimList.at(id) == nullptr)
+    {
+        return;
+    }
+
+    m_meshMixSkinAnimList.at(id)->SetAnimationSpeed(speed);
+}
+
 std::vector<RenderLoadedModelInfo> Render::GetLoadedModelInfoList()
 {
     std::vector<RenderLoadedModelInfo> models;

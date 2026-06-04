@@ -78,6 +78,7 @@ public:
     std::wstring GetMeshName() const;
     const std::vector<AnimationInfo>& GetAnimationInfoList() const;
     bool PlayAnimation(const std::wstring& name);
+    void SetAnimationSpeed(float speed);
 
     void OnDeviceLost() override;
     void OnDeviceReset() override;
@@ -154,6 +155,7 @@ private:
     AnimController m_animController;
     std::vector<AnimationInfo> m_animationInfoList;
     std::vector<AnimationClip> m_animationClips;
+    float m_animationSpeed = 1.0f;
 };
 
 }
