@@ -3699,11 +3699,16 @@ void Render::DrawImageAutoResize(const std::wstring& text,
                                              const int transparency)
 {
     m_sprite.LoadImage_(text);
+    const SIZE imageSize = m_sprite.GetImageSize(text);
+    if (imageSize.cx <= 0 || imageSize.cy <= 0)
+    {
+        return;
+    }
 
-    const int baseX = static_cast<int>(X * Common::BASE_W);
-    const int baseY = static_cast<int>(Y * Common::BASE_H);
+    const int baseX = static_cast<int>(X * Common::BASE_W) - imageSize.cx / 2;
+    const int baseY = static_cast<int>(Y * Common::BASE_H) - imageSize.cy / 2;
 
-    m_sprite.PlaceImage(text, baseX, baseY, Common::BASE_W, Common::BASE_H, transparency);
+    m_sprite.PlaceImage(text, baseX, baseY, imageSize.cx, imageSize.cy, transparency);
 }
 
 void Render::DrawWorldImage(const std::wstring& filename,
