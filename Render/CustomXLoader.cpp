@@ -1,4 +1,4 @@
-#include "CustomXLoader.h"
+﻿#include "CustomXLoader.h"
 #include "Common.h"
 #include "Util.h"
 
@@ -887,6 +887,43 @@ bool FillCustomXMeshBuffers(const CustomXMeshData& meshData,
     return true;
 }
 
+bool InvertCustomXMeshNormals(LPD3DXMESH mesh)
+{
+    if (mesh == nullptr)
+    {
+        return false;
+    }
+
+    struct CustomXVertex
+    {
+        float x;
+        float y;
+        float z;
+        float nx;
+        float ny;
+        float nz;
+        float u;
+        float v;
+    };
+
+    CustomXVertex* vertices = nullptr;
+    if (FAILED(mesh->LockVertexBuffer(0, reinterpret_cast<void**>(&vertices))))
+    {
+        return false;
+    }
+
+    const DWORD vertexCount = mesh->GetNumVertices();
+    for (DWORD i = 0; i < vertexCount; ++i)
+    {
+        vertices[i].nx = -vertices[i].nx;
+        vertices[i].ny = -vertices[i].ny;
+        vertices[i].nz = -vertices[i].nz;
+    }
+
+    mesh->UnlockVertexBuffer();
+    return true;
+}
+
 bool CreateCustomXSkinInfo(const CustomXMeshData& meshData,
                            const DWORD fvf,
                            LPD3DXSKININFO* skinInfo)
@@ -1011,6 +1048,13 @@ bool CreateCustomXMeshContainer(const std::string& meshName,
     {
         CUSTOM_X_LOADER_LOG(L"Custom mesh failed: D3DXComputeNormals failed. HR=" +
                                     FormatHRESULT(hr));
+        SAFE_RELEASE(mesh);
+        return false;
+    }
+
+    if (!InvertCustomXMeshNormals(mesh))
+    {
+        CUSTOM_X_LOADER_LOG(L"Custom mesh failed: normal inversion failed.");
         SAFE_RELEASE(mesh);
         return false;
     }
