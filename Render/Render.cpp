@@ -2571,7 +2571,7 @@ int Render::AddMeshInstansing(const std::wstring& filePath,
     if (m_meshInstancingMap.find(filePath) == m_meshInstancingMap.end())
     {
         MeshInstancing* mesh = NEW MeshInstancing();
-        mesh->Initialize(filePath);
+        mesh->Initialize(filePath, true);
         mesh->SetHighQuality(m_meshInstancingHighQualityEnabled);
 
         m_meshInstancingMap[filePath] = mesh;

@@ -2,6 +2,9 @@
 
 #include "Common.h"
 
+#include <atomic>
+#include <thread>
+
 namespace NSRender
 {
 
@@ -15,7 +18,8 @@ public:
     MeshInstancing();
     ~MeshInstancing();
 
-    void Initialize(const std::wstring& filePath);
+    void Initialize(const std::wstring& filePath, bool async = true);
+    void WaitForLoad();
 
     void Finalize();
 
@@ -82,6 +86,7 @@ private:
     DWORD GetSubsetMaterialIndex(DWORD subsetIndex) const;
     bool IsSubsetAlphaMaterial(DWORD subsetIndex) const;
     HRESULT DrawInstancedSubset(DWORD subsetIndex) const;
+    void InitializeInternal();
 
     std::vector<InstanceData> m_allInstances;
     std::vector<InstanceData> m_instances;
@@ -90,6 +95,9 @@ private:
     bool m_autoHide = false;
     SwayMode m_swayMode = SwayMode::Off;
     D3DXVECTOR3 m_instanceOffset = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+
+    std::atomic<bool> m_bLoaded { false };
+    std::thread m_loadThread;
 
 };
 

@@ -205,15 +205,43 @@ MeshInstancing::MeshInstancing()
 
 MeshInstancing::~MeshInstancing()
 {
+    if (m_loadThread.joinable())
+    {
+        m_loadThread.join();
+    }
     Finalize();
 }
 
-void MeshInstancing::Initialize(const std::wstring& filePath)
+void MeshInstancing::Initialize(const std::wstring& filePath, bool async)
+{
+    m_filePath = ResolvePathFromExeDir(filePath);
+
+    if (async)
+    {
+        if (m_loadThread.joinable())
+        {
+            m_loadThread.join();
+        }
+        m_loadThread = std::thread([this]() { InitializeInternal(); });
+    }
+    else
+    {
+        InitializeInternal();
+    }
+}
+
+void MeshInstancing::WaitForLoad()
+{
+    if (m_loadThread.joinable())
+    {
+        m_loadThread.join();
+    }
+}
+
+void MeshInstancing::InitializeInternal()
 {
     HRESULT hResult = E_FAIL;
     LPD3DXBUFFER pD3DXMtrlBuffer = NULL;
-
-    m_filePath = ResolvePathFromExeDir(filePath);
 
     hResult = D3DXLoadMeshFromX(m_filePath.c_str(),
                                 D3DXMESH_SYSTEMMEM,
@@ -300,11 +328,19 @@ void MeshInstancing::Initialize(const std::wstring& filePath)
 
     m_loadedPlacementCsv = LoadPlacementCsv();
     Common::AddDeviceLostResource(this);
+
+    m_bLoaded = true;
 }
 
 void MeshInstancing::Finalize()
 {
+    if (m_loadThread.joinable())
+    {
+        m_loadThread.join();
+    }
+
     Common::RemoveDeviceLostResource(this);
+    m_bLoaded = false;
 
     SAFE_RELEASE(m_decl);
     SAFE_RELEASE(m_worldPosBuf);
@@ -362,6 +398,11 @@ void MeshInstancing::SetHighQuality(const bool enabled)
 
 void MeshInstancing::Draw()
 {
+    if (!m_bLoaded)
+    {
+        return;
+    }
+
     UpdateVisibleInstances();
 
     if (m_pMesh == nullptr || m_pEffect == nullptr || m_worldPosBuf == nullptr || m_instances.empty())
@@ -473,6 +514,11 @@ void MeshInstancing::Draw()
 
 void MeshInstancing::RenderToGBufferEffect(LPD3DXEFFECT effect, const char* techniqueName)
 {
+    if (!m_bLoaded)
+    {
+        return;
+    }
+
     UpdateVisibleInstances();
 
     if (m_pMesh == nullptr || effect == nullptr || m_worldPosBuf == nullptr || m_instances.empty())
@@ -544,6 +590,11 @@ void MeshInstancing::RenderToShadowOccluderEffect(LPD3DXEFFECT effect,
                                                   const char* techniqueName,
                                                   const float alphaClipThreshold)
 {
+    if (!m_bLoaded)
+    {
+        return;
+    }
+
     UpdateVisibleInstances();
 
     if (m_pMesh == nullptr || effect == nullptr || m_worldPosBuf == nullptr || m_instances.empty())
