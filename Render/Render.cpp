@@ -3615,6 +3615,37 @@ void Render::DrawTextExNormalized(const int fontId,
     DrawTextEx(fontId, text, NormalizedTextXToBaseX(X), NormalizedTextYToBaseY(Y), color);
 }
 
+void Render::DrawTextExCenter(const int fontId,
+                              const std::wstring& text,
+                              const int X,
+                              const int Y,
+                              const int Width,
+                              const int Height)
+{
+    if (fontId >= m_fontExList.size())
+    {
+        throw std::exception("Illegal fontId");
+    }
+
+    m_fontExList.at(fontId)->AddTextCenter(text, X, Y, Width, Height);
+}
+
+void Render::DrawTextExCenter(const int fontId,
+                              const std::wstring& text,
+                              const int X,
+                              const int Y,
+                              const int Width,
+                              const int Height,
+                              const UINT color)
+{
+    if (fontId >= m_fontExList.size())
+    {
+        throw std::exception("Illegal fontId");
+    }
+
+    m_fontExList.at(fontId)->AddTextCenter(text, X, Y, Width, Height, color);
+}
+
 void Render::DrawTextCenter(const int fontId,
                                       const std::wstring& text,
                                       const int X,
