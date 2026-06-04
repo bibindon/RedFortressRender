@@ -9,6 +9,16 @@ namespace NSRender
 {
 namespace
 {
+LONG_PTR AddVisibleStyleIfVisible(const HWND hWnd, const LONG_PTR style)
+{
+    if (IsWindowVisible(hWnd))
+    {
+        return style | WS_VISIBLE;
+    }
+
+    return style;
+}
+
 RECT BuildCenteredWindowRect(const HWND hWnd, const int width, const int height)
 {
     RECT rect { };
@@ -256,16 +266,17 @@ void WindowManager::UpdateWindowPlacement(const eWindowMode mode, const int widt
     if (mode == eWindowMode::WINDOW)
     {
         const RECT rect = BuildCenteredWindowRect(m_hWnd, width, height);
+        const LONG_PTR style = AddVisibleStyleIfVisible(m_hWnd, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME);
         SetWindowLongPtr(m_hWnd,
                          GWL_STYLE,
-                         WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME | WS_VISIBLE);
+                         style);
         SetWindowPos(m_hWnd,
                      HWND_TOP,
                      rect.left,
                      rect.top,
                      rect.right - rect.left,
                      rect.bottom - rect.top,
-                     SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+                     SWP_FRAMECHANGED);
         return;
     }
 
@@ -274,14 +285,15 @@ void WindowManager::UpdateWindowPlacement(const eWindowMode mode, const int widt
     GetMonitorInfo(monitor, &monitorInfo);
     RECT monitorRect = monitorInfo.rcMonitor;
 
-    SetWindowLongPtr(m_hWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+    const LONG_PTR style = AddVisibleStyleIfVisible(m_hWnd, WS_POPUP);
+    SetWindowLongPtr(m_hWnd, GWL_STYLE, style);
     SetWindowPos(m_hWnd,
                  HWND_TOP,
                  monitorRect.left,
                  monitorRect.top,
                  monitorRect.right - monitorRect.left,
                  monitorRect.bottom - monitorRect.top,
-                 SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+                 SWP_FRAMECHANGED);
 }
 
 bool WindowManager::ResetDeviceForMode(const eWindowMode mode, int width, int height)
