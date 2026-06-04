@@ -163,7 +163,7 @@ void Font::Draw()
                                                 -1,
 
                                                 &textInfo.m_rect,
-                                                DT_CENTER | DT_NOCLIP,
+                                                DT_CENTER | DT_VCENTER | DT_NOCLIP,
                                                 textInfo.m_color);
 
             assert(hResult >= 0);
