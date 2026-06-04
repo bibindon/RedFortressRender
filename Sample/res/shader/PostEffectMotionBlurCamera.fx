@@ -73,6 +73,11 @@ float2 GetPrevUv(float2 uv, float linearDepth)
 float2 GetVelocity(float2 uv, float linearDepth)
 {
     float2 prevUv = GetPrevUv(uv, linearDepth);
+    if (prevUv.x < 0.0f || prevUv.x > 1.0f || prevUv.y < 0.0f || prevUv.y > 1.0f)
+    {
+        return 0.0f;
+    }
+
     float2 velocity = (uv - prevUv) * g_fBlurScale;
 
     float2 velocityPixels;
@@ -98,7 +103,7 @@ float4 SampleMotionBlur(float2 uv, float2 velocity)
     [loop]
     for (int i = 0; i < 21; ++i)
     {
-        float t = ((float)i / (float)(sampleCount - 1)) * 2.0f - 1.0f;
+        float t = (float)i / (float)(sampleCount - 1);
         float2 sampleUv = saturate(uv - velocity * t);
         float active = 0.0f;
         if (i < sampleCount)
