@@ -2312,6 +2312,11 @@ void Render::Draw()
 
 }
 
+HWND Render::GetWindowHandle() const
+{
+    return m_hWnd;
+}
+
 void Render::UpdateSkinAnimationState()
 {
     for (auto& elem : m_skinAnimMeshList)

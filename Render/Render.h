@@ -144,6 +144,7 @@ public:
     void Initialize(HWND hWnd, const std::wstring& settingsCsvPath = L"");
     void Finalize();
     void Draw();
+    HWND GetWindowHandle() const;
     void ShowSettingsDialog(bool activateDialog = true);
     void ToggleSettingsDialog();
 
