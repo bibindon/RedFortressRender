@@ -290,6 +290,16 @@ public:
     void UpdateMovingPlatforms(float deltaSeconds);
     void ResetMovingPlatforms();
     void RegisterCsvIdMapping(int csvId, int renderId);
+
+    struct MovingPlatform
+    {
+        int renderId = -1;
+        int csvId = -1;
+        D3DXVECTOR3 startPos;
+        D3DXVECTOR3 endPos;
+        float duration = 10.0f;
+        float elapsed = 0.0f;
+    };
     const std::vector<MovingPlatform>& GetMovingPlatforms() const;
 
     void SetMeshMixPos(const int id, const D3DXVECTOR3& pos);
@@ -706,15 +716,6 @@ private:
     std::unordered_map<std::wstring, MeshInstancing*> m_meshInstancingMap;
     bool m_meshInstancingHighQualityEnabled = true;
 
-    struct MovingPlatform
-    {
-        int renderId = -1;
-        int csvId = -1;
-        D3DXVECTOR3 startPos;
-        D3DXVECTOR3 endPos;
-        float duration = 10.0f;
-        float elapsed = 0.0f;
-    };
     std::unordered_map<int, int> m_csvIdToRenderId;
     std::vector<MovingPlatform> m_movingPlatforms;
 
