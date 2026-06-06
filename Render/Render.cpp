@@ -1324,6 +1324,20 @@ void Render::ApplySettings()
         }
     }
 
+    const auto halfLambertShadowSaturation = m_settings.find(L"HalfLambertShadowSaturation");
+    if (halfLambertShadowSaturation != m_settings.end())
+    {
+        try
+        {
+            const float value = (std::max)(0.0f, std::stof(halfLambertShadowSaturation->second));
+            SetMeshMixSaturateShadow(value > 0.0f);
+            SetMeshMixSaturateShadowIntensity(value);
+        }
+        catch (...)
+        {
+        }
+    }
+
     const auto fogIntensity = m_settings.find(L"FogIntensity");
     if (fogIntensity != m_settings.end())
     {
