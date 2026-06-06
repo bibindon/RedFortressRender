@@ -479,6 +479,7 @@ bool Render::LoadXFileListMoveFromCsv(const std::wstring& csvPath,
 
             MovingPlatform platform;
             platform.renderId = found->second;
+            platform.csvId = renderId;
             platform.startPos = D3DXVECTOR3(std::stof(TrimCsvField(fields[10])),
                                             std::stof(TrimCsvField(fields[11])),
                                             std::stof(TrimCsvField(fields[12])));
@@ -539,14 +540,9 @@ void Render::RegisterCsvIdMapping(const int csvId, const int renderId)
     m_csvIdToRenderId[csvId] = renderId;
 }
 
-int Render::GetRenderIdFromCsvId(const int csvId) const
+const std::vector<Render::MovingPlatform>& Render::GetMovingPlatforms() const
 {
-    const auto found = m_csvIdToRenderId.find(csvId);
-    if (found != m_csvIdToRenderId.end())
-    {
-        return found->second;
-    }
-    return -1;
+    return m_movingPlatforms;
 }
 
 void Render::LoadSettingsCsv(const std::wstring& settingsCsvPath)

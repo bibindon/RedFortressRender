@@ -290,7 +290,7 @@ public:
     void UpdateMovingPlatforms(float deltaSeconds);
     void ResetMovingPlatforms();
     void RegisterCsvIdMapping(int csvId, int renderId);
-    int GetRenderIdFromCsvId(int csvId) const;
+    const std::vector<MovingPlatform>& GetMovingPlatforms() const;
 
     void SetMeshMixPos(const int id, const D3DXVECTOR3& pos);
     D3DXVECTOR3 GetMeshMixPos(const int id) const;
@@ -709,6 +709,7 @@ private:
     struct MovingPlatform
     {
         int renderId = -1;
+        int csvId = -1;
         D3DXVECTOR3 startPos;
         D3DXVECTOR3 endPos;
         float duration = 10.0f;
