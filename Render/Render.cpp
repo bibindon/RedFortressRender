@@ -539,6 +539,16 @@ void Render::RegisterCsvIdMapping(const int csvId, const int renderId)
     m_csvIdToRenderId[csvId] = renderId;
 }
 
+int Render::GetRenderIdFromCsvId(const int csvId) const
+{
+    const auto found = m_csvIdToRenderId.find(csvId);
+    if (found != m_csvIdToRenderId.end())
+    {
+        return found->second;
+    }
+    return -1;
+}
+
 void Render::LoadSettingsCsv(const std::wstring& settingsCsvPath)
 {
     m_settings.clear();

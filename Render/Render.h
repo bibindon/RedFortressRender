@@ -290,6 +290,7 @@ public:
     void UpdateMovingPlatforms(float deltaSeconds);
     void ResetMovingPlatforms();
     void RegisterCsvIdMapping(int csvId, int renderId);
+    int GetRenderIdFromCsvId(int csvId) const;
 
     void SetMeshMixPos(const int id, const D3DXVECTOR3& pos);
     D3DXVECTOR3 GetMeshMixPos(const int id) const;
