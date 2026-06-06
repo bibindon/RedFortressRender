@@ -906,6 +906,18 @@ void Render::ApplySettings()
         }
     }
 
+    const auto saturateLevel = m_settings.find(L"SaturateLevel");
+    if (saturateLevel != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectSaturate(std::stof(saturateLevel->second));
+        }
+        catch (...)
+        {
+        }
+    }
+
     const auto gaussianEnable = m_settings.find(L"GaussianEnable");
     if (gaussianEnable != m_settings.end())
     {
@@ -1278,6 +1290,40 @@ void Render::ApplySettings()
         SetMeshMixSSSColor((r << 16) | (g << 8) | b);
     }
 
+    const auto specularIntensity = m_settings.find(L"SpecularIntensity");
+    if (specularIntensity != m_settings.end())
+    {
+        try
+        {
+            SetMeshMixSpecularIntensity(std::stof(specularIntensity->second));
+        }
+        catch (...)
+        {
+        }
+    }
+
+    const auto specularIntensityOverride = m_settings.find(L"SpecularIntensityOverride");
+    if (specularIntensityOverride != m_settings.end())
+    {
+        bool enabled = true;
+        if (TryParseBoolSetting(specularIntensityOverride->second, enabled))
+        {
+            SetMeshMixSpecularIntensityOverrideEnabled(enabled);
+        }
+    }
+
+    const auto fresnelIntensity = m_settings.find(L"FresnelIntensity");
+    if (fresnelIntensity != m_settings.end())
+    {
+        try
+        {
+            SetMeshMixFresnelIntensity(std::stof(fresnelIntensity->second));
+        }
+        catch (...)
+        {
+        }
+    }
+
     const auto fogIntensity = m_settings.find(L"FogIntensity");
     if (fogIntensity != m_settings.end())
     {
@@ -1473,6 +1519,57 @@ void Render::ApplySettings()
     else
     {
         SetPostEffectDepthBufferShadowSaturationBoost(0.35f);
+    }
+
+    const auto shadowCoverage = m_settings.find(L"ShadowCoverage");
+    if (shadowCoverage != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectDepthBufferShadowCoverage(std::stof(shadowCoverage->second));
+        }
+        catch (...)
+        {
+            SetPostEffectDepthBufferShadowCoverage(0.5f);
+        }
+    }
+    else
+    {
+        SetPostEffectDepthBufferShadowCoverage(0.5f);
+    }
+
+    const auto shadowPcfTapCount = m_settings.find(L"ShadowPcfTapCount");
+    if (shadowPcfTapCount != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectDepthBufferShadowPcfTapCount(std::stoi(shadowPcfTapCount->second));
+        }
+        catch (...)
+        {
+            SetPostEffectDepthBufferShadowPcfTapCount(11);
+        }
+    }
+    else
+    {
+        SetPostEffectDepthBufferShadowPcfTapCount(11);
+    }
+
+    const auto shadowCompositeTapCount = m_settings.find(L"ShadowCompositeTapCount");
+    if (shadowCompositeTapCount != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectDepthBufferShadowCompositeTapCount(std::stoi(shadowCompositeTapCount->second));
+        }
+        catch (...)
+        {
+            SetPostEffectDepthBufferShadowCompositeTapCount(11);
+        }
+    }
+    else
+    {
+        SetPostEffectDepthBufferShadowCompositeTapCount(11);
     }
 
     const auto ssaoSampleRadius = m_settings.find(L"SSAOSampleRadius");
@@ -1813,6 +1910,94 @@ void Render::ApplySettings()
     else
     {
         SetPostEffectStarBurstDistanceFade(0.0f);
+    }
+
+    const auto godRayEnable = m_settings.find(L"GodRayEnable");
+    if (godRayEnable != m_settings.end())
+    {
+        bool enabled = false;
+        if (TryParseBoolSetting(godRayEnable->second, enabled))
+        {
+            SetPostEffectGodRay(enabled);
+        }
+    }
+
+    {
+        D3DXVECTOR3 godRayLightPos = GetPostEffectGodRayLightPos();
+        bool godRayLightPosChanged = false;
+        const auto godRayLightPosX = m_settings.find(L"GodRayLightPosX");
+        if (godRayLightPosX != m_settings.end())
+        {
+            try { godRayLightPos.x = std::stof(godRayLightPosX->second); godRayLightPosChanged = true; }
+            catch (...) { }
+        }
+        const auto godRayLightPosY = m_settings.find(L"GodRayLightPosY");
+        if (godRayLightPosY != m_settings.end())
+        {
+            try { godRayLightPos.y = std::stof(godRayLightPosY->second); godRayLightPosChanged = true; }
+            catch (...) { }
+        }
+        const auto godRayLightPosZ = m_settings.find(L"GodRayLightPosZ");
+        if (godRayLightPosZ != m_settings.end())
+        {
+            try { godRayLightPos.z = std::stof(godRayLightPosZ->second); godRayLightPosChanged = true; }
+            catch (...) { }
+        }
+        if (godRayLightPosChanged)
+        {
+            SetPostEffectGodRayLightPos(godRayLightPos);
+        }
+    }
+
+    {
+        D3DXVECTOR3 godRayLightColor = GetPostEffectGodRayLightColor();
+        bool godRayLightColorChanged = false;
+        const auto godRayLightColorR = m_settings.find(L"GodRayLightColorR");
+        if (godRayLightColorR != m_settings.end())
+        {
+            try { godRayLightColor.x = ClampUnitSetting(std::stof(godRayLightColorR->second)); godRayLightColorChanged = true; }
+            catch (...) { }
+        }
+        const auto godRayLightColorG = m_settings.find(L"GodRayLightColorG");
+        if (godRayLightColorG != m_settings.end())
+        {
+            try { godRayLightColor.y = ClampUnitSetting(std::stof(godRayLightColorG->second)); godRayLightColorChanged = true; }
+            catch (...) { }
+        }
+        const auto godRayLightColorB = m_settings.find(L"GodRayLightColorB");
+        if (godRayLightColorB != m_settings.end())
+        {
+            try { godRayLightColor.z = ClampUnitSetting(std::stof(godRayLightColorB->second)); godRayLightColorChanged = true; }
+            catch (...) { }
+        }
+        if (godRayLightColorChanged)
+        {
+            SetPostEffectGodRayLightColor(godRayLightColor);
+        }
+    }
+
+    const auto godRayIntensity = m_settings.find(L"GodRayIntensity");
+    if (godRayIntensity != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectGodRayIntensity(std::stof(godRayIntensity->second));
+        }
+        catch (...)
+        {
+        }
+    }
+
+    const auto godRayVirtualProximityStrength = m_settings.find(L"GodRayVirtualProximityStrength");
+    if (godRayVirtualProximityStrength != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectGodRayVirtualProximityStrength(std::stof(godRayVirtualProximityStrength->second));
+        }
+        catch (...)
+        {
+        }
     }
 
     const auto renderingQuality = m_settings.find(L"RenderQuality");
