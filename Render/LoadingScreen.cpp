@@ -106,21 +106,19 @@ void LoadingScreen::Draw(Sprite& sprite, Font& font)
         return;
     }
 
-    const int textAlpha = GetTextAlpha255();
-    if (textAlpha <= 0)
+    const int textAlpha = GetBlinkAlpha255(0.0f);
+    if (textAlpha > 0)
     {
-        return;
+        font.AddTextCenter(L"Loading...",
+                           0,
+                           0,
+                           Common::BASE_W,
+                           Common::BASE_H,
+                           D3DCOLOR_RGBA(255, 255, 255, textAlpha));
+        font.Draw();
     }
 
-    font.AddTextCenter(L"Loading...",
-                       0,
-                       0,
-                       Common::BASE_W,
-                       Common::BASE_H,
-                       D3DCOLOR_RGBA(255, 255, 255, textAlpha));
-    font.Draw();
-
-    DrawWhitePoint(sprite, textAlpha);
+    DrawWhitePoint(sprite);
 }
 
 bool LoadingScreen::IsVisible() const
@@ -235,19 +233,15 @@ void LoadingScreen::EnsureWhitePointTexture(Sprite& sprite)
     m_whitePointTextureRegistered = true;
 }
 
-void LoadingScreen::DrawWhitePoint(Sprite& sprite, const int alpha)
+void LoadingScreen::DrawWhitePoint(Sprite& sprite)
 {
-    if (alpha <= 0)
-    {
-        return;
-    }
-
     EnsureWhitePointTexture(sprite);
     if (m_whitePointTexture == NULL)
     {
         return;
     }
 
+    const int alpha = GetBlinkAlpha255(1.33f);
     const float orbitCycleSeconds = 5.4f;
     const float radians = (m_animationTime / orbitCycleSeconds) * D3DX_PI * 2.0f;
     const float radiusX = 130.0f;
@@ -257,7 +251,23 @@ void LoadingScreen::DrawWhitePoint(Sprite& sprite, const int alpha)
     const int x = static_cast<int>(centerX + std::cos(radians) * radiusX) - 8;
     const int y = static_cast<int>(centerY + std::sin(radians) * radiusY) - 8;
 
-    sprite.PlaceImage(kLoadingScreenWhitePointTextureKey, x, y, alpha);
+    if (alpha > 0)
+    {
+        sprite.PlaceImage(kLoadingScreenWhitePointTextureKey, x, y, alpha);
+    }
+
+    const int alpha2 = GetBlinkAlpha255(2.66f);
+    const float orbitCycleSeconds2 = 7.4f;
+    const float radians2 = (m_animationTime / orbitCycleSeconds2) * D3DX_PI * 2.0f;
+    const float radiusX2 = 80.0f;
+    const float radiusY2 = 120.0f;
+    const int x2 = static_cast<int>(centerX + std::cos(radians2) * radiusX2) - 16;
+    const int y2 = static_cast<int>(centerY + std::sin(radians2) * radiusY2) - 16;
+
+    if (alpha2 > 0)
+    {
+        sprite.PlaceImage(kLoadingScreenWhitePointTextureKey, x2, y2, 32, 32, alpha2);
+    }
     sprite.Draw();
 }
 
@@ -275,13 +285,17 @@ int LoadingScreen::GetFadeAlpha255() const
     return static_cast<int>(clamped * 255.0f);
 }
 
-int LoadingScreen::GetTextAlpha255() const
+int LoadingScreen::GetBlinkAlpha255(const float phaseSeconds) const
 {
     const float blinkCycleSeconds = 4.0f;
-    float cycleTime = m_animationTime;
+    float cycleTime = m_animationTime + phaseSeconds;
     while (cycleTime >= blinkCycleSeconds)
     {
         cycleTime -= blinkCycleSeconds;
+    }
+    while (cycleTime < 0.0f)
+    {
+        cycleTime += blinkCycleSeconds;
     }
 
     float blinkAlpha = 0.0f;

@@ -19,9 +19,9 @@ public:
 private:
     void EnsureBlackTexture(Sprite& sprite);
     void EnsureWhitePointTexture(Sprite& sprite);
-    void DrawWhitePoint(Sprite& sprite, int alpha);
+    void DrawWhitePoint(Sprite& sprite);
     int GetFadeAlpha255() const;
-    int GetTextAlpha255() const;
+    int GetBlinkAlpha255(float phaseSeconds) const;
 
     bool m_visible = false;
     bool m_fadingOut = false;
