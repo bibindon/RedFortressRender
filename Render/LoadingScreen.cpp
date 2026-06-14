@@ -191,8 +191,10 @@ void LoadingScreen::EnsureWhitePointTexture(Sprite& sprite)
     if (SUCCEEDED(hr))
     {
         const float center = 7.5f;
-        const float radius = 8.0f;
-        const float radiusSquared = radius * radius;
+        const float coreRadius = 4.0f;
+        const float blurSigma = 2.8f;
+        const float coreRadiusSquared = coreRadius * coreRadius;
+        const float blurScale = 2.0f * blurSigma * blurSigma;
         for (int y = 0; y < 16; ++y)
         {
             BYTE* row = static_cast<BYTE*>(lockedRect.pBits) + lockedRect.Pitch * y;
@@ -202,11 +204,27 @@ void LoadingScreen::EnsureWhitePointTexture(Sprite& sprite)
                 const float dx = static_cast<float>(x) - center;
                 const float dy = static_cast<float>(y) - center;
                 const float distanceSquared = dx * dx + dy * dy;
-                DWORD color = D3DCOLOR_ARGB(0, 255, 255, 255);
-                if (distanceSquared <= radiusSquared)
+                int alpha = 0;
+                if (distanceSquared <= coreRadiusSquared)
                 {
-                    color = D3DCOLOR_ARGB(255, 255, 255, 255);
+                    alpha = 255;
                 }
+                else
+                {
+                    const float distance = std::sqrt(distanceSquared);
+                    const float blurDistance = distance - coreRadius;
+                    const float gaussian = std::exp(-(blurDistance * blurDistance) / blurScale);
+                    alpha = static_cast<int>(gaussian * 255.0f);
+                    if (alpha < 0)
+                    {
+                        alpha = 0;
+                    }
+                    if (alpha > 255)
+                    {
+                        alpha = 255;
+                    }
+                }
+                DWORD color = D3DCOLOR_ARGB(alpha, 255, 255, 255);
                 pixels[x] = color;
             }
         }
