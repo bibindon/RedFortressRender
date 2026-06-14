@@ -139,7 +139,7 @@ void LoadingScreen::Draw(Sprite& sprite, Font& loadingFont, Font& titleFont)
                                   220,
                                   maskWidth,
                                   100,
-                                  255);
+                                  backgroundAlpha);
                 sprite.Draw();
             }
         }
