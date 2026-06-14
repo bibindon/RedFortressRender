@@ -126,6 +126,38 @@ void LoadingScreen::Draw(Sprite& sprite, Font& loadingFont, Font& titleFont)
                                   D3DCOLOR_RGBA(255, 255, 255, textAlpha));
     }
     titleFont.Draw();
+
+    const std::size_t totalChars = m_title.size();
+    if (totalChars > 0 && m_progress < 100)
+    {
+        const SIZE titleSize = titleFont.GetTextSize(displayTitle);
+        int visibleCount = m_progress * static_cast<int>(totalChars) / 100 + 1;
+        if (visibleCount > static_cast<int>(totalChars))
+        {
+            visibleCount = static_cast<int>(totalChars);
+        }
+
+        const float visibleRatio = static_cast<float>(visibleCount) / static_cast<float>(totalChars);
+        const int titleLeft = (Common::BASE_W - titleSize.cx) / 2;
+        const int maskLeft = titleLeft + static_cast<int>(titleSize.cx * visibleRatio);
+        int maskWidth = Common::BASE_W - maskLeft;
+        if (maskWidth < 0)
+        {
+            maskWidth = 0;
+        }
+
+        if (maskWidth > 0 && m_blackTexture != NULL)
+        {
+            sprite.PlaceImage(kLoadingScreenBlackTextureKey,
+                              maskLeft,
+                              220,
+                              maskWidth,
+                              100,
+                              255);
+            sprite.Draw();
+        }
+    }
+
     loadingFont.Draw();
 
     DrawWhitePoint(sprite);
@@ -163,20 +195,8 @@ int LoadingScreen::GetProgress() const
 
 std::wstring LoadingScreen::BuildDisplayTitle() const
 {
-    const std::size_t totalChars = m_title.size();
-    if (totalChars == 0)
-    {
-        return L"";
-    }
-
-    std::size_t visibleCount = static_cast<std::size_t>(m_progress) * totalChars / 100 + 1;
-    if (visibleCount > totalChars)
-    {
-        visibleCount = totalChars;
-    }
-
     std::wstring displayTitle;
-    for (std::size_t i = 0; i < visibleCount; ++i)
+    for (std::size_t i = 0; i < m_title.size(); ++i)
     {
         if (i > 0)
         {
