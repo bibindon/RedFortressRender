@@ -467,6 +467,8 @@ public:
     float GetFadeAlpha() const;
     void StartLoadingScreen();
     void EndLoadingScreen();
+    void SetLoadingScreenTitle(const std::wstring& title);
+    void SetLoadingScreenTitleFontPath(const std::wstring& fontPath);
 
     void PlaceParticleEffect(const ParticleEffectPreset preset, const D3DXVECTOR3& origin);
     void ClearParticleEffect();
@@ -733,6 +735,10 @@ private:
     int m_settingsDialogTextFontId = -1;
     int m_settingsDialogTextFontExId = -1;
     int m_loadingScreenFontId = -1;
+    int m_loadingScreenTitleFontId = -1;
+    std::wstring m_loadingScreenTitleFontName = L"BIZ UDゴシック";
+    std::wstring m_loadingScreenTitleFontPath;
+    bool m_loadingScreenTitleFontRegistered = false;
     Sprite m_sprite;
     LoadingScreen m_loadingScreen;
     ParticleSystem m_particleSystem;

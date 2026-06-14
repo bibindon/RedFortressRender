@@ -120,6 +120,7 @@ void InitializeSampleScene(HWND hWnd)
 
     LoadSampleSettingsFromCsv(L"RenderSettings.csv");
     g_Render.Initialize(hWnd, L"RenderSettings.csv");
+    g_Render.SetLoadingScreenTitleFontPath(L"..\\..\\Sample\\res\\font\\BIZUDMincho-Regular.ttf");
     ApplyResolution();
     g_Render.SetShowCameraPosition(true);
     g_Render.SetCamera(D3DXVECTOR3(0.0f, 1.7f, -2.0f), D3DXVECTOR3(0.0f, 1.5f, 0.0f));

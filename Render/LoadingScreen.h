@@ -13,13 +13,15 @@ public:
     void Start();
     void End();
     void Update(float deltaSeconds);
-    void Draw(Sprite& sprite, Font& font);
+    void Draw(Sprite& sprite, Font& loadingFont, Font& titleFont);
     bool IsVisible() const;
+    void SetTitle(const std::wstring& title);
 
 private:
     void EnsureBlackTexture(Sprite& sprite);
     void EnsureWhitePointTexture(Sprite& sprite);
     void DrawWhitePoint(Sprite& sprite);
+    std::wstring BuildDisplayTitle() const;
     int GetFadeAlpha255() const;
     int GetBlinkAlpha255(float phaseSeconds) const;
 
@@ -31,6 +33,7 @@ private:
     float m_fadeElapsed = 0.0f;
     float m_fadeDuration = 0.5f;
     float m_fadeAlpha = 0.0f;
+    std::wstring m_title = L"ホシガール";
     LPDIRECT3DTEXTURE9 m_blackTexture = NULL;
     LPDIRECT3DTEXTURE9 m_whitePointTexture = NULL;
 };

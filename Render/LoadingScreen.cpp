@@ -76,7 +76,7 @@ void LoadingScreen::Update(const float deltaSeconds)
     }
 }
 
-void LoadingScreen::Draw(Sprite& sprite, Font& font)
+void LoadingScreen::Draw(Sprite& sprite, Font& loadingFont, Font& titleFont)
 {
     if (!m_visible)
     {
@@ -106,17 +106,26 @@ void LoadingScreen::Draw(Sprite& sprite, Font& font)
         return;
     }
 
+    const std::wstring displayTitle = BuildDisplayTitle();
+    titleFont.AddTextCenter(displayTitle,
+                            0,
+                            220,
+                            Common::BASE_W,
+                            100,
+                            D3DCOLOR_RGBA(255, 255, 255, 255));
+
     const int textAlpha = GetBlinkAlpha255(0.0f);
     if (textAlpha > 0)
     {
-        font.AddTextCenter(L"Loading...",
-                           0,
-                           0,
-                           Common::BASE_W,
-                           Common::BASE_H,
-                           D3DCOLOR_RGBA(255, 255, 255, textAlpha));
-        font.Draw();
+        loadingFont.AddTextCenter(L"Loading...",
+                                  0,
+                                  100,
+                                  Common::BASE_W,
+                                  Common::BASE_H,
+                                  D3DCOLOR_RGBA(255, 255, 255, textAlpha));
     }
+    titleFont.Draw();
+    loadingFont.Draw();
 
     DrawWhitePoint(sprite);
 }
@@ -124,6 +133,25 @@ void LoadingScreen::Draw(Sprite& sprite, Font& font)
 bool LoadingScreen::IsVisible() const
 {
     return m_visible;
+}
+
+void LoadingScreen::SetTitle(const std::wstring& title)
+{
+    m_title = title;
+}
+
+std::wstring LoadingScreen::BuildDisplayTitle() const
+{
+    std::wstring displayTitle;
+    for (std::size_t i = 0; i < m_title.size(); ++i)
+    {
+        if (i > 0)
+        {
+            displayTitle += L"  ";
+        }
+        displayTitle += m_title[i];
+    }
+    return displayTitle;
 }
 
 void LoadingScreen::EnsureBlackTexture(Sprite& sprite)
@@ -247,7 +275,7 @@ void LoadingScreen::DrawWhitePoint(Sprite& sprite)
     const float radiusX = 130.0f;
     const float radiusY = 60.0f;
     const float centerX = static_cast<float>(Common::BASE_W) * 0.5f;
-    const float centerY = static_cast<float>(Common::BASE_H) * 0.5f;
+    const float centerY = (static_cast<float>(Common::BASE_H) * 0.5f) + 100.0f;
     const int x = static_cast<int>(centerX + std::cos(radians) * radiusX) - 8;
     const int y = static_cast<int>(centerY + std::sin(radians) * radiusY) - 8;
 

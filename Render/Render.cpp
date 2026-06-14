@@ -2191,6 +2191,12 @@ void Render::Finalize()
     }
     m_fontExList.clear();
 
+    if (m_loadingScreenTitleFontRegistered)
+    {
+        RemoveFontResourceExW(m_loadingScreenTitleFontPath.c_str(), FR_PRIVATE, NULL);
+        m_loadingScreenTitleFontRegistered = false;
+    }
+
     m_sprite.Finalize();
     m_GBuffer.Finalize();
     SAFE_RELEASE(m_pRenderTarget1);
@@ -5669,16 +5675,52 @@ void Render::EndLoadingScreen()
     m_loadingScreen.End();
 }
 
-void Render::EnsureLoadingScreenFont()
+void Render::SetLoadingScreenTitle(const std::wstring& title)
 {
-    if (m_loadingScreenFontId >= 0)
+    m_loadingScreen.SetTitle(title);
+}
+
+void Render::SetLoadingScreenTitleFontPath(const std::wstring& fontPath)
+{
+    if (m_loadingScreenTitleFontRegistered)
     {
-        return;
+        RemoveFontResourceExW(m_loadingScreenTitleFontPath.c_str(), FR_PRIVATE, NULL);
+        m_loadingScreenTitleFontRegistered = false;
     }
 
-    m_loadingScreenFontId = SetUpFont(L"BIZ UDゴシック",
-                                      20,
-                                      D3DCOLOR_RGBA(255, 255, 255, 255));
+    m_loadingScreenTitleFontPath = fontPath;
+    m_loadingScreenTitleFontName = L"BIZ UDMincho";
+    m_loadingScreenTitleFontId = -1;
+}
+
+void Render::EnsureLoadingScreenFont()
+{
+    if (m_loadingScreenFontId < 0)
+    {
+        m_loadingScreenFontId = SetUpFont(L"BIZ UDゴシック",
+                                          20,
+                                          D3DCOLOR_RGBA(255, 255, 255, 255));
+    }
+
+    if (m_loadingScreenTitleFontId < 0)
+    {
+        if (!m_loadingScreenTitleFontPath.empty() && !m_loadingScreenTitleFontRegistered)
+        {
+            const int addedFontCount = AddFontResourceExW(m_loadingScreenTitleFontPath.c_str(), FR_PRIVATE, NULL);
+            if (addedFontCount > 0)
+            {
+                m_loadingScreenTitleFontRegistered = true;
+            }
+            else
+            {
+                m_loadingScreenTitleFontName = L"BIZ UDゴシック";
+            }
+        }
+
+        m_loadingScreenTitleFontId = SetUpFont(m_loadingScreenTitleFontName,
+                                               80,
+                                               D3DCOLOR_RGBA(255, 255, 255, 255));
+    }
 }
 
 void Render::DrawLoadingScreen()
@@ -5689,12 +5731,14 @@ void Render::DrawLoadingScreen()
     }
 
     EnsureLoadingScreenFont();
-    if (m_loadingScreenFontId < 0)
+    if (m_loadingScreenFontId < 0 || m_loadingScreenTitleFontId < 0)
     {
         return;
     }
 
-    m_loadingScreen.Draw(m_sprite, *m_fontList.at(m_loadingScreenFontId));
+    m_loadingScreen.Draw(m_sprite,
+                         *m_fontList.at(m_loadingScreenFontId),
+                         *m_fontList.at(m_loadingScreenTitleFontId));
 }
 
 void Render::DrawFadeOverlay()
