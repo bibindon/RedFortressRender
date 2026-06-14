@@ -163,8 +163,20 @@ int LoadingScreen::GetProgress() const
 
 std::wstring LoadingScreen::BuildDisplayTitle() const
 {
+    const std::size_t totalChars = m_title.size();
+    if (totalChars == 0)
+    {
+        return L"";
+    }
+
+    std::size_t visibleCount = static_cast<std::size_t>(m_progress) * totalChars / 100 + 1;
+    if (visibleCount > totalChars)
+    {
+        visibleCount = totalChars;
+    }
+
     std::wstring displayTitle;
-    for (std::size_t i = 0; i < m_title.size(); ++i)
+    for (std::size_t i = 0; i < visibleCount; ++i)
     {
         if (i > 0)
         {
