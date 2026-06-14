@@ -3975,6 +3975,13 @@ void Render::DrawImage(const std::wstring& text,
     m_sprite.PlaceImage(text, X, Y, transparency);
 }
 
+void Render::DrawImageStretched(const std::wstring& filename,
+                                            const int transparency)
+{
+    m_sprite.LoadImage_(filename);
+    m_sprite.PlaceImage(filename, 0, 0, Common::BASE_W, Common::BASE_H, transparency);
+}
+
 void Render::DrawImageAutoResize(const std::wstring& text,
                                              const float X,
                                              const float Y,

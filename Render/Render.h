@@ -452,6 +452,9 @@ public:
                    const int Y,
                    const int transparency = 255);
 
+    void DrawImageStretched(const std::wstring& filename,
+                            const int transparency = 255);
+
     void DrawImageAutoResize(const std::wstring& text,
                              const float X,
                              const float Y,
