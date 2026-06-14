@@ -5728,7 +5728,7 @@ void Render::EnsureLoadingScreenFont()
         }
 
         m_loadingScreenTitleFontId = SetUpFont(m_loadingScreenTitleFontName,
-                                               80,
+                                               50,
                                                D3DCOLOR_RGBA(255, 255, 255, 255));
     }
 }
