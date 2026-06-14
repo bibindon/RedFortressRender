@@ -20,7 +20,6 @@ private:
     void EnsureBlackTexture(Sprite& sprite);
     int GetFadeAlpha255() const;
     int GetTextAlpha255() const;
-    bool ShouldShowText() const;
 
     bool m_visible = false;
     bool m_fadingOut = false;

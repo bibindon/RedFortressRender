@@ -98,7 +98,7 @@ void LoadingScreen::Draw(Sprite& sprite, Font& font)
         sprite.Draw();
     }
 
-    if (!ShouldShowText())
+    if (m_fadingOut)
     {
         return;
     }
@@ -176,13 +176,34 @@ int LoadingScreen::GetFadeAlpha255() const
 
 int LoadingScreen::GetTextAlpha255() const
 {
-    return GetFadeAlpha255();
-}
+    const float blinkCycleSeconds = 1.0f;
+    float cycleTime = m_animationTime;
+    while (cycleTime >= blinkCycleSeconds)
+    {
+        cycleTime -= blinkCycleSeconds;
+    }
 
-bool LoadingScreen::ShouldShowText() const
-{
-    const int seconds = static_cast<int>(m_animationTime);
-    return (seconds % 2) == 0;
+    float blinkAlpha = 0.0f;
+    const float halfCycleSeconds = blinkCycleSeconds * 0.5f;
+    if (cycleTime < halfCycleSeconds)
+    {
+        blinkAlpha = cycleTime / halfCycleSeconds;
+    }
+    else
+    {
+        blinkAlpha = 1.0f - ((cycleTime - halfCycleSeconds) / halfCycleSeconds);
+    }
+
+    if (blinkAlpha < 0.0f)
+    {
+        blinkAlpha = 0.0f;
+    }
+    if (blinkAlpha > 1.0f)
+    {
+        blinkAlpha = 1.0f;
+    }
+
+    return static_cast<int>(blinkAlpha * 255.0f);
 }
 
 }
