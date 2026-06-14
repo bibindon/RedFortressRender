@@ -18,8 +18,10 @@
 #include <crtdbg.h>
 #include <cwctype>
 #include <vector>
+#include <Shlwapi.h>
 
 #include "Common.h"
+#pragma comment(lib, "Shlwapi.lib")
 
 #include "MeshOld.h"
 #include "AnimMesh.h"
@@ -5688,7 +5690,15 @@ void Render::SetLoadingScreenTitleFontPath(const std::wstring& fontPath)
         m_loadingScreenTitleFontRegistered = false;
     }
 
-    m_loadingScreenTitleFontPath = fontPath;
+    if (PathIsRelative(fontPath.c_str()))
+    {
+        m_loadingScreenTitleFontPath = Util::GetExeDir() + fontPath;
+    }
+    else
+    {
+        m_loadingScreenTitleFontPath = fontPath;
+    }
+
     m_loadingScreenTitleFontName = L"BIZ UDMincho";
     m_loadingScreenTitleFontId = -1;
 }
