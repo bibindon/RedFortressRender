@@ -5708,6 +5708,11 @@ void Render::SetLoadingScreenProgress(const int progress)
     m_loadingScreen.SetProgress(progress);
 }
 
+void Render::SetLoadingScreenShowTitle(const bool show)
+{
+    m_loadingScreen.SetShowTitle(show);
+}
+
 void Render::EnsureLoadingScreenFont()
 {
     if (m_loadingScreenFontId < 0)

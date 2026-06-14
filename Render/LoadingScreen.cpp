@@ -102,18 +102,48 @@ void LoadingScreen::Draw(Sprite& sprite, Font& loadingFont, Font& titleFont)
         sprite.Draw();
     }
 
-    if (m_fadingOut)
+    if (m_showTitle)
     {
-        return;
-    }
+        const std::wstring displayTitle = BuildDisplayTitle();
+        titleFont.AddTextCenter(displayTitle,
+                                0,
+                                220,
+                                Common::BASE_W,
+                                100,
+                                D3DCOLOR_RGBA(255, 255, 255, 255));
+        titleFont.Draw();
 
-    const std::wstring displayTitle = BuildDisplayTitle();
-    titleFont.AddTextCenter(displayTitle,
-                            0,
-                            220,
-                            Common::BASE_W,
-                            100,
-                            D3DCOLOR_RGBA(255, 255, 255, 255));
+        const std::size_t totalChars = m_title.size();
+        if (totalChars > 0 && m_progress < 100)
+        {
+            const SIZE titleSize = titleFont.GetTextSize(displayTitle);
+            int visibleCount = m_progress * static_cast<int>(totalChars) / 100 + 1;
+            if (visibleCount > static_cast<int>(totalChars))
+            {
+                visibleCount = static_cast<int>(totalChars);
+            }
+
+            const float visibleRatio = static_cast<float>(visibleCount) / static_cast<float>(totalChars);
+            const int titleLeft = (Common::BASE_W - titleSize.cx) / 2;
+            const int maskLeft = titleLeft + static_cast<int>(titleSize.cx * visibleRatio);
+            int maskWidth = Common::BASE_W - maskLeft;
+            if (maskWidth < 0)
+            {
+                maskWidth = 0;
+            }
+
+            if (maskWidth > 0 && m_blackTexture != NULL)
+            {
+                sprite.PlaceImage(kLoadingScreenBlackTextureKey,
+                                  maskLeft,
+                                  220,
+                                  maskWidth,
+                                  100,
+                                  255);
+                sprite.Draw();
+            }
+        }
+    }
 
     const int textAlpha = GetBlinkAlpha255(0.0f);
     if (textAlpha > 0)
@@ -125,39 +155,6 @@ void LoadingScreen::Draw(Sprite& sprite, Font& loadingFont, Font& titleFont)
                                   Common::BASE_H,
                                   D3DCOLOR_RGBA(255, 255, 255, textAlpha));
     }
-    titleFont.Draw();
-
-    const std::size_t totalChars = m_title.size();
-    if (totalChars > 0 && m_progress < 100)
-    {
-        const SIZE titleSize = titleFont.GetTextSize(displayTitle);
-        int visibleCount = m_progress * static_cast<int>(totalChars) / 100 + 1;
-        if (visibleCount > static_cast<int>(totalChars))
-        {
-            visibleCount = static_cast<int>(totalChars);
-        }
-
-        const float visibleRatio = static_cast<float>(visibleCount) / static_cast<float>(totalChars);
-        const int titleLeft = (Common::BASE_W - titleSize.cx) / 2;
-        const int maskLeft = titleLeft + static_cast<int>(titleSize.cx * visibleRatio);
-        int maskWidth = Common::BASE_W - maskLeft;
-        if (maskWidth < 0)
-        {
-            maskWidth = 0;
-        }
-
-        if (maskWidth > 0 && m_blackTexture != NULL)
-        {
-            sprite.PlaceImage(kLoadingScreenBlackTextureKey,
-                              maskLeft,
-                              220,
-                              maskWidth,
-                              100,
-                              255);
-            sprite.Draw();
-        }
-    }
-
     loadingFont.Draw();
 
     DrawWhitePoint(sprite);
@@ -191,6 +188,16 @@ void LoadingScreen::SetProgress(const int progress)
 int LoadingScreen::GetProgress() const
 {
     return m_progress;
+}
+
+void LoadingScreen::SetShowTitle(const bool show)
+{
+    m_showTitle = show;
+}
+
+bool LoadingScreen::IsShowTitle() const
+{
+    return m_showTitle;
 }
 
 std::wstring LoadingScreen::BuildDisplayTitle() const

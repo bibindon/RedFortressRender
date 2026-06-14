@@ -18,6 +18,8 @@ public:
     void SetTitle(const std::wstring& title);
     void SetProgress(int progress);
     int GetProgress() const;
+    void SetShowTitle(bool show);
+    bool IsShowTitle() const;
 
 private:
     void EnsureBlackTexture(Sprite& sprite);
@@ -37,6 +39,7 @@ private:
     float m_fadeAlpha = 0.0f;
     std::wstring m_title = L"ホシガール";
     int m_progress = 0;
+    bool m_showTitle = true;
     LPDIRECT3DTEXTURE9 m_blackTexture = NULL;
     LPDIRECT3DTEXTURE9 m_whitePointTexture = NULL;
 };
