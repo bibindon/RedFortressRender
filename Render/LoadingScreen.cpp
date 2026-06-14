@@ -248,10 +248,10 @@ void LoadingScreen::DrawWhitePoint(Sprite& sprite, const int alpha)
         return;
     }
 
-    const float orbitCycleSeconds = 4.0f;
+    const float orbitCycleSeconds = 5.4f;
     const float radians = (m_animationTime / orbitCycleSeconds) * D3DX_PI * 2.0f;
-    const float radiusX = 86.0f;
-    const float radiusY = 30.0f;
+    const float radiusX = 130.0f;
+    const float radiusY = 60.0f;
     const float centerX = static_cast<float>(Common::BASE_W) * 0.5f;
     const float centerY = static_cast<float>(Common::BASE_H) * 0.5f;
     const int x = static_cast<int>(centerX + std::cos(radians) * radiusX) - 8;
