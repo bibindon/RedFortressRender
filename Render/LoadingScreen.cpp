@@ -191,8 +191,8 @@ void LoadingScreen::EnsureWhitePointTexture(Sprite& sprite)
     if (SUCCEEDED(hr))
     {
         const float center = 7.5f;
-        const float coreRadius = 2.0f;
-        const float blurSigma = 2.8f;
+        const float coreRadius = 0.50f;
+        const float blurSigma = 2.0f;
         const float coreRadiusSquared = coreRadius * coreRadius;
         const float blurScale = 2.0f * blurSigma * blurSigma;
         for (int y = 0; y < 16; ++y)
