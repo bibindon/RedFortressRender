@@ -5674,6 +5674,7 @@ void Render::StartLoadingScreen()
 
 void Render::EndLoadingScreen()
 {
+    m_loadingScreen.SetProgress(100);
     m_loadingScreen.End();
 }
 
