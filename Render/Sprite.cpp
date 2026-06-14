@@ -1,4 +1,4 @@
-#include "Sprite.h"
+﻿#include "Sprite.h"
 
 namespace NSRender
 {
@@ -55,7 +55,8 @@ void Sprite::PlaceImage(const std::wstring& filename,
                          const int Y,
                          const int width,
                          const int height,
-                         const int transparency)
+                         const int transparency,
+                         const bool flipX)
 {
     SpriteInfo spriteInfo;
 
@@ -66,6 +67,7 @@ void Sprite::PlaceImage(const std::wstring& filename,
     spriteInfo.m_imageName = filename;
     spriteInfo.m_transparency = transparency;
     spriteInfo.m_scaled = true;
+    spriteInfo.m_flipX = flipX;
 
     m_spriteInfoList.push_back(spriteInfo);
 }
@@ -130,16 +132,28 @@ void Sprite::Draw()
             {
                 const float scaleXVal = static_cast<float>(elem.m_rect.right) / static_cast<float>(imageSize.cx);
                 const float scaleYVal = static_cast<float>(elem.m_rect.bottom) / static_cast<float>(imageSize.cy);
+                float workScaleXVal = scaleXVal;
+                if (elem.m_flipX)
+                {
+                    workScaleXVal *= -1.0f;
+                }
 
                 D3DXMATRIX perImageScale;
-                D3DXMatrixScaling(&perImageScale, scaleXVal, scaleYVal, 1.0f);
+                D3DXMatrixScaling(&perImageScale, workScaleXVal, scaleYVal, 1.0f);
                 perImageScale = perImageScale * mScale;
 
                 m_pSprite->SetTransform(&perImageScale);
 
-                D3DXVECTOR3 scaledPos(static_cast<float>(elem.m_rect.left) / scaleXVal,
-                                      static_cast<float>(elem.m_rect.top) / scaleYVal,
-                                      0.0f);
+                D3DXVECTOR3 scaledPos(0.0f, 0.0f, 0.0f);
+                if (elem.m_flipX)
+                {
+                    scaledPos.x = static_cast<float>(elem.m_rect.left + elem.m_rect.right) / workScaleXVal;
+                }
+                else
+                {
+                    scaledPos.x = static_cast<float>(elem.m_rect.left) / workScaleXVal;
+                }
+                scaledPos.y = static_cast<float>(elem.m_rect.top) / scaleYVal;
 
                 m_pSprite->Draw(m_textureMap.at(elem.m_imageName),
                                 NULL,

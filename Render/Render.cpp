@@ -3987,6 +3987,16 @@ void Render::DrawImageAutoResize(const std::wstring& text,
                                              const float Y,
                                              const int transparency)
 {
+    DrawImageAutoResizeEx(text, X, Y, 1.0f, false, transparency);
+}
+
+void Render::DrawImageAutoResizeEx(const std::wstring& text,
+                                   const float X,
+                                   const float Y,
+                                   const float scale,
+                                   const bool flipX,
+                                   const int transparency)
+{
     m_sprite.LoadImage_(text);
     const SIZE imageSize = m_sprite.GetImageSize(text);
     if (imageSize.cx <= 0 || imageSize.cy <= 0)
@@ -3994,10 +4004,21 @@ void Render::DrawImageAutoResize(const std::wstring& text,
         return;
     }
 
-    const int baseX = static_cast<int>(X * Common::BASE_W) - imageSize.cx / 2;
-    const int baseY = static_cast<int>(Y * Common::BASE_H) - imageSize.cy / 2;
+    int drawWidth = static_cast<int>(static_cast<float>(imageSize.cx) * scale);
+    int drawHeight = static_cast<int>(static_cast<float>(imageSize.cy) * scale);
+    if (drawWidth <= 0)
+    {
+        drawWidth = 1;
+    }
+    if (drawHeight <= 0)
+    {
+        drawHeight = 1;
+    }
 
-    m_sprite.PlaceImage(text, baseX, baseY, imageSize.cx, imageSize.cy, transparency);
+    const int baseX = static_cast<int>(X * Common::BASE_W) - drawWidth / 2;
+    const int baseY = static_cast<int>(Y * Common::BASE_H) - drawHeight / 2;
+
+    m_sprite.PlaceImage(text, baseX, baseY, drawWidth, drawHeight, transparency, flipX);
 }
 
 void Render::DrawWorldImage(const std::wstring& filename,

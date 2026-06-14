@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Common.h"
 
 namespace NSRender
@@ -22,7 +22,8 @@ public:
                     const int Y,
                     const int width,
                     const int height,
-                    const int transparency = 255);
+                    const int transparency = 255,
+                    const bool flipX = false);
 
     void RegisterTexture(const std::wstring& key, LPDIRECT3DTEXTURE9 texture);
 
@@ -43,6 +44,7 @@ private:
         std::wstring m_imageName;
         int m_transparency = 255;
         bool m_scaled = false;
+        bool m_flipX = false;
     };
 
     LPD3DXSPRITE m_pSprite = NULL;
