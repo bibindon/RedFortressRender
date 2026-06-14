@@ -1,10 +1,13 @@
 ﻿#include "LoadingScreen.h"
 
+#include <cmath>
+
 namespace NSRender
 {
 namespace
 {
 static const std::wstring kLoadingScreenBlackTextureKey = L"__loading_screen_black__";
+static const std::wstring kLoadingScreenWhitePointTextureKey = L"__loading_screen_white_point__";
 }
 
 void LoadingScreen::Start()
@@ -116,6 +119,8 @@ void LoadingScreen::Draw(Sprite& sprite, Font& font)
                        Common::BASE_H,
                        D3DCOLOR_RGBA(255, 255, 255, textAlpha));
     font.Draw();
+
+    DrawWhitePoint(sprite, textAlpha);
 }
 
 bool LoadingScreen::IsVisible() const
@@ -158,6 +163,84 @@ void LoadingScreen::EnsureBlackTexture(Sprite& sprite)
 
     sprite.RegisterTexture(kLoadingScreenBlackTextureKey, m_blackTexture);
     m_blackTextureRegistered = true;
+}
+
+void LoadingScreen::EnsureWhitePointTexture(Sprite& sprite)
+{
+    if (m_whitePointTextureRegistered)
+    {
+        return;
+    }
+
+    HRESULT hr = Common::D3DDevice()->CreateTexture(
+        16,
+        16,
+        1,
+        0,
+        D3DFMT_A8R8G8B8,
+        D3DPOOL_MANAGED,
+        &m_whitePointTexture,
+        NULL);
+    if (FAILED(hr) || m_whitePointTexture == NULL)
+    {
+        return;
+    }
+
+    D3DLOCKED_RECT lockedRect;
+    hr = m_whitePointTexture->LockRect(0, &lockedRect, NULL, 0);
+    if (SUCCEEDED(hr))
+    {
+        const float center = 7.5f;
+        const float radius = 8.0f;
+        const float radiusSquared = radius * radius;
+        for (int y = 0; y < 16; ++y)
+        {
+            BYTE* row = static_cast<BYTE*>(lockedRect.pBits) + lockedRect.Pitch * y;
+            DWORD* pixels = reinterpret_cast<DWORD*>(row);
+            for (int x = 0; x < 16; ++x)
+            {
+                const float dx = static_cast<float>(x) - center;
+                const float dy = static_cast<float>(y) - center;
+                const float distanceSquared = dx * dx + dy * dy;
+                DWORD color = D3DCOLOR_ARGB(0, 255, 255, 255);
+                if (distanceSquared <= radiusSquared)
+                {
+                    color = D3DCOLOR_ARGB(255, 255, 255, 255);
+                }
+                pixels[x] = color;
+            }
+        }
+        m_whitePointTexture->UnlockRect(0);
+    }
+
+    sprite.RegisterTexture(kLoadingScreenWhitePointTextureKey, m_whitePointTexture);
+    m_whitePointTextureRegistered = true;
+}
+
+void LoadingScreen::DrawWhitePoint(Sprite& sprite, const int alpha)
+{
+    if (alpha <= 0)
+    {
+        return;
+    }
+
+    EnsureWhitePointTexture(sprite);
+    if (m_whitePointTexture == NULL)
+    {
+        return;
+    }
+
+    const float orbitCycleSeconds = 4.0f;
+    const float radians = (m_animationTime / orbitCycleSeconds) * D3DX_PI * 2.0f;
+    const float radiusX = 86.0f;
+    const float radiusY = 30.0f;
+    const float centerX = static_cast<float>(Common::BASE_W) * 0.5f;
+    const float centerY = static_cast<float>(Common::BASE_H) * 0.5f;
+    const int x = static_cast<int>(centerX + std::cos(radians) * radiusX) - 8;
+    const int y = static_cast<int>(centerY + std::sin(radians) * radiusY) - 8;
+
+    sprite.PlaceImage(kLoadingScreenWhitePointTextureKey, x, y, alpha);
+    sprite.Draw();
 }
 
 int LoadingScreen::GetFadeAlpha255() const

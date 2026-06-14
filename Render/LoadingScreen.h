@@ -18,17 +18,21 @@ public:
 
 private:
     void EnsureBlackTexture(Sprite& sprite);
+    void EnsureWhitePointTexture(Sprite& sprite);
+    void DrawWhitePoint(Sprite& sprite, int alpha);
     int GetFadeAlpha255() const;
     int GetTextAlpha255() const;
 
     bool m_visible = false;
     bool m_fadingOut = false;
     bool m_blackTextureRegistered = false;
+    bool m_whitePointTextureRegistered = false;
     float m_animationTime = 0.0f;
     float m_fadeElapsed = 0.0f;
     float m_fadeDuration = 0.5f;
     float m_fadeAlpha = 0.0f;
     LPDIRECT3DTEXTURE9 m_blackTexture = NULL;
+    LPDIRECT3DTEXTURE9 m_whitePointTexture = NULL;
 };
 
 }
