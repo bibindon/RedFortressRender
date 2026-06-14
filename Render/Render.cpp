@@ -5677,7 +5677,7 @@ void Render::EnsureLoadingScreenFont()
     }
 
     m_loadingScreenFontId = SetUpFont(L"BIZ UDゴシック",
-                                      28,
+                                      20,
                                       D3DCOLOR_RGBA(255, 255, 255, 255));
 }
 

@@ -176,7 +176,7 @@ int LoadingScreen::GetFadeAlpha255() const
 
 int LoadingScreen::GetTextAlpha255() const
 {
-    const float blinkCycleSeconds = 1.0f;
+    const float blinkCycleSeconds = 4.0f;
     float cycleTime = m_animationTime;
     while (cycleTime >= blinkCycleSeconds)
     {
