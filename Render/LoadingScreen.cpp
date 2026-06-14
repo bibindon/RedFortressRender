@@ -261,12 +261,12 @@ void LoadingScreen::DrawWhitePoint(Sprite& sprite)
     const float radians2 = (m_animationTime / orbitCycleSeconds2) * D3DX_PI * 2.0f;
     const float radiusX2 = 80.0f;
     const float radiusY2 = 120.0f;
-    const int x2 = static_cast<int>(centerX + std::cos(radians2) * radiusX2) - 16;
-    const int y2 = static_cast<int>(centerY + std::sin(radians2) * radiusY2) - 16;
+    const int x2 = static_cast<int>(centerX + std::cos(radians2) * radiusX2) - 12;
+    const int y2 = static_cast<int>(centerY + std::sin(radians2) * radiusY2) - 12;
 
     if (alpha2 > 0)
     {
-        sprite.PlaceImage(kLoadingScreenWhitePointTextureKey, x2, y2, 32, 32, alpha2);
+        sprite.PlaceImage(kLoadingScreenWhitePointTextureKey, x2, y2, 24, 24, alpha2);
     }
     sprite.Draw();
 }
