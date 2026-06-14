@@ -130,6 +130,15 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM)
             g_bAnimateLight = (IsDlgButtonChecked(hDlg, IDC_CHECK_ANIMATE_LIGHT) == BST_CHECKED);
             return TRUE;
         }
+        if (commandId == IDC_BUTTON_LOAD_START)
+        {
+            g_Render.StartLoadingScreen();
+            g_Render.SetLoadingScreenProgress(0);
+            g_loadingProgressValue = 0;
+            g_loadingProgressFrameCount = 0;
+            g_bLoadingProgressActive = true;
+            return TRUE;
+        }
         return FALSE;
     }
     default:

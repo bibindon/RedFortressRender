@@ -393,6 +393,9 @@ extern D3DXVECTOR3 g_godRayLightPos;
 extern int g_godRaySourceMarkerMeshId;
 extern int g_godRayEffectiveMarkerMeshId;
 extern NSRender::ParticleEffectPreset g_particleEffectPreset;
+extern bool g_bLoadingProgressActive;
+extern int g_loadingProgressValue;
+extern int g_loadingProgressFrameCount;
 
 // カメラ・マウス関連の補助関数。
 // 生入力を実際の視点移動へ変換する役割を持つ。

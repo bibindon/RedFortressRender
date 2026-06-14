@@ -17,6 +17,7 @@ void LoadingScreen::Start()
     m_animationTime = 0.0f;
     m_fadeElapsed = 0.0f;
     m_fadeAlpha = 1.0f;
+    m_progress = 0;
 }
 
 void LoadingScreen::End()
@@ -138,6 +139,26 @@ bool LoadingScreen::IsVisible() const
 void LoadingScreen::SetTitle(const std::wstring& title)
 {
     m_title = title;
+}
+
+void LoadingScreen::SetProgress(const int progress)
+{
+    if (progress < 0)
+    {
+        m_progress = 0;
+        return;
+    }
+    if (progress > 100)
+    {
+        m_progress = 100;
+        return;
+    }
+    m_progress = progress;
+}
+
+int LoadingScreen::GetProgress() const
+{
+    return m_progress;
 }
 
 std::wstring LoadingScreen::BuildDisplayTitle() const

@@ -172,6 +172,9 @@ D3DXVECTOR3 g_godRayLightPos = D3DXVECTOR3(0.0f, 50.0f, 50.0f);
 int g_godRaySourceMarkerMeshId = -1;
 int g_godRayEffectiveMarkerMeshId = -1;
 NSRender::ParticleEffectPreset g_particleEffectPreset = NSRender::ParticleEffectPreset::Smoke;
+bool g_bLoadingProgressActive = false;
+int g_loadingProgressValue = 0;
+int g_loadingProgressFrameCount = 0;
 
 namespace
 {

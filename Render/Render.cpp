@@ -5703,6 +5703,11 @@ void Render::SetLoadingScreenTitleFontPath(const std::wstring& fontPath)
     m_loadingScreenTitleFontId = -1;
 }
 
+void Render::SetLoadingScreenProgress(const int progress)
+{
+    m_loadingScreen.SetProgress(progress);
+}
+
 void Render::EnsureLoadingScreenFont()
 {
     if (m_loadingScreenFontId < 0)

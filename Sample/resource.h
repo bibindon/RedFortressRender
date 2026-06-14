@@ -351,6 +351,7 @@
 #define IDC_EDIT_HALO_THRESHOLD        1361
 #define IDC_SLIDER_HALO_THRESHOLD      1362
 #define IDC_CHECK_MIX_SKIN_ANIM_ALPHA_CLIP 1363
+#define IDC_BUTTON_LOAD_START         1364
 
 // Next default values for new objects
 // 

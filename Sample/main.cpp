@@ -154,6 +154,21 @@ void TickAndRenderFrame()
     {
         ApplyGodRayLightPos();
     }
+    if (g_bLoadingProgressActive)
+    {
+        g_loadingProgressFrameCount++;
+        if (g_loadingProgressFrameCount >= 3)
+        {
+            g_loadingProgressFrameCount = 0;
+            g_loadingProgressValue++;
+            g_Render.SetLoadingScreenProgress(g_loadingProgressValue);
+            if (g_loadingProgressValue >= 100)
+            {
+                g_Render.EndLoadingScreen();
+                g_bLoadingProgressActive = false;
+            }
+        }
+    }
     g_Render.Draw();
 }
 }

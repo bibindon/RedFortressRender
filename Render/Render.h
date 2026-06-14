@@ -469,6 +469,7 @@ public:
     void EndLoadingScreen();
     void SetLoadingScreenTitle(const std::wstring& title);
     void SetLoadingScreenTitleFontPath(const std::wstring& fontPath);
+    void SetLoadingScreenProgress(int progress);
 
     void PlaceParticleEffect(const ParticleEffectPreset preset, const D3DXVECTOR3& origin);
     void ClearParticleEffect();
