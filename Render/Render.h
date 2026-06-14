@@ -20,6 +20,7 @@
 #include "FontEx.h"
 #include "Sprite.h"
 #include "ParticleSystem.h"
+#include "LoadingScreen.h"
 
 #include "MeshOld.h"
 #include "MeshSmooth.h"
@@ -464,6 +465,8 @@ public:
     void StartFadeOut(const float durationSeconds);
     void SetFadeAlpha(const float alpha);
     float GetFadeAlpha() const;
+    void StartLoadingScreen();
+    void EndLoadingScreen();
 
     void PlaceParticleEffect(const ParticleEffectPreset preset, const D3DXVECTOR3& origin);
     void ClearParticleEffect();
@@ -729,7 +732,9 @@ private:
     std::unordered_map<int, int> m_worldTextFontExIdBySize;
     int m_settingsDialogTextFontId = -1;
     int m_settingsDialogTextFontExId = -1;
+    int m_loadingScreenFontId = -1;
     Sprite m_sprite;
+    LoadingScreen m_loadingScreen;
     ParticleSystem m_particleSystem;
 
     //---------------------------------------------------------------
@@ -801,6 +806,8 @@ private:
     void EnsureSettingsDialogTextFonts();
     void DrawSettingsDialogText();
     void DrawWorldTexts();
+    void EnsureLoadingScreenFont();
+    void DrawLoadingScreen();
     void DrawFadeOverlay();
     void UpdateFade(float deltaSeconds);
     void EnsureFadeTexture();

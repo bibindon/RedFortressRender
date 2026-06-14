@@ -848,6 +848,14 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
             TryGetSettingsEditFloat(hWnd, 42300, duration);
             render->StartFadeOut(duration);
         }
+        else if (id == 32302)
+        {
+            render->StartLoadingScreen();
+        }
+        else if (id == 32303)
+        {
+            render->EndLoadingScreen();
+        }
         else if (id == 31411)
         {
             render->AddPointLight(render->GetLookAtPos(),

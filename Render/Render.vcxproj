@@ -35,6 +35,7 @@
     <ClCompile Include="CustomXLoader.cpp" />
     <ClCompile Include="GBuffer.cpp" />
     <ClCompile Include="Light.cpp" />
+    <ClCompile Include="LoadingScreen.cpp" />
     <ClCompile Include="MeshOld.cpp" />
     <ClCompile Include="MeshHierarchy.cpp" />
     <ClCompile Include="MeshInstancing.cpp" />
@@ -94,6 +95,7 @@
     <ClInclude Include="CustomXLoader.h" />
     <ClInclude Include="GBuffer.h" />
     <ClInclude Include="Light.h" />
+    <ClInclude Include="LoadingScreen.h" />
     <ClInclude Include="MeshOld.h" />
     <ClInclude Include="MeshHierarchy.h" />
     <ClInclude Include="MeshInstancing.h" />

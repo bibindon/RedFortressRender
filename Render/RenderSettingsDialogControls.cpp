@@ -823,6 +823,11 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     CreateSettingsEdit(hWnd, L"0.5", 240, y + 22, 48, 20, 42300);
     y += 60;
 
+    CreateSettingsGroupBox(hWnd, L"Load", 8, y, 504, 52);
+    CreateSettingsButton(hWnd, L"Load Start", 24, y + 22, 96, 24, 32302);
+    CreateSettingsButton(hWnd, L"Load End", 132, y + 22, 96, 24, 32303);
+    y += 60;
+
     SetSettingsTrackbarRange(hWnd, 31004, 0, 49);
     SetSettingsTrackbarRange(hWnd, 31005, 0, 100);
     SetSettingsTrackbarRange(hWnd, 31100, 0, 50);

@@ -31,6 +31,7 @@
 
 #include "Font.h"
 #include "FontEx.h"
+#include "LoadingScreen.h"
 #include <chrono>
 #include <set>
 #include <algorithm>
@@ -2234,6 +2235,7 @@ void Render::Draw()
 
     const float frameDeltaSeconds = CalcFrameDeltaSeconds();
     m_particleSystem.Update(frameDeltaSeconds);
+    m_loadingScreen.Update(frameDeltaSeconds);
     UpdateMovingPlatforms(frameDeltaSeconds);
     UpdateFade(frameDeltaSeconds);
     UpdateSkinAnimationState();
@@ -5547,6 +5549,7 @@ void Render::Draw2D()
     }
 
     DrawFadeOverlay();
+    DrawLoadingScreen();
 }
 
 void Render::EnsureFadeTexture()
@@ -5654,6 +5657,44 @@ void Render::SetFadeAlpha(const float alpha)
 float Render::GetFadeAlpha() const
 {
     return m_fadeAlpha;
+}
+
+void Render::StartLoadingScreen()
+{
+    m_loadingScreen.Start();
+}
+
+void Render::EndLoadingScreen()
+{
+    m_loadingScreen.End();
+}
+
+void Render::EnsureLoadingScreenFont()
+{
+    if (m_loadingScreenFontId >= 0)
+    {
+        return;
+    }
+
+    m_loadingScreenFontId = SetUpFont(L"BIZ UDゴシック",
+                                      28,
+                                      D3DCOLOR_RGBA(255, 255, 255, 255));
+}
+
+void Render::DrawLoadingScreen()
+{
+    if (!m_loadingScreen.IsVisible())
+    {
+        return;
+    }
+
+    EnsureLoadingScreenFont();
+    if (m_loadingScreenFontId < 0)
+    {
+        return;
+    }
+
+    m_loadingScreen.Draw(m_sprite, *m_fontList.at(m_loadingScreenFontId));
 }
 
 void Render::DrawFadeOverlay()
