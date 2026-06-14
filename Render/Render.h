@@ -482,6 +482,9 @@ public:
                         const D3DXVECTOR3& worldPos,
                         const int transparency = 255);
 
+    void LoadImage(const std::wstring& filename);
+    SIZE GetImageSize(const std::wstring& filename);
+
     void StartFadeIn(const float durationSeconds);
     void StartFadeOut(const float durationSeconds);
     void SetFadeAlpha(const float alpha);

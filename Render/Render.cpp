@@ -4086,6 +4086,16 @@ void Render::DrawWorldImage(const std::wstring& filename,
     m_sprite.PlaceImage(filename, baseX - imageBaseW / 2, baseY - imageBaseH / 2, transparency);
 }
 
+void Render::LoadImage(const std::wstring& filename)
+{
+    m_sprite.LoadImage_(filename);
+}
+
+SIZE Render::GetImageSize(const std::wstring& filename)
+{
+    return m_sprite.GetImageSize(filename);
+}
+
 void Render::SetPostEffectSaturate(const float level)
 {
     m_postEffectSaturateLevel = level;
