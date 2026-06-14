@@ -3982,6 +3982,22 @@ void Render::DrawImageStretched(const std::wstring& filename,
     m_sprite.PlaceImage(filename, 0, 0, Common::BASE_W, Common::BASE_H, transparency);
 }
 
+void Render::DrawImageStretchedScaled(const std::wstring& filename,
+                                                  const float scale,
+                                                  const int transparency)
+{
+    m_sprite.LoadImage_(filename);
+    const SIZE imageSize = m_sprite.GetImageSize(filename);
+    if (imageSize.cx <= 0 || imageSize.cy <= 0)
+    {
+        return;
+    }
+
+    const int drawW = static_cast<int>(imageSize.cx * scale);
+    const int drawH = static_cast<int>(imageSize.cy * scale);
+    m_sprite.PlaceImage(filename, 0, 0, drawW, drawH, transparency);
+}
+
 void Render::DrawImageEx(const std::wstring& filename,
                                      const int centerX,
                                      const int centerY,

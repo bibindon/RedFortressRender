@@ -455,6 +455,10 @@ public:
     void DrawImageStretched(const std::wstring& filename,
                             const int transparency = 255);
 
+    void DrawImageStretchedScaled(const std::wstring& filename,
+                                  const float scale,
+                                  const int transparency = 255);
+
     void DrawImageEx(const std::wstring& filename,
                      const int centerX,
                      const int centerY,
