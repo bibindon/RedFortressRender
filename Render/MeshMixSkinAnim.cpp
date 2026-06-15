@@ -503,6 +503,7 @@ void MeshMixSkinAnim::UpdateAnimation()
 
     D3DXMATRIX worldMatrix = BuildWorldMatrix();
     UpdateFrameMatrix(m_frameRoot, &worldMatrix);
+    InvalidateBonePaletteCache();
 }
 
 void MeshMixSkinAnim::Render()
@@ -529,11 +530,34 @@ void MeshMixSkinAnim::Render()
         useSaturateShadow = TRUE;
     }
     m_D3DEffect->SetBool("g_bSaturateShadow", useSaturateShadow);
-    m_D3DEffect->SetBool("g_treatTextureAsWhite", m_param.treatTextureAsWhite ? TRUE : FALSE);
-    m_D3DEffect->SetBool("g_alphaClipEnabled", m_alphaClipEnabled ? TRUE : FALSE);
-    m_D3DEffect->SetBool("g_fresnelEnable", m_param.fresnel ? TRUE : FALSE);
+    BOOL treatTextureAsWhite = FALSE;
+    if (m_param.treatTextureAsWhite)
+    {
+        treatTextureAsWhite = TRUE;
+    }
+    m_D3DEffect->SetBool("g_treatTextureAsWhite", treatTextureAsWhite);
+
+    BOOL alphaClipEnabled = FALSE;
+    if (m_alphaClipEnabled)
+    {
+        alphaClipEnabled = TRUE;
+    }
+    m_D3DEffect->SetBool("g_alphaClipEnabled", alphaClipEnabled);
+
+    BOOL fresnelEnabled = FALSE;
+    if (m_param.fresnel)
+    {
+        fresnelEnabled = TRUE;
+    }
+    m_D3DEffect->SetBool("g_fresnelEnable", fresnelEnabled);
     m_D3DEffect->SetFloat("g_fresnelIntensity", m_param.fresnelIntensity);
-    m_D3DEffect->SetBool("g_mirrorClipEnable", GetSharedMirrorClipEnabled() ? TRUE : FALSE);
+
+    BOOL mirrorClipEnabled = FALSE;
+    if (GetSharedMirrorClipEnabled())
+    {
+        mirrorClipEnabled = TRUE;
+    }
+    m_D3DEffect->SetBool("g_mirrorClipEnable", mirrorClipEnabled);
     const D3DXVECTOR4 mirrorClipPlane = GetSharedMirrorClipPlane();
     m_D3DEffect->SetVector("g_mirrorClipPlane", &mirrorClipPlane);
     m_D3DEffect->SetFloat("g_fSaturateShadowIntensity", m_param.saturateShadowIntensity);
@@ -590,7 +614,12 @@ void MeshMixSkinAnim::Render()
 
     D3DXMATRIX viewProjectionMatrix = Camera::GetViewMatrix() * Camera::GetProjMatrix();
     m_D3DEffect->SetMatrix("g_matViewProj", &viewProjectionMatrix);
-    m_D3DEffect->SetTechnique(m_alphaClipEnabled ? "TechniqueAlphaClip" : "Technique1");
+    const char* techniqueName = "Technique1";
+    if (m_alphaClipEnabled)
+    {
+        techniqueName = "TechniqueAlphaClip";
+    }
+    m_D3DEffect->SetTechnique(techniqueName);
     RenderFrame(m_frameRoot);
 }
 
@@ -614,6 +643,103 @@ D3DXMATRIX MeshMixSkinAnim::BuildWorldMatrix() const
     }
 
     return worldMatrix;
+}
+
+void MeshMixSkinAnim::InvalidateBonePaletteCache()
+{
+    ++m_bonePaletteVersion;
+    if (m_bonePaletteVersion == 0)
+    {
+        m_bonePaletteVersion = 1;
+        m_bonePaletteCache.clear();
+    }
+}
+
+const std::vector<D3DXMATRIX>* MeshMixSkinAnim::GetCachedBonePalette(const SkinAnimMeshContainer* container,
+                                                                     DWORD paletteIndex)
+{
+    if (container == nullptr)
+    {
+        return nullptr;
+    }
+
+    if (paletteIndex >= container->m_boneCount)
+    {
+        return nullptr;
+    }
+
+    if (container->m_boneBuffer == nullptr)
+    {
+        return nullptr;
+    }
+
+    const DWORD paletteSize = container->m_paletteSize;
+    if (paletteSize == 0)
+    {
+        return nullptr;
+    }
+
+    BonePaletteCache& cache = m_bonePaletteCache[container];
+    bool rebuildCache = false;
+    if (cache.version != m_bonePaletteVersion)
+    {
+        rebuildCache = true;
+    }
+    if (cache.paletteSize != paletteSize)
+    {
+        rebuildCache = true;
+    }
+    if (cache.palettes.size() != container->m_boneCount)
+    {
+        rebuildCache = true;
+    }
+
+    if (rebuildCache)
+    {
+        auto boneCombination = reinterpret_cast<LPD3DXBONECOMBINATION>(container->m_boneBuffer->GetBufferPointer());
+        cache.version = m_bonePaletteVersion;
+        cache.paletteSize = paletteSize;
+        cache.palettes.resize(container->m_boneCount);
+
+        for (DWORD i = 0; i < container->m_boneCount; ++i)
+        {
+            std::vector<D3DXMATRIX>& palette = cache.palettes[i];
+            palette.resize(paletteSize);
+            for (DWORD k = 0; k < paletteSize; ++k)
+            {
+                D3DXMatrixIdentity(&palette[k]);
+
+                const DWORD boneId = boneCombination[i].BoneId[k];
+                if (boneId == UINT_MAX)
+                {
+                    continue;
+                }
+
+                if (boneId >= container->m_boneOffsetMatrices.size())
+                {
+                    OutputDebugStringW(L"GetCachedBonePalette: boneId >= m_boneOffsetMatrices.size()\n");
+                    continue;
+                }
+
+                if (boneId >= container->m_frameCombinedMatrix.size())
+                {
+                    OutputDebugStringW(L"GetCachedBonePalette: boneId >= m_frameCombinedMatrix.size()\n");
+                    continue;
+                }
+
+                if (container->m_frameCombinedMatrix[boneId] == nullptr)
+                {
+                    OutputDebugStringW(L"GetCachedBonePalette: frame matrix pointer is null\n");
+                    continue;
+                }
+
+                palette[k] = container->m_boneOffsetMatrices[boneId] *
+                             (*container->m_frameCombinedMatrix[boneId]);
+            }
+        }
+    }
+
+    return &cache.palettes[paletteIndex];
 }
 
 void MeshMixSkinAnim::ApplyAnimationFrameTransformsToMeshHierarchy(const LPD3DXFRAME meshFrameBase,
@@ -1008,6 +1134,11 @@ void MeshMixSkinAnim::RenderFrameToEffect(const LPD3DXFRAME frame, LPD3DXEFFECT 
 void MeshMixSkinAnim::RenderMeshContainerToEffect(const LPD3DXMESHCONTAINER containerBase, LPD3DXEFFECT effect)
 {
     auto container = reinterpret_cast<SkinAnimMeshContainer*>(containerBase);
+    if (container->m_boneBuffer == nullptr)
+    {
+        return;
+    }
+
     auto boneCombination = reinterpret_cast<LPD3DXBONECOMBINATION>(container->m_boneBuffer->GetBufferPointer());
     const DWORD paletteSize = container->m_paletteSize;
 
@@ -1023,37 +1154,13 @@ void MeshMixSkinAnim::RenderMeshContainerToEffect(const LPD3DXMESHCONTAINER cont
 
     for (DWORD i = 0; i < container->m_boneCount; ++i)
     {
-        for (DWORD k = 0; k < paletteSize; ++k)
+        const std::vector<D3DXMATRIX>* cachedPalette = GetCachedBonePalette(container, i);
+        if (cachedPalette == nullptr)
         {
-            const DWORD boneId = boneCombination[i].BoneId[k];
-            if (boneId == UINT_MAX)
-            {
-                continue;
-            }
-
-            if (boneId >= container->m_boneOffsetMatrices.size())
-            {
-                OutputDebugStringW(L"RenderMeshContainerToEffect: boneId >= m_boneOffsetMatrices.size()\n");
-                continue;
-            }
-
-            if (boneId >= container->m_frameCombinedMatrix.size())
-            {
-                OutputDebugStringW(L"RenderMeshContainerToEffect: boneId >= m_frameCombinedMatrix.size()\n");
-                continue;
-            }
-
-            if (container->m_frameCombinedMatrix[boneId] == nullptr)
-            {
-                OutputDebugStringW(L"RenderMeshContainerToEffect: frame matrix pointer is null\n");
-                continue;
-            }
-
-            m_matWorldArray[k] = container->m_boneOffsetMatrices[boneId] *
-                                  (*container->m_frameCombinedMatrix[boneId]);
+            continue;
         }
 
-        effect->SetMatrixArray("g_matWorldArray", &m_matWorldArray[0], paletteSize);
+        effect->SetMatrixArray("g_matWorldArray", &cachedPalette->at(0), paletteSize);
         const DWORD materialIndex = boneCombination[i].AttribId;
         const D3DMATERIAL9& material = container->pMaterials[materialIndex].MatD3D;
         const bool hasTexture = materialIndex < container->m_textureList.size() &&
@@ -1103,51 +1210,34 @@ void MeshMixSkinAnim::RenderMeshContainerToEffect(const LPD3DXMESHCONTAINER cont
 void MeshMixSkinAnim::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBase)
 {
     auto container = reinterpret_cast<SkinAnimMeshContainer*>(containerBase);
+    if (container->m_boneBuffer == nullptr)
+    {
+        return;
+    }
+
     auto boneCombination = reinterpret_cast<LPD3DXBONECOMBINATION>(container->m_boneBuffer->GetBufferPointer());
     const DWORD paletteSize = container->m_paletteSize;
 
     for (DWORD i = 0; i < container->m_boneCount; ++i)
     {
-        for (DWORD k = 0; k < paletteSize; ++k)
+        const std::vector<D3DXMATRIX>* cachedPalette = GetCachedBonePalette(container, i);
+        if (cachedPalette == nullptr)
         {
-            const DWORD boneId = boneCombination[i].BoneId[k];
-            if (boneId == UINT_MAX)
-            {
-                continue;
-            }
-
-            if (boneId >= container->m_boneOffsetMatrices.size())
-            {
-                OutputDebugStringW(L"RenderMeshContainer: boneId >= m_boneOffsetMatrices.size()\n");
-                continue;
-            }
-
-            if (boneId >= container->m_frameCombinedMatrix.size())
-            {
-                OutputDebugStringW(L"RenderMeshContainer: boneId >= m_frameCombinedMatrix.size()\n");
-                continue;
-            }
-
-            if (container->m_frameCombinedMatrix[boneId] == nullptr)
-            {
-                OutputDebugStringW(L"RenderMeshContainer: frame matrix pointer is null\n");
-                continue;
-            }
-
-            m_matWorldArray[k] = container->m_boneOffsetMatrices[boneId] *
-                                 (*container->m_frameCombinedMatrix[boneId]);
+            continue;
         }
 
-        m_D3DEffect->SetMatrixArray("g_matWorldArray", &m_matWorldArray[0], paletteSize);
+        m_D3DEffect->SetMatrixArray("g_matWorldArray", &cachedPalette->at(0), paletteSize);
 
         const DWORD materialIndex = boneCombination[i].AttribId;
         const D3DMATERIAL9& material = container->pMaterials[materialIndex].MatD3D;
         const bool hasTexture = materialIndex < container->m_textureList.size() &&
                                 container->m_textureList[materialIndex] != nullptr;
         const bool disableZWrite = !m_alphaClipEnabled && !m_ignoreTransparentMaterial && hasTexture && material.Diffuse.a <= 0.001f;
-        const float diffuseAlpha = (hasTexture && material.Diffuse.a <= 0.001f)
-                                 ? 1.0f
-                                 : material.Diffuse.a;
+        float diffuseAlpha = material.Diffuse.a;
+        if (hasTexture && material.Diffuse.a <= 0.001f)
+        {
+            diffuseAlpha = 1.0f;
+        }
         D3DXVECTOR4 diffuse(material.Diffuse.r,
                             material.Diffuse.g,
                             material.Diffuse.b,
@@ -1201,7 +1291,12 @@ void MeshMixSkinAnim::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBas
             Common::D3DDevice()->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
         }
 
-        m_D3DEffect->SetTechnique(m_alphaClipEnabled ? "TechniqueAlphaClip" : "Technique1");
+        const char* techniqueName = "Technique1";
+        if (m_alphaClipEnabled)
+        {
+            techniqueName = "TechniqueAlphaClip";
+        }
+        m_D3DEffect->SetTechnique(techniqueName);
         m_D3DEffect->Begin(nullptr, 0);
         if (FAILED(m_D3DEffect->BeginPass(0)))
         {
@@ -1258,21 +1353,6 @@ HRESULT MeshMixSkinAnim::AllocateBoneMatrix(LPD3DXMESHCONTAINER containerBase)
 
     DWORD boneCount = container->pSkinInfo->GetNumBones();
     container->m_frameCombinedMatrix.resize(boneCount);
-
-    DWORD requiredSize = container->m_paletteSize;
-    if (requiredSize == 0)
-    {
-        requiredSize = boneCount;
-    }
-    if (requiredSize == 0)
-    {
-        requiredSize = 1;
-    }
-
-    if (m_matWorldArray.size() < requiredSize)
-    {
-        m_matWorldArray.resize(requiredSize);
-    }
 
     m_D3DEffect->SetInt("g_currentBoneIndex", container->m_influenceCount - 1);
 
@@ -1396,6 +1476,7 @@ void MeshMixSkinAnim::ReleaseMeshAllocatorRecursive(const LPD3DXFRAME frame, Ski
 void MeshMixSkinAnim::SetPos(const D3DXVECTOR3& pos)
 {
     m_pos = pos;
+    InvalidateBonePaletteCache();
 }
 
 void MeshMixSkinAnim::SetSaturateShadow(const bool enabled)
@@ -1456,6 +1537,7 @@ void MeshMixSkinAnim::SetIgnoreTransparentMaterial(const bool enabled)
 void MeshMixSkinAnim::SetRotY(const float rotY)
 {
     m_rotate.y = rotY;
+    InvalidateBonePaletteCache();
 }
 
 D3DXVECTOR3 MeshMixSkinAnim::GetRot() const
