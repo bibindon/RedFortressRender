@@ -1,5 +1,7 @@
 
 
+#include "Common.fx"
+
 
 float4x4 g_matWorld;
 float4x4 g_matWorldViewProj;
@@ -14,7 +16,6 @@ int      g_swayMode;
 float    g_time;
 bool     g_useMeshAlphaCutout;
 
-static const int MAX_MATRICES = 32;
 float4x3 g_matWorldArray[MAX_MATRICES];
 int g_currentBoneIndex;
 

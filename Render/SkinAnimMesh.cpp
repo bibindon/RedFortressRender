@@ -243,7 +243,6 @@ HRESULT SkinAnimMesh::AllocateBoneMatrix(LPD3DXMESHCONTAINER containerBase)
     DWORD boneCount = container->pSkinInfo->GetNumBones();
     container->m_frameCombinedMatrix.resize(boneCount);
 
-    DWORD MAX_MATRICES = 8;
     if (boneCount > MAX_MATRICES)
     {
         m_matWorldArray.resize(MAX_MATRICES);

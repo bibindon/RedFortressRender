@@ -1,9 +1,10 @@
+#include "Common.fx"
+
 float4 g_lightNormal;
 float g_lightBrightness;
 float4 g_diffuse;
 float4 g_ambient = { 0.2f, 0.2f, 0.2f, 1.0f };
 
-static const int MAX_MATRICES = 32;
 float4x3 g_matWorldArray[MAX_MATRICES];
 float4x4 g_matViewProj;
 
@@ -98,8 +99,8 @@ technique Technique1
 {
     pass Pass0
     {
-        // ƒ^ƒeƒKƒ~‚ª‚¤‚Ü‚­•\¦‚Å‚«‚È‚¢‚ªA‚±‚ÌƒRƒƒ“ƒgƒAƒEƒg‚ğŠO‚·‚Æ
-        // ‹t‚Éƒ^ƒeƒKƒ~‚¾‚¯³‚µ‚­•\¦‚Å‚«‚é‚æ‚¤‚É‚È‚éB
+        // ï¿½^ï¿½eï¿½Kï¿½~ï¿½ï¿½ï¿½ï¿½ï¿½Ü‚ï¿½ï¿½\ï¿½ï¿½ï¿½Å‚ï¿½ï¿½È‚ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ÌƒRï¿½ï¿½ï¿½ï¿½ï¿½gï¿½Aï¿½Eï¿½gï¿½ï¿½ï¿½Oï¿½ï¿½ï¿½ï¿½
+        // ï¿½tï¿½Éƒ^ï¿½eï¿½Kï¿½~ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\ï¿½ï¿½ï¿½Å‚ï¿½ï¿½ï¿½æ‚¤ï¿½É‚È‚ï¿½B
         // ZEnable = FALSE;
         // ZWriteEnable = FALSE;
         // ZFunc        = Always;
