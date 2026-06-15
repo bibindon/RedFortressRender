@@ -72,6 +72,29 @@ void Sprite::PlaceImage(const std::wstring& filename,
     m_spriteInfoList.push_back(spriteInfo);
 }
 
+void Sprite::PlaceImage(const std::wstring& filename,
+                         const int X,
+                         const int Y,
+                         const int width,
+                         const int height,
+                         const RECT& sourceRect,
+                         const int transparency)
+{
+    SpriteInfo spriteInfo;
+
+    spriteInfo.m_rect.left = X;
+    spriteInfo.m_rect.top = Y;
+    spriteInfo.m_rect.right = width;
+    spriteInfo.m_rect.bottom = height;
+    spriteInfo.m_sourceRect = sourceRect;
+    spriteInfo.m_imageName = filename;
+    spriteInfo.m_transparency = transparency;
+    spriteInfo.m_scaled = true;
+    spriteInfo.m_hasSourceRect = true;
+
+    m_spriteInfoList.push_back(spriteInfo);
+}
+
 void Sprite::RegisterTexture(const std::wstring& key, LPDIRECT3DTEXTURE9 texture)
 {
     if (m_textureMap.find(key) != m_textureMap.end())
@@ -130,8 +153,23 @@ void Sprite::Draw()
             const SIZE imageSize = GetImageSize(elem.m_imageName);
             if (imageSize.cx > 0 && imageSize.cy > 0)
             {
-                const float scaleXVal = static_cast<float>(elem.m_rect.right) / static_cast<float>(imageSize.cx);
-                const float scaleYVal = static_cast<float>(elem.m_rect.bottom) / static_cast<float>(imageSize.cy);
+                int sourceWidth = imageSize.cx;
+                int sourceHeight = imageSize.cy;
+                RECT* sourceRect = NULL;
+                if (elem.m_hasSourceRect)
+                {
+                    sourceWidth = elem.m_sourceRect.right - elem.m_sourceRect.left;
+                    sourceHeight = elem.m_sourceRect.bottom - elem.m_sourceRect.top;
+                    sourceRect = &elem.m_sourceRect;
+                }
+
+                if (sourceWidth <= 0 || sourceHeight <= 0)
+                {
+                    continue;
+                }
+
+                const float scaleXVal = static_cast<float>(elem.m_rect.right) / static_cast<float>(sourceWidth);
+                const float scaleYVal = static_cast<float>(elem.m_rect.bottom) / static_cast<float>(sourceHeight);
                 float workScaleXVal = scaleXVal;
                 if (elem.m_flipX)
                 {
@@ -156,7 +194,7 @@ void Sprite::Draw()
                 scaledPos.y = static_cast<float>(elem.m_rect.top) / scaleYVal;
 
                 m_pSprite->Draw(m_textureMap.at(elem.m_imageName),
-                                NULL,
+                                sourceRect,
                                 NULL,
                                 &scaledPos,
                                 D3DCOLOR_RGBA(255, 255, 255, elem.m_transparency));

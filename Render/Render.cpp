@@ -4010,6 +4010,32 @@ void Render::DrawImageSized(const std::wstring& filename,
     m_sprite.PlaceImage(filename, X, Y, width, height, transparency);
 }
 
+void Render::DrawImageSizedRect(const std::wstring& filename,
+                                const int X,
+                                const int Y,
+                                const int width,
+                                const int height,
+                                const int sourceX,
+                                const int sourceY,
+                                const int sourceWidth,
+                                const int sourceHeight,
+                                const int transparency)
+{
+    if (width <= 0 || height <= 0 || sourceWidth <= 0 || sourceHeight <= 0)
+    {
+        return;
+    }
+
+    RECT sourceRect;
+    sourceRect.left = sourceX;
+    sourceRect.top = sourceY;
+    sourceRect.right = sourceX + sourceWidth;
+    sourceRect.bottom = sourceY + sourceHeight;
+
+    m_sprite.LoadImage_(filename);
+    m_sprite.PlaceImage(filename, X, Y, width, height, sourceRect, transparency);
+}
+
 void Render::DrawImageStretched(const std::wstring& filename,
                                             const int transparency)
 {
