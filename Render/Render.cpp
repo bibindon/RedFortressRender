@@ -408,6 +408,25 @@ bool Render::LoadXFileListFromCsv(const std::wstring& csvPath,
     return localLoadedCount > 0;
 }
 
+void Render::ClearCsvLoadedMeshes()
+{
+    std::vector<int> renderIds;
+    for (const auto& entry : m_csvIdToRenderId)
+    {
+        renderIds.push_back(entry.second);
+    }
+
+    std::sort(renderIds.begin(), renderIds.end());
+    renderIds.erase(std::unique(renderIds.begin(), renderIds.end()), renderIds.end());
+    for (auto it = renderIds.rbegin(); it != renderIds.rend(); ++it)
+    {
+        RemoveMeshMix(*it);
+    }
+
+    m_csvIdToRenderId.clear();
+    m_movingPlatforms.clear();
+}
+
 bool Render::IsAllMeshLoaded() const
 {
     for (const auto& mesh : m_meshMixList)

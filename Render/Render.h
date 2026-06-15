@@ -244,6 +244,7 @@ public:
                               const float scale = 1.0f,
                               int* loadedCount = nullptr,
                               int* skippedCount = nullptr);
+    void ClearCsvLoadedMeshes();
 
     // すべての非同期メッシュ読み込みが完了したかどうかを確認する。
     bool IsAllMeshLoaded() const;
