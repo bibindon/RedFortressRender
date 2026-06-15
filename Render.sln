@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.5.11723.231 stable
+VisualStudioVersion = 18.5.11723.231
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sample", "Sample\Sample.vcxproj", "{612AB2DB-B7C4-4E63-AA2D-A02C76A2EEB2}"
 EndProject
@@ -11,18 +11,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnitTest1", "UnitTest1\Unit
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug_VisualStudio2019|x64 = Debug_VisualStudio2019|x64
-		Debug_VisualStudio2019|x86 = Debug_VisualStudio2019|x86
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{612AB2DB-B7C4-4E63-AA2D-A02C76A2EEB2}.Debug_VisualStudio2019|x64.ActiveCfg = Debug_VisualStudio2019|x64
-		{612AB2DB-B7C4-4E63-AA2D-A02C76A2EEB2}.Debug_VisualStudio2019|x64.Build.0 = Debug_VisualStudio2019|x64
-		{612AB2DB-B7C4-4E63-AA2D-A02C76A2EEB2}.Debug_VisualStudio2019|x86.ActiveCfg = Debug_VisualStudio2019|Win32
-		{612AB2DB-B7C4-4E63-AA2D-A02C76A2EEB2}.Debug_VisualStudio2019|x86.Build.0 = Debug_VisualStudio2019|Win32
 		{612AB2DB-B7C4-4E63-AA2D-A02C76A2EEB2}.Debug|x64.ActiveCfg = Debug|x64
 		{612AB2DB-B7C4-4E63-AA2D-A02C76A2EEB2}.Debug|x64.Build.0 = Debug|x64
 		{612AB2DB-B7C4-4E63-AA2D-A02C76A2EEB2}.Debug|x86.ActiveCfg = Debug|Win32
@@ -31,10 +25,6 @@ Global
 		{612AB2DB-B7C4-4E63-AA2D-A02C76A2EEB2}.Release|x64.Build.0 = Release|x64
 		{612AB2DB-B7C4-4E63-AA2D-A02C76A2EEB2}.Release|x86.ActiveCfg = Release|Win32
 		{612AB2DB-B7C4-4E63-AA2D-A02C76A2EEB2}.Release|x86.Build.0 = Release|Win32
-		{D8A93A58-4392-4FC4-A4F7-634D4DAC81B4}.Debug_VisualStudio2019|x64.ActiveCfg = Debug_VisualStudio2019|x64
-		{D8A93A58-4392-4FC4-A4F7-634D4DAC81B4}.Debug_VisualStudio2019|x64.Build.0 = Debug_VisualStudio2019|x64
-		{D8A93A58-4392-4FC4-A4F7-634D4DAC81B4}.Debug_VisualStudio2019|x86.ActiveCfg = Debug_VisualStudio2019|Win32
-		{D8A93A58-4392-4FC4-A4F7-634D4DAC81B4}.Debug_VisualStudio2019|x86.Build.0 = Debug_VisualStudio2019|Win32
 		{D8A93A58-4392-4FC4-A4F7-634D4DAC81B4}.Debug|x64.ActiveCfg = Debug|x64
 		{D8A93A58-4392-4FC4-A4F7-634D4DAC81B4}.Debug|x64.Build.0 = Debug|x64
 		{D8A93A58-4392-4FC4-A4F7-634D4DAC81B4}.Debug|x86.ActiveCfg = Debug|Win32
@@ -43,10 +33,6 @@ Global
 		{D8A93A58-4392-4FC4-A4F7-634D4DAC81B4}.Release|x64.Build.0 = Release|x64
 		{D8A93A58-4392-4FC4-A4F7-634D4DAC81B4}.Release|x86.ActiveCfg = Release|Win32
 		{D8A93A58-4392-4FC4-A4F7-634D4DAC81B4}.Release|x86.Build.0 = Release|Win32
-		{5768658D-5753-57BE-9F55-89088097DC31}.Debug_VisualStudio2019|x64.ActiveCfg = Debug|x64
-		{5768658D-5753-57BE-9F55-89088097DC31}.Debug_VisualStudio2019|x64.Build.0 = Debug|x64
-		{5768658D-5753-57BE-9F55-89088097DC31}.Debug_VisualStudio2019|x86.ActiveCfg = Debug|Win32
-		{5768658D-5753-57BE-9F55-89088097DC31}.Debug_VisualStudio2019|x86.Build.0 = Debug|Win32
 		{5768658D-5753-57BE-9F55-89088097DC31}.Debug|x64.ActiveCfg = Debug|x64
 		{5768658D-5753-57BE-9F55-89088097DC31}.Debug|x64.Build.0 = Debug|x64
 		{5768658D-5753-57BE-9F55-89088097DC31}.Debug|x86.ActiveCfg = Debug|Win32
