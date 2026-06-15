@@ -14,7 +14,7 @@ int      g_swayMode;
 float    g_time;
 bool     g_useMeshAlphaCutout;
 
-static const int MAX_MATRICES = 16;
+static const int MAX_MATRICES = 32;
 float4x3 g_matWorldArray[MAX_MATRICES];
 int g_currentBoneIndex;
 

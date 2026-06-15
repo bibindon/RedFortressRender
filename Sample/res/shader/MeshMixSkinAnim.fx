@@ -32,7 +32,7 @@ float3 g_pointLightColor[16];
 static const float POINT_LIGHT_CUBE_HALF_SIZE = 4.0f;
 static const float POINT_LIGHT_SPHERE_RADIUS = 5.0f;
 
-static const int MAX_MATRICES = 16;
+static const int MAX_MATRICES = 32;
 float4x3 g_matWorldArray[MAX_MATRICES];
 float4x4 g_matViewProj;
 

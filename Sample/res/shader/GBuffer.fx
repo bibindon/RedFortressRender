@@ -4,7 +4,7 @@ float4x4 g_matView;
 float4x4 g_matProj;
 float4x4 g_matWorldViewProjParticle;
 
-static const int MAX_MATRICES = 16;
+static const int MAX_MATRICES = 32;
 float4x3 g_matWorldArray[MAX_MATRICES];
 int g_currentBoneIndex;
 
