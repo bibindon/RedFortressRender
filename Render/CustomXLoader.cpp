@@ -9,6 +9,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <vector>
 
 namespace NSRender
 {
@@ -374,6 +375,12 @@ struct CustomXMeshData
     std::vector<DWORD> faceMaterialIndices;
     std::vector<CustomXMaterialData> materials;
     std::vector<CustomXSkinWeightsData> skinWeights;
+};
+
+struct CustomXParseContext
+{
+    std::map<std::string, std::string> frameParents;
+    std::map<std::string, D3DXMATRIX> frameLocalMatrices;
 };
 
 SkinAnimMeshFrame* CreateCustomXFrame(const std::string& name)
@@ -1101,6 +1108,221 @@ void OutputDebugLog(const std::wstring& message)
     OutputDebugStringW((L"[CustomXLoader] " + message + L"\n").c_str());
 }
 
+std::string ToLowerAsciiText(const std::string& text)
+{
+    std::string result = text;
+    for (std::size_t i = 0; i < result.size(); ++i)
+    {
+        if (result[i] >= 'A' && result[i] <= 'Z')
+        {
+            result[i] = static_cast<char>(result[i] - 'A' + 'a');
+        }
+    }
+    return result;
+}
+
+bool ContainsText(const std::string& text, const char* pattern)
+{
+    return text.find(pattern) != std::string::npos;
+}
+
+bool IsCollapsiblePhysicsBoneName(const std::string& boneName)
+{
+    const std::string lowerName = ToLowerAsciiText(boneName);
+    if (ContainsText(lowerName, "subhair") ||
+        ContainsText(lowerName, "hair") ||
+        ContainsText(lowerName, "coat") ||
+        ContainsText(lowerName, "skirt") ||
+        ContainsText(lowerName, "hat") ||
+        ContainsText(lowerName, "cap"))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+std::string FindSkinWeightCollapseTarget(const std::string& boneName,
+                                         const CustomXParseContext& context)
+{
+    std::string currentName = boneName;
+    while (IsCollapsiblePhysicsBoneName(currentName))
+    {
+        const auto parent = context.frameParents.find(currentName);
+        if (parent == context.frameParents.end() || parent->second.empty())
+        {
+            return boneName;
+        }
+
+        currentName = parent->second;
+    }
+
+    return currentName;
+}
+
+D3DXMATRIX ComputeFrameCombinedMatrix(const std::string& frameName,
+                                      const CustomXParseContext& context)
+{
+    D3DXMATRIX combined;
+    D3DXMatrixIdentity(&combined);
+
+    std::vector<std::string> chain;
+    std::string currentName = frameName;
+    while (!currentName.empty())
+    {
+        chain.push_back(currentName);
+        const auto parent = context.frameParents.find(currentName);
+        if (parent == context.frameParents.end())
+        {
+            break;
+        }
+        currentName = parent->second;
+    }
+
+    for (std::size_t i = 0; i < chain.size(); ++i)
+    {
+        const auto localMatrix = context.frameLocalMatrices.find(chain[i]);
+        if (localMatrix != context.frameLocalMatrices.end())
+        {
+            combined *= localMatrix->second;
+        }
+    }
+
+    return combined;
+}
+
+bool TryGetSkinWeightOffsetMatrix(const CustomXMeshData& meshData,
+                                  const std::string& boneName,
+                                  D3DXMATRIX& offsetMatrix)
+{
+    for (const CustomXSkinWeightsData& weightsData : meshData.skinWeights)
+    {
+        if (weightsData.boneName == boneName)
+        {
+            offsetMatrix = weightsData.offsetMatrix;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool TryComputeFrameOffsetMatrix(const std::string& frameName,
+                                 const CustomXParseContext& context,
+                                 D3DXMATRIX& offsetMatrix)
+{
+    if (context.frameLocalMatrices.count(frameName) == 0)
+    {
+        return false;
+    }
+
+    const D3DXMATRIX combined = ComputeFrameCombinedMatrix(frameName, context);
+    if (D3DXMatrixInverse(&offsetMatrix, nullptr, &combined) == nullptr)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+void NormalizeMergedSkinWeights(CustomXSkinWeightsData& weightsData)
+{
+    std::map<DWORD, float> mergedWeights;
+    for (std::size_t i = 0; i < weightsData.vertexIndices.size(); ++i)
+    {
+        if (weightsData.weights[i] <= 0.000001f)
+        {
+            continue;
+        }
+
+        mergedWeights[weightsData.vertexIndices[i]] += weightsData.weights[i];
+    }
+
+    weightsData.vertexIndices.clear();
+    weightsData.weights.clear();
+    for (const auto& mergedWeight : mergedWeights)
+    {
+        if (mergedWeight.second <= 0.000001f)
+        {
+            continue;
+        }
+
+        weightsData.vertexIndices.push_back(mergedWeight.first);
+        weightsData.weights.push_back(mergedWeight.second);
+    }
+}
+
+void CollapsePhysicsSkinWeights(CustomXMeshData& meshData,
+                                const CustomXParseContext& context)
+{
+    if (meshData.skinWeights.empty())
+    {
+        return;
+    }
+
+    std::map<std::string, CustomXSkinWeightsData> mergedSkinWeights;
+    DWORD collapsedBoneCount = 0;
+
+    for (const CustomXSkinWeightsData& weightsData : meshData.skinWeights)
+    {
+        const std::string targetBoneName = FindSkinWeightCollapseTarget(weightsData.boneName, context);
+
+        D3DXMATRIX targetOffsetMatrix;
+        bool hasTargetOffsetMatrix = TryGetSkinWeightOffsetMatrix(meshData, targetBoneName, targetOffsetMatrix);
+        if (!hasTargetOffsetMatrix)
+        {
+            hasTargetOffsetMatrix = TryComputeFrameOffsetMatrix(targetBoneName, context, targetOffsetMatrix);
+        }
+        if (!hasTargetOffsetMatrix)
+        {
+            targetOffsetMatrix = weightsData.offsetMatrix;
+        }
+
+        CustomXSkinWeightsData& mergedWeightsData = mergedSkinWeights[targetBoneName];
+        if (mergedWeightsData.boneName.empty())
+        {
+            mergedWeightsData.boneName = targetBoneName;
+            mergedWeightsData.offsetMatrix = targetOffsetMatrix;
+        }
+
+        if (targetBoneName != weightsData.boneName)
+        {
+            ++collapsedBoneCount;
+        }
+
+        for (std::size_t weightIndex = 0; weightIndex < weightsData.vertexIndices.size(); ++weightIndex)
+        {
+            if (weightsData.weights[weightIndex] <= 0.000001f)
+            {
+                continue;
+            }
+
+            mergedWeightsData.vertexIndices.push_back(weightsData.vertexIndices[weightIndex]);
+            mergedWeightsData.weights.push_back(weightsData.weights[weightIndex]);
+        }
+    }
+
+    if (collapsedBoneCount == 0)
+    {
+        return;
+    }
+
+    meshData.skinWeights.clear();
+    for (auto& skinWeight : mergedSkinWeights)
+    {
+        NormalizeMergedSkinWeights(skinWeight.second);
+        if (!skinWeight.second.vertexIndices.empty())
+        {
+            meshData.skinWeights.push_back(skinWeight.second);
+        }
+    }
+
+    OutputDebugLog(L"CollapsePhysicsSkinWeights: collapsedBones=" +
+                   std::to_wstring(collapsedBoneCount) +
+                   L" remainingSkinWeights=" +
+                   std::to_wstring(meshData.skinWeights.size()));
+}
+
 bool SplitCustomXMeshDataByBoneLimit(const CustomXMeshData& sourceMeshData,
                                      const DWORD maxBonesPerPart,
                                      std::vector<CustomXMeshData>& outMeshParts)
@@ -1371,7 +1593,8 @@ bool SplitCustomXMeshDataByBoneLimit(const CustomXMeshData& sourceMeshData,
 
 bool ParseCustomXMesh(XTextTokenizer& tokenizer,
                       SkinAnimMeshFrame* frame,
-                      SkinAnimMeshAlloc* allocator)
+                      SkinAnimMeshAlloc* allocator,
+                      CustomXParseContext* context)
 {
     std::string token;
     std::string meshName = "CustomXMesh";
@@ -1443,6 +1666,11 @@ bool ParseCustomXMesh(XTextTokenizer& tokenizer,
         {
             if (allocator != nullptr)
             {
+                if (context != nullptr)
+                {
+                    CollapsePhysicsSkinWeights(meshData, *context);
+                }
+
                 if (meshData.skinWeights.size() <= MAX_SKININFO_BONES_PER_PART)
                 {
                     LPD3DXMESHCONTAINER meshContainer = nullptr;
@@ -1529,9 +1757,17 @@ bool ParseCustomXMesh(XTextTokenizer& tokenizer,
     return false;
 }
 
-bool ParseCustomXFrameBody(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame, SkinAnimMeshAlloc* allocator, CustomXLoadPurpose loadPurpose);
+bool ParseCustomXFrameBody(XTextTokenizer& tokenizer,
+                           SkinAnimMeshFrame* frame,
+                           SkinAnimMeshAlloc* allocator,
+                           CustomXLoadPurpose loadPurpose,
+                           CustomXParseContext* context);
 
-SkinAnimMeshFrame* ParseCustomXFrame(XTextTokenizer& tokenizer, SkinAnimMeshAlloc* allocator, CustomXLoadPurpose loadPurpose)
+SkinAnimMeshFrame* ParseCustomXFrame(XTextTokenizer& tokenizer,
+                                     SkinAnimMeshAlloc* allocator,
+                                     CustomXLoadPurpose loadPurpose,
+                                     CustomXParseContext* context,
+                                     const std::string& parentFrameName)
 {
     std::string frameName;
     if (!tokenizer.ReadToken(frameName))
@@ -1545,7 +1781,13 @@ SkinAnimMeshFrame* ParseCustomXFrame(XTextTokenizer& tokenizer, SkinAnimMeshAllo
     }
 
     SkinAnimMeshFrame* frame = CreateCustomXFrame(frameName);
-    if (!ParseCustomXFrameBody(tokenizer, frame, allocator, loadPurpose))
+    if (context != nullptr)
+    {
+        context->frameParents[frameName] = parentFrameName;
+        context->frameLocalMatrices[frameName] = frame->TransformationMatrix;
+    }
+
+    if (!ParseCustomXFrameBody(tokenizer, frame, allocator, loadPurpose, context))
     {
         SAFE_DELETE_ARRAY(frame->Name);
         SAFE_DELETE(frame);
@@ -1555,7 +1797,11 @@ SkinAnimMeshFrame* ParseCustomXFrame(XTextTokenizer& tokenizer, SkinAnimMeshAllo
     return frame;
 }
 
-bool ParseCustomXFrameBody(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame, SkinAnimMeshAlloc* allocator, CustomXLoadPurpose loadPurpose)
+bool ParseCustomXFrameBody(XTextTokenizer& tokenizer,
+                           SkinAnimMeshFrame* frame,
+                           SkinAnimMeshAlloc* allocator,
+                           CustomXLoadPurpose loadPurpose,
+                           CustomXParseContext* context)
 {
     std::string token;
     while (tokenizer.ReadToken(token))
@@ -1572,7 +1818,17 @@ bool ParseCustomXFrameBody(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame, 
 
         if (token == "Frame")
         {
-            SkinAnimMeshFrame* child = ParseCustomXFrame(tokenizer, allocator, loadPurpose);
+            std::string parentFrameName;
+            if (frame->Name != nullptr)
+            {
+                parentFrameName = frame->Name;
+            }
+
+            SkinAnimMeshFrame* child = ParseCustomXFrame(tokenizer,
+                                                         allocator,
+                                                         loadPurpose,
+                                                         context,
+                                                         parentFrameName);
             if (child == nullptr)
             {
                 return false;
@@ -1587,6 +1843,10 @@ bool ParseCustomXFrameBody(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame, 
             if (!ParseCustomXFrameTransformMatrix(tokenizer, frame))
             {
                 return false;
+            }
+            if (context != nullptr && frame->Name != nullptr)
+            {
+                context->frameLocalMatrices[frame->Name] = frame->TransformationMatrix;
             }
             continue;
         }
@@ -1616,7 +1876,7 @@ bool ParseCustomXFrameBody(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame, 
                 continue;
             }
 
-            if (!ParseCustomXMesh(tokenizer, frame, allocator))
+            if (!ParseCustomXMesh(tokenizer, frame, allocator, context))
             {
                 return false;
             }
@@ -2229,6 +2489,7 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
     CUSTOM_X_LOADER_LOG(L"Custom parser start. Bytes=" + std::to_wstring(fileText.size()));
 
     XTextTokenizer tokenizer(fileText);
+    CustomXParseContext parseContext;
     std::string token;
     bool frameFound = false;
     while (tokenizer.ReadToken(token))
@@ -2241,7 +2502,11 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
         if (token == "Frame")
         {
             CUSTOM_X_LOADER_LOG(L"Custom parser found top-level Frame.");
-            SkinAnimMeshFrame* frame = ParseCustomXFrame(tokenizer, allocator, loadPurpose);
+            SkinAnimMeshFrame* frame = ParseCustomXFrame(tokenizer,
+                                                         allocator,
+                                                         loadPurpose,
+                                                         &parseContext,
+                                                         std::string());
             if (frame == nullptr)
             {
                 CUSTOM_X_LOADER_LOG(L"Custom parser failed while parsing top-level Frame.");
