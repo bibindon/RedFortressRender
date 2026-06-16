@@ -17,6 +17,7 @@ public:
     void SetSampleSize(const int sampleSize);
     void SetIntensity(const float intensity);
     void SetMaskPath(const std::wstring& maskPath);
+    void SetMaskScaleToBaseResolution(const bool enabled);
 
     void OnDeviceLost() override;
     void OnDeviceReset() override;
@@ -33,6 +34,7 @@ private:
     LPDIRECT3DTEXTURE9 m_texBlurResult = nullptr;
     LPDIRECT3DTEXTURE9 m_texMask = nullptr;
     std::wstring m_maskPath;
+    bool m_maskScaleToBaseResolution = false;
     int m_sampleSize = 101;
     float m_intensity = 1.0f;
 

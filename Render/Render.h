@@ -555,6 +555,7 @@ public:
     void SetPostEffectMaskedGaussianFilter(const bool arg);
     void SetPostEffectMaskedGaussianSampleSize(const int sampleSize);
     void SetPostEffectMaskedGaussianMaskPath(const std::wstring& maskPath);
+    void SetPostEffectMaskedGaussianMaskScaleToBaseResolution(const bool arg);
     void SetPostEffectAA(const bool arg);
     void SetPostEffectFXAA(const bool arg);
     void SetPostEffectFXAAQuality(const int quality);

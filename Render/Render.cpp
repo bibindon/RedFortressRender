@@ -4383,6 +4383,11 @@ void Render::SetPostEffectMaskedGaussianMaskPath(const std::wstring& maskPath)
     m_postEffectMaskedGauss.SetMaskPath(maskPath);
 }
 
+void Render::SetPostEffectMaskedGaussianMaskScaleToBaseResolution(const bool arg)
+{
+    m_postEffectMaskedGauss.SetMaskScaleToBaseResolution(arg);
+}
+
 void Render::SetPostEffectAA(const bool arg)
 {
     m_postEffectAAEnabled = arg;
