@@ -710,6 +710,8 @@ public:
     void SetShowFPS(const bool arg);
     bool IsShowFPS() const;
     void SetShowCameraPosition(const bool arg);
+    void SetSceneUpdatePaused(const bool paused);
+    bool IsSceneUpdatePaused() const;
 
     std::vector<std::pair<int, int>> GetResolutionList();
 
@@ -790,6 +792,7 @@ private:
 
     std::unordered_map<int, int> m_csvIdToRenderId;
     std::vector<MovingPlatform> m_movingPlatforms;
+    bool m_sceneUpdatePaused = false;
 
     // ポインターにしないとデバイスロストを扱う機能が機能しなくなる
     std::vector<Font*> m_fontList;

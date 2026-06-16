@@ -2261,12 +2261,15 @@ void Render::Draw()
     }
 
     const float frameDeltaSeconds = CalcFrameDeltaSeconds();
-    m_particleSystem.Update(frameDeltaSeconds);
-    m_loadingScreen.Update(frameDeltaSeconds);
-    UpdateMovingPlatforms(frameDeltaSeconds);
-    UpdateFade(frameDeltaSeconds);
-    UpdateSkinAnimationState();
-    UpdateMeshMixSkinAnimBlink();
+    if (!m_sceneUpdatePaused)
+    {
+        m_particleSystem.Update(frameDeltaSeconds);
+        m_loadingScreen.Update(frameDeltaSeconds);
+        UpdateMovingPlatforms(frameDeltaSeconds);
+        UpdateFade(frameDeltaSeconds);
+        UpdateSkinAnimationState();
+        UpdateMeshMixSkinAnimBlink();
+    }
     CameraShakeFrameScope cameraShakeFrameScope;
     ApplyTAAProjectionJitter();
 
@@ -5165,6 +5168,16 @@ bool Render::IsShowFPS() const
 void Render::SetShowCameraPosition(const bool arg)
 {
     m_bShowCameraPosition = arg;
+}
+
+void Render::SetSceneUpdatePaused(const bool paused)
+{
+    m_sceneUpdatePaused = paused;
+}
+
+bool Render::IsSceneUpdatePaused() const
+{
+    return m_sceneUpdatePaused;
 }
 
 std::vector<std::pair<int, int>> Render::GetResolutionList()
