@@ -450,6 +450,14 @@ public:
     void ClearWorldTexts();
     const std::vector<WorldTextInfo>& GetWorldTextList() const;
 
+    // 1 フレームだけ表示されるワールドテキスト。
+    // 呼び出しフレームの Draw() 内で一度だけ描画され、次のフレームには残らない。
+    void DrawWorldText(const std::wstring& text,
+                       const D3DXVECTOR3& worldPos,
+                       const int fontSize,
+                       const D3DXCOLOR& color,
+                       const bool decorated = false);
+
     void DrawImage(const std::wstring& text,
                    const int X,
                    const int Y,
@@ -786,6 +794,7 @@ private:
     std::vector<FontEx*> m_fontExList;
     std::vector<RenderSettingsDialogTextInfo> m_settingsDialogTextList;
     std::vector<WorldTextInfo> m_worldTextList;
+    std::vector<WorldTextInfo> m_pendingWorldTexts;
     int m_worldTextFontId = -1;
     std::unordered_map<int, int> m_worldTextFontIdBySize;
     std::unordered_map<int, int> m_worldTextFontExIdBySize;
@@ -869,6 +878,7 @@ private:
     void EnsureSettingsDialogTextFonts();
     void DrawSettingsDialogText();
     void DrawWorldTexts();
+    void DrawWorldTextImpl(const WorldTextInfo& worldText);
     void EnsureLoadingScreenFont();
     void DrawLoadingScreen();
     void DrawFadeOverlay();

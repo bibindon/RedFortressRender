@@ -3985,6 +3985,21 @@ const std::vector<WorldTextInfo>& Render::GetWorldTextList() const
     return m_worldTextList;
 }
 
+void Render::DrawWorldText(const std::wstring& text,
+                           const D3DXVECTOR3& worldPos,
+                           const int fontSize,
+                           const D3DXCOLOR& color,
+                           const bool decorated)
+{
+    WorldTextInfo info;
+    info.text = text;
+    info.worldPos = worldPos;
+    info.fontSize = fontSize;
+    info.color = color;
+    info.decorated = decorated;
+    m_pendingWorldTexts.push_back(info);
+}
+
 void Render::DrawImage(const std::wstring& text,
                                  const int X,
                                  const int Y,
@@ -5636,75 +5651,81 @@ void Render::WaitForTargetFrameRate()
     m_lastFramePacingTime = currentTime;
 }
 
-void Render::DrawWorldTexts()
+void Render::DrawWorldTextImpl(const WorldTextInfo& worldText)
 {
-    if (m_worldTextList.empty())
+    const float scaleX = static_cast<float>(Common::BASE_W) / static_cast<float>(Common::ScreenW());
+    const float scaleY = static_cast<float>(Common::BASE_H) / static_cast<float>(Common::ScreenH());
+
+    const POINT screenPos = Camera::GetScreenPos(worldText.worldPos);
+    if (screenPos.x < 0 || screenPos.y < 0)
     {
         return;
     }
 
-    const float scaleX = static_cast<float>(Common::BASE_W) / static_cast<float>(Common::ScreenW());
-    const float scaleY = static_cast<float>(Common::BASE_H) / static_cast<float>(Common::ScreenH());
+    const int baseX = static_cast<int>(static_cast<float>(screenPos.x) * scaleX);
+    const int baseY = static_cast<int>(static_cast<float>(screenPos.y) * scaleY);
 
+    SIZE textSize = { 0, 0 };
+    if (worldText.decorated)
+    {
+        auto found = m_worldTextFontExIdBySize.find(worldText.fontSize);
+        if (found == m_worldTextFontExIdBySize.end())
+        {
+            const int newId = SetUpFontEx(L"BIZ UDゴシック", worldText.fontSize, D3DCOLOR_ARGB(255, 255, 255, 255));
+            m_worldTextFontExIdBySize[worldText.fontSize] = newId;
+            found = m_worldTextFontExIdBySize.find(worldText.fontSize);
+        }
+
+        textSize = m_fontExList.at(found->second)->GetTextSize(worldText.text);
+
+        const UINT drawColor = D3DCOLOR_ARGB(
+            static_cast<int>(worldText.color.a * 255.0f),
+            static_cast<int>(worldText.color.r * 255.0f),
+            static_cast<int>(worldText.color.g * 255.0f),
+            static_cast<int>(worldText.color.b * 255.0f));
+
+        const int centerX = baseX - textSize.cx / 2;
+        const int centerY = baseY - textSize.cy / 2;
+
+        DrawTextEx(found->second, worldText.text, centerX, centerY, drawColor);
+    }
+    else
+    {
+        auto found = m_worldTextFontIdBySize.find(worldText.fontSize);
+        if (found == m_worldTextFontIdBySize.end())
+        {
+            const int newId = SetUpFont(L"BIZ UDゴシック", worldText.fontSize, D3DCOLOR_ARGB(255, 255, 255, 255));
+            m_worldTextFontIdBySize[worldText.fontSize] = newId;
+            found = m_worldTextFontIdBySize.find(worldText.fontSize);
+        }
+
+        textSize = m_fontList.at(found->second)->GetTextSize(worldText.text);
+
+        const UINT drawColor = D3DCOLOR_ARGB(
+            static_cast<int>(worldText.color.a * 255.0f),
+            static_cast<int>(worldText.color.r * 255.0f),
+            static_cast<int>(worldText.color.g * 255.0f),
+            static_cast<int>(worldText.color.b * 255.0f));
+
+        const int centerX = baseX - textSize.cx / 2;
+        const int centerY = baseY - textSize.cy / 2;
+
+        DrawText_(found->second, worldText.text, centerX, centerY, drawColor);
+    }
+}
+
+void Render::DrawWorldTexts()
+{
     for (const auto& worldText : m_worldTextList)
     {
-        const POINT screenPos = Camera::GetScreenPos(worldText.worldPos);
-        if (screenPos.x < 0 || screenPos.y < 0)
-        {
-            continue;
-        }
-
-        const int baseX = static_cast<int>(static_cast<float>(screenPos.x) * scaleX);
-        const int baseY = static_cast<int>(static_cast<float>(screenPos.y) * scaleY);
-
-        SIZE textSize = { 0, 0 };
-        if (worldText.decorated)
-        {
-            auto found = m_worldTextFontExIdBySize.find(worldText.fontSize);
-            if (found == m_worldTextFontExIdBySize.end())
-            {
-                const int newId = SetUpFontEx(L"BIZ UDゴシック", worldText.fontSize, D3DCOLOR_ARGB(255, 255, 255, 255));
-                m_worldTextFontExIdBySize[worldText.fontSize] = newId;
-                found = m_worldTextFontExIdBySize.find(worldText.fontSize);
-            }
-
-            textSize = m_fontExList.at(found->second)->GetTextSize(worldText.text);
-
-            const UINT drawColor = D3DCOLOR_ARGB(
-                static_cast<int>(worldText.color.a * 255.0f),
-                static_cast<int>(worldText.color.r * 255.0f),
-                static_cast<int>(worldText.color.g * 255.0f),
-                static_cast<int>(worldText.color.b * 255.0f));
-
-            const int centerX = baseX - textSize.cx / 2;
-            const int centerY = baseY - textSize.cy / 2;
-
-            DrawTextEx(found->second, worldText.text, centerX, centerY, drawColor);
-        }
-        else
-        {
-            auto found = m_worldTextFontIdBySize.find(worldText.fontSize);
-            if (found == m_worldTextFontIdBySize.end())
-            {
-                const int newId = SetUpFont(L"BIZ UDゴシック", worldText.fontSize, D3DCOLOR_ARGB(255, 255, 255, 255));
-                m_worldTextFontIdBySize[worldText.fontSize] = newId;
-                found = m_worldTextFontIdBySize.find(worldText.fontSize);
-            }
-
-            textSize = m_fontList.at(found->second)->GetTextSize(worldText.text);
-
-            const UINT drawColor = D3DCOLOR_ARGB(
-                static_cast<int>(worldText.color.a * 255.0f),
-                static_cast<int>(worldText.color.r * 255.0f),
-                static_cast<int>(worldText.color.g * 255.0f),
-                static_cast<int>(worldText.color.b * 255.0f));
-
-            const int centerX = baseX - textSize.cx / 2;
-            const int centerY = baseY - textSize.cy / 2;
-
-            DrawText_(found->second, worldText.text, centerX, centerY, drawColor);
-        }
+        DrawWorldTextImpl(worldText);
     }
+
+    for (const auto& worldText : m_pendingWorldTexts)
+    {
+        DrawWorldTextImpl(worldText);
+    }
+    m_pendingWorldTexts.clear();
 }
 
 void Render::Draw2D()
