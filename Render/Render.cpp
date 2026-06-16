@@ -4120,6 +4120,42 @@ void Render::DrawImageAutoResizeEx(const std::wstring& text,
     m_sprite.PlaceImage(text, baseX, baseY, drawWidth, drawHeight, transparency, flipX);
 }
 
+void Render::DrawImageAutoResizeSizedRect(const std::wstring& filename,
+                                          const float X,
+                                          const float Y,
+                                          const int sourceX,
+                                          const int sourceY,
+                                          const int sourceWidth,
+                                          const int sourceHeight,
+                                          const float scale,
+                                          const int transparency)
+{
+    if (sourceWidth <= 0 || sourceHeight <= 0)
+    {
+        return;
+    }
+
+    m_sprite.LoadImage_(filename);
+
+    const int drawW = static_cast<int>(static_cast<float>(sourceWidth) * scale);
+    const int drawH = static_cast<int>(static_cast<float>(sourceHeight) * scale);
+    if (drawW <= 0 || drawH <= 0)
+    {
+        return;
+    }
+
+    const int baseX = static_cast<int>(X * Common::BASE_W);
+    const int baseY = static_cast<int>(Y * Common::BASE_H);
+
+    RECT sourceRect;
+    sourceRect.left = sourceX;
+    sourceRect.top = sourceY;
+    sourceRect.right = sourceX + sourceWidth;
+    sourceRect.bottom = sourceY + sourceHeight;
+
+    m_sprite.PlaceImage(filename, baseX, baseY, drawW, drawH, sourceRect, transparency);
+}
+
 void Render::DrawWorldImage(const std::wstring& filename,
                             const D3DXVECTOR3& worldPos,
                             const int transparency)

@@ -499,6 +499,16 @@ public:
                                const bool flipX,
                                const int transparency = 255);
 
+    void DrawImageAutoResizeSizedRect(const std::wstring& filename,
+                                      const float X,
+                                      const float Y,
+                                      const int sourceX,
+                                      const int sourceY,
+                                      const int sourceWidth,
+                                      const int sourceHeight,
+                                      const float scale = 1.0f,
+                                      const int transparency = 255);
+
     void DrawWorldImage(const std::wstring& filename,
                         const D3DXVECTOR3& worldPos,
                         const int transparency = 255);
