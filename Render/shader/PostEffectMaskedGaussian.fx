@@ -89,14 +89,15 @@ float4 GaussianSparseV(float2 texCoord : TEXCOORD0) : COLOR
     return c;
 }
 
-float2 g_MaskBaseSize = float2(1600.0f, 900.0f);
+float2 g_MaskTextureSize = float2(1600.0f, 900.0f);
 float2 g_MaskScreenSize = float2(1600.0f, 900.0f);
 
 float4 CompositeMaskedBlur(float2 uv : TEXCOORD0) : COLOR
 {
     const float4 blurColor = tex2D(SrcSampler, uv);
     const float4 originalColor = tex2D(SrcSampler2, uv);
-    const float2 maskUV = uv * g_MaskScreenSize / g_MaskBaseSize;
+    const float2 screenPixel = uv * g_MaskScreenSize;
+    const float2 maskUV = screenPixel / g_MaskTextureSize;
     const float maskValue = tex2D(MaskSampler, maskUV).r;
     return lerp(originalColor, blurColor, maskValue);
 }
