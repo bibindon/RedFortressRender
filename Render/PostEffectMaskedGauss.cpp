@@ -102,11 +102,6 @@ void PostEffectMaskedGauss::SetMaskPath(const std::wstring& maskPath)
     }
 }
 
-void PostEffectMaskedGauss::SetMaskScaleToBaseResolution(const bool enabled)
-{
-    m_maskScaleToBaseResolution = enabled;
-}
-
 void PostEffectMaskedGauss::OnDeviceLost()
 {
     if (!m_isInitialized || m_d3dEffect == nullptr)
@@ -415,15 +410,8 @@ void PostEffectMaskedGauss::DrawCompositeQuad(LPDIRECT3DTEXTURE9 texBlurred,
                                     static_cast<float>(Common::BASE_H) };
     const float maskScreenSize[2] = { static_cast<float>(targetDesc.Width),
                                       static_cast<float>(targetDesc.Height) };
-    float maskOffset[2] = { 0.0f, 0.0f };
-    if (m_maskScaleToBaseResolution)
-    {
-        maskOffset[0] = (maskScreenSize[0] - maskBaseSize[0]) * 0.5f;
-        maskOffset[1] = (maskScreenSize[1] - maskBaseSize[1]) * 0.5f;
-    }
     m_d3dEffect->SetFloatArray("g_MaskBaseSize", maskBaseSize, 2);
     m_d3dEffect->SetFloatArray("g_MaskScreenSize", maskScreenSize, 2);
-    m_d3dEffect->SetFloatArray("g_MaskOffset", maskOffset, 2);
 
     ScreenVertex quad[4] { };
 
