@@ -2449,7 +2449,7 @@ void Render::Draw()
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
-    if (m_gBufferEnabled && m_postEffectMaskedGaussEnabled)
+    if (m_postEffectMaskedGaussEnabled)
     {
         EnsurePostEffectMaskedGaussInitialized();
         m_postEffectMaskedGauss.Draw(pTempTexture, pWorkTexture);
