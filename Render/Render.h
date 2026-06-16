@@ -286,6 +286,8 @@ public:
     void SetMeshMixSkinAnimIgnoreTransparentMaterial(const bool enabled);
     void SetMeshMixSkinAnimPos(const int id, const D3DXVECTOR3& pos);
     void SetMeshMixSkinAnimRotY(const int id, const float rotY);
+    void StartMeshMixSkinAnimBlink(int id, int durationFrames, int intervalFrames = 4);
+    void StopMeshMixSkinAnimBlink(int id);
     std::vector<RenderLoadedModelInfo> GetLoadedModelInfoList();
 
     bool LoadXFileListMoveFromCsv(const std::wstring& csvPath,
@@ -795,6 +797,15 @@ private:
     std::vector<RenderSettingsDialogTextInfo> m_settingsDialogTextList;
     std::vector<WorldTextInfo> m_worldTextList;
     std::vector<WorldTextInfo> m_pendingWorldTexts;
+
+    struct MeshMixSkinAnimBlinkInfo
+    {
+        int meshId = -1;
+        int remainingFrames = 0;
+        int intervalFrames = 4;
+    };
+    std::vector<MeshMixSkinAnimBlinkInfo> m_meshMixSkinAnimBlinkList;
+
     int m_worldTextFontId = -1;
     std::unordered_map<int, int> m_worldTextFontIdBySize;
     std::unordered_map<int, int> m_worldTextFontExIdBySize;
@@ -879,6 +890,7 @@ private:
     void DrawSettingsDialogText();
     void DrawWorldTexts();
     void DrawWorldTextImpl(const WorldTextInfo& worldText);
+    void UpdateMeshMixSkinAnimBlink();
     void EnsureLoadingScreenFont();
     void DrawLoadingScreen();
     void DrawFadeOverlay();

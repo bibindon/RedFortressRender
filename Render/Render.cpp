@@ -2266,6 +2266,7 @@ void Render::Draw()
     UpdateMovingPlatforms(frameDeltaSeconds);
     UpdateFade(frameDeltaSeconds);
     UpdateSkinAnimationState();
+    UpdateMeshMixSkinAnimBlink();
     CameraShakeFrameScope cameraShakeFrameScope;
     ApplyTAAProjectionJitter();
 
@@ -3003,6 +3004,76 @@ void Render::SetMeshMixSkinAnimRotY(const int id, const float rotY)
     m_meshMixSkinAnimList.at(id)->SetRotY(rotY);
 }
 
+void Render::StartMeshMixSkinAnimBlink(int id, int durationFrames, int intervalFrames)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshMixSkinAnimList.size()) || m_meshMixSkinAnimList.at(id) == nullptr)
+    {
+        return;
+    }
+
+    for (auto& info : m_meshMixSkinAnimBlinkList)
+    {
+        if (info.meshId == id)
+        {
+            info.remainingFrames = durationFrames;
+            info.intervalFrames = intervalFrames;
+            return;
+        }
+    }
+
+    MeshMixSkinAnimBlinkInfo info;
+    info.meshId = id;
+    info.remainingFrames = durationFrames;
+    info.intervalFrames = intervalFrames;
+    m_meshMixSkinAnimBlinkList.push_back(info);
+}
+
+void Render::StopMeshMixSkinAnimBlink(int id)
+{
+    for (auto it = m_meshMixSkinAnimBlinkList.begin(); it != m_meshMixSkinAnimBlinkList.end();)
+    {
+        if (it->meshId == id)
+        {
+            if (it->meshId >= 0 && it->meshId < static_cast<int>(m_meshMixSkinAnimList.size()) &&
+                m_meshMixSkinAnimList.at(it->meshId) != nullptr)
+            {
+                m_meshMixSkinAnimList.at(it->meshId)->SetEnabled(true);
+            }
+            it = m_meshMixSkinAnimBlinkList.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+}
+
+void Render::UpdateMeshMixSkinAnimBlink()
+{
+    for (auto it = m_meshMixSkinAnimBlinkList.begin(); it != m_meshMixSkinAnimBlinkList.end();)
+    {
+        if (it->meshId < 0 || it->meshId >= static_cast<int>(m_meshMixSkinAnimList.size()) ||
+            m_meshMixSkinAnimList.at(it->meshId) == nullptr)
+        {
+            it = m_meshMixSkinAnimBlinkList.erase(it);
+            continue;
+        }
+
+        --it->remainingFrames;
+        if (it->remainingFrames <= 0)
+        {
+            m_meshMixSkinAnimList.at(it->meshId)->SetEnabled(true);
+            it = m_meshMixSkinAnimBlinkList.erase(it);
+        }
+        else
+        {
+            const bool visible = ((it->remainingFrames / it->intervalFrames) % 2) == 0;
+            m_meshMixSkinAnimList.at(it->meshId)->SetEnabled(visible);
+            ++it;
+        }
+    }
+}
+
 int Render::AddMeshMixSkinAnim(const std::wstring& filePath,
                                const D3DXVECTOR3& pos,
                                const D3DXVECTOR3& rot,
@@ -3098,6 +3169,23 @@ bool Render::RemoveMeshMixSkinAnim(const int id)
     if (id < 0 || id >= static_cast<int>(m_meshMixSkinAnimList.size()) || m_meshMixSkinAnimList.at(id) == nullptr)
     {
         return false;
+    }
+
+    for (auto it = m_meshMixSkinAnimBlinkList.begin(); it != m_meshMixSkinAnimBlinkList.end();)
+    {
+        if (it->meshId == id)
+        {
+            it = m_meshMixSkinAnimBlinkList.erase(it);
+        }
+        else if (it->meshId > id)
+        {
+            --it->meshId;
+            ++it;
+        }
+        else
+        {
+            ++it;
+        }
     }
 
     SAFE_DELETE(m_meshMixSkinAnimList.at(id));
