@@ -311,6 +311,8 @@ public:
 
     void SetMeshMixPos(const int id, const D3DXVECTOR3& pos);
     D3DXVECTOR3 GetMeshMixPos(const int id) const;
+    void SetMeshMixRotY(const int id, const float rotY);
+    D3DXVECTOR3 GetMeshMixRot(const int id) const;
     void SetMeshMixSaturateShadow(const bool enabled);
     void SetMeshMixSaturateShadowIntensity(const float intensity);
     void SetMeshMixShadowDarkness(const float darkness);
