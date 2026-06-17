@@ -2830,18 +2830,26 @@ bool Render::RemoveSkinAnimMesh(const int id)
 int Render::AddMeshInstansing(const std::wstring& filePath,
                               const D3DXVECTOR3& pos,
                               const D3DXVECTOR3& rot,
-                              const float scale)
+                              const float scale,
+                              const std::wstring& csvPath)
 {
     if (m_meshInstancingMap.find(filePath) == m_meshInstancingMap.end())
     {
         MeshInstancing* mesh = NEW MeshInstancing();
-        mesh->Initialize(filePath, true);
+        if (csvPath.empty())
+        {
+            mesh->Initialize(filePath, true);
+        }
+        else
+        {
+            mesh->Initialize(filePath, csvPath, true);
+        }
         mesh->SetHighQuality(m_meshInstancingHighQualityEnabled);
 
         m_meshInstancingMap[filePath] = mesh;
     }
 
-    m_meshInstancingMap[filePath]->AddInstance(pos);
+    m_meshInstancingMap[filePath]->AddInstance(pos, rot.y);
     return 0;
 }
 

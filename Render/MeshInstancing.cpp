@@ -215,6 +215,26 @@ MeshInstancing::~MeshInstancing()
 void MeshInstancing::Initialize(const std::wstring& filePath, bool async)
 {
     m_filePath = ResolvePathFromExeDir(filePath);
+    m_customPlacementCsvPath.clear();
+
+    if (async)
+    {
+        if (m_loadThread.joinable())
+        {
+            m_loadThread.join();
+        }
+        m_loadThread = std::thread([this]() { InitializeInternal(); });
+    }
+    else
+    {
+        InitializeInternal();
+    }
+}
+
+void MeshInstancing::Initialize(const std::wstring& filePath, const std::wstring& csvPath, bool async)
+{
+    m_filePath = ResolvePathFromExeDir(filePath);
+    m_customPlacementCsvPath = ResolvePathFromExeDir(csvPath);
 
     if (async)
     {
@@ -326,7 +346,14 @@ void MeshInstancing::InitializeInternal()
     hResult = Common::D3DDevice()->CreateVertexDeclaration(declElems, &m_decl);
     assert(hResult == S_OK);
 
-    m_loadedPlacementCsv = LoadPlacementCsv();
+    if (!m_customPlacementCsvPath.empty())
+    {
+        m_loadedPlacementCsv = LoadPlacementCsv(m_customPlacementCsvPath);
+    }
+    else
+    {
+        m_loadedPlacementCsv = LoadPlacementCsv();
+    }
     Common::AddDeviceLostResource(this);
 
     m_bLoaded = true;
@@ -365,7 +392,7 @@ void MeshInstancing::Finalize()
     m_swayMode = SwayMode::Off;
 }
 
-void MeshInstancing::AddInstance(const D3DXVECTOR3& pos)
+void MeshInstancing::AddInstance(const D3DXVECTOR3& pos, float rotationY)
 {
     if (m_loadedPlacementCsv && !m_allInstances.empty())
     {
@@ -377,7 +404,7 @@ void MeshInstancing::AddInstance(const D3DXVECTOR3& pos)
     instance.x = pos.x;
     instance.y = pos.y;
     instance.z = pos.z;
-    instance.rotationYRadians = 0.0f;
+    instance.rotationYRadians = rotationY;
     instance.scale = 1.0f;
 
     m_allInstances.clear();
@@ -783,7 +810,11 @@ void MeshInstancing::UpdateInstanceBuffer()
 
 bool MeshInstancing::LoadPlacementCsv()
 {
-    const std::wstring csvPath = BuildPlacementCsvPath(m_filePath);
+    return LoadPlacementCsv(BuildPlacementCsvPath(m_filePath));
+}
+
+bool MeshInstancing::LoadPlacementCsv(const std::wstring& csvPath)
+{
     std::wifstream file(csvPath);
     if (!file.is_open())
     {

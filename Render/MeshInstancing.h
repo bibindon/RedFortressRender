@@ -19,12 +19,12 @@ public:
     ~MeshInstancing();
 
     void Initialize(const std::wstring& filePath, bool async = true);
+    void Initialize(const std::wstring& filePath, const std::wstring& csvPath, bool async = true);
     void WaitForLoad();
 
     void Finalize();
 
-    // TODO rotate, scale
-    void AddInstance(const D3DXVECTOR3& pos);
+    void AddInstance(const D3DXVECTOR3& pos, float rotationY = 0.0f);
     void SetInstanceOffset(const D3DXVECTOR3& offset);
 
     void SetHighQuality(bool enabled);
@@ -49,6 +49,7 @@ public:
 private:
 
     std::wstring m_filePath;
+    std::wstring m_customPlacementCsvPath;
 
     LPD3DXMESH m_pMesh = NULL;
 
@@ -83,6 +84,7 @@ private:
     void SortInstancesBackToFront();
     void UpdateInstanceBuffer();
     bool LoadPlacementCsv();
+    bool LoadPlacementCsv(const std::wstring& csvPath);
     DWORD GetSubsetMaterialIndex(DWORD subsetIndex) const;
     bool IsSubsetAlphaMaterial(DWORD subsetIndex) const;
     HRESULT DrawInstancedSubset(DWORD subsetIndex) const;

@@ -229,7 +229,8 @@ public:
     int AddMeshInstansing(const std::wstring& filePath,
                           const D3DXVECTOR3& pos,
                           const D3DXVECTOR3& rot,
-                          const float scale);
+                          const float scale,
+                          const std::wstring& csvPath = L"");
     bool RemoveMeshInstancing(const std::wstring& filePath);
     void SetMeshInstancingHighQuality(bool enabled);
 
