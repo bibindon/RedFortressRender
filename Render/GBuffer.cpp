@@ -298,7 +298,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     Common::D3DDevice()->Clear(0,
                                NULL,
                                D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
-                               D3DCOLOR_RGBA(0, 0, 0, 0),
+                               D3DCOLOR_XRGB(255, 255, 255),
                                1.0f,
                                0);
     Common::D3DDevice()->BeginScene();
