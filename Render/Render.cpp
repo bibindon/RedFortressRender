@@ -4629,11 +4629,13 @@ void Render::EnsurePostEffectSSGIInitialized()
 void Render::EnsurePostEffectFogInitialized()
 {
     m_postEffectFog.Initialize();
+    m_postEffectFog.SetFogColor(m_postEffectFogColor);
 }
 
 void Render::EnsurePostEffectHeightFogInitialized()
 {
     m_postEffectHeightFog.Initialize();
+    m_postEffectHeightFog.SetFogColor(m_postEffectFogColor);
 }
 
 void Render::EnsurePostEffectBloomInitialized()
