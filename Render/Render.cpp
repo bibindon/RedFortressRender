@@ -1366,6 +1366,20 @@ void Render::ApplySettings()
         }
     }
 
+    const auto halfLambertShadowDarkness = m_settings.find(L"HalfLambertShadowDarkness");
+    if (halfLambertShadowDarkness != m_settings.end())
+    {
+        try
+        {
+            float value = std::stof(halfLambertShadowDarkness->second);
+            value = (std::max)(0.0f, (std::min)(1.0f, value));
+            SetMeshMixShadowDarkness(value);
+        }
+        catch (...)
+        {
+        }
+    }
+
     const auto fogIntensity = m_settings.find(L"FogIntensity");
     if (fogIntensity != m_settings.end())
     {
