@@ -3797,7 +3797,7 @@ RenderingQualitySettings Render::SetRenderQuality(const std::wstring& quality)
         settings.heightFogEnabled = true;
         settings.bloomEnabled = true;
         settings.haloEnabled = true;
-        settings.depthOfFieldMode = DepthOfFieldMode::Enabled;
+        settings.depthOfFieldMode = DepthOfFieldMode::AutoNear;
         settings.starBurstEnabled = true;
         settings.godRayEnabled = true;
     }
