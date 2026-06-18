@@ -2470,7 +2470,7 @@ void Render::Draw()
     {
         EnsurePostEffectMotionBlurCameraInitialized();
         bool motionBlurApplied = false;
-        m_postEffectMotionBlurCamera.Draw(pTempTexture, pTexTempZ, pWorkTexture, motionBlurApplied);
+        m_postEffectMotionBlurCamera.Draw(pTempTexture, pTexTempCameraZ, pWorkTexture, motionBlurApplied);
         if (motionBlurApplied)
         {
             SwapPostEffectBuffers(pTempTexture, pWorkTexture);
@@ -3679,6 +3679,7 @@ void Render::SetCameraClipPlanes(const float nearPlane, const float farPlane)
     m_postEffectFog.SetFogDepthRange(nearPlane, farPlane);
     m_postEffectHeightFog.SetDepthDecodeRange(nearPlane, farPlane);
     m_postEffectGodRay.SetDepthRange(nearPlane, farPlane);
+    m_postEffectMotionBlurCamera.SetDepthRange(nearPlane, farPlane);
 }
 
 void Render::SetCameraHorizontalFovDegrees(const float horizontalFovDegrees)
@@ -3703,7 +3704,6 @@ void Render::SetGBufferClipPlanes(const float nearPlane, const float farPlane)
     m_gBufferFarPlane = farPlane;
     const float positionRange = GBuffer::ComputePositionRange(nearPlane, farPlane);
     m_GBuffer.SetDepthRange(nearPlane, farPlane);
-    m_postEffectMotionBlurCamera.SetDepthRange(nearPlane, farPlane);
     m_postEffectSSGI.SetDepthRange(nearPlane, farPlane);
     m_postEffectSSAO.SetDepthRange(nearPlane, farPlane);
     m_postEffectDepthOfField.SetPositionRange(positionRange);
