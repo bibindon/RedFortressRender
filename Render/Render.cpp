@@ -3789,7 +3789,7 @@ RenderingQualitySettings Render::SetRenderQuality(const std::wstring& quality)
         settings.postEffectAAEnabled = false;
         settings.fxaaEnabled = false;
         settings.taaEnabled = true;
-        settings.motionBlurCameraEnabled = true;
+        settings.motionBlurCameraEnabled = false;
         settings.depthBufferShadowEnabled = true;
         settings.ssaoEnabled = true;
         settings.ssgiEnabled = true;
