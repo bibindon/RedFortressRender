@@ -458,7 +458,8 @@ void PostEffectZShadow::RenderTechnique2()
     hr = g_fxDepthBufferShadow->SetFloat("g_shadowTexelH", 1.0f / (float)descLightZ.Height);
     assert(hr == S_OK);
 
-    hr = g_fxDepthBufferShadow->SetFloat("g_shadowBias", 0.0002f);
+    const float coverageBias = 0.0002f * (CoverageToViewSize(m_coverage) / SHADOW_VIEW_SIZE_MIN);
+    hr = g_fxDepthBufferShadow->SetFloat("g_shadowBias", coverageBias);
     assert(hr == S_OK);
 
     hr = g_fxDepthBufferShadow->SetInt("g_shadowPcfTapCount", m_pcfTapCount);
