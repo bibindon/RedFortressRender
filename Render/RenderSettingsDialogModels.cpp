@@ -44,7 +44,7 @@ void UpdateLoadedModelsList(RenderSettingsDialogState* state)
         std::swprintf(scaleText, sizeof(scaleText) / sizeof(scaleText[0]), L"%.2f", model.scale);
         std::swprintf(posText,
                       sizeof(posText) / sizeof(posText[0]),
-                      L"(%.1f, %.1f, %.1f)",
+                      L"(%.3f, %.3f, %.3f)",
                       model.pos.x,
                       model.pos.y,
                       model.pos.z);
@@ -178,7 +178,7 @@ void UpdatePointLightsList(RenderSettingsDialogState* state)
         wchar_t brightnessText[32] { };
         std::swprintf(posText,
                       sizeof(posText) / sizeof(posText[0]),
-                      L"(%.1f, %.1f, %.1f)",
+                      L"(%.3f, %.3f, %.3f)",
                       light.m_pos.x,
                       light.m_pos.y,
                       light.m_pos.z);
@@ -280,9 +280,9 @@ void UpdateWorldTextList(RenderSettingsDialogState* state)
         wchar_t rText[8];
         wchar_t gText[8];
         wchar_t bText[8];
-        std::swprintf(xText, 16, L"%.1f", entry.worldPos.x);
-        std::swprintf(yText, 16, L"%.1f", entry.worldPos.y);
-        std::swprintf(zText, 16, L"%.1f", entry.worldPos.z);
+        std::swprintf(xText, 16, L"%.3f", entry.worldPos.x);
+        std::swprintf(yText, 16, L"%.3f", entry.worldPos.y);
+        std::swprintf(zText, 16, L"%.3f", entry.worldPos.z);
         std::swprintf(szText, 16, L"%d", entry.fontSize);
         std::swprintf(rText, 8, L"%d", static_cast<int>(entry.color.r * 255.0f));
         std::swprintf(gText, 8, L"%d", static_cast<int>(entry.color.g * 255.0f));

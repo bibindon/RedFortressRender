@@ -1258,7 +1258,7 @@ void HandleRenderSettingsHScroll(HWND hWnd, LPARAM lParam)
     case 31004:
         state->cameraShakeDuration = TrackbarToFloat(trackbar, 0.1f, 5.0f);
         render->SetCameraShakeDuration(state->cameraShakeDuration);
-        SetEditFloat(hWnd, trackbar, state->cameraShakeDuration, L"%.1f");
+        SetEditFloat(hWnd, trackbar, state->cameraShakeDuration, L"%.3f");
         break;
     case 31005:
         state->cameraShakeIntensity = TrackbarToFloat(trackbar, 0.0f, 1.0f);
@@ -1270,16 +1270,16 @@ void HandleRenderSettingsHScroll(HWND hWnd, LPARAM lParam)
     {
         float value = TrackbarToFloat(trackbar, 0.0f, 4.0f);
         render->SetPostEffectSaturate(value);
-        SetEditFloat(hWnd, trackbar, value, L"%.1f");
+        SetEditFloat(hWnd, trackbar, value, L"%.3f");
         break;
     }
     case 31100:
         render->SetLightBrightness(TrackbarToFloat(trackbar, 0.0f, 5.0f));
-        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 5.0f), L"%.1f");
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 5.0f), L"%.3f");
         break;
     case 31101:
         render->SetAmbientLightBrightness(TrackbarToFloat(trackbar, 0.0f, 5.0f));
-        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 5.0f), L"%.1f");
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 5.0f), L"%.3f");
         break;
     case 31102:
         render->SetMeshMixSaturateShadowIntensity(TrackbarToFloat(trackbar, 0.0f, 10.0f));
@@ -1410,7 +1410,7 @@ void HandleRenderSettingsHScroll(HWND hWnd, LPARAM lParam)
         break;
     case 31900:
         render->SetPostEffectFogIntensity(TrackbarToFloat(trackbar, 0.0f, 20.0f));
-        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 20.0f), L"%.1f");
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 20.0f), L"%.3f");
         break;
     case 31901:
     case 31902:
@@ -1430,51 +1430,51 @@ void HandleRenderSettingsHScroll(HWND hWnd, LPARAM lParam)
         break;
     case 31921:
         render->SetPostEffectHeightFogStart(TrackbarToFloat(trackbar, -50000.0f, 50000.0f));
-        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, -50000.0f, 50000.0f), L"%.1f");
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, -50000.0f, 50000.0f), L"%.3f");
         break;
     case 31922:
         render->SetPostEffectHeightFogMax(TrackbarToFloat(trackbar, -50000.0f, 50000.0f));
-        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, -50000.0f, 50000.0f), L"%.1f");
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, -50000.0f, 50000.0f), L"%.3f");
         break;
     case 31923:
         render->SetPostEffectHeightFogDistanceStart(TrackbarToFloat(trackbar, 0.0f, 100000.0f));
-        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 100000.0f), L"%.1f");
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 100000.0f), L"%.3f");
         break;
     case 31924:
         render->SetPostEffectHeightFogDistanceMax(TrackbarToFloat(trackbar, 0.0f, 100000.0f));
-        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 100000.0f), L"%.1f");
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 100000.0f), L"%.3f");
         break;
     case 31950:
         render->SetPostEffectDepthOfFieldFocalDistance(TrackbarToFloat(trackbar, 0.5f, 50.0f));
-        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.5f, 50.0f), L"%.1f");
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.5f, 50.0f), L"%.3f");
         break;
     case 31951:
         render->SetPostEffectDepthOfFieldMaxBlurDistance(TrackbarToFloat(trackbar, 0.5f, 50.0f));
-        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.5f, 50.0f), L"%.1f");
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.5f, 50.0f), L"%.3f");
         break;
     case 31952:
         render->SetPostEffectDepthOfFieldAutoActivationDistance(TrackbarToFloat(trackbar, 0.5f, 50.0f));
-        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.5f, 50.0f), L"%.1f");
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.5f, 50.0f), L"%.3f");
         break;
     case 31953:
         render->SetPostEffectDepthOfFieldStartNear(TrackbarToFloat(trackbar, 0.0f, 50.0f));
-        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 50.0f), L"%.1f");
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 50.0f), L"%.3f");
         break;
     case 31970:
         render->SetPostEffectBloomThreshold(TrackbarToFloat(trackbar, 0.0f, 5.0f));
-        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 5.0f), L"%.1f");
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 5.0f), L"%.3f");
         break;
     case 31971:
         render->SetPostEffectBloomWeightSum(TrackbarToFloat(trackbar, 1.0f, 100.0f));
-        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 1.0f, 100.0f), L"%.1f");
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 1.0f, 100.0f), L"%.3f");
         break;
     case 31972:
         render->SetPostEffectHaloThreshold(TrackbarToFloat(trackbar, 0.0f, 5.0f));
-        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 5.0f), L"%.1f");
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 5.0f), L"%.3f");
         break;
     case 31980:
         render->SetPostEffectStarBurstThreshold(TrackbarToFloat(trackbar, 0.0f, 5.0f));
-        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 5.0f), L"%.1f");
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 5.0f), L"%.3f");
         break;
     case 31981:
         render->SetPostEffectStarBurstDistanceFade(TrackbarToFloat(trackbar, 0.0f, 1.0f));
@@ -1509,7 +1509,7 @@ void HandleRenderSettingsHScroll(HWND hWnd, LPARAM lParam)
         if (id == 32006) state->godRayPos.y = value;
         if (id == 32007) state->godRayPos.z = value;
         render->SetPostEffectGodRayLightPos(state->godRayPos);
-        SetEditFloat(hWnd, trackbar, value, L"%.1f");
+        SetEditFloat(hWnd, trackbar, value, L"%.3f");
         break;
     }
     case 32021:

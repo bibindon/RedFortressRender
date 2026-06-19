@@ -372,7 +372,7 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     CreateSettingsStatic(hWnd, L"Camera Near", 22, y + 24, 100, 20);
     CreateSettingsEdit(hWnd, L"0.100", 158, y + 22, 72, 20, 41000);
     CreateSettingsStatic(hWnd, L"Camera Far", 264, y + 24, 100, 20);
-    CreateSettingsEdit(hWnd, L"30000.0", 400, y + 22, 104, 20, 41001);
+    CreateSettingsEdit(hWnd, L"30000.000", 400, y + 22, 104, 20, 41001);
     CreateSettingsCheckbox(hWnd, 31002, L"Show FPS", 22, y + 50, 96, 22);
     CreateSettingsStatic(hWnd, L"H FOV", 118, y + 52, 56, 20);
     CreateSettingsTrackbar(hWnd, 31003, 174, y + 50, 238, 32, 1, 180, 90);
@@ -381,7 +381,7 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     CreateSettingsButton(hWnd, L"Shake", 22, y + 78, 56, 24, 41002);
     CreateSettingsStatic(hWnd, L"Sec", 88, y + 82, 28, 20);
     CreateSettingsTrackbar(hWnd, 31004, 122, y + 76, 94, 32, 0, 100, 35);
-    CreateSettingsEdit(hWnd, L"1.0", 226, y + 78, 34, 20, 41004);
+    CreateSettingsEdit(hWnd, L"1.000", 226, y + 78, 34, 20, 41004);
     CreateSettingsStatic(hWnd, L"Power", 286, y + 82, 44, 20);
     CreateSettingsTrackbar(hWnd, 31005, 326, y + 76, 98, 32, 0, 100, 20);
     CreateSettingsEdit(hWnd, L"0.12", 436, y + 78, 68, 20, 41005);
@@ -391,7 +391,7 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     CreateSettingsStatic(hWnd, L"GBuffer Near", 22, y + 42, 100, 18);
     CreateSettingsEdit(hWnd, L"0.100", 158, y + 38, 72, 20, 41010);
     CreateSettingsStatic(hWnd, L"GBuffer Far", 264, y + 42, 100, 18);
-    CreateSettingsEdit(hWnd, L"30.0", 400, y + 38, 104, 20, 41011);
+    CreateSettingsEdit(hWnd, L"30.000", 400, y + 38, 104, 20, 41011);
     y += 72;
     CreateSettingsGroupBox(hWnd, L"Post Effects", left - 4, y, width + 8, 90);
     CreateSettingsCheckbox(hWnd, 31006, L"ZShadow", 22, y + 18, 88, 22);
@@ -670,7 +670,7 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     y += 124;
     CreateSettingsGroupBox(hWnd, L"Saturate", 8, y, 504, 50);
     CreateSettingsStatic(hWnd, L"Saturation", 24, y + 22, 54, 18);
-    CreateSettingsEdit(hWnd, L"0.7", 78, y + 18, 80, 20, 41940);
+    CreateSettingsEdit(hWnd, L"0.700", 78, y + 18, 80, 20, 41940);
     CreateSettingsTrackbar(hWnd, 31940, 174, y + 14, 96, 30, 0, 100, 30);
     CreateSettingsButton(hWnd, L"-", 286, y + 16, 20, 22);
     CreateSettingsButton(hWnd, L"+", 308, y + 16, 20, 22);
@@ -678,7 +678,7 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     y += 64;
     CreateSettingsGroupBox(hWnd, L"DOF", 8, y, 504, 118);
     const wchar_t* dofLabels[] = { L"DOF Focal Dist", L"DOF Max Blur Dist", L"DOF Auto Dist", L"DOF Start Near" };
-    const wchar_t* dofValues[] = { L"3.0", L"8.0", L"3.0", L"1.0" };
+    const wchar_t* dofValues[] = { L"3.000", L"8.000", L"3.000", L"1.000" };
     int dofY = y + 42;
     for (int i = 0; i < 4; ++i)
     {
@@ -691,18 +691,18 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     CreateSettingsGroupBox(hWnd, L"Bloom", 8, y, 504, 58);
     CreateSettingsStatic(hWnd, L"Bloom Threshold", 24, y + 22, 138, 18);
     CreateSettingsTrackbar(hWnd, 31970, 168, y + 16, 122, 30, 0, 100, 50);
-    CreateSettingsEdit(hWnd, L"1.0", 298, y + 18, 40, 20, 41970);
+    CreateSettingsEdit(hWnd, L"1.000", 298, y + 18, 40, 20, 41970);
     CreateSettingsStatic(hWnd, L"Sum", 350, y + 22, 34, 18);
     CreateSettingsTrackbar(hWnd, 31971, 386, y + 16, 58, 30, 0, 100, 50);
-    CreateSettingsEdit(hWnd, L"1", 458, y + 18, 46, 20, 41971);
+    CreateSettingsEdit(hWnd, L"1.000", 458, y + 18, 46, 20, 41971);
     CreateSettingsStatic(hWnd, L"Halo Threshold", 24, y + 42, 138, 18);
     CreateSettingsTrackbar(hWnd, 31972, 168, y + 36, 122, 30, 0, 100, 50);
-    CreateSettingsEdit(hWnd, L"1.0", 298, y + 38, 40, 20, 41972);
+    CreateSettingsEdit(hWnd, L"1.000", 298, y + 38, 40, 20, 41972);
     y += 70;
     CreateSettingsGroupBox(hWnd, L"StarBurst", 8, y, 504, 68);
     CreateSettingsStatic(hWnd, L"StarBurst Threshold", 24, y + 22, 138, 18);
     CreateSettingsTrackbar(hWnd, 31980, 168, y + 16, 122, 30, 0, 100, 30);
-    CreateSettingsEdit(hWnd, L"0.6", 298, y + 18, 40, 20, 41980);
+    CreateSettingsEdit(hWnd, L"0.600", 298, y + 18, 40, 20, 41980);
     CreateSettingsStatic(hWnd, L"StarBurst Dist Fade", 24, y + 44, 138, 18);
     CreateSettingsTrackbar(hWnd, 31981, 168, y + 38, 122, 30, 0, 100, 5);
     CreateSettingsEdit(hWnd, L"0.00", 298, y + 40, 40, 20, 41981);
