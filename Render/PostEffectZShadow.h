@@ -30,6 +30,7 @@ public:
     void SetShadowIntensity(const float intensity);
     void SetShadowSaturationBoost(const float saturationBoost);
     void SetCoverage(const float coverage);
+    void SetShadowBias(const float shadowBias);
     void SetPcfTapCount(const int tapCount);
     void SetCompositeTapCount(const int tapCount);
     void SetShadowTextureScaleDivisor(const int scaleDivisor);
@@ -53,6 +54,7 @@ private:
     float m_shadowIntensity = 0.5f;
     float m_shadowSaturationBoost = 0.35f;
     float m_coverage = 0.5f;
+    float m_shadowBias = 0.0121f;
     int m_pcfTapCount = 11;
     int m_compositeTapCount = 11;
     int m_shadowTextureScaleDivisor = 1;

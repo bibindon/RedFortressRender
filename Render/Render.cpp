@@ -1594,6 +1594,23 @@ void Render::ApplySettings()
         SetPostEffectDepthBufferShadowCoverage(0.5f);
     }
 
+    const auto shadowBias = m_settings.find(L"ShadowBias");
+    if (shadowBias != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectDepthBufferShadowBias(std::stof(shadowBias->second));
+        }
+        catch (...)
+        {
+            SetPostEffectDepthBufferShadowBias(0.0002f * (1.0f + (119.0f * m_postEffectDepthBufferShadowCoverage)));
+        }
+    }
+    else
+    {
+        SetPostEffectDepthBufferShadowBias(0.0002f * (1.0f + (119.0f * m_postEffectDepthBufferShadowCoverage)));
+    }
+
     const auto shadowPcfTapCount = m_settings.find(L"ShadowPcfTapCount");
     if (shadowPcfTapCount != m_settings.end())
     {
@@ -4543,6 +4560,12 @@ void Render::SetPostEffectDepthBufferShadowCoverage(const float coverage)
     m_postEffectZShadow.SetCoverage(coverage);
 }
 
+void Render::SetPostEffectDepthBufferShadowBias(const float shadowBias)
+{
+    m_postEffectDepthBufferShadowBias = (std::max)(0.0f, shadowBias);
+    m_postEffectZShadow.SetShadowBias(m_postEffectDepthBufferShadowBias);
+}
+
 void Render::SetPostEffectDepthBufferShadowPcfTapCount(const int tapCount)
 {
     m_postEffectDepthBufferShadowPcfTapCount = tapCount;
@@ -4581,6 +4604,7 @@ bool Render::IsPostEffectDepthBufferShadowEnabled() const { return m_postEffectZ
 float Render::GetPostEffectDepthBufferShadowIntensity() const { return m_postEffectDepthBufferShadowIntensity; }
 float Render::GetPostEffectDepthBufferShadowSaturationBoost() const { return m_postEffectDepthBufferShadowSaturationBoost; }
 float Render::GetPostEffectDepthBufferShadowCoverage() const { return m_postEffectDepthBufferShadowCoverage; }
+float Render::GetPostEffectDepthBufferShadowBias() const { return m_postEffectDepthBufferShadowBias; }
 int Render::GetPostEffectDepthBufferShadowPcfTapCount() const { return m_postEffectDepthBufferShadowPcfTapCount; }
 int Render::GetPostEffectDepthBufferShadowCompositeTapCount() const { return m_postEffectDepthBufferShadowCompositeTapCount; }
 int Render::GetPostEffectDepthBufferShadowTexSizeDivisor() const { return m_postEffectDepthBufferShadowTexSizeDivisor; }

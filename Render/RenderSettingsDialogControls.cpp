@@ -541,11 +541,11 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
         pbrY += 20;
     }
     y += 190;
-    CreateSettingsGroupBox(hWnd, L"ZShadow", 8, y, 504, 126);
-    const wchar_t* zShadowLabels[] = { L"ZShadow Intensity", L"ZShadow Saturation", L"ZShadow Range" };
-    const wchar_t* zShadowValues[] = { L"0.25", L"0.50", L"0.05" };
+    CreateSettingsGroupBox(hWnd, L"ZShadow", 8, y, 504, 146);
+    const wchar_t* zShadowLabels[] = { L"ZShadow Intensity", L"ZShadow Saturation", L"ZShadow Range", L"ZShadow Bias" };
+    const wchar_t* zShadowValues[] = { L"0.25", L"0.50", L"0.05", L"0.00139" };
     int zY = y + 28;
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < 4; ++i)
     {
         CreateSettingsStatic(hWnd, zShadowLabels[i], 24, zY + 4, 142, 18);
         CreateSettingsTrackbar(hWnd, 31600 + i, 168, zY, 122, 30, 0, 100, 50);
@@ -579,7 +579,7 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     SendMessage(zTexSizeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/8"));
     SendMessage(zTexSizeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/16"));
     SendMessage(zTexSizeCombo, CB_SETCURSEL, 0, 0);
-    y += 140;
+    y += 160;
     CreateSettingsGroupBox(hWnd, L"SSGI", 8, y, 504, 104);
     CreateSettingsStatic(hWnd, L"SSGI Sample Count", 24, y + 24, 138, 18);
     HWND ssgiSampleCombo = CreateSettingsCombo(hWnd, 31700, 266, y + 20, 72, 120);

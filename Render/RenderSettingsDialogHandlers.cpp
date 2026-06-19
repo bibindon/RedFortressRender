@@ -445,11 +445,17 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
         SetTrackbarFromFloat(hWnd, id - 10000, floatValue, minValue, maxValue);
         return true;
     }
-    if (id >= 41600 && id <= 41602 && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    if (id >= 41600 && id <= 41603 && TryGetSettingsEditFloat(hWnd, id, floatValue))
     {
         if (id == 41600) render->SetPostEffectDepthBufferShadowIntensity(floatValue);
         if (id == 41601) render->SetPostEffectDepthBufferShadowSaturationBoost(floatValue);
         if (id == 41602) render->SetPostEffectDepthBufferShadowCoverage(floatValue);
+        if (id == 41603)
+        {
+            render->SetPostEffectDepthBufferShadowBias(floatValue);
+            SetTrackbarFromFloat(hWnd, id - 10000, floatValue, 0.0f, 0.03f);
+            return true;
+        }
         SetTrackbarFromFloat(hWnd, id - 10000, floatValue, 0.0f, 1.0f);
         return true;
     }
@@ -1381,6 +1387,10 @@ void HandleRenderSettingsHScroll(HWND hWnd, LPARAM lParam)
     case 31602:
         render->SetPostEffectDepthBufferShadowCoverage(TrackbarToFloat(trackbar, 0.0f, 1.0f));
         SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 1.0f));
+        break;
+    case 31603:
+        render->SetPostEffectDepthBufferShadowBias(TrackbarToFloat(trackbar, 0.0f, 0.03f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 0.03f), L"%.5f");
         break;
     case 31701:
         render->SetPostEffectSSGISampleRadius(TrackbarToFloat(trackbar, 0.1f, 10.0f));
