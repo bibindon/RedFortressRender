@@ -3031,7 +3031,7 @@ D3DXVECTOR3 Render::GetMeshMixRot(const int id) const
 
 void Render::SetMeshMixSkinAnimPos(const int id, const D3DXVECTOR3& pos)
 {
-    if (id < 0 || id >= static_cast<int>(m_meshMixSkinAnimList.size()))
+    if (id < 0 || id >= static_cast<int>(m_meshMixSkinAnimList.size()) || m_meshMixSkinAnimList.at(id) == nullptr)
     {
         return;
     }
@@ -3041,7 +3041,7 @@ void Render::SetMeshMixSkinAnimPos(const int id, const D3DXVECTOR3& pos)
 
 void Render::SetMeshMixSkinAnimRotY(const int id, const float rotY)
 {
-    if (id < 0 || id >= static_cast<int>(m_meshMixSkinAnimList.size()))
+    if (id < 0 || id >= static_cast<int>(m_meshMixSkinAnimList.size()) || m_meshMixSkinAnimList.at(id) == nullptr)
     {
         return;
     }
@@ -3222,19 +3222,15 @@ bool Render::RemoveMeshMixSkinAnim(const int id)
         {
             it = m_meshMixSkinAnimBlinkList.erase(it);
         }
-        else if (it->meshId > id)
-        {
-            --it->meshId;
-            ++it;
-        }
         else
         {
             ++it;
         }
     }
 
+    // IDを安定させるため、要素を詰めずに空きスロットとして残す。
+    // eraseすると後続メッシュのIDが変わり、ゲーム側が保持するIDと不一致になる。
     SAFE_DELETE(m_meshMixSkinAnimList.at(id));
-    m_meshMixSkinAnimList.erase(m_meshMixSkinAnimList.begin() + static_cast<std::ptrdiff_t>(id));
     return true;
 }
 
