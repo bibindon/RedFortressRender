@@ -25,7 +25,12 @@ void FontEx::AddText(const std::wstring& text,
                      const int Y,
                      const UINT fontColor)
 {
+    const int outlineOffset = 1;
+    const UINT outlineColor = MakeOutlineColor(fontColor);
+
     m_shadowFont.AddText(text, X, Y, MakeBlurColor(fontColor));
+    m_mainFont.AddText(text, X - outlineOffset, Y - outlineOffset, outlineColor);
+    m_mainFont.AddText(text, X + outlineOffset, Y + outlineOffset, outlineColor);
     m_mainFont.AddText(text, X, Y, fontColor);
 }
 
@@ -45,7 +50,22 @@ void FontEx::AddTextCenter(const std::wstring& text,
                            const int Height,
                            const UINT fontColor)
 {
+    const int outlineOffset = 1;
+    const UINT outlineColor = MakeOutlineColor(fontColor);
+
     m_shadowFont.AddTextCenter(text, X, Y, Width, Height, MakeBlurColor(fontColor));
+    m_mainFont.AddTextCenter(text,
+                             X - outlineOffset,
+                             Y - outlineOffset,
+                             Width,
+                             Height,
+                             outlineColor);
+    m_mainFont.AddTextCenter(text,
+                             X + outlineOffset,
+                             Y + outlineOffset,
+                             Width,
+                             Height,
+                             outlineColor);
     m_mainFont.AddTextCenter(text, X, Y, Width, Height, fontColor);
 }
 
@@ -75,6 +95,12 @@ void FontEx::SetGaussianSampleSize(const int sampleSize)
 }
 
 UINT FontEx::MakeBlurColor(const UINT color)
+{
+    const UINT alpha = color & 0xFF000000;
+    return D3DCOLOR_ARGB(alpha >> 24, 128, 128, 128);
+}
+
+UINT FontEx::MakeOutlineColor(const UINT color)
 {
     const UINT alpha = color & 0xFF000000;
     return D3DCOLOR_ARGB(alpha >> 24, 128, 128, 128);

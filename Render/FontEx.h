@@ -47,6 +47,7 @@ public:
 private:
 
     static UINT MakeBlurColor(const UINT color);
+    static UINT MakeOutlineColor(const UINT color);
 
     Font m_shadowFont;
     Font m_mainFont;
