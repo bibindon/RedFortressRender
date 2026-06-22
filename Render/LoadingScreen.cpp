@@ -77,7 +77,7 @@ void LoadingScreen::Update(const float deltaSeconds)
     }
 }
 
-void LoadingScreen::Draw(Sprite& sprite, Font& loadingFont, Font& titleFont)
+void LoadingScreen::Draw(Sprite& sprite, Font& loadingFont, FontEx& titleFont)
 {
     if (!m_visible)
     {

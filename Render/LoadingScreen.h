@@ -2,6 +2,7 @@
 
 #include "Common.h"
 #include "Font.h"
+#include "FontEx.h"
 #include "Sprite.h"
 
 namespace NSRender
@@ -13,7 +14,7 @@ public:
     void Start();
     void End();
     void Update(float deltaSeconds);
-    void Draw(Sprite& sprite, Font& loadingFont, Font& titleFont);
+    void Draw(Sprite& sprite, Font& loadingFont, FontEx& titleFont);
     bool IsVisible() const;
     void SetTitle(const std::wstring& title);
     void SetProgress(int progress);

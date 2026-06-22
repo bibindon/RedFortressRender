@@ -6226,9 +6226,9 @@ void Render::EnsureLoadingScreenFont()
             }
         }
 
-        m_loadingScreenTitleFontId = SetUpFont(m_loadingScreenTitleFontName,
-                                               50,
-                                               D3DCOLOR_RGBA(255, 255, 255, 255));
+        m_loadingScreenTitleFontId = SetUpFontEx(m_loadingScreenTitleFontName,
+                                                 50,
+                                                 D3DCOLOR_RGBA(255, 255, 255, 255));
     }
 }
 
@@ -6247,7 +6247,7 @@ void Render::DrawLoadingScreen()
 
     m_loadingScreen.Draw(m_sprite,
                          *m_fontList.at(m_loadingScreenFontId),
-                         *m_fontList.at(m_loadingScreenTitleFontId));
+                         *m_fontExList.at(m_loadingScreenTitleFontId));
 }
 
 void Render::DrawFadeOverlay()
