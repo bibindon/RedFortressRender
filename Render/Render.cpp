@@ -2260,6 +2260,16 @@ void Render::Finalize()
     }
     m_fontExList.clear();
 
+    for (auto& font : m_fontExAnimList)
+    {
+        if (font != nullptr)
+        {
+            font->Finalize();
+        }
+        SAFE_DELETE(font);
+    }
+    m_fontExAnimList.clear();
+
     if (m_loadingScreenTitleFontRegistered)
     {
         RemoveFontResourceExW(m_loadingScreenTitleFontPath.c_str(), FR_PRIVATE, NULL);
@@ -3944,6 +3954,67 @@ int Render::SetUpFontEx(const std::wstring& fontName,
     return static_cast<int>(m_fontExList.size() - 1);
 }
 
+int Render::SetUpFontExAnim(const std::wstring& fontName,
+                            const int fontSize,
+                            const UINT fontColor)
+{
+    FontExAnim* font = NEW FontExAnim();
+    font->Initialize(fontName, fontSize, fontColor);
+    font->SetGaussianSampleSize(m_fontExGaussianSampleSize);
+    m_fontExAnimList.push_back(font);
+
+    return static_cast<int>(m_fontExAnimList.size() - 1);
+}
+
+void Render::StartTextExAnim(const int fontId,
+                             const std::wstring& text,
+                             const int X,
+                             const int Y,
+                             const int framesPerCharacter)
+{
+    if (fontId < 0 || fontId >= static_cast<int>(m_fontExAnimList.size()))
+    {
+        throw std::exception("Illegal fontId");
+    }
+
+    m_fontExAnimList.at(fontId)->Start(text, X, Y, framesPerCharacter);
+}
+
+void Render::StartTextExAnim(const int fontId,
+                             const std::wstring& text,
+                             const int X,
+                             const int Y,
+                             const int framesPerCharacter,
+                             const UINT color)
+{
+    if (fontId < 0 || fontId >= static_cast<int>(m_fontExAnimList.size()))
+    {
+        throw std::exception("Illegal fontId");
+    }
+
+    m_fontExAnimList.at(fontId)->Start(text, X, Y, framesPerCharacter, color);
+}
+
+void Render::FinishTextExAnim(const int fontId)
+{
+    if (fontId < 0 || fontId >= static_cast<int>(m_fontExAnimList.size()))
+    {
+        throw std::exception("Illegal fontId");
+    }
+
+    m_fontExAnimList.at(fontId)->Finish();
+}
+
+bool Render::IsTextExAnimFinished(const int fontId) const
+{
+    if (fontId < 0 || fontId >= static_cast<int>(m_fontExAnimList.size()))
+    {
+        throw std::exception("Illegal fontId");
+    }
+
+    return m_fontExAnimList.at(fontId)->IsFinished();
+}
+
 void Render::DrawText_(const int fontId,
                                  const std::wstring& text,
                                  const int X,
@@ -4445,6 +4516,14 @@ void Render::SetPostEffectFontSampleSize(const int sampleSize)
 {
     m_fontExGaussianSampleSize = NormalizeFontGaussianSampleSize(sampleSize);
     for (auto& font : m_fontExList)
+    {
+        if (font != nullptr)
+        {
+            font->SetGaussianSampleSize(m_fontExGaussianSampleSize);
+        }
+    }
+
+    for (auto& font : m_fontExAnimList)
     {
         if (font != nullptr)
         {
@@ -5956,6 +6035,12 @@ void Render::Draw2D()
 
     for (auto& elem : m_fontExList)
     {
+        elem->Draw();
+    }
+
+    for (auto& elem : m_fontExAnimList)
+    {
+        elem->Update();
         elem->Draw();
     }
 

@@ -75,6 +75,7 @@
     <ClCompile Include="Sprite.cpp" />
     <ClCompile Include="Font.cpp" />
     <ClCompile Include="FontEx.cpp" />
+    <ClCompile Include="FontExAnim.cpp" />
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="WindowManager.cpp" />
   </ItemGroup>
@@ -131,6 +132,7 @@
     <ClInclude Include="Sprite.h" />
     <ClInclude Include="Font.h" />
     <ClInclude Include="FontEx.h" />
+    <ClInclude Include="FontExAnim.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="WindowManager.h" />
   </ItemGroup>

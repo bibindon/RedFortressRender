@@ -20,6 +20,7 @@
 
 #include "Font.h"
 #include "FontEx.h"
+#include "FontExAnim.h"
 #include "Sprite.h"
 #include "ParticleSystem.h"
 #include "LoadingScreen.h"
@@ -362,6 +363,21 @@ public:
     // IDが返ってくるので、そのIDを文字描画するときに指定する
     int SetUpFont(const std::wstring& fontName, const int fontSize, const UINT fontColor);
     int SetUpFontEx(const std::wstring& fontName, const int fontSize, const UINT fontColor);
+    int SetUpFontExAnim(const std::wstring& fontName, const int fontSize, const UINT fontColor);
+
+    void StartTextExAnim(const int fontId,
+                         const std::wstring& text,
+                         const int X,
+                         const int Y,
+                         const int framesPerCharacter = 3);
+    void StartTextExAnim(const int fontId,
+                         const std::wstring& text,
+                         const int X,
+                         const int Y,
+                         const int framesPerCharacter,
+                         const UINT color);
+    void FinishTextExAnim(const int fontId);
+    bool IsTextExAnimFinished(const int fontId) const;
 
     // フォント作成時に取得したIDを指定して文字を描画する
     // 文字が表示され続けるためにはこの関数を毎フレーム実行する必要がある。
@@ -806,6 +822,7 @@ private:
     // ポインターにしないとデバイスロストを扱う機能が機能しなくなる
     std::vector<Font*> m_fontList;
     std::vector<FontEx*> m_fontExList;
+    std::vector<FontExAnim*> m_fontExAnimList;
     std::vector<RenderSettingsDialogTextInfo> m_settingsDialogTextList;
     std::vector<WorldTextInfo> m_worldTextList;
     std::vector<WorldTextInfo> m_pendingWorldTexts;
