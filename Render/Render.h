@@ -289,6 +289,8 @@ public:
     void SetMeshMixSkinAnimRotY(const int id, const float rotY);
     void StartMeshMixSkinAnimBlink(int id, int durationFrames, int intervalFrames = 4);
     void StopMeshMixSkinAnimBlink(int id);
+    void SetMeshMixSkinAnimEnabled(int id, bool enabled);
+    bool IsMeshMixSkinAnimEnabled(int id) const;
     std::vector<RenderLoadedModelInfo> GetLoadedModelInfoList();
 
     bool LoadXFileListMoveFromCsv(const std::wstring& csvPath,

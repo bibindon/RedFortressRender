@@ -3127,6 +3127,26 @@ void Render::StopMeshMixSkinAnimBlink(int id)
     }
 }
 
+void Render::SetMeshMixSkinAnimEnabled(const int id, const bool enabled)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshMixSkinAnimList.size()) || m_meshMixSkinAnimList.at(id) == nullptr)
+    {
+        return;
+    }
+
+    m_meshMixSkinAnimList.at(id)->SetEnabled(enabled);
+}
+
+bool Render::IsMeshMixSkinAnimEnabled(const int id) const
+{
+    if (id < 0 || id >= static_cast<int>(m_meshMixSkinAnimList.size()) || m_meshMixSkinAnimList.at(id) == nullptr)
+    {
+        return false;
+    }
+
+    return m_meshMixSkinAnimList.at(id)->IsEnabled();
+}
+
 void Render::UpdateMeshMixSkinAnimBlink()
 {
     for (auto it = m_meshMixSkinAnimBlinkList.begin(); it != m_meshMixSkinAnimBlinkList.end();)
