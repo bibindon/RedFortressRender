@@ -103,6 +103,7 @@ Sample 側の一部キーは `std::stoi(value) != 0` で判定しているため
 | `DepthBufferShadowEnable` | Depth Buffer Shadow ON/OFF |
 | `ShadowIntensity` | Shadow の強さ |
 | `ShadowCoverage` | Shadow の被覆率 |
+| `ShadowCoverageFar` | 遠距離 Shadow の被覆率。遠距離影は近距離影の半解像度で生成される |
 | `ShadowBias` | Z影の深度比較閾値。範囲とは独立して調整される |
 | `ShadowSaturationBoost` | Shadow 部分彩度補正 |
 | `ShadowPcfTapCount` | PCF サンプル数 |

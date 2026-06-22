@@ -1594,6 +1594,23 @@ void Render::ApplySettings()
         SetPostEffectDepthBufferShadowCoverage(0.5f);
     }
 
+    const auto shadowCoverageFar = m_settings.find(L"ShadowCoverageFar");
+    if (shadowCoverageFar != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectDepthBufferShadowCoverageFar(std::stof(shadowCoverageFar->second));
+        }
+        catch (...)
+        {
+            SetPostEffectDepthBufferShadowCoverageFar(0.8f);
+        }
+    }
+    else
+    {
+        SetPostEffectDepthBufferShadowCoverageFar(0.8f);
+    }
+
     const auto shadowBias = m_settings.find(L"ShadowBias");
     if (shadowBias != m_settings.end())
     {
@@ -4560,6 +4577,12 @@ void Render::SetPostEffectDepthBufferShadowCoverage(const float coverage)
     m_postEffectZShadow.SetCoverage(coverage);
 }
 
+void Render::SetPostEffectDepthBufferShadowCoverageFar(const float coverage)
+{
+    m_postEffectDepthBufferShadowCoverageFar = coverage;
+    m_postEffectZShadow.SetCoverageFar(coverage);
+}
+
 void Render::SetPostEffectDepthBufferShadowBias(const float shadowBias)
 {
     m_postEffectDepthBufferShadowBias = (std::max)(0.0f, shadowBias);
@@ -4604,6 +4627,7 @@ bool Render::IsPostEffectDepthBufferShadowEnabled() const { return m_postEffectZ
 float Render::GetPostEffectDepthBufferShadowIntensity() const { return m_postEffectDepthBufferShadowIntensity; }
 float Render::GetPostEffectDepthBufferShadowSaturationBoost() const { return m_postEffectDepthBufferShadowSaturationBoost; }
 float Render::GetPostEffectDepthBufferShadowCoverage() const { return m_postEffectDepthBufferShadowCoverage; }
+float Render::GetPostEffectDepthBufferShadowCoverageFar() const { return m_postEffectDepthBufferShadowCoverageFar; }
 float Render::GetPostEffectDepthBufferShadowBias() const { return m_postEffectDepthBufferShadowBias; }
 int Render::GetPostEffectDepthBufferShadowPcfTapCount() const { return m_postEffectDepthBufferShadowPcfTapCount; }
 int Render::GetPostEffectDepthBufferShadowCompositeTapCount() const { return m_postEffectDepthBufferShadowCompositeTapCount; }

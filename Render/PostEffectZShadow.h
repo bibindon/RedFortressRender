@@ -30,6 +30,7 @@ public:
     void SetShadowIntensity(const float intensity);
     void SetShadowSaturationBoost(const float saturationBoost);
     void SetCoverage(const float coverage);
+    void SetCoverageFar(const float coverage);
     void SetShadowBias(const float shadowBias);
     void SetPcfTapCount(const int tapCount);
     void SetCompositeTapCount(const int tapCount);
@@ -45,15 +46,19 @@ public:
 
 private:
     static const int SHADOW_TEX_SIZE_VARIANT_COUNT = 5;
+    static const int SHADOW_CASCADE_COUNT = 2;
+    static const int SHADOW_CASCADE_NEAR = 0;
+    static const int SHADOW_CASCADE_FAR = 1;
 
-    void RenderTechnique1();
-    void RenderTechnique2();
+    void RenderTechnique1(const int cascadeIndex);
+    void RenderTechnique2(const int cascadeIndex);
     void RenderTechnique3();
 
 
     float m_shadowIntensity = 0.5f;
     float m_shadowSaturationBoost = 0.35f;
     float m_coverage = 0.5f;
+    float m_coverageFar = 0.8f;
     float m_shadowBias = 0.0121f;
     int m_pcfTapCount = 11;
     int m_compositeTapCount = 11;
@@ -63,11 +68,11 @@ private:
 
     LPDIRECT3DTEXTURE9 g_texTemp = NULL;
 
-    LPDIRECT3DTEXTURE9 g_texRenderTargetLightZ[SHADOW_TEX_SIZE_VARIANT_COUNT] { };
-    LPDIRECT3DTEXTURE9 g_texRenderTargetShadow[SHADOW_TEX_SIZE_VARIANT_COUNT] { };
+    LPDIRECT3DTEXTURE9 g_texRenderTargetLightZ[SHADOW_CASCADE_COUNT][SHADOW_TEX_SIZE_VARIANT_COUNT] { };
+    LPDIRECT3DTEXTURE9 g_texRenderTargetShadow[SHADOW_CASCADE_COUNT][SHADOW_TEX_SIZE_VARIANT_COUNT] { };
     
-    LPDIRECT3DSURFACE9 g_surfaceLightZStensil[SHADOW_TEX_SIZE_VARIANT_COUNT] { };
-    LPDIRECT3DSURFACE9 g_surfaceShadowStensil[SHADOW_TEX_SIZE_VARIANT_COUNT] { };
+    LPDIRECT3DSURFACE9 g_surfaceLightZStensil[SHADOW_CASCADE_COUNT][SHADOW_TEX_SIZE_VARIANT_COUNT] { };
+    LPDIRECT3DSURFACE9 g_surfaceShadowStensil[SHADOW_CASCADE_COUNT][SHADOW_TEX_SIZE_VARIANT_COUNT] { };
     LPDIRECT3DSURFACE9 oldRT0 = NULL;
     LPDIRECT3DSURFACE9 oldZ = NULL;
     
@@ -88,11 +93,11 @@ private:
     };
 
 
-    D3DXMATRIX mLightView;
-    D3DXMATRIX mLightProj;
+    D3DXMATRIX mLightView[SHADOW_CASCADE_COUNT];
+    D3DXMATRIX mLightProj[SHADOW_CASCADE_COUNT];
 
-    float fLightNear = 10.0f;
-    float fLightFar = 200.0f;
+    float fLightNear[SHADOW_CASCADE_COUNT] { 10.0f, 10.0f };
+    float fLightFar[SHADOW_CASCADE_COUNT] { 200.0f, 200.0f };
 
     const std::deque<MeshMixManager>* m_pMeshList;
     const std::vector<MeshMixSkinAnim*>* m_pSkinAnimMeshList = nullptr;
@@ -102,10 +107,10 @@ private:
     LPDIRECT3DTEXTURE9 m_texCompositeTarget = NULL;
 
     void CreateRawResource();
-    LPDIRECT3DTEXTURE9 GetActiveLightZTexture() const;
-    LPDIRECT3DSURFACE9 GetActiveLightZDepthStencil() const;
-    LPDIRECT3DTEXTURE9 GetActiveShadowTexture() const;
-    LPDIRECT3DSURFACE9 GetActiveShadowDepthStencil() const;
+    LPDIRECT3DTEXTURE9 GetActiveLightZTexture(const int cascadeIndex) const;
+    LPDIRECT3DSURFACE9 GetActiveLightZDepthStencil(const int cascadeIndex) const;
+    LPDIRECT3DTEXTURE9 GetActiveShadowTexture(const int cascadeIndex) const;
+    LPDIRECT3DSURFACE9 GetActiveShadowDepthStencil(const int cascadeIndex) const;
     int GetActiveShadowTexVariantIndex() const;
     const char* GetWriteShadowTechniqueName() const;
     const char* GetWriteShadowSkinTechniqueName() const;

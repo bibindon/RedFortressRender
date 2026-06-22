@@ -15,6 +15,7 @@ float    g_meshAlphaClipThreshold;
 int      g_swayMode;
 float    g_time;
 bool     g_useMeshAlphaCutout;
+bool     g_writeNearCascade;
 
 float4x3 g_matWorldArray[MAX_MATRICES];
 int g_currentBoneIndex;
@@ -23,6 +24,8 @@ float g_shadowTexelW;
 float g_shadowTexelH;
 float g_compositeTexelW;
 float g_compositeTexelH;
+float g_compositeFarTexelW;
+float g_compositeFarTexelH;
 
 // 影の端に表示されるギザギザを抑制。0.002～0.005 で調整
 float g_shadowBias;
@@ -58,6 +61,15 @@ texture g_texShadow;
 sampler samplerShadow = sampler_state
 {
     Texture   = (g_texShadow);
+    MipFilter = NONE;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+
+texture g_texShadowFar;
+sampler samplerShadowFar = sampler_state
+{
+    Texture   = (g_texShadowFar);
     MipFilter = NONE;
     MinFilter = POINT;
     MagFilter = POINT;
@@ -520,7 +532,14 @@ float4 BuildWriteShadowColor(float3 inWorldPos, float nShadowColor)
         return outColor;
     }
 
-    outColor.rgb = nShadowColor.xxx;
+    outColor.r = nShadowColor;
+    outColor.g = nShadowColor;
+    if (g_writeNearCascade)
+    {
+        float edgeDistance = max(abs(uvNormalizedView.x), abs(uvNormalizedView.y));
+        float nearCascadeWeight = saturate((1.0f - edgeDistance) / 0.15f);
+        outColor.b = smoothstep(0.0f, 1.0f, nearCascadeWeight);
+    }
     outColor.a = nShadowColor * g_shadowIntensity;
     return outColor;
 }
@@ -651,6 +670,18 @@ void VS_Composite(in  float4 inPos  : POSITION,
 }
 
 // 2枚の画像を線形補間で合成する
+float4 SampleCombinedShadow(float2 uv)
+{
+    float2 farUv = uv;
+    farUv -= float2(0.5f * g_compositeTexelW, 0.5f * g_compositeTexelH);
+    farUv += float2(0.5f * g_compositeFarTexelW, 0.5f * g_compositeFarTexelH);
+
+    float4 nearShadow = tex2D(samplerShadow, uv);
+    float4 farShadow = tex2D(samplerShadowFar, farUv);
+    float nearCascadeWeight = saturate(nearShadow.b);
+    return lerp(farShadow, nearShadow, nearCascadeWeight);
+}
+
 void PS_Composite(in float4 inPos     : POSITION,
                   in float2 inUV      : TEXCOORD0,
 
@@ -659,7 +690,7 @@ void PS_Composite(in float4 inPos     : POSITION,
     float2 uv = inUV + float2(0.5f * g_compositeTexelW, 0.5f * g_compositeTexelH);
     float2 pixelCoord = floor(uv / float2(g_compositeTexelW, g_compositeTexelH));
     float4 vBaseColor = tex2D(samplerBase, uv);
-    float4 vCenterShadowColor = tex2D(samplerShadow, uv);
+    float4 vCenterShadowColor = SampleCombinedShadow(uv);
     float centerDepth = tex2D(samplerSceneDepth, uv).r;
     float3 centerNormal = DecodeWorldNormal(tex2D(samplerSceneNormal, uv).rgb);
 
@@ -698,7 +729,7 @@ void PS_Composite(in float4 inPos     : POSITION,
             }
 
             float weight = 1.0f;
-            vShadowColorSum += tex2D(samplerShadow, sampleUv) * weight;
+            vShadowColorSum += SampleCombinedShadow(sampleUv) * weight;
             totalWeight += weight;
         }
     }
@@ -756,7 +787,7 @@ void AccumulateCompositeSampleFixed(float2 uv,
     }
 
     float weight = 1.0f;
-    vShadowColorSum += tex2D(samplerShadow, sampleUv) * weight;
+    vShadowColorSum += SampleCombinedShadow(sampleUv) * weight;
     totalWeight += weight;
 }
 
@@ -797,7 +828,7 @@ float4 BuildCompositeColorFixed(float2 inUV, int filterRadius)
     float2 uv = inUV + float2(0.5f * g_compositeTexelW, 0.5f * g_compositeTexelH);
     float2 pixelCoord = floor(uv / float2(g_compositeTexelW, g_compositeTexelH));
     float4 vBaseColor = tex2D(samplerBase, uv);
-    float4 vCenterShadowColor = tex2D(samplerShadow, uv);
+    float4 vCenterShadowColor = SampleCombinedShadow(uv);
     float centerDepth = tex2D(samplerSceneDepth, uv).r;
     float3 centerNormal = DecodeWorldNormal(tex2D(samplerSceneNormal, uv).rgb);
     float4 vShadowColorSum = 0.0f;

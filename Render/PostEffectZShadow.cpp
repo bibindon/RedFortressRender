@@ -19,6 +19,7 @@ constexpr int SHADOW_TEX_SIZE_DIVISOR_2 = 2;
 constexpr int SHADOW_TEX_SIZE_DIVISOR_4 = 4;
 constexpr int SHADOW_TEX_SIZE_DIVISOR_8 = 8;
 constexpr int SHADOW_TEX_SIZE_DIVISOR_16 = 16;
+constexpr int SHADOW_FAR_RESOLUTION_DIVISOR = 2;
 const D3DXVECTOR3 SHADOW_CAMERA_OFFSET(40.0f, 50.0f, -40.0f);
 
 D3DXMATRIX BuildMeshWorldMatrix(const MeshMixManager& mesh)
@@ -165,12 +166,15 @@ void PostEffectZShadow::Finalize()
 
     SAFE_RELEASE(g_fxDepthBufferShadow);
 
-    for (int i = 0; i < SHADOW_TEX_SIZE_VARIANT_COUNT; ++i)
+    for (int cascadeIndex = 0; cascadeIndex < SHADOW_CASCADE_COUNT; ++cascadeIndex)
     {
-        SAFE_RELEASE(g_texRenderTargetLightZ[i]);
-        SAFE_RELEASE(g_texRenderTargetShadow[i]);
-        SAFE_RELEASE(g_surfaceLightZStensil[i]);
-        SAFE_RELEASE(g_surfaceShadowStensil[i]);
+        for (int variantIndex = 0; variantIndex < SHADOW_TEX_SIZE_VARIANT_COUNT; ++variantIndex)
+        {
+            SAFE_RELEASE(g_texRenderTargetLightZ[cascadeIndex][variantIndex]);
+            SAFE_RELEASE(g_texRenderTargetShadow[cascadeIndex][variantIndex]);
+            SAFE_RELEASE(g_surfaceLightZStensil[cascadeIndex][variantIndex]);
+            SAFE_RELEASE(g_surfaceShadowStensil[cascadeIndex][variantIndex]);
+        }
     }
     SAFE_RELEASE(g_pQuadDecl);
 
@@ -193,8 +197,10 @@ void PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_sceneDepthTexture = sceneDepthTexture;
     m_sceneNormalTexture = sceneNormalTexture;
 
-    RenderTechnique1();
-    RenderTechnique2();
+    RenderTechnique1(SHADOW_CASCADE_NEAR);
+    RenderTechnique2(SHADOW_CASCADE_NEAR);
+    RenderTechnique1(SHADOW_CASCADE_FAR);
+    RenderTechnique2(SHADOW_CASCADE_FAR);
     RenderTechnique3();
 
     m_pMeshList = nullptr;
@@ -205,11 +211,11 @@ void PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_texCompositeTarget = NULL;
 }
 
-void PostEffectZShadow::RenderTechnique1()
+void PostEffectZShadow::RenderTechnique1(const int cascadeIndex)
 {
     HRESULT hr = E_FAIL;
-    LPDIRECT3DTEXTURE9 activeLightZTexture = GetActiveLightZTexture();
-    LPDIRECT3DSURFACE9 activeLightZDepthStencil = GetActiveLightZDepthStencil();
+    LPDIRECT3DTEXTURE9 activeLightZTexture = GetActiveLightZTexture(cascadeIndex);
+    LPDIRECT3DSURFACE9 activeLightZDepthStencil = GetActiveLightZDepthStencil(cascadeIndex);
 
     hr = Common::D3DDevice()->GetRenderTarget(0, &oldRT0);
     assert(hr == S_OK);
@@ -256,24 +262,34 @@ void PostEffectZShadow::RenderTechnique1()
                              0);
     assert(hr == S_OK);
 
-    const float viewWidth = CoverageToViewSize(m_coverage);
-    const float focusYOffset = viewWidth * 0.35f;
+    float coverage = m_coverage;
+    if (cascadeIndex == SHADOW_CASCADE_FAR)
+    {
+        coverage = m_coverageFar;
+    }
+    const float viewWidth = CoverageToViewSize(coverage);
+    const float nearViewWidth = CoverageToViewSize(m_coverage);
+    const float focusYOffset = nearViewWidth * 0.35f;
     D3DXVECTOR3 focusPoint = Camera::GetLookAtPos();
     focusPoint.y -= focusYOffset;
     const D3DXVECTOR3 vLightEye = focusPoint + SHADOW_CAMERA_OFFSET;
     const D3DXVECTOR3 vLightAt = (Camera::GetEyePos() + Camera::GetLookAtPos()) * 0.5f;
     D3DXVECTOR3 vLightUp(0, 1, 0);
-    D3DXMatrixLookAtLH(&mLightView, &vLightEye, &vLightAt, &vLightUp);
+    D3DXMatrixLookAtLH(&mLightView[cascadeIndex], &vLightEye, &vLightAt, &vLightUp);
 
     D3DXVECTOR3 lightToCamera = Camera::GetEyePos() - vLightEye;
     float cameraDistance = D3DXVec3Length(&lightToCamera);
     cameraDistance = (std::max)(cameraDistance, 0.1f);
 
-    fLightNear = (std::max)(0.1f, cameraDistance * 0.5f);
-    fLightFar = (std::max)(fLightNear + 0.1f, cameraDistance * 2.0f);
+    fLightNear[cascadeIndex] = (std::max)(0.1f, cameraDistance * 0.5f);
+    fLightFar[cascadeIndex] = (std::max)(fLightNear[cascadeIndex] + 0.1f, cameraDistance * 2.0f);
 
     const float viewHeight = viewWidth;
-    D3DXMatrixOrthoLH(&mLightProj, viewWidth, viewHeight, fLightNear, fLightFar);
+    D3DXMatrixOrthoLH(&mLightProj[cascadeIndex],
+                      viewWidth,
+                      viewHeight,
+                      fLightNear[cascadeIndex],
+                      fLightFar[cascadeIndex]);
 
     hr = Common::D3DDevice()->BeginScene();
     assert(hr == S_OK);
@@ -281,17 +297,17 @@ void PostEffectZShadow::RenderTechnique1()
     hr = g_fxDepthBufferShadow->SetTechnique("TechniqueDepthFromLight");
     assert(hr == S_OK);
 
-    hr = g_fxDepthBufferShadow->SetMatrix("g_matLightView", &mLightView);
+    hr = g_fxDepthBufferShadow->SetMatrix("g_matLightView", &mLightView[cascadeIndex]);
     assert(hr == S_OK);
 
-    D3DXMATRIX mLightViewProj = mLightView * mLightProj;
+    D3DXMATRIX mLightViewProj = mLightView[cascadeIndex] * mLightProj[cascadeIndex];
     hr = g_fxDepthBufferShadow->SetMatrix("g_matLightViewProj", &mLightViewProj);
     assert(hr == S_OK);
 
-    hr = g_fxDepthBufferShadow->SetFloat ("g_lightNear", fLightNear);
+    hr = g_fxDepthBufferShadow->SetFloat ("g_lightNear", fLightNear[cascadeIndex]);
     assert(hr == S_OK);
 
-    hr = g_fxDepthBufferShadow->SetFloat ("g_lightFar", fLightFar);
+    hr = g_fxDepthBufferShadow->SetFloat ("g_lightFar", fLightFar[cascadeIndex]);
     assert(hr == S_OK);
 
     hr = g_fxDepthBufferShadow->SetFloat("g_meshAlphaClipThreshold", 0.5f);
@@ -320,7 +336,7 @@ void PostEffectZShadow::RenderTechnique1()
         D3DXMATRIX mWorld = BuildMeshWorldMatrix(mesh);
         D3DXMATRIX mWorldViewProjLight;
 
-        mWorldViewProjLight = mWorld * mLightView * mLightProj;
+        mWorldViewProjLight = mWorld * mLightView[cascadeIndex] * mLightProj[cascadeIndex];
         
         hr = g_fxDepthBufferShadow->SetMatrix("g_matWorld", &mWorld);
         assert(hr == S_OK);
@@ -377,12 +393,12 @@ void PostEffectZShadow::RenderTechnique1()
     Common::D3DDevice()->SetViewport(&oldViewPort);
 }
 
-void PostEffectZShadow::RenderTechnique2()
+void PostEffectZShadow::RenderTechnique2(const int cascadeIndex)
 {
     HRESULT hr = E_FAIL;
-    LPDIRECT3DTEXTURE9 activeLightZTexture = GetActiveLightZTexture();
-    LPDIRECT3DTEXTURE9 activeShadowTexture = GetActiveShadowTexture();
-    LPDIRECT3DSURFACE9 activeShadowDepthStencil = GetActiveShadowDepthStencil();
+    LPDIRECT3DTEXTURE9 activeLightZTexture = GetActiveLightZTexture(cascadeIndex);
+    LPDIRECT3DTEXTURE9 activeShadowTexture = GetActiveShadowTexture(cascadeIndex);
+    LPDIRECT3DSURFACE9 activeShadowDepthStencil = GetActiveShadowDepthStencil(cascadeIndex);
 
     LPDIRECT3DSURFACE9 surfaceShadow= NULL;
     hr = activeShadowTexture->GetSurfaceLevel(0, &surfaceShadow);
@@ -427,7 +443,7 @@ void PostEffectZShadow::RenderTechnique2()
 
     D3DXMATRIX mProj = Camera::GetProjMatrix();
 
-    D3DXMATRIX mLightViewProj = mLightView * mLightProj;
+    D3DXMATRIX mLightViewProj = mLightView[cascadeIndex] * mLightProj[cascadeIndex];
 
     hr = Common::D3DDevice()->BeginScene();
     assert(hr == S_OK);
@@ -435,13 +451,13 @@ void PostEffectZShadow::RenderTechnique2()
     hr = g_fxDepthBufferShadow->SetMatrix("g_matLightViewProj", &mLightViewProj);
     assert(hr == S_OK);
 
-    hr = g_fxDepthBufferShadow->SetMatrix("g_matLightView", &mLightView);
+    hr = g_fxDepthBufferShadow->SetMatrix("g_matLightView", &mLightView[cascadeIndex]);
     assert(hr == S_OK);
 
-    hr = g_fxDepthBufferShadow->SetFloat("g_lightNear", fLightNear);
+    hr = g_fxDepthBufferShadow->SetFloat("g_lightNear", fLightNear[cascadeIndex]);
     assert(hr == S_OK);
 
-    hr = g_fxDepthBufferShadow->SetFloat("g_lightFar", fLightFar);
+    hr = g_fxDepthBufferShadow->SetFloat("g_lightFar", fLightFar[cascadeIndex]);
     assert(hr == S_OK);
 
     hr = g_fxDepthBufferShadow->SetTexture("g_texLightZ", activeLightZTexture);
@@ -462,6 +478,14 @@ void PostEffectZShadow::RenderTechnique2()
     assert(hr == S_OK);
 
     hr = g_fxDepthBufferShadow->SetInt("g_shadowPcfTapCount", m_pcfTapCount);
+    assert(hr == S_OK);
+
+    BOOL writeNearCascade = FALSE;
+    if (cascadeIndex == SHADOW_CASCADE_NEAR)
+    {
+        writeNearCascade = TRUE;
+    }
+    hr = g_fxDepthBufferShadow->SetBool("g_writeNearCascade", writeNearCascade);
     assert(hr == S_OK);
 
     if (m_pMeshInstancingMap != nullptr)
@@ -627,13 +651,19 @@ void PostEffectZShadow::RenderTechnique3()
     g_fxDepthBufferShadow->Begin(&nPassNum, 0);
     g_fxDepthBufferShadow->BeginPass(0);
 
-    LPDIRECT3DTEXTURE9 activeShadowTexture = GetActiveShadowTexture();
+    LPDIRECT3DTEXTURE9 activeShadowTexture = GetActiveShadowTexture(SHADOW_CASCADE_NEAR);
+    LPDIRECT3DTEXTURE9 activeShadowTextureFar = GetActiveShadowTexture(SHADOW_CASCADE_FAR);
     D3DSURFACE_DESC descShadow{};
+    D3DSURFACE_DESC descShadowFar{};
     activeShadowTexture->GetLevelDesc(0, &descShadow);
+    activeShadowTextureFar->GetLevelDesc(0, &descShadowFar);
     g_fxDepthBufferShadow->SetFloat("g_compositeTexelW", 1.0f / static_cast<float>(descShadow.Width));
     g_fxDepthBufferShadow->SetFloat("g_compositeTexelH", 1.0f / static_cast<float>(descShadow.Height));
+    g_fxDepthBufferShadow->SetFloat("g_compositeFarTexelW", 1.0f / static_cast<float>(descShadowFar.Width));
+    g_fxDepthBufferShadow->SetFloat("g_compositeFarTexelH", 1.0f / static_cast<float>(descShadowFar.Height));
     g_fxDepthBufferShadow->SetTexture("g_texBase",   g_texTemp);               // 元のカラー
     g_fxDepthBufferShadow->SetTexture("g_texShadow", activeShadowTexture);     // 影アルファ
+    g_fxDepthBufferShadow->SetTexture("g_texShadowFar", activeShadowTextureFar);
     g_fxDepthBufferShadow->SetTexture("g_texSceneDepth", m_sceneDepthTexture);
     g_fxDepthBufferShadow->SetTexture("g_texSceneNormal", m_sceneNormalTexture);
     g_fxDepthBufferShadow->SetFloat("g_shadowIntensity", m_shadowIntensity);
@@ -662,7 +692,7 @@ void PostEffectZShadow::DrawDebugLightDepthOverlay(const int x,
                                                    const int width,
                                                    const int height)
 {
-    LPDIRECT3DTEXTURE9 activeLightZTexture = GetActiveLightZTexture();
+    LPDIRECT3DTEXTURE9 activeLightZTexture = GetActiveLightZTexture(SHADOW_CASCADE_NEAR);
     if (g_fxDepthBufferShadow == NULL || activeLightZTexture == NULL)
     {
         return;
@@ -768,6 +798,11 @@ void PostEffectZShadow::SetCoverage(const float coverage)
     m_coverage = ClampZeroToOne(coverage);
 }
 
+void PostEffectZShadow::SetCoverageFar(const float coverage)
+{
+    m_coverageFar = ClampZeroToOne(coverage);
+}
+
 void PostEffectZShadow::SetShadowBias(const float shadowBias)
 {
     m_shadowBias = (std::max)(0.0f, shadowBias);
@@ -797,12 +832,15 @@ void PostEffectZShadow::OnDeviceLost()
 
     g_fxDepthBufferShadow->OnLostDevice();
     SAFE_RELEASE(g_texTemp);
-    for (int i = 0; i < SHADOW_TEX_SIZE_VARIANT_COUNT; ++i)
+    for (int cascadeIndex = 0; cascadeIndex < SHADOW_CASCADE_COUNT; ++cascadeIndex)
     {
-        SAFE_RELEASE(g_texRenderTargetLightZ[i]);
-        SAFE_RELEASE(g_texRenderTargetShadow[i]);
-        SAFE_RELEASE(g_surfaceLightZStensil[i]);
-        SAFE_RELEASE(g_surfaceShadowStensil[i]);
+        for (int variantIndex = 0; variantIndex < SHADOW_TEX_SIZE_VARIANT_COUNT; ++variantIndex)
+        {
+            SAFE_RELEASE(g_texRenderTargetLightZ[cascadeIndex][variantIndex]);
+            SAFE_RELEASE(g_texRenderTargetShadow[cascadeIndex][variantIndex]);
+            SAFE_RELEASE(g_surfaceLightZStensil[cascadeIndex][variantIndex]);
+            SAFE_RELEASE(g_surfaceShadowStensil[cascadeIndex][variantIndex]);
+        }
     }
     SAFE_RELEASE(g_pQuadDecl);
 }
@@ -823,53 +861,63 @@ void PostEffectZShadow::CreateRawResource()
     HRESULT hResult = E_FAIL;
     HRESULT hr = E_FAIL;
 
-    for (int i = 0; i < SHADOW_TEX_SIZE_VARIANT_COUNT; ++i)
+    for (int cascadeIndex = 0; cascadeIndex < SHADOW_CASCADE_COUNT; ++cascadeIndex)
     {
-        const int scaleDivisor = VariantIndexToShadowTextureScaleDivisor(i);
-        const UINT lightZWidth = ComputeLightZTextureSize(Common::ScreenW(), scaleDivisor);
-        const UINT lightZHeight = ComputeLightZTextureSize(Common::ScreenH(), scaleDivisor);
-        const UINT shadowWidth = ComputeShadowTextureSize(Common::ScreenW(), scaleDivisor);
-        const UINT shadowHeight = ComputeShadowTextureSize(Common::ScreenH(), scaleDivisor);
+        for (int variantIndex = 0; variantIndex < SHADOW_TEX_SIZE_VARIANT_COUNT; ++variantIndex)
+        {
+            const int scaleDivisor = VariantIndexToShadowTextureScaleDivisor(variantIndex);
+            UINT lightZWidth = ComputeLightZTextureSize(Common::ScreenW(), scaleDivisor);
+            UINT lightZHeight = ComputeLightZTextureSize(Common::ScreenH(), scaleDivisor);
+            UINT shadowWidth = ComputeShadowTextureSize(Common::ScreenW(), scaleDivisor);
+            UINT shadowHeight = ComputeShadowTextureSize(Common::ScreenH(), scaleDivisor);
+            if (cascadeIndex == SHADOW_CASCADE_FAR)
+            {
+                lightZWidth = (std::max)(1U, lightZWidth / SHADOW_FAR_RESOLUTION_DIVISOR);
+                lightZHeight = (std::max)(1U, lightZHeight / SHADOW_FAR_RESOLUTION_DIVISOR);
+                shadowWidth = (std::max)(1U, shadowWidth / SHADOW_FAR_RESOLUTION_DIVISOR);
+                shadowHeight = (std::max)(1U, shadowHeight / SHADOW_FAR_RESOLUTION_DIVISOR);
+            }
 
-        hResult = D3DXCreateTexture(Common::D3DDevice(),
+            hResult = D3DXCreateTexture(Common::D3DDevice(),
                                     lightZWidth,
                                     lightZHeight,
                                     1,
                                     D3DUSAGE_RENDERTARGET,
                                     D3DFMT_R32F,
                                     D3DPOOL_DEFAULT,
-                                    &g_texRenderTargetLightZ[i]);
-        assert(hResult == S_OK);
+                                    &g_texRenderTargetLightZ[cascadeIndex][variantIndex]);
+            assert(hResult == S_OK);
 
-        hr = Common::D3DDevice()->CreateDepthStencilSurface(lightZWidth,
+            hr = Common::D3DDevice()->CreateDepthStencilSurface(lightZWidth,
                                                             lightZHeight,
                                                             D3DFMT_D16,
                                                             D3DMULTISAMPLE_NONE,
                                                             0,
                                                             TRUE,
-                                                            &g_surfaceLightZStensil[i],
+                                                            &g_surfaceLightZStensil[cascadeIndex][variantIndex],
                                                             NULL);
-        assert(hr == S_OK);
+            assert(hr == S_OK);
 
-        hResult = D3DXCreateTexture(Common::D3DDevice(),
+            hResult = D3DXCreateTexture(Common::D3DDevice(),
                                     shadowWidth,
                                     shadowHeight,
                                     1,
                                     D3DUSAGE_RENDERTARGET,
                                     D3DFMT_A16B16G16R16F,
                                     D3DPOOL_DEFAULT,
-                                    &g_texRenderTargetShadow[i]);
-        assert(hResult == S_OK);
+                                    &g_texRenderTargetShadow[cascadeIndex][variantIndex]);
+            assert(hResult == S_OK);
 
-        hr = Common::D3DDevice()->CreateDepthStencilSurface(shadowWidth,
+            hr = Common::D3DDevice()->CreateDepthStencilSurface(shadowWidth,
                                                             shadowHeight,
                                                             D3DFMT_D16,
                                                             D3DMULTISAMPLE_NONE,
                                                             0,
                                                             TRUE,
-                                                            &g_surfaceShadowStensil[i],
+                                                            &g_surfaceShadowStensil[cascadeIndex][variantIndex],
                                                             NULL);
-        assert(hr == S_OK);
+            assert(hr == S_OK);
+        }
     }
 
     D3DVERTEXELEMENT9 elems[] =
@@ -883,24 +931,24 @@ void PostEffectZShadow::CreateRawResource()
     assert(hResult == S_OK);
 }
 
-LPDIRECT3DTEXTURE9 PostEffectZShadow::GetActiveLightZTexture() const
+LPDIRECT3DTEXTURE9 PostEffectZShadow::GetActiveLightZTexture(const int cascadeIndex) const
 {
-    return g_texRenderTargetLightZ[GetActiveShadowTexVariantIndex()];
+    return g_texRenderTargetLightZ[cascadeIndex][GetActiveShadowTexVariantIndex()];
 }
 
-LPDIRECT3DSURFACE9 PostEffectZShadow::GetActiveLightZDepthStencil() const
+LPDIRECT3DSURFACE9 PostEffectZShadow::GetActiveLightZDepthStencil(const int cascadeIndex) const
 {
-    return g_surfaceLightZStensil[GetActiveShadowTexVariantIndex()];
+    return g_surfaceLightZStensil[cascadeIndex][GetActiveShadowTexVariantIndex()];
 }
 
-LPDIRECT3DTEXTURE9 PostEffectZShadow::GetActiveShadowTexture() const
+LPDIRECT3DTEXTURE9 PostEffectZShadow::GetActiveShadowTexture(const int cascadeIndex) const
 {
-    return g_texRenderTargetShadow[GetActiveShadowTexVariantIndex()];
+    return g_texRenderTargetShadow[cascadeIndex][GetActiveShadowTexVariantIndex()];
 }
 
-LPDIRECT3DSURFACE9 PostEffectZShadow::GetActiveShadowDepthStencil() const
+LPDIRECT3DSURFACE9 PostEffectZShadow::GetActiveShadowDepthStencil(const int cascadeIndex) const
 {
-    return g_surfaceShadowStensil[GetActiveShadowTexVariantIndex()];
+    return g_surfaceShadowStensil[cascadeIndex][GetActiveShadowTexVariantIndex()];
 }
 
 int PostEffectZShadow::GetActiveShadowTexVariantIndex() const
