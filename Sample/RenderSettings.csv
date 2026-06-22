@@ -80,7 +80,7 @@ HaloThreshold,1.0
 PostEffectAAEnable,0
 ,
 StarBurstEnable,0
-StarBurstThreshold,0.6
+StarBurstThreshold,1.0
 StarBurstDistanceFade,0.0
 ,
 DepthOfFieldMode,0
