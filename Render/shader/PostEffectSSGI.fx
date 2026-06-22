@@ -120,8 +120,8 @@ float3 GetViewPosition(float2 uv)
     float viewDepth = GetViewDepth(uv);
     float2 ndc = float2(uv.x * 2.0f - 1.0f,
                         1.0f - uv.y * 2.0f);
-    return float3(ndc.x * viewDepth / g_matProj._11,
-                  ndc.y * viewDepth / g_matProj._22,
+    return float3((ndc.x - g_matProj._31) * viewDepth / g_matProj._11,
+                  (ndc.y - g_matProj._32) * viewDepth / g_matProj._22,
                   viewDepth);
 }
 
