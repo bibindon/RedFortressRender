@@ -136,6 +136,12 @@ struct WorldTextInfo
     bool decorated = false;
 };
 
+enum class BlinkMode
+{
+    WhiteFlash,
+    Visibility
+};
+
 class Render : public IDeviceResettable
 {
 
@@ -290,7 +296,8 @@ public:
     void SetMeshMixSkinAnimPos(const int id, const D3DXVECTOR3& pos);
     void SetMeshMixSkinAnimRotY(const int id, const float rotY);
     void SetMeshMixSkinAnimScale(const int id, const float scale);
-    void StartMeshMixSkinAnimBlink(int id, int durationFrames, int intervalFrames = 4);
+    void StartMeshMixSkinAnimBlink(int id, int durationFrames, int intervalFrames = 4,
+                                   BlinkMode mode = BlinkMode::WhiteFlash);
     void StopMeshMixSkinAnimBlink(int id);
     void SetMeshMixSkinAnimEnabled(int id, bool enabled);
     bool IsMeshMixSkinAnimEnabled(int id) const;
@@ -834,6 +841,7 @@ private:
         int meshId = -1;
         int remainingFrames = 0;
         int intervalFrames = 4;
+        BlinkMode mode = BlinkMode::WhiteFlash;
     };
     std::vector<MeshMixSkinAnimBlinkInfo> m_meshMixSkinAnimBlinkList;
 

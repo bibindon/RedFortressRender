@@ -3108,7 +3108,7 @@ void Render::SetMeshMixSkinAnimScale(const int id, const float scale)
     m_meshMixSkinAnimList.at(id)->SetScale(scale);
 }
 
-void Render::StartMeshMixSkinAnimBlink(int id, int durationFrames, int intervalFrames)
+void Render::StartMeshMixSkinAnimBlink(int id, int durationFrames, int intervalFrames, const BlinkMode mode)
 {
     if (id < 0 || id >= static_cast<int>(m_meshMixSkinAnimList.size()) || m_meshMixSkinAnimList.at(id) == nullptr)
     {
@@ -3121,6 +3121,7 @@ void Render::StartMeshMixSkinAnimBlink(int id, int durationFrames, int intervalF
         {
             info.remainingFrames = durationFrames;
             info.intervalFrames = intervalFrames;
+            info.mode = mode;
             return;
         }
     }
@@ -3129,6 +3130,7 @@ void Render::StartMeshMixSkinAnimBlink(int id, int durationFrames, int intervalF
     info.meshId = id;
     info.remainingFrames = durationFrames;
     info.intervalFrames = intervalFrames;
+    info.mode = mode;
     m_meshMixSkinAnimBlinkList.push_back(info);
 }
 
@@ -3142,6 +3144,7 @@ void Render::StopMeshMixSkinAnimBlink(int id)
                 m_meshMixSkinAnimList.at(it->meshId) != nullptr)
             {
                 m_meshMixSkinAnimList.at(it->meshId)->SetEnabled(true);
+                m_meshMixSkinAnimList.at(it->meshId)->SetDamageFlash(false);
             }
             it = m_meshMixSkinAnimBlinkList.erase(it);
         }
@@ -3187,12 +3190,20 @@ void Render::UpdateMeshMixSkinAnimBlink()
         if (it->remainingFrames <= 0)
         {
             m_meshMixSkinAnimList.at(it->meshId)->SetEnabled(true);
+            m_meshMixSkinAnimList.at(it->meshId)->SetDamageFlash(false);
             it = m_meshMixSkinAnimBlinkList.erase(it);
         }
         else
         {
             const bool visible = ((it->remainingFrames / it->intervalFrames) % 2) == 0;
-            m_meshMixSkinAnimList.at(it->meshId)->SetEnabled(visible);
+            if (it->mode == BlinkMode::WhiteFlash)
+            {
+                m_meshMixSkinAnimList.at(it->meshId)->SetDamageFlash(!visible);
+            }
+            else
+            {
+                m_meshMixSkinAnimList.at(it->meshId)->SetEnabled(visible);
+            }
             ++it;
         }
     }

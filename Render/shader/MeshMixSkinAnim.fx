@@ -18,6 +18,7 @@ float g_fShadowDarkness = 1.0f;
 float g_specularPower = 1.0f;
 float g_specularIntensity = 0.1f;
 bool g_treatTextureAsWhite = false;
+bool g_damageFlash = false;
 bool g_alphaClipEnabled = false;
 bool g_mirrorClipEnable = false;
 float4 g_mirrorClipPlane = { 0.0f, 1.0f, 0.0f, 0.0f };
@@ -266,6 +267,12 @@ void PixelShader1(in  float3 inPosWorld    : TEXCOORD0,
     ApplyMirrorClip(inPosWorld);
     ApplyAlphaClip(inTexCoord);
 
+    if (g_damageFlash)
+    {
+        outColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
+        return;
+    }
+
     float3 normal = normalize(inNormalWorld);
     float3 lightDir = normalize(g_lightDir.xyz);
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
@@ -309,6 +316,12 @@ void PixelShaderPointLight(in  float4 inPosition    : POSITION,
 {
     ApplyMirrorClip(inPosWorld);
     ApplyAlphaClip(inTexCoord);
+
+    if (g_damageFlash)
+    {
+        outColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
+        return;
+    }
 
     float3 N = normalize(inNormalWorld);
     float3 cameraDirWS = normalize(g_cameraPos.xyz - inPosWorld);

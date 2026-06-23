@@ -70,6 +70,7 @@ public:
     void SetSpecularIntensityOverrideEnabled(const bool enabled);
     void SetSpecularEdgeOverrideEnabled(const bool enabled);
     void SetTreatTextureAsWhite(const bool enabled);
+    void SetDamageFlash(const bool enabled);
     void SetAlphaClipEnabled(const bool enabled);
     void SetIgnoreTransparentMaterial(const bool enabled);
     void SetRotY(const float rotY);
@@ -161,6 +162,7 @@ private:
     D3DXVECTOR3 m_rotate = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
     float m_scale = 1.0f;
     bool m_enabled = true;
+    bool m_damageFlash = false;
     std::atomic<bool> m_bLoaded { false };
     std::thread m_loadThread;
     bool m_useExternalAnimation = false;
