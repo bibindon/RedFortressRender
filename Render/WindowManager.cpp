@@ -147,6 +147,11 @@ std::vector<std::pair<int, int>> WindowManager::GetResolutionList()
     return resolutionList;
 }
 
+eWindowMode WindowManager::GetCurrentWindowMode() const
+{
+    return m_eWindowModeCurrent;
+}
+
 void WindowManager::ChangeWindowMode()
 {
     if (m_eWindowModeRequest == eWindowMode::NONE)

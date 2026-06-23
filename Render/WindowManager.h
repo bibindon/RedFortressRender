@@ -39,6 +39,7 @@ public:
     void NotifyDeviceLost();
 
     std::vector<std::pair<int, int>> GetResolutionList();
+    eWindowMode GetCurrentWindowMode() const;
 
 private:
 

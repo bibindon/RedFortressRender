@@ -2666,6 +2666,11 @@ void Render::ChangeWindowMode(const eWindowMode eWindowMode_)
     m_windowManager.ChangeWindowMode();
 }
 
+eWindowMode Render::GetWindowMode() const
+{
+    return m_windowManager.GetCurrentWindowMode();
+}
+
 int Render::AddMesh(const std::wstring& filePath,
                     const D3DXVECTOR3& pos,
                     const D3DXVECTOR3& rot,
