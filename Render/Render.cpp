@@ -3093,6 +3093,16 @@ void Render::SetMeshMixSkinAnimRotY(const int id, const float rotY)
     m_meshMixSkinAnimList.at(id)->SetRotY(rotY);
 }
 
+void Render::SetMeshMixSkinAnimScale(const int id, const float scale)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshMixSkinAnimList.size()) || m_meshMixSkinAnimList.at(id) == nullptr)
+    {
+        return;
+    }
+
+    m_meshMixSkinAnimList.at(id)->SetScale(scale);
+}
+
 void Render::StartMeshMixSkinAnimBlink(int id, int durationFrames, int intervalFrames)
 {
     if (id < 0 || id >= static_cast<int>(m_meshMixSkinAnimList.size()) || m_meshMixSkinAnimList.at(id) == nullptr)

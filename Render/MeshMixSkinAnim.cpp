@@ -1,4 +1,4 @@
-#include "MeshMixSkinAnim.h"
+﻿#include "MeshMixSkinAnim.h"
 
 #include <algorithm>
 #include <cmath>
@@ -1537,6 +1537,12 @@ void MeshMixSkinAnim::SetIgnoreTransparentMaterial(const bool enabled)
 void MeshMixSkinAnim::SetRotY(const float rotY)
 {
     m_rotate.y = rotY;
+    InvalidateBonePaletteCache();
+}
+
+void MeshMixSkinAnim::SetScale(const float scale)
+{
+    m_scale = scale;
     InvalidateBonePaletteCache();
 }
 

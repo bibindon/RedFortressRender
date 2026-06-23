@@ -288,6 +288,7 @@ public:
     void SetMeshMixSkinAnimIgnoreTransparentMaterial(const bool enabled);
     void SetMeshMixSkinAnimPos(const int id, const D3DXVECTOR3& pos);
     void SetMeshMixSkinAnimRotY(const int id, const float rotY);
+    void SetMeshMixSkinAnimScale(const int id, const float scale);
     void StartMeshMixSkinAnimBlink(int id, int durationFrames, int intervalFrames = 4);
     void StopMeshMixSkinAnimBlink(int id);
     void SetMeshMixSkinAnimEnabled(int id, bool enabled);

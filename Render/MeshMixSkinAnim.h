@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <d3d9.h>
 #include <d3dx9.h>
@@ -73,6 +73,7 @@ public:
     void SetAlphaClipEnabled(const bool enabled);
     void SetIgnoreTransparentMaterial(const bool enabled);
     void SetRotY(const float rotY);
+    void SetScale(const float scale);
 
     D3DXVECTOR3 GetRot() const;
     D3DXVECTOR3 GetPos() const;
