@@ -60,6 +60,7 @@ public:
     D3DXVECTOR3 GetPos() const;
 
     void SetRotY(const float rotY);
+    void SetWorldMatrix(const D3DXMATRIX& mat);
 
     D3DXVECTOR3 GetRot() const;
 
@@ -105,6 +106,9 @@ private:
     D3DXVECTOR3 m_pos = D3DXVECTOR3(0.f, 0.f, 0.f);
     D3DXVECTOR3 m_rotate = D3DXVECTOR3(0.f, 0.f, 0.f);
     float m_scale = 0.0f;
+
+    D3DXMATRIX m_matOverride;
+    bool m_useMatrixOverride = false;
 
     std::atomic<bool> m_bLoaded { false };
     bool m_enabled = true;

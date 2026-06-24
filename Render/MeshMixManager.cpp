@@ -1551,6 +1551,12 @@ void MeshMixManager::SetRotY(const float rotY)
     m_rotate.y = rotY;
 }
 
+void MeshMixManager::SetWorldMatrix(const D3DXMATRIX& mat)
+{
+    m_matOverride = mat;
+    m_useMatrixOverride = true;
+}
+
 D3DXVECTOR3 MeshMixManager::GetRot() const
 {
     return m_rotate;
@@ -1568,6 +1574,11 @@ float MeshMixManager::GetScale() const
 
 D3DXMATRIX MeshMixManager::BuildWorldMatrix() const
 {
+    if (m_useMatrixOverride)
+    {
+        return m_matOverride;
+    }
+
     D3DXMATRIX matWorld { };
     D3DXMatrixIdentity(&matWorld);
 

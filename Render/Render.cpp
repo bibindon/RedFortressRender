@@ -3126,6 +3126,16 @@ void Render::SetMeshMixRotY(const int id, const float rotY)
     m_meshMixList.at(id).SetRotY(rotY);
 }
 
+void Render::SetMeshMixWorldMatrix(const int id, const D3DXMATRIX& mat)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshMixList.size()))
+    {
+        return;
+    }
+
+    m_meshMixList.at(id).SetWorldMatrix(mat);
+}
+
 D3DXVECTOR3 Render::GetMeshMixRot(const int id) const
 {
     if (id < 0 || id >= static_cast<int>(m_meshMixList.size()))
@@ -3136,32 +3146,14 @@ D3DXVECTOR3 Render::GetMeshMixRot(const int id) const
     return m_meshMixList.at(id).GetRot();
 }
 
-void Render::SetMeshPos(const int id, const D3DXVECTOR3& pos)
-{
-    if (id < 0 || id >= static_cast<int>(m_meshList.size()))
-    {
-        return;
-    }
-
-    m_meshList.at(id).SetPos(pos);
-}
-
-void Render::SetMeshWorldMatrix(const int id, const D3DXMATRIX& mat)
-{
-    if (id < 0 || id >= static_cast<int>(m_meshList.size()))
-    {
-        return;
-    }
-
-    m_meshList.at(id).SetWorldMatrix(mat);
-}
-
-void Render::AttachMeshToBone(const int childMeshId, const int parentSkinnedMeshId, const char* boneName)
+void Render::AttachMeshToBone(const int childMeshId, const int parentSkinnedMeshId,
+                              const char* boneName, const D3DXVECTOR3& localRotate)
 {
     BoneAttachment attach;
     attach.childMeshId = childMeshId;
     attach.parentSkinnedMeshId = parentSkinnedMeshId;
     attach.boneName = boneName;
+    attach.localRotate = localRotate;
     m_boneAttachments.push_back(attach);
 }
 
@@ -3199,9 +3191,15 @@ void Render::UpdateBoneAttachments()
             continue;
         }
 
-        if (attach.childMeshId >= 0 && attach.childMeshId < static_cast<int>(m_meshList.size()))
+        if (attach.childMeshId >= 0 && attach.childMeshId < static_cast<int>(m_meshMixList.size()))
         {
-            m_meshList.at(attach.childMeshId).SetWorldMatrix(boneWorldMatrix);
+            D3DXMATRIX matLocal;
+            D3DXMatrixRotationYawPitchRoll(&matLocal,
+                                           attach.localRotate.y,
+                                           attach.localRotate.x,
+                                           attach.localRotate.z);
+            const D3DXMATRIX finalMatrix = boneWorldMatrix * matLocal;
+            m_meshMixList.at(attach.childMeshId).SetWorldMatrix(finalMatrix);
         }
     }
 }
