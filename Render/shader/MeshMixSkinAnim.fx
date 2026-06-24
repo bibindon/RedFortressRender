@@ -19,6 +19,7 @@ float g_specularPower = 1.0f;
 float g_specularIntensity = 0.1f;
 bool g_treatTextureAsWhite = false;
 bool g_damageFlash = false;
+bool g_yellowFlash = false;
 bool g_alphaClipEnabled = false;
 bool g_mirrorClipEnable = false;
 float4 g_mirrorClipPlane = { 0.0f, 1.0f, 0.0f, 0.0f };
@@ -267,6 +268,12 @@ void PixelShader1(in  float3 inPosWorld    : TEXCOORD0,
     ApplyMirrorClip(inPosWorld);
     ApplyAlphaClip(inTexCoord);
 
+    if (g_yellowFlash)
+    {
+        outColor = float4(1.0f, 1.0f, 0.0f, 1.0f);
+        return;
+    }
+
     if (g_damageFlash)
     {
         outColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -316,6 +323,12 @@ void PixelShaderPointLight(in  float4 inPosition    : POSITION,
 {
     ApplyMirrorClip(inPosWorld);
     ApplyAlphaClip(inTexCoord);
+
+    if (g_yellowFlash)
+    {
+        outColor = float4(1.0f, 1.0f, 0.0f, 1.0f);
+        return;
+    }
 
     if (g_damageFlash)
     {

@@ -3248,6 +3248,7 @@ void Render::UpdateMeshMixSkinAnimBlink()
         {
             m_meshMixSkinAnimList.at(it->meshId)->SetEnabled(true);
             m_meshMixSkinAnimList.at(it->meshId)->SetDamageFlash(false);
+            m_meshMixSkinAnimList.at(it->meshId)->SetYellowFlash(false);
             it = m_meshMixSkinAnimBlinkList.erase(it);
         }
         else
@@ -3256,6 +3257,11 @@ void Render::UpdateMeshMixSkinAnimBlink()
             if (it->mode == BlinkMode::WhiteFlash)
             {
                 m_meshMixSkinAnimList.at(it->meshId)->SetDamageFlash(!visible);
+            }
+            else if (it->mode == BlinkMode::StarFlash)
+            {
+                m_meshMixSkinAnimList.at(it->meshId)->SetDamageFlash(visible);
+                m_meshMixSkinAnimList.at(it->meshId)->SetYellowFlash(!visible);
             }
             else
             {

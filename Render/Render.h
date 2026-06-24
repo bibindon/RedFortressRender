@@ -139,7 +139,8 @@ struct WorldTextInfo
 enum class BlinkMode
 {
     WhiteFlash,
-    Visibility
+    Visibility,
+    StarFlash
 };
 
 class Render : public IDeviceResettable

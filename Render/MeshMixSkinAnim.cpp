@@ -533,13 +533,14 @@ void MeshMixSkinAnim::Render()
     }
     m_D3DEffect->SetBool("g_bSaturateShadow", useSaturateShadow);
     BOOL treatTextureAsWhite = FALSE;
-    if (m_param.treatTextureAsWhite || m_damageFlash)
+    if (m_param.treatTextureAsWhite || m_damageFlash || m_yellowFlash)
     {
         treatTextureAsWhite = TRUE;
     }
     m_D3DEffect->SetBool("g_treatTextureAsWhite", treatTextureAsWhite);
 
     m_D3DEffect->SetBool("g_damageFlash", m_damageFlash ? TRUE : FALSE);
+    m_D3DEffect->SetBool("g_yellowFlash", m_yellowFlash ? TRUE : FALSE);
 
     BOOL alphaClipEnabled = FALSE;
     if (m_alphaClipEnabled)
@@ -1531,6 +1532,11 @@ void MeshMixSkinAnim::SetTreatTextureAsWhite(const bool enabled)
 void MeshMixSkinAnim::SetDamageFlash(const bool enabled)
 {
     m_damageFlash = enabled;
+}
+
+void MeshMixSkinAnim::SetYellowFlash(const bool enabled)
+{
+    m_yellowFlash = enabled;
 }
 
 void MeshMixSkinAnim::SetAlphaClipEnabled(const bool enabled)

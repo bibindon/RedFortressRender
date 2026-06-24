@@ -71,6 +71,7 @@ public:
     void SetSpecularEdgeOverrideEnabled(const bool enabled);
     void SetTreatTextureAsWhite(const bool enabled);
     void SetDamageFlash(const bool enabled);
+    void SetYellowFlash(const bool enabled);
     void SetAlphaClipEnabled(const bool enabled);
     void SetIgnoreTransparentMaterial(const bool enabled);
     void SetRotY(const float rotY);
@@ -163,6 +164,7 @@ private:
     float m_scale = 1.0f;
     bool m_enabled = true;
     bool m_damageFlash = false;
+    bool m_yellowFlash = false;
     std::atomic<bool> m_bLoaded { false };
     std::thread m_loadThread;
     bool m_useExternalAnimation = false;
