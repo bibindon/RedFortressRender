@@ -3147,13 +3147,15 @@ D3DXVECTOR3 Render::GetMeshMixRot(const int id) const
 }
 
 void Render::AttachMeshToBone(const int childMeshId, const int parentSkinnedMeshId,
-                              const char* boneName, const D3DXVECTOR3& localRotate)
+                              const char* boneName, const D3DXVECTOR3& localRotate,
+                              const D3DXVECTOR3& localOffset)
 {
     BoneAttachment attach;
     attach.childMeshId = childMeshId;
     attach.parentSkinnedMeshId = parentSkinnedMeshId;
     attach.boneName = boneName;
     attach.localRotate = localRotate;
+    attach.localOffset = localOffset;
     m_boneAttachments.push_back(attach);
 
     char dbg[256];
@@ -3234,6 +3236,12 @@ void Render::UpdateBoneAttachments()
                                        attach.localRotate.x,
                                        attach.localRotate.z);
 
+        D3DXMATRIX matTranslate;
+        D3DXMatrixTranslation(&matTranslate,
+                              attach.localOffset.x,
+                              attach.localOffset.y,
+                              attach.localOffset.z);
+
         const D3DXVECTOR3 bonePos(boneWorldMatrix._41, boneWorldMatrix._42, boneWorldMatrix._43);
 
         D3DXMATRIX boneRotOnly = boneWorldMatrix;
@@ -3241,7 +3249,7 @@ void Render::UpdateBoneAttachments()
         boneRotOnly._42 = 0.0f;
         boneRotOnly._43 = 0.0f;
 
-        D3DXMATRIX finalMatrix = boneRotOnly * matLocal;
+        D3DXMATRIX finalMatrix = boneRotOnly * matLocal * matTranslate;
         finalMatrix._41 = bonePos.x;
         finalMatrix._42 = bonePos.y;
         finalMatrix._43 = bonePos.z;

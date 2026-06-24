@@ -149,6 +149,7 @@ struct BoneAttachment
     int parentSkinnedMeshId = -1;
     std::string boneName;
     D3DXVECTOR3 localRotate = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+    D3DXVECTOR3 localOffset = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 };
 
 class Render : public IDeviceResettable
@@ -335,7 +336,8 @@ public:
     void SetMeshMixRotY(const int id, const float rotY);
     void SetMeshMixWorldMatrix(const int id, const D3DXMATRIX& mat);
     void AttachMeshToBone(int childMeshId, int parentSkinnedMeshId, const char* boneName,
-                          const D3DXVECTOR3& localRotate = D3DXVECTOR3(0.0f, 0.0f, 0.0f));
+                          const D3DXVECTOR3& localRotate = D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                          const D3DXVECTOR3& localOffset = D3DXVECTOR3(0.0f, 0.0f, 0.0f));
     void DetachMeshFromBone(int childMeshId);
     D3DXVECTOR3 GetMeshMixRot(const int id) const;
     void SetMeshMixSaturateShadow(const bool enabled);
