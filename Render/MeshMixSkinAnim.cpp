@@ -320,6 +320,8 @@ MeshMixSkinAnim::MeshMixSkinAnim(const std::wstring& meshFilename,
 
 MeshMixSkinAnim::~MeshMixSkinAnim()
 {
+    Common::RemoveDeviceLostResource(this);
+
     if (m_loadThread.joinable())
     {
         m_loadThread.join();
