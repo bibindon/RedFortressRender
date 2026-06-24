@@ -1539,6 +1539,22 @@ void MeshMixSkinAnim::SetYellowFlash(const bool enabled)
     m_yellowFlash = enabled;
 }
 
+bool MeshMixSkinAnim::GetBoneWorldMatrix(const char* boneName, D3DXMATRIX& outMatrix) const
+{
+    if (m_frameRoot == nullptr)
+    {
+        return false;
+    }
+    LPD3DXFRAME frame = D3DXFrameFind(m_frameRoot, boneName);
+    if (frame == nullptr)
+    {
+        return false;
+    }
+    auto skinFrame = reinterpret_cast<SkinAnimMeshFrame*>(frame);
+    outMatrix = skinFrame->m_combinedMatrix;
+    return true;
+}
+
 void MeshMixSkinAnim::SetAlphaClipEnabled(const bool enabled)
 {
     m_alphaClipEnabled = enabled;

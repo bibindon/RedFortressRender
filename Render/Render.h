@@ -143,6 +143,13 @@ enum class BlinkMode
     StarFlash
 };
 
+struct BoneAttachment
+{
+    int childMeshId = -1;
+    int parentSkinnedMeshId = -1;
+    std::string boneName;
+};
+
 class Render : public IDeviceResettable
 {
 
@@ -325,6 +332,10 @@ public:
     void SetMeshMixPos(const int id, const D3DXVECTOR3& pos);
     D3DXVECTOR3 GetMeshMixPos(const int id) const;
     void SetMeshMixRotY(const int id, const float rotY);
+    void SetMeshPos(const int id, const D3DXVECTOR3& pos);
+    void SetMeshWorldMatrix(const int id, const D3DXMATRIX& mat);
+    void AttachMeshToBone(int childMeshId, int parentSkinnedMeshId, const char* boneName);
+    void DetachMeshFromBone(int childMeshId);
     D3DXVECTOR3 GetMeshMixRot(const int id) const;
     void SetMeshMixSaturateShadow(const bool enabled);
     void SetMeshMixSaturateShadowIntensity(const float intensity);
@@ -805,6 +816,7 @@ private:
 
     std::deque<MeshOld> m_meshList;
     std::vector<bool> m_meshEnabledList;
+    std::vector<BoneAttachment> m_boneAttachments;
     std::vector<AnimMesh*> m_animMeshList;
     std::vector<SkinAnimMesh*> m_skinAnimMeshList;
     std::vector<MeshMixSkinAnim*> m_meshMixSkinAnimList;
@@ -937,6 +949,7 @@ private:
     void UpdateFade(float deltaSeconds);
     void EnsureFadeTexture();
     void UpdateSkinAnimationState();
+    void UpdateBoneAttachments();
     void LoadSettingsCsv(const std::wstring& settingsCsvPath);
     void ApplySettings();
     void EnsureGBufferInitialized();

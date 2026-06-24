@@ -232,6 +232,12 @@ void MeshOld::SetRotY(const float rotY)
     m_rotate.y = rotY;
 }
 
+void MeshOld::SetWorldMatrix(const D3DXMATRIX& mat)
+{
+    m_matOverride = mat;
+    m_useMatrixOverride = true;
+}
+
 D3DXVECTOR3 MeshOld::GetPos() const
 {
     return m_pos;
@@ -384,7 +390,12 @@ void MeshOld::Render()
     {
         D3DXMATRIX mat;
 
-        // 武器か否か
+        if (m_useMatrixOverride)
+        {
+            worldViewProjMatrix = m_matOverride;
+        }
+        else
+        {
 //        if (m_bWeapon)
 //        {
 //            D3DXMatrixScaling(&mat, m_scale, m_scale, m_scale);
@@ -405,6 +416,7 @@ void MeshOld::Render()
 
             D3DXMatrixTranslation(&mat, m_pos.x, m_pos.y, m_pos.z);
             worldViewProjMatrix *= mat;
+        }
         }
     }
 

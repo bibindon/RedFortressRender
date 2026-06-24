@@ -41,6 +41,7 @@ public:
     void SetPos(const D3DXVECTOR3& pos);
     D3DXVECTOR3 GetPos() const;
     void SetRotY(const float rotY);
+    void SetWorldMatrix(const D3DXMATRIX& mat);
     float GetScale() const;
     void Render();
     LPD3DXMESH GetD3DMesh() const;
@@ -67,6 +68,9 @@ private:
 
     D3DXVECTOR3 m_pos = D3DXVECTOR3(0.f, 0.f, 0.f);
     D3DXVECTOR3 m_rotate = D3DXVECTOR3(0.f, 0.f, 0.f);
+
+    D3DXMATRIX m_matOverride;
+    bool m_useMatrixOverride = false;
 
     //-------------------------------------------------
     // この物体の半径

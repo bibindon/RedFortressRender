@@ -72,6 +72,7 @@ public:
     void SetTreatTextureAsWhite(const bool enabled);
     void SetDamageFlash(const bool enabled);
     void SetYellowFlash(const bool enabled);
+    bool GetBoneWorldMatrix(const char* boneName, D3DXMATRIX& outMatrix) const;
     void SetAlphaClipEnabled(const bool enabled);
     void SetIgnoreTransparentMaterial(const bool enabled);
     void SetRotY(const float rotY);

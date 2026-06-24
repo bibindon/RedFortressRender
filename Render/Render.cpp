@@ -2383,6 +2383,7 @@ void Render::Draw()
         UpdateMovingPlatforms(frameDeltaSeconds);
         UpdateFade(frameDeltaSeconds);
         UpdateSkinAnimationState();
+        UpdateBoneAttachments();
         UpdateMeshMixSkinAnimBlink();
     }
     CameraShakeFrameScope cameraShakeFrameScope;
@@ -3133,6 +3134,76 @@ D3DXVECTOR3 Render::GetMeshMixRot(const int id) const
     }
 
     return m_meshMixList.at(id).GetRot();
+}
+
+void Render::SetMeshPos(const int id, const D3DXVECTOR3& pos)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshList.size()))
+    {
+        return;
+    }
+
+    m_meshList.at(id).SetPos(pos);
+}
+
+void Render::SetMeshWorldMatrix(const int id, const D3DXMATRIX& mat)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshList.size()))
+    {
+        return;
+    }
+
+    m_meshList.at(id).SetWorldMatrix(mat);
+}
+
+void Render::AttachMeshToBone(const int childMeshId, const int parentSkinnedMeshId, const char* boneName)
+{
+    BoneAttachment attach;
+    attach.childMeshId = childMeshId;
+    attach.parentSkinnedMeshId = parentSkinnedMeshId;
+    attach.boneName = boneName;
+    m_boneAttachments.push_back(attach);
+}
+
+void Render::DetachMeshFromBone(const int childMeshId)
+{
+    for (auto it = m_boneAttachments.begin(); it != m_boneAttachments.end(); ++it)
+    {
+        if (it->childMeshId == childMeshId)
+        {
+            m_boneAttachments.erase(it);
+            return;
+        }
+    }
+}
+
+void Render::UpdateBoneAttachments()
+{
+    for (const auto& attach : m_boneAttachments)
+    {
+        if (attach.parentSkinnedMeshId < 0 ||
+            attach.parentSkinnedMeshId >= static_cast<int>(m_meshMixSkinAnimList.size()))
+        {
+            continue;
+        }
+
+        MeshMixSkinAnim* parent = m_meshMixSkinAnimList.at(attach.parentSkinnedMeshId);
+        if (parent == nullptr)
+        {
+            continue;
+        }
+
+        D3DXMATRIX boneWorldMatrix;
+        if (!parent->GetBoneWorldMatrix(attach.boneName.c_str(), boneWorldMatrix))
+        {
+            continue;
+        }
+
+        if (attach.childMeshId >= 0 && attach.childMeshId < static_cast<int>(m_meshList.size()))
+        {
+            m_meshList.at(attach.childMeshId).SetWorldMatrix(boneWorldMatrix);
+        }
+    }
 }
 
 void Render::SetMeshMixSkinAnimPos(const int id, const D3DXVECTOR3& pos)
