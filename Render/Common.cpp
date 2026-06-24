@@ -34,18 +34,40 @@ void Common::SetD3DDevice(LPDIRECT3DDEVICE9 arg)
 
 void Common::OnDeviceLostAll()
 {
-    for (auto& elem : m_resourceList)
+    const size_t count = m_resourceList.size();
+    wchar_t buf[512];
+    swprintf_s(buf, L"[OnDeviceLostAll] count=%zu\n", count);
+    OutputDebugStringW(buf);
+
+    for (size_t i = 0; i < count; ++i)
     {
+        IDeviceResettable* elem = m_resourceList[i];
+        swprintf_s(buf, L"[OnDeviceLostAll] [%zu/%zu] %hs\n", i, count, typeid(*elem).name());
+        OutputDebugStringW(buf);
         elem->OnDeviceLost();
+        OutputDebugStringW(L"[OnDeviceLostAll]   -> done\n");
     }
+
+    OutputDebugStringW(L"[OnDeviceLostAll] completed\n");
 }
 
 void Common::OnDeviceResetAll()
 {
-    for (auto& elem : m_resourceList)
+    const size_t count = m_resourceList.size();
+    wchar_t buf[512];
+    swprintf_s(buf, L"[OnDeviceResetAll] count=%zu\n", count);
+    OutputDebugStringW(buf);
+
+    for (size_t i = 0; i < count; ++i)
     {
+        IDeviceResettable* elem = m_resourceList[i];
+        swprintf_s(buf, L"[OnDeviceResetAll] [%zu/%zu] %hs\n", i, count, typeid(*elem).name());
+        OutputDebugStringW(buf);
         elem->OnDeviceReset();
+        OutputDebugStringW(L"[OnDeviceResetAll]   -> done\n");
     }
+
+    OutputDebugStringW(L"[OnDeviceResetAll] completed\n");
 }
 
 void Common::AddDeviceLostResource(IDeviceResettable* res)
