@@ -1555,6 +1555,11 @@ void MeshMixManager::SetWorldMatrix(const D3DXMATRIX& mat)
 {
     m_matOverride = mat;
     m_useMatrixOverride = true;
+
+    char dbg[128];
+    sprintf_s(dbg, "[SetWorldMatrix] this=%p pos=(%.2f,%.2f,%.2f)\n",
+              this, mat._41, mat._42, mat._43);
+    OutputDebugStringA(dbg);
 }
 
 D3DXVECTOR3 MeshMixManager::GetRot() const
@@ -1576,6 +1581,14 @@ D3DXMATRIX MeshMixManager::BuildWorldMatrix() const
 {
     if (m_useMatrixOverride)
     {
+        static int frameCount = 0;
+        if (++frameCount <= 3)
+        {
+            char dbg[128];
+            sprintf_s(dbg, "[BuildWorldMatrix] OVERRIDE this=%p pos=(%.2f,%.2f,%.2f)\n",
+                      this, m_matOverride._41, m_matOverride._42, m_matOverride._43);
+            OutputDebugStringA(dbg);
+        }
         return m_matOverride;
     }
 

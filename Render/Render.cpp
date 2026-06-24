@@ -3155,6 +3155,11 @@ void Render::AttachMeshToBone(const int childMeshId, const int parentSkinnedMesh
     attach.boneName = boneName;
     attach.localRotate = localRotate;
     m_boneAttachments.push_back(attach);
+
+    char dbg[256];
+    sprintf_s(dbg, "[AttachMeshToBone] registered: child=%d parent=%d bone=%s count=%d\n",
+              childMeshId, parentSkinnedMeshId, boneName, static_cast<int>(m_boneAttachments.size()));
+    OutputDebugStringA(dbg);
 }
 
 void Render::DetachMeshFromBone(const int childMeshId)
@@ -3171,36 +3176,77 @@ void Render::DetachMeshFromBone(const int childMeshId)
 
 void Render::UpdateBoneAttachments()
 {
+    const int attachmentCount = static_cast<int>(m_boneAttachments.size());
+    char dbg[256];
+
+    if (attachmentCount == 0)
+    {
+        OutputDebugStringA("[UpdateBoneAttachments] no attachments\n");
+    }
+
     for (const auto& attach : m_boneAttachments)
     {
+        sprintf_s(dbg, "[UpdateBoneAttachments] child=%d parent=%d bone=%s rot=(%.2f,%.2f,%.2f)\n",
+                  attach.childMeshId, attach.parentSkinnedMeshId, attach.boneName.c_str(),
+                  attach.localRotate.x, attach.localRotate.y, attach.localRotate.z);
+        OutputDebugStringA(dbg);
+
         if (attach.parentSkinnedMeshId < 0 ||
             attach.parentSkinnedMeshId >= static_cast<int>(m_meshMixSkinAnimList.size()))
         {
+            sprintf_s(dbg, "[UpdateBoneAttachments] SKIP: parentMeshId=%d out of range (listSize=%d)\n",
+                      attach.parentSkinnedMeshId, static_cast<int>(m_meshMixSkinAnimList.size()));
+            OutputDebugStringA(dbg);
             continue;
         }
 
         MeshMixSkinAnim* parent = m_meshMixSkinAnimList.at(attach.parentSkinnedMeshId);
         if (parent == nullptr)
         {
+            OutputDebugStringA("[UpdateBoneAttachments] SKIP: parentMesh is null\n");
             continue;
         }
 
         D3DXMATRIX boneWorldMatrix;
         if (!parent->GetBoneWorldMatrix(attach.boneName.c_str(), boneWorldMatrix))
         {
+            OutputDebugStringA("[UpdateBoneAttachments] SKIP: GetBoneWorldMatrix failed\n");
             continue;
         }
 
-        if (attach.childMeshId >= 0 && attach.childMeshId < static_cast<int>(m_meshMixList.size()))
+        sprintf_s(dbg, "[UpdateBoneAttachments] bonePos=(%.2f,%.2f,%.2f)\n",
+                  boneWorldMatrix._41, boneWorldMatrix._42, boneWorldMatrix._43);
+        OutputDebugStringA(dbg);
+
+        if (attach.childMeshId < 0 || attach.childMeshId >= static_cast<int>(m_meshMixList.size()))
         {
-            D3DXMATRIX matLocal;
-            D3DXMatrixRotationYawPitchRoll(&matLocal,
-                                           attach.localRotate.y,
-                                           attach.localRotate.x,
-                                           attach.localRotate.z);
-            const D3DXMATRIX finalMatrix = boneWorldMatrix * matLocal;
-            m_meshMixList.at(attach.childMeshId).SetWorldMatrix(finalMatrix);
+            sprintf_s(dbg, "[UpdateBoneAttachments] SKIP: childMeshId=%d out of range (listSize=%d)\n",
+                      attach.childMeshId, static_cast<int>(m_meshMixList.size()));
+            OutputDebugStringA(dbg);
+            continue;
         }
+
+        OutputDebugStringA("[UpdateBoneAttachments] OK: calling SetWorldMatrix\n");
+
+        D3DXMATRIX matLocal;
+        D3DXMatrixRotationYawPitchRoll(&matLocal,
+                                       attach.localRotate.y,
+                                       attach.localRotate.x,
+                                       attach.localRotate.z);
+
+        const D3DXVECTOR3 bonePos(boneWorldMatrix._41, boneWorldMatrix._42, boneWorldMatrix._43);
+
+        D3DXMATRIX boneRotOnly = boneWorldMatrix;
+        boneRotOnly._41 = 0.0f;
+        boneRotOnly._42 = 0.0f;
+        boneRotOnly._43 = 0.0f;
+
+        D3DXMATRIX finalMatrix = boneRotOnly * matLocal;
+        finalMatrix._41 = bonePos.x;
+        finalMatrix._42 = bonePos.y;
+        finalMatrix._43 = bonePos.z;
+
+        m_meshMixList.at(attach.childMeshId).SetWorldMatrix(finalMatrix);
     }
 }
 
