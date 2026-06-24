@@ -3188,9 +3188,10 @@ void Render::UpdateBoneAttachments()
 
     for (const auto& attach : m_boneAttachments)
     {
-        sprintf_s(dbg, "[UpdateBoneAttachments] child=%d parent=%d bone=%s rot=(%.2f,%.2f,%.2f)\n",
+        sprintf_s(dbg, "[UpdateBoneAttachments] child=%d parent=%d bone=%s rot=(%.2f,%.2f,%.2f) off=(%.2f,%.2f,%.2f)\n",
                   attach.childMeshId, attach.parentSkinnedMeshId, attach.boneName.c_str(),
-                  attach.localRotate.x, attach.localRotate.y, attach.localRotate.z);
+                  attach.localRotate.x, attach.localRotate.y, attach.localRotate.z,
+                  attach.localOffset.x, attach.localOffset.y, attach.localOffset.z);
         OutputDebugStringA(dbg);
 
         if (attach.parentSkinnedMeshId < 0 ||
