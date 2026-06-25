@@ -1,4 +1,4 @@
-#include "MeshMixAnimNoBoneAlloc.h"
+﻿#include "MeshMixAnimNoBoneAlloc.h"
 
 #include "Common.h"
 #include "Util.h"
@@ -69,23 +69,38 @@ STDMETHODIMP AnimNoBoneMeshAlloc::CreateMeshContainer(LPCSTR meshName,
     m_container->Name = NEW char[meshFilename.length() + 1];
     strcpy_s(m_container->Name, meshFilename.length() + 1, meshFilename.c_str());
 
+    const DWORD sourceFvf = meshData->pMesh->GetFVF();
+    DWORD requiredFvf = sourceFvf;
+    bool needsNormal = false;
+    if (!(sourceFvf & D3DFVF_NORMAL))
+    {
+        requiredFvf |= D3DFVF_NORMAL;
+        needsNormal = true;
+    }
+
+    if (!(sourceFvf & D3DFVF_TEX1))
+    {
+        requiredFvf |= D3DFVF_TEX1;
+    }
+
     HRESULT result = E_FAIL;
-    if (!(meshData->pMesh->GetFVF() & D3DFVF_NORMAL))
+    if (requiredFvf != sourceFvf)
     {
         m_container->MeshData.Type = D3DXMESHTYPE_MESH;
         result = meshData->pMesh->CloneMeshFVF(meshData->pMesh->GetOptions() | D3DXMESH_32BIT,
-                                     meshData->pMesh->GetFVF() | D3DFVF_NORMAL,
-                                     Common::D3DDevice(),
-                                     &m_container->MeshData.pMesh);
+                                      requiredFvf,
+                                      Common::D3DDevice(),
+                                      &m_container->MeshData.pMesh);
 
         if (FAILED(result))
         {
             return E_FAIL;
         }
 
-        LPD3DXMESH temp = meshData->pMesh;
-        temp = m_container->MeshData.pMesh;
-        D3DXComputeNormals(temp, nullptr);
+        if (needsNormal)
+        {
+            D3DXComputeNormals(m_container->MeshData.pMesh, nullptr);
+        }
     }
     else
     {

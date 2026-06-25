@@ -287,6 +287,11 @@ void PixelShader1(in  float3 inPosWorld    : TEXCOORD0,
     float3 halfVector = normalize(lightDir + cameraDir);
 
     float4 textureColor = tex2D(g_textureSampler, inTexCoord);
+    if (g_treatTextureAsWhite)
+    {
+        textureColor = 1.0f.xxxx;
+    }
+
     float3 albedo = SampleBaseTextureColor(inTexCoord) * g_diffuse.rgb;
 
     float NdotL = saturate(dot(normal, lightDir));
