@@ -512,6 +512,8 @@ void PostEffectZShadow::RenderTechnique2(const int cascadeIndex)
     hr = g_fxDepthBufferShadow->SetBool("g_writeNearCascade", writeNearCascade);
     assert(hr == S_OK);
 
+    D3DXMATRIX mViewProj = mView * mProj;
+
     if (m_pMeshInstancingMap != nullptr)
     {
         DWORD oldColorWriteEnable = 0;
@@ -529,6 +531,39 @@ void PostEffectZShadow::RenderTechnique2(const int cascadeIndex)
                 meshEntry.second->RenderToShadowOccluderEffect(g_fxDepthBufferShadow,
                                                                "TechniqueShadowOccluderInstancing",
                                                                alphaClipThreshold);
+            }
+        }
+
+        hr = Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE, oldColorWriteEnable);
+        assert(hr == S_OK);
+    }
+
+    if (m_pMeshMixAnimNoBoneList != nullptr)
+    {
+        DWORD oldColorWriteEnable = 0;
+        hr = Common::D3DDevice()->GetRenderState(D3DRS_COLORWRITEENABLE, &oldColorWriteEnable);
+        assert(hr == S_OK);
+
+        hr = Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE, 0);
+        assert(hr == S_OK);
+
+        hr = g_fxDepthBufferShadow->SetTechnique(GetWriteShadowTechniqueName());
+        assert(hr == S_OK);
+
+        hr = g_fxDepthBufferShadow->SetBool("g_useMeshAlphaCutout", FALSE);
+        assert(hr == S_OK);
+
+        hr = g_fxDepthBufferShadow->SetTexture("g_texMeshAlpha", nullptr);
+        assert(hr == S_OK);
+
+        hr = g_fxDepthBufferShadow->CommitChanges();
+        assert(hr == S_OK);
+
+        for (auto& mesh : *m_pMeshMixAnimNoBoneList)
+        {
+            if (mesh != nullptr)
+            {
+                mesh->RenderToEffect(g_fxDepthBufferShadow, mViewProj);
             }
         }
 
@@ -616,11 +651,9 @@ void PostEffectZShadow::RenderTechnique2(const int cascadeIndex)
     hr = g_fxDepthBufferShadow->End();
     assert(hr == S_OK);
 
-    D3DXMATRIX mViewProj = mView * mProj;
-
     // MeshMixAnimNoBone participates in the light-depth pass as a caster.
-    // Do not draw it into the receiver shadow mask here, because the current
-    // Z-shadow pass cannot distinguish same-object self projection.
+    // It already wrote depth-only above, so it occludes receiver shadows
+    // behind it without drawing self-shadow color onto its own surface.
 
     hr = g_fxDepthBufferShadow->SetTechnique(GetWriteShadowSkinTechniqueName());
     assert(hr == S_OK);
