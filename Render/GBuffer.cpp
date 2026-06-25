@@ -7,6 +7,7 @@
 #include "Common.h"
 #include "Camera.h"
 #include "MeshInstancing.h"
+#include "MeshMixAnimNoBone.h"
 #include "MeshMixSkinAnim.h"
 #include "ParticleSystem.h"
 
@@ -148,6 +149,7 @@ void GBuffer::CreateRawResource()
 
 void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
                    const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList,
+                   const std::vector<MeshMixAnimNoBone*>& meshMixAnimNoBoneList,
                    const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap,
                    ParticleSystem* particleSystem,
                    LPDIRECT3DTEXTURE9* Z,
@@ -190,6 +192,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     // ここで「不透明物体のみ」を GBuffer.fx で描く
     auto mView = Camera::GetViewMatrix();
     auto mProj = Camera::GetProjMatrix();
+    D3DXMATRIX viewProjectionMatrix = mView * mProj;
 
     m_fxGBuffer->SetMatrix("g_matView",  &mView);
     m_fxGBuffer->SetMatrix("g_matProj",  &mProj);
@@ -256,6 +259,15 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         if (mesh != nullptr)
         {
             mesh->RenderToEffect(m_fxGBuffer);
+        }
+    }
+
+    m_fxGBuffer->SetTechnique("TechniqueGBuffer");
+    for (auto& mesh : meshMixAnimNoBoneList)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->RenderToEffect(m_fxGBuffer, viewProjectionMatrix);
         }
     }
 
@@ -366,6 +378,15 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         }
     }
 
+    m_fxGBuffer->SetTechnique("TechniqueGBuffer");
+    for (auto& mesh : meshMixAnimNoBoneList)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->RenderToEffect(m_fxGBuffer, viewProjectionMatrix);
+        }
+    }
+
     for (const auto& mesh : meshInstancingMap)
     {
         if (mesh.second != nullptr)
@@ -465,6 +486,15 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         if (mesh != nullptr)
         {
             mesh->RenderToEffect(m_fxGBuffer);
+        }
+    }
+
+    m_fxGBuffer->SetTechnique("TechniqueGBufferBackFace");
+    for (auto& mesh : meshMixAnimNoBoneList)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->RenderToEffect(m_fxGBuffer, viewProjectionMatrix);
         }
     }
 

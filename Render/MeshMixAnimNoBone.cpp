@@ -461,23 +461,38 @@ void MeshMixAnimNoBone::Render()
 void MeshMixAnimNoBone::RenderToEffect(LPD3DXEFFECT e)
 {
     if (!m_bLoaded || !m_enabled) return;
-    RenderFrameHierarchy(m_frameRoot, e);
+    D3DXMATRIX viewProjectionMatrix = Camera::GetViewMatrix() * Camera::GetProjMatrix();
+    RenderFrameHierarchy(m_frameRoot, e, viewProjectionMatrix);
+}
+
+void MeshMixAnimNoBone::RenderToEffect(LPD3DXEFFECT e, const D3DXMATRIX& viewProjectionMatrix)
+{
+    if (!m_bLoaded || !m_enabled)
+    {
+        return;
+    }
+
+    RenderFrameHierarchy(m_frameRoot, e, viewProjectionMatrix);
 }
 
 void MeshMixAnimNoBone::RenderFrameHierarchy(LPD3DXFRAME frame, LPD3DXEFFECT e)
+{
+    D3DXMATRIX viewProjectionMatrix = Camera::GetViewMatrix() * Camera::GetProjMatrix();
+    RenderFrameHierarchy(frame, e, viewProjectionMatrix);
+}
+
+void MeshMixAnimNoBone::RenderFrameHierarchy(LPD3DXFRAME frame, LPD3DXEFFECT e, const D3DXMATRIX& viewProjectionMatrix)
 {
     if (!frame) return;
     auto nf = reinterpret_cast<AnimNoBoneFrame*>(frame);
     if (frame->pMeshContainer) {
         auto c = reinterpret_cast<AnimNoBoneMeshContainer*>(frame->pMeshContainer);
-        D3DXMATRIX wvp = nf->m_combinedMatrix;
-        wvp *= Camera::GetViewMatrix(); wvp *= Camera::GetProjMatrix();
+        D3DXMATRIX wvp = nf->m_combinedMatrix * viewProjectionMatrix;
         e->SetMatrix("g_matWorld", &nf->m_combinedMatrix);
         e->SetMatrix("g_matWorldViewProj", &wvp);
         D3DXHANDLE viewProjectionHandle = e->GetParameterByName(nullptr, "g_matViewProj");
         if (viewProjectionHandle != nullptr)
         {
-            D3DXMATRIX viewProjectionMatrix = Camera::GetViewMatrix() * Camera::GetProjMatrix();
             e->SetMatrix(viewProjectionHandle, &viewProjectionMatrix);
         }
         LPD3DXMESH m = c->MeshData.pMesh;
@@ -522,8 +537,8 @@ void MeshMixAnimNoBone::RenderFrameHierarchy(LPD3DXFRAME frame, LPD3DXEFFECT e)
             e->End();
         }
     }
-    if (frame->pFrameSibling) RenderFrameHierarchy(frame->pFrameSibling, e);
-    if (frame->pFrameFirstChild) RenderFrameHierarchy(frame->pFrameFirstChild, e);
+    if (frame->pFrameSibling) RenderFrameHierarchy(frame->pFrameSibling, e, viewProjectionMatrix);
+    if (frame->pFrameFirstChild) RenderFrameHierarchy(frame->pFrameFirstChild, e, viewProjectionMatrix);
 }
 
 void MeshMixAnimNoBone::UpdateFrameMatrix(const LPD3DXFRAME fb, const LPD3DXMATRIX mp)

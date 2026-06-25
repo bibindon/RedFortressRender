@@ -2,6 +2,7 @@
 
 #include "Camera.h"
 #include "MeshInstancing.h"
+#include "MeshMixAnimNoBone.h"
 #include "MeshMixSkinAnim.h"
 
 #include "Util.h"
@@ -184,15 +185,17 @@ void PostEffectZShadow::Finalize()
 void PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                              LPDIRECT3DTEXTURE9 texTarget,
                              LPDIRECT3DTEXTURE9 sceneDepthTexture,
-                             LPDIRECT3DTEXTURE9 sceneNormalTexture,
-                             const std::deque<MeshMixManager>& meshMixList,
-                             const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList,
-                             const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap)
+                              LPDIRECT3DTEXTURE9 sceneNormalTexture,
+                              const std::deque<MeshMixManager>& meshMixList,
+                              const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList,
+                              const std::vector<MeshMixAnimNoBone*>& meshMixAnimNoBoneList,
+                              const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap)
 {
     g_texTemp = renderTarget;
     m_texCompositeTarget = texTarget;
     m_pMeshList = &meshMixList;
     m_pSkinAnimMeshList = &meshMixSkinAnimList;
+    m_pMeshMixAnimNoBoneList = &meshMixAnimNoBoneList;
     m_pMeshInstancingMap = &meshInstancingMap;
     m_sceneDepthTexture = sceneDepthTexture;
     m_sceneNormalTexture = sceneNormalTexture;
@@ -205,6 +208,7 @@ void PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
 
     m_pMeshList = nullptr;
     m_pSkinAnimMeshList = nullptr;
+    m_pMeshMixAnimNoBoneList = nullptr;
     m_pMeshInstancingMap = nullptr;
     m_sceneDepthTexture = NULL;
     m_sceneNormalTexture = NULL;
@@ -356,12 +360,21 @@ void PostEffectZShadow::RenderTechnique1(const int cascadeIndex)
         }
         for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
         {
-            const BOOL useAlphaCutout = mesh.IsAlphaCutoutSubset(subsetIndex) ? TRUE : FALSE;
+            BOOL useAlphaCutout = FALSE;
+            if (mesh.IsAlphaCutoutSubset(subsetIndex))
+            {
+                useAlphaCutout = TRUE;
+            }
             hr = g_fxDepthBufferShadow->SetBool("g_useMeshAlphaCutout", useAlphaCutout);
             assert(hr == S_OK);
 
-            hr = g_fxDepthBufferShadow->SetTexture("g_texMeshAlpha",
-                                                   useAlphaCutout ? mesh.GetSubsetTextureForShadow(subsetIndex) : nullptr);
+            LPDIRECT3DBASETEXTURE9 alphaTexture = nullptr;
+            if (useAlphaCutout)
+            {
+                alphaTexture = mesh.GetSubsetTextureForShadow(subsetIndex);
+            }
+
+            hr = g_fxDepthBufferShadow->SetTexture("g_texMeshAlpha", alphaTexture);
             assert(hr == S_OK);
 
             hr = g_fxDepthBufferShadow->CommitChanges();
@@ -373,6 +386,17 @@ void PostEffectZShadow::RenderTechnique1(const int cascadeIndex)
 
     g_fxDepthBufferShadow->EndPass();
     g_fxDepthBufferShadow->End();
+
+    hr = g_fxDepthBufferShadow->SetTechnique("TechniqueDepthFromLight");
+    assert(hr == S_OK);
+
+    for (auto& mesh : *m_pMeshMixAnimNoBoneList)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->RenderToEffect(g_fxDepthBufferShadow, mLightViewProj);
+        }
+    }
 
     hr = g_fxDepthBufferShadow->SetTechnique("TechniqueDepthFromLightSkin");
     assert(hr == S_OK);
@@ -561,12 +585,21 @@ void PostEffectZShadow::RenderTechnique2(const int cascadeIndex)
         }
         for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
         {
-            const BOOL useAlphaCutout = mesh.IsAlphaCutoutSubset(subsetIndex) ? TRUE : FALSE;
+            BOOL useAlphaCutout = FALSE;
+            if (mesh.IsAlphaCutoutSubset(subsetIndex))
+            {
+                useAlphaCutout = TRUE;
+            }
             hr = g_fxDepthBufferShadow->SetBool("g_useMeshAlphaCutout", useAlphaCutout);
             assert(hr == S_OK);
 
-            hr = g_fxDepthBufferShadow->SetTexture("g_texMeshAlpha",
-                                                   useAlphaCutout ? mesh.GetSubsetTextureForShadow(subsetIndex) : nullptr);
+            LPDIRECT3DBASETEXTURE9 alphaTexture = nullptr;
+            if (useAlphaCutout)
+            {
+                alphaTexture = mesh.GetSubsetTextureForShadow(subsetIndex);
+            }
+
+            hr = g_fxDepthBufferShadow->SetTexture("g_texMeshAlpha", alphaTexture);
             assert(hr == S_OK);
 
             hr = g_fxDepthBufferShadow->CommitChanges();
@@ -583,10 +616,31 @@ void PostEffectZShadow::RenderTechnique2(const int cascadeIndex)
     hr = g_fxDepthBufferShadow->End();
     assert(hr == S_OK);
 
+    D3DXMATRIX mViewProj = mView * mProj;
+
+    hr = g_fxDepthBufferShadow->SetTechnique(GetWriteShadowTechniqueName());
+    assert(hr == S_OK);
+
+    hr = g_fxDepthBufferShadow->SetBool("g_useMeshAlphaCutout", FALSE);
+    assert(hr == S_OK);
+
+    hr = g_fxDepthBufferShadow->SetTexture("g_texMeshAlpha", nullptr);
+    assert(hr == S_OK);
+
+    hr = g_fxDepthBufferShadow->CommitChanges();
+    assert(hr == S_OK);
+
+    for (auto& mesh : *m_pMeshMixAnimNoBoneList)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->RenderToEffect(g_fxDepthBufferShadow, mViewProj);
+        }
+    }
+
     hr = g_fxDepthBufferShadow->SetTechnique(GetWriteShadowSkinTechniqueName());
     assert(hr == S_OK);
 
-    D3DXMATRIX mViewProj = mView * mProj;
     hr = g_fxDepthBufferShadow->SetMatrix("g_matWorldViewProj", &mViewProj);
     assert(hr == S_OK);
 

@@ -2404,6 +2404,7 @@ void Render::Draw()
         EnsureGBufferInitialized();
         m_GBuffer.Draw(m_meshMixList,
                        m_meshMixSkinAnimList,
+                       m_meshMixAnimNoBoneList,
                        m_meshInstancingMap,
                        &m_particleSystem,
                        &pTexTempZ,
@@ -2452,6 +2453,7 @@ void Render::Draw()
                                  pTexTempNoral,
                                  m_meshMixList,
                                  m_meshMixSkinAnimList,
+                                 m_meshMixAnimNoBoneList,
                                  m_meshInstancingMap);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }

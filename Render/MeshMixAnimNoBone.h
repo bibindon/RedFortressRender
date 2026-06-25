@@ -53,6 +53,7 @@ public:
     void UpdateAnimation();
     void Render();
     void RenderToEffect(LPD3DXEFFECT effect);
+    void RenderToEffect(LPD3DXEFFECT effect, const D3DXMATRIX& viewProjectionMatrix);
 
     void SetPos(const D3DXVECTOR3& pos);
     void SetSaturateShadow(const bool enabled);
@@ -117,6 +118,7 @@ private:
     D3DXMATRIX BuildWorldMatrix() const;
     void UpdateActiveAnimationClip();
     void RenderFrameHierarchy(LPD3DXFRAME frame, LPD3DXEFFECT effect);
+    void RenderFrameHierarchy(LPD3DXFRAME frame, LPD3DXEFFECT effect, const D3DXMATRIX& viewProjectionMatrix);
     HRESULT LoadMeshHierarchy(const std::wstring& filePath,
                                AnimNoBoneMeshAlloc& allocator,
                                LPD3DXFRAME* outRoot,
