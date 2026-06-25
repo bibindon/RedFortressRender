@@ -11,6 +11,7 @@
 #include <sstream>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 #pragma comment(lib, "Shlwapi.lib")
 
 namespace NSRender
@@ -972,6 +973,13 @@ void MeshMixManager::InitializeInternal()
                                 &m_D3DMesh);
 
     assert(hResult == S_OK);
+    if (FAILED(hResult) || m_D3DMesh == nullptr)
+    {
+        OutputDebugStringW((L"[MeshMixManager] D3DXLoadMeshFromX failed: " + tempPath + L"\n").c_str());
+        SAFE_RELEASE(adjacencyBuffer);
+        SAFE_RELEASE(materialBuffer);
+        return;
+    }
 
     const stCsvParam csvParam = ReadCsvParam(tempPath);
     if (csvParam.meshType == eMeshType::POM)
@@ -1137,7 +1145,24 @@ void MeshMixManager::InitializeInternal()
         m_hasMirrorPlane = false;
     }
 
-    DWORD* adjacencyList = static_cast<DWORD*>(adjacencyBuffer->GetBufferPointer());
+    std::vector<DWORD> generatedAdjacency;
+    DWORD* adjacencyList = nullptr;
+    if (adjacencyBuffer != nullptr)
+    {
+        adjacencyList = static_cast<DWORD*>(adjacencyBuffer->GetBufferPointer());
+    }
+    else
+    {
+        generatedAdjacency.resize(static_cast<std::size_t>(m_D3DMesh->GetNumFaces()) * 3);
+        hResult = m_D3DMesh->GenerateAdjacency(1e-6f, generatedAdjacency.data());
+        if (FAILED(hResult))
+        {
+            OutputDebugStringW((L"[MeshMixManager] GenerateAdjacency failed: " + tempPath + L"\n").c_str());
+            SAFE_RELEASE(materialBuffer);
+            return;
+        }
+        adjacencyList = generatedAdjacency.data();
+    }
 
     ModifyMeshForNormalMapping(m_D3DMesh);
 
