@@ -91,6 +91,8 @@
     <ClInclude Include="GBuffer.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="LoadingScreen.h" />
+    <ClInclude Include="MeshMixNoSkinAnim.h" />
+    <ClInclude Include="MeshMixNoSkinAnimAlloc.h" />
     <ClInclude Include="MeshOld.h" />
     <ClInclude Include="MeshHierarchy.h" />
     <ClInclude Include="MeshInstancing.h" />

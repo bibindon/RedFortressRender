@@ -75,12 +75,6 @@
     <ClCompile Include="AnimController.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="AnimMesh.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="AnimMeshAlloc.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="SkinAnimMesh.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -201,6 +195,18 @@
     <ClCompile Include="CustomXLoader.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="MeshMixNoSkinAnim.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshMixNoSkinAnimAlloc.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimMeshAlloc.cpp">
+      <Filter>ソース ファイル\Trial</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimMesh.cpp">
+      <Filter>ソース ファイル\Trial</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Render.h">
@@ -240,12 +246,6 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="AnimController.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="AnimMesh.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="AnimMeshAlloc.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="SkinAnimMesh.h">
@@ -366,6 +366,18 @@
       <Filter>ヘッダー ファイル\Trial</Filter>
     </ClInclude>
     <ClInclude Include="CustomXLoader.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimMeshAlloc.h">
+      <Filter>ヘッダー ファイル\Trial</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimMesh.h">
+      <Filter>ヘッダー ファイル\Trial</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshMixNoSkinAnimAlloc.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshMixNoSkinAnim.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
