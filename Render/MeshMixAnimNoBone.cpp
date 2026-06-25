@@ -1,4 +1,4 @@
-#include "MeshMixAnimNoBone.h"
+﻿#include "MeshMixAnimNoBone.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -254,7 +254,7 @@ void MeshMixAnimNoBone::Initialize(bool) { m_loadThread = std::thread([this]() {
     if (FAILED(hr))
     {
         OutputDebugStringW((L"[MeshMixAnimNoBone] ERROR: Failed to create effect. HR=" + FormatHRESULT(hr) + L"\n").c_str());
-        throw std::exception("Failed to create effect");
+        return;
     }
 
     LPD3DXANIMATIONCONTROLLER tempAnimController = nullptr;
@@ -269,6 +269,10 @@ void MeshMixAnimNoBone::Initialize(bool) { m_loadThread = std::thread([this]() {
     }
 
     OutputDebugStringW((L"[MeshMixAnimNoBone] Mesh path: " + path + L"\n").c_str());
+    if (!FileExists(path))
+    {
+        OutputDebugStringW(std::wstring(L"[MeshMixAnimNoBone] ERROR: Mesh file does not exist\n").c_str());
+    }
 
     hr = LoadMeshHierarchy(path,
                            m_allocator,
@@ -281,7 +285,8 @@ void MeshMixAnimNoBone::Initialize(bool) { m_loadThread = std::thread([this]() {
     {
         SAFE_RELEASE(tempAnimController);
         OutputDebugStringW(std::wstring(L"[MeshMixAnimNoBone] ERROR: Failed to load mesh\n").c_str());
-        throw std::exception("Failed to load mesh");
+        OutputDebugStringW(std::wstring(L"[MeshMixAnimNoBone] HINT: Check .x mesh data consistency, especially MeshNormals face counts.\n").c_str());
+        return;
     }
 
     if (tempAnimController == nullptr)
@@ -324,7 +329,7 @@ void MeshMixAnimNoBone::Initialize(bool) { m_loadThread = std::thread([this]() {
         {
             SAFE_RELEASE(tempAnimController);
             OutputDebugStringW(std::wstring(L"[MeshMixAnimNoBone] ERROR: Failed to load animation mesh\n").c_str());
-            throw std::exception("Failed to load animation mesh");
+            return;
         }
 
         ReleaseMeshContainersRecursive(m_animationFrameRoot, m_animationAllocator);
@@ -380,17 +385,45 @@ void MeshMixAnimNoBone::UpdateAnimation()
 
 void MeshMixAnimNoBone::Render()
 {
-    if (!m_bLoaded || !m_enabled || !m_D3DEffect) return;
+    if (!m_bLoaded || !m_enabled || !m_D3DEffect)
+    {
+        return;
+    }
+
+    BOOL useWhiteTexture = FALSE;
+    if (m_damageFlash || m_yellowFlash)
+    {
+        useWhiteTexture = TRUE;
+    }
+
+    BOOL damageFlash = FALSE;
+    if (m_damageFlash)
+    {
+        damageFlash = TRUE;
+    }
+
+    BOOL yellowFlash = FALSE;
+    if (m_yellowFlash)
+    {
+        yellowFlash = TRUE;
+    }
+
+    BOOL alphaClipEnabled = FALSE;
+    if (m_alphaClipEnabled)
+    {
+        alphaClipEnabled = TRUE;
+    }
+
     const D3DXVECTOR4 lightDir = Light::GetLightDir();
     m_D3DEffect->SetVector("g_lightDir", &lightDir);
     D3DXVECTOR4 lc(Light::GetLightColor()); m_D3DEffect->SetVector("g_lightColor", &lc);
     m_D3DEffect->SetFloat("g_fSunLightIntensity", Light::GetBrightness());
     m_D3DEffect->SetFloat("g_fAmbientIntensity", Light::GetAmbientBrightness());
     D3DXVECTOR4 cp(Camera::GetEyePos(), 1.0f); m_D3DEffect->SetVector("g_cameraPos", &cp);
-    m_D3DEffect->SetBool("g_treatTextureAsWhite", (m_damageFlash||m_yellowFlash)?TRUE:FALSE);
-    m_D3DEffect->SetBool("g_damageFlash", m_damageFlash?TRUE:FALSE);
-    m_D3DEffect->SetBool("g_yellowFlash", m_yellowFlash?TRUE:FALSE);
-    m_D3DEffect->SetBool("g_alphaClipEnabled", m_alphaClipEnabled?TRUE:FALSE);
+    m_D3DEffect->SetBool("g_treatTextureAsWhite", useWhiteTexture);
+    m_D3DEffect->SetBool("g_damageFlash", damageFlash);
+    m_D3DEffect->SetBool("g_yellowFlash", yellowFlash);
+    m_D3DEffect->SetBool("g_alphaClipEnabled", alphaClipEnabled);
     m_D3DEffect->SetTechnique("TechniqueNoSkin");
     m_D3DEffect->Begin(nullptr, 0);
     RenderFrameHierarchy(m_frameRoot, m_D3DEffect);
@@ -437,7 +470,14 @@ void MeshMixAnimNoBone::UpdateFrameMatrix(const LPD3DXFRAME fb, const LPD3DXMATR
 {
     auto f = reinterpret_cast<AnimNoBoneFrame*>(fb);
     if (!f) return;
-    f->m_combinedMatrix = mp ? f->TransformationMatrix * (*mp) : f->TransformationMatrix;
+    if (mp != nullptr)
+    {
+        f->m_combinedMatrix = f->TransformationMatrix * (*mp);
+    }
+    else
+    {
+        f->m_combinedMatrix = f->TransformationMatrix;
+    }
     if (f->pFrameSibling) UpdateFrameMatrix(f->pFrameSibling, mp);
     if (f->pFrameFirstChild) UpdateFrameMatrix(f->pFrameFirstChild, &f->m_combinedMatrix);
 }

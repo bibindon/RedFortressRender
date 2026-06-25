@@ -17,9 +17,11 @@ float4 GaussianBlur(float2 texCoord, float2 stepDir) : COLOR
 {
     const int radius = SAMPLE_SIZE_MAX / 2;
     const int activeRadius = min(radius, g_sampleSize / 2);
+    const float sigma = max(float(activeRadius) / 2.0f, 1.0f);
 
-    float4 color = tex2D(SrcSampler, texCoord);
-    float weightSum = 1.0f;
+    const float centerWeight = 1.0f;
+    float4 color = tex2D(SrcSampler, texCoord) * centerWeight;
+    float weightSum = centerWeight;
 
     [unroll]
     for (int i = 1; i <= radius; ++i)
@@ -29,10 +31,13 @@ float4 GaussianBlur(float2 texCoord, float2 stepDir) : COLOR
             break;
         }
 
+        const float distance = (float)(i);
+        const float weight = exp(-(distance * distance) / (2.0f * sigma * sigma));
+
         const float2 offset = stepDir * i;
-        color += tex2D(SrcSampler, texCoord + offset);
-        color += tex2D(SrcSampler, texCoord - offset);
-        weightSum += 2.0f;
+        color += tex2D(SrcSampler, texCoord + offset) * weight;
+        color += tex2D(SrcSampler, texCoord - offset) * weight;
+        weightSum += weight * 2.0f;
     }
 
     return color / weightSum;

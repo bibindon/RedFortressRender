@@ -37,6 +37,7 @@ static const float POINT_LIGHT_CUBE_HALF_SIZE = 4.0f;
 static const float POINT_LIGHT_SPHERE_RADIUS = 5.0f;
 
 float4x3 g_matWorldArray[MAX_MATRICES];
+float4x4 g_matWorld;
 float4x4 g_matViewProj;
 
 texture g_texture;
@@ -379,6 +380,76 @@ void PixelShaderAlphaDepthPrePass(in  float2 inTexCoord : TEXCOORD2,
 {
     clip(tex2D(g_textureSampler, inTexCoord).a - 0.5f);
     outColor = 0.0f;
+}
+
+// Simplified vertex shader without skinning (uses g_matWorld)
+void VS_NoSkin(in  float4 inPos      : POSITION,
+               in  float3 inNormal   : NORMAL,
+               in  float2 inTexCoord : TEXCOORD0,
+               out float3 outPosWorld    : TEXCOORD0,
+               out float3 outNormalWorld : TEXCOORD1,
+               out float2 outTexCoord    : TEXCOORD2,
+               out float4 outPosition    : POSITION)
+{
+    outPosWorld    = mul(inPos, g_matWorld).xyz;
+    outNormalWorld = mul(float4(inNormal, 0.0f), g_matWorld).xyz;
+    outTexCoord    = inTexCoord;
+    outPosition    = mul(inPos, mul(g_matWorld, g_matViewProj));
+}
+
+technique TechniqueNoSkin
+{
+    pass Pass0
+    {
+        AlphaBlendEnable = TRUE;
+        SrcBlend = SRCALPHA;
+        DestBlend = INVSRCALPHA;
+        ColorWriteEnable = 15;
+        CullMode = NONE;
+
+        VertexShader = compile vs_3_0 VS_NoSkin();
+        PixelShader = compile ps_3_0 PixelShader1();
+    }
+
+    pass PassPointLight
+    {
+        AlphaBlendEnable = TRUE;
+        SrcBlend = ONE;
+        DestBlend = ONE;
+        ColorWriteEnable = 15;
+        CullMode = NONE;
+
+        VertexShader = compile vs_3_0 VS_NoSkin();
+        PixelShader = compile ps_3_0 PixelShaderPointLight();
+    }
+}
+
+technique TechniqueNoSkinAlphaClip
+{
+    pass Pass0
+    {
+        ZEnable = TRUE;
+        ZWriteEnable = TRUE;
+        AlphaBlendEnable = FALSE;
+        AlphaTestEnable = FALSE;
+        ColorWriteEnable = 15;
+        CullMode = NONE;
+
+        VertexShader = compile vs_3_0 VS_NoSkin();
+        PixelShader = compile ps_3_0 PixelShader1();
+    }
+
+    pass PassPointLight
+    {
+        AlphaBlendEnable = TRUE;
+        SrcBlend = ONE;
+        DestBlend = ONE;
+        ColorWriteEnable = 15;
+        CullMode = NONE;
+
+        VertexShader = compile vs_3_0 VS_NoSkin();
+        PixelShader = compile ps_3_0 PixelShaderPointLight();
+    }
 }
 
 technique Technique1
