@@ -3136,6 +3136,16 @@ void Render::SetMeshMixWorldMatrix(const int id, const D3DXMATRIX& mat)
     m_meshMixList.at(id).SetWorldMatrix(mat);
 }
 
+void Render::SetMeshMixEnabled(const int id, const bool enabled)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshMixList.size()))
+    {
+        return;
+    }
+
+    m_meshMixList.at(id).SetEnabled(enabled);
+}
+
 D3DXVECTOR3 Render::GetMeshMixRot(const int id) const
 {
     if (id < 0 || id >= static_cast<int>(m_meshMixList.size()))

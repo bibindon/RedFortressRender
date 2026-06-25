@@ -335,6 +335,7 @@ public:
     D3DXVECTOR3 GetMeshMixPos(const int id) const;
     void SetMeshMixRotY(const int id, const float rotY);
     void SetMeshMixWorldMatrix(const int id, const D3DXMATRIX& mat);
+    void SetMeshMixEnabled(const int id, const bool enabled);
     void AttachMeshToBone(int childMeshId, int parentSkinnedMeshId, const char* boneName,
                           const D3DXVECTOR3& localRotate = D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                           const D3DXVECTOR3& localOffset = D3DXVECTOR3(0.0f, 0.0f, 0.0f));
