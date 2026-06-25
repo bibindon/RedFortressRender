@@ -228,6 +228,7 @@ MeshMixAnimNoBone::~MeshMixAnimNoBone()
     }
 
     SAFE_RELEASE(m_D3DEffect);
+    SAFE_RELEASE(m_tempAnimController);
     m_animController.Finalize();
     ReleaseAnimationClips();
 
@@ -337,7 +338,18 @@ void MeshMixAnimNoBone::Initialize(bool) { m_loadThread = std::thread([this]() {
     else if (tempAnimController != nullptr)
     {
         OutputDebugStringW(std::wstring(L"[MeshMixAnimNoBone] Using embedded animation controller\n").c_str());
-        m_animController.Init(tempAnimController, m_animSetMap);
+        if (m_animSetMap.empty())
+        {
+            OutputDebugStringW(std::wstring(L"[MeshMixAnimNoBone] Embedded animation uses direct controller update\n").c_str());
+            m_tempAnimController = tempAnimController;
+            tempAnimController = nullptr;
+            m_embeddedAnimationDuration = GetAnimationControllerDuration(m_tempAnimController);
+        }
+        else
+        {
+            m_animController.Init(tempAnimController, m_animSetMap);
+            tempAnimController = nullptr;
+        }
         m_hasAnimationController = true;
     }
     else
@@ -366,7 +378,21 @@ void MeshMixAnimNoBone::UpdateAnimation()
     }
     else if (m_hasAnimationController)
     {
-        m_animController.Update();
+        if (m_tempAnimController != nullptr)
+        {
+            const double deltaTime = m_animationSpeed * Common::ANIMATION_SPEED / D3DX64_ANIMATION_TIME_SCALE;
+            m_embeddedAnimationTime += deltaTime;
+            if (m_embeddedAnimationTime >= m_embeddedAnimationDuration)
+            {
+                m_embeddedAnimationTime = 0.0;
+                m_tempAnimController->SetTrackPosition(0, 0.0);
+            }
+            m_tempAnimController->AdvanceTime(deltaTime, nullptr);
+        }
+        else
+        {
+            m_animController.Update();
+        }
     }
 
     if (!m_animationClips.empty())
@@ -424,10 +450,12 @@ void MeshMixAnimNoBone::Render()
     m_D3DEffect->SetBool("g_damageFlash", damageFlash);
     m_D3DEffect->SetBool("g_yellowFlash", yellowFlash);
     m_D3DEffect->SetBool("g_alphaClipEnabled", alphaClipEnabled);
+
+    D3DXMATRIX viewProjectionMatrix = Camera::GetViewMatrix() * Camera::GetProjMatrix();
+    m_D3DEffect->SetMatrix("g_matViewProj", &viewProjectionMatrix);
+
     m_D3DEffect->SetTechnique("TechniqueNoSkin");
-    m_D3DEffect->Begin(nullptr, 0);
     RenderFrameHierarchy(m_frameRoot, m_D3DEffect);
-    m_D3DEffect->End();
 }
 
 void MeshMixAnimNoBone::RenderToEffect(LPD3DXEFFECT e)
@@ -446,16 +474,48 @@ void MeshMixAnimNoBone::RenderFrameHierarchy(LPD3DXFRAME frame, LPD3DXEFFECT e)
         wvp *= Camera::GetViewMatrix(); wvp *= Camera::GetProjMatrix();
         e->SetMatrix("g_matWorld", &nf->m_combinedMatrix);
         e->SetMatrix("g_matWorldViewProj", &wvp);
+        D3DXHANDLE viewProjectionHandle = e->GetParameterByName(nullptr, "g_matViewProj");
+        if (viewProjectionHandle != nullptr)
+        {
+            D3DXMATRIX viewProjectionMatrix = Camera::GetViewMatrix() * Camera::GetProjMatrix();
+            e->SetMatrix(viewProjectionHandle, &viewProjectionMatrix);
+        }
         LPD3DXMESH m = c->MeshData.pMesh;
         DWORD ns = c->NumMaterials; if (ns == 0) ns = 1;
         for (DWORD i = 0; i < ns; ++i) {
+            BOOL subsetTreatTextureAsWhite = FALSE;
+            if (m_damageFlash || m_yellowFlash || m_param.treatTextureAsWhite)
+            {
+                subsetTreatTextureAsWhite = TRUE;
+            }
+
+            BOOL subsetAlphaClipEnabled = FALSE;
+            if (m_alphaClipEnabled)
+            {
+                subsetAlphaClipEnabled = TRUE;
+            }
+
+            bool subsetHasTexture = false;
             if (i < c->m_textureList.size() && c->m_textureList[i])
+            {
                 e->SetTexture("g_textureSampler", c->m_textureList[i]);
+                subsetHasTexture = true;
+            }
+
+            if (!subsetHasTexture)
+            {
+                e->SetTexture("g_textureSampler", nullptr);
+                subsetTreatTextureAsWhite = TRUE;
+                subsetAlphaClipEnabled = FALSE;
+            }
+
             D3DXVECTOR4 d(1,1,1,1);
             if (i < c->NumMaterials) {
                 const D3DMATERIAL9& mat = c->pMaterials[i].MatD3D;
                 d = D3DXVECTOR4(mat.Diffuse.r, mat.Diffuse.g, mat.Diffuse.b, mat.Diffuse.a);
             }
+            e->SetBool("g_treatTextureAsWhite", subsetTreatTextureAsWhite);
+            e->SetBool("g_alphaClipEnabled", subsetAlphaClipEnabled);
             e->SetVector("g_diffuse", &d); e->CommitChanges();
             UINT pn = 0; e->Begin(&pn, 0);
             for (UINT p = 0; p < pn; ++p) { e->BeginPass(p); m->DrawSubset(i); e->EndPass(); }

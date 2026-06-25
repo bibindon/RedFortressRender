@@ -176,6 +176,8 @@ private:
     std::vector<AnimationInfo> m_animationInfoList;
     std::vector<AnimationClip> m_animationClips;
     float m_animationSpeed = 1.0f;
+    double m_embeddedAnimationTime = 0.0;
+    double m_embeddedAnimationDuration = 1.0;
 };
 
 }
