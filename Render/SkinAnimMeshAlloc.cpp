@@ -273,12 +273,9 @@ LPDIRECT3DTEXTURE9 SkinAnimMeshAlloc::LoadTextureCached(const std::wstring& text
     auto foundTexture = m_textureCache.find(texturePath);
     if (foundTexture != m_textureCache.end())
     {
-        OutputDebugStringW((L"[SkinAnimMeshAlloc] Texture cache HIT: " + texturePath + L"\n").c_str());
         foundTexture->second->AddRef();
         return foundTexture->second;
     }
-
-    OutputDebugStringW((L"[SkinAnimMeshAlloc] Texture cache MISS: " + texturePath + L"\n").c_str());
 
     LPDIRECT3DTEXTURE9 texture = nullptr;
     HRESULT hr = D3DXCreateTextureFromFile(Common::D3DDevice(),

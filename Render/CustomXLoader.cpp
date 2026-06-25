@@ -1103,11 +1103,6 @@ bool CreateCustomXMeshContainer(const std::string& meshName,
 
 constexpr DWORD MAX_SKININFO_BONES_PER_PART = 32;
 
-void OutputDebugLog(const std::wstring& message)
-{
-    OutputDebugStringW((L"[CustomXLoader] " + message + L"\n").c_str());
-}
-
 std::string ToLowerAsciiText(const std::string& text)
 {
     std::string result = text;
@@ -1317,10 +1312,6 @@ void CollapsePhysicsSkinWeights(CustomXMeshData& meshData,
         }
     }
 
-    OutputDebugLog(L"CollapsePhysicsSkinWeights: collapsedBones=" +
-                   std::to_wstring(collapsedBoneCount) +
-                   L" remainingSkinWeights=" +
-                   std::to_wstring(meshData.skinWeights.size()));
 }
 
 bool SplitCustomXMeshDataByBoneLimit(const CustomXMeshData& sourceMeshData,
@@ -1332,10 +1323,6 @@ bool SplitCustomXMeshDataByBoneLimit(const CustomXMeshData& sourceMeshData,
     {
         return false;
     }
-
-    OutputDebugLog(L"SplitMesh: skinWeights=" + std::to_wstring(sourceMeshData.skinWeights.size()) +
-                   L" faces=" + std::to_wstring(sourceMeshData.faces.size()) +
-                   L" vertices=" + std::to_wstring(sourceMeshData.positions.size()));
 
     std::vector<std::vector<DWORD>> vertexToBones(sourceMeshData.positions.size());
     for (DWORD boneIndex = 0; boneIndex < static_cast<DWORD>(sourceMeshData.skinWeights.size()); ++boneIndex)
@@ -1410,10 +1397,6 @@ bool SplitCustomXMeshDataByBoneLimit(const CustomXMeshData& sourceMeshData,
 
             if (triBones.size() > maxBonesPerPart)
             {
-                OutputDebugLog(L"SplitMesh FAILED: triangle has " +
-                               std::to_wstring(triBones.size()) +
-                               L" bones, exceeds maxBonesPerPart=" +
-                               std::to_wstring(maxBonesPerPart));
                 return false;
             }
 
@@ -1448,8 +1431,6 @@ bool SplitCustomXMeshDataByBoneLimit(const CustomXMeshData& sourceMeshData,
             partTrianglesList.push_back(currentPartTriangles);
         }
     }
-
-    OutputDebugLog(L"SplitMesh: parts=" + std::to_wstring(partTrianglesList.size()));
 
     for (std::size_t partIndex = 0; partIndex < partTrianglesList.size(); ++partIndex)
     {
@@ -1571,17 +1552,9 @@ bool SplitCustomXMeshDataByBoneLimit(const CustomXMeshData& sourceMeshData,
             }
         }
 
-        OutputDebugLog(L"SplitMesh: part[" + std::to_wstring(partIndex) + L"] vertices=" +
-                       std::to_wstring(partMeshData.positions.size()) +
-                       L" triangles=" + std::to_wstring(partTriangles.size()) +
-                       L" bones=" + std::to_wstring(partMeshData.skinWeights.size()) +
-                       L" materials=" + std::to_wstring(partMeshData.materials.size()));
-
         if (partMeshData.skinWeights.size() > maxBonesPerPart)
         {
-            OutputDebugLog(L"SplitMesh FAILED: part[" + std::to_wstring(partIndex) +
-                           L"] has " + std::to_wstring(partMeshData.skinWeights.size()) +
-                           L" bones, exceeds limit");
+            return false;
             return false;
         }
 

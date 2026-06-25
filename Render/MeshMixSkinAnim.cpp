@@ -722,19 +722,16 @@ const std::vector<D3DXMATRIX>* MeshMixSkinAnim::GetCachedBonePalette(const SkinA
 
                 if (boneId >= container->m_boneOffsetMatrices.size())
                 {
-                    OutputDebugStringW(L"GetCachedBonePalette: boneId >= m_boneOffsetMatrices.size()\n");
                     continue;
                 }
 
                 if (boneId >= container->m_frameCombinedMatrix.size())
                 {
-                    OutputDebugStringW(L"GetCachedBonePalette: boneId >= m_frameCombinedMatrix.size()\n");
                     continue;
                 }
 
                 if (container->m_frameCombinedMatrix[boneId] == nullptr)
                 {
-                    OutputDebugStringW(L"GetCachedBonePalette: frame matrix pointer is null\n");
                     continue;
                 }
 

@@ -2128,10 +2128,7 @@ void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
 
 void Render::Finalize()
 {
-    OutputDebugStringW(L"[Render::Finalize] begin\n");
-
     m_settingsDialog.Finalize();
-    OutputDebugStringW(L"[Render::Finalize] settingsDialog done\n");
 
     MeshMixManager::SetSharedThicknessTexture(NULL);
 
@@ -2153,10 +2150,8 @@ void Render::Finalize()
     m_postEffectFXAA.Finalize();
     m_postEffectTAA.Finalize();
     m_postEffectEnd.Finalize();
-    OutputDebugStringW(L"[Render::Finalize] post-effects done\n");
 
     m_particleSystem.Finalize();
-    OutputDebugStringW(L"[Render::Finalize] particleSystem done\n");
 
     if (m_hasRequestedTimerResolution)
     {
@@ -2167,11 +2162,6 @@ void Render::Finalize()
     m_hasLastFrameTime = false;
     m_hasLastFramePacingTime = false;
 
-    {
-        wchar_t buf[128];
-        swprintf_s(buf, L"[Render::Finalize] m_meshList count=%zu\n", m_meshList.size());
-        OutputDebugStringW(buf);
-    }
     for (auto& mesh : m_meshList)
     {
         mesh.Finalize();
@@ -2219,13 +2209,6 @@ void Render::Finalize()
     m_meshPOMList.clear();
     m_meshPOMEnabledList.clear();
 
-    OutputDebugStringW(L"[Render::Finalize] static mesh lists done\n");
-
-    {
-        wchar_t buf[128];
-        swprintf_s(buf, L"[Render::Finalize] m_animMeshList count=%zu\n", m_animMeshList.size());
-        OutputDebugStringW(buf);
-    }
     for (auto& mesh : m_animMeshList)
     {
         SAFE_DELETE(mesh);
@@ -2238,22 +2221,12 @@ void Render::Finalize()
     }
     m_skinAnimMeshList.clear();
 
-    {
-        wchar_t buf[128];
-        swprintf_s(buf, L"[Render::Finalize] m_meshMixSkinAnimList count=%zu\n", m_meshMixSkinAnimList.size());
-        OutputDebugStringW(buf);
-    }
     for (auto& mesh : m_meshMixSkinAnimList)
     {
         SAFE_DELETE(mesh);
     }
     m_meshMixSkinAnimList.clear();
 
-    {
-        wchar_t buf[128];
-        swprintf_s(buf, L"[Render::Finalize] m_meshInstancingMap count=%zu\n", m_meshInstancingMap.size());
-        OutputDebugStringW(buf);
-    }
     for (auto& mesh : m_meshInstancingMap)
     {
         SAFE_DELETE(mesh.second);
@@ -2272,24 +2245,12 @@ void Render::Finalize()
     }
     m_meshPBRList.clear();
 
-    OutputDebugStringW(L"[Render::Finalize] dynamic mesh lists done\n");
-
-    {
-        wchar_t buf[128];
-        swprintf_s(buf, L"[Render::Finalize] m_fontList count=%zu\n", m_fontList.size());
-        OutputDebugStringW(buf);
-    }
     for (auto& font : m_fontList)
     {
         SAFE_DELETE(font);
     }
     m_fontList.clear();
 
-    {
-        wchar_t buf[128];
-        swprintf_s(buf, L"[Render::Finalize] m_fontExList count=%zu\n", m_fontExList.size());
-        OutputDebugStringW(buf);
-    }
     for (auto& font : m_fontExList)
     {
         if (font != nullptr)
@@ -2300,11 +2261,6 @@ void Render::Finalize()
     }
     m_fontExList.clear();
 
-    {
-        wchar_t buf[128];
-        swprintf_s(buf, L"[Render::Finalize] m_fontExAnimList count=%zu\n", m_fontExAnimList.size());
-        OutputDebugStringW(buf);
-    }
     for (auto& font : m_fontExAnimList)
     {
         if (font != nullptr)
@@ -2315,8 +2271,6 @@ void Render::Finalize()
     }
     m_fontExAnimList.clear();
 
-    OutputDebugStringW(L"[Render::Finalize] font lists done\n");
-
     if (m_loadingScreenTitleFontRegistered)
     {
         RemoveFontResourceExW(m_loadingScreenTitleFontPath.c_str(), FR_PRIVATE, NULL);
@@ -2324,30 +2278,23 @@ void Render::Finalize()
     }
 
     m_sprite.Finalize();
-    OutputDebugStringW(L"[Render::Finalize] sprite done\n");
 
     m_GBuffer.Finalize();
-    OutputDebugStringW(L"[Render::Finalize] GBuffer done\n");
 
     SAFE_RELEASE(m_pRenderTarget1);
     SAFE_RELEASE(m_pRenderTarget2);
     SAFE_RELEASE(m_pLightEffectSourceTexture);
     SAFE_RELEASE(m_pMirrorRenderTarget);
-    OutputDebugStringW(L"[Render::Finalize] render targets released\n");
 
     Common::RemoveDeviceLostResource(this);
-    OutputDebugStringW(L"[Render::Finalize] RemoveDeviceLostResource done\n");
 
     LPDIRECT3DDEVICE9 d3dDevice = Common::D3DDevice();
     SAFE_RELEASE(d3dDevice);
     Common::SetD3DDevice(NULL);
-    OutputDebugStringW(L"[Render::Finalize] device released\n");
 
     m_windowManager.Finalize();
-    OutputDebugStringW(L"[Render::Finalize] WindowManager done\n");
 
     Common::Finalize();
-    OutputDebugStringW(L"[Render::Finalize] completed\n");
 }
 
 void Render::ShowSettingsDialog(const bool activateDialog)
@@ -3177,11 +3124,6 @@ void Render::AttachMeshToBone(const int childMeshId, const int parentSkinnedMesh
     attach.localRotate = localRotate;
     attach.localOffset = localOffset;
     m_boneAttachments.push_back(attach);
-
-    char dbg[256];
-    sprintf_s(dbg, "[AttachMeshToBone] registered: child=%d parent=%d bone=%s count=%d\n",
-              childMeshId, parentSkinnedMeshId, boneName, static_cast<int>(m_boneAttachments.size()));
-    OutputDebugStringA(dbg);
 }
 
 void Render::DetachMeshFromBone(const int childMeshId)
@@ -3198,58 +3140,30 @@ void Render::DetachMeshFromBone(const int childMeshId)
 
 void Render::UpdateBoneAttachments()
 {
-    const int attachmentCount = static_cast<int>(m_boneAttachments.size());
-    char dbg[256];
-
-    if (attachmentCount == 0)
-    {
-        OutputDebugStringA("[UpdateBoneAttachments] no attachments\n");
-    }
-
     for (const auto& attach : m_boneAttachments)
     {
-        sprintf_s(dbg, "[UpdateBoneAttachments] child=%d parent=%d bone=%s rot=(%.2f,%.2f,%.2f) off=(%.2f,%.2f,%.2f)\n",
-                  attach.childMeshId, attach.parentSkinnedMeshId, attach.boneName.c_str(),
-                  attach.localRotate.x, attach.localRotate.y, attach.localRotate.z,
-                  attach.localOffset.x, attach.localOffset.y, attach.localOffset.z);
-        OutputDebugStringA(dbg);
-
         if (attach.parentSkinnedMeshId < 0 ||
             attach.parentSkinnedMeshId >= static_cast<int>(m_meshMixSkinAnimList.size()))
         {
-            sprintf_s(dbg, "[UpdateBoneAttachments] SKIP: parentMeshId=%d out of range (listSize=%d)\n",
-                      attach.parentSkinnedMeshId, static_cast<int>(m_meshMixSkinAnimList.size()));
-            OutputDebugStringA(dbg);
             continue;
         }
 
         MeshMixSkinAnim* parent = m_meshMixSkinAnimList.at(attach.parentSkinnedMeshId);
         if (parent == nullptr)
         {
-            OutputDebugStringA("[UpdateBoneAttachments] SKIP: parentMesh is null\n");
             continue;
         }
 
         D3DXMATRIX boneWorldMatrix;
         if (!parent->GetBoneWorldMatrix(attach.boneName.c_str(), boneWorldMatrix))
         {
-            OutputDebugStringA("[UpdateBoneAttachments] SKIP: GetBoneWorldMatrix failed\n");
             continue;
         }
-
-        sprintf_s(dbg, "[UpdateBoneAttachments] bonePos=(%.2f,%.2f,%.2f)\n",
-                  boneWorldMatrix._41, boneWorldMatrix._42, boneWorldMatrix._43);
-        OutputDebugStringA(dbg);
 
         if (attach.childMeshId < 0 || attach.childMeshId >= static_cast<int>(m_meshMixList.size()))
         {
-            sprintf_s(dbg, "[UpdateBoneAttachments] SKIP: childMeshId=%d out of range (listSize=%d)\n",
-                      attach.childMeshId, static_cast<int>(m_meshMixList.size()));
-            OutputDebugStringA(dbg);
             continue;
         }
-
-        OutputDebugStringA("[UpdateBoneAttachments] OK: calling SetWorldMatrix\n");
 
         D3DXMATRIX matLocal;
         D3DXMatrixRotationYawPitchRoll(&matLocal,
@@ -6644,32 +6558,19 @@ void Render::DrawSettingsDialogText()
 
 void Render::OnDeviceLost()
 {
-    OutputDebugStringW(L"[Render::OnDeviceLost] begin\n");
-    OutputDebugStringW(L"[Render::OnDeviceLost] releasing m_pRenderTarget1\n");
     SAFE_RELEASE(m_pRenderTarget1);
-    OutputDebugStringW(L"[Render::OnDeviceLost] releasing m_pRenderTarget2\n");
     SAFE_RELEASE(m_pRenderTarget2);
-    OutputDebugStringW(L"[Render::OnDeviceLost] releasing m_pLightEffectSourceTexture\n");
     SAFE_RELEASE(m_pLightEffectSourceTexture);
-    OutputDebugStringW(L"[Render::OnDeviceLost] releasing m_pMirrorRenderTarget\n");
     SAFE_RELEASE(m_pMirrorRenderTarget);
-    OutputDebugStringW(L"[Render::OnDeviceLost] sprite.OnDeviceLost\n");
     m_sprite.OnDeviceLost();
-    OutputDebugStringW(L"[Render::OnDeviceLost] particleSystem.OnDeviceLost\n");
     m_particleSystem.OnDeviceLost();
-    OutputDebugStringW(L"[Render::OnDeviceLost] done\n");
 }
 
 void Render::OnDeviceReset()
 {
-    OutputDebugStringW(L"[Render::OnDeviceReset] begin\n");
     CreateTexture();
-    OutputDebugStringW(L"[Render::OnDeviceReset] CreateTexture done\n");
     m_sprite.OnDeviceReset();
-    OutputDebugStringW(L"[Render::OnDeviceReset] sprite.OnDeviceReset done\n");
     m_particleSystem.OnDeviceReset();
-    OutputDebugStringW(L"[Render::OnDeviceReset] particleSystem.OnDeviceReset done\n");
-    OutputDebugStringW(L"[Render::OnDeviceReset] done\n");
 }
 
 void Render::CreateTexture()

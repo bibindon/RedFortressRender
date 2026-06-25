@@ -169,10 +169,8 @@ void WindowManager::NotifyDeviceLost()
 {
     if (!m_bDeviceLost)
     {
-        OutputDebugStringW(L"[WindowManager] NotifyDeviceLost\n");
         Common::OnDeviceLostAll();
         m_bDeviceLost = true;
-        OutputDebugStringW(L"[WindowManager] NotifyDeviceLost done\n");
     }
 }
 
@@ -311,37 +309,25 @@ void WindowManager::UpdateWindowPlacement(const eWindowMode mode, const int widt
 
 bool WindowManager::ResetDeviceForMode(const eWindowMode mode, int width, int height)
 {
-    wchar_t buf[128];
-    swprintf_s(buf, L"[WindowManager] ResetDeviceForMode mode=%d %dx%d\n", static_cast<int>(mode), width, height);
-    OutputDebugStringW(buf);
-
     NotifyDeviceLost();
-    OutputDebugStringW(L"[WindowManager] NotifyDeviceLost done\n");
 
     D3DPRESENT_PARAMETERS d3dpp = CreatePresentParameters(mode, width, height);
-    OutputDebugStringW(L"[WindowManager] CreatePresentParameters done\n");
     UpdateWindowPlacement(mode, static_cast<int>(d3dpp.BackBufferWidth), static_cast<int>(d3dpp.BackBufferHeight));
 
     const HRESULT hResult = Common::D3DDevice()->Reset(&d3dpp);
-    swprintf_s(buf, L"[WindowManager] device->Reset result=0x%08X\n", hResult);
-    OutputDebugStringW(buf);
     if (hResult == D3DERR_DEVICELOST)
     {
-        OutputDebugStringW(L"[WindowManager] ResetDeviceForMode failed: D3DERR_DEVICELOST\n");
         return false;
     }
     assert(hResult == S_OK);
     if (hResult != S_OK)
     {
-        OutputDebugStringW(L"[WindowManager] ResetDeviceForMode failed\n");
         return false;
     }
 
     Common::OnDeviceResetAll();
-    OutputDebugStringW(L"[WindowManager] OnDeviceResetAll done\n");
     m_eWindowModeCurrent = mode;
     m_bDeviceLost = false;
-    OutputDebugStringW(L"[WindowManager] ResetDeviceForMode success\n");
     return true;
 }
 
