@@ -1,4 +1,4 @@
-#include "MeshMixNoSkinAnimAlloc.h"
+#include "MeshMixAnimNoBoneAlloc.h"
 
 #include "Common.h"
 #include "Util.h"
@@ -6,7 +6,7 @@
 namespace NSRender
 {
 
-NoSkinAnimMeshAlloc::NoSkinAnimMeshAlloc(const std::wstring &xFilename)
+AnimNoBoneMeshAlloc::AnimNoBoneMeshAlloc(const std::wstring &xFilename)
     : m_xFilename(xFilename)
 {
     std::wstring resolvedPath;
@@ -26,14 +26,14 @@ NoSkinAnimMeshAlloc::NoSkinAnimMeshAlloc(const std::wstring &xFilename)
     }
 }
 
-NoSkinAnimMeshAlloc::~NoSkinAnimMeshAlloc()
+AnimNoBoneMeshAlloc::~AnimNoBoneMeshAlloc()
 {
     ClearTextureCache();
 }
 
-STDMETHODIMP NoSkinAnimMeshAlloc::CreateFrame(LPCSTR name, LPD3DXFRAME *newFrame)
+STDMETHODIMP AnimNoBoneMeshAlloc::CreateFrame(LPCSTR name, LPD3DXFRAME *newFrame)
 {
-    auto animFrame = NEW NoSkinAnimFrame();
+    auto animFrame = NEW AnimNoBoneFrame();
 
     auto len = strlen(name);
     animFrame->Name = NEW char[len + 1];
@@ -50,7 +50,7 @@ STDMETHODIMP NoSkinAnimMeshAlloc::CreateFrame(LPCSTR name, LPD3DXFRAME *newFrame
     return S_OK;
 }
 
-STDMETHODIMP NoSkinAnimMeshAlloc::CreateMeshContainer(LPCSTR meshName,
+STDMETHODIMP AnimNoBoneMeshAlloc::CreateMeshContainer(LPCSTR meshName,
                                                        CONST D3DXMESHDATA *meshData,
                                                        CONST D3DXMATERIAL *materials,
                                                        CONST D3DXEFFECTINSTANCE *,
@@ -59,7 +59,7 @@ STDMETHODIMP NoSkinAnimMeshAlloc::CreateMeshContainer(LPCSTR meshName,
                                                        LPD3DXSKININFO,
                                                        LPD3DXMESHCONTAINER *meshContainer)
 {
-    m_container = NEW NoSkinAnimMeshContainer();
+    m_container = NEW AnimNoBoneMeshContainer();
 
     std::string meshFilename = meshName;
 
@@ -106,16 +106,16 @@ STDMETHODIMP NoSkinAnimMeshAlloc::CreateMeshContainer(LPCSTR meshName,
     return S_OK;
 }
 
-STDMETHODIMP NoSkinAnimMeshAlloc::DestroyFrame(LPD3DXFRAME frame)
+STDMETHODIMP AnimNoBoneMeshAlloc::DestroyFrame(LPD3DXFRAME frame)
 {
     SAFE_DELETE_ARRAY(frame->Name);
     SAFE_DELETE(frame);
     return S_OK;
 }
 
-STDMETHODIMP NoSkinAnimMeshAlloc::DestroyMeshContainer(LPD3DXMESHCONTAINER meshContainerBase)
+STDMETHODIMP AnimNoBoneMeshAlloc::DestroyMeshContainer(LPD3DXMESHCONTAINER meshContainerBase)
 {
-    auto *meshContainer = (NoSkinAnimMeshContainer*)meshContainerBase;
+    auto *meshContainer = (AnimNoBoneMeshContainer*)meshContainerBase;
 
     SAFE_RELEASE(meshContainer->pSkinInfo);
     SAFE_DELETE_ARRAY(meshContainer->Name);
@@ -133,7 +133,7 @@ STDMETHODIMP NoSkinAnimMeshAlloc::DestroyMeshContainer(LPD3DXMESHCONTAINER meshC
     return S_OK;
 }
 
-void NoSkinAnimMeshAlloc::InitializeMaterials(const DWORD materialCount,
+void AnimNoBoneMeshAlloc::InitializeMaterials(const DWORD materialCount,
                                               const D3DXMATERIAL *materials,
                                               const std::wstring &xFilename)
 {
@@ -164,7 +164,7 @@ void NoSkinAnimMeshAlloc::InitializeMaterials(const DWORD materialCount,
     }
 }
 
-void NoSkinAnimMeshAlloc::ClearTextureCache()
+void AnimNoBoneMeshAlloc::ClearTextureCache()
 {
     for (auto& texturePair : m_textureCache)
     {
@@ -174,7 +174,7 @@ void NoSkinAnimMeshAlloc::ClearTextureCache()
     m_textureCache.clear();
 }
 
-std::wstring NoSkinAnimMeshAlloc::ResolveTexturePath(const char* textureFilename) const
+std::wstring AnimNoBoneMeshAlloc::ResolveTexturePath(const char* textureFilename) const
 {
     if (textureFilename == nullptr || textureFilename[0] == '\0')
     {
@@ -208,7 +208,7 @@ std::wstring NoSkinAnimMeshAlloc::ResolveTexturePath(const char* textureFilename
     return combinedPath;
 }
 
-LPDIRECT3DTEXTURE9 NoSkinAnimMeshAlloc::LoadTextureCached(const std::wstring& texturePath)
+LPDIRECT3DTEXTURE9 AnimNoBoneMeshAlloc::LoadTextureCached(const std::wstring& texturePath)
 {
     auto foundTexture = m_textureCache.find(texturePath);
     if (foundTexture != m_textureCache.end())

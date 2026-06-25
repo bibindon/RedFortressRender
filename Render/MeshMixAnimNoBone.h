@@ -12,12 +12,12 @@
 #include "MeshMixSkinAnim.h"
 #include "Common.h"
 #include "AnimController.h"
-#include "MeshMixNoSkinAnimAlloc.h"
+#include "MeshMixAnimNoBoneAlloc.h"
 
 namespace NSRender
 {
 
-class MeshMixNoSkinAnim : public IDeviceResettable
+class MeshMixAnimNoBone : public IDeviceResettable
 {
 public:
 
@@ -29,7 +29,7 @@ public:
         bool isDefault = false;
     };
 
-    MeshMixNoSkinAnim(const std::wstring& filename,
+    MeshMixAnimNoBone(const std::wstring& filename,
                       const D3DXVECTOR3& pos,
                       const D3DXVECTOR3& rotate,
                       const float scale,
@@ -37,7 +37,7 @@ public:
                       const AnimSetMap& animSetMap,
                       const MeshMixSkinAnimLoadMode loadMode = MeshMixSkinAnimLoadMode::DirectX);
 
-    MeshMixNoSkinAnim(const std::wstring& meshFilename,
+    MeshMixAnimNoBone(const std::wstring& meshFilename,
                       const std::wstring& animationFilename,
                       const D3DXVECTOR3& pos,
                       const D3DXVECTOR3& rotate,
@@ -46,7 +46,7 @@ public:
                       const AnimSetMap& animSetMap,
                       const MeshMixSkinAnimLoadMode loadMode = MeshMixSkinAnimLoadMode::DirectX);
 
-    virtual ~MeshMixNoSkinAnim();
+    virtual ~MeshMixAnimNoBone();
 
     void Initialize(bool async = true);
     void WaitForLoad();
@@ -90,7 +90,7 @@ private:
     struct AnimationClip
     {
         AnimationInfo info;
-        NoSkinAnimMeshAlloc* allocator = nullptr;
+        AnimNoBoneMeshAlloc* allocator = nullptr;
         LPD3DXFRAME frameRoot = nullptr;
         LPD3DXANIMATIONCONTROLLER controller = nullptr;
         double currentTime = 0.0;
@@ -101,15 +101,15 @@ private:
 
     void InitializeInternal();
     void ReleaseAnimationClips();
-    void ReleaseMeshAllocatorRecursive(LPD3DXFRAME frame, NoSkinAnimMeshAlloc& allocator);
+    void ReleaseMeshAllocatorRecursive(LPD3DXFRAME frame, AnimNoBoneMeshAlloc& allocator);
     void ReleaseMeshAllocator(const LPD3DXFRAME frame);
-    void ReleaseMeshContainersRecursive(LPD3DXFRAME frame, NoSkinAnimMeshAlloc& allocator);
+    void ReleaseMeshContainersRecursive(LPD3DXFRAME frame, AnimNoBoneMeshAlloc& allocator);
     bool LoadAnimationCsv();
     bool LoadAnimationClip(const AnimationInfo& info);
     bool LoadAnimationClip(const std::wstring& filePath, AnimationClip& outClip);
-    HRESULT LoadMeshHierarchyWithDirectX(const std::wstring& path, NoSkinAnimMeshAlloc& allocator,
+    HRESULT LoadMeshHierarchyWithDirectX(const std::wstring& path, AnimNoBoneMeshAlloc& allocator,
                                           LPD3DXFRAME& outRoot, LPD3DXANIMATIONCONTROLLER& outController);
-    HRESULT LoadMeshHierarchyWithCustomLoader(const std::wstring& path, NoSkinAnimMeshAlloc& allocator,
+    HRESULT LoadMeshHierarchyWithCustomLoader(const std::wstring& path, AnimNoBoneMeshAlloc& allocator,
                                                LPD3DXFRAME& outRoot);
     void ApplyAnimationFrameTransformsToMeshHierarchy(LPD3DXFRAME meshFrameRoot,
                                                        LPD3DXFRAME animFrameRoot);
@@ -118,7 +118,7 @@ private:
     void UpdateActiveAnimationClip();
     void RenderFrameHierarchy(LPD3DXFRAME frame, LPD3DXEFFECT effect);
     HRESULT LoadMeshHierarchy(const std::wstring& filePath,
-                               NoSkinAnimMeshAlloc& allocator,
+                               AnimNoBoneMeshAlloc& allocator,
                                LPD3DXFRAME* outRoot,
                                LPD3DXANIMATIONCONTROLLER* outController);
 
@@ -137,19 +137,19 @@ private:
         DWORD paletteSize = 0;
         std::vector<std::vector<D3DXMATRIX>> palettes;
     };
-    mutable std::unordered_map<const NoSkinAnimMeshContainer*, BonePaletteCache> m_bonePaletteCache;
+    mutable std::unordered_map<const AnimNoBoneMeshContainer*, BonePaletteCache> m_bonePaletteCache;
     unsigned int m_bonePaletteVersion = 1;
-    const std::vector<D3DXMATRIX>* GetCachedBonePalette(const NoSkinAnimMeshContainer* container, DWORD subsetIndex) const;
+    const std::vector<D3DXMATRIX>* GetCachedBonePalette(const AnimNoBoneMeshContainer* container, DWORD subsetIndex) const;
 
-    const std::wstring SHADER_FILENAME = _T(".\\MeshMixNoSkinAnim.cso");
+    const std::wstring SHADER_FILENAME = _T(".\\MeshMixAnimNoBone.cso");
     std::wstring m_meshName;
     std::wstring m_animationMeshName;
     float m_radius = -1.0f;
     bool m_useParallaxOcclusionMapping = false;
     bool m_useNormalMapping = false;
 
-    NoSkinAnimMeshAlloc m_allocator;
-    NoSkinAnimMeshAlloc m_animationAllocator;
+    AnimNoBoneMeshAlloc m_allocator;
+    AnimNoBoneMeshAlloc m_animationAllocator;
     LPD3DXFRAME m_frameRoot = nullptr;
     LPD3DXFRAME m_animationFrameRoot = nullptr;
     LPD3DXANIMATIONCONTROLLER m_tempAnimController = nullptr;

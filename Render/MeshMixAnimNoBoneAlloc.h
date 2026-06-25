@@ -11,14 +11,14 @@
 namespace NSRender
 {
 
-struct NoSkinAnimMeshContainer;
+struct AnimNoBoneMeshContainer;
 
-class NoSkinAnimMeshAlloc : public ID3DXAllocateHierarchy
+class AnimNoBoneMeshAlloc : public ID3DXAllocateHierarchy
 {
 
 public:
-    NoSkinAnimMeshAlloc(const std::wstring &);
-    ~NoSkinAnimMeshAlloc();
+    AnimNoBoneMeshAlloc(const std::wstring &);
+    ~AnimNoBoneMeshAlloc();
 
     STDMETHOD(CreateFrame)(THIS_ LPCSTR, LPD3DXFRAME *);
     STDMETHOD(CreateMeshContainer)(THIS_ LPCSTR,
@@ -42,7 +42,7 @@ private:
     std::wstring m_xFilename;
     std::wstring m_baseDirectory;
 
-    NoSkinAnimMeshContainer* m_container = nullptr;
+    AnimNoBoneMeshContainer* m_container = nullptr;
 
     std::map<std::wstring, LPDIRECT3DTEXTURE9> m_textureCache;
 
@@ -51,7 +51,7 @@ private:
     void ClearTextureCache();
 };
 
-struct NoSkinAnimFrame : public D3DXFRAME
+struct AnimNoBoneFrame : public D3DXFRAME
 {
     D3DXMATRIX m_combinedMatrix;
     D3DXVECTOR3 m_animationScale;
@@ -59,7 +59,7 @@ struct NoSkinAnimFrame : public D3DXFRAME
     D3DXVECTOR3 m_animationPosition;
 };
 
-struct NoSkinAnimMeshContainer : public D3DXMESHCONTAINER
+struct AnimNoBoneMeshContainer : public D3DXMESHCONTAINER
 {
     std::vector<LPDIRECT3DTEXTURE9> m_textureList;
     DWORD m_paletteSize = 0;
