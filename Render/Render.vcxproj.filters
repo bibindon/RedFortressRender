@@ -493,6 +493,9 @@
     <FxCompile Include="shader\Particle.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
+    <FxCompile Include="shader\MeshMixAnimNoBone.fx">
+      <Filter>シェーダー</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README_about_library_csv.md" />

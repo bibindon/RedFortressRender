@@ -35,9 +35,12 @@ STDMETHODIMP AnimNoBoneMeshAlloc::CreateFrame(LPCSTR name, LPD3DXFRAME *newFrame
 {
     auto animFrame = NEW AnimNoBoneFrame();
 
-    auto len = strlen(name);
-    animFrame->Name = NEW char[len + 1];
-    strcpy_s(animFrame->Name, len + 1, name);
+    if (name != nullptr)
+    {
+        auto len = strlen(name);
+        animFrame->Name = NEW char[len + 1];
+        strcpy_s(animFrame->Name, len + 1, name);
+    }
 
     D3DXMatrixIdentity(&animFrame->TransformationMatrix);
     D3DXMatrixIdentity(&animFrame->m_combinedMatrix);

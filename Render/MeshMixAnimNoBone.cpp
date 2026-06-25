@@ -248,9 +248,12 @@ void MeshMixAnimNoBone::Initialize(bool) { m_loadThread = std::thread([this]() {
     HRESULT hr = E_FAIL;
     std::wstring path = ResolveRuntimeFilePath(SHADER_FILENAME);
 
+    OutputDebugStringW((L"[MeshMixAnimNoBone] Shader path: " + path + L"\n").c_str());
+
     hr = D3DXCreateEffectFromFile(Common::D3DDevice(), path.c_str(), nullptr, nullptr, 0, nullptr, &m_D3DEffect, nullptr);
     if (FAILED(hr))
     {
+        OutputDebugStringW((L"[MeshMixAnimNoBone] ERROR: Failed to create effect. HR=" + FormatHRESULT(hr) + L"\n").c_str());
         throw std::exception("Failed to create effect");
     }
 
@@ -265,20 +268,33 @@ void MeshMixAnimNoBone::Initialize(bool) { m_loadThread = std::thread([this]() {
         path = m_meshName;
     }
 
+    OutputDebugStringW((L"[MeshMixAnimNoBone] Mesh path: " + path + L"\n").c_str());
+
     hr = LoadMeshHierarchy(path,
                            m_allocator,
                            &m_frameRoot,
                            &tempAnimController);
+    OutputDebugStringW((L"[MeshMixAnimNoBone] LoadMeshHierarchy HR=" + FormatHRESULT(hr) +
+                        L" FrameRoot=" + std::to_wstring(reinterpret_cast<std::uintptr_t>(m_frameRoot)) +
+                        L" AnimCtrl=" + std::to_wstring(reinterpret_cast<std::uintptr_t>(tempAnimController)) + L"\n").c_str());
     if (FAILED(hr) || m_frameRoot == nullptr)
     {
         SAFE_RELEASE(tempAnimController);
+        OutputDebugStringW(std::wstring(L"[MeshMixAnimNoBone] ERROR: Failed to load mesh\n").c_str());
         throw std::exception("Failed to load mesh");
     }
 
+    if (tempAnimController == nullptr)
+    {
+        OutputDebugStringW(std::wstring(L"[MeshMixAnimNoBone] WARNING: tempAnimController is NULL - no animation in file\n").c_str());
+    }
+
     const bool loadedAnimationCsv = LoadAnimationCsv();
+    OutputDebugStringW((L"[MeshMixAnimNoBone] LoadAnimationCsv=" + std::to_wstring(loadedAnimationCsv) + L"\n").c_str());
 
     if (loadedAnimationCsv)
     {
+        OutputDebugStringW(std::wstring(L"[MeshMixAnimNoBone] Using CSV animation clips\n").c_str());
         SAFE_RELEASE(tempAnimController);
         m_useExternalAnimation = true;
     }
@@ -295,13 +311,19 @@ void MeshMixAnimNoBone::Initialize(bool) { m_loadThread = std::thread([this]() {
             path = m_animationMeshName;
         }
 
+        OutputDebugStringW((L"[MeshMixAnimNoBone] Animation mesh path: " + path + L"\n").c_str());
+
         hr = LoadMeshHierarchy(path,
                                m_animationAllocator,
                                &m_animationFrameRoot,
                                &tempAnimController);
+        OutputDebugStringW((L"[MeshMixAnimNoBone] Anim mesh load HR=" + FormatHRESULT(hr) +
+                            L" FrameRoot=" + std::to_wstring(reinterpret_cast<std::uintptr_t>(m_animationFrameRoot)) +
+                            L" AnimCtrl=" + std::to_wstring(reinterpret_cast<std::uintptr_t>(tempAnimController)) + L"\n").c_str());
         if (FAILED(hr) || m_animationFrameRoot == nullptr || tempAnimController == nullptr)
         {
             SAFE_RELEASE(tempAnimController);
+            OutputDebugStringW(std::wstring(L"[MeshMixAnimNoBone] ERROR: Failed to load animation mesh\n").c_str());
             throw std::exception("Failed to load animation mesh");
         }
 
@@ -309,16 +331,19 @@ void MeshMixAnimNoBone::Initialize(bool) { m_loadThread = std::thread([this]() {
     }
     else if (tempAnimController != nullptr)
     {
+        OutputDebugStringW(std::wstring(L"[MeshMixAnimNoBone] Using embedded animation controller\n").c_str());
         m_animController.Init(tempAnimController, m_animSetMap);
         m_hasAnimationController = true;
     }
     else
     {
+        OutputDebugStringW(std::wstring(L"[MeshMixAnimNoBone] No animation controller (static mesh mode)\n").c_str());
         SAFE_RELEASE(tempAnimController);
     }
 
     Common::AddDeviceLostResource(this);
     m_bLoaded = true;
+    OutputDebugStringW(std::wstring(L"[MeshMixAnimNoBone] Initialize complete\n").c_str());
 }); WaitForLoad(); }
 
 void MeshMixAnimNoBone::WaitForLoad() { if (m_loadThread.joinable()) m_loadThread.join(); }
