@@ -618,25 +618,9 @@ void PostEffectZShadow::RenderTechnique2(const int cascadeIndex)
 
     D3DXMATRIX mViewProj = mView * mProj;
 
-    hr = g_fxDepthBufferShadow->SetTechnique(GetWriteShadowTechniqueName());
-    assert(hr == S_OK);
-
-    hr = g_fxDepthBufferShadow->SetBool("g_useMeshAlphaCutout", FALSE);
-    assert(hr == S_OK);
-
-    hr = g_fxDepthBufferShadow->SetTexture("g_texMeshAlpha", nullptr);
-    assert(hr == S_OK);
-
-    hr = g_fxDepthBufferShadow->CommitChanges();
-    assert(hr == S_OK);
-
-    for (auto& mesh : *m_pMeshMixAnimNoBoneList)
-    {
-        if (mesh != nullptr)
-        {
-            mesh->RenderToEffect(g_fxDepthBufferShadow, mViewProj);
-        }
-    }
+    // MeshMixAnimNoBone participates in the light-depth pass as a caster.
+    // Do not draw it into the receiver shadow mask here, because the current
+    // Z-shadow pass cannot distinguish same-object self projection.
 
     hr = g_fxDepthBufferShadow->SetTechnique(GetWriteShadowSkinTechniqueName());
     assert(hr == S_OK);
