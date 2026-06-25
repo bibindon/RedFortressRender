@@ -2688,6 +2688,14 @@ void Render::UpdateSkinAnimationState()
             elem->UpdateAnimation();
         }
     }
+
+    for (auto& elem : m_meshMixNoSkinAnimList)
+    {
+        if (elem != nullptr)
+        {
+            elem->UpdateAnimation();
+        }
+    }
 }
 
 void Render::ApplyTAAProjectionJitter()
@@ -3519,6 +3527,93 @@ bool Render::RemoveMeshMixSkinAnim(const int id)
     // eraseすると後続メッシュのIDが変わり、ゲーム側が保持するIDと不一致になる。
     SAFE_DELETE(m_meshMixSkinAnimList.at(id));
     return true;
+}
+
+int Render::AddMeshMixNoSkinAnim(const std::wstring& filePath,
+                                  const D3DXVECTOR3& pos,
+                                  const D3DXVECTOR3& rot,
+                                  const float scale,
+                                  const AnimSetMap& animSetMap,
+                                  const float radius,
+                                  const MeshMixSkinAnimLoadMode loadMode)
+{
+    auto param = GetMeshParamPreset(eMeshParamPreset::GRASS);
+    param.smooth = false;
+    param.saturateShadow = m_meshMixSaturateShadowEnabled;
+    param.saturateShadowIntensity = m_meshMixSaturateShadowIntensity;
+    param.shadowDarkness = m_meshMixShadowDarkness;
+    param.specularIntensity = m_meshMixSpecularIntensity;
+    param.specularEdge = m_meshMixSpecularEdge;
+    param.fresnelIntensity = m_meshMixFresnelIntensity;
+    param.specularIntensityOverrideEnabled = m_meshMixSpecularIntensityOverrideEnabled;
+    param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
+
+    MeshMixNoSkinAnim* mesh = NEW MeshMixNoSkinAnim(filePath, pos, rot, scale, param, animSetMap, loadMode);
+    mesh->SetAlphaClipEnabled(m_meshMixSkinAnimAlphaClipEnabled);
+    mesh->SetIgnoreTransparentMaterial(m_meshMixSkinAnimIgnoreTransparentMaterialEnabled);
+    try
+    {
+        mesh->Initialize(true);
+        m_meshMixNoSkinAnimList.push_back(mesh);
+    }
+    catch (...)
+    {
+        SAFE_DELETE(mesh);
+        throw;
+    }
+
+    return static_cast<int>(m_meshMixNoSkinAnimList.size()) - 1;
+}
+
+bool Render::RemoveMeshMixNoSkinAnim(const int id)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshMixNoSkinAnimList.size()) || m_meshMixNoSkinAnimList.at(id) == nullptr)
+    {
+        return false;
+    }
+
+    SAFE_DELETE(m_meshMixNoSkinAnimList.at(id));
+    return true;
+}
+
+void Render::SetMeshMixNoSkinAnimPos(const int id, const D3DXVECTOR3& pos)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshMixNoSkinAnimList.size()) || m_meshMixNoSkinAnimList.at(id) == nullptr)
+    {
+        return;
+    }
+
+    m_meshMixNoSkinAnimList.at(id)->SetPos(pos);
+}
+
+void Render::SetMeshMixNoSkinAnimRotY(const int id, const float rotY)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshMixNoSkinAnimList.size()) || m_meshMixNoSkinAnimList.at(id) == nullptr)
+    {
+        return;
+    }
+
+    m_meshMixNoSkinAnimList.at(id)->SetRotY(rotY);
+}
+
+void Render::SetMeshMixNoSkinAnimScale(const int id, const float scale)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshMixNoSkinAnimList.size()) || m_meshMixNoSkinAnimList.at(id) == nullptr)
+    {
+        return;
+    }
+
+    m_meshMixNoSkinAnimList.at(id)->SetScale(scale);
+}
+
+void Render::SetMeshMixNoSkinAnimEnabled(const int id, const bool enabled)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshMixNoSkinAnimList.size()) || m_meshMixNoSkinAnimList.at(id) == nullptr)
+    {
+        return;
+    }
+
+    m_meshMixNoSkinAnimList.at(id)->SetEnabled(enabled);
 }
 
 const std::vector<MeshMixSkinAnim::AnimationInfo>* Render::GetMeshMixSkinAnimAnimationInfoList(const int id) const
@@ -5930,6 +6025,14 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
     }
 
     for (auto& elem : m_meshMixSkinAnimList)
+    {
+        if (elem != nullptr)
+        {
+            elem->Render();
+        }
+    }
+
+    for (auto& elem : m_meshMixNoSkinAnimList)
     {
         if (elem != nullptr)
         {

@@ -34,6 +34,8 @@
     <ClCompile Include="MeshMix.cpp" />
     <ClCompile Include="MeshPBR.cpp" />
     <ClCompile Include="MeshMixSkinAnim.cpp" />
+    <ClCompile Include="MeshMixNoSkinAnim.cpp" />
+    <ClCompile Include="MeshMixNoSkinAnimAlloc.cpp" />
     <ClCompile Include="MeshMixManager.cpp" />
     <ClCompile Include="MeshPBRManager.cpp" />
     <ClCompile Include="MeshNormalMapping.cpp" />

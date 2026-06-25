@@ -34,6 +34,7 @@
 #include "MeshMixManager.h"
 #include "MeshPBRManager.h"
 #include "MeshMixSkinAnim.h"
+#include "MeshMixNoSkinAnim.h"
 #include "MeshSSS.h"
 #include "MeshPOM.h"
 
@@ -312,6 +313,19 @@ public:
     void SetMeshMixSkinAnimEnabled(int id, bool enabled);
     bool IsMeshMixSkinAnimEnabled(int id) const;
     std::vector<RenderLoadedModelInfo> GetLoadedModelInfoList();
+
+    int AddMeshMixNoSkinAnim(const std::wstring& filePath,
+                             const D3DXVECTOR3& pos,
+                             const D3DXVECTOR3& rot,
+                             const float scale,
+                             const AnimSetMap& animSetMap = AnimSetMap(),
+                             const float radius = -1.f,
+                             const MeshMixSkinAnimLoadMode loadMode = MeshMixSkinAnimLoadMode::DirectX);
+    bool RemoveMeshMixNoSkinAnim(int id);
+    void SetMeshMixNoSkinAnimPos(const int id, const D3DXVECTOR3& pos);
+    void SetMeshMixNoSkinAnimRotY(const int id, const float rotY);
+    void SetMeshMixNoSkinAnimScale(const int id, const float scale);
+    void SetMeshMixNoSkinAnimEnabled(int id, bool enabled);
 
     bool LoadXFileListMoveFromCsv(const std::wstring& csvPath,
                                   int* loadedCount = nullptr,
@@ -824,6 +838,7 @@ private:
     std::vector<AnimMesh*> m_animMeshList;
     std::vector<SkinAnimMesh*> m_skinAnimMeshList;
     std::vector<MeshMixSkinAnim*> m_meshMixSkinAnimList;
+    std::vector<MeshMixNoSkinAnim*> m_meshMixNoSkinAnimList;
     std::deque<MeshSmooth> m_meshSmoothList;
     std::deque<MeshSSSLike> m_meshSSSLikeList;
     std::deque<MeshSSS> m_meshSSSList;
