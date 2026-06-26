@@ -619,6 +619,12 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
         }
         return true;
     }
+    if (id == 42142 && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    {
+        render->SetExplosionScale(floatValue);
+        SetTrackbarFromFloat(hWnd, 32142, floatValue, 0.1f, 10.0f);
+        return true;
+    }
     return false;
 }
 void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
@@ -1564,6 +1570,10 @@ void HandleRenderSettingsHScroll(HWND hWnd, LPARAM lParam)
                 SelectSettingsTextListItem(state, index);
             }
         }
+        break;
+    case 32142:
+        render->SetExplosionScale(TrackbarToFloat(trackbar, 0.1f, 10.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.1f, 10.0f), L"%.2f");
         break;
     default:
         break;

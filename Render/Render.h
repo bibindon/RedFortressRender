@@ -602,6 +602,8 @@ public:
     void ClearParticleEffect();
     void SetDustFixedScreenSize(bool enabled);
     ParticleEffectPreset GetParticleEffectPreset() const;
+    void SetExplosionScale(float scale);
+    float GetExplosionScale() const;
 
     // 彩度をどれくらい上げるか（下げるか）を設定
     void SetPostEffectSaturate(const float level);

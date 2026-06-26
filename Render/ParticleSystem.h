@@ -31,6 +31,8 @@ public:
     void PlaceEffect(ParticleEffectPreset preset, const D3DXVECTOR3& origin);
     void ClearEffect();
     void SetDustFixedScreenSize(bool enabled);
+    void SetExplosionScale(float scale);
+    float GetExplosionScale() const;
 
     void Update(float deltaTime);
     void Draw(const D3DXMATRIX& view, const D3DXMATRIX& proj);
@@ -147,5 +149,6 @@ private:
     LPDIRECT3DTEXTURE9 m_rainTexture = NULL;
     LPD3DXEFFECT m_effect = NULL;
     bool m_dustFixedScreenSizeEnabled = true;
+    float m_explosionScale = 1.0f;
 };
 }

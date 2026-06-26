@@ -163,6 +163,16 @@ void ParticleSystem::SetDustFixedScreenSize(const bool enabled)
     m_dustFixedScreenSizeEnabled = enabled;
 }
 
+void ParticleSystem::SetExplosionScale(const float scale)
+{
+    m_explosionScale = scale;
+}
+
+float ParticleSystem::GetExplosionScale() const
+{
+    return m_explosionScale;
+}
+
 void ParticleSystem::Update(const float deltaTime)
 {
     if (!m_initialized)
@@ -795,6 +805,8 @@ void ParticleSystem::EmitRain(EffectInstance& effect, const float deltaTime)
 
 void ParticleSystem::EmitExplosion(EffectInstance& effect)
 {
+    const float scale = m_explosionScale;
+
     for (int i = 0; i < 54; ++i)
     {
         D3DXVECTOR3 direction(RandomCenteredFloat(1.0f),
@@ -809,15 +821,15 @@ void ParticleSystem::EmitExplosion(EffectInstance& effect)
             D3DXVec3Normalize(&direction, &direction);
         }
 
-        const float speed = RandomFloat(3.0f, 7.0f);
-        const D3DXVECTOR3 pos(effect.origin.x + direction.x * RandomFloat(0.05f, 0.24f),
-                              effect.origin.y + 0.35f + direction.y * RandomFloat(0.04f, 0.28f),
-                              effect.origin.z + direction.z * RandomFloat(0.05f, 0.24f));
+        const float speed = RandomFloat(3.0f, 7.0f) * scale;
+        const D3DXVECTOR3 pos(effect.origin.x + direction.x * RandomFloat(0.05f, 0.24f) * scale,
+                              effect.origin.y + 0.35f * scale + direction.y * RandomFloat(0.04f, 0.28f) * scale,
+                              effect.origin.z + direction.z * RandomFloat(0.05f, 0.24f) * scale);
         const D3DXVECTOR3 velocity(direction.x * speed,
                                    direction.y * speed + RandomFloat(0.8f, 2.4f),
                                    direction.z * speed);
         const float life = RandomFloat(0.22f, 0.52f);
-        const float startSize = RandomFloat(0.40f, 0.85f);
+        const float startSize = RandomFloat(0.40f, 0.85f) * scale;
         const float endSize = startSize * RandomFloat(1.4f, 2.4f);
         const D3DCOLOR color = D3DCOLOR_ARGB(static_cast<int>(RandomFloat(185.0f, 245.0f)),
                                              255,
@@ -850,15 +862,15 @@ void ParticleSystem::EmitExplosion(EffectInstance& effect)
             D3DXVec3Normalize(&direction, &direction);
         }
 
-        const float speed = RandomFloat(5.0f, 10.0f);
+        const float speed = RandomFloat(5.0f, 10.0f) * scale;
         const D3DXVECTOR3 pos(effect.origin.x,
-                              effect.origin.y + RandomFloat(0.35f, 0.75f),
+                              effect.origin.y + RandomFloat(0.35f, 0.75f) * scale,
                               effect.origin.z);
         const D3DXVECTOR3 velocity(direction.x * speed,
                                    direction.y * speed + RandomFloat(0.8f, 2.0f),
                                    direction.z * speed);
         const float life = RandomFloat(0.35f, 0.95f);
-        const float startSize = RandomFloat(0.045f, 0.095f);
+        const float startSize = RandomFloat(0.045f, 0.095f) * scale;
         const float endSize = startSize * RandomFloat(0.45f, 0.85f);
         const D3DCOLOR color = D3DCOLOR_ARGB(static_cast<int>(RandomFloat(150.0f, 230.0f)),
                                              255,
@@ -891,15 +903,15 @@ void ParticleSystem::EmitExplosion(EffectInstance& effect)
             D3DXVec3Normalize(&direction, &direction);
         }
 
-        const float speed = RandomFloat(0.7f, 2.6f);
-        const D3DXVECTOR3 pos(effect.origin.x + RandomCenteredFloat(0.45f),
-                              effect.origin.y + RandomFloat(0.30f, 0.95f),
-                              effect.origin.z + RandomCenteredFloat(0.45f));
+        const float speed = RandomFloat(0.7f, 2.6f) * scale;
+        const D3DXVECTOR3 pos(effect.origin.x + RandomCenteredFloat(0.45f) * scale,
+                              effect.origin.y + RandomFloat(0.30f, 0.95f) * scale,
+                              effect.origin.z + RandomCenteredFloat(0.45f) * scale);
         const D3DXVECTOR3 velocity(direction.x * speed,
                                    direction.y * speed + RandomFloat(0.4f, 1.2f),
                                    direction.z * speed);
         const float life = RandomFloat(1.4f, 3.2f);
-        const float startSize = RandomFloat(0.55f, 1.15f);
+        const float startSize = RandomFloat(0.55f, 1.15f) * scale;
         const float endSize = startSize * RandomFloat(2.0f, 3.6f);
         const int gray = static_cast<int>(RandomFloat(72.0f, 132.0f));
         const D3DCOLOR color = D3DCOLOR_ARGB(static_cast<int>(RandomFloat(85.0f, 140.0f)),
@@ -933,15 +945,15 @@ void ParticleSystem::EmitExplosion(EffectInstance& effect)
             D3DXVec3Normalize(&direction, &direction);
         }
 
-        const float speed = RandomFloat(1.2f, 4.4f);
-        const D3DXVECTOR3 pos(effect.origin.x + RandomCenteredFloat(0.35f),
-                              effect.origin.y + RandomFloat(0.04f, 0.22f),
-                              effect.origin.z + RandomCenteredFloat(0.35f));
+        const float speed = RandomFloat(1.2f, 4.4f) * scale;
+        const D3DXVECTOR3 pos(effect.origin.x + RandomCenteredFloat(0.35f) * scale,
+                              effect.origin.y + RandomFloat(0.04f, 0.22f) * scale,
+                              effect.origin.z + RandomCenteredFloat(0.35f) * scale);
         const D3DXVECTOR3 velocity(direction.x * speed,
                                    RandomFloat(0.04f, 0.38f),
                                    direction.z * speed);
         const float life = RandomFloat(0.85f, 1.9f);
-        const float startSize = RandomFloat(0.25f, 0.62f);
+        const float startSize = RandomFloat(0.25f, 0.62f) * scale;
         const float endSize = startSize * RandomFloat(2.0f, 3.0f);
         const int gray = static_cast<int>(RandomFloat(145.0f, 205.0f));
         const D3DCOLOR color = D3DCOLOR_ARGB(static_cast<int>(RandomFloat(65.0f, 115.0f)),

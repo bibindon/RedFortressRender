@@ -5695,6 +5695,16 @@ ParticleEffectPreset Render::GetParticleEffectPreset() const
     return m_particleSystem.GetPreset();
 }
 
+void Render::SetExplosionScale(const float scale)
+{
+    m_particleSystem.SetExplosionScale(scale);
+}
+
+float Render::GetExplosionScale() const
+{
+    return m_particleSystem.GetExplosionScale();
+}
+
 void Render::RotateCamera(const D3DXVECTOR3& rot)
 {
     D3DXVECTOR3 lookAt = Camera::GetLookAtPos();
