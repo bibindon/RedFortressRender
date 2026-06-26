@@ -438,9 +438,14 @@ void Render::ClearCsvLoadedMeshes()
 
 bool Render::IsAllMeshLoaded() const
 {
-    for (const auto& mesh : m_meshMixList)
+    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
     {
-        if (!mesh.IsLoaded())
+        if (!IsMeshMixSlotUsed(i))
+        {
+            continue;
+        }
+
+        if (!m_meshMixList.at(i).IsLoaded())
         {
             return false;
         }
@@ -2247,6 +2252,7 @@ void Render::Finalize()
         mesh.Finalize();
     }
     m_meshMixList.clear();
+    m_meshMixSlotUsedList.clear();
 
     for (auto& mesh : m_meshPBRList)
     {
@@ -3019,8 +3025,23 @@ int Render::AddMeshMix(const std::wstring& filePath,
     param.sss = m_meshMixSSSEnabled;
     param.sssIntensity = m_meshMixSSSIntensity;
     param.sssColor = m_meshMixSSSColor;
+
     auto mesh = MeshMixManager(filePath, pos, rot, scale, param);
+    for (int i = 0; i < static_cast<int>(m_meshMixSlotUsedList.size()); ++i)
+    {
+        if (m_meshMixSlotUsedList.at(i))
+        {
+            continue;
+        }
+
+        m_meshMixList.at(i) = std::move(mesh);
+        m_meshMixSlotUsedList.at(i) = true;
+        m_meshMixList.at(i).Initialize(async);
+        return i;
+    }
+
     m_meshMixList.push_back(std::move(mesh));
+    m_meshMixSlotUsedList.push_back(true);
     m_meshMixList.rbegin()->Initialize(async);
 
     return static_cast<int>(m_meshMixList.size()) - 1;
@@ -3028,14 +3049,27 @@ int Render::AddMeshMix(const std::wstring& filePath,
 
 bool Render::RemoveMeshMix(const int id)
 {
-    if (id < 0 || id >= static_cast<int>(m_meshMixList.size()))
+    if (!IsMeshMixSlotUsed(id))
     {
         return false;
     }
 
+    m_meshMixList.at(id).SetEnabled(false);
     m_meshMixList.at(id).Finalize();
-    m_meshMixList.erase(m_meshMixList.begin() + static_cast<std::ptrdiff_t>(id));
+    m_meshMixSlotUsedList.at(id) = false;
     return true;
+}
+
+bool Render::IsMeshMixSlotUsed(const int id) const
+{
+    if (id < 0 ||
+        id >= static_cast<int>(m_meshMixList.size()) ||
+        id >= static_cast<int>(m_meshMixSlotUsedList.size()))
+    {
+        return false;
+    }
+
+    return m_meshMixSlotUsedList.at(id);
 }
 
 int Render::AddMeshPBR(const std::wstring& filePath,
@@ -3093,7 +3127,7 @@ bool Render::RemoveMeshPBR(const int id)
 
 void Render::SetMeshMixPos(const int id, const D3DXVECTOR3& pos)
 {
-    if (id < 0 || id >= static_cast<int>(m_meshMixList.size()))
+    if (!IsMeshMixSlotUsed(id))
     {
         return;
     }
@@ -3103,7 +3137,7 @@ void Render::SetMeshMixPos(const int id, const D3DXVECTOR3& pos)
 
 D3DXVECTOR3 Render::GetMeshMixPos(const int id) const
 {
-    if (id < 0 || id >= static_cast<int>(m_meshMixList.size()))
+    if (!IsMeshMixSlotUsed(id))
     {
         return D3DXVECTOR3(0.0f, 0.0f, 0.0f);
     }
@@ -3113,7 +3147,7 @@ D3DXVECTOR3 Render::GetMeshMixPos(const int id) const
 
 void Render::SetMeshMixRotY(const int id, const float rotY)
 {
-    if (id < 0 || id >= static_cast<int>(m_meshMixList.size()))
+    if (!IsMeshMixSlotUsed(id))
     {
         return;
     }
@@ -3123,7 +3157,7 @@ void Render::SetMeshMixRotY(const int id, const float rotY)
 
 void Render::SetMeshMixWorldMatrix(const int id, const D3DXMATRIX& mat)
 {
-    if (id < 0 || id >= static_cast<int>(m_meshMixList.size()))
+    if (!IsMeshMixSlotUsed(id))
     {
         return;
     }
@@ -3133,7 +3167,7 @@ void Render::SetMeshMixWorldMatrix(const int id, const D3DXMATRIX& mat)
 
 void Render::SetMeshMixEnabled(const int id, const bool enabled)
 {
-    if (id < 0 || id >= static_cast<int>(m_meshMixList.size()))
+    if (!IsMeshMixSlotUsed(id))
     {
         return;
     }
@@ -3143,7 +3177,7 @@ void Render::SetMeshMixEnabled(const int id, const bool enabled)
 
 void Render::SetMeshMixDamageFlash(const int id, const bool enabled)
 {
-    if (id < 0 || id >= static_cast<int>(m_meshMixList.size()))
+    if (!IsMeshMixSlotUsed(id))
     {
         return;
     }
@@ -3153,7 +3187,7 @@ void Render::SetMeshMixDamageFlash(const int id, const bool enabled)
 
 D3DXVECTOR3 Render::GetMeshMixRot(const int id) const
 {
-    if (id < 0 || id >= static_cast<int>(m_meshMixList.size()))
+    if (!IsMeshMixSlotUsed(id))
     {
         return D3DXVECTOR3(0.0f, 0.0f, 0.0f);
     }
@@ -3208,7 +3242,7 @@ void Render::UpdateBoneAttachments()
             continue;
         }
 
-        if (attach.childMeshId < 0 || attach.childMeshId >= static_cast<int>(m_meshMixList.size()))
+        if (!IsMeshMixSlotUsed(attach.childMeshId))
         {
             continue;
         }
@@ -3616,6 +3650,11 @@ std::vector<RenderLoadedModelInfo> Render::GetLoadedModelInfoList()
 
     for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
     {
+        if (!IsMeshMixSlotUsed(i))
+        {
+            continue;
+        }
+
         RenderLoadedModelInfo info;
         info.type = RenderLoadedModelType::MeshMix;
         info.renderId = i;
@@ -3697,9 +3736,12 @@ void Render::SetMeshMixSaturateShadow(const bool enabled)
 {
     m_meshMixSaturateShadowEnabled = enabled;
 
-    for (auto& mesh : m_meshMixList)
+    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
     {
-        mesh.SetSaturateShadow(enabled);
+        if (IsMeshMixSlotUsed(i))
+        {
+            m_meshMixList.at(i).SetSaturateShadow(enabled);
+        }
     }
 
     for (auto& mesh : m_meshMixSkinAnimList)
@@ -3715,9 +3757,12 @@ void Render::SetMeshMixSaturateShadowIntensity(const float intensity)
 {
     m_meshMixSaturateShadowIntensity = intensity;
 
-    for (auto& mesh : m_meshMixList)
+    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
     {
-        mesh.SetSaturateShadowIntensity(intensity);
+        if (IsMeshMixSlotUsed(i))
+        {
+            m_meshMixList.at(i).SetSaturateShadowIntensity(intensity);
+        }
     }
 
     for (auto& mesh : m_meshMixSkinAnimList)
@@ -3733,9 +3778,12 @@ void Render::SetMeshMixShadowDarkness(const float darkness)
 {
     m_meshMixShadowDarkness = darkness;
 
-    for (auto& mesh : m_meshMixList)
+    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
     {
-        mesh.SetShadowDarkness(darkness);
+        if (IsMeshMixSlotUsed(i))
+        {
+            m_meshMixList.at(i).SetShadowDarkness(darkness);
+        }
     }
 
     for (auto& mesh : m_meshMixSkinAnimList)
@@ -3751,9 +3799,12 @@ void Render::SetMeshMixSpecularIntensity(const float intensity)
 {
     m_meshMixSpecularIntensity = intensity;
 
-    for (auto& mesh : m_meshMixList)
+    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
     {
-        mesh.SetSpecularIntensity(intensity);
+        if (IsMeshMixSlotUsed(i))
+        {
+            m_meshMixList.at(i).SetSpecularIntensity(intensity);
+        }
     }
 
     for (auto& mesh : m_meshMixSkinAnimList)
@@ -3769,9 +3820,12 @@ void Render::SetMeshMixSpecularEdge(const float edge)
 {
     m_meshMixSpecularEdge = edge;
 
-    for (auto& mesh : m_meshMixList)
+    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
     {
-        mesh.SetSpecularEdge(edge);
+        if (IsMeshMixSlotUsed(i))
+        {
+            m_meshMixList.at(i).SetSpecularEdge(edge);
+        }
     }
 
     for (auto& mesh : m_meshMixSkinAnimList)
@@ -3787,9 +3841,12 @@ void Render::SetMeshMixFresnelIntensity(const float intensity)
 {
     m_meshMixFresnelIntensity = (std::max)(0.0f, intensity);
 
-    for (auto& mesh : m_meshMixList)
+    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
     {
-        mesh.SetFresnelIntensity(m_meshMixFresnelIntensity);
+        if (IsMeshMixSlotUsed(i))
+        {
+            m_meshMixList.at(i).SetFresnelIntensity(m_meshMixFresnelIntensity);
+        }
     }
 
     for (auto& mesh : m_meshMixSkinAnimList)
@@ -3805,9 +3862,12 @@ void Render::SetMeshMixEnvMapBlend(const float blend)
 {
     m_meshMixCubeMappingRate = blend;
 
-    for (auto& mesh : m_meshMixList)
+    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
     {
-        mesh.SetCubeMappingRate(blend);
+        if (IsMeshMixSlotUsed(i))
+        {
+            m_meshMixList.at(i).SetCubeMappingRate(blend);
+        }
     }
 
     for (auto& mesh : m_meshPBRList)
@@ -3894,9 +3954,12 @@ void Render::SetMeshMixSpecularIntensityOverrideEnabled(const bool enabled)
 {
     m_meshMixSpecularIntensityOverrideEnabled = enabled;
 
-    for (auto& mesh : m_meshMixList)
+    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
     {
-        mesh.SetSpecularIntensityOverrideEnabled(enabled);
+        if (IsMeshMixSlotUsed(i))
+        {
+            m_meshMixList.at(i).SetSpecularIntensityOverrideEnabled(enabled);
+        }
     }
 
     for (auto& mesh : m_meshMixSkinAnimList)
@@ -3912,9 +3975,12 @@ void Render::SetMeshMixSpecularEdgeOverrideEnabled(const bool enabled)
 {
     m_meshMixSpecularEdgeOverrideEnabled = enabled;
 
-    for (auto& mesh : m_meshMixList)
+    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
     {
-        mesh.SetSpecularEdgeOverrideEnabled(enabled);
+        if (IsMeshMixSlotUsed(i))
+        {
+            m_meshMixList.at(i).SetSpecularEdgeOverrideEnabled(enabled);
+        }
     }
 
     for (auto& mesh : m_meshMixSkinAnimList)
@@ -3930,9 +3996,12 @@ void Render::SetPhongTreatTextureAsWhite(const bool enabled)
 {
     m_phongTreatTextureAsWhiteEnabled = enabled;
 
-    for (auto& mesh : m_meshMixList)
+    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
     {
-        mesh.SetTreatTextureAsWhite(enabled);
+        if (IsMeshMixSlotUsed(i))
+        {
+            m_meshMixList.at(i).SetTreatTextureAsWhite(enabled);
+        }
     }
 
     for (auto& mesh : m_meshMixSkinAnimList)
@@ -3948,9 +4017,12 @@ void Render::SetMeshMixSSS(const bool enabled)
 {
     m_meshMixSSSEnabled = enabled;
 
-    for (auto& mesh : m_meshMixList)
+    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
     {
-        mesh.SetSSS(enabled);
+        if (IsMeshMixSlotUsed(i))
+        {
+            m_meshMixList.at(i).SetSSS(enabled);
+        }
     }
 }
 
@@ -3958,9 +4030,12 @@ void Render::SetMeshMixSSSIntensity(const float intensity)
 {
     m_meshMixSSSIntensity = intensity;
 
-    for (auto& mesh : m_meshMixList)
+    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
     {
-        mesh.SetSSSIntensity(intensity);
+        if (IsMeshMixSlotUsed(i))
+        {
+            m_meshMixList.at(i).SetSSSIntensity(intensity);
+        }
     }
 }
 
@@ -3968,9 +4043,12 @@ void Render::SetMeshMixSSSColor(const DWORD color)
 {
     m_meshMixSSSColor = color;
 
-    for (auto& mesh : m_meshMixList)
+    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
     {
-        mesh.SetSSSColor(color);
+        if (IsMeshMixSlotUsed(i))
+        {
+            m_meshMixList.at(i).SetSSSColor(color);
+        }
     }
 }
 
@@ -5799,6 +5877,11 @@ int Render::FindActiveMirrorMeshIndex() const
 {
     for (int i = static_cast<int>(m_meshMixList.size()) - 1; i >= 0; --i)
     {
+        if (!IsMeshMixSlotUsed(i))
+        {
+            continue;
+        }
+
         const auto& mesh = m_meshMixList[static_cast<size_t>(i)];
         if (mesh.IsEnabled() && mesh.IsLoaded() && mesh.IsMirror())
         {
@@ -5813,6 +5896,7 @@ bool Render::RenderMirrorTexture(const int activeMirrorMeshIndex)
 {
     if (activeMirrorMeshIndex < 0 ||
         activeMirrorMeshIndex >= static_cast<int>(m_meshMixList.size()) ||
+        !IsMeshMixSlotUsed(activeMirrorMeshIndex) ||
         m_pMirrorRenderTarget == NULL)
     {
         return false;
@@ -5981,6 +6065,11 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
     std::vector<size_t> transparentWaterMeshIndices;
     for (size_t i = 0; i < m_meshMixList.size(); ++i)
     {
+        if (!IsMeshMixSlotUsed(static_cast<int>(i)))
+        {
+            continue;
+        }
+
         if (static_cast<int>(i) == skippedMeshMixIndex)
         {
             continue;

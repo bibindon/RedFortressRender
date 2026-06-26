@@ -836,6 +836,7 @@ private:
     WindowManager m_windowManager;
 
     void ChangeWindowMode();
+    bool IsMeshMixSlotUsed(int id) const;
 
     std::deque<MeshOld> m_meshList;
     std::vector<bool> m_meshEnabledList;
@@ -856,6 +857,7 @@ private:
     std::vector<bool> m_meshPOMEnabledList;
 
     std::deque<MeshMixManager> m_meshMixList;
+    std::vector<bool> m_meshMixSlotUsedList;
     std::deque<MeshPBRManager> m_meshPBRList;
 
     std::unordered_map<std::wstring, MeshInstancing*> m_meshInstancingMap;
