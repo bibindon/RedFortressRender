@@ -396,7 +396,18 @@ bool Render::LoadXFileListFromCsv(const std::wstring& csvPath,
             }
 
             const int csvId = std::stoi(TrimCsvField(fields[0]));
-            m_csvIdToRenderId[csvId] = renderId;
+            if (loadType == L"instancing")
+            {
+                m_csvInstancingFilePaths.push_back(resolvedPath);
+            }
+            else if (loadType == L"skinanim")
+            {
+                m_csvSkinAnimRenderIds.push_back(renderId);
+            }
+            else
+            {
+                m_csvIdToRenderId[csvId] = renderId;
+            }
 
             ++localLoadedCount;
         }
@@ -432,7 +443,23 @@ void Render::ClearCsvLoadedMeshes()
         RemoveMeshMix(*it);
     }
 
+    std::sort(m_csvSkinAnimRenderIds.begin(), m_csvSkinAnimRenderIds.end());
+    m_csvSkinAnimRenderIds.erase(std::unique(m_csvSkinAnimRenderIds.begin(), m_csvSkinAnimRenderIds.end()), m_csvSkinAnimRenderIds.end());
+    for (auto it = m_csvSkinAnimRenderIds.rbegin(); it != m_csvSkinAnimRenderIds.rend(); ++it)
+    {
+        RemoveMeshMixSkinAnim(*it);
+    }
+
+    std::sort(m_csvInstancingFilePaths.begin(), m_csvInstancingFilePaths.end());
+    m_csvInstancingFilePaths.erase(std::unique(m_csvInstancingFilePaths.begin(), m_csvInstancingFilePaths.end()), m_csvInstancingFilePaths.end());
+    for (const auto& filePath : m_csvInstancingFilePaths)
+    {
+        RemoveMeshInstancing(filePath);
+    }
+
     m_csvIdToRenderId.clear();
+    m_csvSkinAnimRenderIds.clear();
+    m_csvInstancingFilePaths.clear();
     m_movingPlatforms.clear();
 }
 
@@ -2246,6 +2273,7 @@ void Render::Finalize()
         SAFE_DELETE(mesh.second);
     }
     m_meshInstancingMap.clear();
+    m_csvInstancingFilePaths.clear();
 
     for (auto& mesh : m_meshMixList)
     {
@@ -2253,6 +2281,8 @@ void Render::Finalize()
     }
     m_meshMixList.clear();
     m_meshMixSlotUsedList.clear();
+    m_csvIdToRenderId.clear();
+    m_csvSkinAnimRenderIds.clear();
 
     for (auto& mesh : m_meshPBRList)
     {

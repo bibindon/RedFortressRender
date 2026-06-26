@@ -864,6 +864,8 @@ private:
     bool m_meshInstancingHighQualityEnabled = true;
 
     std::unordered_map<int, int> m_csvIdToRenderId;
+    std::vector<std::wstring> m_csvInstancingFilePaths;
+    std::vector<int> m_csvSkinAnimRenderIds;
     std::vector<MovingPlatform> m_movingPlatforms;
     bool m_sceneUpdatePaused = false;
 
