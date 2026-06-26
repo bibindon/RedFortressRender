@@ -364,11 +364,20 @@ bool Render::LoadXFileListFromCsv(const std::wstring& csvPath,
                                   D3DXToRadian(std::stof(TrimCsvField(fields[6]))),
                                   D3DXToRadian(std::stof(TrimCsvField(fields[7]))));
             const float modelScale = std::stof(TrimCsvField(fields[8]));
+            std::wstring resolvedInstancingCsvPath;
+            if (loadType == L"instancing" && fields.size() >= 11 && !TrimCsvField(fields[10]).empty())
+            {
+                if (!ResolveCsvFilePath(csvDirectoryPath, fields[10], resolvedInstancingCsvPath))
+                {
+                    ++localSkippedCount;
+                    continue;
+                }
+            }
 
             int renderId = -1;
             if (loadType == L"instancing")
             {
-                renderId = AddMeshInstansing(resolvedPath, pos, rot, modelScale);
+                renderId = AddMeshInstansing(resolvedPath, pos, rot, modelScale, resolvedInstancingCsvPath);
             }
             else if (loadType == L"skinanim")
             {

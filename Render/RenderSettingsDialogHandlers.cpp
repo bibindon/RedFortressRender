@@ -190,13 +190,22 @@ bool LoadXFileListCsv(RenderSettingsDialogState* state,
                                   D3DXToRadian(std::stof(TrimCsvField(fields[6]))),
                                   D3DXToRadian(std::stof(TrimCsvField(fields[7]))));
             const float modelScale = std::stof(TrimCsvField(fields[8]));
+            std::wstring resolvedInstancingCsvPath;
+            if (loadType == L"instancing" && fields.size() >= 11 && !TrimCsvField(fields[10]).empty())
+            {
+                if (!ResolveXFileListPath(csvDirectoryPath, fields[10], resolvedInstancingCsvPath))
+                {
+                    ++skippedCount;
+                    continue;
+                }
+            }
 
             int renderId = -1;
             RenderSettingsDialogState::LoadedModelType modelType = RenderSettingsDialogState::LoadedModelType::MeshMix;
 
             if (loadType == L"instancing")
             {
-                renderId = state->render->AddMeshInstansing(resolvedPath, pos, rot, modelScale);
+                renderId = state->render->AddMeshInstansing(resolvedPath, pos, rot, modelScale, resolvedInstancingCsvPath);
                 modelType = RenderSettingsDialogState::LoadedModelType::MeshInstancing;
             }
             else if (loadType == L"skinanim")
