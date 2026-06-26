@@ -651,6 +651,26 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
         {
             render->SetPostEffectSaturateEnable(IsSettingsCheckboxChecked(hWnd, id));
         }
+        else if (id == 32160)
+        {
+            const float newValue = (std::max)(0.0f, render->GetPostEffectSaturate() - 0.1f);
+            render->SetPostEffectSaturate(newValue);
+            SetSettingsEditFloat(hWnd, 41940, newValue, L"%.3f");
+            SetTrackbarFromFloat(hWnd, 31940, newValue, 0.0f, 4.0f);
+        }
+        else if (id == 32161)
+        {
+            const float newValue = (std::min)(4.0f, render->GetPostEffectSaturate() + 0.1f);
+            render->SetPostEffectSaturate(newValue);
+            SetSettingsEditFloat(hWnd, 41940, newValue, L"%.3f");
+            SetTrackbarFromFloat(hWnd, 31940, newValue, 0.0f, 4.0f);
+        }
+        else if (id == 32162)
+        {
+            render->SetPostEffectSaturate(1.0f);
+            SetSettingsEditFloat(hWnd, 41940, 1.0f, L"%.3f");
+            SetTrackbarFromFloat(hWnd, 31940, 1.0f, 0.0f, 4.0f);
+        }
         else if (id == IDC_RENDER_SETTINGS_GBUFFER_ENABLE)
         {
             render->SetGBufferEnable(IsSettingsCheckboxChecked(hWnd, id));

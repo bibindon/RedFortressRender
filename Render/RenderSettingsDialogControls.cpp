@@ -672,9 +672,9 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     CreateSettingsStatic(hWnd, L"Saturation", 24, y + 22, 54, 18);
     CreateSettingsEdit(hWnd, L"0.700", 78, y + 18, 80, 20, 41940);
     CreateSettingsTrackbar(hWnd, 31940, 174, y + 14, 96, 30, 0, 100, 30);
-    CreateSettingsButton(hWnd, L"-", 286, y + 16, 20, 22);
-    CreateSettingsButton(hWnd, L"+", 308, y + 16, 20, 22);
-    CreateSettingsButton(hWnd, L"Reset", 330, y + 16, 40, 22);
+    CreateSettingsButton(hWnd, L"-", 286, y + 16, 20, 22, 32160);
+    CreateSettingsButton(hWnd, L"+", 308, y + 16, 20, 22, 32161);
+    CreateSettingsButton(hWnd, L"Reset", 330, y + 16, 40, 22, 32162);
     y += 64;
     CreateSettingsGroupBox(hWnd, L"DOF", 8, y, 504, 118);
     const wchar_t* dofLabels[] = { L"DOF Focal Dist", L"DOF Max Blur Dist", L"DOF Auto Dist", L"DOF Start Near" };
