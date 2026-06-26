@@ -181,6 +181,8 @@ public:
                 const float radius = -1.f,
                 const float uvTile = 1.0f);
     bool RemoveMesh(int id);
+    void SetMeshWorldMatrix(int id, const D3DXMATRIX& mat);
+    void SetMeshEnabled(int id, bool enabled);
 
     int AddMeshNoLighting(const std::wstring& filePath,
                           const D3DXVECTOR3& pos,

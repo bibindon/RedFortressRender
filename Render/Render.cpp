@@ -2723,6 +2723,35 @@ bool Render::RemoveMesh(const int id)
     return true;
 }
 
+void Render::SetMeshWorldMatrix(const int id, const D3DXMATRIX& mat)
+{
+    if (id < 0 ||
+        id >= static_cast<int>(m_meshEnabledList.size()) ||
+        id >= static_cast<int>(m_meshList.size()))
+    {
+        return;
+    }
+
+    if (!m_meshEnabledList.at(id))
+    {
+        return;
+    }
+
+    m_meshList.at(id).SetWorldMatrix(mat);
+}
+
+void Render::SetMeshEnabled(const int id, const bool enabled)
+{
+    if (id < 0 ||
+        id >= static_cast<int>(m_meshEnabledList.size()) ||
+        id >= static_cast<int>(m_meshList.size()))
+    {
+        return;
+    }
+
+    m_meshEnabledList.at(id) = enabled;
+}
+
 int Render::AddMeshNoLighting(const std::wstring& filePath,
                               const D3DXVECTOR3& pos,
                               const D3DXVECTOR3& rot,
