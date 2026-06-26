@@ -891,6 +891,7 @@ MeshMixManager& MeshMixManager::operator=(MeshMixManager&& other) noexcept
     m_scale = other.m_scale;
     m_bLoaded = other.m_bLoaded.load();
     m_enabled = other.m_enabled;
+    m_damageFlash = other.m_damageFlash;
     m_autoPointLightAdded = other.m_autoPointLightAdded;
     m_deviceResourceRegistered = other.m_deviceResourceRegistered;
     m_hasMirrorPlane = other.m_hasMirrorPlane;
@@ -904,6 +905,7 @@ MeshMixManager& MeshMixManager::operator=(MeshMixManager&& other) noexcept
     other.m_subsetCount = 0;
     other.m_bLoaded = false;
     other.m_enabled = false;
+    other.m_damageFlash = false;
     other.m_autoPointLightAdded = false;
     other.m_deviceResourceRegistered = false;
     other.m_hasMirrorPlane = false;
@@ -1559,6 +1561,11 @@ void MeshMixManager::SetTreatTextureAsWhite(const bool enabled)
     m_param.treatTextureAsWhite = enabled;
 }
 
+void MeshMixManager::SetDamageFlash(const bool enabled)
+{
+    m_damageFlash = enabled;
+}
+
 void MeshMixManager::SetRotY(const float rotY)
 {
     m_rotate.y = rotY;
@@ -1837,6 +1844,14 @@ void MeshMixManager::Render(const bool renderAsMirrorSurface)
     hResult = sharedEffect->SetBool("g_bSaturateShadow", useSaturateShadow);
     assert(hResult == S_OK);
     hResult = sharedEffect->SetBool("g_treatTextureAsWhite", m_param.treatTextureAsWhite ? TRUE : FALSE);
+    assert(hResult == S_OK);
+
+    BOOL damageFlash = FALSE;
+    if (m_damageFlash)
+    {
+        damageFlash = TRUE;
+    }
+    hResult = sharedEffect->SetBool("g_damageFlash", damageFlash);
     assert(hResult == S_OK);
 
     hResult = sharedEffect->SetFloat("g_fSaturateShadowIntensity", m_param.saturateShadowIntensity);

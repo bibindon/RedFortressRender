@@ -53,6 +53,7 @@ public:
     void SetSpecularIntensityOverrideEnabled(const bool enabled);
     void SetSpecularEdgeOverrideEnabled(const bool enabled);
     void SetTreatTextureAsWhite(const bool enabled);
+    void SetDamageFlash(const bool enabled);
     void SetSSS(const bool enabled);
     void SetSSSIntensity(const float intensity);
     void SetSSSColor(const DWORD color);
@@ -112,6 +113,7 @@ private:
 
     std::atomic<bool> m_bLoaded { false };
     bool m_enabled = true;
+    bool m_damageFlash = false;
     bool m_autoPointLightAdded = false;
     bool m_deviceResourceRegistered = false;
     bool m_hasMirrorPlane = false;

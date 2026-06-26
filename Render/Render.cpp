@@ -3103,6 +3103,16 @@ void Render::SetMeshMixEnabled(const int id, const bool enabled)
     m_meshMixList.at(id).SetEnabled(enabled);
 }
 
+void Render::SetMeshMixDamageFlash(const int id, const bool enabled)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshMixList.size()))
+    {
+        return;
+    }
+
+    m_meshMixList.at(id).SetDamageFlash(enabled);
+}
+
 D3DXVECTOR3 Render::GetMeshMixRot(const int id) const
 {
     if (id < 0 || id >= static_cast<int>(m_meshMixList.size()))
