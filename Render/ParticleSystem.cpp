@@ -138,6 +138,10 @@ void ParticleSystem::PlaceEffect(const ParticleEffectPreset preset, const D3DXVE
         target->origin = Camera::GetEyePos();
         EmitRain(*target, 2.0f);
     }
+    else if (preset == ParticleEffectPreset::Explosion)
+    {
+        EmitExplosion(*target);
+    }
 
     m_lastPlacedPreset = preset;
 }
@@ -457,7 +461,8 @@ void ParticleSystem::SpawnParticle(EffectInstance& effect,
                                    const float endSize,
                                    const float rotation,
                                    const float rotationSpeed,
-                                   const D3DCOLOR color)
+                                   const D3DCOLOR color,
+                                   const ParticleVisualType visualType)
 {
     for (auto& particle : effect.particles)
     {
@@ -480,6 +485,7 @@ void ParticleSystem::SpawnParticle(EffectInstance& effect,
         particle.randomScale = RandomFloat(0.80f, 1.35f);
         particle.alphaBias = RandomFloat(0.65f, 1.35f);
         particle.useAltTexture = RandomFloat(0.0f, 1.0f) >= 0.5f;
+        particle.visualType = visualType;
         particle.color = color;
         particle.active = true;
         return;
@@ -787,6 +793,175 @@ void ParticleSystem::EmitRain(EffectInstance& effect, const float deltaTime)
     }
 }
 
+void ParticleSystem::EmitExplosion(EffectInstance& effect)
+{
+    for (int i = 0; i < 54; ++i)
+    {
+        D3DXVECTOR3 direction(RandomCenteredFloat(1.0f),
+                              RandomFloat(0.05f, 1.0f),
+                              RandomCenteredFloat(1.0f));
+        if (D3DXVec3LengthSq(&direction) <= 0.0001f)
+        {
+            direction = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
+        }
+        else
+        {
+            D3DXVec3Normalize(&direction, &direction);
+        }
+
+        const float speed = RandomFloat(3.0f, 7.0f);
+        const D3DXVECTOR3 pos(effect.origin.x + direction.x * RandomFloat(0.05f, 0.24f),
+                              effect.origin.y + 0.35f + direction.y * RandomFloat(0.04f, 0.28f),
+                              effect.origin.z + direction.z * RandomFloat(0.05f, 0.24f));
+        const D3DXVECTOR3 velocity(direction.x * speed,
+                                   direction.y * speed + RandomFloat(0.8f, 2.4f),
+                                   direction.z * speed);
+        const float life = RandomFloat(0.22f, 0.52f);
+        const float startSize = RandomFloat(0.40f, 0.85f);
+        const float endSize = startSize * RandomFloat(1.4f, 2.4f);
+        const D3DCOLOR color = D3DCOLOR_ARGB(static_cast<int>(RandomFloat(185.0f, 245.0f)),
+                                             255,
+                                             static_cast<int>(RandomFloat(155.0f, 230.0f)),
+                                             static_cast<int>(RandomFloat(45.0f, 105.0f)));
+
+        SpawnParticle(effect,
+                      pos,
+                      velocity,
+                      life,
+                      startSize,
+                      endSize,
+                      RandomFloat(0.0f, D3DX_PI * 2.0f),
+                      RandomFloat(-4.5f, 4.5f),
+                      color,
+                      ParticleVisualType::ExplosionFire);
+    }
+
+    for (int i = 0; i < 38; ++i)
+    {
+        D3DXVECTOR3 direction(RandomCenteredFloat(1.0f),
+                              RandomFloat(0.02f, 0.75f),
+                              RandomCenteredFloat(1.0f));
+        if (D3DXVec3LengthSq(&direction) <= 0.0001f)
+        {
+            direction = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
+        }
+        else
+        {
+            D3DXVec3Normalize(&direction, &direction);
+        }
+
+        const float speed = RandomFloat(5.0f, 10.0f);
+        const D3DXVECTOR3 pos(effect.origin.x,
+                              effect.origin.y + RandomFloat(0.35f, 0.75f),
+                              effect.origin.z);
+        const D3DXVECTOR3 velocity(direction.x * speed,
+                                   direction.y * speed + RandomFloat(0.8f, 2.0f),
+                                   direction.z * speed);
+        const float life = RandomFloat(0.35f, 0.95f);
+        const float startSize = RandomFloat(0.045f, 0.095f);
+        const float endSize = startSize * RandomFloat(0.45f, 0.85f);
+        const D3DCOLOR color = D3DCOLOR_ARGB(static_cast<int>(RandomFloat(150.0f, 230.0f)),
+                                             255,
+                                             static_cast<int>(RandomFloat(185.0f, 235.0f)),
+                                             95);
+
+        SpawnParticle(effect,
+                      pos,
+                      velocity,
+                      life,
+                      startSize,
+                      endSize,
+                      RandomFloat(0.0f, D3DX_PI * 2.0f),
+                      RandomFloat(-10.0f, 10.0f),
+                      color,
+                      ParticleVisualType::ExplosionSpark);
+    }
+
+    for (int i = 0; i < 70; ++i)
+    {
+        D3DXVECTOR3 direction(RandomCenteredFloat(1.0f),
+                              RandomFloat(0.18f, 1.0f),
+                              RandomCenteredFloat(1.0f));
+        if (D3DXVec3LengthSq(&direction) <= 0.0001f)
+        {
+            direction = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
+        }
+        else
+        {
+            D3DXVec3Normalize(&direction, &direction);
+        }
+
+        const float speed = RandomFloat(0.7f, 2.6f);
+        const D3DXVECTOR3 pos(effect.origin.x + RandomCenteredFloat(0.45f),
+                              effect.origin.y + RandomFloat(0.30f, 0.95f),
+                              effect.origin.z + RandomCenteredFloat(0.45f));
+        const D3DXVECTOR3 velocity(direction.x * speed,
+                                   direction.y * speed + RandomFloat(0.4f, 1.2f),
+                                   direction.z * speed);
+        const float life = RandomFloat(1.4f, 3.2f);
+        const float startSize = RandomFloat(0.55f, 1.15f);
+        const float endSize = startSize * RandomFloat(2.0f, 3.6f);
+        const int gray = static_cast<int>(RandomFloat(72.0f, 132.0f));
+        const D3DCOLOR color = D3DCOLOR_ARGB(static_cast<int>(RandomFloat(85.0f, 140.0f)),
+                                             gray,
+                                             gray,
+                                             gray);
+
+        SpawnParticle(effect,
+                      pos,
+                      velocity,
+                      life,
+                      startSize,
+                      endSize,
+                      RandomFloat(0.0f, D3DX_PI * 2.0f),
+                      RandomFloat(-0.75f, 0.75f),
+                      color,
+                      ParticleVisualType::ExplosionSmoke);
+    }
+
+    for (int i = 0; i < 46; ++i)
+    {
+        D3DXVECTOR3 direction(RandomCenteredFloat(1.0f),
+                              RandomFloat(-0.05f, 0.20f),
+                              RandomCenteredFloat(1.0f));
+        if (D3DXVec3LengthSq(&direction) <= 0.0001f)
+        {
+            direction = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
+        }
+        else
+        {
+            D3DXVec3Normalize(&direction, &direction);
+        }
+
+        const float speed = RandomFloat(1.2f, 4.4f);
+        const D3DXVECTOR3 pos(effect.origin.x + RandomCenteredFloat(0.35f),
+                              effect.origin.y + RandomFloat(0.04f, 0.22f),
+                              effect.origin.z + RandomCenteredFloat(0.35f));
+        const D3DXVECTOR3 velocity(direction.x * speed,
+                                   RandomFloat(0.04f, 0.38f),
+                                   direction.z * speed);
+        const float life = RandomFloat(0.85f, 1.9f);
+        const float startSize = RandomFloat(0.25f, 0.62f);
+        const float endSize = startSize * RandomFloat(2.0f, 3.0f);
+        const int gray = static_cast<int>(RandomFloat(145.0f, 205.0f));
+        const D3DCOLOR color = D3DCOLOR_ARGB(static_cast<int>(RandomFloat(65.0f, 115.0f)),
+                                             gray,
+                                             gray,
+                                             gray);
+
+        SpawnParticle(effect,
+                      pos,
+                      velocity,
+                      life,
+                      startSize,
+                      endSize,
+                      RandomFloat(0.0f, D3DX_PI * 2.0f),
+                      RandomFloat(-1.4f, 1.4f),
+                      color,
+                      ParticleVisualType::ExplosionDust);
+    }
+}
+
 void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
 {
     if (effect.preset == ParticleEffectPreset::None)
@@ -811,10 +986,13 @@ void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
     case ParticleEffectPreset::Rain:
         EmitRain(effect, deltaTime);
         break;
+    case ParticleEffectPreset::Explosion:
+        break;
     default:
         break;
     }
 
+    bool hasActiveParticle = false;
     for (auto& particle : effect.particles)
     {
         if (!particle.active)
@@ -832,6 +1010,7 @@ void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
 
         float age = particle.life / particle.maxLife;
         age = ClampFloat(age, 0.0f, 1.0f);
+        hasActiveParticle = true;
 
         if (effect.preset == ParticleEffectPreset::Smoke)
         {
@@ -946,11 +1125,81 @@ void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
                                                           185.0f));
             particle.color = D3DCOLOR_ARGB(alpha, 210, 222, 255);
         }
+        else if (effect.preset == ParticleEffectPreset::Explosion)
+        {
+            if (particle.visualType == ParticleVisualType::ExplosionFire)
+            {
+                particle.velocity.y -= 2.4f * deltaTime;
+                particle.velocity.x *= 0.965f;
+                particle.velocity.z *= 0.965f;
+                particle.size = particle.startSize + (particle.endSize - particle.startSize) * sinf(age * D3DX_PI);
+
+                const float intensity = 1.0f - age;
+                const int alpha = static_cast<int>(ClampFloat(245.0f * intensity, 0.0f, 255.0f));
+                int red = 255;
+                int green = 205;
+                int blue = 105;
+                if (age >= 0.18f && age < 0.50f)
+                {
+                    green = 140;
+                    blue = 38;
+                }
+                else if (age >= 0.50f)
+                {
+                    green = 72;
+                    blue = 22;
+                }
+                particle.color = D3DCOLOR_ARGB(alpha, red, green, blue);
+            }
+            else if (particle.visualType == ParticleVisualType::ExplosionSpark)
+            {
+                particle.velocity.y -= 6.8f * deltaTime;
+                particle.velocity.x *= 0.982f;
+                particle.velocity.z *= 0.982f;
+                particle.size = particle.startSize + (particle.endSize - particle.startSize) * age;
+
+                const float intensity = 1.0f - age;
+                const int alpha = static_cast<int>(ClampFloat(230.0f * intensity * particle.alphaBias, 0.0f, 255.0f));
+                particle.color = D3DCOLOR_ARGB(alpha, 255, 210, 88);
+            }
+            else if (particle.visualType == ParticleVisualType::ExplosionSmoke)
+            {
+                particle.velocity.x += RandomFloat(-0.22f, 0.22f) * deltaTime;
+                particle.velocity.z += RandomFloat(-0.22f, 0.22f) * deltaTime;
+                particle.velocity.y += 0.24f * deltaTime;
+                particle.velocity.x *= 0.990f;
+                particle.velocity.z *= 0.990f;
+                particle.size = (particle.startSize + (particle.endSize - particle.startSize) * age) * particle.randomScale;
+
+                int alpha = static_cast<int>(118.0f * (1.0f - age) * particle.alphaBias);
+                int gray = static_cast<int>(82.0f + 70.0f * age);
+                alpha = static_cast<int>(ClampFloat(static_cast<float>(alpha), 0.0f, 145.0f));
+                gray = static_cast<int>(ClampFloat(static_cast<float>(gray), 0.0f, 190.0f));
+                particle.color = D3DCOLOR_ARGB(alpha, gray, gray, gray);
+            }
+            else if (particle.visualType == ParticleVisualType::ExplosionDust)
+            {
+                particle.velocity.x *= 0.972f;
+                particle.velocity.z *= 0.972f;
+                particle.velocity.y += RandomFloat(-0.10f, 0.10f) * deltaTime;
+                particle.size = particle.startSize + (particle.endSize - particle.startSize) * age;
+
+                const float fade = sinf(age * D3DX_PI);
+                const int alpha = static_cast<int>(ClampFloat(120.0f * fade * particle.alphaBias, 0.0f, 150.0f));
+                particle.color = D3DCOLOR_ARGB(alpha, 184, 178, 162);
+            }
+        }
 
         particle.rotation += particle.rotationSpeed * deltaTime;
         particle.pos.x += particle.velocity.x * deltaTime;
         particle.pos.y += particle.velocity.y * deltaTime;
         particle.pos.z += particle.velocity.z * deltaTime;
+    }
+
+    if (effect.preset == ParticleEffectPreset::Explosion && !hasActiveParticle)
+    {
+        effect.preset = ParticleEffectPreset::None;
+        effect.generation = 0;
     }
 }
 
@@ -962,7 +1211,11 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
     }
 
     LPDIRECT3DTEXTURE9 texture = NULL;
-    const bool additive = (effectInstance.preset == ParticleEffectPreset::Fire);
+    bool additive = false;
+    if (effectInstance.preset == ParticleEffectPreset::Fire)
+    {
+        additive = true;
+    }
 
     switch (effectInstance.preset)
     {
@@ -980,6 +1233,9 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
         break;
     case ParticleEffectPreset::Rain:
         texture = m_rainTexture;
+        break;
+    case ParticleEffectPreset::Explosion:
+        texture = m_fireTexture;
         break;
     default:
         return;
@@ -1025,13 +1281,15 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
     }
 
     auto drawBatch = [&](LPDIRECT3DTEXTURE9 batchTexture,
-                         const bool useAltTextureFilter,
+                         const ParticleVisualType visualTypeFilter,
                          const char* techniqueName) -> void
     {
         HRESULT hResult = E_FAIL;
-        const int activeCount = (effectInstance.preset == ParticleEffectPreset::Dust)
-            ? FillDustVertices(effectInstance, batchTexture, view)
-            : 0;
+        int activeCount = 0;
+        if (effectInstance.preset == ParticleEffectPreset::Dust)
+        {
+            activeCount = FillDustVertices(effectInstance, batchTexture, view);
+        }
         if (activeCount <= 0)
         {
             if (effectInstance.preset == ParticleEffectPreset::Dust)
@@ -1047,6 +1305,12 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
             for (const auto& particle : effectInstance.particles)
             {
                 if (!particle.active)
+                {
+                    continue;
+                }
+
+                if (effectInstance.preset == ParticleEffectPreset::Explosion &&
+                    particle.visualType != visualTypeFilter)
                 {
                     continue;
                 }
@@ -1081,6 +1345,24 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
                     halfWidth = particle.size * 0.38f;
                     halfHeight = particle.size * 0.92f;
                     center.y += halfHeight * 0.18f;
+                }
+                else if (effectInstance.preset == ParticleEffectPreset::Explosion)
+                {
+                    if (particle.visualType == ParticleVisualType::ExplosionSpark)
+                    {
+                        halfWidth = particle.size * 0.34f;
+                        halfHeight = particle.size * 1.15f;
+                    }
+                    else if (particle.visualType == ParticleVisualType::ExplosionSmoke)
+                    {
+                        halfWidth = particle.size * 0.72f;
+                        halfHeight = particle.size * 0.62f;
+                    }
+                    else if (particle.visualType == ParticleVisualType::ExplosionDust)
+                    {
+                        halfWidth = particle.size * 0.86f;
+                        halfHeight = particle.size * 0.42f;
+                    }
                 }
                 else if (effectInstance.preset == ParticleEffectPreset::Fog)
                 {
@@ -1211,12 +1493,26 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
 
     if (effectInstance.preset == ParticleEffectPreset::Dust)
     {
-        drawBatch(m_dustTexture, false, "ParticleAlphaTechnique");
-        drawBatch(m_dustTexture2, true, "ParticleAlphaTechnique");
+        drawBatch(m_dustTexture, ParticleVisualType::Default, "ParticleAlphaTechnique");
+        drawBatch(m_dustTexture2, ParticleVisualType::Default, "ParticleAlphaTechnique");
+    }
+    else if (effectInstance.preset == ParticleEffectPreset::Explosion)
+    {
+        drawBatch(m_fireTexture, ParticleVisualType::ExplosionFire, "ParticleAdditiveTechnique");
+        drawBatch(m_fireTexture, ParticleVisualType::ExplosionSpark, "ParticleAdditiveTechnique");
+        drawBatch(m_smokeTexture, ParticleVisualType::ExplosionSmoke, "ParticleAlphaTechnique");
+        drawBatch(m_dustTexture2, ParticleVisualType::ExplosionDust, "ParticleAlphaTechnique");
     }
     else
     {
-        drawBatch(texture, false, additive ? "ParticleAdditiveTechnique" : "ParticleAlphaTechnique");
+        if (additive)
+        {
+            drawBatch(texture, ParticleVisualType::Default, "ParticleAdditiveTechnique");
+        }
+        else
+        {
+            drawBatch(texture, ParticleVisualType::Default, "ParticleAlphaTechnique");
+        }
     }
 
     hResult = Common::D3DDevice()->SetTexture(0, NULL);

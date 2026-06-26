@@ -770,6 +770,7 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     SendMessage(particleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Dust"));
     SendMessage(particleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Fog"));
     SendMessage(particleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Rain"));
+    SendMessage(particleCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Explosion"));
     SendMessage(particleCombo, CB_SETCURSEL, 0, 0);
     CreateSettingsButton(hWnd, L"Place At LookAt", 352, y, 154, 24, 32141);
     y += 30;

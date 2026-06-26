@@ -1756,6 +1756,9 @@ void PlaceParticleEffectAtLookAt()
     case NSRender::ParticleEffectPreset::Dust:
         pos.y += 0.10f;
         break;
+    case NSRender::ParticleEffectPreset::Explosion:
+        pos.y += 0.35f;
+        break;
     case NSRender::ParticleEffectPreset::Fog:
         pos.y += 0.80f;
         break;

@@ -131,6 +131,8 @@ ParticleEffectPreset ComboIndexToParticleEffectPreset(int index)
         return ParticleEffectPreset::Fog;
     case 4:
         return ParticleEffectPreset::Rain;
+    case 5:
+        return ParticleEffectPreset::Explosion;
     default:
         return ParticleEffectPreset::Smoke;
     }

@@ -20,6 +20,7 @@ bool g_fresnelEnable = true;
 float g_fresnelIntensity = 0.08f;
 bool g_waterMirrorEnable = false;
 bool g_treatTextureAsWhite = false;
+bool g_damageFlash = false;
 bool g_mirrorClipEnable = false;
 float4 g_mirrorClipPlane = { 0.0f, 1.0f, 0.0f, 0.0f };
 
@@ -534,6 +535,12 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
     }
 
     ApplyAlphaCutout(inTexCoord);
+    if (g_damageFlash)
+    {
+        outColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
+        return;
+    }
+
     float surfaceAlpha = GetSurfaceAlpha(inTexCoord);
     float3 albedo = SampleBaseTextureColor(inTexCoord) * g_diffuse.rgb;
 
@@ -768,6 +775,12 @@ void PixelShaderPointLight(in  float4 inPosition            : POSITION,
     }
 
     ApplyAlphaCutout(uv);
+    if (g_damageFlash)
+    {
+        outColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
+        return;
+    }
+
     float3 albedo = SampleBaseTextureColor(uv) * g_diffuse.rgb;
 
     float3 N = normalWS;

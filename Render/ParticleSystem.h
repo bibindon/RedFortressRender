@@ -16,6 +16,7 @@ enum class ParticleEffectPreset
     Dust,
     Fog,
     Rain,
+    Explosion,
 };
 
 class ParticleSystem
@@ -41,6 +42,15 @@ public:
     ParticleEffectPreset GetPreset() const;
 
 private:
+    enum class ParticleVisualType
+    {
+        Default = 0,
+        ExplosionFire,
+        ExplosionSpark,
+        ExplosionSmoke,
+        ExplosionDust,
+    };
+
     struct Particle
     {
         D3DXVECTOR3 pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
@@ -57,6 +67,7 @@ private:
         float randomScale = 1.0f;
         float alphaBias = 1.0f;
         bool useAltTexture = false;
+        ParticleVisualType visualType = ParticleVisualType::Default;
         D3DCOLOR color = 0xffffffff;
         bool active = false;
     };
@@ -102,13 +113,15 @@ private:
                        float endSize,
                        float rotation,
                        float rotationSpeed,
-                       D3DCOLOR color);
+                       D3DCOLOR color,
+                       ParticleVisualType visualType = ParticleVisualType::Default);
 
     void EmitSmoke(EffectInstance& effect, float deltaTime);
     void EmitFire(EffectInstance& effect, float deltaTime);
     void EmitDust(EffectInstance& effect, float deltaTime);
     void EmitFog(EffectInstance& effect, float deltaTime);
     void EmitRain(EffectInstance& effect, float deltaTime);
+    void EmitExplosion(EffectInstance& effect);
     void UpdateEffect(EffectInstance& effect, float deltaTime);
     void DrawEffect(const EffectInstance& effect, const D3DXMATRIX& view, const D3DXMATRIX& proj);
     int FillDustVertices(const EffectInstance& effectInstance,
