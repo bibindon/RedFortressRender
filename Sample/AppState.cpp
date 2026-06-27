@@ -866,7 +866,7 @@ bool SpawnMeshAtTransform(const std::wstring& filePath,
     }
 
     const D3DXVECTOR3 rotationRadians(0.0f, D3DXToRadian(yawDegrees), 0.0f);
-    const int renderId = g_Render.AddMesh(filePath, pos, rotationRadians, g_modelLoadScale, 1.0f);
+    const int renderId = g_Render.AddMesh_deprecated(filePath, pos, rotationRadians, g_modelLoadScale, 1.0f);
     RegisterLoadedModel(L"Mesh", filePath, pos, g_modelLoadScale, renderId);
     return true;
 }

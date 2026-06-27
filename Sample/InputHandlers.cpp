@@ -86,7 +86,7 @@ void AddSimpleMeshAtLookAt(const std::wstring& filePath,
     }
     else
     {
-        const int renderId = g_Render.AddMesh(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), scale, 1.0f);
+        const int renderId = g_Render.AddMesh_deprecated(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), scale, 1.0f);
         RegisterLoadedModel(L"Mesh", filePath, pos, scale, renderId);
     }
 }

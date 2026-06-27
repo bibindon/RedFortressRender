@@ -174,12 +174,12 @@ public:
     void ChangeWindowMode(const eWindowMode eWindowMode_);
     eWindowMode GetWindowMode() const;
 
-    int AddMesh(const std::wstring& filePath,
-                const D3DXVECTOR3& pos,
-                const D3DXVECTOR3& rot,
-                const float scale,
-                const float radius = -1.f,
-                const float uvTile = 1.0f);
+    int AddMesh_deprecated(const std::wstring& filePath,
+                           const D3DXVECTOR3& pos,
+                           const D3DXVECTOR3& rot,
+                           const float scale,
+                           const float radius = -1.f,
+                           const float uvTile = 1.0f);
     bool RemoveMesh(int id);
     void SetMeshWorldMatrix(int id, const D3DXMATRIX& mat);
     void SetMeshEnabled(int id, bool enabled);

@@ -2767,12 +2767,12 @@ eWindowMode Render::GetWindowMode() const
     return m_windowManager.GetCurrentWindowMode();
 }
 
-int Render::AddMesh(const std::wstring& filePath,
-                    const D3DXVECTOR3& pos,
-                    const D3DXVECTOR3& rot,
-                    const float scale,
-                    const float radius,
-                    const float uvTile)
+int Render::AddMesh_deprecated(const std::wstring& filePath,
+                               const D3DXVECTOR3& pos,
+                               const D3DXVECTOR3& rot,
+                               const float scale,
+                               const float radius,
+                               const float uvTile)
 {
     m_meshList.push_back(MeshOld(filePath, pos, rot, scale, radius, uvTile));
     m_meshEnabledList.push_back(true);
