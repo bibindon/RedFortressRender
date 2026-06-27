@@ -203,6 +203,35 @@ std::wstring UnquoteCsvField(const std::wstring& text)
     return text;
 }
 
+bool IsIntegerCsvField(const std::wstring& text)
+{
+    const std::wstring trimmedText = TrimCsvField(text);
+    if (trimmedText.empty())
+    {
+        return false;
+    }
+
+    std::size_t startIndex = 0;
+    if (trimmedText.front() == L'+' || trimmedText.front() == L'-')
+    {
+        if (trimmedText.size() == 1)
+        {
+            return false;
+        }
+        startIndex = 1;
+    }
+
+    for (std::size_t i = startIndex; i < trimmedText.size(); ++i)
+    {
+        if (std::iswdigit(trimmedText[i]) == 0)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 std::vector<std::wstring> SplitCsvLineText(const std::wstring& line)
 {
     std::vector<std::wstring> fields;
@@ -532,7 +561,14 @@ bool Render::LoadXFileListMoveFromCsv(const std::wstring& csvPath,
 
         try
         {
-            const int renderId = std::stoi(TrimCsvField(fields[1]));
+            const std::wstring renderIdText = TrimCsvField(fields[1]);
+            if (!IsIntegerCsvField(renderIdText))
+            {
+                ++localSkippedCount;
+                continue;
+            }
+
+            const int renderId = std::stoi(renderIdText);
             const auto found = m_csvIdToRenderId.find(renderId);
             if (found == m_csvIdToRenderId.end())
             {
