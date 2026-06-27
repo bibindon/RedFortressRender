@@ -5,6 +5,8 @@
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
+#include <stdexcept>
+#include <string>
 
 #include "Camera.h"
 #include "Common.h"
@@ -20,6 +22,17 @@ constexpr float kRainSpawnHalfWidth = 8.0f;
 constexpr float kRainSpawnForward = 12.0f;
 constexpr float kRainSpawnTopOffset = 5.0f;
 constexpr float kRainKillBelowCamera = 4.0f;
+
+std::string NarrowAscii(const std::wstring& wide)
+{
+    std::string narrow;
+    narrow.reserve(wide.size());
+    for (const wchar_t ch : wide)
+    {
+        narrow.push_back(static_cast<char>(ch));
+    }
+    return narrow;
+}
 }
 
 namespace NSRender
@@ -403,39 +416,46 @@ bool ParticleSystem::TryInitializeResources()
     HRESULT hr = D3DXCreateTextureFromFile(Common::D3DDevice(), smokePath.c_str(), &m_smokeTexture);
     if (FAILED(hr))
     {
-        return false;
+        throw std::runtime_error("ParticleSystem: failed to load texture 'particle_smoke.png' [" +
+                                 NarrowAscii(smokePath) + "] HRESULT=" + std::to_string(hr));
     }
 
     hr = D3DXCreateTextureFromFile(Common::D3DDevice(), firePath.c_str(), &m_fireTexture);
     if (FAILED(hr))
     {
-        return false;
+        throw std::runtime_error("ParticleSystem: failed to load texture 'particle_fire.png' [" +
+                                 NarrowAscii(firePath) + "] HRESULT=" + std::to_string(hr));
     }
 
     hr = D3DXCreateTextureFromFile(Common::D3DDevice(), dustPath.c_str(), &m_dustTexture);
     if (FAILED(hr))
     {
-        return false;
+        throw std::runtime_error("ParticleSystem: failed to load texture 'particle_dust.png' [" +
+                                 NarrowAscii(dustPath) + "] HRESULT=" + std::to_string(hr));
     }
 
     hr = D3DXCreateTextureFromFile(Common::D3DDevice(), dustPath2.c_str(), &m_dustTexture2);
     if (FAILED(hr))
     {
-        return false;
+        throw std::runtime_error("ParticleSystem: failed to load texture 'particle_dust2.png' [" +
+                                 NarrowAscii(dustPath2) + "] HRESULT=" + std::to_string(hr));
     }
 
     hr = D3DXCreateTextureFromFile(Common::D3DDevice(), fogPath.c_str(), &m_fogTexture);
     if (FAILED(hr))
     {
-        return false;
+        throw std::runtime_error("ParticleSystem: failed to load texture 'particle_fog.png' [" +
+                                 NarrowAscii(fogPath) + "] HRESULT=" + std::to_string(hr));
     }
 
     hr = D3DXCreateTextureFromFile(Common::D3DDevice(), rainPath.c_str(), &m_rainTexture);
     if (FAILED(hr))
     {
-        return false;
+        throw std::runtime_error("ParticleSystem: failed to load texture 'particle_rain.png' [" +
+                                 NarrowAscii(rainPath) + "] HRESULT=" + std::to_string(hr));
     }
 
+    LPD3DXBUFFER compilationErrors = NULL;
     hr = D3DXCreateEffectFromFile(Common::D3DDevice(),
                                   effectPath.c_str(),
                                   NULL,
@@ -443,8 +463,22 @@ bool ParticleSystem::TryInitializeResources()
                                   D3DXSHADER_DEBUG,
                                   NULL,
                                   &m_effect,
-                                  NULL);
-    return SUCCEEDED(hr);
+                                  &compilationErrors);
+    if (FAILED(hr))
+    {
+        std::string message = "ParticleSystem: failed to load effect 'Particle.cso' [" +
+                              NarrowAscii(effectPath) + "] HRESULT=" + std::to_string(hr);
+        if (compilationErrors != NULL)
+        {
+            message += " - ";
+            message += static_cast<const char*>(compilationErrors->GetBufferPointer());
+            compilationErrors->Release();
+            compilationErrors = NULL;
+        }
+        throw std::runtime_error(message);
+    }
+
+    return true;
 }
 
 void ParticleSystem::ClearParticles(EffectInstance& effect)
