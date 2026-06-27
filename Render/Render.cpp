@@ -715,6 +715,13 @@ void Render::ApplySettings()
 
         return false;
     };
+
+    const auto renderingQuality = m_settings.find(L"RenderQuality");
+    if (renderingQuality != m_settings.end())
+    {
+        SetRenderQuality(renderingQuality->second);
+    }
+
     if (cameraHorizontalFov != m_settings.end())
     {
         try
@@ -1457,8 +1464,20 @@ void Render::ApplySettings()
         }
     }
 
+    const auto fogDensity = m_settings.find(L"FogDensity");
     const auto fogIntensity = m_settings.find(L"FogIntensity");
-    if (fogIntensity != m_settings.end())
+    if (fogDensity != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectFogIntensity(std::stof(fogDensity->second));
+        }
+        catch (...)
+        {
+            SetPostEffectFogIntensity(2.0f);
+        }
+    }
+    else if (fogIntensity != m_settings.end())
     {
         try
         {
@@ -2167,11 +2186,6 @@ void Render::ApplySettings()
         }
     }
 
-    const auto renderingQuality = m_settings.find(L"RenderQuality");
-    if (renderingQuality != m_settings.end())
-    {
-        SetRenderQuality(renderingQuality->second);
-    }
 }
 
 void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
