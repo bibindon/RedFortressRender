@@ -3372,6 +3372,7 @@ void Render::StopMeshMixSkinAnimBlink(int id)
             {
                 m_meshMixSkinAnimList.at(it->meshId)->SetEnabled(true);
                 m_meshMixSkinAnimList.at(it->meshId)->SetDamageFlash(false);
+                m_meshMixSkinAnimList.at(it->meshId)->SetYellowFlash(false);
             }
             it = m_meshMixSkinAnimBlinkList.erase(it);
         }
