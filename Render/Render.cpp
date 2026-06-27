@@ -716,12 +716,6 @@ void Render::ApplySettings()
         return false;
     };
 
-    const auto renderingQuality = m_settings.find(L"RenderQuality");
-    if (renderingQuality != m_settings.end())
-    {
-        SetRenderQuality(renderingQuality->second);
-    }
-
     if (cameraHorizontalFov != m_settings.end())
     {
         try
@@ -2186,6 +2180,11 @@ void Render::ApplySettings()
         }
     }
 
+    const auto renderingQuality = m_settings.find(L"RenderQuality");
+    if (renderingQuality != m_settings.end())
+    {
+        SetRenderQuality(renderingQuality->second);
+    }
 }
 
 void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
