@@ -72,6 +72,7 @@ public:
     void SetTreatTextureAsWhite(const bool enabled);
     void SetDamageFlash(const bool enabled);
     void SetYellowFlash(const bool enabled);
+    void SetCustomFlash(const bool enabled, const D3DXVECTOR4& color);
     bool GetBoneWorldMatrix(const char* boneName, D3DXMATRIX& outMatrix) const;
     void SetAlphaClipEnabled(const bool enabled);
     void SetIgnoreTransparentMaterial(const bool enabled);
@@ -166,6 +167,8 @@ private:
     bool m_enabled = true;
     bool m_damageFlash = false;
     bool m_yellowFlash = false;
+    bool m_customFlash = false;
+    D3DXVECTOR4 m_customFlashColor = D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
     std::atomic<bool> m_bLoaded { false };
     std::thread m_loadThread;
     bool m_useExternalAnimation = false;

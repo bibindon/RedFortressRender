@@ -141,7 +141,9 @@ enum class BlinkMode
 {
     WhiteFlash,
     Visibility,
-    StarFlash
+    StarFlash,
+    PinkWhiteFlash,
+    CyanWhiteFlash
 };
 
 struct BoneAttachment

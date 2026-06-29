@@ -533,7 +533,7 @@ void MeshMixSkinAnim::Render()
     }
     m_D3DEffect->SetBool("g_bSaturateShadow", useSaturateShadow);
     BOOL treatTextureAsWhite = FALSE;
-    if (m_param.treatTextureAsWhite || m_damageFlash || m_yellowFlash)
+    if (m_param.treatTextureAsWhite || m_damageFlash || m_yellowFlash || m_customFlash)
     {
         treatTextureAsWhite = TRUE;
     }
@@ -541,6 +541,8 @@ void MeshMixSkinAnim::Render()
 
     m_D3DEffect->SetBool("g_damageFlash", m_damageFlash ? TRUE : FALSE);
     m_D3DEffect->SetBool("g_yellowFlash", m_yellowFlash ? TRUE : FALSE);
+    m_D3DEffect->SetBool("g_customFlash", m_customFlash ? TRUE : FALSE);
+    m_D3DEffect->SetVector("g_customFlashColor", &m_customFlashColor);
 
     BOOL alphaClipEnabled = FALSE;
     if (m_alphaClipEnabled)
@@ -1534,6 +1536,12 @@ void MeshMixSkinAnim::SetDamageFlash(const bool enabled)
 void MeshMixSkinAnim::SetYellowFlash(const bool enabled)
 {
     m_yellowFlash = enabled;
+}
+
+void MeshMixSkinAnim::SetCustomFlash(const bool enabled, const D3DXVECTOR4& color)
+{
+    m_customFlash = enabled;
+    m_customFlashColor = color;
 }
 
 bool MeshMixSkinAnim::GetBoneWorldMatrix(const char* boneName, D3DXMATRIX& outMatrix) const

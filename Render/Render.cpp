@@ -3422,6 +3422,7 @@ void Render::StopMeshMixSkinAnimBlink(int id)
                 m_meshMixSkinAnimList.at(it->meshId)->SetEnabled(true);
                 m_meshMixSkinAnimList.at(it->meshId)->SetDamageFlash(false);
                 m_meshMixSkinAnimList.at(it->meshId)->SetYellowFlash(false);
+                m_meshMixSkinAnimList.at(it->meshId)->SetCustomFlash(false, D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f));
             }
             it = m_meshMixSkinAnimBlinkList.erase(it);
         }
@@ -3469,11 +3470,16 @@ void Render::UpdateMeshMixSkinAnimBlink()
             m_meshMixSkinAnimList.at(it->meshId)->SetEnabled(true);
             m_meshMixSkinAnimList.at(it->meshId)->SetDamageFlash(false);
             m_meshMixSkinAnimList.at(it->meshId)->SetYellowFlash(false);
+            m_meshMixSkinAnimList.at(it->meshId)->SetCustomFlash(false, D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f));
             it = m_meshMixSkinAnimBlinkList.erase(it);
         }
         else
         {
             const bool visible = ((it->remainingFrames / it->intervalFrames) % 2) == 0;
+            m_meshMixSkinAnimList.at(it->meshId)->SetEnabled(true);
+            m_meshMixSkinAnimList.at(it->meshId)->SetDamageFlash(false);
+            m_meshMixSkinAnimList.at(it->meshId)->SetYellowFlash(false);
+            m_meshMixSkinAnimList.at(it->meshId)->SetCustomFlash(false, D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f));
             if (it->mode == BlinkMode::WhiteFlash)
             {
                 m_meshMixSkinAnimList.at(it->meshId)->SetDamageFlash(!visible);
@@ -3482,6 +3488,28 @@ void Render::UpdateMeshMixSkinAnimBlink()
             {
                 m_meshMixSkinAnimList.at(it->meshId)->SetDamageFlash(visible);
                 m_meshMixSkinAnimList.at(it->meshId)->SetYellowFlash(!visible);
+            }
+            else if (it->mode == BlinkMode::PinkWhiteFlash)
+            {
+                if (visible)
+                {
+                    m_meshMixSkinAnimList.at(it->meshId)->SetDamageFlash(true);
+                }
+                else
+                {
+                    m_meshMixSkinAnimList.at(it->meshId)->SetCustomFlash(true, D3DXVECTOR4(1.0f, 0.35f, 0.85f, 1.0f));
+                }
+            }
+            else if (it->mode == BlinkMode::CyanWhiteFlash)
+            {
+                if (visible)
+                {
+                    m_meshMixSkinAnimList.at(it->meshId)->SetDamageFlash(true);
+                }
+                else
+                {
+                    m_meshMixSkinAnimList.at(it->meshId)->SetCustomFlash(true, D3DXVECTOR4(0.2f, 0.9f, 1.0f, 1.0f));
+                }
             }
             else
             {
