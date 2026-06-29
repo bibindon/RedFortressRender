@@ -40,7 +40,8 @@ public:
     void DrawDebugLightDepthOverlay(const int x,
                                     const int y,
                                     const int width,
-                                    const int height);
+                                    const int height,
+                                    const int cascadeIndex);
 
     void OnDeviceLost();
     void OnDeviceReset();

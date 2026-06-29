@@ -761,9 +761,16 @@ void PostEffectZShadow::RenderTechnique3()
 void PostEffectZShadow::DrawDebugLightDepthOverlay(const int x,
                                                    const int y,
                                                    const int width,
-                                                   const int height)
+                                                   const int height,
+                                                   const int cascadeIndex)
 {
-    LPDIRECT3DTEXTURE9 activeLightZTexture = GetActiveLightZTexture(SHADOW_CASCADE_NEAR);
+    int activeCascadeIndex = SHADOW_CASCADE_NEAR;
+    if (cascadeIndex >= 0 && cascadeIndex < SHADOW_CASCADE_COUNT)
+    {
+        activeCascadeIndex = cascadeIndex;
+    }
+
+    LPDIRECT3DTEXTURE9 activeLightZTexture = GetActiveLightZTexture(activeCascadeIndex);
     if (g_fxDepthBufferShadow == NULL || activeLightZTexture == NULL)
     {
         return;

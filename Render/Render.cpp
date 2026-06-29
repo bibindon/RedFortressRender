@@ -2732,7 +2732,24 @@ void Render::Draw()
 
     if (m_postEffectZShadowEnabled && m_postEffectZShadowDebugLightDepthEnabled)
     {
-        m_postEffectZShadow.DrawDebugLightDepthOverlay(10, 10, 256, 256);
+        const int debugLightDepthMargin = 10;
+        const int debugLightDepthSize = 256;
+        int debugFarY = Common::ScreenH() - debugLightDepthSize - debugLightDepthMargin;
+        if (debugFarY < debugLightDepthMargin)
+        {
+            debugFarY = debugLightDepthMargin;
+        }
+
+        m_postEffectZShadow.DrawDebugLightDepthOverlay(debugLightDepthMargin,
+                                                       debugLightDepthMargin,
+                                                       debugLightDepthSize,
+                                                       debugLightDepthSize,
+                                                       0);
+        m_postEffectZShadow.DrawDebugLightDepthOverlay(debugLightDepthMargin,
+                                                       debugFarY,
+                                                       debugLightDepthSize,
+                                                       debugLightDepthSize,
+                                                       1);
     }
 
     WaitForTargetFrameRate();
