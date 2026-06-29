@@ -1487,6 +1487,49 @@ void Render::ApplySettings()
         SetPostEffectFogIntensity(2.0f);
     }
 
+    D3DXCOLOR fogColor = GetPostEffectFogColor();
+    bool fogColorChanged = false;
+    const auto fogColorR = m_settings.find(L"FogColorR");
+    if (fogColorR != m_settings.end())
+    {
+        try
+        {
+            fogColor.r = ClampUnitSetting(std::stof(fogColorR->second));
+            fogColorChanged = true;
+        }
+        catch (...)
+        {
+        }
+    }
+    const auto fogColorG = m_settings.find(L"FogColorG");
+    if (fogColorG != m_settings.end())
+    {
+        try
+        {
+            fogColor.g = ClampUnitSetting(std::stof(fogColorG->second));
+            fogColorChanged = true;
+        }
+        catch (...)
+        {
+        }
+    }
+    const auto fogColorB = m_settings.find(L"FogColorB");
+    if (fogColorB != m_settings.end())
+    {
+        try
+        {
+            fogColor.b = ClampUnitSetting(std::stof(fogColorB->second));
+            fogColorChanged = true;
+        }
+        catch (...)
+        {
+        }
+    }
+    if (fogColorChanged)
+    {
+        SetPostEffectFogColor(fogColor);
+    }
+
     const auto fogHeightEnable = m_settings.find(L"FogHeightEnable");
     if (fogHeightEnable != m_settings.end())
     {
