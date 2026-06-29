@@ -2730,12 +2730,9 @@ void Render::Draw()
     // 文字と画像は彩度フィルタの影響を受けないようにする
     Draw2D();
 
-    if (m_postEffectZShadowEnabled)
+    if (m_postEffectZShadowEnabled && m_postEffectZShadowDebugLightDepthEnabled)
     {
-        if (false)
-        {
-            m_postEffectZShadow.DrawDebugLightDepthOverlay(10, 10, 256, 256);
-        }
+        m_postEffectZShadow.DrawDebugLightDepthOverlay(10, 10, 256, 256);
     }
 
     WaitForTargetFrameRate();
@@ -5217,6 +5214,11 @@ void Render::SetPostEffectDepthBufferShadowTexSizeDivisor(const int scaleDivisor
     m_postEffectZShadow.SetShadowTextureScaleDivisor(scaleDivisor);
 }
 
+void Render::SetPostEffectDepthBufferShadowDebugLightDepth(const bool enabled)
+{
+    m_postEffectZShadowDebugLightDepthEnabled = enabled;
+}
+
 float Render::GetPostEffectSaturate() const { return m_postEffectSaturateLevel; }
 bool Render::IsPostEffectSaturateEnabled() const { return m_postEffectSaturateEnabled; }
 bool Render::IsPostEffectGaussianFilterEnabled() const { return m_postEffectGaussEnabled; }
@@ -5234,6 +5236,7 @@ bool Render::IsPostEffectMotionBlurCameraEnabled() const { return m_postEffectMo
 float Render::GetPostEffectMotionBlurCameraMaxBlurPixels() const { return m_motionBlurCameraMaxBlurPixels; }
 int Render::GetPostEffectMotionBlurCameraSampleCount() const { return m_motionBlurCameraSampleCount; }
 bool Render::IsPostEffectDepthBufferShadowEnabled() const { return m_postEffectZShadowEnabled; }
+bool Render::IsPostEffectDepthBufferShadowDebugLightDepthEnabled() const { return m_postEffectZShadowDebugLightDepthEnabled; }
 float Render::GetPostEffectDepthBufferShadowIntensity() const { return m_postEffectDepthBufferShadowIntensity; }
 float Render::GetPostEffectDepthBufferShadowSaturationBoost() const { return m_postEffectDepthBufferShadowSaturationBoost; }
 float Render::GetPostEffectDepthBufferShadowCoverage() const { return m_postEffectDepthBufferShadowCoverage; }
