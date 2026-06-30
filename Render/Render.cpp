@@ -3369,21 +3369,32 @@ void Render::UpdateBoneAttachments()
 {
     for (const auto& attach : m_boneAttachments)
     {
+        auto hideChildMesh = [this, &attach]()
+        {
+            if (IsMeshMixSlotUsed(attach.childMeshId))
+            {
+                m_meshMixList.at(attach.childMeshId).SetEnabled(false);
+            }
+        };
+
         if (attach.parentSkinnedMeshId < 0 ||
             attach.parentSkinnedMeshId >= static_cast<int>(m_meshMixSkinAnimList.size()))
         {
+            hideChildMesh();
             continue;
         }
 
         MeshMixSkinAnim* parent = m_meshMixSkinAnimList.at(attach.parentSkinnedMeshId);
         if (parent == nullptr)
         {
+            hideChildMesh();
             continue;
         }
 
         D3DXMATRIX boneWorldMatrix;
         if (!parent->GetBoneWorldMatrix(attach.boneName.c_str(), boneWorldMatrix))
         {
+            hideChildMesh();
             continue;
         }
 
