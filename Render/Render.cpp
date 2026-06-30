@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <cassert>
 #include <crtdbg.h>
+#include <cstdlib>
 #include <cwctype>
 #include <vector>
 #include <Shlwapi.h>
@@ -38,6 +39,7 @@
 #include <set>
 #include <algorithm>
 #include <fstream>
+#include <unordered_set>
 #include <sstream>
 #include <cwctype>
 #include <utility>
@@ -349,6 +351,7 @@ bool Render::LoadXFileListFromCsv(const std::wstring& csvPath,
     }
 
     const std::wstring csvDirectoryPath = GetCsvParentDirectoryPath(csvPath);
+    std::unordered_set<int> loadedCsvIds;
     int localLoadedCount = 0;
     int localSkippedCount = 0;
     std::wstring line;
@@ -425,6 +428,12 @@ bool Render::LoadXFileListFromCsv(const std::wstring& csvPath,
             }
 
             const int csvId = std::stoi(TrimCsvField(fields[0]));
+            if (loadedCsvIds.find(csvId) != loadedCsvIds.end())
+            {
+                std::abort();
+            }
+            loadedCsvIds.insert(csvId);
+
             if (loadType == L"instancing")
             {
                 m_csvInstancingFilePaths.push_back(resolvedPath);
