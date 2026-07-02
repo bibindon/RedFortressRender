@@ -1169,7 +1169,7 @@ void ParticleSystem::EmitDamage(EffectInstance& effect)
     for (int i = 0; i < 16; ++i)
     {
         const float angle = RandomFloat(0.0f, D3DX_PI * 2.0f);
-        const float speed = RandomFloat(4.2f, 8.2f) * scale;
+        const float speed = RandomFloat(6.3f, 12.3f) * scale;
         const float size = RandomFloat(0.16f, 0.28f) * scale;
         D3DCOLOR scatterColor = D3DCOLOR_ARGB(255, 255, 255, 255);
         if ((i % 2) == 1)
@@ -1182,7 +1182,7 @@ void ParticleSystem::EmitDamage(EffectInstance& effect)
                       D3DXVECTOR3(cosf(angle) * speed,
                                   RandomFloat(-0.35f, 0.55f) * speed,
                                   sinf(angle) * speed),
-                      0.11f,
+                      0.22f,
                       0.0f,
                       size,
                       angle,
