@@ -185,14 +185,14 @@ bool ComputeMirrorPlaneFromMesh(LPD3DXMESH pMesh,
 
 float ConvertXMaterialPowerToShaderPower(const float materialPower)
 {
-    float clampedPower = (std::max)(0.0f, (std::min)(materialPower, 255.0f));
-    return clampedPower;
+    const float t = (std::max)(0.0f, (std::min)(materialPower / 500.0f, 1.0f));
+    return t * 128.0f;
 }
 
 float ConvertXMaterialPowerToSpecularIntensity(const float materialPower)
 {
-    const float clampedPower = (std::max)(0.0f, (std::min)(materialPower, 255.0f));
-    return (clampedPower / 255.0f) * 0.5f;
+    const float t = (std::max)(0.0f, (std::min)(materialPower / 500.0f, 1.0f));
+    return t;
 }
 
 float GetMaterialSpecularIntensity(const D3DMATERIAL9& material)

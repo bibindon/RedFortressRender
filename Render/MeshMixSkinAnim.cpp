@@ -21,7 +21,6 @@ namespace NSRender
 {
 namespace
 {
-constexpr float X_MATERIAL_SPECULAR_INTENSITY_SCALE = 0.5f;
 constexpr double D3DX64_ANIMATION_TIME_SCALE = 160.0;
 
 float ClampSpecularEdge(const float edge)
@@ -36,14 +35,14 @@ float ConvertSpecularEdgeToShaderPower(const float edge)
 
 float ConvertXMaterialPowerToShaderPower(const float materialPower)
 {
-    const float clampedPower = (std::max)(0.0f, (std::min)(materialPower, 255.0f));
-    return clampedPower;
+    const float t = (std::max)(0.0f, (std::min)(materialPower / 500.0f, 1.0f));
+    return t * 128.0f;
 }
 
 float ConvertXMaterialPowerToSpecularIntensity(const float materialPower)
 {
-    const float clampedPower = (std::max)(0.0f, (std::min)(materialPower, 255.0f));
-    return (clampedPower / 255.0f) * X_MATERIAL_SPECULAR_INTENSITY_SCALE;
+    const float t = (std::max)(0.0f, (std::min)(materialPower / 500.0f, 1.0f));
+    return t;
 }
 
 float PointLightShapeToShaderValue(const PointLightShape shape)
