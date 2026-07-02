@@ -1379,8 +1379,7 @@ void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
             particle.velocity.x *= 0.955f;
             particle.velocity.z *= 0.955f;
 
-            float sizeScale = sinf(age * D3DX_PI);
-            sizeScale = ClampFloat(sizeScale, 0.0f, 1.0f);
+            const float sizeScale = ClampFloat(age / 0.22f, 0.0f, 1.0f);
             if (particle.visualType == ParticleVisualType::DamageOutline)
             {
                 particle.size = particle.endSize * sizeScale;
@@ -1394,8 +1393,7 @@ void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
             else if (particle.visualType == ParticleVisualType::DamageRing)
             {
                 const float expand = age * 1.35f;
-                const float shrink = sizeScale;
-                particle.size = particle.endSize * expand * shrink;
+                particle.size = particle.endSize * (std::min)(expand, 1.0f);
                 particle.color = D3DCOLOR_ARGB(255, 255, 100, 28);
             }
             else if (particle.visualType == ParticleVisualType::DamageSpike)
