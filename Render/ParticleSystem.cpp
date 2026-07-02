@@ -1387,7 +1387,7 @@ void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
         else if (effect.preset == ParticleEffectPreset::Damage)
         {
             const float sizeProgress = ClampFloat(particle.life / 0.10f, 0.0f, 1.0f);
-            const float sizeScale = sqrtf(sizeProgress);
+            const float sizeScale = 0.5f + 0.5f * sqrtf(sizeProgress);
             if (particle.visualType == ParticleVisualType::DamageOutline)
             {
                 particle.size = particle.endSize * sizeScale;
