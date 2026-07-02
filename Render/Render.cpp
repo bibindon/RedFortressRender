@@ -3415,17 +3415,7 @@ void Render::UpdateBoneAttachments()
                               attach.localOffset.y,
                               attach.localOffset.z);
 
-        const D3DXVECTOR3 bonePos(boneWorldMatrix._41, boneWorldMatrix._42, boneWorldMatrix._43);
-
-        D3DXMATRIX boneRotOnly = boneWorldMatrix;
-        boneRotOnly._41 = 0.0f;
-        boneRotOnly._42 = 0.0f;
-        boneRotOnly._43 = 0.0f;
-
-        D3DXMATRIX finalMatrix = boneRotOnly * matLocal * matTranslate;
-        finalMatrix._41 = bonePos.x;
-        finalMatrix._42 = bonePos.y;
-        finalMatrix._43 = bonePos.z;
+        D3DXMATRIX finalMatrix = matLocal * matTranslate * boneWorldMatrix;
 
         m_meshMixList.at(attach.childMeshId).SetWorldMatrix(finalMatrix);
     }
