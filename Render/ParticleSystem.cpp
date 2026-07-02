@@ -1060,7 +1060,7 @@ void ParticleSystem::EmitDamage(EffectInstance& effect)
     SpawnParticle(effect,
                   center,
                   D3DXVECTOR3(0.0f, 0.0f, 0.0f),
-                  0.22f,
+                  0.11f,
                   0.0f,
                   1.18f * scale,
                   0.0f,
@@ -1412,7 +1412,7 @@ void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
             }
             else if (particle.visualType == ParticleVisualType::DamageRing)
             {
-                particle.size = particle.endSize * sizeScale;
+                particle.size = particle.endSize * 2.0f * age;
                 particle.color = D3DCOLOR_ARGB(255, 255, 100, 28);
             }
             else if (particle.visualType == ParticleVisualType::DamageSpike)
