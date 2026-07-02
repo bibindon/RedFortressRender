@@ -37,10 +37,10 @@ struct stMeshParam
     float fresnelIntensity = 0.08f;
 
     // 設定ダイアログのスペキュラ光の強さで上書きするか
-    bool specularIntensityOverrideEnabled = true;
+    bool specularIntensityOverrideEnabled = false;
 
     // 設定ダイアログのスペキュラ光の鋭さで上書きするか
-    bool specularEdgeOverrideEnabled = true;
+    bool specularEdgeOverrideEnabled = false;
 
     // テクスチャ色を無視して白として扱うか
     bool treatTextureAsWhite = false;

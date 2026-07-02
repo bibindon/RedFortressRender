@@ -1113,8 +1113,8 @@ private:
     float m_meshPBREnvDiffuseIntensity = 0.8f;
     float m_meshPBREnvDiffuseMipLevel = 3.0f;
     std::wstring m_pbrEnvMapPath;
-    bool m_meshMixSpecularIntensityOverrideEnabled = true;
-    bool m_meshMixSpecularEdgeOverrideEnabled = true;
+    bool m_meshMixSpecularIntensityOverrideEnabled = false;
+    bool m_meshMixSpecularEdgeOverrideEnabled = false;
     bool m_phongTreatTextureAsWhiteEnabled = false;
     bool m_meshMixSkinAnimAlphaClipEnabled = true;
     bool m_meshMixSkinAnimIgnoreTransparentMaterialEnabled = false;

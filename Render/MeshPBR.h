@@ -11,8 +11,8 @@ struct stMeshPBRParam
     DWORD specularColor = 0xffffffff;
     float specularIntensity = 0.0f;
     float specularEdge = 0.0f;
-    bool specularIntensityOverrideEnabled = true;
-    bool specularEdgeOverrideEnabled = true;
+    bool specularIntensityOverrideEnabled = false;
+    bool specularEdgeOverrideEnabled = false;
     bool fogDistance = true;
     float fogDistanceLength = 10000.0f;
     float fogDistanceSpeed = 0.0f;
