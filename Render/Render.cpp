@@ -3415,7 +3415,11 @@ void Render::UpdateBoneAttachments()
                               attach.localOffset.y,
                               attach.localOffset.z);
 
-        D3DXMATRIX finalMatrix = matLocal * matTranslate * boneWorldMatrix;
+        const float childScale = m_meshMixList.at(attach.childMeshId).GetScale();
+        D3DXMATRIX matScale;
+        D3DXMatrixScaling(&matScale, childScale, childScale, childScale);
+
+        D3DXMATRIX finalMatrix = matScale * matLocal * matTranslate * boneWorldMatrix;
 
         m_meshMixList.at(attach.childMeshId).SetWorldMatrix(finalMatrix);
     }
