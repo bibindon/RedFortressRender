@@ -17,6 +17,7 @@ enum class ParticleEffectPreset
     Fog,
     Rain,
     Explosion,
+    Damage,
 };
 
 class ParticleSystem
@@ -51,6 +52,10 @@ private:
         ExplosionSpark,
         ExplosionSmoke,
         ExplosionDust,
+        DamageOutline,
+        DamageFlash,
+        DamageRing,
+        DamageSpark,
     };
 
     struct Particle
@@ -124,6 +129,7 @@ private:
     void EmitFog(EffectInstance& effect, float deltaTime);
     void EmitRain(EffectInstance& effect, float deltaTime);
     void EmitExplosion(EffectInstance& effect);
+    void EmitDamage(EffectInstance& effect);
     void UpdateEffect(EffectInstance& effect, float deltaTime);
     void DrawEffect(const EffectInstance& effect, const D3DXMATRIX& view, const D3DXMATRIX& proj);
     int FillDustVertices(const EffectInstance& effectInstance,
@@ -147,6 +153,7 @@ private:
     LPDIRECT3DTEXTURE9 m_dustTexture2 = NULL;
     LPDIRECT3DTEXTURE9 m_fogTexture = NULL;
     LPDIRECT3DTEXTURE9 m_rainTexture = NULL;
+    LPDIRECT3DTEXTURE9 m_damageTexture = NULL;
     LPD3DXEFFECT m_effect = NULL;
     bool m_dustFixedScreenSizeEnabled = true;
     float m_explosionScale = 1.0f;

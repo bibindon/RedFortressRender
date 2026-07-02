@@ -71,6 +71,7 @@ void ParticleSystem::Finalize()
     SAFE_RELEASE_LOCAL(m_dustTexture2);
     SAFE_RELEASE_LOCAL(m_fogTexture);
     SAFE_RELEASE_LOCAL(m_rainTexture);
+    SAFE_RELEASE_LOCAL(m_damageTexture);
     SAFE_RELEASE_LOCAL(m_effect);
 
     for (auto& effect : m_effects)
@@ -154,6 +155,10 @@ void ParticleSystem::PlaceEffect(const ParticleEffectPreset preset, const D3DXVE
     else if (preset == ParticleEffectPreset::Explosion)
     {
         EmitExplosion(*target);
+    }
+    else if (preset == ParticleEffectPreset::Damage)
+    {
+        EmitDamage(*target);
     }
 
     m_lastPlacedPreset = preset;
@@ -411,6 +416,7 @@ bool ParticleSystem::TryInitializeResources()
     const std::wstring dustPath2 = BuildAssetPath(L"particle_dust2.png");
     const std::wstring fogPath = BuildAssetPath(L"particle_fog.png");
     const std::wstring rainPath = BuildAssetPath(L"particle_rain.png");
+    const std::wstring damagePath = BuildAssetPath(L"particle_damage.png");
     const std::wstring effectPath = Util::GetExeDir() + L"Particle.cso";
 
     HRESULT hr = D3DXCreateTextureFromFile(Common::D3DDevice(), smokePath.c_str(), &m_smokeTexture);
@@ -453,6 +459,13 @@ bool ParticleSystem::TryInitializeResources()
     {
         throw std::runtime_error("ParticleSystem: failed to load texture 'particle_rain.png' [" +
                                  NarrowAscii(rainPath) + "] HRESULT=" + std::to_string(hr));
+    }
+
+    hr = D3DXCreateTextureFromFile(Common::D3DDevice(), damagePath.c_str(), &m_damageTexture);
+    if (FAILED(hr))
+    {
+        throw std::runtime_error("ParticleSystem: failed to load texture 'particle_damage.png' [" +
+                                 NarrowAscii(damagePath) + "] HRESULT=" + std::to_string(hr));
     }
 
     LPD3DXBUFFER compilationErrors = NULL;
@@ -1008,6 +1021,124 @@ void ParticleSystem::EmitExplosion(EffectInstance& effect)
     }
 }
 
+void ParticleSystem::EmitDamage(EffectInstance& effect)
+{
+    const D3DCOLOR outlineColor = D3DCOLOR_ARGB(175, 31, 34, 78);
+    const D3DXVECTOR3 center(effect.origin.x,
+                             effect.origin.y + 0.42f,
+                             effect.origin.z);
+
+    SpawnParticle(effect,
+                  center,
+                  D3DXVECTOR3(0.0f, 0.38f, 0.0f),
+                  0.26f,
+                  0.98f,
+                  1.34f,
+                  RandomFloat(0.0f, D3DX_PI * 2.0f),
+                  RandomFloat(-2.8f, 2.8f),
+                  outlineColor,
+                  ParticleVisualType::DamageOutline);
+
+    SpawnParticle(effect,
+                  center,
+                  D3DXVECTOR3(0.0f, 0.54f, 0.0f),
+                  0.22f,
+                  0.54f,
+                  0.82f,
+                  RandomFloat(0.0f, D3DX_PI * 2.0f),
+                  RandomFloat(-4.2f, 4.2f),
+                  D3DCOLOR_ARGB(245, 255, 255, 235),
+                  ParticleVisualType::DamageFlash);
+
+    SpawnParticle(effect,
+                  center,
+                  D3DXVECTOR3(0.0f, 0.25f, 0.0f),
+                  0.34f,
+                  0.72f,
+                  1.95f,
+                  RandomFloat(0.0f, D3DX_PI * 2.0f),
+                  RandomFloat(-1.5f, 1.5f),
+                  outlineColor,
+                  ParticleVisualType::DamageOutline);
+
+    SpawnParticle(effect,
+                  center,
+                  D3DXVECTOR3(0.0f, 0.30f, 0.0f),
+                  0.30f,
+                  0.42f,
+                  1.42f,
+                  RandomFloat(0.0f, D3DX_PI * 2.0f),
+                  RandomFloat(-1.8f, 1.8f),
+                  D3DCOLOR_ARGB(220, 255, 236, 76),
+                  ParticleVisualType::DamageRing);
+
+    for (int i = 0; i < 30; ++i)
+    {
+        D3DXVECTOR3 direction(RandomCenteredFloat(1.0f),
+                              RandomFloat(0.10f, 0.90f),
+                              RandomCenteredFloat(1.0f));
+        if (D3DXVec3LengthSq(&direction) <= 0.0001f)
+        {
+            direction = D3DXVECTOR3(1.0f, 0.35f, 0.0f);
+        }
+        else
+        {
+            D3DXVec3Normalize(&direction, &direction);
+        }
+
+        const float speed = RandomFloat(1.9f, 4.8f);
+        const D3DXVECTOR3 pos(effect.origin.x + direction.x * RandomFloat(0.02f, 0.16f),
+                              effect.origin.y + RandomFloat(0.24f, 0.70f),
+                              effect.origin.z + direction.z * RandomFloat(0.02f, 0.16f));
+        const D3DXVECTOR3 velocity(direction.x * speed,
+                                   direction.y * speed + RandomFloat(0.15f, 1.05f),
+                                   direction.z * speed);
+        const float life = RandomFloat(0.26f, 0.48f);
+        const float brightSize = RandomFloat(0.13f, 0.25f);
+        D3DCOLOR sparkColor = D3DCOLOR_ARGB(static_cast<int>(RandomFloat(195.0f, 245.0f)),
+                                           255,
+                                           235,
+                                           90);
+        const int colorType = static_cast<int>(RandomFloat(0.0f, 3.0f));
+        if (colorType == 1)
+        {
+            sparkColor = D3DCOLOR_ARGB(static_cast<int>(RandomFloat(185.0f, 235.0f)),
+                                       98,
+                                       226,
+                                       255);
+        }
+        else if (colorType == 2)
+        {
+            sparkColor = D3DCOLOR_ARGB(static_cast<int>(RandomFloat(185.0f, 235.0f)),
+                                       255,
+                                       126,
+                                       216);
+        }
+
+        SpawnParticle(effect,
+                      pos,
+                      velocity,
+                      life,
+                      brightSize * 1.52f,
+                      brightSize * 0.72f,
+                      RandomFloat(0.0f, D3DX_PI * 2.0f),
+                      RandomFloat(-8.0f, 8.0f),
+                      outlineColor,
+                      ParticleVisualType::DamageOutline);
+
+        SpawnParticle(effect,
+                      pos,
+                      velocity,
+                      life,
+                      brightSize,
+                      brightSize * 0.42f,
+                      RandomFloat(0.0f, D3DX_PI * 2.0f),
+                      RandomFloat(-11.0f, 11.0f),
+                      sparkColor,
+                      ParticleVisualType::DamageSpark);
+    }
+}
+
 void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
 {
     if (effect.preset == ParticleEffectPreset::None)
@@ -1033,6 +1164,8 @@ void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
         EmitRain(effect, deltaTime);
         break;
     case ParticleEffectPreset::Explosion:
+        break;
+    case ParticleEffectPreset::Damage:
         break;
     default:
         break;
@@ -1235,6 +1368,45 @@ void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
                 particle.color = D3DCOLOR_ARGB(alpha, 184, 178, 162);
             }
         }
+        else if (effect.preset == ParticleEffectPreset::Damage)
+        {
+            particle.velocity.y -= 4.6f * deltaTime;
+            particle.velocity.x *= 0.955f;
+            particle.velocity.z *= 0.955f;
+
+            const float fade = 1.0f - age;
+            if (particle.visualType == ParticleVisualType::DamageOutline)
+            {
+                particle.size = particle.startSize + (particle.endSize - particle.startSize) * age;
+                const int alpha = static_cast<int>(ClampFloat(180.0f * fade * particle.alphaBias,
+                                                              0.0f,
+                                                              190.0f));
+                particle.color = D3DCOLOR_ARGB(alpha, 26, 28, 72);
+            }
+            else if (particle.visualType == ParticleVisualType::DamageFlash)
+            {
+                particle.size = particle.startSize + (particle.endSize - particle.startSize) * sinf(age * D3DX_PI);
+                const int alpha = static_cast<int>(ClampFloat(250.0f * fade, 0.0f, 255.0f));
+                particle.color = D3DCOLOR_ARGB(alpha, 255, 255, 236);
+            }
+            else if (particle.visualType == ParticleVisualType::DamageRing)
+            {
+                particle.size = particle.startSize + (particle.endSize - particle.startSize) * age;
+                const int alpha = static_cast<int>(ClampFloat(210.0f * fade, 0.0f, 230.0f));
+                particle.color = D3DCOLOR_ARGB(alpha, 255, 236, 76);
+            }
+            else if (particle.visualType == ParticleVisualType::DamageSpark)
+            {
+                particle.size = particle.startSize + (particle.endSize - particle.startSize) * age;
+                const int alpha = static_cast<int>(ClampFloat(235.0f * fade * particle.alphaBias,
+                                                              0.0f,
+                                                              245.0f));
+                const int red = static_cast<int>((particle.color >> 16) & 0xff);
+                const int green = static_cast<int>((particle.color >> 8) & 0xff);
+                const int blue = static_cast<int>(particle.color & 0xff);
+                particle.color = D3DCOLOR_ARGB(alpha, red, green, blue);
+            }
+        }
 
         particle.rotation += particle.rotationSpeed * deltaTime;
         particle.pos.x += particle.velocity.x * deltaTime;
@@ -1242,7 +1414,9 @@ void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
         particle.pos.z += particle.velocity.z * deltaTime;
     }
 
-    if (effect.preset == ParticleEffectPreset::Explosion && !hasActiveParticle)
+    if ((effect.preset == ParticleEffectPreset::Explosion ||
+         effect.preset == ParticleEffectPreset::Damage) &&
+        !hasActiveParticle)
     {
         effect.preset = ParticleEffectPreset::None;
         effect.generation = 0;
@@ -1282,6 +1456,9 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
         break;
     case ParticleEffectPreset::Explosion:
         texture = m_fireTexture;
+        break;
+    case ParticleEffectPreset::Damage:
+        texture = m_damageTexture;
         break;
     default:
         return;
@@ -1355,7 +1532,8 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
                     continue;
                 }
 
-                if (effectInstance.preset == ParticleEffectPreset::Explosion &&
+                if ((effectInstance.preset == ParticleEffectPreset::Explosion ||
+                     effectInstance.preset == ParticleEffectPreset::Damage) &&
                     particle.visualType != visualTypeFilter)
                 {
                     continue;
@@ -1421,6 +1599,29 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
                     rotatedUp = rainUp;
                     halfWidth = particle.size * 0.50f;
                     halfHeight = particle.size * 0.50f;
+                }
+                else if (effectInstance.preset == ParticleEffectPreset::Damage)
+                {
+                    if (particle.visualType == ParticleVisualType::DamageSpark)
+                    {
+                        halfWidth = particle.size * 0.42f;
+                        halfHeight = particle.size * 0.72f;
+                    }
+                    else if (particle.visualType == ParticleVisualType::DamageRing)
+                    {
+                        halfWidth = particle.size * 0.86f;
+                        halfHeight = particle.size * 0.86f;
+                    }
+                    else if (particle.visualType == ParticleVisualType::DamageFlash)
+                    {
+                        halfWidth = particle.size * 0.70f;
+                        halfHeight = particle.size * 0.70f;
+                    }
+                    else if (particle.visualType == ParticleVisualType::DamageOutline)
+                    {
+                        halfWidth = particle.size * 0.78f;
+                        halfHeight = particle.size * 0.78f;
+                    }
                 }
 
                 const D3DXVECTOR3 halfRight(rotatedRight.x * halfWidth,
@@ -1548,6 +1749,13 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
         drawBatch(m_fireTexture, ParticleVisualType::ExplosionSpark, "ParticleAdditiveTechnique");
         drawBatch(m_smokeTexture, ParticleVisualType::ExplosionSmoke, "ParticleAlphaTechnique");
         drawBatch(m_dustTexture2, ParticleVisualType::ExplosionDust, "ParticleAlphaTechnique");
+    }
+    else if (effectInstance.preset == ParticleEffectPreset::Damage)
+    {
+        drawBatch(m_damageTexture, ParticleVisualType::DamageOutline, "ParticleAlphaTechnique");
+        drawBatch(m_damageTexture, ParticleVisualType::DamageRing, "ParticleAdditiveTechnique");
+        drawBatch(m_damageTexture, ParticleVisualType::DamageFlash, "ParticleAdditiveTechnique");
+        drawBatch(m_damageTexture, ParticleVisualType::DamageSpark, "ParticleAdditiveTechnique");
     }
     else
     {
