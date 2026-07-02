@@ -71,7 +71,9 @@ void ParticleSystem::Finalize()
     SAFE_RELEASE_LOCAL(m_dustTexture2);
     SAFE_RELEASE_LOCAL(m_fogTexture);
     SAFE_RELEASE_LOCAL(m_rainTexture);
-    SAFE_RELEASE_LOCAL(m_damageTexture);
+    SAFE_RELEASE_LOCAL(m_damageCoreTexture);
+    SAFE_RELEASE_LOCAL(m_damageRingTexture);
+    SAFE_RELEASE_LOCAL(m_damageSpikeTexture);
     SAFE_RELEASE_LOCAL(m_effect);
 
     for (auto& effect : m_effects)
@@ -416,7 +418,9 @@ bool ParticleSystem::TryInitializeResources()
     const std::wstring dustPath2 = BuildAssetPath(L"particle_dust2.png");
     const std::wstring fogPath = BuildAssetPath(L"particle_fog.png");
     const std::wstring rainPath = BuildAssetPath(L"particle_rain.png");
-    const std::wstring damagePath = BuildAssetPath(L"particle_damage.png");
+    const std::wstring damageCorePath = BuildAssetPath(L"particle_damage_core.png");
+    const std::wstring damageRingPath = BuildAssetPath(L"particle_damage_ring.png");
+    const std::wstring damageSpikePath = BuildAssetPath(L"particle_damage_spike.png");
     const std::wstring effectPath = Util::GetExeDir() + L"Particle.cso";
 
     HRESULT hr = D3DXCreateTextureFromFile(Common::D3DDevice(), smokePath.c_str(), &m_smokeTexture);
@@ -461,11 +465,25 @@ bool ParticleSystem::TryInitializeResources()
                                  NarrowAscii(rainPath) + "] HRESULT=" + std::to_string(hr));
     }
 
-    hr = D3DXCreateTextureFromFile(Common::D3DDevice(), damagePath.c_str(), &m_damageTexture);
+    hr = D3DXCreateTextureFromFile(Common::D3DDevice(), damageCorePath.c_str(), &m_damageCoreTexture);
     if (FAILED(hr))
     {
-        throw std::runtime_error("ParticleSystem: failed to load texture 'particle_damage.png' [" +
-                                 NarrowAscii(damagePath) + "] HRESULT=" + std::to_string(hr));
+        throw std::runtime_error("ParticleSystem: failed to load texture 'particle_damage_core.png' [" +
+                                 NarrowAscii(damageCorePath) + "] HRESULT=" + std::to_string(hr));
+    }
+
+    hr = D3DXCreateTextureFromFile(Common::D3DDevice(), damageRingPath.c_str(), &m_damageRingTexture);
+    if (FAILED(hr))
+    {
+        throw std::runtime_error("ParticleSystem: failed to load texture 'particle_damage_ring.png' [" +
+                                 NarrowAscii(damageRingPath) + "] HRESULT=" + std::to_string(hr));
+    }
+
+    hr = D3DXCreateTextureFromFile(Common::D3DDevice(), damageSpikePath.c_str(), &m_damageSpikeTexture);
+    if (FAILED(hr))
+    {
+        throw std::runtime_error("ParticleSystem: failed to load texture 'particle_damage_spike.png' [" +
+                                 NarrowAscii(damageSpikePath) + "] HRESULT=" + std::to_string(hr));
     }
 
     LPD3DXBUFFER compilationErrors = NULL;
@@ -1023,117 +1041,104 @@ void ParticleSystem::EmitExplosion(EffectInstance& effect)
 
 void ParticleSystem::EmitDamage(EffectInstance& effect)
 {
-    const D3DCOLOR outlineColor = D3DCOLOR_ARGB(175, 31, 34, 78);
+    const D3DCOLOR outlineColor = D3DCOLOR_ARGB(190, 52, 18, 42);
     const D3DXVECTOR3 center(effect.origin.x,
                              effect.origin.y + 0.42f,
                              effect.origin.z);
 
     SpawnParticle(effect,
                   center,
-                  D3DXVECTOR3(0.0f, 0.38f, 0.0f),
-                  0.26f,
-                  0.98f,
-                  1.34f,
-                  RandomFloat(0.0f, D3DX_PI * 2.0f),
-                  RandomFloat(-2.8f, 2.8f),
-                  outlineColor,
-                  ParticleVisualType::DamageOutline);
-
-    SpawnParticle(effect,
-                  center,
-                  D3DXVECTOR3(0.0f, 0.54f, 0.0f),
+                  D3DXVECTOR3(0.0f, 0.32f, 0.0f),
                   0.22f,
-                  0.54f,
-                  0.82f,
-                  RandomFloat(0.0f, D3DX_PI * 2.0f),
-                  RandomFloat(-4.2f, 4.2f),
-                  D3DCOLOR_ARGB(245, 255, 255, 235),
-                  ParticleVisualType::DamageFlash);
-
-    SpawnParticle(effect,
-                  center,
-                  D3DXVECTOR3(0.0f, 0.25f, 0.0f),
-                  0.34f,
-                  0.72f,
-                  1.95f,
-                  RandomFloat(0.0f, D3DX_PI * 2.0f),
-                  RandomFloat(-1.5f, 1.5f),
-                  outlineColor,
-                  ParticleVisualType::DamageOutline);
-
-    SpawnParticle(effect,
-                  center,
-                  D3DXVECTOR3(0.0f, 0.30f, 0.0f),
-                  0.30f,
-                  0.42f,
-                  1.42f,
-                  RandomFloat(0.0f, D3DX_PI * 2.0f),
-                  RandomFloat(-1.8f, 1.8f),
-                  D3DCOLOR_ARGB(220, 255, 236, 76),
+                  0.86f,
+                  1.18f,
+                  0.0f,
+                  RandomFloat(-1.4f, 1.4f),
+                  D3DCOLOR_ARGB(230, 255, 92, 24),
                   ParticleVisualType::DamageRing);
 
-    for (int i = 0; i < 30; ++i)
-    {
-        D3DXVECTOR3 direction(RandomCenteredFloat(1.0f),
-                              RandomFloat(0.10f, 0.90f),
-                              RandomCenteredFloat(1.0f));
-        if (D3DXVec3LengthSq(&direction) <= 0.0001f)
-        {
-            direction = D3DXVECTOR3(1.0f, 0.35f, 0.0f);
-        }
-        else
-        {
-            D3DXVec3Normalize(&direction, &direction);
-        }
+    SpawnParticle(effect,
+                  center,
+                  D3DXVECTOR3(0.0f, 0.48f, 0.0f),
+                  0.18f,
+                  0.58f,
+                  0.82f,
+                  RandomFloat(0.0f, D3DX_PI * 2.0f),
+                  RandomFloat(-4.5f, 4.5f),
+                  D3DCOLOR_ARGB(255, 255, 247, 188),
+                  ParticleVisualType::DamageCore);
 
-        const float speed = RandomFloat(1.9f, 4.8f);
-        const D3DXVECTOR3 pos(effect.origin.x + direction.x * RandomFloat(0.02f, 0.16f),
-                              effect.origin.y + RandomFloat(0.24f, 0.70f),
-                              effect.origin.z + direction.z * RandomFloat(0.02f, 0.16f));
-        const D3DXVECTOR3 velocity(direction.x * speed,
-                                   direction.y * speed + RandomFloat(0.15f, 1.05f),
-                                   direction.z * speed);
-        const float life = RandomFloat(0.26f, 0.48f);
-        const float brightSize = RandomFloat(0.13f, 0.25f);
-        D3DCOLOR sparkColor = D3DCOLOR_ARGB(static_cast<int>(RandomFloat(195.0f, 245.0f)),
-                                           255,
-                                           235,
-                                           90);
-        const int colorType = static_cast<int>(RandomFloat(0.0f, 3.0f));
-        if (colorType == 1)
-        {
-            sparkColor = D3DCOLOR_ARGB(static_cast<int>(RandomFloat(185.0f, 235.0f)),
-                                       98,
-                                       226,
-                                       255);
-        }
-        else if (colorType == 2)
-        {
-            sparkColor = D3DCOLOR_ARGB(static_cast<int>(RandomFloat(185.0f, 235.0f)),
-                                       255,
-                                       126,
-                                       216);
-        }
+    const float majorAngles[] =
+    {
+        -0.88f,
+        0.22f,
+        0.98f,
+        2.36f,
+        3.78f,
+    };
+    const float majorSizes[] =
+    {
+        2.18f,
+        1.78f,
+        2.45f,
+        1.46f,
+        1.76f,
+    };
+
+    for (int i = 0; i < 5; ++i)
+    {
+        const float angle = majorAngles[i] + RandomFloat(-0.10f, 0.10f);
+        const float size = majorSizes[i] * RandomFloat(0.92f, 1.08f);
+        const float life = RandomFloat(0.20f, 0.30f);
 
         SpawnParticle(effect,
-                      pos,
-                      velocity,
+                      center,
+                      D3DXVECTOR3(0.0f, RandomFloat(0.24f, 0.54f), 0.0f),
                       life,
-                      brightSize * 1.52f,
-                      brightSize * 0.72f,
-                      RandomFloat(0.0f, D3DX_PI * 2.0f),
-                      RandomFloat(-8.0f, 8.0f),
+                      size * 1.16f,
+                      size * 1.28f,
+                      angle,
+                      RandomFloat(-1.2f, 1.2f),
                       outlineColor,
                       ParticleVisualType::DamageOutline);
 
         SpawnParticle(effect,
-                      pos,
-                      velocity,
+                      center,
+                      D3DXVECTOR3(0.0f, RandomFloat(0.32f, 0.62f), 0.0f),
                       life,
-                      brightSize,
-                      brightSize * 0.42f,
-                      RandomFloat(0.0f, D3DX_PI * 2.0f),
-                      RandomFloat(-11.0f, 11.0f),
+                      size,
+                      size * 1.12f,
+                      angle,
+                      RandomFloat(-1.6f, 1.6f),
+                      D3DCOLOR_ARGB(245, 255, 232, 98),
+                      ParticleVisualType::DamageSpike);
+    }
+
+    for (int i = 0; i < 10; ++i)
+    {
+        const float angle = RandomFloat(0.0f, D3DX_PI * 2.0f);
+        const float size = RandomFloat(0.50f, 1.05f);
+        const float life = RandomFloat(0.18f, 0.34f);
+        D3DCOLOR sparkColor = D3DCOLOR_ARGB(static_cast<int>(RandomFloat(160.0f, 230.0f)),
+                                           255,
+                                           245,
+                                           172);
+        if (i == 2 || i == 7)
+        {
+            sparkColor = D3DCOLOR_ARGB(static_cast<int>(RandomFloat(140.0f, 210.0f)),
+                                       255,
+                                       110,
+                                       36);
+        }
+
+        SpawnParticle(effect,
+                      center,
+                      D3DXVECTOR3(0.0f, RandomFloat(0.12f, 0.42f), 0.0f),
+                      life,
+                      size,
+                      size * 1.18f,
+                      angle,
+                      RandomFloat(-2.4f, 2.4f),
                       sparkColor,
                       ParticleVisualType::DamageSpark);
     }
@@ -1381,19 +1386,25 @@ void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
                 const int alpha = static_cast<int>(ClampFloat(180.0f * fade * particle.alphaBias,
                                                               0.0f,
                                                               190.0f));
-                particle.color = D3DCOLOR_ARGB(alpha, 26, 28, 72);
+                particle.color = D3DCOLOR_ARGB(alpha, 48, 14, 38);
             }
-            else if (particle.visualType == ParticleVisualType::DamageFlash)
+            else if (particle.visualType == ParticleVisualType::DamageCore)
             {
                 particle.size = particle.startSize + (particle.endSize - particle.startSize) * sinf(age * D3DX_PI);
                 const int alpha = static_cast<int>(ClampFloat(250.0f * fade, 0.0f, 255.0f));
-                particle.color = D3DCOLOR_ARGB(alpha, 255, 255, 236);
+                particle.color = D3DCOLOR_ARGB(alpha, 255, 248, 196);
             }
             else if (particle.visualType == ParticleVisualType::DamageRing)
             {
                 particle.size = particle.startSize + (particle.endSize - particle.startSize) * age;
-                const int alpha = static_cast<int>(ClampFloat(210.0f * fade, 0.0f, 230.0f));
-                particle.color = D3DCOLOR_ARGB(alpha, 255, 236, 76);
+                const int alpha = static_cast<int>(ClampFloat(220.0f * fade, 0.0f, 230.0f));
+                particle.color = D3DCOLOR_ARGB(alpha, 255, 100, 28);
+            }
+            else if (particle.visualType == ParticleVisualType::DamageSpike)
+            {
+                particle.size = particle.startSize + (particle.endSize - particle.startSize) * age;
+                const int alpha = static_cast<int>(ClampFloat(245.0f * fade, 0.0f, 250.0f));
+                particle.color = D3DCOLOR_ARGB(alpha, 255, 232, 98);
             }
             else if (particle.visualType == ParticleVisualType::DamageSpark)
             {
@@ -1458,7 +1469,7 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
         texture = m_fireTexture;
         break;
     case ParticleEffectPreset::Damage:
-        texture = m_damageTexture;
+        texture = m_damageCoreTexture;
         break;
     default:
         return;
@@ -1604,23 +1615,28 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
                 {
                     if (particle.visualType == ParticleVisualType::DamageSpark)
                     {
-                        halfWidth = particle.size * 0.42f;
-                        halfHeight = particle.size * 0.72f;
+                        halfWidth = particle.size * 0.11f;
+                        halfHeight = particle.size * 0.48f;
                     }
                     else if (particle.visualType == ParticleVisualType::DamageRing)
                     {
-                        halfWidth = particle.size * 0.86f;
-                        halfHeight = particle.size * 0.86f;
+                        halfWidth = particle.size * 0.76f;
+                        halfHeight = particle.size * 0.76f;
                     }
-                    else if (particle.visualType == ParticleVisualType::DamageFlash)
+                    else if (particle.visualType == ParticleVisualType::DamageCore)
                     {
-                        halfWidth = particle.size * 0.70f;
-                        halfHeight = particle.size * 0.70f;
+                        halfWidth = particle.size * 0.58f;
+                        halfHeight = particle.size * 0.58f;
+                    }
+                    else if (particle.visualType == ParticleVisualType::DamageSpike)
+                    {
+                        halfWidth = particle.size * 0.15f;
+                        halfHeight = particle.size * 1.12f;
                     }
                     else if (particle.visualType == ParticleVisualType::DamageOutline)
                     {
-                        halfWidth = particle.size * 0.78f;
-                        halfHeight = particle.size * 0.78f;
+                        halfWidth = particle.size * 0.18f;
+                        halfHeight = particle.size * 1.18f;
                     }
                 }
 
@@ -1752,10 +1768,11 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
     }
     else if (effectInstance.preset == ParticleEffectPreset::Damage)
     {
-        drawBatch(m_damageTexture, ParticleVisualType::DamageOutline, "ParticleAlphaTechnique");
-        drawBatch(m_damageTexture, ParticleVisualType::DamageRing, "ParticleAdditiveTechnique");
-        drawBatch(m_damageTexture, ParticleVisualType::DamageFlash, "ParticleAdditiveTechnique");
-        drawBatch(m_damageTexture, ParticleVisualType::DamageSpark, "ParticleAdditiveTechnique");
+        drawBatch(m_damageSpikeTexture, ParticleVisualType::DamageOutline, "ParticleAlphaTechnique");
+        drawBatch(m_damageRingTexture, ParticleVisualType::DamageRing, "ParticleAdditiveTechnique");
+        drawBatch(m_damageSpikeTexture, ParticleVisualType::DamageSpike, "ParticleAdditiveTechnique");
+        drawBatch(m_damageCoreTexture, ParticleVisualType::DamageCore, "ParticleAdditiveTechnique");
+        drawBatch(m_damageSpikeTexture, ParticleVisualType::DamageSpark, "ParticleAdditiveTechnique");
     }
     else
     {

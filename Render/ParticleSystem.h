@@ -53,8 +53,9 @@ private:
         ExplosionSmoke,
         ExplosionDust,
         DamageOutline,
-        DamageFlash,
+        DamageCore,
         DamageRing,
+        DamageSpike,
         DamageSpark,
     };
 
@@ -153,7 +154,9 @@ private:
     LPDIRECT3DTEXTURE9 m_dustTexture2 = NULL;
     LPDIRECT3DTEXTURE9 m_fogTexture = NULL;
     LPDIRECT3DTEXTURE9 m_rainTexture = NULL;
-    LPDIRECT3DTEXTURE9 m_damageTexture = NULL;
+    LPDIRECT3DTEXTURE9 m_damageCoreTexture = NULL;
+    LPDIRECT3DTEXTURE9 m_damageRingTexture = NULL;
+    LPDIRECT3DTEXTURE9 m_damageSpikeTexture = NULL;
     LPD3DXEFFECT m_effect = NULL;
     bool m_dustFixedScreenSizeEnabled = true;
     float m_explosionScale = 1.0f;
