@@ -1041,7 +1041,7 @@ void ParticleSystem::EmitExplosion(EffectInstance& effect)
 
 void ParticleSystem::EmitDamage(EffectInstance& effect)
 {
-    const D3DCOLOR outlineColor = D3DCOLOR_ARGB(190, 52, 18, 42);
+    const D3DCOLOR outlineColor = D3DCOLOR_ARGB(255, 52, 18, 42);
     const D3DXVECTOR3 center(effect.origin.x,
                              effect.origin.y + 0.42f,
                              effect.origin.z);
@@ -1054,7 +1054,7 @@ void ParticleSystem::EmitDamage(EffectInstance& effect)
                   1.18f,
                   0.0f,
                   RandomFloat(-1.4f, 1.4f),
-                  D3DCOLOR_ARGB(230, 255, 92, 24),
+                  D3DCOLOR_ARGB(255, 255, 92, 24),
                   ParticleVisualType::DamageRing);
 
     SpawnParticle(effect,
@@ -1110,7 +1110,7 @@ void ParticleSystem::EmitDamage(EffectInstance& effect)
                       size * 1.12f,
                       angle,
                       RandomFloat(-1.6f, 1.6f),
-                      D3DCOLOR_ARGB(245, 255, 232, 98),
+                      D3DCOLOR_ARGB(255, 255, 232, 98),
                       ParticleVisualType::DamageSpike);
     }
 
@@ -1119,13 +1119,13 @@ void ParticleSystem::EmitDamage(EffectInstance& effect)
         const float angle = RandomFloat(0.0f, D3DX_PI * 2.0f);
         const float size = RandomFloat(0.50f, 1.05f);
         const float life = RandomFloat(0.18f, 0.34f);
-        D3DCOLOR sparkColor = D3DCOLOR_ARGB(static_cast<int>(RandomFloat(160.0f, 230.0f)),
+        D3DCOLOR sparkColor = D3DCOLOR_ARGB(255,
                                            255,
                                            245,
                                            172);
         if (i == 2 || i == 7)
         {
-            sparkColor = D3DCOLOR_ARGB(static_cast<int>(RandomFloat(140.0f, 210.0f)),
+            sparkColor = D3DCOLOR_ARGB(255,
                                        255,
                                        110,
                                        36);
@@ -1379,43 +1379,37 @@ void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
             particle.velocity.x *= 0.955f;
             particle.velocity.z *= 0.955f;
 
-            const float fade = 1.0f - age;
+            float sizeScale = sinf(age * D3DX_PI);
+            sizeScale = ClampFloat(sizeScale, 0.0f, 1.0f);
             if (particle.visualType == ParticleVisualType::DamageOutline)
             {
-                particle.size = particle.startSize + (particle.endSize - particle.startSize) * age;
-                const int alpha = static_cast<int>(ClampFloat(180.0f * fade * particle.alphaBias,
-                                                              0.0f,
-                                                              190.0f));
-                particle.color = D3DCOLOR_ARGB(alpha, 48, 14, 38);
+                particle.size = particle.endSize * sizeScale;
+                particle.color = D3DCOLOR_ARGB(255, 48, 14, 38);
             }
             else if (particle.visualType == ParticleVisualType::DamageCore)
             {
-                particle.size = particle.startSize + (particle.endSize - particle.startSize) * sinf(age * D3DX_PI);
-                const int alpha = static_cast<int>(ClampFloat(250.0f * fade, 0.0f, 255.0f));
-                particle.color = D3DCOLOR_ARGB(alpha, 255, 248, 196);
+                particle.size = particle.endSize * sizeScale;
+                particle.color = D3DCOLOR_ARGB(255, 255, 248, 196);
             }
             else if (particle.visualType == ParticleVisualType::DamageRing)
             {
-                particle.size = particle.startSize + (particle.endSize - particle.startSize) * age;
-                const int alpha = static_cast<int>(ClampFloat(220.0f * fade, 0.0f, 230.0f));
-                particle.color = D3DCOLOR_ARGB(alpha, 255, 100, 28);
+                const float expand = age * 1.35f;
+                const float shrink = sizeScale;
+                particle.size = particle.endSize * expand * shrink;
+                particle.color = D3DCOLOR_ARGB(255, 255, 100, 28);
             }
             else if (particle.visualType == ParticleVisualType::DamageSpike)
             {
-                particle.size = particle.startSize + (particle.endSize - particle.startSize) * age;
-                const int alpha = static_cast<int>(ClampFloat(245.0f * fade, 0.0f, 250.0f));
-                particle.color = D3DCOLOR_ARGB(alpha, 255, 232, 98);
+                particle.size = particle.endSize * sizeScale;
+                particle.color = D3DCOLOR_ARGB(255, 255, 232, 98);
             }
             else if (particle.visualType == ParticleVisualType::DamageSpark)
             {
-                particle.size = particle.startSize + (particle.endSize - particle.startSize) * age;
-                const int alpha = static_cast<int>(ClampFloat(235.0f * fade * particle.alphaBias,
-                                                              0.0f,
-                                                              245.0f));
                 const int red = static_cast<int>((particle.color >> 16) & 0xff);
                 const int green = static_cast<int>((particle.color >> 8) & 0xff);
                 const int blue = static_cast<int>(particle.color & 0xff);
-                particle.color = D3DCOLOR_ARGB(alpha, red, green, blue);
+                particle.size = particle.endSize * sizeScale;
+                particle.color = D3DCOLOR_ARGB(255, red, green, blue);
             }
         }
 
