@@ -608,6 +608,8 @@ public:
     ParticleEffectPreset GetParticleEffectPreset() const;
     void SetExplosionScale(float scale);
     float GetExplosionScale() const;
+    void SetDamageScale(float scale);
+    float GetDamageScale() const;
 
     // 彩度をどれくらい上げるか（下げるか）を設定
     void SetPostEffectSaturate(const float level);

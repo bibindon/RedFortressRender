@@ -6012,6 +6012,16 @@ float Render::GetExplosionScale() const
     return m_particleSystem.GetExplosionScale();
 }
 
+void Render::SetDamageScale(const float scale)
+{
+    m_particleSystem.SetDamageScale(scale);
+}
+
+float Render::GetDamageScale() const
+{
+    return m_particleSystem.GetDamageScale();
+}
+
 void Render::RotateCamera(const D3DXVECTOR3& rot)
 {
     D3DXVECTOR3 lookAt = Camera::GetLookAtPos();

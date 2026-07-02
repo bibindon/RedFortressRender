@@ -34,6 +34,8 @@ public:
     void SetDustFixedScreenSize(bool enabled);
     void SetExplosionScale(float scale);
     float GetExplosionScale() const;
+    void SetDamageScale(float scale);
+    float GetDamageScale() const;
 
     void Update(float deltaTime);
     void Draw(const D3DXMATRIX& view, const D3DXMATRIX& proj);
@@ -160,5 +162,6 @@ private:
     LPD3DXEFFECT m_effect = NULL;
     bool m_dustFixedScreenSizeEnabled = true;
     float m_explosionScale = 1.0f;
+    float m_damageScale = 1.0f;
 };
 }

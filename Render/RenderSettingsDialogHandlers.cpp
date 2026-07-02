@@ -634,6 +634,12 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
         SetTrackbarFromFloat(hWnd, 32142, floatValue, 0.1f, 10.0f);
         return true;
     }
+    if (id == 42143 && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    {
+        render->SetDamageScale(floatValue);
+        SetTrackbarFromFloat(hWnd, 32143, floatValue, 0.1f, 10.0f);
+        return true;
+    }
     return false;
 }
 void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
@@ -1606,6 +1612,10 @@ void HandleRenderSettingsHScroll(HWND hWnd, LPARAM lParam)
         break;
     case 32142:
         render->SetExplosionScale(TrackbarToFloat(trackbar, 0.1f, 10.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.1f, 10.0f), L"%.2f");
+        break;
+    case 32143:
+        render->SetDamageScale(TrackbarToFloat(trackbar, 0.1f, 10.0f));
         SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.1f, 10.0f), L"%.2f");
         break;
     default:

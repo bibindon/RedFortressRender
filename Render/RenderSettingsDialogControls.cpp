@@ -780,6 +780,10 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     CreateSettingsTrackbar(hWnd, 32142, 168, y, 122, 30, 0, 100, 50);
     CreateSettingsEdit(hWnd, L"1.00", 298, y + 2, 40, 20, 42142);
     y += 30;
+    CreateSettingsStatic(hWnd, L"Damage Scale", 16, y + 6, 138, 18);
+    CreateSettingsTrackbar(hWnd, 32143, 168, y, 122, 30, 0, 100, 50);
+    CreateSettingsEdit(hWnd, L"1.00", 298, y + 2, 40, 20, 42143);
+    y += 30;
     CreateSettingsGroupBox(hWnd, L"Text", 8, y, 504, 216);
     CreateSettingsStatic(hWnd, L"Text", 24, y + 24, 48, 18);
     CreateSettingsEdit(hWnd, L"サンプルテキスト", 96, y + 22, 268, 20, 32152);
@@ -902,6 +906,7 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     SetSettingsTrackbarRange(hWnd, 32120, 1, 8);
     SetSettingsTrackbarRange(hWnd, 32130, 1, 21);
     SetSettingsTrackbarRange(hWnd, 32142, 0, 100);
+    SetSettingsTrackbarRange(hWnd, 32143, 0, 100);
     SetSettingsTrackbarRange(hWnd, 32150, 0, 1000);
     SetSettingsTrackbarRange(hWnd, 32151, 0, 1000);
 

@@ -210,6 +210,8 @@ void SyncRenderSettingsDialogFromRender(HWND hWnd)
     SetTrackbarFromInt(hWnd, 32130, render->GetPostEffectFontSampleSize(), 1, 21);
     SetSettingsEditFloat(hWnd, 42142, render->GetExplosionScale(), L"%.2f");
     SetTrackbarFromFloat(hWnd, 32142, render->GetExplosionScale(), 0.1f, 10.0f);
+    SetSettingsEditFloat(hWnd, 42143, render->GetDamageScale(), L"%.2f");
+    SetTrackbarFromFloat(hWnd, 32143, render->GetDamageScale(), 0.1f, 10.0f);
     SyncLoadedModelsFromRender(state);
     UpdatePointLightsList(state);
     UpdateSettingsTextList(state);
