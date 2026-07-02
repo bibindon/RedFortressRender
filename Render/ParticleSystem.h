@@ -163,6 +163,6 @@ private:
     LPD3DXEFFECT m_effect = NULL;
     bool m_dustFixedScreenSizeEnabled = true;
     float m_explosionScale = 1.0f;
-    float m_damageScale = 1.0f;
+    float m_damageScale = 0.5f;
 };
 }
