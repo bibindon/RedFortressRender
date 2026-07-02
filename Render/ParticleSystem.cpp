@@ -1165,6 +1165,31 @@ void ParticleSystem::EmitDamage(EffectInstance& effect)
                       sparkColor,
                       ParticleVisualType::DamageSpark);
     }
+
+    for (int i = 0; i < 16; ++i)
+    {
+        const float angle = RandomFloat(0.0f, D3DX_PI * 2.0f);
+        const float speed = RandomFloat(4.2f, 8.2f) * scale;
+        const float size = RandomFloat(0.16f, 0.28f) * scale;
+        D3DCOLOR scatterColor = D3DCOLOR_ARGB(255, 255, 255, 255);
+        if ((i % 2) == 1)
+        {
+            scatterColor = D3DCOLOR_ARGB(255, 255, 126, 24);
+        }
+
+        SpawnParticle(effect,
+                      center,
+                      D3DXVECTOR3(cosf(angle) * speed,
+                                  RandomFloat(-0.35f, 0.55f) * speed,
+                                  sinf(angle) * speed),
+                      0.11f,
+                      0.0f,
+                      size,
+                      angle,
+                      RandomFloat(-6.0f, 6.0f),
+                      scatterColor,
+                      ParticleVisualType::DamageScatter);
+    }
 }
 
 void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
@@ -1431,6 +1456,14 @@ void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
                 particle.size = particle.endSize * sizeScale;
                 particle.color = D3DCOLOR_ARGB(255, red, green, blue);
             }
+            else if (particle.visualType == ParticleVisualType::DamageScatter)
+            {
+                const int red = static_cast<int>((particle.color >> 16) & 0xff);
+                const int green = static_cast<int>((particle.color >> 8) & 0xff);
+                const int blue = static_cast<int>(particle.color & 0xff);
+                particle.size = particle.endSize * age;
+                particle.color = D3DCOLOR_ARGB(255, red, green, blue);
+            }
         }
 
         particle.rotation += particle.rotationSpeed * deltaTime;
@@ -1642,6 +1675,11 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
                         halfWidth = particle.size * 0.58f;
                         halfHeight = particle.size * 0.58f;
                     }
+                    else if (particle.visualType == ParticleVisualType::DamageScatter)
+                    {
+                        halfWidth = particle.size * 0.26f;
+                        halfHeight = particle.size * 0.26f;
+                    }
                     else if (particle.visualType == ParticleVisualType::DamageSpike)
                     {
                         halfWidth = particle.size * 0.15f;
@@ -1787,6 +1825,7 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
         drawBatch(m_damageSpikeTexture, ParticleVisualType::DamageSpike, "ParticleAdditiveTechnique");
         drawBatch(m_damageCoreTexture, ParticleVisualType::DamageCore, "ParticleAdditiveTechnique");
         drawBatch(m_damageSpikeTexture, ParticleVisualType::DamageSpark, "ParticleAdditiveTechnique");
+        drawBatch(m_damageCoreTexture, ParticleVisualType::DamageScatter, "ParticleAdditiveTechnique");
     }
     else
     {

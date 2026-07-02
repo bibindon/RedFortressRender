@@ -59,6 +59,7 @@ private:
         DamageRing,
         DamageSpike,
         DamageSpark,
+        DamageScatter,
     };
 
     struct Particle
