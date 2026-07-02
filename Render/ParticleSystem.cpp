@@ -1054,14 +1054,14 @@ void ParticleSystem::EmitDamage(EffectInstance& effect)
     const float scale = m_damageScale;
     const D3DCOLOR outlineColor = D3DCOLOR_ARGB(255, 52, 18, 42);
     const D3DXVECTOR3 center(effect.origin.x,
-                             effect.origin.y + 0.42f * scale,
+                             effect.origin.y + 0.42f,
                              effect.origin.z);
 
     SpawnParticle(effect,
                   center,
-                  D3DXVECTOR3(0.0f, 0.32f * scale, 0.0f),
+                  D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                   0.22f,
-                  0.86f * scale,
+                  0.0f,
                   1.18f * scale,
                   0.0f,
                   RandomFloat(-1.4f, 1.4f),
@@ -1070,9 +1070,9 @@ void ParticleSystem::EmitDamage(EffectInstance& effect)
 
     SpawnParticle(effect,
                   center,
-                  D3DXVECTOR3(0.0f, 0.48f * scale, 0.0f),
+                  D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                   0.18f,
-                  0.58f * scale,
+                  0.0f,
                   0.82f * scale,
                   RandomFloat(0.0f, D3DX_PI * 2.0f),
                   RandomFloat(-4.5f, 4.5f),
@@ -1104,9 +1104,9 @@ void ParticleSystem::EmitDamage(EffectInstance& effect)
 
         SpawnParticle(effect,
                       center,
-                      D3DXVECTOR3(0.0f, RandomFloat(0.24f, 0.54f) * scale, 0.0f),
+                      D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                       life,
-                      size * 1.16f,
+                      0.0f,
                       size * 1.28f,
                       angle,
                       RandomFloat(-1.2f, 1.2f),
@@ -1115,9 +1115,9 @@ void ParticleSystem::EmitDamage(EffectInstance& effect)
 
         SpawnParticle(effect,
                       center,
-                      D3DXVECTOR3(0.0f, RandomFloat(0.32f, 0.62f) * scale, 0.0f),
+                      D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                       life,
-                      size,
+                      0.0f,
                       size * 1.12f,
                       angle,
                       RandomFloat(-1.6f, 1.6f),
@@ -1144,9 +1144,9 @@ void ParticleSystem::EmitDamage(EffectInstance& effect)
 
         SpawnParticle(effect,
                       center,
-                      D3DXVECTOR3(0.0f, RandomFloat(0.12f, 0.42f) * scale, 0.0f),
+                      D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                       life,
-                      size,
+                      0.0f,
                       size * 1.18f,
                       angle,
                       RandomFloat(-2.4f, 2.4f),
@@ -1386,11 +1386,8 @@ void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
         }
         else if (effect.preset == ParticleEffectPreset::Damage)
         {
-            particle.velocity.y -= 4.6f * deltaTime;
-            particle.velocity.x *= 0.955f;
-            particle.velocity.z *= 0.955f;
-
-            const float sizeScale = ClampFloat(age / 0.22f, 0.0f, 1.0f);
+            const float sizeProgress = ClampFloat(particle.life / 0.10f, 0.0f, 1.0f);
+            const float sizeScale = sqrtf(sizeProgress);
             if (particle.visualType == ParticleVisualType::DamageOutline)
             {
                 particle.size = particle.endSize * sizeScale;
@@ -1403,8 +1400,7 @@ void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
             }
             else if (particle.visualType == ParticleVisualType::DamageRing)
             {
-                const float expand = age * 1.35f;
-                particle.size = particle.endSize * (std::min)(expand, 1.0f);
+                particle.size = particle.endSize * sizeScale;
                 particle.color = D3DCOLOR_ARGB(255, 255, 100, 28);
             }
             else if (particle.visualType == ParticleVisualType::DamageSpike)
