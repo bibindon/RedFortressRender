@@ -29,9 +29,11 @@ void FontEx::AddText(const std::wstring& text,
     const UINT outlineColor = MakeOutlineColor(fontColor);
 
     m_shadowFont.AddText(text, X, Y, MakeBlurColor(fontColor));
-    m_mainFont.AddText(text, X - outlineOffset, Y - outlineOffset, outlineColor);
-    m_mainFont.AddText(text, X + outlineOffset, Y + outlineOffset, outlineColor);
-    m_mainFont.AddText(text, X, Y, fontColor);
+
+    const POINT mainPos = Common::ScaledPoint(X, Y);
+    m_mainFont.AddTextDirect(text, mainPos.x - outlineOffset, mainPos.y - outlineOffset, outlineColor);
+    m_mainFont.AddTextDirect(text, mainPos.x + outlineOffset, mainPos.y + outlineOffset, outlineColor);
+    m_mainFont.AddTextDirect(text, mainPos.x, mainPos.y, fontColor);
 }
 
 void FontEx::AddTextCenter(const std::wstring& text,
@@ -54,19 +56,24 @@ void FontEx::AddTextCenter(const std::wstring& text,
     const UINT outlineColor = MakeOutlineColor(fontColor);
 
     m_shadowFont.AddTextCenter(text, X, Y, Width, Height, MakeBlurColor(fontColor));
-    m_mainFont.AddTextCenter(text,
-                             X - outlineOffset,
-                             Y - outlineOffset,
-                             Width,
-                             Height,
-                             outlineColor);
-    m_mainFont.AddTextCenter(text,
-                             X + outlineOffset,
-                             Y + outlineOffset,
-                             Width,
-                             Height,
-                             outlineColor);
-    m_mainFont.AddTextCenter(text, X, Y, Width, Height, fontColor);
+
+    const POINT mainPos = Common::ScaledPoint(X, Y);
+    D3DXVECTOR2 size = Common::ScaledSize();
+    const int screenWidth = (int)(Width * size.x);
+    const int screenHeight = (int)(Height * size.y);
+    m_mainFont.AddTextCenterDirect(text,
+                                   mainPos.x - outlineOffset,
+                                   mainPos.y - outlineOffset,
+                                   screenWidth,
+                                   screenHeight,
+                                   outlineColor);
+    m_mainFont.AddTextCenterDirect(text,
+                                   mainPos.x + outlineOffset,
+                                   mainPos.y + outlineOffset,
+                                   screenWidth,
+                                   screenHeight,
+                                   outlineColor);
+    m_mainFont.AddTextCenterDirect(text, mainPos.x, mainPos.y, screenWidth, screenHeight, fontColor);
 }
 
 void FontEx::Draw()

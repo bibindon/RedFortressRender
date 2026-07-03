@@ -36,6 +36,15 @@ public:
                  const int Y,
                  const UINT fontColor);
 
+    void AddTextDirect(const std::wstring& text,
+                       const int screenX,
+                       const int screenY);
+
+    void AddTextDirect(const std::wstring& text,
+                       const int screenX,
+                       const int screenY,
+                       const UINT fontColor);
+
     void AddTextCenter(const std::wstring& text,
                        const int X,
                        const int Y,
@@ -48,6 +57,19 @@ public:
                        const int Width,
                        const int Height,
                        const UINT fontColor);
+
+    void AddTextCenterDirect(const std::wstring& text,
+                             const int screenX,
+                             const int screenY,
+                             const int screenWidth,
+                             const int screenHeight);
+
+    void AddTextCenterDirect(const std::wstring& text,
+                             const int screenX,
+                             const int screenY,
+                             const int screenWidth,
+                             const int screenHeight,
+                             const UINT fontColor);
 
     void Draw();
     void Finalize();

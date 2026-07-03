@@ -58,21 +58,8 @@ void Font::AddText(const std::wstring& text,
                       const int X,
                       const int Y)
 {
-    TextInfo textInfo;
-
-    POINT pt = Common::ScaledPoint(X, Y);
-
-    textInfo.m_rect.left = pt.x;
-    textInfo.m_rect.top = pt.y;
-    textInfo.m_rect.right = 0;
-    textInfo.m_rect.bottom = 0;
-
-    textInfo.m_text = text;
-    textInfo.m_bCenter = false;
-
-    textInfo.m_color = m_fontColor;
-
-    m_textList.push_back(textInfo);
+    const POINT pt = Common::ScaledPoint(X, Y);
+    AddTextDirect(text, pt.x, pt.y);
 }
 
 void Font::AddText(const std::wstring& text,
@@ -80,18 +67,42 @@ void Font::AddText(const std::wstring& text,
                        const int Y,
                        const UINT fontColor)
 {
+    const POINT pt = Common::ScaledPoint(X, Y);
+    AddTextDirect(text, pt.x, pt.y, fontColor);
+}
+
+void Font::AddTextDirect(const std::wstring& text,
+                         const int screenX,
+                         const int screenY)
+{
     TextInfo textInfo;
 
-    POINT pt = Common::ScaledPoint(X, Y);
-
-    textInfo.m_rect.left = pt.x;
-    textInfo.m_rect.top = pt.y;
+    textInfo.m_rect.left = screenX;
+    textInfo.m_rect.top = screenY;
     textInfo.m_rect.right = 0;
     textInfo.m_rect.bottom = 0;
 
     textInfo.m_text = text;
     textInfo.m_bCenter = false;
+    textInfo.m_color = m_fontColor;
 
+    m_textList.push_back(textInfo);
+}
+
+void Font::AddTextDirect(const std::wstring& text,
+                         const int screenX,
+                         const int screenY,
+                         const UINT fontColor)
+{
+    TextInfo textInfo;
+
+    textInfo.m_rect.left = screenX;
+    textInfo.m_rect.top = screenY;
+    textInfo.m_rect.right = 0;
+    textInfo.m_rect.bottom = 0;
+
+    textInfo.m_text = text;
+    textInfo.m_bCenter = false;
     textInfo.m_color = fontColor;
 
     m_textList.push_back(textInfo);
@@ -103,23 +114,11 @@ void Font::AddTextCenter(const std::wstring& text,
                         const int Width,
                         const int Height)
 {
-    TextInfo textInfo;
-
-    POINT pt = Common::ScaledPoint(X, Y);
-    POINT pt2 = Common::ScaledPoint(Width, Height);
-
-    textInfo.m_rect.left = pt.x;
-    textInfo.m_rect.top = pt.y;
-
-    textInfo.m_rect.right = pt.x + pt2.x;
-    textInfo.m_rect.bottom = pt.y + pt2.y;
-
-    textInfo.m_text = text;
-    textInfo.m_bCenter = true;
-
-    textInfo.m_color = m_fontColor;
-
-    m_textList.push_back(textInfo);
+    const POINT pt = Common::ScaledPoint(X, Y);
+    D3DXVECTOR2 size = Common::ScaledSize();
+    const int screenWidth = (int)(Width * size.x);
+    const int screenHeight = (int)(Height * size.y);
+    AddTextCenterDirect(text, pt.x, pt.y, screenWidth, screenHeight);
 }
 
 void Font::AddTextCenter(const std::wstring& text,
@@ -129,20 +128,49 @@ void Font::AddTextCenter(const std::wstring& text,
                          const int Height,
                          const UINT fontColor)
 {
+    const POINT pt = Common::ScaledPoint(X, Y);
+    D3DXVECTOR2 size = Common::ScaledSize();
+    const int screenWidth = (int)(Width * size.x);
+    const int screenHeight = (int)(Height * size.y);
+    AddTextCenterDirect(text, pt.x, pt.y, screenWidth, screenHeight, fontColor);
+}
+
+void Font::AddTextCenterDirect(const std::wstring& text,
+                               const int screenX,
+                               const int screenY,
+                               const int screenWidth,
+                               const int screenHeight)
+{
     TextInfo textInfo;
 
-    POINT pt = Common::ScaledPoint(X, Y);
-    POINT pt2 = Common::ScaledPoint(Width, Height);
-
-    textInfo.m_rect.left = pt.x;
-    textInfo.m_rect.top = pt.y;
-
-    textInfo.m_rect.right = pt.x + pt2.x;
-    textInfo.m_rect.bottom = pt.y + pt2.y;
+    textInfo.m_rect.left = screenX;
+    textInfo.m_rect.top = screenY;
+    textInfo.m_rect.right = screenX + screenWidth;
+    textInfo.m_rect.bottom = screenY + screenHeight;
 
     textInfo.m_text = text;
     textInfo.m_bCenter = true;
+    textInfo.m_color = m_fontColor;
 
+    m_textList.push_back(textInfo);
+}
+
+void Font::AddTextCenterDirect(const std::wstring& text,
+                               const int screenX,
+                               const int screenY,
+                               const int screenWidth,
+                               const int screenHeight,
+                               const UINT fontColor)
+{
+    TextInfo textInfo;
+
+    textInfo.m_rect.left = screenX;
+    textInfo.m_rect.top = screenY;
+    textInfo.m_rect.right = screenX + screenWidth;
+    textInfo.m_rect.bottom = screenY + screenHeight;
+
+    textInfo.m_text = text;
+    textInfo.m_bCenter = true;
     textInfo.m_color = fontColor;
 
     m_textList.push_back(textInfo);
