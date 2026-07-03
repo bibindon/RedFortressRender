@@ -1271,13 +1271,20 @@ void ParticleSystem::EmitDash(EffectInstance& effect)
 
     for (int i = 0; i < 22; ++i)
     {
-        const D3DXVECTOR3 pos = effect.origin +
-                                back * RandomFloat(0.05f, 0.95f) +
-                                right * RandomCenteredFloat(0.44f) +
-                                D3DXVECTOR3(0.0f, RandomFloat(-0.24f, 0.54f), 0.0f);
-        const D3DXVECTOR3 velocity = back * RandomFloat(7.0f, 13.0f) +
-                                     right * RandomCenteredFloat(1.2f) +
-                                     D3DXVECTOR3(0.0f, RandomCenteredFloat(0.8f), 0.0f);
+        D3DXVECTOR3 radialDirection = back * RandomFloat(0.80f, 1.35f) +
+                                      right * RandomCenteredFloat(0.48f) +
+                                      D3DXVECTOR3(0.0f, RandomCenteredFloat(0.42f), 0.0f);
+        if (D3DXVec3LengthSq(&radialDirection) <= 0.0001f)
+        {
+            radialDirection = back;
+        }
+        else
+        {
+            D3DXVec3Normalize(&radialDirection, &radialDirection);
+        }
+
+        const D3DXVECTOR3 pos = effect.origin + radialDirection * RandomFloat(0.16f, 0.72f);
+        const D3DXVECTOR3 velocity = radialDirection * RandomFloat(7.5f, 13.5f);
         const float life = RandomFloat(0.14f, 0.26f);
         const float startSize = RandomFloat(0.34f, 0.70f);
         const float endSize = startSize * RandomFloat(0.42f, 0.78f);
@@ -1822,15 +1829,19 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
                 }
                 else if (effectInstance.preset == ParticleEffectPreset::Dash)
                 {
-                    D3DXVECTOR3 dashVelocity = particle.velocity;
-                    if (D3DXVec3LengthSq(&dashVelocity) <= 0.0001f)
+                    D3DXVECTOR3 dashDirection = particle.pos - effectInstance.origin;
+                    if (D3DXVec3LengthSq(&dashDirection) <= 0.0001f)
                     {
-                        dashVelocity = effectInstance.direction * -1.0f;
+                        dashDirection = particle.velocity;
                     }
-                    D3DXVec3Normalize(&dashVelocity, &dashVelocity);
+                    if (D3DXVec3LengthSq(&dashDirection) <= 0.0001f)
+                    {
+                        dashDirection = effectInstance.direction * -1.0f;
+                    }
+                    D3DXVec3Normalize(&dashDirection, &dashDirection);
 
-                    const float dashX = D3DXVec3Dot(&dashVelocity, &cameraRight);
-                    const float dashY = D3DXVec3Dot(&dashVelocity, &cameraUp);
+                    const float dashX = D3DXVec3Dot(&dashDirection, &cameraRight);
+                    const float dashY = D3DXVec3Dot(&dashDirection, &cameraUp);
                     D3DXVECTOR3 dashUp = cameraRight * dashX + cameraUp * dashY;
                     if (D3DXVec3LengthSq(&dashUp) <= 0.0001f)
                     {
