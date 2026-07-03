@@ -410,8 +410,8 @@ void PostEffectMaskedGauss::DrawCompositeQuad(LPDIRECT3DTEXTURE9 texBlurred,
     m_texMask->GetLevelDesc(0, &maskDesc);
     const float maskTextureSize[2] = { static_cast<float>(maskDesc.Width),
                                        static_cast<float>(maskDesc.Height) };
-    const float maskScreenSize[2] = { static_cast<float>(targetDesc.Width),
-                                      static_cast<float>(targetDesc.Height) };
+    const float maskScreenSize[2] = { static_cast<float>(Common::BASE_W),
+                                      static_cast<float>(Common::BASE_H) };
     m_d3dEffect->SetFloatArray("g_MaskTextureSize", maskTextureSize, 2);
     m_d3dEffect->SetFloatArray("g_MaskScreenSize", maskScreenSize, 2);
 
