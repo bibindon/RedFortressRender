@@ -1271,22 +1271,13 @@ void ParticleSystem::EmitDash(EffectInstance& effect)
 
     for (int i = 0; i < 44; ++i)
     {
-        D3DXVECTOR3 radialDirection = back * RandomFloat(0.80f, 1.35f) +
-                                      right * RandomCenteredFloat(0.96f) +
-                                      D3DXVECTOR3(0.0f, RandomCenteredFloat(0.84f), 0.0f);
-        if (D3DXVec3LengthSq(&radialDirection) <= 0.0001f)
-        {
-            radialDirection = back;
-        }
-        else
-        {
-            D3DXVec3Normalize(&radialDirection, &radialDirection);
-        }
-
-        const D3DXVECTOR3 pos = effect.origin + radialDirection * RandomFloat(0.32f, 1.44f);
-        const D3DXVECTOR3 velocity = radialDirection * RandomFloat(7.5f, 13.5f);
-        const float life = RandomFloat(0.14f, 0.26f);
-        const float startSize = RandomFloat(0.34f, 0.70f);
+        const D3DXVECTOR3 pos = effect.origin +
+                                back * RandomFloat(0.12f, 1.20f) +
+                                right * RandomCenteredFloat(1.10f) +
+                                D3DXVECTOR3(0.0f, RandomCenteredFloat(0.92f), 0.0f);
+        const D3DXVECTOR3 velocity = back * RandomFloat(8.5f, 14.5f);
+        const float life = RandomFloat(0.18f, 0.32f);
+        const float startSize = RandomFloat(0.72f, 1.28f);
         const float endSize = startSize * RandomFloat(0.42f, 0.78f);
         const int alpha = static_cast<int>(RandomFloat(125.0f, 205.0f));
         const int red = static_cast<int>(RandomFloat(205.0f, 245.0f));
@@ -1829,14 +1820,10 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
                 }
                 else if (effectInstance.preset == ParticleEffectPreset::Dash)
                 {
-                    D3DXVECTOR3 dashDirection = particle.pos - effectInstance.origin;
+                    D3DXVECTOR3 dashDirection = effectInstance.direction * -1.0f;
                     if (D3DXVec3LengthSq(&dashDirection) <= 0.0001f)
                     {
                         dashDirection = particle.velocity;
-                    }
-                    if (D3DXVec3LengthSq(&dashDirection) <= 0.0001f)
-                    {
-                        dashDirection = effectInstance.direction * -1.0f;
                     }
                     D3DXVec3Normalize(&dashDirection, &dashDirection);
 
@@ -1865,7 +1852,7 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
                     rotatedRight = dashRight;
                     rotatedUp = dashUp;
                     halfWidth = particle.size * 0.055f;
-                    halfHeight = particle.size * 1.28f;
+                    halfHeight = particle.size * 1.95f;
                 }
 
                 const D3DXVECTOR3 halfRight(rotatedRight.x * halfWidth,
