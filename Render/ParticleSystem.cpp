@@ -1269,11 +1269,11 @@ void ParticleSystem::EmitDash(EffectInstance& effect)
         D3DXVec3Normalize(&right, &right);
     }
 
-    for (int i = 0; i < 22; ++i)
+    for (int i = 0; i < 44; ++i)
     {
         D3DXVECTOR3 radialDirection = back * RandomFloat(0.80f, 1.35f) +
-                                      right * RandomCenteredFloat(0.48f) +
-                                      D3DXVECTOR3(0.0f, RandomCenteredFloat(0.42f), 0.0f);
+                                      right * RandomCenteredFloat(0.96f) +
+                                      D3DXVECTOR3(0.0f, RandomCenteredFloat(0.84f), 0.0f);
         if (D3DXVec3LengthSq(&radialDirection) <= 0.0001f)
         {
             radialDirection = back;
@@ -1283,7 +1283,7 @@ void ParticleSystem::EmitDash(EffectInstance& effect)
             D3DXVec3Normalize(&radialDirection, &radialDirection);
         }
 
-        const D3DXVECTOR3 pos = effect.origin + radialDirection * RandomFloat(0.16f, 0.72f);
+        const D3DXVECTOR3 pos = effect.origin + radialDirection * RandomFloat(0.32f, 1.44f);
         const D3DXVECTOR3 velocity = radialDirection * RandomFloat(7.5f, 13.5f);
         const float life = RandomFloat(0.14f, 0.26f);
         const float startSize = RandomFloat(0.34f, 0.70f);
