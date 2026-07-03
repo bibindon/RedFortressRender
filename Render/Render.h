@@ -603,6 +603,7 @@ public:
     void SetLoadingScreenShowTitle(bool show);
 
     void PlaceParticleEffect(const ParticleEffectPreset preset, const D3DXVECTOR3& origin);
+    void PlaceDashParticleEffect(const D3DXVECTOR3& origin, const D3DXVECTOR3& direction);
     void ClearParticleEffect();
     void SetDustFixedScreenSize(bool enabled);
     ParticleEffectPreset GetParticleEffectPreset() const;

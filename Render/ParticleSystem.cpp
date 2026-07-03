@@ -138,6 +138,7 @@ void ParticleSystem::PlaceEffect(const ParticleEffectPreset preset, const D3DXVE
 
     target->preset = preset;
     target->origin = origin;
+    target->direction = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
     target->generation = m_nextGeneration++;
     ClearParticles(*target);
 
@@ -162,8 +163,58 @@ void ParticleSystem::PlaceEffect(const ParticleEffectPreset preset, const D3DXVE
     {
         EmitDamage(*target);
     }
+    else if (preset == ParticleEffectPreset::Dash)
+    {
+        EmitDash(*target);
+    }
 
     m_lastPlacedPreset = preset;
+}
+
+void ParticleSystem::PlaceDashEffect(const D3DXVECTOR3& origin, const D3DXVECTOR3& direction)
+{
+    Initialize();
+    if (!m_initialized)
+    {
+        return;
+    }
+
+    D3DXVECTOR3 horizontalDirection(direction.x, 0.0f, direction.z);
+    if (D3DXVec3LengthSq(&horizontalDirection) <= 0.0001f)
+    {
+        return;
+    }
+    D3DXVec3Normalize(&horizontalDirection, &horizontalDirection);
+
+    EffectInstance* target = nullptr;
+    for (auto& effect : m_effects)
+    {
+        if (effect.preset == ParticleEffectPreset::None)
+        {
+            target = &effect;
+            break;
+        }
+    }
+
+    if (target == nullptr)
+    {
+        target = &m_effects.front();
+        for (auto& effect : m_effects)
+        {
+            if (effect.generation < target->generation)
+            {
+                target = &effect;
+            }
+        }
+    }
+
+    target->preset = ParticleEffectPreset::Dash;
+    target->origin = origin;
+    target->direction = horizontalDirection;
+    target->generation = m_nextGeneration++;
+    ClearParticles(*target);
+    EmitDash(*target);
+    m_lastPlacedPreset = ParticleEffectPreset::Dash;
 }
 
 void ParticleSystem::ClearEffect()
@@ -172,6 +223,7 @@ void ParticleSystem::ClearEffect()
     {
         ClearParticles(effect);
         effect.preset = ParticleEffectPreset::None;
+        effect.direction = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
         effect.generation = 0;
     }
 
@@ -1192,6 +1244,60 @@ void ParticleSystem::EmitDamage(EffectInstance& effect)
     }
 }
 
+void ParticleSystem::EmitDash(EffectInstance& effect)
+{
+    D3DXVECTOR3 forward(effect.direction.x, 0.0f, effect.direction.z);
+    if (D3DXVec3LengthSq(&forward) <= 0.0001f)
+    {
+        forward = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
+    }
+    else
+    {
+        D3DXVec3Normalize(&forward, &forward);
+    }
+
+    const D3DXVECTOR3 back = forward * -1.0f;
+    const D3DXVECTOR3 worldUp(0.0f, 1.0f, 0.0f);
+    D3DXVECTOR3 right;
+    D3DXVec3Cross(&right, &worldUp, &forward);
+    if (D3DXVec3LengthSq(&right) <= 0.0001f)
+    {
+        right = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
+    }
+    else
+    {
+        D3DXVec3Normalize(&right, &right);
+    }
+
+    for (int i = 0; i < 22; ++i)
+    {
+        const D3DXVECTOR3 pos = effect.origin +
+                                back * RandomFloat(0.05f, 0.95f) +
+                                right * RandomCenteredFloat(0.44f) +
+                                D3DXVECTOR3(0.0f, RandomFloat(-0.24f, 0.54f), 0.0f);
+        const D3DXVECTOR3 velocity = back * RandomFloat(7.0f, 13.0f) +
+                                     right * RandomCenteredFloat(1.2f) +
+                                     D3DXVECTOR3(0.0f, RandomCenteredFloat(0.8f), 0.0f);
+        const float life = RandomFloat(0.14f, 0.26f);
+        const float startSize = RandomFloat(0.34f, 0.70f);
+        const float endSize = startSize * RandomFloat(0.42f, 0.78f);
+        const int alpha = static_cast<int>(RandomFloat(125.0f, 205.0f));
+        const int red = static_cast<int>(RandomFloat(205.0f, 245.0f));
+        const int green = static_cast<int>(RandomFloat(230.0f, 255.0f));
+        const D3DCOLOR color = D3DCOLOR_ARGB(alpha, red, green, 255);
+
+        SpawnParticle(effect,
+                      pos,
+                      velocity,
+                      life,
+                      startSize,
+                      endSize,
+                      RandomFloat(-0.10f, 0.10f),
+                      RandomFloat(-1.6f, 1.6f),
+                      color);
+    }
+}
+
 void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
 {
     if (effect.preset == ParticleEffectPreset::None)
@@ -1219,6 +1325,8 @@ void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
     case ParticleEffectPreset::Explosion:
         break;
     case ParticleEffectPreset::Damage:
+        break;
+    case ParticleEffectPreset::Dash:
         break;
     default:
         break;
@@ -1465,6 +1573,19 @@ void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
                 particle.color = D3DCOLOR_ARGB(255, red, green, blue);
             }
         }
+        else if (effect.preset == ParticleEffectPreset::Dash)
+        {
+            particle.velocity.x *= 0.942f;
+            particle.velocity.y *= 0.940f;
+            particle.velocity.z *= 0.942f;
+            particle.size = particle.startSize + (particle.endSize - particle.startSize) * age;
+
+            const float intensity = 1.0f - age;
+            const int alpha = static_cast<int>(ClampFloat(220.0f * intensity * particle.alphaBias,
+                                                          0.0f,
+                                                          225.0f));
+            particle.color = D3DCOLOR_ARGB(alpha, 218, 242, 255);
+        }
 
         particle.rotation += particle.rotationSpeed * deltaTime;
         particle.pos.x += particle.velocity.x * deltaTime;
@@ -1473,7 +1594,8 @@ void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
     }
 
     if ((effect.preset == ParticleEffectPreset::Explosion ||
-         effect.preset == ParticleEffectPreset::Damage) &&
+         effect.preset == ParticleEffectPreset::Damage ||
+         effect.preset == ParticleEffectPreset::Dash) &&
         !hasActiveParticle)
     {
         effect.preset = ParticleEffectPreset::None;
@@ -1491,6 +1613,10 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
     LPDIRECT3DTEXTURE9 texture = NULL;
     bool additive = false;
     if (effectInstance.preset == ParticleEffectPreset::Fire)
+    {
+        additive = true;
+    }
+    else if (effectInstance.preset == ParticleEffectPreset::Dash)
     {
         additive = true;
     }
@@ -1517,6 +1643,9 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
         break;
     case ParticleEffectPreset::Damage:
         texture = m_damageCoreTexture;
+        break;
+    case ParticleEffectPreset::Dash:
+        texture = m_damageSpikeTexture;
         break;
     default:
         return;
@@ -1691,6 +1820,42 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
                         halfHeight = particle.size * 1.18f;
                     }
                 }
+                else if (effectInstance.preset == ParticleEffectPreset::Dash)
+                {
+                    D3DXVECTOR3 dashVelocity = particle.velocity;
+                    if (D3DXVec3LengthSq(&dashVelocity) <= 0.0001f)
+                    {
+                        dashVelocity = effectInstance.direction * -1.0f;
+                    }
+                    D3DXVec3Normalize(&dashVelocity, &dashVelocity);
+
+                    const float dashX = D3DXVec3Dot(&dashVelocity, &cameraRight);
+                    const float dashY = D3DXVec3Dot(&dashVelocity, &cameraUp);
+                    D3DXVECTOR3 dashUp = cameraRight * dashX + cameraUp * dashY;
+                    if (D3DXVec3LengthSq(&dashUp) <= 0.0001f)
+                    {
+                        dashUp = cameraUp;
+                    }
+                    else
+                    {
+                        D3DXVec3Normalize(&dashUp, &dashUp);
+                    }
+
+                    D3DXVECTOR3 dashRight = cameraRight * (-dashY) + cameraUp * dashX;
+                    if (D3DXVec3LengthSq(&dashRight) <= 0.0001f)
+                    {
+                        dashRight = cameraRight;
+                    }
+                    else
+                    {
+                        D3DXVec3Normalize(&dashRight, &dashRight);
+                    }
+
+                    rotatedRight = dashRight;
+                    rotatedUp = dashUp;
+                    halfWidth = particle.size * 0.055f;
+                    halfHeight = particle.size * 1.28f;
+                }
 
                 const D3DXVECTOR3 halfRight(rotatedRight.x * halfWidth,
                                             rotatedRight.y * halfWidth,
@@ -1826,6 +1991,10 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
         drawBatch(m_damageCoreTexture, ParticleVisualType::DamageCore, "ParticleAdditiveTechnique");
         drawBatch(m_damageSpikeTexture, ParticleVisualType::DamageSpark, "ParticleAdditiveTechnique");
         drawBatch(m_damageCoreTexture, ParticleVisualType::DamageScatter, "ParticleAdditiveTechnique");
+    }
+    else if (effectInstance.preset == ParticleEffectPreset::Dash)
+    {
+        drawBatch(m_damageSpikeTexture, ParticleVisualType::Default, "ParticleAdditiveTechnique");
     }
     else
     {

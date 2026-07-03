@@ -18,6 +18,7 @@ enum class ParticleEffectPreset
     Rain,
     Explosion,
     Damage,
+    Dash,
 };
 
 class ParticleSystem
@@ -30,6 +31,7 @@ public:
     void OnDeviceReset();
 
     void PlaceEffect(ParticleEffectPreset preset, const D3DXVECTOR3& origin);
+    void PlaceDashEffect(const D3DXVECTOR3& origin, const D3DXVECTOR3& direction);
     void ClearEffect();
     void SetDustFixedScreenSize(bool enabled);
     void SetExplosionScale(float scale);
@@ -100,6 +102,7 @@ private:
     {
         ParticleEffectPreset preset = ParticleEffectPreset::None;
         D3DXVECTOR3 origin = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+        D3DXVECTOR3 direction = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
         std::vector<Particle> particles;
         float smokeEmitAccumulator = 0.0f;
         float fireEmitAccumulator = 0.0f;
@@ -134,6 +137,7 @@ private:
     void EmitRain(EffectInstance& effect, float deltaTime);
     void EmitExplosion(EffectInstance& effect);
     void EmitDamage(EffectInstance& effect);
+    void EmitDash(EffectInstance& effect);
     void UpdateEffect(EffectInstance& effect, float deltaTime);
     void DrawEffect(const EffectInstance& effect, const D3DXMATRIX& view, const D3DXMATRIX& proj);
     int FillDustVertices(const EffectInstance& effectInstance,
