@@ -64,6 +64,7 @@ public:
     void SetWorldMatrix(const D3DXMATRIX& mat);
 
     D3DXVECTOR3 GetRot() const;
+    D3DXMATRIX GetWorldMatrix() const;
 
     float GetScale() const;
     DWORD GetSubsetCount() const;

@@ -218,19 +218,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         }
 
         // 必要な定数の投入
-        D3DXMATRIX matWorld;
-        D3DXMatrixIdentity(&matWorld);
-        {
-            D3DXMATRIX m;
-            D3DXMatrixIdentity(&m);
-            D3DXMatrixScaling(&m, mesh.GetScale(), mesh.GetScale(), mesh.GetScale());
-            matWorld *= m;
-            D3DXMatrixRotationYawPitchRoll(&m, mesh.GetRot().y, mesh.GetRot().x, mesh.GetRot().z);
-            matWorld *= m;
-            D3DXVECTOR3 p = mesh.GetPos();
-            D3DXMatrixTranslation(&m, p.x, p.y, p.z);
-            matWorld *= m;
-        }
+        const D3DXMATRIX matWorld = mesh.GetWorldMatrix();
 
         m_fxGBuffer->SetMatrix("g_matWorld", &matWorld);
         m_fxGBuffer->SetTechnique("TechniqueGBuffer");
@@ -335,19 +323,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
             continue;
         }
 
-        D3DXMATRIX matWorld;
-        D3DXMatrixIdentity(&matWorld);
-        {
-            D3DXMATRIX m;
-            D3DXMatrixIdentity(&m);
-            D3DXMatrixScaling(&m, mesh.GetScale(), mesh.GetScale(), mesh.GetScale());
-            matWorld *= m;
-            D3DXMatrixRotationYawPitchRoll(&m, mesh.GetRot().y, mesh.GetRot().x, mesh.GetRot().z);
-            matWorld *= m;
-            D3DXVECTOR3 p = mesh.GetPos();
-            D3DXMatrixTranslation(&m, p.x, p.y, p.z);
-            matWorld *= m;
-        }
+        const D3DXMATRIX matWorld = mesh.GetWorldMatrix();
 
         m_fxGBuffer->SetMatrix("g_matWorld", &matWorld);
         m_fxGBuffer->SetTechnique("TechniqueGBuffer");
@@ -446,19 +422,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
             continue;
         }
 
-        D3DXMATRIX matWorld;
-        D3DXMatrixIdentity(&matWorld);
-        {
-            D3DXMATRIX m;
-            D3DXMatrixIdentity(&m);
-            D3DXMatrixScaling(&m, mesh.GetScale(), mesh.GetScale(), mesh.GetScale());
-            matWorld *= m;
-            D3DXMatrixRotationYawPitchRoll(&m, mesh.GetRot().y, mesh.GetRot().x, mesh.GetRot().z);
-            matWorld *= m;
-            D3DXVECTOR3 p = mesh.GetPos();
-            D3DXMatrixTranslation(&m, p.x, p.y, p.z);
-            matWorld *= m;
-        }
+        const D3DXMATRIX matWorld = mesh.GetWorldMatrix();
 
         m_fxGBuffer->SetMatrix("g_matWorld", &matWorld);
         m_fxGBuffer->SetTechnique("TechniqueGBufferBackFace");

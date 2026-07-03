@@ -1585,6 +1585,11 @@ D3DXVECTOR3 MeshMixManager::GetRot() const
     return m_rotate;
 }
 
+D3DXMATRIX MeshMixManager::GetWorldMatrix() const
+{
+    return BuildWorldMatrix();
+}
+
 D3DXVECTOR3 MeshMixManager::GetPos() const
 {
     return m_pos;
