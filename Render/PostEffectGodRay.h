@@ -33,7 +33,8 @@ public:
 
 private:
 
-    void CreateTexture();
+    bool CreateTexture();
+    bool HasRenderTextures() const;
 
     void DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
                             const std::string& technique);

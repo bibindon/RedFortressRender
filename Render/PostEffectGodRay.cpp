@@ -62,7 +62,11 @@ void PostEffectGodRay::Initialize()
                                                NULL);
     assert(SUCCEEDED(hResult));
 
-    CreateTexture();
+    if (!CreateTexture())
+    {
+        SAFE_RELEASE(m_d3dEffect);
+        return;
+    }
 
     if (!m_isRegisteredForDeviceReset)
     {
@@ -72,44 +76,83 @@ void PostEffectGodRay::Initialize()
     m_isInitialized = true;
 }
 
-void PostEffectGodRay::CreateTexture()
+bool PostEffectGodRay::CreateTexture()
 {
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
-                      D3DPOOL_DEFAULT,
-                      &m_texOcclusion);
+    SAFE_RELEASE(m_texOcclusion);
+    SAFE_RELEASE(m_texBlurTemp);
+    SAFE_RELEASE(m_texOcclusionBlurred);
 
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
-                      D3DPOOL_DEFAULT,
-                      &m_texBlurTemp);
+    HRESULT hResult = D3DXCreateTexture(Common::D3DDevice(),
+                                        Common::ScreenW(),
+                                        Common::ScreenH(),
+                                        1,
+                                        D3DUSAGE_RENDERTARGET,
+                                        D3DFMT_A8R8G8B8,
+                                        D3DPOOL_DEFAULT,
+                                        &m_texOcclusion);
+    if (FAILED(hResult) || m_texOcclusion == NULL)
+    {
+        SAFE_RELEASE(m_texOcclusion);
+        return false;
+    }
 
-    D3DXCreateTexture(Common::D3DDevice(),
-                      Common::ScreenW(),
-                      Common::ScreenH(),
-                      1,
-                      D3DUSAGE_RENDERTARGET,
-                      D3DFMT_A8R8G8B8,
-                      D3DPOOL_DEFAULT,
-                      &m_texOcclusionBlurred);
+    hResult = D3DXCreateTexture(Common::D3DDevice(),
+                                Common::ScreenW(),
+                                Common::ScreenH(),
+                                1,
+                                D3DUSAGE_RENDERTARGET,
+                                D3DFMT_A8R8G8B8,
+                                D3DPOOL_DEFAULT,
+                                &m_texBlurTemp);
+    if (FAILED(hResult) || m_texBlurTemp == NULL)
+    {
+        SAFE_RELEASE(m_texOcclusion);
+        SAFE_RELEASE(m_texBlurTemp);
+        return false;
+    }
 
+    hResult = D3DXCreateTexture(Common::D3DDevice(),
+                                Common::ScreenW(),
+                                Common::ScreenH(),
+                                1,
+                                D3DUSAGE_RENDERTARGET,
+                                D3DFMT_A8R8G8B8,
+                                D3DPOOL_DEFAULT,
+                                &m_texOcclusionBlurred);
+    if (FAILED(hResult) || m_texOcclusionBlurred == NULL)
+    {
+        SAFE_RELEASE(m_texOcclusion);
+        SAFE_RELEASE(m_texBlurTemp);
+        SAFE_RELEASE(m_texOcclusionBlurred);
+        return false;
+    }
+
+    return true;
+}
+
+bool PostEffectGodRay::HasRenderTextures() const
+{
+    return m_texOcclusion != NULL &&
+        m_texBlurTemp != NULL &&
+        m_texOcclusionBlurred != NULL;
 }
 
 void PostEffectGodRay::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                             LPDIRECT3DTEXTURE9 texZ,
                             LPDIRECT3DTEXTURE9 texTarget)
 {
-    if (!m_isInitialized || m_d3dEffect == NULL)
+    if (!m_isInitialized || m_d3dEffect == NULL ||
+        renderTarget == NULL || texZ == NULL || texTarget == NULL)
     {
         return;
+    }
+
+    if (!HasRenderTextures())
+    {
+        if (!CreateTexture())
+        {
+            return;
+        }
     }
 
     D3DXMATRIX matView = Camera::GetViewMatrix();
@@ -216,14 +259,30 @@ void PostEffectGodRay::BlurOcclusionTexture()
 void PostEffectGodRay::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texTarget,
                                           const std::string& technique)
 {
+    if (texTarget == NULL)
+    {
+        return;
+    }
+
     LPDIRECT3DSURFACE9 pSurface = NULL;
-    texTarget->GetSurfaceLevel(0, &pSurface);
+    HRESULT hResult = texTarget->GetSurfaceLevel(0, &pSurface);
+    if (FAILED(hResult) || pSurface == NULL)
+    {
+        SAFE_RELEASE(pSurface);
+        return;
+    }
+
     Common::D3DDevice()->SetRenderTarget(0, pSurface);
     SAFE_RELEASE(pSurface);
 
     Common::D3DDevice()->SetVertexShader(NULL);
 
-    m_d3dEffect->SetTechnique(technique.c_str());
+    hResult = m_d3dEffect->SetTechnique(technique.c_str());
+    if (FAILED(hResult))
+    {
+        Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
+        return;
+    }
 
     const float w = static_cast<float>(Common::ScreenW());
     const float h = static_cast<float>(Common::ScreenH());
