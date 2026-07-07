@@ -2,6 +2,7 @@
 #include "Common.h"
 #include "Util.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
@@ -2510,6 +2511,41 @@ HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimati
                         pk.Value.y = p.y;
                         pk.Value.z = p.z;
                         posKeys.push_back(pk);
+                    }
+                }
+            }
+
+            std::sort(scaleKeys.begin(),
+                      scaleKeys.end(),
+                      [](const D3DXKEY_VECTOR3& a, const D3DXKEY_VECTOR3& b)
+                      {
+                          return a.Time < b.Time;
+                      });
+            std::sort(rotKeys.begin(),
+                      rotKeys.end(),
+                      [](const D3DXKEY_QUATERNION& a, const D3DXKEY_QUATERNION& b)
+                      {
+                          return a.Time < b.Time;
+                      });
+            std::sort(posKeys.begin(),
+                      posKeys.end(),
+                      [](const D3DXKEY_VECTOR3& a, const D3DXKEY_VECTOR3& b)
+                      {
+                          return a.Time < b.Time;
+                      });
+
+            for (std::size_t k = 0; k < rotKeys.size(); ++k)
+            {
+                D3DXQuaternionNormalize(&rotKeys[k].Value, &rotKeys[k].Value);
+                if (k > 0)
+                {
+                    const FLOAT dot = D3DXQuaternionDot(&rotKeys[k - 1].Value, &rotKeys[k].Value);
+                    if (dot < 0.0f)
+                    {
+                        rotKeys[k].Value.w = -rotKeys[k].Value.w;
+                        rotKeys[k].Value.x = -rotKeys[k].Value.x;
+                        rotKeys[k].Value.y = -rotKeys[k].Value.y;
+                        rotKeys[k].Value.z = -rotKeys[k].Value.z;
                     }
                 }
             }

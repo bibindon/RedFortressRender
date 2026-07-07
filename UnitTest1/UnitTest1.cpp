@@ -6,6 +6,7 @@
 #include "../Render/MeshMixSkinAnim.h"
 #include "../Render/Render.h"
 
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iterator>
@@ -613,19 +614,6 @@ namespace UnitTest1
                 }
             }
 
-            std::map<std::string, D3DXMATRIX> originalMatrices;
-            for (const std::string& frameName : frameNames)
-            {
-                LPD3DXFRAME foundFrame = D3DXFrameFind(frameRoot, frameName.c_str());
-                if (foundFrame == nullptr)
-                {
-                    continue;
-                }
-
-                NSRender::SkinAnimMeshFrame* skinFrame = reinterpret_cast<NSRender::SkinAnimMeshFrame*>(foundFrame);
-                originalMatrices[frameName] = skinFrame->TransformationMatrix;
-            }
-
             LPD3DXANIMATIONCONTROLLER controller = nullptr;
             NSRender::CustomXLoadOptions controllerOptions;
             controllerOptions.transposeAnimationMatrixKeys = true;
@@ -636,38 +624,429 @@ namespace UnitTest1
             Assert::IsTrue(SUCCEEDED(controllerHr), L"Failed to create animation controller.");
             Assert::IsNotNull(controller, L"Animation controller was null.");
 
-            controller->SetTrackPosition(0, 0.0);
-            controller->AdvanceTime(0.0, nullptr);
-
             double maxError = 0.0;
             std::string maxErrorFrameName;
-            for (const auto& entry : originalMatrices)
+            int maxErrorTime = 0;
+            double maxErrorControllerTime = 0.0;
+            std::map<int, double> maxErrorByTime;
+            std::map<int, std::string> maxErrorFrameByTime;
+            std::map<int, std::map<std::string, D3DXMATRIX>> controllerMatricesByTime;
+            const double ticksPerSecond = animationSets.front().ticksPerSecond;
+            double controllerPeriod = 0.0;
+            LPD3DXANIMATIONSET periodAnimationSet = nullptr;
+            if (SUCCEEDED(controller->GetAnimationSet(0, &periodAnimationSet)) && periodAnimationSet != nullptr)
             {
-                LPD3DXFRAME foundFrame = D3DXFrameFind(frameRoot, entry.first.c_str());
-                if (foundFrame == nullptr)
-                {
-                    continue;
-                }
+                controllerPeriod = periodAnimationSet->GetPeriod();
+                periodAnimationSet->Release();
+                periodAnimationSet = nullptr;
+            }
 
-                NSRender::SkinAnimMeshFrame* skinFrame = reinterpret_cast<NSRender::SkinAnimMeshFrame*>(foundFrame);
-                for (int row = 0; row < 4; ++row)
+            for (int time = 0; time <= 90; ++time)
+            {
+                const double controllerTime = static_cast<double>(time) / ticksPerSecond;
+                controller->SetTrackPosition(0, controllerTime);
+                controller->AdvanceTime(0.0, nullptr);
+
+                for (const auto& animation : animationSets.front().animations)
                 {
-                    for (int column = 0; column < 4; ++column)
+                    if (animation.frameName.empty())
                     {
-                        const double error = std::fabs(static_cast<double>(skinFrame->TransformationMatrix(row, column)) -
-                                                       static_cast<double>(entry.second(row, column)));
-                        if (error > maxError)
+                        continue;
+                    }
+                    if (animation.frameName == "Bone_000")
+                    {
+                        continue;
+                    }
+
+                    const NSRender::CustomXAnimationKey* matrixKey = nullptr;
+                    for (const auto& key : animation.keys)
+                    {
+                        if (key.keyType == 4)
                         {
-                            maxError = error;
-                            maxErrorFrameName = entry.first;
+                            matrixKey = &key;
+                            break;
+                        }
+                    }
+                    if (matrixKey == nullptr)
+                    {
+                        continue;
+                    }
+
+                    int keyIndex = -1;
+                    for (int i = 0; i < static_cast<int>(matrixKey->times.size()); ++i)
+                    {
+                        if (static_cast<int>(matrixKey->times.at(i)) == time)
+                        {
+                            keyIndex = i;
+                            break;
+                        }
+                    }
+                    if (keyIndex < 0)
+                    {
+                        continue;
+                    }
+
+                    D3DXMATRIX expected;
+                    const float* values = &matrixKey->values.at(keyIndex * matrixKey->valueCount);
+                    for (int row = 0; row < 4; ++row)
+                    {
+                        for (int column = 0; column < 4; ++column)
+                        {
+                            expected(row, column) = values[(row * 4) + column];
+                        }
+                    }
+                    for (int row = 0; row < 3; ++row)
+                    {
+                        for (int column = row + 1; column < 3; ++column)
+                        {
+                            const float temp = expected(row, column);
+                            expected(row, column) = expected(column, row);
+                            expected(column, row) = temp;
+                        }
+                    }
+
+                    LPD3DXFRAME foundFrame = D3DXFrameFind(frameRoot, animation.frameName.c_str());
+                    if (foundFrame == nullptr)
+                    {
+                        continue;
+                    }
+
+                    NSRender::SkinAnimMeshFrame* skinFrame = reinterpret_cast<NSRender::SkinAnimMeshFrame*>(foundFrame);
+                    controllerMatricesByTime[time][animation.frameName] = skinFrame->TransformationMatrix;
+                    for (int row = 0; row < 4; ++row)
+                    {
+                        for (int column = 0; column < 4; ++column)
+                        {
+                            const double error = std::fabs(static_cast<double>(skinFrame->TransformationMatrix(row, column)) -
+                                                           static_cast<double>(expected(row, column)));
+                            if (error > maxError)
+                            {
+                                maxError = error;
+                                maxErrorFrameName = animation.frameName;
+                                maxErrorTime = time;
+                                maxErrorControllerTime = controllerTime;
+                            }
+                            const auto timeError = maxErrorByTime.find(time);
+                            if (timeError == maxErrorByTime.end() || error > timeError->second)
+                            {
+                                maxErrorByTime[time] = error;
+                                maxErrorFrameByTime[time] = animation.frameName;
+                            }
                         }
                     }
                 }
             }
 
-            std::wstring message = L"Marine animation controller matrix-key error at t=0\n";
+            std::wstring message = L"Marine animation controller matrix-key max error\n";
             message += L"Frame=" + NSRender::AnsiTextToWideText(maxErrorFrameName) + L"\n";
+            message += L"KeyTime=" + std::to_wstring(maxErrorTime) + L"\n";
+            message += L"ControllerTime=" + FormatDiagnosticDouble(maxErrorControllerTime) + L"\n";
+            message += L"TicksPerSecond=" + FormatDiagnosticDouble(ticksPerSecond) + L"\n";
+            message += L"ControllerPeriod=" + FormatDiagnosticDouble(controllerPeriod) + L"\n";
             message += L"MaxError=" + FormatDiagnosticDouble(maxError) + L"\n";
+            message += L"Top frame errors excluding Bone_000:\n";
+            std::vector<std::pair<int, double>> frameErrors;
+            for (const auto& entry : maxErrorByTime)
+            {
+                frameErrors.push_back(entry);
+            }
+            std::sort(frameErrors.begin(),
+                      frameErrors.end(),
+                      [](const std::pair<int, double>& a, const std::pair<int, double>& b)
+                      {
+                          return a.second > b.second;
+                      });
+            for (int i = 0; i < static_cast<int>(frameErrors.size()) && i < 20; ++i)
+            {
+                const int time = frameErrors.at(i).first;
+                message += L"KeyTime=" + std::to_wstring(time) +
+                           L" Frame=" + NSRender::AnsiTextToWideText(maxErrorFrameByTime[time]) +
+                           L" Error=" + FormatDiagnosticDouble(frameErrors.at(i).second) + L"\n";
+            }
+
+            struct JumpInfo
+            {
+                int fromTime = 0;
+                int toTime = 0;
+                double fromSampleTime = 0.0;
+                double toSampleTime = 0.0;
+                double maxDiff = 0.0;
+                std::string frameName;
+                int elementIndex = 0;
+            };
+            std::vector<JumpInfo> jumps;
+            for (int time = 1; time <= 90; ++time)
+            {
+                const auto previousFrames = controllerMatricesByTime.find(time - 1);
+                const auto currentFrames = controllerMatricesByTime.find(time);
+                if (previousFrames == controllerMatricesByTime.end() ||
+                    currentFrames == controllerMatricesByTime.end())
+                {
+                    continue;
+                }
+
+                JumpInfo jump;
+                jump.fromTime = time - 1;
+                jump.toTime = time;
+                for (const auto& previousEntry : previousFrames->second)
+                {
+                    const auto currentEntry = currentFrames->second.find(previousEntry.first);
+                    if (currentEntry == currentFrames->second.end())
+                    {
+                        continue;
+                    }
+
+                    const D3DXMATRIX& previousMatrix = previousEntry.second;
+                    const D3DXMATRIX& currentMatrix = currentEntry->second;
+                    for (int row = 0; row < 4; ++row)
+                    {
+                        for (int column = 0; column < 4; ++column)
+                        {
+                            const double diff = std::fabs(static_cast<double>(currentMatrix(row, column)) -
+                                                          static_cast<double>(previousMatrix(row, column)));
+                            if (diff > jump.maxDiff)
+                            {
+                                jump.maxDiff = diff;
+                                jump.frameName = previousEntry.first;
+                                jump.elementIndex = (row * 4) + column;
+                            }
+                        }
+                    }
+                }
+                jumps.push_back(jump);
+            }
+            std::sort(jumps.begin(),
+                      jumps.end(),
+                      [](const JumpInfo& a, const JumpInfo& b)
+                      {
+                          return a.maxDiff > b.maxDiff;
+                      });
+            message += L"Top D3DX output adjacent jumps:\n";
+            for (int i = 0; i < static_cast<int>(jumps.size()) && i < 30; ++i)
+            {
+                message += std::to_wstring(jumps.at(i).fromTime) + L"->" +
+                           std::to_wstring(jumps.at(i).toTime) +
+                           L" Frame=" + NSRender::AnsiTextToWideText(jumps.at(i).frameName) +
+                           L" Element=" + std::to_wstring(jumps.at(i).elementIndex) +
+                           L" Diff=" + FormatDiagnosticDouble(jumps.at(i).maxDiff) + L"\n";
+            }
+
+            std::vector<JumpInfo> sampledJumps;
+            std::map<std::string, D3DXMATRIX> previousSampleMatrices;
+            double previousSampleTime = 0.0;
+            bool hasPreviousSample = false;
+            const double sampleStep = 0.025;
+            for (int sampleIndex = 0; sampleIndex <= 120; ++sampleIndex)
+            {
+                double sampleTime = sampleStep * static_cast<double>(sampleIndex);
+                if (sampleTime > controllerPeriod)
+                {
+                    sampleTime = controllerPeriod;
+                }
+                controller->SetTrackPosition(0, sampleTime);
+                controller->AdvanceTime(0.0, nullptr);
+
+                std::map<std::string, D3DXMATRIX> currentSampleMatrices;
+                for (const auto& animation : animationSets.front().animations)
+                {
+                    if (animation.frameName.empty())
+                    {
+                        continue;
+                    }
+
+                    LPD3DXFRAME foundFrame = D3DXFrameFind(frameRoot, animation.frameName.c_str());
+                    if (foundFrame == nullptr)
+                    {
+                        continue;
+                    }
+
+                    NSRender::SkinAnimMeshFrame* skinFrame = reinterpret_cast<NSRender::SkinAnimMeshFrame*>(foundFrame);
+                    currentSampleMatrices[animation.frameName] = skinFrame->TransformationMatrix;
+                }
+
+                if (hasPreviousSample)
+                {
+                    JumpInfo jump;
+                    jump.fromTime = static_cast<int>(std::lround(previousSampleTime * ticksPerSecond));
+                    jump.toTime = static_cast<int>(std::lround(sampleTime * ticksPerSecond));
+                    jump.fromSampleTime = previousSampleTime;
+                    jump.toSampleTime = sampleTime;
+                    for (const auto& previousEntry : previousSampleMatrices)
+                    {
+                        const auto currentEntry = currentSampleMatrices.find(previousEntry.first);
+                        if (currentEntry == currentSampleMatrices.end())
+                        {
+                            continue;
+                        }
+
+                        const D3DXMATRIX& previousMatrix = previousEntry.second;
+                        const D3DXMATRIX& currentMatrix = currentEntry->second;
+                        for (int row = 0; row < 4; ++row)
+                        {
+                            for (int column = 0; column < 4; ++column)
+                            {
+                                const double diff = std::fabs(static_cast<double>(currentMatrix(row, column)) -
+                                                              static_cast<double>(previousMatrix(row, column)));
+                                if (diff > jump.maxDiff)
+                                {
+                                    jump.maxDiff = diff;
+                                    jump.frameName = previousEntry.first;
+                                    jump.elementIndex = (row * 4) + column;
+                                }
+                            }
+                        }
+                    }
+                    sampledJumps.push_back(jump);
+                }
+
+                previousSampleMatrices = currentSampleMatrices;
+                previousSampleTime = sampleTime;
+                hasPreviousSample = true;
+                if (sampleTime >= controllerPeriod)
+                {
+                    break;
+                }
+            }
+            std::sort(sampledJumps.begin(),
+                      sampledJumps.end(),
+                      [](const JumpInfo& a, const JumpInfo& b)
+                      {
+                          return a.maxDiff > b.maxDiff;
+                      });
+            message += L"Top sampled D3DX jumps step=0.025s:\n";
+            for (int i = 0; i < static_cast<int>(sampledJumps.size()) && i < 30; ++i)
+            {
+                message += L"ApproxKeyTime=" + std::to_wstring(sampledJumps.at(i).fromTime) +
+                           L"->" + std::to_wstring(sampledJumps.at(i).toTime) +
+                           L" SampleTime=" + FormatDiagnosticDouble(sampledJumps.at(i).fromSampleTime) +
+                           L"->" + FormatDiagnosticDouble(sampledJumps.at(i).toSampleTime) +
+                           L" Frame=" + NSRender::AnsiTextToWideText(sampledJumps.at(i).frameName) +
+                           L" Element=" + std::to_wstring(sampledJumps.at(i).elementIndex) +
+                           L" Diff=" + FormatDiagnosticDouble(sampledJumps.at(i).maxDiff) + L"\n";
+            }
+
+            const NSRender::CustomXAnimation* bone152Animation = nullptr;
+            for (const auto& animation : animationSets.front().animations)
+            {
+                if (animation.frameName == "Bone_152")
+                {
+                    bone152Animation = &animation;
+                    break;
+                }
+            }
+            if (bone152Animation != nullptr)
+            {
+                const NSRender::CustomXAnimationKey* bone152MatrixKey = nullptr;
+                for (const auto& key : bone152Animation->keys)
+                {
+                    if (key.keyType == 4)
+                    {
+                        bone152MatrixKey = &key;
+                        break;
+                    }
+                }
+
+                if (bone152MatrixKey != nullptr)
+                {
+                    message += L"Bone_152 decomposed matrix keys:\n";
+                    D3DXQUATERNION previousQuaternion;
+                    bool hasPreviousQuaternion = false;
+                    for (int keyTime = 72; keyTime <= 80; ++keyTime)
+                    {
+                        int keyIndex = -1;
+                        for (int i = 0; i < static_cast<int>(bone152MatrixKey->times.size()); ++i)
+                        {
+                            if (static_cast<int>(bone152MatrixKey->times.at(i)) == keyTime)
+                            {
+                                keyIndex = i;
+                                break;
+                            }
+                        }
+                        if (keyIndex < 0)
+                        {
+                            continue;
+                        }
+
+                        D3DXMATRIX mat;
+                        const float* values = &bone152MatrixKey->values.at(keyIndex * bone152MatrixKey->valueCount);
+                        for (int row = 0; row < 4; ++row)
+                        {
+                            for (int column = 0; column < 4; ++column)
+                            {
+                                mat(row, column) = values[(row * 4) + column];
+                            }
+                        }
+                        for (int row = 0; row < 3; ++row)
+                        {
+                            for (int column = row + 1; column < 3; ++column)
+                            {
+                                const float temp = mat(row, column);
+                                mat(row, column) = mat(column, row);
+                                mat(column, row) = temp;
+                            }
+                        }
+
+                        D3DXVECTOR3 scale;
+                        D3DXQUATERNION rotation;
+                        D3DXVECTOR3 position;
+                        D3DXMatrixDecompose(&scale, &rotation, &position, &mat);
+
+                        double dot = 0.0;
+                        if (hasPreviousQuaternion)
+                        {
+                            dot = D3DXQuaternionDot(&previousQuaternion, &rotation);
+                        }
+
+                        message += L"KeyTime=" + std::to_wstring(keyTime) +
+                                   L" Scale=(" + FormatDiagnosticDouble(scale.x) +
+                                   L"," + FormatDiagnosticDouble(scale.y) +
+                                   L"," + FormatDiagnosticDouble(scale.z) +
+                                   L") Quat=(" + FormatDiagnosticDouble(rotation.w) +
+                                   L"," + FormatDiagnosticDouble(rotation.x) +
+                                   L"," + FormatDiagnosticDouble(rotation.y) +
+                                   L"," + FormatDiagnosticDouble(rotation.z) +
+                                   L") DotPrev=" + FormatDiagnosticDouble(dot) +
+                                   L" Pos=(" + FormatDiagnosticDouble(position.x) +
+                                   L"," + FormatDiagnosticDouble(position.y) +
+                                   L"," + FormatDiagnosticDouble(position.z) + L")\n";
+
+                        previousQuaternion = rotation;
+                        hasPreviousQuaternion = true;
+                    }
+
+                    message += L"Bone_152 sampled controller matrices:\n";
+                    const double sampleTimes[] = { 2.500, 2.525, 2.550, 2.575, 2.600 };
+                    for (int i = 0; i < 5; ++i)
+                    {
+                        controller->SetTrackPosition(0, sampleTimes[i]);
+                        controller->AdvanceTime(0.0, nullptr);
+
+                        LPD3DXFRAME foundFrame = D3DXFrameFind(frameRoot, "Bone_152");
+                        if (foundFrame == nullptr)
+                        {
+                            continue;
+                        }
+
+                        NSRender::SkinAnimMeshFrame* skinFrame = reinterpret_cast<NSRender::SkinAnimMeshFrame*>(foundFrame);
+                        const D3DXMATRIX& mat = skinFrame->TransformationMatrix;
+                        D3DXVECTOR3 scale;
+                        D3DXQUATERNION rotation;
+                        D3DXVECTOR3 position;
+                        D3DXMatrixDecompose(&scale, &rotation, &position, &mat);
+                        message += L"SampleTime=" + FormatDiagnosticDouble(sampleTimes[i]) +
+                                   L" KeyTime=" + FormatDiagnosticDouble(sampleTimes[i] * ticksPerSecond) +
+                                   L" M22=" + FormatDiagnosticDouble(mat(2, 2)) +
+                                   L" Scale=(" + FormatDiagnosticDouble(scale.x) +
+                                   L"," + FormatDiagnosticDouble(scale.y) +
+                                   L"," + FormatDiagnosticDouble(scale.z) +
+                                   L") Quat=(" + FormatDiagnosticDouble(rotation.w) +
+                                   L"," + FormatDiagnosticDouble(rotation.x) +
+                                   L"," + FormatDiagnosticDouble(rotation.y) +
+                                   L"," + FormatDiagnosticDouble(rotation.z) +
+                                   L")\n";
+                    }
+                }
+            }
             Logger::WriteMessage(message.c_str());
 
             if (controller != nullptr)
@@ -678,6 +1057,11 @@ namespace UnitTest1
             NSRender::DestroyCustomXFrameHierarchyWithAllocator(frameRoot, allocator);
 
             Assert::IsTrue(maxError >= 0.0, L"Animation controller diagnostic failed.");
+            if (!sampledJumps.empty())
+            {
+                Assert::IsTrue(sampledJumps.front().maxDiff < 0.1,
+                               L"Animation controller had an abnormal sampled matrix jump.");
+            }
         }
 
         TEST_METHOD(AddMeshMixSkinAnimWithCustomLoader)
