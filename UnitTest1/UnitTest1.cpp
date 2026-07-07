@@ -7,6 +7,11 @@
 #include "../Render/Render.h"
 
 #include <cmath>
+#include <fstream>
+#include <iterator>
+#include <map>
+#include <string>
+#include <vector>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -545,8 +550,10 @@ namespace UnitTest1
             D3DDeviceScope deviceScope(windowScope.GetHWnd());
             Assert::IsTrue(deviceScope.IsValid(), L"Failed to create a Direct3D9 test device.");
 
+            NSRender::CustomXLoadOptions options;
+            options.allowDuplicateSkinWeightsCount = true;
             const NSRender::CustomXSkinningDiagnosticResult result =
-                NSRender::DiagnoseCustomXSkinningForTest(filePath);
+                NSRender::DiagnoseCustomXSkinningForTest(filePath, options);
 
             std::wstring message = L"Marine custom X diagnostic\n";
             message += L"HR=" + NSRender::FormatHRESULT(result.hr) + L"\n";
@@ -570,6 +577,107 @@ namespace UnitTest1
 
             Assert::IsTrue(SUCCEEDED(result.hr), L"Custom X diagnostic load failed.");
             Assert::IsTrue(result.meshContainerCount > 0, L"No mesh containers were created.");
+        }
+
+        TEST_METHOD(DiagnoseMarineAnimationControllerMatrixKeys)
+        {
+            const std::wstring filePath = GetMarineAssetFilePath(L"marine.000.x");
+            std::ifstream file(filePath, std::ios::binary);
+            if (!file)
+            {
+                Logger::WriteMessage(L"Marine animation diagnostic skipped. Asset file was not found.");
+                return;
+            }
+
+            const std::string fileText((std::istreambuf_iterator<char>(file)),
+                                       std::istreambuf_iterator<char>());
+
+            NSRender::SkinAnimMeshAlloc allocator(filePath);
+            LPD3DXFRAME frameRoot = nullptr;
+            std::vector<NSRender::CustomXAnimationSet> animationSets;
+            const HRESULT parseHr = NSRender::LoadCustomXFrameHierarchyFromText(fileText,
+                                                                                &allocator,
+                                                                                &frameRoot,
+                                                                                &animationSets,
+                                                                                NSRender::CustomXLoadPurpose::AnimationOnly);
+            Assert::IsTrue(SUCCEEDED(parseHr), L"Failed to parse marine.000.x.");
+            Assert::IsNotNull(frameRoot, L"marine.000.x frame root was null.");
+            Assert::IsFalse(animationSets.empty(), L"marine.000.x had no animation sets.");
+
+            std::vector<std::string> frameNames;
+            for (const auto& animation : animationSets.front().animations)
+            {
+                if (!animation.frameName.empty())
+                {
+                    frameNames.push_back(animation.frameName);
+                }
+            }
+
+            std::map<std::string, D3DXMATRIX> originalMatrices;
+            for (const std::string& frameName : frameNames)
+            {
+                LPD3DXFRAME foundFrame = D3DXFrameFind(frameRoot, frameName.c_str());
+                if (foundFrame == nullptr)
+                {
+                    continue;
+                }
+
+                NSRender::SkinAnimMeshFrame* skinFrame = reinterpret_cast<NSRender::SkinAnimMeshFrame*>(foundFrame);
+                originalMatrices[frameName] = skinFrame->TransformationMatrix;
+            }
+
+            LPD3DXANIMATIONCONTROLLER controller = nullptr;
+            NSRender::CustomXLoadOptions controllerOptions;
+            controllerOptions.transposeAnimationMatrixKeys = true;
+            const HRESULT controllerHr = NSRender::CreateAnimationControllerFromParsedData(animationSets,
+                                                                                           frameRoot,
+                                                                                           &controller,
+                                                                                           controllerOptions);
+            Assert::IsTrue(SUCCEEDED(controllerHr), L"Failed to create animation controller.");
+            Assert::IsNotNull(controller, L"Animation controller was null.");
+
+            controller->SetTrackPosition(0, 0.0);
+            controller->AdvanceTime(0.0, nullptr);
+
+            double maxError = 0.0;
+            std::string maxErrorFrameName;
+            for (const auto& entry : originalMatrices)
+            {
+                LPD3DXFRAME foundFrame = D3DXFrameFind(frameRoot, entry.first.c_str());
+                if (foundFrame == nullptr)
+                {
+                    continue;
+                }
+
+                NSRender::SkinAnimMeshFrame* skinFrame = reinterpret_cast<NSRender::SkinAnimMeshFrame*>(foundFrame);
+                for (int row = 0; row < 4; ++row)
+                {
+                    for (int column = 0; column < 4; ++column)
+                    {
+                        const double error = std::fabs(static_cast<double>(skinFrame->TransformationMatrix(row, column)) -
+                                                       static_cast<double>(entry.second(row, column)));
+                        if (error > maxError)
+                        {
+                            maxError = error;
+                            maxErrorFrameName = entry.first;
+                        }
+                    }
+                }
+            }
+
+            std::wstring message = L"Marine animation controller matrix-key error at t=0\n";
+            message += L"Frame=" + NSRender::AnsiTextToWideText(maxErrorFrameName) + L"\n";
+            message += L"MaxError=" + FormatDiagnosticDouble(maxError) + L"\n";
+            Logger::WriteMessage(message.c_str());
+
+            if (controller != nullptr)
+            {
+                controller->Release();
+                controller = nullptr;
+            }
+            NSRender::DestroyCustomXFrameHierarchyWithAllocator(frameRoot, allocator);
+
+            Assert::IsTrue(maxError >= 0.0, L"Animation controller diagnostic failed.");
         }
 
         TEST_METHOD(AddMeshMixSkinAnimWithCustomLoader)

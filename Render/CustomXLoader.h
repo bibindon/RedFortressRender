@@ -25,6 +25,7 @@ enum class CustomXLoadPurpose
 struct CustomXLoadOptions
 {
     bool allowDuplicateSkinWeightsCount = false;
+    bool transposeAnimationMatrixKeys = false;
 };
 
 struct CustomXFrameHierarchyLoadResult
@@ -82,7 +83,8 @@ std::wstring AnsiTextToWideText(const std::string& text);
 CustomXFrameHierarchyLoadResult LoadCustomXFrameHierarchyForTest(const std::wstring& filePath,
                                                                  bool loadMeshContainers = false);
 
-CustomXSkinningDiagnosticResult DiagnoseCustomXSkinningForTest(const std::wstring& filePath);
+CustomXSkinningDiagnosticResult DiagnoseCustomXSkinningForTest(const std::wstring& filePath,
+                                                               const CustomXLoadOptions& options = CustomXLoadOptions());
 
 HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
                                           SkinAnimMeshAlloc* allocator,
@@ -93,7 +95,8 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
 
 HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimationSet>& animationSets,
                                                  LPD3DXFRAME frameRoot,
-                                                 LPD3DXANIMATIONCONTROLLER* outController);
+                                                 LPD3DXANIMATIONCONTROLLER* outController,
+                                                 const CustomXLoadOptions& options = CustomXLoadOptions());
 
 void DestroyCustomXFrameHierarchy(LPD3DXFRAME frame);
 

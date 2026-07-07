@@ -2287,7 +2287,8 @@ bool ParseCustomXAnimationSet(XTextTokenizer& tokenizer, CustomXAnimationSet& an
 
 HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimationSet>& animationSets,
                                                  LPD3DXFRAME frameRoot,
-                                                 LPD3DXANIMATIONCONTROLLER* outController)
+                                                 LPD3DXANIMATIONCONTROLLER* outController,
+                                                 const CustomXLoadOptions& options)
 {
     if (outController == nullptr)
     {
@@ -2468,6 +2469,18 @@ HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimati
                             for (int col = 0; col < 4; ++col)
                             {
                                 mat(row, col) = vals[row * 4 + col];
+                            }
+                        }
+                        if (options.transposeAnimationMatrixKeys)
+                        {
+                            for (int row = 0; row < 3; ++row)
+                            {
+                                for (int col = row + 1; col < 3; ++col)
+                                {
+                                    const float temp = mat(row, col);
+                                    mat(row, col) = mat(col, row);
+                                    mat(col, row) = temp;
+                                }
                             }
                         }
 
@@ -3103,7 +3116,8 @@ CustomXFrameHierarchyLoadResult LoadCustomXFrameHierarchyForTest(const std::wstr
     return result;
 }
 
-CustomXSkinningDiagnosticResult DiagnoseCustomXSkinningForTest(const std::wstring& filePath)
+CustomXSkinningDiagnosticResult DiagnoseCustomXSkinningForTest(const std::wstring& filePath,
+                                                               const CustomXLoadOptions& options)
 {
     CustomXSkinningDiagnosticResult result;
 
@@ -3119,7 +3133,12 @@ CustomXSkinningDiagnosticResult DiagnoseCustomXSkinningForTest(const std::wstrin
                                std::istreambuf_iterator<char>());
     LPD3DXFRAME frameRoot = nullptr;
     SkinAnimMeshAlloc allocator(filePath);
-    result.hr = LoadCustomXFrameHierarchyFromText(fileText, &allocator, &frameRoot);
+    result.hr = LoadCustomXFrameHierarchyFromText(fileText,
+                                                  &allocator,
+                                                  &frameRoot,
+                                                  nullptr,
+                                                  CustomXLoadPurpose::MeshAndAnimation,
+                                                  options);
     if (FAILED(result.hr) || frameRoot == nullptr)
     {
         result.message = L"Parser failed. Bytes=" + std::to_wstring(fileText.size());

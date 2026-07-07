@@ -1157,6 +1157,7 @@ HRESULT MeshMixSkinAnim::LoadMeshHierarchyWithCustomLoader(const std::wstring& f
     if (m_loadMode == MeshMixSkinAnimLoadMode::Blender512Custom)
     {
         options.allowDuplicateSkinWeightsCount = true;
+        options.transposeAnimationMatrixKeys = true;
     }
 
     const HRESULT hr = LoadCustomXFrameHierarchyFromText(fileText,
@@ -1175,7 +1176,8 @@ HRESULT MeshMixSkinAnim::LoadMeshHierarchyWithCustomLoader(const std::wstring& f
         LPD3DXANIMATIONCONTROLLER controller = nullptr;
         const HRESULT controllerHr = CreateAnimationControllerFromParsedData(animationSets,
                                                                               *frameRoot,
-                                                                              &controller);
+                                                                              &controller,
+                                                                              options);
         if (SUCCEEDED(controllerHr) && controller != nullptr)
         {
             *animationController = controller;
