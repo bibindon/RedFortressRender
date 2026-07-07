@@ -105,6 +105,8 @@ private:
         LPD3DXANIMATIONCONTROLLER controller = nullptr;
         double currentTime = 0.0;
         double duration = 1.0;
+        double playbackStartTime = 0.0;
+        double playbackEndTime = 1.0;
         bool loop = true;
         bool stopWhenEnd = false;
     };
