@@ -2080,6 +2080,27 @@ bool ParseCustomXAnimationOptions(XTextTokenizer& tokenizer, double& ticksPerSec
     return SkipCustomXObjectBody(tokenizer);
 }
 
+bool ParseCustomXAnimTicksPerSecond(XTextTokenizer& tokenizer, double& ticksPerSecond)
+{
+    if (!ReadExpectedXToken(tokenizer, "{"))
+    {
+        return false;
+    }
+
+    DWORD ticks = 0;
+    if (!ReadXUIntToken(tokenizer, ticks))
+    {
+        return false;
+    }
+
+    if (ticks > 0)
+    {
+        ticksPerSecond = static_cast<double>(ticks);
+    }
+
+    return SkipCustomXObjectBody(tokenizer);
+}
+
 bool ParseCustomXAnimationSet(XTextTokenizer& tokenizer, CustomXAnimationSet& animSet)
 {
     if (!ReadXStringToken(tokenizer, animSet.name))
@@ -2465,6 +2486,7 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
     CustomXParseContext parseContext;
     std::string token;
     bool frameFound = false;
+    double globalTicksPerSecond = 4800.0;
     while (tokenizer.ReadToken(token))
     {
         if (IsXTextSeparatorToken(token))
@@ -2497,9 +2519,16 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
             continue;
         }
 
+        if (token == "AnimTicksPerSecond")
+        {
+            ParseCustomXAnimTicksPerSecond(tokenizer, globalTicksPerSecond);
+            continue;
+        }
+
         if (token == "AnimationSet" && outAnimationSets != nullptr)
         {
             CustomXAnimationSet animSet;
+            animSet.ticksPerSecond = globalTicksPerSecond;
             if (ParseCustomXAnimationSet(tokenizer, animSet))
             {
                 CUSTOM_X_LOADER_LOG(L"Custom parser loaded AnimationSet: " +

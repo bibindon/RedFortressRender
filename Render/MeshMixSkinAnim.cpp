@@ -312,6 +312,79 @@ std::vector<MeshMixSkinAnim::AnimationInfo> GetAnimationInfoListFromController(
     return infoList;
 }
 
+void RegisterAnimationOutputsRecursive(LPD3DXANIMATIONCONTROLLER controller,
+                                       LPD3DXFRAME frameBase)
+{
+    if (controller == nullptr || frameBase == nullptr)
+    {
+        return;
+    }
+
+    auto frame = reinterpret_cast<SkinAnimMeshFrame*>(frameBase);
+    if (frame->Name != nullptr)
+    {
+        controller->RegisterAnimationOutput(frame->Name,
+                                            &frame->TransformationMatrix,
+                                            nullptr,
+                                            nullptr,
+                                            nullptr);
+    }
+
+    if (frame->pFrameSibling != nullptr)
+    {
+        RegisterAnimationOutputsRecursive(controller, frame->pFrameSibling);
+    }
+
+    if (frame->pFrameFirstChild != nullptr)
+    {
+        RegisterAnimationOutputsRecursive(controller, frame->pFrameFirstChild);
+    }
+}
+
+LPD3DXANIMATIONCONTROLLER CreateControllerFromEmbeddedAnimationText(const std::wstring& filePath,
+                                                                    LPD3DXFRAME targetFrameRoot)
+{
+    if (targetFrameRoot == nullptr)
+    {
+        return nullptr;
+    }
+
+    std::ifstream file(filePath, std::ios::binary);
+    if (!file)
+    {
+        return nullptr;
+    }
+
+    const std::string fileText((std::istreambuf_iterator<char>(file)),
+                               std::istreambuf_iterator<char>());
+
+    SkinAnimMeshAlloc parserAllocator(filePath);
+    LPD3DXFRAME parserFrameRoot = nullptr;
+    std::vector<CustomXAnimationSet> animationSets;
+    const HRESULT parseHr = LoadCustomXFrameHierarchyFromText(fileText,
+                                                              &parserAllocator,
+                                                              &parserFrameRoot,
+                                                              &animationSets,
+                                                              CustomXLoadPurpose::AnimationOnly);
+    DestroyCustomXFrameHierarchyWithAllocator(parserFrameRoot, parserAllocator);
+    if (FAILED(parseHr) || animationSets.empty())
+    {
+        return nullptr;
+    }
+
+    LPD3DXANIMATIONCONTROLLER controller = nullptr;
+    const HRESULT controllerHr = CreateAnimationControllerFromParsedData(animationSets,
+                                                                         targetFrameRoot,
+                                                                         &controller);
+    if (FAILED(controllerHr))
+    {
+        SAFE_RELEASE(controller);
+        return nullptr;
+    }
+
+    return controller;
+}
+
 } // anonymous namespace
 
 void MeshMixSkinAnim::SetSharedMirrorClipPlane(const bool enabled, const D3DXVECTOR4& plane)
@@ -505,6 +578,18 @@ void MeshMixSkinAnim::InitializeInternal()
 
     if (m_animationClips.empty() && tempAnimController != nullptr)
     {
+        if (m_loadMode == MeshMixSkinAnimLoadMode::DirectX && !m_useExternalAnimation)
+        {
+            LPD3DXANIMATIONCONTROLLER embeddedController =
+                CreateControllerFromEmbeddedAnimationText(tempPath, m_frameRoot);
+            if (embeddedController != nullptr)
+            {
+                SAFE_RELEASE(tempAnimController);
+                tempAnimController = embeddedController;
+            }
+        }
+
+        RegisterAnimationOutputsRecursive(tempAnimController, m_frameRoot);
         m_animController.Init(tempAnimController, m_animSetMap);
         m_animationInfoList = GetAnimationInfoListFromController(tempAnimController, tempPath);
         m_hasAnimationController = true;
@@ -824,6 +909,7 @@ void MeshMixSkinAnim::ApplyAnimationFrameTransformsToMeshHierarchy(const LPD3DXF
 void MeshMixSkinAnim::SetAnimationSpeed(const float speed)
 {
     m_animationSpeed = speed;
+    m_animController.SetAnimSpeed(speed);
 }
 
 bool MeshMixSkinAnim::IsLoaded() const

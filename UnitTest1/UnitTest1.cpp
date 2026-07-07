@@ -5,6 +5,8 @@
 #include "../Render/MeshMixSkinAnim.h"
 #include "../Render/Render.h"
 
+#include <cmath>
+
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace UnitTest1
@@ -20,6 +22,22 @@ namespace UnitTest1
             }
 
             return (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
+        }
+
+        bool IsMatrixDifferent(const D3DXMATRIX& lhs, const D3DXMATRIX& rhs)
+        {
+            for (int row = 0; row < 4; ++row)
+            {
+                for (int column = 0; column < 4; ++column)
+                {
+                    if (std::fabs(lhs.m[row][column] - rhs.m[row][column]) > 0.0001f)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         std::wstring GetWolf2FilePath(const std::wstring& fileName)
@@ -396,6 +414,15 @@ namespace UnitTest1
             Assert::AreEqual(std::wstring(L"BlockWiggle"), animationInfoList.at(0).name);
             Assert::IsTrue(animationInfoList.at(0).isDefault);
             Assert::IsTrue(mesh.PlayAnimation(L"BlockWiggle"));
+
+            D3DXMATRIX beforeUpdate { };
+            D3DXMATRIX afterUpdate { };
+            Assert::IsTrue(mesh.GetBoneWorldMatrix("Bend_02_Upper", beforeUpdate));
+            mesh.SetAnimationSpeed(80.0f);
+            mesh.UpdateAnimation();
+            Assert::IsTrue(mesh.GetBoneWorldMatrix("Bend_02_Upper", afterUpdate));
+            Assert::IsTrue(IsMatrixDifferent(beforeUpdate, afterUpdate),
+                           L"Bend_02_Upper matrix did not change after advancing BlockWiggle.");
         }
 
         TEST_METHOD(AddMeshMixSkinAnimWithCustomLoader)

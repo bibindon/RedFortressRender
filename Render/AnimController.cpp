@@ -49,6 +49,12 @@ void NSRender::AnimController::Init(const LPD3DXANIMATIONCONTROLLER controller,
     m_animationSetIndexMap.clear();
     std::wstring firstAnimationSetName;
 
+    // DirectX9を64bitでビルドすると80倍速になってしまうため調節する
+    for (auto& animSetting : m_animSettingMap)
+    {
+        ScaleAnimSettingForDirectX64(animSetting.second);
+    }
+
     if (m_controller != nullptr)
     {
         const UINT animationSetCount = m_controller->GetNumAnimationSets();
@@ -85,12 +91,6 @@ void NSRender::AnimController::Init(const LPD3DXANIMATIONCONTROLLER controller,
 
             SAFE_RELEASE(animationSet);
         }
-    }
-
-    // DirectX9を64bitでビルドすると80倍速になってしまうため調節する
-    for (auto& animSetting : m_animSettingMap)
-    {
-        ScaleAnimSettingForDirectX64(animSetting.second);
     }
 
     if (!firstAnimationSetName.empty())
@@ -220,5 +220,8 @@ void NSRender::AnimController::SetTrackAnimationSetByIndex(UINT index)
     }
 
     m_controller->SetTrackAnimationSet(0, animationSet);
+    m_controller->SetTrackEnable(0, TRUE);
+    m_controller->SetTrackWeight(0, 1.0f);
+    m_controller->SetTrackSpeed(0, 1.0f);
     SAFE_RELEASE(animationSet);
 }
