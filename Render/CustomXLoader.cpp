@@ -381,6 +381,7 @@ struct CustomXParseContext
 {
     std::map<std::string, std::string> frameParents;
     std::map<std::string, D3DXMATRIX> frameLocalMatrices;
+    std::map<std::string, CustomXMaterialData> namedMaterials;
 };
 
 SkinAnimMeshFrame* CreateCustomXFrame(const std::string& name)
@@ -629,7 +630,7 @@ bool ParseCustomXMaterial(XTextTokenizer& tokenizer, CustomXMaterialData& materi
             return true;
         }
 
-        if (token == "TextureFilename")
+        if (token == "TextureFilename" || token == "TextureFileName")
         {
             if (!ReadExpectedXToken(tokenizer, "{") ||
                 !ReadXStringToken(tokenizer, materialData.textureFilename) ||
@@ -649,7 +650,21 @@ bool ParseCustomXMaterial(XTextTokenizer& tokenizer, CustomXMaterialData& materi
     return false;
 }
 
-bool ParseCustomXMeshMaterialList(XTextTokenizer& tokenizer, CustomXMeshData& meshData)
+bool ParseCustomXNamedMaterial(XTextTokenizer& tokenizer,
+                               std::string& materialName,
+                               CustomXMaterialData& materialData)
+{
+    if (!tokenizer.ReadToken(materialName))
+    {
+        return false;
+    }
+
+    return ParseCustomXMaterial(tokenizer, materialData);
+}
+
+bool ParseCustomXMeshMaterialList(XTextTokenizer& tokenizer,
+                                  CustomXMeshData& meshData,
+                                  const CustomXParseContext* context)
 {
     if (!ReadExpectedXToken(tokenizer, "{"))
     {
@@ -698,6 +713,32 @@ bool ParseCustomXMeshMaterialList(XTextTokenizer& tokenizer, CustomXMeshData& me
             }
             meshData.materials.push_back(materialData);
             continue;
+        }
+
+        if (token == "{")
+        {
+            std::string materialName;
+            if (!tokenizer.ReadToken(materialName))
+            {
+                return false;
+            }
+
+            if (!ReadExpectedXToken(tokenizer, "}"))
+            {
+                return false;
+            }
+
+            if (context != nullptr)
+            {
+                const auto found = context->namedMaterials.find(materialName);
+                if (found != context->namedMaterials.end())
+                {
+                    meshData.materials.push_back(found->second);
+                    continue;
+                }
+            }
+
+            return false;
         }
 
         if (!SkipCustomXObject(tokenizer))
@@ -1705,7 +1746,7 @@ bool ParseCustomXMesh(XTextTokenizer& tokenizer,
 
         if (token == "MeshMaterialList")
         {
-            if (!ParseCustomXMeshMaterialList(tokenizer, meshData))
+            if (!ParseCustomXMeshMaterialList(tokenizer, meshData, context))
             {
                 return false;
             }
@@ -2486,6 +2527,7 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
     CustomXParseContext parseContext;
     std::string token;
     bool frameFound = false;
+    bool syntheticRootCreated = false;
     double globalTicksPerSecond = 4800.0;
     while (tokenizer.ReadToken(token))
     {
@@ -2514,7 +2556,23 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
                 frameName = AnsiTextToWideText(frame->Name);
             }
             CUSTOM_X_LOADER_LOG(L"Custom parser loaded top-level Frame: " + frameName);
-            *frameRoot = frame;
+            if (*frameRoot == nullptr)
+            {
+                *frameRoot = frame;
+            }
+            else
+            {
+                if (!syntheticRootCreated)
+                {
+                    SkinAnimMeshFrame* syntheticRoot = CreateCustomXFrame("");
+                    AppendCustomXChildFrame(syntheticRoot,
+                                            reinterpret_cast<SkinAnimMeshFrame*>(*frameRoot));
+                    *frameRoot = syntheticRoot;
+                    syntheticRootCreated = true;
+                }
+
+                AppendCustomXChildFrame(reinterpret_cast<SkinAnimMeshFrame*>(*frameRoot), frame);
+            }
             frameFound = true;
             continue;
         }
@@ -2522,6 +2580,23 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
         if (token == "AnimTicksPerSecond")
         {
             ParseCustomXAnimTicksPerSecond(tokenizer, globalTicksPerSecond);
+            continue;
+        }
+
+        if (token == "Material")
+        {
+            std::string materialName;
+            CustomXMaterialData materialData;
+            if (!ParseCustomXNamedMaterial(tokenizer, materialName, materialData))
+            {
+                CUSTOM_X_LOADER_LOG(L"Custom parser failed while parsing top-level Material.");
+                return E_FAIL;
+            }
+
+            if (!materialName.empty())
+            {
+                parseContext.namedMaterials[materialName] = materialData;
+            }
             continue;
         }
 

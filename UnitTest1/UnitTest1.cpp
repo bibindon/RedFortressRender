@@ -386,6 +386,23 @@ namespace UnitTest1
             Assert::AreEqual(std::wstring(L"BlockWiggle"), animationSetName);
         }
 
+        TEST_METHOD(LoadBlender512CylinderSkinnedWithCustomLoader)
+        {
+            HiddenWindowScope windowScope;
+            Assert::IsNotNull(windowScope.GetHWnd(), L"Failed to create a hidden test window.");
+
+            D3DDeviceScope deviceScope(windowScope.GetHWnd());
+            Assert::IsTrue(deviceScope.IsValid(), L"Failed to create a Direct3D9 test device.");
+
+            const std::wstring filePath = GetBlender512CylinderSkinnedFilePath();
+            const NSRender::CustomXFrameHierarchyLoadResult result =
+                NSRender::LoadCustomXFrameHierarchyForTest(filePath, true);
+
+            Assert::IsTrue(SUCCEEDED(result.hr), result.message.c_str());
+            Assert::IsTrue(result.frameCount >= 3);
+            Assert::IsTrue(result.meshContainerCount >= 1);
+        }
+
         TEST_METHOD(AddBlender512CylinderSkinnedDirectXLoaderAnimationInfo)
         {
             const std::wstring shaderDirectory = GetCompiledShaderDirectory();
