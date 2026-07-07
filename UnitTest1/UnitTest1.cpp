@@ -418,8 +418,10 @@ namespace UnitTest1
             D3DXMATRIX beforeUpdate { };
             D3DXMATRIX afterUpdate { };
             Assert::IsTrue(mesh.GetBoneWorldMatrix("Bend_02_Upper", beforeUpdate));
-            mesh.SetAnimationSpeed(80.0f);
-            mesh.UpdateAnimation();
+            for (int i = 0; i < 60; ++i)
+            {
+                mesh.UpdateAnimation();
+            }
             Assert::IsTrue(mesh.GetBoneWorldMatrix("Bend_02_Upper", afterUpdate));
             Assert::IsTrue(IsMatrixDifferent(beforeUpdate, afterUpdate),
                            L"Bend_02_Upper matrix did not change after advancing BlockWiggle.");
