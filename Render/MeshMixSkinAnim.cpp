@@ -606,6 +606,20 @@ void MeshMixSkinAnim::InitializeInternal()
     }
     AllocateAllBoneMatrix(m_frameRoot);
 
+    if (!m_animationClips.empty() &&
+        m_activeAnimationClipIndex >= 0 &&
+        m_activeAnimationClipIndex < static_cast<int>(m_animationClips.size()))
+    {
+        AnimationClip& clip = m_animationClips.at(m_activeAnimationClipIndex);
+        clip.currentTime = 0.0;
+        if (clip.controller != nullptr)
+        {
+            clip.controller->SetTrackPosition(0, 0.0);
+            clip.controller->AdvanceTime(0.0, nullptr);
+            ApplyAnimationFrameTransformsToMeshHierarchy(m_frameRoot, clip.frameRoot);
+        }
+    }
+
     D3DXMATRIX worldMatrix = BuildWorldMatrix();
     UpdateFrameMatrix(m_frameRoot, &worldMatrix);
     InvalidateBonePaletteCache();
