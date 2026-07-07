@@ -33,6 +33,7 @@ void SyncRenderSettingsDialogFromRender(HWND hWnd)
     SetSettingsCheckbox(hWnd, 31302, render->IsMeshMixSkinAnimAlphaClipEnabled());
     SetSettingsCheckbox(hWnd, 31303, render->IsMeshMixSkinAnimIgnoreTransparentMaterialEnabled());
     SetSettingsCheckbox(hWnd, 31304, state->useCustomMeshMixSkinAnimLoader);
+    SetSettingsCheckbox(hWnd, 31305, state->useMeshMixSkinAnim2);
     SetSettingsCheckbox(hWnd, 31702, render->IsPostEffectSSGIBlurEnabled());
     SetSettingsCheckbox(hWnd, 31704, render->IsPostEffectSSGISeparableBlurEnabled());
     SetSettingsCheckbox(hWnd, 31806, render->IsPostEffectSSAOCompositeGaussian3x3Enabled());

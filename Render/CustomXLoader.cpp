@@ -174,6 +174,47 @@ public:
         return false;
     }
 
+    bool TrySkipDuplicateUIntValue(const DWORD expectedValue)
+    {
+        const std::size_t savedPos = m_pos;
+        SkipSeparators();
+        if (m_pos >= m_text.size())
+        {
+            m_pos = savedPos;
+            return false;
+        }
+
+        char* endPtr = nullptr;
+        const unsigned long parsed = std::strtoul(m_text.c_str() + m_pos, &endPtr, 10);
+        if (endPtr == m_text.c_str() + m_pos)
+        {
+            m_pos = savedPos;
+            return false;
+        }
+
+        const std::size_t parsedEnd = static_cast<std::size_t>(endPtr - m_text.c_str());
+        std::size_t cursor = parsedEnd;
+        while (cursor < m_text.size() && IsWhitespace(m_text[cursor]))
+        {
+            ++cursor;
+        }
+
+        if (cursor >= m_text.size() || (m_text[cursor] != ',' && m_text[cursor] != ';'))
+        {
+            m_pos = savedPos;
+            return false;
+        }
+
+        if (static_cast<DWORD>(parsed) != expectedValue)
+        {
+            m_pos = savedPos;
+            return false;
+        }
+
+        m_pos = cursor + 1;
+        return true;
+    }
+
     bool SkipObjectBodyFast()
     {
         int depth = 1;
@@ -292,6 +333,22 @@ private:
         }
     }
 
+    void SkipSeparators()
+    {
+        bool skipped = true;
+        while (skipped)
+        {
+            skipped = false;
+            SkipWhitespace();
+            while (m_pos < m_text.size() && (m_text[m_pos] == ',' || m_text[m_pos] == ';'))
+            {
+                ++m_pos;
+                skipped = true;
+                SkipWhitespace();
+            }
+        }
+    }
+
     bool SkipComment()
     {
         if (m_pos + 1 >= m_text.size() || m_text[m_pos] != '/')
@@ -383,6 +440,7 @@ struct CustomXParseContext
     std::map<std::string, std::string> frameParents;
     std::map<std::string, D3DXMATRIX> frameLocalMatrices;
     std::map<std::string, CustomXMaterialData> namedMaterials;
+    CustomXLoadOptions options;
 };
 
 SkinAnimMeshFrame* CreateCustomXFrame(const std::string& name)
@@ -777,7 +835,9 @@ bool ParseCustomXMeshTextureCoords(XTextTokenizer& tokenizer, CustomXMeshData& m
     return SkipCustomXObjectBody(tokenizer);
 }
 
-bool ParseCustomXSkinWeights(XTextTokenizer& tokenizer, CustomXMeshData& meshData)
+bool ParseCustomXSkinWeights(XTextTokenizer& tokenizer,
+                             CustomXMeshData& meshData,
+                             const CustomXParseContext* context)
 {
     if (!ReadExpectedXToken(tokenizer, "{"))
     {
@@ -804,6 +864,11 @@ bool ParseCustomXSkinWeights(XTextTokenizer& tokenizer, CustomXMeshData& meshDat
         {
             return false;
         }
+    }
+
+    if (context != nullptr && context->options.allowDuplicateSkinWeightsCount)
+    {
+        tokenizer.TrySkipDuplicateUIntValue(weightCount);
     }
 
     weightsData.weights.resize(weightCount);
@@ -1770,7 +1835,7 @@ bool ParseCustomXMesh(XTextTokenizer& tokenizer,
 
         if (token == "SkinWeights")
         {
-            if (!ParseCustomXSkinWeights(tokenizer, meshData))
+            if (!ParseCustomXSkinWeights(tokenizer, meshData, context))
             {
                 return false;
             }
@@ -2522,7 +2587,8 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
                                           SkinAnimMeshAlloc* allocator,
                                           LPD3DXFRAME* frameRoot,
                                           std::vector<CustomXAnimationSet>* outAnimationSets,
-                                          CustomXLoadPurpose loadPurpose)
+                                          CustomXLoadPurpose loadPurpose,
+                                          const CustomXLoadOptions& options)
 {
     if (frameRoot == nullptr)
     {
@@ -2540,6 +2606,7 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
 
     XTextTokenizer tokenizer(fileText);
     CustomXParseContext parseContext;
+    parseContext.options = options;
     std::string token;
     bool frameFound = false;
     bool syntheticRootCreated = false;

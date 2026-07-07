@@ -22,6 +22,11 @@ enum class CustomXLoadPurpose
     AnimationOnly
 };
 
+struct CustomXLoadOptions
+{
+    bool allowDuplicateSkinWeightsCount = false;
+};
+
 struct CustomXFrameHierarchyLoadResult
 {
     HRESULT hr = E_FAIL;
@@ -83,7 +88,8 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
                                           SkinAnimMeshAlloc* allocator,
                                           LPD3DXFRAME* frameRoot,
                                           std::vector<CustomXAnimationSet>* outAnimationSets = nullptr,
-                                          CustomXLoadPurpose loadPurpose = CustomXLoadPurpose::MeshAndAnimation);
+                                          CustomXLoadPurpose loadPurpose = CustomXLoadPurpose::MeshAndAnimation,
+                                          const CustomXLoadOptions& options = CustomXLoadOptions());
 
 HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimationSet>& animationSets,
                                                  LPD3DXFRAME frameRoot,

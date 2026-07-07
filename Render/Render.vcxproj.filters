@@ -93,6 +93,9 @@
     <ClCompile Include="MeshMixSkinAnim.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="MeshMixSkinAnim2.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="PtrManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -264,6 +267,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="MeshMixSkinAnim.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshMixSkinAnim2.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="PtrManager.h">

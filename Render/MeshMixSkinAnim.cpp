@@ -1091,7 +1091,8 @@ HRESULT MeshMixSkinAnim::LoadMeshHierarchy(const std::wstring& filePath,
                                            LPD3DXANIMATIONCONTROLLER* animationController,
                                            CustomXLoadPurpose loadPurpose)
 {
-    if (m_loadMode == MeshMixSkinAnimLoadMode::Custom)
+    if (m_loadMode == MeshMixSkinAnimLoadMode::Custom ||
+        m_loadMode == MeshMixSkinAnimLoadMode::Blender512Custom)
     {
         WriteMeshMixSkinAnimLoadLog(L"LoadMeshHierarchy route=Custom Path=" + filePath);
         return LoadMeshHierarchyWithCustomLoader(filePath,
@@ -1152,7 +1153,18 @@ HRESULT MeshMixSkinAnim::LoadMeshHierarchyWithCustomLoader(const std::wstring& f
                                 std::istreambuf_iterator<char>());
 
     std::vector<CustomXAnimationSet> animationSets;
-    const HRESULT hr = LoadCustomXFrameHierarchyFromText(fileText, &allocator, frameRoot, &animationSets, loadPurpose);
+    CustomXLoadOptions options;
+    if (m_loadMode == MeshMixSkinAnimLoadMode::Blender512Custom)
+    {
+        options.allowDuplicateSkinWeightsCount = true;
+    }
+
+    const HRESULT hr = LoadCustomXFrameHierarchyFromText(fileText,
+                                                         &allocator,
+                                                         frameRoot,
+                                                         &animationSets,
+                                                         loadPurpose,
+                                                         options);
     WriteMeshMixSkinAnimLoadLog(L"Custom loader result. Path=" + filePath +
                                 L" HR=" + FormatHRESULT(hr) +
                                 L" FrameRoot=" + std::to_wstring(reinterpret_cast<std::uintptr_t>(*frameRoot)) +

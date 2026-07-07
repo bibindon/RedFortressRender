@@ -21,6 +21,7 @@ enum class MeshMixSkinAnimLoadMode
 {
     DirectX,
     Custom,
+    Blender512Custom,
 };
 
 class MeshMixSkinAnim : public IDeviceResettable
@@ -52,7 +53,7 @@ public:
                     const AnimSetMap& animSetMap,
                     const MeshMixSkinAnimLoadMode loadMode = MeshMixSkinAnimLoadMode::DirectX);
 
-    ~MeshMixSkinAnim();
+    virtual ~MeshMixSkinAnim();
 
     void Initialize(bool async = true);
     void WaitForLoad();

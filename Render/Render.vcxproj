@@ -34,6 +34,7 @@
     <ClCompile Include="MeshMix.cpp" />
     <ClCompile Include="MeshPBR.cpp" />
     <ClCompile Include="MeshMixSkinAnim.cpp" />
+    <ClCompile Include="MeshMixSkinAnim2.cpp" />
     <ClCompile Include="MeshMixAnimNoBone.cpp" />
     <ClCompile Include="MeshMixAnimNoBoneAlloc.cpp" />
     <ClCompile Include="MeshMixManager.cpp" />
@@ -99,6 +100,7 @@
     <ClInclude Include="MeshMix.h" />
     <ClInclude Include="MeshPBR.h" />
     <ClInclude Include="MeshMixSkinAnim.h" />
+    <ClInclude Include="MeshMixSkinAnim2.h" />
     <ClInclude Include="MeshMixManager.h" />
     <ClInclude Include="MeshPBRManager.h" />
     <ClInclude Include="MeshNormalMapping.h" />

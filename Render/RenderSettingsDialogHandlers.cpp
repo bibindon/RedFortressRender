@@ -169,7 +169,10 @@ bool LoadXFileListCsv(RenderSettingsDialogState* state,
         if (fields.size() >= 10)
         {
             loadType = TrimCsvField(fields[9]);
-            if (loadType != L"normal" && loadType != L"instancing" && loadType != L"skinanim")
+            if (loadType != L"normal" &&
+                loadType != L"instancing" &&
+                loadType != L"skinanim" &&
+                loadType != L"skinanim2")
             {
                 loadType = L"normal";
             }
@@ -208,18 +211,32 @@ bool LoadXFileListCsv(RenderSettingsDialogState* state,
                 renderId = state->render->AddMeshInstansing(resolvedPath, pos, rot, modelScale, resolvedInstancingCsvPath);
                 modelType = RenderSettingsDialogState::LoadedModelType::MeshInstancing;
             }
-            else if (loadType == L"skinanim")
+            else if (loadType == L"skinanim" || loadType == L"skinanim2")
             {
                 AnimSetMap emptyAnimSetMap;
-                renderId = state->render->AddMeshMixSkinAnim(resolvedPath,
-                                                             pos,
-                                                             rot,
-                                                             modelScale,
-                                                             emptyAnimSetMap,
-                                                             -1.0f,
-                                                             false,
-                                                             false,
-                                                             GetMeshMixSkinAnimLoadMode(state));
+                if (loadType == L"skinanim2" || state->useMeshMixSkinAnim2)
+                {
+                    renderId = state->render->AddMeshMixSkinAnim2(resolvedPath,
+                                                                  pos,
+                                                                  rot,
+                                                                  modelScale,
+                                                                  emptyAnimSetMap,
+                                                                  -1.0f,
+                                                                  false,
+                                                                  false);
+                }
+                else
+                {
+                    renderId = state->render->AddMeshMixSkinAnim(resolvedPath,
+                                                                 pos,
+                                                                 rot,
+                                                                 modelScale,
+                                                                 emptyAnimSetMap,
+                                                                 -1.0f,
+                                                                 false,
+                                                                 false,
+                                                                 GetMeshMixSkinAnimLoadMode(state));
+                }
                 modelType = RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim;
             }
             else
@@ -778,6 +795,10 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
         {
             state->useCustomMeshMixSkinAnimLoader = IsSettingsCheckboxChecked(hWnd, id);
         }
+        else if (id == 31305)
+        {
+            state->useMeshMixSkinAnim2 = IsSettingsCheckboxChecked(hWnd, id);
+        }
         else if (id == 31702)
         {
             render->SetPostEffectSSGIBlur(IsSettingsCheckboxChecked(hWnd, id));
@@ -987,7 +1008,21 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
                 D3DXVECTOR3 forward = render->GetCameraRotate();
                 D3DXVec3Normalize(&forward, &forward);
                 const float yaw = atan2f(forward.x, forward.z);
-                int renderId = render->AddMeshMixSkinAnim(state->meshMixSkinAnimPath,
+                int renderId = -1;
+                if (state->useMeshMixSkinAnim2)
+                {
+                    renderId = render->AddMeshMixSkinAnim2(state->meshMixSkinAnimPath,
+                                                           pos,
+                                                           D3DXVECTOR3(0.0f, yaw, 0.0f),
+                                                           state->modelLoadScale,
+                                                           AnimSetMap(),
+                                                           -1.0f,
+                                                           false,
+                                                           false);
+                }
+                else
+                {
+                    renderId = render->AddMeshMixSkinAnim(state->meshMixSkinAnimPath,
                                                           pos,
                                                           D3DXVECTOR3(0.0f, yaw, 0.0f),
                                                           state->modelLoadScale,
@@ -996,6 +1031,7 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
                                                           false,
                                                           false,
                                                           GetMeshMixSkinAnimLoadMode(state));
+                }
                 AddLoadedModelRecord(state,
                                      RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim,
                                      renderId,
@@ -1065,7 +1101,22 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
                 D3DXVECTOR3 forward = render->GetCameraRotate();
                 D3DXVec3Normalize(&forward, &forward);
                 const float yaw = atan2f(forward.x, forward.z);
-                int renderId = render->AddMeshMixSkinAnim(state->meshMixSkinNonAnimPath,
+                int renderId = -1;
+                if (state->useMeshMixSkinAnim2)
+                {
+                    renderId = render->AddMeshMixSkinAnim2(state->meshMixSkinNonAnimPath,
+                                                           state->meshMixSkinAnimOnlyPath,
+                                                           pos,
+                                                           D3DXVECTOR3(0.0f, yaw, 0.0f),
+                                                           state->modelLoadScale,
+                                                           AnimSetMap(),
+                                                           -1.0f,
+                                                           false,
+                                                           false);
+                }
+                else
+                {
+                    renderId = render->AddMeshMixSkinAnim(state->meshMixSkinNonAnimPath,
                                                           state->meshMixSkinAnimOnlyPath,
                                                           pos,
                                                           D3DXVECTOR3(0.0f, yaw, 0.0f),
@@ -1075,6 +1126,7 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
                                                           false,
                                                           false,
                                                           GetMeshMixSkinAnimLoadMode(state));
+                }
                 AddLoadedModelRecord(state,
                                      RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim,
                                      renderId,

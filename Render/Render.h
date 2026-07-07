@@ -34,6 +34,7 @@
 #include "MeshMixManager.h"
 #include "MeshPBRManager.h"
 #include "MeshMixSkinAnim.h"
+#include "MeshMixSkinAnim2.h"
 #include "MeshMixAnimNoBone.h"
 #include "MeshSSS.h"
 #include "MeshPOM.h"
@@ -302,6 +303,23 @@ public:
                            const bool useParallaxOcclusionMapping = false,
                            const bool useNormalMapping = false,
                            const MeshMixSkinAnimLoadMode loadMode = MeshMixSkinAnimLoadMode::DirectX);
+    int AddMeshMixSkinAnim2(const std::wstring& filePath,
+                            const D3DXVECTOR3& pos,
+                            const D3DXVECTOR3& rot,
+                            const float scale,
+                            const AnimSetMap& animSetMap,
+                            const float radius = -1.f,
+                            const bool useParallaxOcclusionMapping = false,
+                            const bool useNormalMapping = false);
+    int AddMeshMixSkinAnim2(const std::wstring& meshFilePath,
+                            const std::wstring& animationFilePath,
+                            const D3DXVECTOR3& pos,
+                            const D3DXVECTOR3& rot,
+                            const float scale,
+                            const AnimSetMap& animSetMap,
+                            const float radius = -1.f,
+                            const bool useParallaxOcclusionMapping = false,
+                            const bool useNormalMapping = false);
     bool RemoveMeshMixSkinAnim(int id);
     const std::vector<MeshMixSkinAnim::AnimationInfo>* GetMeshMixSkinAnimAnimationInfoList(int id) const;
     bool PlayMeshMixSkinAnimAnimation(int id, const std::wstring& name);
