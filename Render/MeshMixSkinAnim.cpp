@@ -606,6 +606,10 @@ void MeshMixSkinAnim::InitializeInternal()
     }
     AllocateAllBoneMatrix(m_frameRoot);
 
+    D3DXMATRIX worldMatrix = BuildWorldMatrix();
+    UpdateFrameMatrix(m_frameRoot, &worldMatrix);
+    InvalidateBonePaletteCache();
+
     Common::AddDeviceLostResource(this);
     m_bLoaded = true;
 }
