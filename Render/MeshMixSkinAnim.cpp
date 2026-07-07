@@ -611,7 +611,7 @@ void MeshMixSkinAnim::InitializeInternal()
         m_activeAnimationClipIndex < static_cast<int>(m_animationClips.size()))
     {
         AnimationClip& clip = m_animationClips.at(m_activeAnimationClipIndex);
-        clip.currentTime = clip.playbackStartTime;
+        clip.currentTime = 0.0;
         if (clip.controller != nullptr)
         {
             clip.controller->SetTrackPosition(0, clip.currentTime);
@@ -983,35 +983,6 @@ void MeshMixSkinAnim::UpdateActiveAnimationClip()
         }
     }
 
-    if (m_loadMode == MeshMixSkinAnimLoadMode::Blender512Custom)
-    {
-        if (clip.currentTime < clip.playbackStartTime ||
-            clip.currentTime >= clip.playbackEndTime)
-        {
-            if (clip.stopWhenEnd)
-            {
-                clip.currentTime = clip.playbackEndTime;
-            }
-            else
-            {
-                const double playbackDuration = clip.playbackEndTime - clip.playbackStartTime;
-                if (playbackDuration > 0.0)
-                {
-                    clip.currentTime = clip.playbackStartTime +
-                                       std::fmod(clip.currentTime - clip.playbackStartTime, playbackDuration);
-                    if (clip.currentTime < clip.playbackStartTime)
-                    {
-                        clip.currentTime += playbackDuration;
-                    }
-                }
-                else
-                {
-                    clip.currentTime = clip.playbackStartTime;
-                }
-            }
-        }
-    }
-
     clip.controller->SetTrackPosition(0, clip.currentTime);
     clip.controller->AdvanceTime(0.0, nullptr);
 }
@@ -1140,16 +1111,6 @@ bool MeshMixSkinAnim::LoadAnimationClip(const AnimationInfo& info)
     if (clip.controller != nullptr)
     {
         clip.duration = GetAnimationControllerDuration(clip.controller);
-        clip.playbackStartTime = 0.0;
-        clip.playbackEndTime = clip.duration;
-        if (m_loadMode == MeshMixSkinAnimLoadMode::Blender512Custom)
-        {
-            const double sourceFrameCount = 90.0;
-            const double frameTime = clip.duration / sourceFrameCount;
-            clip.playbackStartTime = frameTime;
-            clip.playbackEndTime = frameTime * 88.0;
-            clip.currentTime = clip.playbackStartTime;
-        }
     }
     m_animationClips.push_back(clip);
     return true;
@@ -1853,7 +1814,7 @@ bool MeshMixSkinAnim::PlayAnimation(const std::wstring& name)
         }
 
         m_activeAnimationClipIndex = i;
-        m_animationClips.at(i).currentTime = m_animationClips.at(i).playbackStartTime;
+        m_animationClips.at(i).currentTime = 0.0;
         if (m_animationClips.at(i).controller != nullptr)
         {
             m_animationClips.at(i).controller->SetTrackPosition(0, m_animationClips.at(i).currentTime);
