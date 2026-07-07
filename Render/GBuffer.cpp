@@ -148,7 +148,7 @@ void GBuffer::CreateRawResource()
 }
 
 void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
-                   const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList,
+                   const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
                    const std::vector<MeshMixAnimNoBone*>& meshMixAnimNoBoneList,
                    const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap,
                    ParticleSystem* particleSystem,
@@ -524,3 +524,4 @@ void GBuffer::OnDeviceReset()
 }
 
 }
+

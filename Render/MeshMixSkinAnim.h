@@ -8,32 +8,19 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Common.h"
 #include "CustomXLoader.h"
 #include "AnimController.h"
+#include "MeshMixSkinAnimCommon.h"
 #include "MeshMix.h"
 #include "SkinAnimMeshAlloc.h"
 
 namespace NSRender
 {
 
-enum class MeshMixSkinAnimLoadMode
-{
-    DirectX,
-    Custom,
-    Blender512Custom,
-};
-
-class MeshMixSkinAnim : public IDeviceResettable
+class MeshMixSkinAnim : public IMeshMixSkinAnim
 {
 public:
-    struct AnimationInfo
-    {
-        std::wstring name;
-        std::wstring filePath;
-        std::wstring mode;
-        bool isDefault = false;
-    };
+    using AnimationInfo = MeshMixSkinAnimAnimationInfo;
 
     static void SetSharedMirrorClipPlane(bool enabled, const D3DXVECTOR4& plane);
 
@@ -53,7 +40,7 @@ public:
                     const AnimSetMap& animSetMap,
                     const MeshMixSkinAnimLoadMode loadMode = MeshMixSkinAnimLoadMode::DirectX);
 
-    virtual ~MeshMixSkinAnim();
+    ~MeshMixSkinAnim() override;
 
     void Initialize(bool async = true);
     void WaitForLoad();

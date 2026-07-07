@@ -321,7 +321,7 @@ public:
                             const bool useParallaxOcclusionMapping = false,
                             const bool useNormalMapping = false);
     bool RemoveMeshMixSkinAnim(int id);
-    const std::vector<MeshMixSkinAnim::AnimationInfo>* GetMeshMixSkinAnimAnimationInfoList(int id) const;
+    const std::vector<MeshMixSkinAnimAnimationInfo>* GetMeshMixSkinAnimAnimationInfoList(int id) const;
     bool PlayMeshMixSkinAnimAnimation(int id, const std::wstring& name);
     void SetMeshMixSkinAnimSpeed(int id, float speed);
     void SetMeshMixSkinAnimAlphaClip(const bool enabled);
@@ -868,7 +868,7 @@ private:
     std::vector<BoneAttachment> m_boneAttachments;
     std::vector<AnimMesh*> m_animMeshList;
     std::vector<SkinAnimMesh*> m_skinAnimMeshList;
-    std::vector<MeshMixSkinAnim*> m_meshMixSkinAnimList;
+    std::vector<IMeshMixSkinAnim*> m_meshMixSkinAnimList;
     std::vector<MeshMixAnimNoBone*> m_meshMixAnimNoBoneList;
     std::deque<MeshSmooth> m_meshSmoothList;
     std::deque<MeshSSSLike> m_meshSSSLikeList;
@@ -1190,4 +1190,5 @@ private:
 
 };
 }
+
 

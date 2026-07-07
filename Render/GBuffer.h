@@ -9,7 +9,7 @@
 
 namespace NSRender
 {
-class MeshMixSkinAnim;
+class IMeshMixSkinAnim;
 class MeshMixAnimNoBone;
 class MeshInstancing;
 class ParticleSystem;
@@ -28,7 +28,7 @@ public:
     bool IsInitialized() const;
 
     void Draw(const std::deque<MeshMixManager>& meshList,
-              const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList,
+              const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
               const std::vector<MeshMixAnimNoBone*>& meshMixAnimNoBoneList,
               const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap,
               ParticleSystem* particleSystem,
@@ -66,4 +66,5 @@ private:
 };
 
 }
+
 

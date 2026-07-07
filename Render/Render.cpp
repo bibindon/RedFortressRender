@@ -3384,7 +3384,7 @@ void Render::UpdateBoneAttachments()
             continue;
         }
 
-        MeshMixSkinAnim* parent = m_meshMixSkinAnimList.at(attach.parentSkinnedMeshId);
+        IMeshMixSkinAnim* parent = m_meshMixSkinAnimList.at(attach.parentSkinnedMeshId);
         if (parent == nullptr)
         {
             hideChildMesh();
@@ -3615,7 +3615,7 @@ int Render::AddMeshMixSkinAnim(const std::wstring& filePath,
     param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
     param.treatTextureAsWhite = m_phongTreatTextureAsWhiteEnabled;
 
-    MeshMixSkinAnim* mesh = NEW MeshMixSkinAnim(filePath, pos, rot, scale, param, animSetMap, loadMode);
+    IMeshMixSkinAnim* mesh = NEW MeshMixSkinAnim(filePath, pos, rot, scale, param, animSetMap, loadMode);
     mesh->SetAlphaClipEnabled(m_meshMixSkinAnimAlphaClipEnabled);
     mesh->SetIgnoreTransparentMaterial(m_meshMixSkinAnimIgnoreTransparentMaterialEnabled);
     try
@@ -3657,14 +3657,14 @@ int Render::AddMeshMixSkinAnim(const std::wstring& meshFilePath,
     param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
     param.treatTextureAsWhite = m_phongTreatTextureAsWhiteEnabled;
 
-    MeshMixSkinAnim* mesh = NEW MeshMixSkinAnim(meshFilePath,
-                                               animationFilePath,
-                                               pos,
-                                               rot,
-                                               scale,
-                                               param,
-                                               animSetMap,
-                                               loadMode);
+    IMeshMixSkinAnim* mesh = NEW MeshMixSkinAnim(meshFilePath,
+                                                animationFilePath,
+                                                pos,
+                                                rot,
+                                                scale,
+                                                param,
+                                                animSetMap,
+                                                loadMode);
     mesh->SetAlphaClipEnabled(m_meshMixSkinAnimAlphaClipEnabled);
     mesh->SetIgnoreTransparentMaterial(m_meshMixSkinAnimIgnoreTransparentMaterialEnabled);
     try
@@ -3704,7 +3704,7 @@ int Render::AddMeshMixSkinAnim2(const std::wstring& filePath,
     param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
     param.treatTextureAsWhite = m_phongTreatTextureAsWhiteEnabled;
 
-    MeshMixSkinAnim* mesh = NEW MeshMixSkinAnim2(filePath, pos, rot, scale, param, animSetMap);
+    IMeshMixSkinAnim* mesh = NEW MeshMixSkinAnim2(filePath, pos, rot, scale, param, animSetMap);
     mesh->SetAlphaClipEnabled(m_meshMixSkinAnimAlphaClipEnabled);
     mesh->SetIgnoreTransparentMaterial(m_meshMixSkinAnimIgnoreTransparentMaterialEnabled);
     try
@@ -3745,13 +3745,13 @@ int Render::AddMeshMixSkinAnim2(const std::wstring& meshFilePath,
     param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
     param.treatTextureAsWhite = m_phongTreatTextureAsWhiteEnabled;
 
-    MeshMixSkinAnim* mesh = NEW MeshMixSkinAnim2(meshFilePath,
-                                                animationFilePath,
-                                                pos,
-                                                rot,
-                                                scale,
-                                                param,
-                                                animSetMap);
+    IMeshMixSkinAnim* mesh = NEW MeshMixSkinAnim2(meshFilePath,
+                                                 animationFilePath,
+                                                 pos,
+                                                 rot,
+                                                 scale,
+                                                 param,
+                                                 animSetMap);
     mesh->SetAlphaClipEnabled(m_meshMixSkinAnimAlphaClipEnabled);
     mesh->SetIgnoreTransparentMaterial(m_meshMixSkinAnimIgnoreTransparentMaterialEnabled);
     try
@@ -3880,7 +3880,7 @@ void Render::SetMeshMixAnimNoBoneEnabled(const int id, const bool enabled)
     m_meshMixAnimNoBoneList.at(id)->SetEnabled(enabled);
 }
 
-const std::vector<MeshMixSkinAnim::AnimationInfo>* Render::GetMeshMixSkinAnimAnimationInfoList(const int id) const
+const std::vector<MeshMixSkinAnimAnimationInfo>* Render::GetMeshMixSkinAnimAnimationInfoList(const int id) const
 {
     if (id < 0 || id >= static_cast<int>(m_meshMixSkinAnimList.size()) || m_meshMixSkinAnimList.at(id) == nullptr)
     {
@@ -3954,7 +3954,7 @@ std::vector<RenderLoadedModelInfo> Render::GetLoadedModelInfoList()
 
     for (int i = 0; i < static_cast<int>(m_meshMixSkinAnimList.size()); ++i)
     {
-        const MeshMixSkinAnim* mesh = m_meshMixSkinAnimList.at(i);
+        const IMeshMixSkinAnim* mesh = m_meshMixSkinAnimList.at(i);
         if (mesh == nullptr)
         {
             continue;
@@ -7055,3 +7055,4 @@ void Render::CreateTexture()
 }
 
 }
+

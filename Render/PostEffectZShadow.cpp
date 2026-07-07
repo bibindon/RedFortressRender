@@ -187,7 +187,7 @@ void PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                              LPDIRECT3DTEXTURE9 sceneDepthTexture,
                               LPDIRECT3DTEXTURE9 sceneNormalTexture,
                               const std::deque<MeshMixManager>& meshMixList,
-                              const std::vector<MeshMixSkinAnim*>& meshMixSkinAnimList,
+                              const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
                               const std::vector<MeshMixAnimNoBone*>& meshMixAnimNoBoneList,
                               const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap)
 {
@@ -1125,4 +1125,5 @@ const char* PostEffectZShadow::GetCompositeTechniqueName() const
 }
 
 }
+
 
