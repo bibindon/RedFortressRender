@@ -40,9 +40,16 @@ STDMETHODIMP SkinAnimMeshAlloc::CreateFrame(LPCSTR name, LPD3DXFRAME *newFrame)
 {
     auto animMeshFrame = NEW SkinAnimMeshFrame();
 
-    auto len = strlen(name);
-    animMeshFrame->Name = NEW char[len + 1];
-    strcpy_s(animMeshFrame->Name, len + 1, name);
+    if (name == nullptr)
+    {
+        animMeshFrame->Name = nullptr;
+    }
+    else
+    {
+        auto len = strlen(name);
+        animMeshFrame->Name = NEW char[len + 1];
+        strcpy_s(animMeshFrame->Name, len + 1, name);
+    }
 
     D3DXMatrixIdentity(&animMeshFrame->TransformationMatrix);
     D3DXMatrixIdentity(&animMeshFrame->m_combinedMatrix);
@@ -66,10 +73,16 @@ STDMETHODIMP SkinAnimMeshAlloc::CreateMeshContainer(LPCSTR meshName,
 {
     m_container = NEW SkinAnimMeshContainer();
 
-    std::string meshFilename = meshName;
-
-    m_container->Name = NEW char[meshFilename.length() + 1];
-    strcpy_s(m_container->Name, meshFilename.length() + 1, meshFilename.c_str());
+    if (meshName == nullptr)
+    {
+        m_container->Name = nullptr;
+    }
+    else
+    {
+        std::string meshFilename = meshName;
+        m_container->Name = NEW char[meshFilename.length() + 1];
+        strcpy_s(m_container->Name, meshFilename.length() + 1, meshFilename.c_str());
+    }
 
     HRESULT result = E_FAIL;
     if (!(meshData->pMesh->GetFVF() & D3DFVF_NORMAL))

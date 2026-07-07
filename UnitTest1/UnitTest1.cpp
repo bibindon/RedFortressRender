@@ -82,6 +82,37 @@ namespace UnitTest1
             return L"Sample\\res\\model\\wolf\\" + fileName;
         }
 
+        std::wstring GetBlender512CylinderSkinnedFilePath()
+        {
+            wchar_t currentDirectory[MAX_PATH] { };
+            const DWORD length = GetCurrentDirectoryW(_countof(currentDirectory), currentDirectory);
+            if (length == 0 || length >= _countof(currentDirectory))
+            {
+                return L"Sample\\res\\Blender5.1.2Sample\\CylinderSkinned\\untitled.X";
+            }
+
+            std::wstring directory(currentDirectory);
+            for (int i = 0; i < 8; ++i)
+            {
+                const std::wstring candidate =
+                    directory + L"\\Sample\\res\\Blender5.1.2Sample\\CylinderSkinned\\untitled.X";
+                if (FileExists(candidate))
+                {
+                    return candidate;
+                }
+
+                const std::size_t slashPos = directory.find_last_of(L"\\/");
+                if (slashPos == std::wstring::npos)
+                {
+                    break;
+                }
+
+                directory = directory.substr(0, slashPos);
+            }
+
+            return L"Sample\\res\\Blender5.1.2Sample\\CylinderSkinned\\untitled.X";
+        }
+
         std::wstring GetCompiledShaderDirectory()
         {
             wchar_t currentDirectory[MAX_PATH] { };
@@ -277,6 +308,40 @@ namespace UnitTest1
             Assert::IsTrue(SUCCEEDED(result.hr), result.message.c_str());
             Assert::AreEqual(45, result.frameCount);
             Assert::AreEqual(std::wstring(L"Root"), result.rootFrameName);
+        }
+
+        TEST_METHOD(LoadBlender512CylinderSkinnedWithDirectXLoader)
+        {
+            HiddenWindowScope windowScope;
+            Assert::IsNotNull(windowScope.GetHWnd(), L"Failed to create a hidden test window.");
+
+            D3DDeviceScope deviceScope(windowScope.GetHWnd());
+            Assert::IsTrue(deviceScope.IsValid(), L"Failed to create a Direct3D9 test device.");
+
+            const std::wstring filePath = GetBlender512CylinderSkinnedFilePath();
+            NSRender::SkinAnimMeshAlloc allocator(filePath);
+            LPD3DXFRAME frameRoot = nullptr;
+            LPD3DXANIMATIONCONTROLLER animationController = nullptr;
+
+            const HRESULT hr = D3DXLoadMeshHierarchyFromX(filePath.c_str(),
+                                                          D3DXMESH_MANAGED | D3DXMESH_32BIT,
+                                                          NSRender::Common::D3DDevice(),
+                                                          &allocator,
+                                                          nullptr,
+                                                          &frameRoot,
+                                                          &animationController);
+
+            NSRender::SAFE_RELEASE(animationController);
+            if (frameRoot != nullptr)
+            {
+                D3DXFrameDestroy(frameRoot, &allocator);
+            }
+
+            wchar_t message[128] { };
+            swprintf_s(message,
+                       L"D3DXLoadMeshHierarchyFromX failed for Blender 5.1.2 skinned X file. HR=0x%08X",
+                       static_cast<unsigned int>(hr));
+            Assert::IsTrue(SUCCEEDED(hr), message);
         }
 
         TEST_METHOD(AddMeshMixSkinAnimWithCustomLoader)

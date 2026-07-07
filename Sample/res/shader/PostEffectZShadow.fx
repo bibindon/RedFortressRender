@@ -340,8 +340,7 @@ VSOutDepth VS_DepthFromLight(VSInDepth vin)
 
 
     // 線形深度（ライト View 空間 z を near..far で正規化）
-    float  depthLinear = (vPosLightView.z - g_lightNear) / (g_lightFar - g_lightNear);
-    vout.fDepth = saturate(depthLinear);
+    vout.fDepth = vPosLightView.z;
     vout.uv = vin.uv;
 
     return vout;
@@ -377,7 +376,7 @@ void VS_DepthFromLightSkin(in  float4 inPosition     : POSITION,
     float4 posLightView = mul(float4(worldPos, 1.0f), g_matLightView);
 
     outPosition = mul(float4(worldPos, 1.0f), g_matLightViewProj);
-    outDepth = saturate((posLightView.z - g_lightNear) / (g_lightFar - g_lightNear));
+    outDepth = posLightView.z;
     outUV = inUV;
 }
 
@@ -388,7 +387,7 @@ float4 PS_DepthFromLight(VSOutDepth pin) : COLOR0
         clip(tex2D(sampMeshAlpha, pin.uv).a - g_meshAlphaClipThreshold);
     }
 
-    float d = pin.fDepth;
+    float d = saturate((pin.fDepth - g_lightNear) / (g_lightFar - g_lightNear));
     return float4(d, d, d, 1.0f);
 }
 
@@ -956,6 +955,9 @@ technique TechniqueDepthFromLight
     pass P0
     {
         CullMode     = NONE;
+        ZEnable      = TRUE;
+        ZWriteEnable = TRUE;
+        ZFunc        = LESSEQUAL;
         VertexShader = compile vs_3_0 VS_DepthFromLight();
         PixelShader  = compile ps_3_0 PS_DepthFromLight();
     }
@@ -966,6 +968,9 @@ technique TechniqueDepthFromLightSkin
     pass P0
     {
         CullMode     = NONE;
+        ZEnable      = TRUE;
+        ZWriteEnable = TRUE;
+        ZFunc        = LESSEQUAL;
         VertexShader = (vsDepthSkinArray[g_currentBoneIndex]);
         PixelShader  = compile ps_3_0 PS_DepthFromLight();
     }
