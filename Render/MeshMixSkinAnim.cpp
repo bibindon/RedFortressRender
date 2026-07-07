@@ -251,7 +251,7 @@ std::wstring Utf8BytesToWideString(const std::string& bytes)
 
 double GetAnimationControllerDuration(LPD3DXANIMATIONCONTROLLER controller)
 {
-    if (controller == nullptr || controller->GetMaxNumAnimationSets() == 0)
+    if (controller == nullptr || controller->GetNumAnimationSets() == 0)
     {
         return 1.0;
     }
@@ -265,6 +265,51 @@ double GetAnimationControllerDuration(LPD3DXANIMATIONCONTROLLER controller)
     const double duration = (std::max)(animationSet->GetPeriod(), 0.0001);
     SAFE_RELEASE(animationSet);
     return duration;
+}
+
+std::vector<MeshMixSkinAnim::AnimationInfo> GetAnimationInfoListFromController(
+    LPD3DXANIMATIONCONTROLLER controller,
+    const std::wstring& filePath)
+{
+    std::vector<MeshMixSkinAnim::AnimationInfo> infoList;
+    if (controller == nullptr)
+    {
+        return infoList;
+    }
+
+    const UINT animationSetCount = controller->GetNumAnimationSets();
+    for (UINT i = 0; i < animationSetCount; ++i)
+    {
+        LPD3DXANIMATIONSET animationSet = nullptr;
+        const HRESULT hr = controller->GetAnimationSet(i, &animationSet);
+        if (FAILED(hr) || animationSet == nullptr)
+        {
+            continue;
+        }
+
+        MeshMixSkinAnim::AnimationInfo info;
+        const char* animationSetName = animationSet->GetName();
+        if (animationSetName != nullptr)
+        {
+            info.name = Utf8BytesToWideString(animationSetName);
+        }
+        if (info.name.empty())
+        {
+            info.name = std::to_wstring(i);
+        }
+        info.filePath = filePath;
+        info.mode = L"loop";
+        if (i == 0)
+        {
+            info.mode = L"default";
+            info.isDefault = true;
+        }
+
+        infoList.push_back(info);
+        SAFE_RELEASE(animationSet);
+    }
+
+    return infoList;
 }
 
 } // anonymous namespace
@@ -461,6 +506,7 @@ void MeshMixSkinAnim::InitializeInternal()
     if (m_animationClips.empty() && tempAnimController != nullptr)
     {
         m_animController.Init(tempAnimController, m_animSetMap);
+        m_animationInfoList = GetAnimationInfoListFromController(tempAnimController, tempPath);
         m_hasAnimationController = true;
     }
     else
@@ -1633,6 +1679,20 @@ bool MeshMixSkinAnim::PlayAnimation(const std::wstring& name)
             m_animationClips.at(i).controller->AdvanceTime(0.0, nullptr);
         }
         return true;
+    }
+
+    if (m_hasAnimationController)
+    {
+        for (const auto& info : m_animationInfoList)
+        {
+            if (info.name != name)
+            {
+                continue;
+            }
+
+            m_animController.SetAnim(name, 0.0);
+            return true;
+        }
     }
 
     return false;

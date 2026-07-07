@@ -31,9 +31,13 @@ public:
     void SetAnimSpeed(const float speed);
 
 private:
+    void SetTrackAnimationSetByName(const std::wstring& animName);
+    void SetTrackAnimationSetByIndex(UINT index);
+
     LPD3DXANIMATIONCONTROLLER m_controller = nullptr;
     float m_animationTime = 0.f;
     AnimSetMap m_animSettingMap;
+    std::map<std::wstring, UINT> m_animationSetIndexMap;
     std::wstring m_animName;
     float m_animSpeed = 0.f;
 

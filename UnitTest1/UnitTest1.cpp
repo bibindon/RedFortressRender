@@ -331,6 +331,28 @@ namespace UnitTest1
                                                           &frameRoot,
                                                           &animationController);
 
+            UINT animationSetCount = 0;
+            std::wstring animationSetName;
+            if (animationController != nullptr)
+            {
+                animationSetCount = animationController->GetNumAnimationSets();
+                LPD3DXANIMATIONSET animationSet = nullptr;
+                if (SUCCEEDED(animationController->GetAnimationSet(0, &animationSet)) && animationSet != nullptr)
+                {
+                    const char* rawName = animationSet->GetName();
+                    if (rawName != nullptr)
+                    {
+                        const int required = MultiByteToWideChar(CP_UTF8, 0, rawName, -1, nullptr, 0);
+                        if (required > 1)
+                        {
+                            animationSetName.resize(required - 1);
+                            MultiByteToWideChar(CP_UTF8, 0, rawName, -1, &animationSetName[0], required);
+                        }
+                    }
+                    NSRender::SAFE_RELEASE(animationSet);
+                }
+            }
+
             NSRender::SAFE_RELEASE(animationController);
             if (frameRoot != nullptr)
             {
@@ -342,6 +364,38 @@ namespace UnitTest1
                        L"D3DXLoadMeshHierarchyFromX failed for Blender 5.1.2 skinned X file. HR=0x%08X",
                        static_cast<unsigned int>(hr));
             Assert::IsTrue(SUCCEEDED(hr), message);
+            Assert::AreEqual(1U, animationSetCount);
+            Assert::AreEqual(std::wstring(L"BlockWiggle"), animationSetName);
+        }
+
+        TEST_METHOD(AddBlender512CylinderSkinnedDirectXLoaderAnimationInfo)
+        {
+            const std::wstring shaderDirectory = GetCompiledShaderDirectory();
+            Assert::IsFalse(shaderDirectory.empty(), L"MeshMixSkinAnim.cso was not found.");
+
+            CurrentDirectoryScope currentDirectoryScope(shaderDirectory);
+            HiddenWindowScope windowScope;
+            Assert::IsNotNull(windowScope.GetHWnd(), L"Failed to create a hidden test window.");
+
+            D3DDeviceScope deviceScope(windowScope.GetHWnd());
+            Assert::IsTrue(deviceScope.IsValid(), L"Failed to create a Direct3D9 test device.");
+
+            NSRender::AnimSetMap animSetMap;
+            NSRender::MeshMixSkinAnim mesh(GetBlender512CylinderSkinnedFilePath(),
+                                           D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                                           D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                                           1.0f,
+                                           NSRender::GetMeshParamPreset(NSRender::eMeshParamPreset::GRASS),
+                                           animSetMap,
+                                           NSRender::MeshMixSkinAnimLoadMode::DirectX);
+
+            mesh.Initialize(false);
+
+            const auto& animationInfoList = mesh.GetAnimationInfoList();
+            Assert::AreEqual(static_cast<std::size_t>(1), animationInfoList.size());
+            Assert::AreEqual(std::wstring(L"BlockWiggle"), animationInfoList.at(0).name);
+            Assert::IsTrue(animationInfoList.at(0).isDefault);
+            Assert::IsTrue(mesh.PlayAnimation(L"BlockWiggle"));
         }
 
         TEST_METHOD(AddMeshMixSkinAnimWithCustomLoader)
