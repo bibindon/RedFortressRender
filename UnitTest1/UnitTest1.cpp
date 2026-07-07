@@ -131,6 +131,37 @@ namespace UnitTest1
             return L"Sample\\res\\Blender5.1.2Sample\\CylinderSkinned\\untitled.X";
         }
 
+        std::wstring GetBlender512CylinderSkinnedSeparatedFilePath(const std::wstring& fileName)
+        {
+            wchar_t currentDirectory[MAX_PATH] { };
+            const DWORD length = GetCurrentDirectoryW(_countof(currentDirectory), currentDirectory);
+            if (length == 0 || length >= _countof(currentDirectory))
+            {
+                return L"Sample\\res\\Blender5.1.2Sample\\CylinderSkinned_Separated\\" + fileName;
+            }
+
+            std::wstring directory(currentDirectory);
+            for (int i = 0; i < 8; ++i)
+            {
+                const std::wstring candidate =
+                    directory + L"\\Sample\\res\\Blender5.1.2Sample\\CylinderSkinned_Separated\\" + fileName;
+                if (FileExists(candidate))
+                {
+                    return candidate;
+                }
+
+                const std::size_t slashPos = directory.find_last_of(L"\\/");
+                if (slashPos == std::wstring::npos)
+                {
+                    break;
+                }
+
+                directory = directory.substr(0, slashPos);
+            }
+
+            return L"Sample\\res\\Blender5.1.2Sample\\CylinderSkinned_Separated\\" + fileName;
+        }
+
         std::wstring GetCompiledShaderDirectory()
         {
             wchar_t currentDirectory[MAX_PATH] { };
@@ -442,6 +473,48 @@ namespace UnitTest1
             Assert::IsTrue(mesh.GetBoneWorldMatrix("Bend_02_Upper", afterUpdate));
             Assert::IsTrue(IsMatrixDifferent(beforeUpdate, afterUpdate),
                            L"Bend_02_Upper matrix did not change after advancing BlockWiggle.");
+        }
+
+        TEST_METHOD(AddBlender512CylinderSkinnedSeparatedDirectXLoaderAnimation)
+        {
+            const std::wstring shaderDirectory = GetCompiledShaderDirectory();
+            Assert::IsFalse(shaderDirectory.empty(), L"MeshMixSkinAnim.cso was not found.");
+
+            CurrentDirectoryScope currentDirectoryScope(shaderDirectory);
+            HiddenWindowScope windowScope;
+            Assert::IsNotNull(windowScope.GetHWnd(), L"Failed to create a hidden test window.");
+
+            D3DDeviceScope deviceScope(windowScope.GetHWnd());
+            Assert::IsTrue(deviceScope.IsValid(), L"Failed to create a Direct3D9 test device.");
+
+            NSRender::AnimSetMap animSetMap;
+            NSRender::MeshMixSkinAnim mesh(
+                GetBlender512CylinderSkinnedSeparatedFilePath(L"untitled.nonAnim.X"),
+                GetBlender512CylinderSkinnedSeparatedFilePath(L"untitled.AnimOnly.X"),
+                D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                1.0f,
+                NSRender::GetMeshParamPreset(NSRender::eMeshParamPreset::GRASS),
+                animSetMap,
+                NSRender::MeshMixSkinAnimLoadMode::DirectX);
+
+            mesh.Initialize(false);
+
+            const auto& animationInfoList = mesh.GetAnimationInfoList();
+            Assert::AreEqual(static_cast<std::size_t>(1), animationInfoList.size());
+            Assert::AreEqual(std::wstring(L"BlockWiggle"), animationInfoList.at(0).name);
+            Assert::IsTrue(mesh.PlayAnimation(L"BlockWiggle"));
+
+            D3DXMATRIX beforeUpdate { };
+            D3DXMATRIX afterUpdate { };
+            Assert::IsTrue(mesh.GetBoneWorldMatrix("Bend_02_Upper", beforeUpdate));
+            for (int i = 0; i < 60; ++i)
+            {
+                mesh.UpdateAnimation();
+            }
+            Assert::IsTrue(mesh.GetBoneWorldMatrix("Bend_02_Upper", afterUpdate));
+            Assert::IsTrue(IsMatrixDifferent(beforeUpdate, afterUpdate),
+                           L"Bend_02_Upper matrix did not change after advancing separated BlockWiggle.");
         }
 
         TEST_METHOD(AddMeshMixSkinAnimWithCustomLoader)

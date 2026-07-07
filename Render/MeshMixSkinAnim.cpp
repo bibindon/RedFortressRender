@@ -578,10 +578,16 @@ void MeshMixSkinAnim::InitializeInternal()
 
     if (m_animationClips.empty() && tempAnimController != nullptr)
     {
-        if (m_loadMode == MeshMixSkinAnimLoadMode::DirectX && !m_useExternalAnimation)
+        LPD3DXFRAME animationTargetFrameRoot = m_frameRoot;
+        if (m_useExternalAnimation)
+        {
+            animationTargetFrameRoot = m_animationFrameRoot;
+        }
+
+        if (m_loadMode == MeshMixSkinAnimLoadMode::DirectX)
         {
             LPD3DXANIMATIONCONTROLLER embeddedController =
-                CreateControllerFromEmbeddedAnimationText(tempPath, m_frameRoot);
+                CreateControllerFromEmbeddedAnimationText(tempPath, animationTargetFrameRoot);
             if (embeddedController != nullptr)
             {
                 SAFE_RELEASE(tempAnimController);
@@ -589,7 +595,7 @@ void MeshMixSkinAnim::InitializeInternal()
             }
         }
 
-        RegisterAnimationOutputsRecursive(tempAnimController, m_frameRoot);
+        RegisterAnimationOutputsRecursive(tempAnimController, animationTargetFrameRoot);
         m_animController.Init(tempAnimController, m_animSetMap);
         m_animationInfoList = GetAnimationInfoListFromController(tempAnimController, tempPath);
         m_hasAnimationController = true;
