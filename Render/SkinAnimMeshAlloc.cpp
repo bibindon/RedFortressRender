@@ -195,10 +195,16 @@ void SkinAnimMeshAlloc::InitializeBone(const LPD3DXSKININFO skinInfo,
 
     UINT boneCount = skinInfo->GetNumBones();
     m_container->m_boneOffsetMatrices.resize(boneCount);
+    m_container->m_boneNames.resize(boneCount);
 
     for (DWORD i = 0; i < boneCount; ++i)
     {
         m_container->m_boneOffsetMatrices[i] = *skinInfo->GetBoneOffsetMatrix(i);
+        const char* boneName = skinInfo->GetBoneName(i);
+        if (boneName != nullptr)
+        {
+            m_container->m_boneNames[i] = boneName;
+        }
     }
 
     auto boneNum = skinInfo->GetNumBones();

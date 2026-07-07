@@ -256,8 +256,13 @@ HRESULT SkinAnimMesh::AllocateBoneMatrix(LPD3DXMESHCONTAINER containerBase)
 
     for (DWORD i = 0; i < boneCount; ++i)
     {
-        LPD3DXFRAME p = D3DXFrameFind(m_frameRoot,
-                                      container->pSkinInfo->GetBoneName(i));
+        const char* boneName = container->pSkinInfo->GetBoneName(i);
+        if (i < container->m_boneNames.size() && !container->m_boneNames.at(i).empty())
+        {
+            boneName = container->m_boneNames.at(i).c_str();
+        }
+
+        LPD3DXFRAME p = D3DXFrameFind(m_frameRoot, boneName);
 
         frame = (SkinAnimMeshFrame*)p;
 

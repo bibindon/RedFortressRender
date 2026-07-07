@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <d3d9.h>
 #include <d3dx9.h>
@@ -31,6 +31,24 @@ struct CustomXFrameHierarchyLoadResult
     std::wstring message;
 };
 
+struct CustomXSkinningDiagnosticResult
+{
+    HRESULT hr = E_FAIL;
+    int frameCount = 0;
+    int meshContainerCount = 0;
+    DWORD maxPaletteSize = 0;
+    DWORD maxInfluenceCount = 0;
+    DWORD maxBoneCount = 0;
+    double maxAbsFrameCombined = 0.0;
+    double maxAbsBoneOffset = 0.0;
+    double maxBindPoseError = 0.0;
+    double maxBindPoseErrorParentLocalFrame = 0.0;
+    double maxBindPoseErrorCombinedOffset = 0.0;
+    double maxBindPoseErrorTransposedOffset = 0.0;
+    std::wstring maxBindPoseErrorBoneName;
+    std::wstring message;
+};
+
 struct CustomXAnimationKey
 {
     DWORD keyType = 0;
@@ -58,6 +76,8 @@ std::wstring AnsiTextToWideText(const std::string& text);
 
 CustomXFrameHierarchyLoadResult LoadCustomXFrameHierarchyForTest(const std::wstring& filePath,
                                                                  bool loadMeshContainers = false);
+
+CustomXSkinningDiagnosticResult DiagnoseCustomXSkinningForTest(const std::wstring& filePath);
 
 HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
                                           SkinAnimMeshAlloc* allocator,

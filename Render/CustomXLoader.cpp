@@ -2,6 +2,7 @@
 #include "Common.h"
 #include "Util.h"
 
+#include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <fstream>
@@ -1137,6 +1138,20 @@ bool CreateCustomXMeshContainer(const std::string& meshName,
                                          &adjacency[0],
                                          skinInfo,
                                          meshContainer);
+    if (SUCCEEDED(hr) && meshContainer != nullptr && *meshContainer != nullptr)
+    {
+        SkinAnimMeshContainer* skinContainer = reinterpret_cast<SkinAnimMeshContainer*>(*meshContainer);
+        skinContainer->m_boneNames.clear();
+        skinContainer->m_boneOffsetMatrices.clear();
+        skinContainer->m_boneNames.reserve(meshData.skinWeights.size());
+        skinContainer->m_boneOffsetMatrices.reserve(meshData.skinWeights.size());
+        for (const CustomXSkinWeightsData& weightsData : meshData.skinWeights)
+        {
+            skinContainer->m_boneNames.push_back(weightsData.boneName);
+            skinContainer->m_boneOffsetMatrices.push_back(weightsData.offsetMatrix);
+        }
+    }
+
     SAFE_RELEASE(skinInfo);
     SAFE_RELEASE(mesh);
     return SUCCEEDED(hr) && *meshContainer != nullptr;
@@ -2667,6 +2682,263 @@ int CountCustomXMeshContainers(const LPD3DXFRAME frame)
            CountCustomXMeshContainers(frame->pFrameSibling);
 }
 
+double GetCustomXMatrixMaxAbsElement(const D3DXMATRIX& matrix)
+{
+    double maxAbsValue = 0.0;
+    for (int row = 0; row < 4; ++row)
+    {
+        for (int column = 0; column < 4; ++column)
+        {
+            const double absValue = std::fabs(static_cast<double>(matrix(row, column)));
+            if (absValue > maxAbsValue)
+            {
+                maxAbsValue = absValue;
+            }
+        }
+    }
+
+    return maxAbsValue;
+}
+
+double GetCustomXMatrixIdentityError(const D3DXMATRIX& matrix)
+{
+    double maxError = 0.0;
+    for (int row = 0; row < 4; ++row)
+    {
+        for (int column = 0; column < 4; ++column)
+        {
+            double expected = 0.0;
+            if (row == column)
+            {
+                expected = 1.0;
+            }
+
+            const double error = std::fabs(static_cast<double>(matrix(row, column)) - expected);
+            if (error > maxError)
+            {
+                maxError = error;
+            }
+        }
+    }
+
+    return maxError;
+}
+
+void UpdateCustomXDiagnosticFrameMatrices(const LPD3DXFRAME frameBase,
+                                          const LPD3DXMATRIX parentMatrix,
+                                          std::map<std::string, D3DXMATRIX>& frameMatrices,
+                                          double& maxAbsFrameCombined,
+                                          const bool parentLocalOrder)
+{
+    if (frameBase == nullptr)
+    {
+        return;
+    }
+
+    const SkinAnimMeshFrame* frame = reinterpret_cast<const SkinAnimMeshFrame*>(frameBase);
+    D3DXMATRIX combinedMatrix;
+    if (parentMatrix != nullptr)
+    {
+        if (parentLocalOrder)
+        {
+            combinedMatrix = (*parentMatrix) * frame->TransformationMatrix;
+        }
+        else
+        {
+            combinedMatrix = frame->TransformationMatrix * (*parentMatrix);
+        }
+    }
+    else
+    {
+        combinedMatrix = frame->TransformationMatrix;
+    }
+
+    if (frame->Name != nullptr)
+    {
+        frameMatrices[frame->Name] = combinedMatrix;
+    }
+
+    const double absValue = GetCustomXMatrixMaxAbsElement(combinedMatrix);
+    if (absValue > maxAbsFrameCombined)
+    {
+        maxAbsFrameCombined = absValue;
+    }
+
+    if (frame->pFrameSibling != nullptr)
+    {
+        UpdateCustomXDiagnosticFrameMatrices(frame->pFrameSibling,
+                                             parentMatrix,
+                                             frameMatrices,
+                                             maxAbsFrameCombined,
+                                             parentLocalOrder);
+    }
+
+    if (frame->pFrameFirstChild != nullptr)
+    {
+        UpdateCustomXDiagnosticFrameMatrices(frame->pFrameFirstChild,
+                                             &combinedMatrix,
+                                             frameMatrices,
+                                             maxAbsFrameCombined,
+                                             parentLocalOrder);
+    }
+}
+
+void DiagnoseCustomXMeshContainers(const LPD3DXFRAME frameBase,
+                                   const std::map<std::string, D3DXMATRIX>& frameMatrices,
+                                   const std::map<std::string, D3DXMATRIX>& parentLocalFrameMatrices,
+                                   CustomXSkinningDiagnosticResult& result)
+{
+    if (frameBase == nullptr)
+    {
+        return;
+    }
+
+    const LPD3DXMESHCONTAINER containerBase = frameBase->pMeshContainer;
+    LPD3DXMESHCONTAINER currentContainer = containerBase;
+    while (currentContainer != nullptr)
+    {
+        ++result.meshContainerCount;
+        const SkinAnimMeshContainer* container = reinterpret_cast<const SkinAnimMeshContainer*>(currentContainer);
+        if (container->m_paletteSize > result.maxPaletteSize)
+        {
+            result.maxPaletteSize = container->m_paletteSize;
+        }
+        if (container->m_influenceCount > result.maxInfluenceCount)
+        {
+            result.maxInfluenceCount = container->m_influenceCount;
+        }
+        if (container->m_boneCount > result.maxBoneCount)
+        {
+            result.maxBoneCount = container->m_boneCount;
+        }
+
+        if (container->pSkinInfo != nullptr)
+        {
+            const DWORD boneCount = container->pSkinInfo->GetNumBones();
+            for (DWORD boneIndex = 0; boneIndex < boneCount; ++boneIndex)
+            {
+                const D3DXMATRIX* offsetMatrix = container->pSkinInfo->GetBoneOffsetMatrix(boneIndex);
+                if (boneIndex < container->m_boneOffsetMatrices.size())
+                {
+                    offsetMatrix = &container->m_boneOffsetMatrices[boneIndex];
+                }
+
+                if (offsetMatrix == nullptr)
+                {
+                    continue;
+                }
+
+                const double offsetAbsValue = GetCustomXMatrixMaxAbsElement(*offsetMatrix);
+                if (offsetAbsValue > result.maxAbsBoneOffset)
+                {
+                    result.maxAbsBoneOffset = offsetAbsValue;
+                }
+
+                const char* boneName = container->pSkinInfo->GetBoneName(boneIndex);
+                if (boneIndex < container->m_boneNames.size() && !container->m_boneNames.at(boneIndex).empty())
+                {
+                    boneName = container->m_boneNames.at(boneIndex).c_str();
+                }
+
+                if (boneName == nullptr)
+                {
+                    continue;
+                }
+
+                const auto frameMatrix = frameMatrices.find(boneName);
+                if (frameMatrix == frameMatrices.end())
+                {
+                    continue;
+                }
+
+                const D3DXMATRIX bindPoseMatrix = (*offsetMatrix) * frameMatrix->second;
+                const double bindPoseError = GetCustomXMatrixIdentityError(bindPoseMatrix);
+                if (bindPoseError > result.maxBindPoseError)
+                {
+                    result.maxBindPoseError = bindPoseError;
+                    result.maxBindPoseErrorBoneName = AnsiTextToWideText(boneName);
+                    std::wstring detail = L"Diagnostic max bind pose matrices for ";
+                    detail += result.maxBindPoseErrorBoneName;
+                    detail += L"\nOffset=";
+                    for (int row = 0; row < 4; ++row)
+                    {
+                        for (int column = 0; column < 4; ++column)
+                        {
+                            detail += std::to_wstring((*offsetMatrix)(row, column));
+                            detail += L",";
+                        }
+                    }
+                    detail += L"\nCombined=";
+                    for (int row = 0; row < 4; ++row)
+                    {
+                        for (int column = 0; column < 4; ++column)
+                        {
+                            detail += std::to_wstring(frameMatrix->second(row, column));
+                            detail += L",";
+                        }
+                    }
+                    detail += L"\nBind=";
+                    for (int row = 0; row < 4; ++row)
+                    {
+                        for (int column = 0; column < 4; ++column)
+                        {
+                            detail += std::to_wstring(bindPoseMatrix(row, column));
+                            detail += L",";
+                        }
+                    }
+                    result.message = detail;
+                }
+
+                const D3DXMATRIX combinedOffsetMatrix = frameMatrix->second * (*offsetMatrix);
+                const double combinedOffsetError = GetCustomXMatrixIdentityError(combinedOffsetMatrix);
+                if (combinedOffsetError > result.maxBindPoseErrorCombinedOffset)
+                {
+                    result.maxBindPoseErrorCombinedOffset = combinedOffsetError;
+                }
+
+                D3DXMATRIX transposedOffsetMatrix;
+                D3DXMatrixTranspose(&transposedOffsetMatrix, offsetMatrix);
+                const D3DXMATRIX transposedBindPoseMatrix = transposedOffsetMatrix * frameMatrix->second;
+                const double transposedBindPoseError = GetCustomXMatrixIdentityError(transposedBindPoseMatrix);
+                if (transposedBindPoseError > result.maxBindPoseErrorTransposedOffset)
+                {
+                    result.maxBindPoseErrorTransposedOffset = transposedBindPoseError;
+                }
+
+                const auto parentLocalFrameMatrix = parentLocalFrameMatrices.find(boneName);
+                if (parentLocalFrameMatrix != parentLocalFrameMatrices.end())
+                {
+                    const D3DXMATRIX parentLocalBindPoseMatrix = (*offsetMatrix) * parentLocalFrameMatrix->second;
+                    const double parentLocalBindPoseError =
+                        GetCustomXMatrixIdentityError(parentLocalBindPoseMatrix);
+                    if (parentLocalBindPoseError > result.maxBindPoseErrorParentLocalFrame)
+                    {
+                        result.maxBindPoseErrorParentLocalFrame = parentLocalBindPoseError;
+                    }
+                }
+            }
+        }
+
+        currentContainer = currentContainer->pNextMeshContainer;
+    }
+
+    if (frameBase->pFrameSibling != nullptr)
+    {
+        DiagnoseCustomXMeshContainers(frameBase->pFrameSibling,
+                                      frameMatrices,
+                                      parentLocalFrameMatrices,
+                                      result);
+    }
+
+    if (frameBase->pFrameFirstChild != nullptr)
+    {
+        DiagnoseCustomXMeshContainers(frameBase->pFrameFirstChild,
+                                      frameMatrices,
+                                      parentLocalFrameMatrices,
+                                      result);
+    }
+}
+
 void DestroyCustomXFrameHierarchy(LPD3DXFRAME frame)
 {
     if (frame == nullptr)
@@ -2761,6 +3033,54 @@ CustomXFrameHierarchyLoadResult LoadCustomXFrameHierarchyForTest(const std::wstr
     {
         DestroyCustomXFrameHierarchy(frameRoot);
     }
+    return result;
+}
+
+CustomXSkinningDiagnosticResult DiagnoseCustomXSkinningForTest(const std::wstring& filePath)
+{
+    CustomXSkinningDiagnosticResult result;
+
+    std::ifstream file(filePath, std::ios::binary);
+    if (!file)
+    {
+        result.hr = E_FAIL;
+        result.message = L"File open failed: " + filePath;
+        return result;
+    }
+
+    const std::string fileText((std::istreambuf_iterator<char>(file)),
+                               std::istreambuf_iterator<char>());
+    LPD3DXFRAME frameRoot = nullptr;
+    SkinAnimMeshAlloc allocator(filePath);
+    result.hr = LoadCustomXFrameHierarchyFromText(fileText, &allocator, &frameRoot);
+    if (FAILED(result.hr) || frameRoot == nullptr)
+    {
+        result.message = L"Parser failed. Bytes=" + std::to_wstring(fileText.size());
+        DestroyCustomXFrameHierarchyWithAllocator(frameRoot, allocator);
+        return result;
+    }
+
+    result.frameCount = CountCustomXFrames(frameRoot);
+    std::map<std::string, D3DXMATRIX> frameMatrices;
+    UpdateCustomXDiagnosticFrameMatrices(frameRoot,
+                                         nullptr,
+                                         frameMatrices,
+                                         result.maxAbsFrameCombined,
+                                         false);
+    double unusedMaxAbsParentLocalFrameCombined = 0.0;
+    std::map<std::string, D3DXMATRIX> parentLocalFrameMatrices;
+    UpdateCustomXDiagnosticFrameMatrices(frameRoot,
+                                         nullptr,
+                                         parentLocalFrameMatrices,
+                                         unusedMaxAbsParentLocalFrameCombined,
+                                         true);
+    DiagnoseCustomXMeshContainers(frameRoot, frameMatrices, parentLocalFrameMatrices, result);
+    if (result.message.empty())
+    {
+        result.message = L"Diagnostic completed.";
+    }
+
+    DestroyCustomXFrameHierarchyWithAllocator(frameRoot, allocator);
     return result;
 }
 

@@ -2,6 +2,7 @@
 #include "CppUnitTest.h"
 
 #include "../Render/Common.h"
+#include "../Render/CustomXLoader.h"
 #include "../Render/MeshMixSkinAnim.h"
 #include "../Render/Render.h"
 
@@ -196,6 +197,18 @@ namespace UnitTest1
             }
 
             return L"";
+        }
+
+        std::wstring GetMarineAssetFilePath(const std::wstring& fileName)
+        {
+            return L"C:\\Users\\bibindon\\Nextcloud\\RedFortressAsset\\marine\\blender5.1.2\\" + fileName;
+        }
+
+        std::wstring FormatDiagnosticDouble(const double value)
+        {
+            wchar_t buffer[64] { };
+            std::swprintf(buffer, _countof(buffer), L"%.9f", value);
+            return buffer;
         }
 
         class CurrentDirectoryScope
@@ -515,6 +528,48 @@ namespace UnitTest1
             Assert::IsTrue(mesh.GetBoneWorldMatrix("Bend_02_Upper", afterUpdate));
             Assert::IsTrue(IsMatrixDifferent(beforeUpdate, afterUpdate),
                            L"Bend_02_Upper matrix did not change after advancing separated BlockWiggle.");
+        }
+
+        TEST_METHOD(DiagnoseMarineCustomXSkinning)
+        {
+            const std::wstring filePath = GetMarineAssetFilePath(L"marine_decimate50.nonAnim.X");
+            if (!FileExists(filePath))
+            {
+                Logger::WriteMessage(L"Marine diagnostic skipped. Asset file was not found.");
+                return;
+            }
+
+            HiddenWindowScope windowScope;
+            Assert::IsNotNull(windowScope.GetHWnd(), L"Failed to create a hidden test window.");
+
+            D3DDeviceScope deviceScope(windowScope.GetHWnd());
+            Assert::IsTrue(deviceScope.IsValid(), L"Failed to create a Direct3D9 test device.");
+
+            const NSRender::CustomXSkinningDiagnosticResult result =
+                NSRender::DiagnoseCustomXSkinningForTest(filePath);
+
+            std::wstring message = L"Marine custom X diagnostic\n";
+            message += L"HR=" + NSRender::FormatHRESULT(result.hr) + L"\n";
+            message += L"FrameCount=" + std::to_wstring(result.frameCount) + L"\n";
+            message += L"MeshContainerCount=" + std::to_wstring(result.meshContainerCount) + L"\n";
+            message += L"MaxPaletteSize=" + std::to_wstring(result.maxPaletteSize) + L"\n";
+            message += L"MaxInfluenceCount=" + std::to_wstring(result.maxInfluenceCount) + L"\n";
+            message += L"MaxBoneCount=" + std::to_wstring(result.maxBoneCount) + L"\n";
+            message += L"MaxAbsFrameCombined=" + FormatDiagnosticDouble(result.maxAbsFrameCombined) + L"\n";
+            message += L"MaxAbsBoneOffset=" + FormatDiagnosticDouble(result.maxAbsBoneOffset) + L"\n";
+            message += L"MaxBindPoseError=" + FormatDiagnosticDouble(result.maxBindPoseError) + L"\n";
+            message += L"MaxBindPoseErrorParentLocalFrame=" +
+                       FormatDiagnosticDouble(result.maxBindPoseErrorParentLocalFrame) + L"\n";
+            message += L"MaxBindPoseErrorCombinedOffset=" +
+                       FormatDiagnosticDouble(result.maxBindPoseErrorCombinedOffset) + L"\n";
+            message += L"MaxBindPoseErrorTransposedOffset=" +
+                       FormatDiagnosticDouble(result.maxBindPoseErrorTransposedOffset) + L"\n";
+            message += L"MaxBindPoseErrorBoneName=" + result.maxBindPoseErrorBoneName + L"\n";
+            message += L"Message=" + result.message + L"\n";
+            Logger::WriteMessage(message.c_str());
+
+            Assert::IsTrue(SUCCEEDED(result.hr), L"Custom X diagnostic load failed.");
+            Assert::IsTrue(result.meshContainerCount > 0, L"No mesh containers were created.");
         }
 
         TEST_METHOD(AddMeshMixSkinAnimWithCustomLoader)

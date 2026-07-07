@@ -71,6 +71,7 @@ struct SkinAnimMeshContainer : public D3DXMESHCONTAINER
     LPD3DXBUFFER m_boneBuffer = NULL;
     std::vector<LPD3DXMATRIX> m_frameCombinedMatrix;
     std::vector<D3DXMATRIX> m_boneOffsetMatrices;
+    std::vector<std::string> m_boneNames;
 };
 
 }
