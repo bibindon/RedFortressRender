@@ -960,7 +960,8 @@ void MeshMixSkinAnim::UpdateActiveAnimationClip()
     }
 
     double deltaTime = m_animationSpeed * Common::ANIMATION_SPEED / D3DX64_ANIMATION_TIME_SCALE;
-    if (m_loadMode == MeshMixSkinAnimLoadMode::Blender512Custom)
+    if (m_loadMode == MeshMixSkinAnimLoadMode::Custom ||
+        m_loadMode == MeshMixSkinAnimLoadMode::Blender512Custom)
     {
         deltaTime = m_animationSpeed * Common::ANIMATION_SPEED;
     }

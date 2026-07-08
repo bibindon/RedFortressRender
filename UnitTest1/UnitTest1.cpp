@@ -107,6 +107,17 @@ namespace UnitTest1
             return L"Sample\\res\\model\\wolf\\" + fileName;
         }
 
+        std::wstring GetSeparatedWolfAssetFilePath(const std::wstring& fileName)
+        {
+            const std::wstring filePath = L"C:\\Users\\bibindon\\Nextcloud\\RedFortressAsset\\wolf\\separatedAnim\\" + fileName;
+            if (FileExists(filePath))
+            {
+                return filePath;
+            }
+
+            return L"";
+        }
+
         std::wstring GetBlender512CylinderSkinnedFilePath()
         {
             wchar_t currentDirectory[MAX_PATH] { };
@@ -376,6 +387,49 @@ namespace UnitTest1
             Assert::IsTrue(SUCCEEDED(result.hr), result.message.c_str());
             Assert::AreEqual(45, result.frameCount);
             Assert::AreEqual(std::wstring(L"Root"), result.rootFrameName);
+        }
+
+        TEST_METHOD(SeparatedWolfCustomLoaderAnimationAdvances)
+        {
+            const std::wstring meshPath = GetSeparatedWolfAssetFilePath(L"wolfAnim.x");
+            const std::wstring animationPath = GetSeparatedWolfAssetFilePath(L"wolfAnim.run.x");
+            if (meshPath.empty() || animationPath.empty())
+            {
+                Logger::WriteMessage(L"Separated wolf custom loader animation test skipped. Asset file was not found.");
+                return;
+            }
+
+            const std::wstring shaderDirectory = GetCompiledShaderDirectory();
+            Assert::IsFalse(shaderDirectory.empty(), L"MeshMixSkinAnim.cso was not found.");
+
+            CurrentDirectoryScope currentDirectoryScope(shaderDirectory);
+            HiddenWindowScope windowScope;
+            Assert::IsNotNull(windowScope.GetHWnd(), L"Failed to create a hidden test window.");
+
+            D3DDeviceScope deviceScope(windowScope.GetHWnd());
+            Assert::IsTrue(deviceScope.IsValid(), L"Failed to create a Direct3D9 test device.");
+
+            NSRender::MeshMixSkinAnim mesh(meshPath,
+                                           animationPath,
+                                           D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                                           D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                                           1.0f,
+                                           NSRender::stMeshParam(),
+                                           NSRender::AnimSetMap(),
+                                           NSRender::MeshMixSkinAnimLoadMode::Custom);
+            mesh.Initialize(false);
+            Assert::IsTrue(mesh.PlayAnimation(L"run"), L"Separated wolf run animation was not found.");
+
+            D3DXMATRIX beforeUpdate { };
+            D3DXMATRIX afterUpdate { };
+            Assert::IsTrue(mesh.GetBoneWorldMatrix("Wolf_Skeleton_Pfote2_L", beforeUpdate));
+            for (int i = 0; i < 10; ++i)
+            {
+                mesh.UpdateAnimation();
+            }
+            Assert::IsTrue(mesh.GetBoneWorldMatrix("Wolf_Skeleton_Pfote2_L", afterUpdate));
+            Assert::IsTrue(IsMatrixDifferent(beforeUpdate, afterUpdate),
+                           L"Separated wolf run animation did not advance with the custom loader.");
         }
 
         TEST_METHOD(LoadBlender512CylinderSkinnedWithDirectXLoader)
