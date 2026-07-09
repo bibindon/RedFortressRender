@@ -1773,7 +1773,7 @@ void MeshMixSkinAnim2::SetIgnoreTransparentMaterial(const bool enabled)
 
 void MeshMixSkinAnim2::SetRotY(const float rotY)
 {
-    m_rotate.y = rotY;
+    m_rotate.y = rotY + D3DX_PI;
     InvalidateBonePaletteCache();
 }
 
