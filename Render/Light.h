@@ -67,6 +67,7 @@ public:
                               const std::wstring& ownerTag = L"");
     static bool RemovePointLight(size_t index);
     static void RemovePointLightsByOwnerTag(const std::wstring& ownerTag);
+    static void ClearPointLights();
 
     static std::deque<PointLightInfo> GetPointLightList();
 

@@ -940,6 +940,10 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
         {
             RemoveSelectedPointLight(hWnd);
         }
+        else if (id == 31413)
+        {
+            ClearPointLights(hWnd);
+        }
         else if (id == 41002)
         {
             render->SetCameraShakeDuration(state->cameraShakeDuration);

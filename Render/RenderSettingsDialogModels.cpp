@@ -323,6 +323,18 @@ void RemoveSelectedPointLight(HWND hWnd)
         UpdatePointLightsList(state);
     }
 }
+
+void ClearPointLights(HWND hWnd)
+{
+    RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    if (state == nullptr)
+    {
+        return;
+    }
+
+    Light::ClearPointLights();
+    UpdatePointLightsList(state);
+}
 void ClearAnimationList(RenderSettingsDialogState* state)
 {
     if (state == nullptr)

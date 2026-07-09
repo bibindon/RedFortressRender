@@ -4,6 +4,36 @@ namespace NSRender
 {
 namespace RenderSettingsDialogInternal
 {
+bool IsRenderSettingsDialogInUse(HWND hWnd)
+{
+    if (GetActiveWindow() == hWnd)
+    {
+        return true;
+    }
+
+    HWND focus = GetFocus();
+    while (focus != NULL)
+    {
+        if (focus == hWnd)
+        {
+            return true;
+        }
+        focus = GetParent(focus);
+    }
+
+    HWND capture = GetCapture();
+    while (capture != NULL)
+    {
+        if (capture == hWnd)
+        {
+            return true;
+        }
+        capture = GetParent(capture);
+    }
+
+    return false;
+}
+
 LRESULT CALLBACK RenderSettingsDialogProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
@@ -30,7 +60,10 @@ LRESULT CALLBACK RenderSettingsDialogProc(HWND hWnd, UINT msg, WPARAM wParam, LP
     {
         if (wParam == RENDER_SETTINGS_SYNC_TIMER_ID && IsWindowVisible(hWnd))
         {
-            SyncRenderSettingsDialogFromRender(hWnd);
+            if (!IsRenderSettingsDialogInUse(hWnd))
+            {
+                SyncRenderSettingsDialogFromRender(hWnd);
+            }
             return 0;
         }
         break;

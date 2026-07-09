@@ -124,6 +124,11 @@ void Light::RemovePointLightsByOwnerTag(const std::wstring& ownerTag)
     }
 }
 
+void Light::ClearPointLights()
+{
+    m_pointLightList.clear();
+}
+
 std::deque<PointLightInfo> Light::GetPointLightList()
 {
     return m_pointLightList;

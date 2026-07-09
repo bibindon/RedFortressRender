@@ -142,6 +142,7 @@ void SelectSettingsTextListItem(RenderSettingsDialogState* state, int index);
 void LoadSelectedSettingsTextPosition(HWND hWnd);
 int GetSelectedListViewIndex(HWND listView);
 void RemoveSelectedPointLight(HWND hWnd);
+void ClearPointLights(HWND hWnd);
 void ClearAnimationList(RenderSettingsDialogState* state);
 void PopulateAnimationListForModel(RenderSettingsDialogState* state, int modelIndex);
 void AddLoadedModelRecord(RenderSettingsDialogState* state, RenderSettingsDialogState::LoadedModelType type, int renderId, const std::wstring& filePath, const D3DXVECTOR3& pos);

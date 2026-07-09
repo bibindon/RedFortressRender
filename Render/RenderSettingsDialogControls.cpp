@@ -494,6 +494,7 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     }
     y += 124;
     CreateSettingsStatic(hWnd, L"Point Lights", 24, y + 2, 120, 18);
+    CreateSettingsButton(hWnd, L"Clear All", 348, y - 2, 76, 22, 31413);
     CreateSettingsButton(hWnd, L"Remove", 430, y - 2, 76, 22, 31412);
     y += 20;
     const wchar_t* pointLightColumns[] = { L"Pos", L"Type", L"Color", L"Bright..." };
