@@ -23,6 +23,7 @@ namespace XLoader = CustomXLoader2;
 namespace
 {
 constexpr double D3DX64_ANIMATION_TIME_SCALE = 160.0;
+constexpr double BLENDER512_ANIMATION_SPEED_SCALE = 1.0;
 
 float ClampSpecularEdge(const float edge)
 {
@@ -642,7 +643,7 @@ void MeshMixSkinAnim2::UpdateAnimation()
         {
             if (m_loadMode == MeshMixSkinAnimLoadMode::Blender512Custom)
             {
-                m_animController.SetAnimSpeed(m_animationSpeed * 2.0f);
+                m_animController.SetAnimSpeed(static_cast<float>(m_animationSpeed * BLENDER512_ANIMATION_SPEED_SCALE));
             }
             m_animController.Update();
         }
@@ -981,7 +982,7 @@ void MeshMixSkinAnim2::UpdateActiveAnimationClip()
     double playbackDeltaTime = deltaTime;
     if (m_loadMode == MeshMixSkinAnimLoadMode::Blender512Custom)
     {
-        playbackDeltaTime *= 2.0;
+        playbackDeltaTime *= BLENDER512_ANIMATION_SPEED_SCALE;
     }
     clip.currentTime += playbackDeltaTime;
 
