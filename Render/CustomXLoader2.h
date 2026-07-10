@@ -28,6 +28,7 @@ struct CustomXLoadOptions
 {
     bool allowDuplicateSkinWeightsCount = false;
     bool transposeAnimationMatrixKeys = false;
+    bool invertRecalculatedMeshNormals = true;
 };
 
 struct CustomXFrameHierarchyLoadResult

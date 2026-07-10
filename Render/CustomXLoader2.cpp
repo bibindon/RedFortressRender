@@ -1093,6 +1093,7 @@ bool CreateCustomXSkinInfo(const CustomXMeshData& meshData,
 bool CreateCustomXMeshContainer(const std::string& meshName,
                                 const CustomXMeshData& meshData,
                                 SkinAnimMeshAlloc* allocator,
+                                const bool invertRecalculatedMeshNormals,
                                 LPD3DXMESHCONTAINER* meshContainer)
 {
     if (allocator == nullptr || meshContainer == nullptr ||
@@ -1169,7 +1170,7 @@ bool CreateCustomXMeshContainer(const std::string& meshName,
         return false;
     }
 
-    if (!InvertCustomXMeshNormals(mesh))
+    if (invertRecalculatedMeshNormals && !InvertCustomXMeshNormals(mesh))
     {
         CUSTOM_X_LOADER_LOG(L"Custom mesh failed: normal inversion failed.");
         SAFE_RELEASE(mesh);
@@ -1768,10 +1769,20 @@ bool ParseCustomXMesh(XTextTokenizer& tokenizer,
                     CollapsePhysicsSkinWeights(meshData, *context);
                 }
 
+                bool invertRecalculatedMeshNormals = true;
+                if (context != nullptr && !context->options.invertRecalculatedMeshNormals)
+                {
+                    invertRecalculatedMeshNormals = false;
+                }
+
                 if (meshData.skinWeights.size() <= MAX_SKININFO_BONES_PER_PART)
                 {
                     LPD3DXMESHCONTAINER meshContainer = nullptr;
-                    if (!CreateCustomXMeshContainer(meshName, meshData, allocator, &meshContainer))
+                    if (!CreateCustomXMeshContainer(meshName,
+                                                    meshData,
+                                                    allocator,
+                                                    invertRecalculatedMeshNormals,
+                                                    &meshContainer))
                     {
                         return false;
                     }
@@ -1797,6 +1808,7 @@ bool ParseCustomXMesh(XTextTokenizer& tokenizer,
                         if (!CreateCustomXMeshContainer(partMeshName,
                                                         meshParts[partIndex],
                                                         allocator,
+                                                        invertRecalculatedMeshNormals,
                                                         &meshContainer))
                         {
                             return false;

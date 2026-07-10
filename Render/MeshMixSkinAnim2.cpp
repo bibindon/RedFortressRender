@@ -1204,6 +1204,7 @@ HRESULT MeshMixSkinAnim2::LoadMeshHierarchyWithCustomLoader(const std::wstring& 
     {
         options.allowDuplicateSkinWeightsCount = true;
         options.transposeAnimationMatrixKeys = true;
+        options.invertRecalculatedMeshNormals = false;
     }
 
     const HRESULT hr = XLoader::LoadCustomXFrameHierarchyFromText(fileText,
