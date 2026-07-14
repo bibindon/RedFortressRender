@@ -1,12 +1,15 @@
-#include "MeshMix2.h"
+﻿#include "MeshMix2.h"
 
 #include "Camera.h"
+#include "CustomXLoader.h"
 #include "Light.h"
 #include "Util.h"
 
 #include <algorithm>
 #include <cmath>
 #include <exception>
+#include <fstream>
+#include <iterator>
 #include <stdexcept>
 
 namespace NSRender
@@ -41,7 +44,7 @@ MeshMix2::MeshMix2(const std::wstring& filename,
                    const D3DXVECTOR3& pos,
                    const D3DXVECTOR3& rotate,
                    const float scale,
-                   const stMeshParam& param)
+                   const MeshMix2Param& param)
     : m_meshName(filename)
     , m_allocator(filename)
     , m_pos(pos)
@@ -95,15 +98,19 @@ void MeshMix2::Initialize(const bool async)
 void MeshMix2::InitializeInternal()
 {
     const std::wstring meshPath = ResolveRuntimePath(m_meshName);
-    LPD3DXANIMATIONCONTROLLER unusedAnimationController = nullptr;
-    const HRESULT loadResult = D3DXLoadMeshHierarchyFromX(meshPath.c_str(),
-                                                          D3DXMESH_MANAGED | D3DXMESH_32BIT,
-                                                          Common::D3DDevice(),
-                                                          &m_allocator,
-                                                          nullptr,
-                                                          &m_frameRoot,
-                                                          &unusedAnimationController);
-    SAFE_RELEASE(unusedAnimationController);
+    std::ifstream file(meshPath, std::ios::binary);
+    if (!file)
+    {
+        throw std::runtime_error("MeshMix2 failed to open a Blender 5.1.2 DirectX X file.");
+    }
+
+    const std::string fileText((std::istreambuf_iterator<char>(file)),
+                               std::istreambuf_iterator<char>());
+    const HRESULT loadResult = LoadCustomXFrameHierarchyFromText(fileText,
+                                                                 &m_allocator,
+                                                                 &m_frameRoot,
+                                                                 nullptr,
+                                                                 CustomXLoadPurpose::MeshAndAnimation);
     if (FAILED(loadResult) || m_frameRoot == nullptr)
     {
         throw std::runtime_error("MeshMix2 failed to load a Blender 5.1.2 DirectX X hierarchy.");

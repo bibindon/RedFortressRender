@@ -87,7 +87,7 @@ CustomXSkinningDiagnosticResult DiagnoseCustomXSkinningForTest(const std::wstrin
                                                                const CustomXLoadOptions& options = CustomXLoadOptions());
 
 HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
-                                          SkinAnimMeshAlloc* allocator,
+                                          ID3DXAllocateHierarchy* allocator,
                                           LPD3DXFRAME* frameRoot,
                                           std::vector<CustomXAnimationSet>* outAnimationSets = nullptr,
                                           CustomXLoadPurpose loadPurpose = CustomXLoadPurpose::MeshAndAnimation,

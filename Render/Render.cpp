@@ -3343,8 +3343,7 @@ int Render::AddMeshMix2(const std::wstring& filePath,
                         const float scale,
                         const bool async)
 {
-    auto param = GetMeshParamPreset(eMeshParamPreset::GRASS);
-    param.smooth = false;
+    MeshMix2Param param;
     param.saturateShadow = m_meshMixSaturateShadowEnabled;
     param.saturateShadowIntensity = m_meshMixSaturateShadowIntensity;
     param.shadowDarkness = m_meshMixShadowDarkness;

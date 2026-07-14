@@ -445,8 +445,19 @@ struct CustomXParseContext
     CustomXLoadOptions options;
 };
 
-SkinAnimMeshFrame* CreateCustomXFrame(const std::string& name)
+LPD3DXFRAME CreateCustomXFrame(const std::string& name, ID3DXAllocateHierarchy* allocator)
 {
+    if (allocator != nullptr)
+    {
+        LPD3DXFRAME frame = nullptr;
+        const HRESULT createResult = allocator->CreateFrame(name.c_str(), &frame);
+        if (FAILED(createResult))
+        {
+            return nullptr;
+        }
+        return frame;
+    }
+
     SkinAnimMeshFrame* frame = NEW SkinAnimMeshFrame();
     ZeroMemory(frame, sizeof(SkinAnimMeshFrame));
 
@@ -461,7 +472,7 @@ SkinAnimMeshFrame* CreateCustomXFrame(const std::string& name)
     return frame;
 }
 
-void AppendCustomXChildFrame(SkinAnimMeshFrame* parent, SkinAnimMeshFrame* child)
+void AppendCustomXChildFrame(LPD3DXFRAME parent, LPD3DXFRAME child)
 {
     if (parent->pFrameFirstChild == nullptr)
     {
@@ -478,7 +489,7 @@ void AppendCustomXChildFrame(SkinAnimMeshFrame* parent, SkinAnimMeshFrame* child
     sibling->pFrameSibling = child;
 }
 
-void AppendCustomXMeshContainer(SkinAnimMeshFrame* frame, LPD3DXMESHCONTAINER meshContainer)
+void AppendCustomXMeshContainer(LPD3DXFRAME frame, LPD3DXMESHCONTAINER meshContainer)
 {
     if (frame->pMeshContainer == nullptr)
     {
@@ -533,7 +544,7 @@ bool ReadXStringToken(XTextTokenizer& tokenizer, std::string& value)
     return false;
 }
 
-bool ParseCustomXFrameTransformMatrix(XTextTokenizer& tokenizer, SkinAnimMeshFrame* frame)
+bool ParseCustomXFrameTransformMatrix(XTextTokenizer& tokenizer, LPD3DXFRAME frame)
 {
     if (!ReadExpectedXToken(tokenizer, "{"))
     {
@@ -1202,7 +1213,7 @@ bool CreateCustomXSkinInfo(const CustomXMeshData& meshData,
 
 bool CreateCustomXMeshContainer(const std::string& meshName,
                                 const CustomXMeshData& meshData,
-                                SkinAnimMeshAlloc* allocator,
+                                ID3DXAllocateHierarchy* allocator,
                                 LPD3DXMESHCONTAINER* meshContainer)
 {
     if (allocator == nullptr || meshContainer == nullptr ||
@@ -1319,7 +1330,10 @@ bool CreateCustomXMeshContainer(const std::string& meshName,
                                          &adjacency[0],
                                          skinInfo,
                                          meshContainer);
-    if (SUCCEEDED(hr) && meshContainer != nullptr && *meshContainer != nullptr)
+    if (SUCCEEDED(hr) &&
+        meshContainer != nullptr &&
+        *meshContainer != nullptr &&
+        !meshData.skinWeights.empty())
     {
         SkinAnimMeshContainer* skinContainer = reinterpret_cast<SkinAnimMeshContainer*>(*meshContainer);
         skinContainer->m_boneNames.clear();
@@ -1802,8 +1816,8 @@ bool SplitCustomXMeshDataByBoneLimit(const CustomXMeshData& sourceMeshData,
 }
 
 bool ParseCustomXMesh(XTextTokenizer& tokenizer,
-                      SkinAnimMeshFrame* frame,
-                      SkinAnimMeshAlloc* allocator,
+                      LPD3DXFRAME frame,
+                      ID3DXAllocateHierarchy* allocator,
                       CustomXParseContext* context)
 {
     std::string meshName = "CustomXMesh";
@@ -1965,13 +1979,13 @@ bool ParseCustomXMesh(XTextTokenizer& tokenizer,
 }
 
 bool ParseCustomXFrameBody(XTextTokenizer& tokenizer,
-                           SkinAnimMeshFrame* frame,
-                           SkinAnimMeshAlloc* allocator,
+                           LPD3DXFRAME frame,
+                           ID3DXAllocateHierarchy* allocator,
                            CustomXLoadPurpose loadPurpose,
                            CustomXParseContext* context);
 
-SkinAnimMeshFrame* ParseCustomXFrame(XTextTokenizer& tokenizer,
-                                     SkinAnimMeshAlloc* allocator,
+LPD3DXFRAME ParseCustomXFrame(XTextTokenizer& tokenizer,
+                                     ID3DXAllocateHierarchy* allocator,
                                      CustomXLoadPurpose loadPurpose,
                                      CustomXParseContext* context,
                                      const std::string& parentFrameName)
@@ -1982,7 +1996,11 @@ SkinAnimMeshFrame* ParseCustomXFrame(XTextTokenizer& tokenizer,
         return nullptr;
     }
 
-    SkinAnimMeshFrame* frame = CreateCustomXFrame(frameName);
+    LPD3DXFRAME frame = CreateCustomXFrame(frameName, allocator);
+    if (frame == nullptr)
+    {
+        return nullptr;
+    }
     if (context != nullptr)
     {
         context->frameParents[frameName] = parentFrameName;
@@ -1991,8 +2009,15 @@ SkinAnimMeshFrame* ParseCustomXFrame(XTextTokenizer& tokenizer,
 
     if (!ParseCustomXFrameBody(tokenizer, frame, allocator, loadPurpose, context))
     {
-        SAFE_DELETE_ARRAY(frame->Name);
-        SAFE_DELETE(frame);
+        if (allocator != nullptr)
+        {
+            allocator->DestroyFrame(frame);
+        }
+        else
+        {
+            SAFE_DELETE_ARRAY(frame->Name);
+            SAFE_DELETE(frame);
+        }
         return nullptr;
     }
 
@@ -2000,8 +2025,8 @@ SkinAnimMeshFrame* ParseCustomXFrame(XTextTokenizer& tokenizer,
 }
 
 bool ParseCustomXFrameBody(XTextTokenizer& tokenizer,
-                           SkinAnimMeshFrame* frame,
-                           SkinAnimMeshAlloc* allocator,
+                           LPD3DXFRAME frame,
+                           ID3DXAllocateHierarchy* allocator,
                            CustomXLoadPurpose loadPurpose,
                            CustomXParseContext* context)
 {
@@ -2026,7 +2051,7 @@ bool ParseCustomXFrameBody(XTextTokenizer& tokenizer,
                 parentFrameName = frame->Name;
             }
 
-            SkinAnimMeshFrame* child = ParseCustomXFrame(tokenizer,
+            LPD3DXFRAME child = ParseCustomXFrame(tokenizer,
                                                          allocator,
                                                          loadPurpose,
                                                          context,
@@ -2740,7 +2765,7 @@ HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimati
 }
 
 HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
-                                          SkinAnimMeshAlloc* allocator,
+                                          ID3DXAllocateHierarchy* allocator,
                                           LPD3DXFRAME* frameRoot,
                                           std::vector<CustomXAnimationSet>* outAnimationSets,
                                           CustomXLoadPurpose loadPurpose,
@@ -2777,7 +2802,7 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
         if (token == "Frame")
         {
             CUSTOM_X_LOADER_LOG(L"Custom parser found top-level Frame.");
-            SkinAnimMeshFrame* frame = ParseCustomXFrame(tokenizer,
+            LPD3DXFRAME frame = ParseCustomXFrame(tokenizer,
                                                          allocator,
                                                          loadPurpose,
                                                          &parseContext,
@@ -2802,14 +2827,17 @@ HRESULT LoadCustomXFrameHierarchyFromText(const std::string& fileText,
             {
                 if (!syntheticRootCreated)
                 {
-                    SkinAnimMeshFrame* syntheticRoot = CreateCustomXFrame("");
-                    AppendCustomXChildFrame(syntheticRoot,
-                                            reinterpret_cast<SkinAnimMeshFrame*>(*frameRoot));
+                    LPD3DXFRAME syntheticRoot = CreateCustomXFrame("", allocator);
+                    if (syntheticRoot == nullptr)
+                    {
+                        return E_FAIL;
+                    }
+                    AppendCustomXChildFrame(syntheticRoot, *frameRoot);
                     *frameRoot = syntheticRoot;
                     syntheticRootCreated = true;
                 }
 
-                AppendCustomXChildFrame(reinterpret_cast<SkinAnimMeshFrame*>(*frameRoot), frame);
+                AppendCustomXChildFrame(*frameRoot, frame);
             }
             frameFound = true;
             continue;

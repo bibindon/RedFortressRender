@@ -1,7 +1,6 @@
-#pragma once
+﻿#pragma once
 
 #include "Common.h"
-#include "MeshMix.h"
 #include "MeshMix2Hierarchy.h"
 
 #include <atomic>
@@ -10,6 +9,20 @@
 namespace NSRender
 {
 
+struct MeshMix2Param
+{
+    bool saturateShadow = true;
+    float saturateShadowIntensity = 1.2f;
+    float shadowDarkness = 1.0f;
+    float specularIntensity = 0.0f;
+    float specularEdge = 0.0f;
+    bool specularIntensityOverrideEnabled = false;
+    bool specularEdgeOverrideEnabled = false;
+    bool treatTextureAsWhite = false;
+    bool shadow = true;
+    bool ssao = true;
+};
+
 class MeshMix2 : public IDeviceResettable
 {
 public:
@@ -17,7 +30,7 @@ public:
              const D3DXVECTOR3& pos,
              const D3DXVECTOR3& rotate,
              float scale,
-             const stMeshParam& param);
+             const MeshMix2Param& param);
     ~MeshMix2();
 
     MeshMix2(const MeshMix2&) = delete;
@@ -76,7 +89,7 @@ private:
     bool m_enabled = true;
     bool m_damageFlash = false;
     bool m_deviceResourceRegistered = false;
-    stMeshParam m_param;
+    MeshMix2Param m_param;
     std::thread m_loadThread;
 
     void InitializeInternal();
