@@ -11,6 +11,7 @@ namespace NSRender
 class MeshInstancing;
 class MeshInstancing2;
 class MeshMixAnimNoBone;
+class MeshMix2;
 class IMeshMixSkinAnim;
 
 class PostEffectZShadow : public IDeviceResettable
@@ -28,6 +29,7 @@ public:
               const std::deque<MeshMixManager>& meshMixList,
               const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
               const std::vector<MeshMixAnimNoBone*>& meshMixAnimNoBoneList,
+              const std::vector<MeshMix2*>& meshMix2List,
               const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap,
               const std::unordered_map<std::wstring, MeshInstancing2*>& meshInstancing2Map);
 
@@ -107,6 +109,7 @@ private:
     const std::deque<MeshMixManager>* m_pMeshList;
     const std::vector<IMeshMixSkinAnim*>* m_pSkinAnimMeshList = nullptr;
     const std::vector<MeshMixAnimNoBone*>* m_pMeshMixAnimNoBoneList = nullptr;
+    const std::vector<MeshMix2*>* m_pMeshMix2List = nullptr;
     const std::unordered_map<std::wstring, MeshInstancing*>* m_pMeshInstancingMap = nullptr;
     const std::unordered_map<std::wstring, MeshInstancing2*>* m_pMeshInstancing2Map = nullptr;
     LPDIRECT3DTEXTURE9 m_sceneDepthTexture = NULL;

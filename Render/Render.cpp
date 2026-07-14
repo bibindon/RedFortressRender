@@ -374,7 +374,10 @@ bool Render::LoadXFileListFromCsv(const std::wstring& csvPath,
         if (fields.size() >= 10)
         {
             loadType = TrimCsvField(fields[9]);
-            if (loadType != L"normal" && loadType != L"instancing" && loadType != L"skinanim")
+            if (loadType != L"normal" &&
+                loadType != L"meshmix2" &&
+                loadType != L"instancing" &&
+                loadType != L"skinanim")
             {
                 loadType = L"normal";
             }
@@ -416,6 +419,10 @@ bool Render::LoadXFileListFromCsv(const std::wstring& csvPath,
                 AnimSetMap emptyAnimSetMap;
                 renderId = AddMeshMixSkinAnim(resolvedPath, pos, rot, modelScale, emptyAnimSetMap);
             }
+            else if (loadType == L"meshmix2")
+            {
+                renderId = AddMeshMix2(resolvedPath, pos, rot, modelScale);
+            }
             else
             {
                 renderId = AddMeshMix(resolvedPath, pos, rot, modelScale, 1.0f);
@@ -441,6 +448,10 @@ bool Render::LoadXFileListFromCsv(const std::wstring& csvPath,
             else if (loadType == L"skinanim")
             {
                 m_csvSkinAnimRenderIds.push_back(renderId);
+            }
+            else if (loadType == L"meshmix2")
+            {
+                m_csvMeshMix2RenderIds.push_back(renderId);
             }
             else
             {
@@ -488,6 +499,14 @@ void Render::ClearCsvLoadedMeshes()
         RemoveMeshMixSkinAnim(*it);
     }
 
+    std::sort(m_csvMeshMix2RenderIds.begin(), m_csvMeshMix2RenderIds.end());
+    m_csvMeshMix2RenderIds.erase(std::unique(m_csvMeshMix2RenderIds.begin(), m_csvMeshMix2RenderIds.end()),
+                                 m_csvMeshMix2RenderIds.end());
+    for (auto it = m_csvMeshMix2RenderIds.rbegin(); it != m_csvMeshMix2RenderIds.rend(); ++it)
+    {
+        RemoveMeshMix2(*it);
+    }
+
     std::sort(m_csvInstancingFilePaths.begin(), m_csvInstancingFilePaths.end());
     m_csvInstancingFilePaths.erase(std::unique(m_csvInstancingFilePaths.begin(), m_csvInstancingFilePaths.end()), m_csvInstancingFilePaths.end());
     for (const auto& filePath : m_csvInstancingFilePaths)
@@ -497,6 +516,7 @@ void Render::ClearCsvLoadedMeshes()
 
     m_csvIdToRenderId.clear();
     m_csvSkinAnimRenderIds.clear();
+    m_csvMeshMix2RenderIds.clear();
     m_csvInstancingFilePaths.clear();
     m_movingPlatforms.clear();
 }
@@ -517,6 +537,14 @@ bool Render::IsAllMeshLoaded() const
     }
 
     for (const auto* mesh : m_meshMixSkinAnimList)
+    {
+        if (mesh != nullptr && !mesh->IsLoaded())
+        {
+            return false;
+        }
+    }
+
+    for (const auto* mesh : m_meshMix2List)
     {
         if (mesh != nullptr && !mesh->IsLoaded())
         {
@@ -2388,8 +2416,14 @@ void Render::Finalize()
     }
     m_meshMixList.clear();
     m_meshMixSlotUsedList.clear();
+    for (auto& mesh : m_meshMix2List)
+    {
+        SAFE_DELETE(mesh);
+    }
+    m_meshMix2List.clear();
     m_csvIdToRenderId.clear();
     m_csvSkinAnimRenderIds.clear();
+    m_csvMeshMix2RenderIds.clear();
 
     for (auto& mesh : m_meshPBRList)
     {
@@ -2514,6 +2548,7 @@ void Render::Draw()
         m_GBuffer.Draw(m_meshMixList,
                        m_meshMixSkinAnimList,
                        m_meshMixAnimNoBoneList,
+                       m_meshMix2List,
                        m_meshInstancingMap,
                        m_meshInstancing2Map,
                        &m_particleSystem,
@@ -2576,6 +2611,7 @@ void Render::Draw()
                                  m_meshMixList,
                                  m_meshMixSkinAnimList,
                                  m_meshMixAnimNoBoneList,
+                                 m_meshMix2List,
                                  m_meshInstancingMap,
                                  m_meshInstancing2Map);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
@@ -3298,6 +3334,51 @@ bool Render::RemoveMeshMix(const int id)
     m_meshMixList.at(id).SetEnabled(false);
     m_meshMixList.at(id).Finalize();
     m_meshMixSlotUsedList.at(id) = false;
+    return true;
+}
+
+int Render::AddMeshMix2(const std::wstring& filePath,
+                        const D3DXVECTOR3& pos,
+                        const D3DXVECTOR3& rot,
+                        const float scale,
+                        const bool async)
+{
+    auto param = GetMeshParamPreset(eMeshParamPreset::GRASS);
+    param.smooth = false;
+    param.saturateShadow = m_meshMixSaturateShadowEnabled;
+    param.saturateShadowIntensity = m_meshMixSaturateShadowIntensity;
+    param.shadowDarkness = m_meshMixShadowDarkness;
+    param.specularIntensity = m_meshMixSpecularIntensity;
+    param.specularEdge = m_meshMixSpecularEdge;
+    param.specularIntensityOverrideEnabled = m_meshMixSpecularIntensityOverrideEnabled;
+    param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
+
+    MeshMix2* mesh = NEW MeshMix2(filePath, pos, rot, scale, param);
+    try
+    {
+        mesh->Initialize(async);
+        m_meshMix2List.push_back(mesh);
+    }
+
+    catch (...)
+    {
+        SAFE_DELETE(mesh);
+        throw;
+    }
+
+    return static_cast<int>(m_meshMix2List.size()) - 1;
+}
+
+bool Render::RemoveMeshMix2(const int id)
+{
+    if (id < 0 ||
+        id >= static_cast<int>(m_meshMix2List.size()) ||
+        m_meshMix2List.at(id) == nullptr)
+    {
+        return false;
+    }
+
+    SAFE_DELETE(m_meshMix2List.at(id));
     return true;
 }
 
@@ -6501,6 +6582,14 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
     }
 
     for (auto& elem : m_meshMixAnimNoBoneList)
+    {
+        if (elem != nullptr)
+        {
+            elem->Render();
+        }
+    }
+
+    for (auto& elem : m_meshMix2List)
     {
         if (elem != nullptr)
         {

@@ -9,6 +9,7 @@
 #include "MeshInstancing.h"
 #include "MeshInstancing2.h"
 #include "MeshMixAnimNoBone.h"
+#include "MeshMix2.h"
 #include "MeshMixSkinAnim.h"
 #include "ParticleSystem.h"
 
@@ -151,6 +152,7 @@ void GBuffer::CreateRawResource()
 void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
                    const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
                    const std::vector<MeshMixAnimNoBone*>& meshMixAnimNoBoneList,
+                   const std::vector<MeshMix2*>& meshMix2List,
                    const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap,
                    const std::unordered_map<std::wstring, MeshInstancing2*>& meshInstancing2Map,
                    ParticleSystem* particleSystem,
@@ -256,6 +258,14 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     for (auto& mesh : meshMixAnimNoBoneList)
     {
         if (mesh != nullptr)
+        {
+            mesh->RenderToEffect(m_fxGBuffer, viewProjectionMatrix);
+        }
+    }
+
+    for (auto& mesh : meshMix2List)
+    {
+        if (mesh != nullptr && mesh->IsSsaoEnabled())
         {
             mesh->RenderToEffect(m_fxGBuffer, viewProjectionMatrix);
         }
@@ -373,6 +383,14 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         }
     }
 
+    for (auto& mesh : meshMix2List)
+    {
+        if (mesh != nullptr && mesh->IsSsaoEnabled())
+        {
+            mesh->RenderToEffect(m_fxGBuffer, viewProjectionMatrix);
+        }
+    }
+
     for (const auto& mesh : meshInstancingMap)
     {
         if (mesh.second != nullptr)
@@ -475,6 +493,14 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     for (auto& mesh : meshMixAnimNoBoneList)
     {
         if (mesh != nullptr)
+        {
+            mesh->RenderToEffect(m_fxGBuffer, viewProjectionMatrix);
+        }
+    }
+
+    for (auto& mesh : meshMix2List)
+    {
+        if (mesh != nullptr && mesh->IsSsaoEnabled())
         {
             mesh->RenderToEffect(m_fxGBuffer, viewProjectionMatrix);
         }

@@ -32,6 +32,7 @@
 #include "MeshNormalMapping.h"
 #include "MeshMix.h"
 #include "MeshMixManager.h"
+#include "MeshMix2.h"
 #include "MeshPBRManager.h"
 #include "MeshMixSkinAnim.h"
 #include "MeshMixSkinAnim2.h"
@@ -287,6 +288,12 @@ public:
                    const bool useNormalMapping = false,
                    const bool async = true);
     bool RemoveMeshMix(int id);
+    int AddMeshMix2(const std::wstring& filePath,
+                    const D3DXVECTOR3& pos,
+                    const D3DXVECTOR3& rot,
+                    float scale,
+                    bool async = true);
+    bool RemoveMeshMix2(int id);
     bool LoadXFileListFromCsv(const std::wstring& csvPath,
                               const float scale = 1.0f,
                               int* loadedCount = nullptr,
@@ -909,6 +916,7 @@ private:
 
     std::deque<MeshMixManager> m_meshMixList;
     std::vector<bool> m_meshMixSlotUsedList;
+    std::vector<MeshMix2*> m_meshMix2List;
     std::deque<MeshPBRManager> m_meshPBRList;
 
     std::unordered_map<std::wstring, MeshInstancing*> m_meshInstancingMap;
@@ -918,6 +926,7 @@ private:
     std::unordered_map<int, int> m_csvIdToRenderId;
     std::vector<std::wstring> m_csvInstancingFilePaths;
     std::vector<int> m_csvSkinAnimRenderIds;
+    std::vector<int> m_csvMeshMix2RenderIds;
     std::vector<MovingPlatform> m_movingPlatforms;
     bool m_sceneUpdatePaused = false;
 
