@@ -901,7 +901,7 @@ private:
     std::deque<MeshPBRManager> m_meshPBRList;
 
     std::unordered_map<std::wstring, MeshInstancing*> m_meshInstancingMap;
-    bool m_meshInstancingHighQualityEnabled = true;
+    bool m_meshInstancingHighQualityEnabled = false;
 
     std::unordered_map<int, int> m_csvIdToRenderId;
     std::vector<std::wstring> m_csvInstancingFilePaths;

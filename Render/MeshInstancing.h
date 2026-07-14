@@ -93,7 +93,7 @@ private:
     std::vector<InstanceData> m_allInstances;
     std::vector<InstanceData> m_instances;
     bool m_loadedPlacementCsv = false;
-    bool m_highQualityEnabled = true;
+    bool m_highQualityEnabled = false;
     bool m_autoHide = false;
     SwayMode m_swayMode = SwayMode::Off;
     D3DXVECTOR3 m_instanceOffset = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
