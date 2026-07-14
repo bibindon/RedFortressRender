@@ -196,12 +196,12 @@ void MeshMix2::CorrectBlenderOfficialAxisTransforms(LPD3DXFRAME frame,
     if (!skipCurrentFrame)
     {
         // Blender's official DirectX exporter converts mesh vertices to DirectX axes,
-        // then includes the same conversion at the start of every exported Frame matrix.
-        // MeshMix2 consumes the already converted vertices, so remove that duplicate
-        // frame conversion. Pre-multiplication preserves the exported translation row.
+        // then includes a Y/Z conversion at the start of every exported Frame matrix.
+        // Apply only the Y/Z correction here. Keep the X conversion in the Frame
+        // matrix so it cancels the matching X conversion already applied to vertices.
+        // Pre-multiplication preserves the exported translation row.
         D3DXMATRIX blenderAxisConversion;
         D3DXMatrixIdentity(&blenderAxisConversion);
-        blenderAxisConversion._11 = -1.0f;
         blenderAxisConversion._22 = 0.0f;
         blenderAxisConversion._23 = 1.0f;
         blenderAxisConversion._32 = 1.0f;
@@ -300,13 +300,26 @@ void MeshMix2::RenderMeshContainer(const MeshMix2Frame& frame,
     const D3DXMATRIX worldViewProjection = frame.m_combinedMatrix * viewProjectionMatrix;
     ThrowIfEffectCallFailed(effect->SetMatrix("g_matWorld", &frame.m_combinedMatrix),
                             "MeshMix2 failed to set g_matWorld.");
-    ThrowIfEffectCallFailed(effect->SetMatrix("g_matWorldViewProj", &worldViewProjection),
-                            "MeshMix2 failed to set g_matWorldViewProj.");
+
+    const D3DXHANDLE worldViewProjectionHandle =
+        effect->GetParameterByName(nullptr, "g_matWorldViewProj");
+    if (worldViewProjectionHandle != nullptr)
+    {
+        ThrowIfEffectCallFailed(effect->SetMatrix(worldViewProjectionHandle,
+                                                  &worldViewProjection),
+                                "MeshMix2 failed to set g_matWorldViewProj.");
+    }
+
     const D3DXHANDLE viewProjectionHandle = effect->GetParameterByName(nullptr, "g_matViewProj");
     if (viewProjectionHandle != nullptr)
     {
         ThrowIfEffectCallFailed(effect->SetMatrix(viewProjectionHandle, &viewProjectionMatrix),
                                 "MeshMix2 failed to set g_matViewProj.");
+    }
+    else if (configureMaterial)
+    {
+        throw std::runtime_error(
+            "MeshMix2 display effect does not define the required g_matViewProj matrix.");
     }
 
     DWORD subsetCount = container.NumMaterials;
@@ -350,6 +363,7 @@ void MeshMix2::RenderMeshContainer(const MeshMix2Frame& frame,
                     effect->SetTexture("g_texture", container.m_textureList[subsetIndex]),
                     "MeshMix2 failed to set g_texture.");
                 hasTexture = true;
+                diffuse = D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
             }
             else
             {
