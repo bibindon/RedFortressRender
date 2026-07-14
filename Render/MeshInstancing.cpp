@@ -261,16 +261,26 @@ void MeshInstancing::WaitForLoad()
 void MeshInstancing::InitializeInternal()
 {
     HRESULT hResult = E_FAIL;
+    LPD3DXBUFFER pAdjacencyBuffer = NULL;
     LPD3DXBUFFER pD3DXMtrlBuffer = NULL;
 
     hResult = D3DXLoadMeshFromX(m_filePath.c_str(),
-                                D3DXMESH_SYSTEMMEM,
+                                D3DXMESH_MANAGED,
                                 Common::D3DDevice(),
-                                NULL,
+                                &pAdjacencyBuffer,
                                 &pD3DXMtrlBuffer,
                                 NULL,
                                 &m_dwNumMaterials,
                                 &m_pMesh);
+    assert(hResult == S_OK);
+
+    DWORD* adjacencyList = static_cast<DWORD*>(pAdjacencyBuffer->GetBufferPointer());
+    hResult = m_pMesh->OptimizeInplace(D3DXMESHOPT_COMPACT | D3DXMESHOPT_ATTRSORT | D3DXMESHOPT_VERTEXCACHE,
+                                       adjacencyList,
+                                       nullptr,
+                                       nullptr,
+                                       nullptr);
+    SAFE_RELEASE(pAdjacencyBuffer);
     assert(hResult == S_OK);
 
     D3DXMATERIAL* d3dxMaterials = reinterpret_cast<D3DXMATERIAL*>(pD3DXMtrlBuffer->GetBufferPointer());
