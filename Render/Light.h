@@ -30,7 +30,7 @@ struct PointLightInfo
     float m_squareWidth = 10.0f;
     float m_squareHeight = 10.0f;
     D3DXVECTOR3 m_rotation = D3DXVECTOR3(0.f, 0.f, 0.f);
-    float m_range = 8.0f;
+    float m_range = 12.0f;
     std::wstring m_ownerTag;
 };
 
@@ -65,7 +65,7 @@ public:
                               const float squareWidth = 10.0f,
                               const float squareHeight = 10.0f,
                               const D3DXVECTOR3& rotation = D3DXVECTOR3(0.f, 0.f, 0.f),
-                              const float range = 8.0f,
+                              const float range = 12.0f,
                               const std::wstring& ownerTag = L"");
     static bool RemovePointLight(size_t index);
     static void RemovePointLightsByOwnerTag(const std::wstring& ownerTag);

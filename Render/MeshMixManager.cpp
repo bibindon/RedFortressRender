@@ -1333,7 +1333,7 @@ void MeshMixManager::InitializeInternal()
                              10.0f,
                              10.0f,
                              D3DXVECTOR3(0.0f, 0.0f, 0.0f),
-                             8.0f,
+                             12.0f,
                              m_autoPointLightOwnerTag);
         m_autoPointLightAdded = true;
     }
@@ -1465,7 +1465,7 @@ void MeshMixManager::SetPos(const D3DXVECTOR3& pos)
                              10.0f,
                              10.0f,
                              D3DXVECTOR3(0.0f, 0.0f, 0.0f),
-                             8.0f,
+                             12.0f,
                              m_autoPointLightOwnerTag);
     }
 }

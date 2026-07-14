@@ -174,10 +174,12 @@ void AccumulateSingleLightSample(float3 samplePos,
     float NdotL = saturate(dot(normal, L));
     float3 H = normalize(L + cameraDirWS);
     float NdotH = saturate(dot(normal, H));
-    float normalizedDistance = dist / max(sampleRange, 1e-6f);
-    float rangeFalloff = saturate(1.0f - normalizedDistance * normalizedDistance);
-    rangeFalloff *= rangeFalloff;
-    float atten = rangeFalloff / (1.0f + dist * dist);
+    float fadeStart = sampleRange * 0.5f;
+    float fadeLength = max(sampleRange - fadeStart, 1e-6f);
+    float fadeProgress = saturate((dist - fadeStart) / fadeLength);
+    float smoothFade = fadeProgress * fadeProgress * (3.0f - 2.0f * fadeProgress);
+    float rangeFalloff = 1.0f - smoothFade;
+    float atten = saturate(1.0f / max(dist, 1e-6f)) * rangeFalloff;
 
     float diff = sampleBrightness * atten * NdotL;
     float spec = 0.0f;

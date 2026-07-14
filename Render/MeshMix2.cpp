@@ -228,11 +228,14 @@ void MeshMix2::Render()
 
     const D3DXVECTOR4 lightDirection = Light::GetLightDir();
     const D3DXVECTOR4 lightColor(Light::GetLightColor());
+    const D3DXVECTOR4 ambientColor(Light::GetAmbientColor());
     const D3DXVECTOR4 cameraPosition(Camera::GetEyePos(), 1.0f);
     ThrowIfEffectCallFailed(m_D3DEffect->SetVector("g_lightDir", &lightDirection),
                             "MeshMix2 failed to set g_lightDir.");
     ThrowIfEffectCallFailed(m_D3DEffect->SetVector("g_lightColor", &lightColor),
                             "MeshMix2 failed to set g_lightColor.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetVector("g_ambient", &ambientColor),
+                            "MeshMix2 failed to set g_ambient.");
     ThrowIfEffectCallFailed(m_D3DEffect->SetVector("g_cameraPos", &cameraPosition),
                             "MeshMix2 failed to set g_cameraPos.");
     ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_fSunLightIntensity", Light::GetBrightness()),
