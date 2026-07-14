@@ -43,6 +43,7 @@
 #include "SkinAnimMesh.h"
 
 #include "MeshInstancing.h"
+#include "MeshInstancing2.h"
 
 #include "PostEffectGauss.h"
 #include "PostEffectMaskedGauss.h"
@@ -269,6 +270,12 @@ public:
                           const float scale,
                           const std::wstring& csvPath = L"");
     bool RemoveMeshInstancing(const std::wstring& filePath);
+    int AddMeshInstansing2(const std::wstring& filePath,
+                           const D3DXVECTOR3& pos,
+                           const D3DXVECTOR3& rot,
+                           const float scale,
+                           const std::wstring& csvPath = L"");
+    bool RemoveMeshInstancing2(const std::wstring& filePath);
     void SetMeshInstancingHighQuality(bool enabled);
 
     int AddMeshMix(const std::wstring& filePath,
@@ -901,6 +908,7 @@ private:
     std::deque<MeshPBRManager> m_meshPBRList;
 
     std::unordered_map<std::wstring, MeshInstancing*> m_meshInstancingMap;
+    std::unordered_map<std::wstring, MeshInstancing2*> m_meshInstancing2Map;
     bool m_meshInstancingHighQualityEnabled = false;
 
     std::unordered_map<int, int> m_csvIdToRenderId;

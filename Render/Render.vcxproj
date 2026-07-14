@@ -32,6 +32,7 @@
     <ClCompile Include="MeshOld.cpp" />
     <ClCompile Include="MeshHierarchy.cpp" />
     <ClCompile Include="MeshInstancing.cpp" />
+    <ClCompile Include="MeshInstancing2.cpp" />
     <ClCompile Include="MeshMix.cpp" />
     <ClCompile Include="MeshPBR.cpp" />
     <ClCompile Include="MeshMixSkinAnim.cpp" />
@@ -99,6 +100,7 @@
     <ClInclude Include="MeshOld.h" />
     <ClInclude Include="MeshHierarchy.h" />
     <ClInclude Include="MeshInstancing.h" />
+    <ClInclude Include="MeshInstancing2.h" />
     <ClInclude Include="MeshMix.h" />
     <ClInclude Include="MeshPBR.h" />
     <ClInclude Include="MeshMixSkinAnim.h" />

@@ -9,6 +9,7 @@
 namespace NSRender
 {
 class MeshInstancing;
+class MeshInstancing2;
 class MeshMixAnimNoBone;
 class IMeshMixSkinAnim;
 
@@ -27,7 +28,8 @@ public:
               const std::deque<MeshMixManager>& meshMixList,
               const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
               const std::vector<MeshMixAnimNoBone*>& meshMixAnimNoBoneList,
-              const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap);
+              const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap,
+              const std::unordered_map<std::wstring, MeshInstancing2*>& meshInstancing2Map);
 
     void SetShadowIntensity(const float intensity);
     void SetShadowSaturationBoost(const float saturationBoost);
@@ -106,6 +108,7 @@ private:
     const std::vector<IMeshMixSkinAnim*>* m_pSkinAnimMeshList = nullptr;
     const std::vector<MeshMixAnimNoBone*>* m_pMeshMixAnimNoBoneList = nullptr;
     const std::unordered_map<std::wstring, MeshInstancing*>* m_pMeshInstancingMap = nullptr;
+    const std::unordered_map<std::wstring, MeshInstancing2*>* m_pMeshInstancing2Map = nullptr;
     LPDIRECT3DTEXTURE9 m_sceneDepthTexture = NULL;
     LPDIRECT3DTEXTURE9 m_sceneNormalTexture = NULL;
     LPDIRECT3DTEXTURE9 m_texCompositeTarget = NULL;

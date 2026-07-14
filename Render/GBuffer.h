@@ -12,6 +12,7 @@ namespace NSRender
 class IMeshMixSkinAnim;
 class MeshMixAnimNoBone;
 class MeshInstancing;
+class MeshInstancing2;
 class ParticleSystem;
 
 // 各ピクセルの深度とワールド座標を表した画像を生成
@@ -31,6 +32,7 @@ public:
               const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
               const std::vector<MeshMixAnimNoBone*>& meshMixAnimNoBoneList,
               const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap,
+              const std::unordered_map<std::wstring, MeshInstancing2*>& meshInstancing2Map,
               ParticleSystem* particleSystem,
               LPDIRECT3DTEXTURE9* Z,
               LPDIRECT3DTEXTURE9* CameraZ,

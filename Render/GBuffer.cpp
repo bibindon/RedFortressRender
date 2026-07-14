@@ -7,6 +7,7 @@
 #include "Common.h"
 #include "Camera.h"
 #include "MeshInstancing.h"
+#include "MeshInstancing2.h"
 #include "MeshMixAnimNoBone.h"
 #include "MeshMixSkinAnim.h"
 #include "ParticleSystem.h"
@@ -151,6 +152,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
                    const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
                    const std::vector<MeshMixAnimNoBone*>& meshMixAnimNoBoneList,
                    const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap,
+                   const std::unordered_map<std::wstring, MeshInstancing2*>& meshInstancing2Map,
                    ParticleSystem* particleSystem,
                    LPDIRECT3DTEXTURE9* Z,
                    LPDIRECT3DTEXTURE9* CameraZ,
@@ -267,6 +269,14 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         }
     }
 
+    for (const auto& mesh : meshInstancing2Map)
+    {
+        if (mesh.second != nullptr)
+        {
+            mesh.second->RenderToGBufferEffect(m_fxGBuffer, "TechniqueGBufferInstancing");
+        }
+    }
+
     if (particleSystem != nullptr)
     {
         particleSystem->RenderDustToGBufferEffect(m_fxGBuffer,
@@ -364,6 +374,14 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     }
 
     for (const auto& mesh : meshInstancingMap)
+    {
+        if (mesh.second != nullptr)
+        {
+            mesh.second->RenderToGBufferEffect(m_fxGBuffer, "TechniqueGBufferInstancingFog");
+        }
+    }
+
+    for (const auto& mesh : meshInstancing2Map)
     {
         if (mesh.second != nullptr)
         {

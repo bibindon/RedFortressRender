@@ -3,6 +3,7 @@
 
 #include "../Render/Common.h"
 #include "../Render/CustomXLoader.h"
+#include "../Render/MeshInstancing2.h"
 #include "../Render/MeshMixSkinAnim.h"
 #include "../Render/Render.h"
 
@@ -110,6 +111,18 @@ namespace UnitTest1
         std::wstring GetSeparatedWolfAssetFilePath(const std::wstring& fileName)
         {
             const std::wstring filePath = L"C:\\Users\\bibindon\\Nextcloud\\RedFortressAsset\\wolf\\separatedAnim\\" + fileName;
+            if (FileExists(filePath))
+            {
+                return filePath;
+            }
+
+            return L"";
+        }
+
+        std::wstring GetLemonTreeBlender512FilePath()
+        {
+            const std::wstring filePath =
+                L"C:\\Users\\bibindon\\source\\repos\\bibindon\\RedFortress\\RedFortress2\\MultiPassRendering\\res\\model\\tree2\\lemonTree.Instancing.512.x";
             if (FileExists(filePath))
             {
                 return filePath;
@@ -375,6 +388,40 @@ namespace UnitTest1
             Assert::IsTrue(SUCCEEDED(result.hr), result.message.c_str());
             Assert::AreEqual(46, result.frameCount);
             Assert::AreEqual(std::wstring(L"Root"), result.rootFrameName);
+        }
+
+        TEST_METHOD(LoadLemonTreeBlender512WithMeshInstancing2)
+        {
+            const std::wstring filePath = GetLemonTreeBlender512FilePath();
+            if (filePath.empty())
+            {
+                Logger::WriteMessage(L"Blender 5.1.2 lemon tree test skipped. Asset file was not found.");
+                return;
+            }
+
+            const NSRender::CustomXFrameHierarchyLoadResult parseResult =
+                NSRender::LoadCustomXFrameHierarchyForTest(filePath, false);
+            Assert::IsTrue(SUCCEEDED(parseResult.hr), parseResult.message.c_str());
+            Assert::IsTrue(parseResult.frameCount >= 1);
+
+            const std::wstring shaderDirectory = GetCompiledShaderDirectory();
+            Assert::IsFalse(shaderDirectory.empty(), L"MeshInstancing.cso was not found.");
+
+            CurrentDirectoryScope currentDirectoryScope(shaderDirectory);
+            HiddenWindowScope windowScope;
+            Assert::IsNotNull(windowScope.GetHWnd(), L"Failed to create a hidden test window.");
+
+            D3DDeviceScope deviceScope(windowScope.GetHWnd());
+            if (!deviceScope.IsValid())
+            {
+                Logger::WriteMessage(L"MeshInstancing2 device test skipped. A Direct3D9 test device could not be created.");
+                return;
+            }
+
+            NSRender::MeshInstancing2 mesh;
+            mesh.Initialize(filePath, false);
+            mesh.AddInstance(D3DXVECTOR3(0.0f, 0.0f, 0.0f), 0.0f);
+            mesh.Finalize();
         }
 
         TEST_METHOD(LoadWolfRunAnimationFrameHierarchy)

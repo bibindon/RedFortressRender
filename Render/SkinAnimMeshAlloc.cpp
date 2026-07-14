@@ -190,7 +190,7 @@ void SkinAnimMeshAlloc::InitializeBone(const LPD3DXSKININFO skinInfo,
 {
     if (skinInfo == NULL)
     {
-        throw std::exception("Failed to get skin info.");
+        return;
     }
 
     UINT boneCount = skinInfo->GetNumBones();

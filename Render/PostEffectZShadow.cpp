@@ -2,6 +2,7 @@
 
 #include "Camera.h"
 #include "MeshInstancing.h"
+#include "MeshInstancing2.h"
 #include "MeshMixAnimNoBone.h"
 #include "MeshMixSkinAnim.h"
 
@@ -189,7 +190,8 @@ void PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                               const std::deque<MeshMixManager>& meshMixList,
                               const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
                               const std::vector<MeshMixAnimNoBone*>& meshMixAnimNoBoneList,
-                              const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap)
+                              const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap,
+                              const std::unordered_map<std::wstring, MeshInstancing2*>& meshInstancing2Map)
 {
     g_texTemp = renderTarget;
     m_texCompositeTarget = texTarget;
@@ -197,6 +199,7 @@ void PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_pSkinAnimMeshList = &meshMixSkinAnimList;
     m_pMeshMixAnimNoBoneList = &meshMixAnimNoBoneList;
     m_pMeshInstancingMap = &meshInstancingMap;
+    m_pMeshInstancing2Map = &meshInstancing2Map;
     m_sceneDepthTexture = sceneDepthTexture;
     m_sceneNormalTexture = sceneNormalTexture;
 
@@ -210,6 +213,7 @@ void PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_pSkinAnimMeshList = nullptr;
     m_pMeshMixAnimNoBoneList = nullptr;
     m_pMeshInstancingMap = nullptr;
+    m_pMeshInstancing2Map = nullptr;
     m_sceneDepthTexture = NULL;
     m_sceneNormalTexture = NULL;
     m_texCompositeTarget = NULL;
@@ -531,6 +535,30 @@ void PostEffectZShadow::RenderTechnique2(const int cascadeIndex)
                 meshEntry.second->RenderToShadowOccluderEffect(g_fxDepthBufferShadow,
                                                                "TechniqueShadowOccluderInstancing",
                                                                alphaClipThreshold);
+            }
+        }
+
+        hr = Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE, oldColorWriteEnable);
+        assert(hr == S_OK);
+    }
+
+    if (m_pMeshInstancing2Map != nullptr)
+    {
+        DWORD oldColorWriteEnable = 0;
+        hr = Common::D3DDevice()->GetRenderState(D3DRS_COLORWRITEENABLE, &oldColorWriteEnable);
+        assert(hr == S_OK);
+
+        hr = Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE, 0);
+        assert(hr == S_OK);
+
+        const float alphaClipThreshold = 0.5f;
+        for (const auto& meshEntry : *m_pMeshInstancing2Map)
+        {
+            if (meshEntry.second != nullptr)
+            {
+                meshEntry.second->RenderToShadowOccluderEffect(g_fxDepthBufferShadow,
+                                                                "TechniqueShadowOccluderInstancing",
+                                                                alphaClipThreshold);
             }
         }
 

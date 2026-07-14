@@ -2374,6 +2374,12 @@ void Render::Finalize()
         SAFE_DELETE(mesh.second);
     }
     m_meshInstancingMap.clear();
+
+    for (auto& mesh : m_meshInstancing2Map)
+    {
+        SAFE_DELETE(mesh.second);
+    }
+    m_meshInstancing2Map.clear();
     m_csvInstancingFilePaths.clear();
 
     for (auto& mesh : m_meshMixList)
@@ -2509,6 +2515,7 @@ void Render::Draw()
                        m_meshMixSkinAnimList,
                        m_meshMixAnimNoBoneList,
                        m_meshInstancingMap,
+                       m_meshInstancing2Map,
                        &m_particleSystem,
                        &pTexTempZ,
                        &pTexTempCameraZ,
@@ -2569,7 +2576,8 @@ void Render::Draw()
                                  m_meshMixList,
                                  m_meshMixSkinAnimList,
                                  m_meshMixAnimNoBoneList,
-                                 m_meshInstancingMap);
+                                 m_meshInstancingMap,
+                                 m_meshInstancing2Map);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
@@ -3174,11 +3182,58 @@ bool Render::RemoveMeshInstancing(const std::wstring& filePath)
     return true;
 }
 
+int Render::AddMeshInstansing2(const std::wstring& filePath,
+                               const D3DXVECTOR3& pos,
+                               const D3DXVECTOR3& rot,
+                               const float scale,
+                               const std::wstring& csvPath)
+{
+    if (m_meshInstancing2Map.find(filePath) == m_meshInstancing2Map.end())
+    {
+        MeshInstancing2* mesh = NEW MeshInstancing2();
+        if (csvPath.empty())
+        {
+            mesh->Initialize(filePath, true);
+        }
+        else
+        {
+            mesh->Initialize(filePath, csvPath, true);
+        }
+        mesh->SetHighQuality(m_meshInstancingHighQualityEnabled);
+
+        m_meshInstancing2Map[filePath] = mesh;
+    }
+
+    m_meshInstancing2Map[filePath]->AddInstance(pos, rot.y);
+    return 0;
+}
+
+bool Render::RemoveMeshInstancing2(const std::wstring& filePath)
+{
+    const auto found = m_meshInstancing2Map.find(filePath);
+    if (found == m_meshInstancing2Map.end())
+    {
+        return false;
+    }
+
+    SAFE_DELETE(found->second);
+    m_meshInstancing2Map.erase(found);
+    return true;
+}
+
 void Render::SetMeshInstancingHighQuality(const bool enabled)
 {
     m_meshInstancingHighQualityEnabled = enabled;
 
     for (auto& mesh : m_meshInstancingMap)
+    {
+        if (mesh.second != nullptr)
+        {
+            mesh.second->SetHighQuality(enabled);
+        }
+    }
+
+    for (auto& mesh : m_meshInstancing2Map)
     {
         if (mesh.second != nullptr)
         {
@@ -6446,6 +6501,11 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
         elem.second->Draw();
     }
 
+    for (auto& elem : m_meshInstancing2Map)
+    {
+        elem.second->Draw();
+    }
+
     std::stable_sort(transparentWaterMeshIndices.begin(),
                      transparentWaterMeshIndices.end(),
                      [&](const size_t lhs, const size_t rhs)
@@ -7049,6 +7109,13 @@ void Render::OnDeviceLost()
     SAFE_RELEASE(m_pMirrorRenderTarget);
     m_sprite.OnDeviceLost();
     m_particleSystem.OnDeviceLost();
+    for (auto& mesh : m_meshInstancing2Map)
+    {
+        if (mesh.second != nullptr)
+        {
+            mesh.second->OnDeviceLost();
+        }
+    }
 }
 
 void Render::OnDeviceReset()
@@ -7056,6 +7123,13 @@ void Render::OnDeviceReset()
     CreateTexture();
     m_sprite.OnDeviceReset();
     m_particleSystem.OnDeviceReset();
+    for (auto& mesh : m_meshInstancing2Map)
+    {
+        if (mesh.second != nullptr)
+        {
+            mesh.second->OnDeviceReset();
+        }
+    }
 }
 
 void Render::CreateTexture()
