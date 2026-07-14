@@ -94,6 +94,7 @@ private:
 
     void InitializeInternal();
     void ReleaseOwnedResources();
+    void CorrectBlenderOfficialAxisTransforms(LPD3DXFRAME frame, bool skipCurrentFrame);
     void UpdateFrameMatrices(LPD3DXFRAME frame, const D3DXMATRIX* parentMatrix);
     void RenderFrameHierarchy(LPD3DXFRAME frame,
                               LPD3DXEFFECT effect,

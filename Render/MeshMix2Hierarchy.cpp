@@ -3,6 +3,8 @@
 #include "Common.h"
 #include "Util.h"
 
+#include <stdexcept>
+
 namespace NSRender
 {
 
@@ -240,7 +242,9 @@ LPDIRECT3DTEXTURE9 MeshMix2MeshAlloc::LoadTextureCached(const std::wstring& text
                                            &texture);
     if (FAILED(hr) || texture == nullptr)
     {
-        return nullptr;
+        const std::string message = "MeshMix2 failed to load a referenced texture: " +
+                                    Util::WstringToUtf8(texturePath);
+        throw std::runtime_error(message);
     }
 
     texture->AddRef();

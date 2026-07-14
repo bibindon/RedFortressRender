@@ -38,6 +38,17 @@ std::wstring ResolveRuntimePath(const std::wstring& path)
     return path;
 }
 
+void ThrowIfEffectCallFailed(const HRESULT result, const char* operation)
+{
+    if (FAILED(result))
+    {
+        const std::string message = std::string(operation) +
+                                    " HRESULT=" +
+                                    std::to_string(static_cast<unsigned long>(result));
+        throw std::runtime_error(message);
+    }
+}
+
 }
 
 MeshMix2::MeshMix2(const std::wstring& filename,
@@ -116,6 +127,15 @@ void MeshMix2::InitializeInternal()
         throw std::runtime_error("MeshMix2 failed to load a Blender 5.1.2 DirectX X hierarchy.");
     }
 
+    bool hasSyntheticRoot = false;
+    if (m_frameRoot->Name != nullptr &&
+        m_frameRoot->Name[0] == '\0' &&
+        m_frameRoot->pMeshContainer == nullptr)
+    {
+        hasSyntheticRoot = true;
+    }
+    CorrectBlenderOfficialAxisTransforms(m_frameRoot, hasSyntheticRoot);
+
     const D3DXMATRIX worldMatrix = BuildWorldMatrix();
     UpdateFrameMatrices(m_frameRoot, &worldMatrix);
 
@@ -165,6 +185,34 @@ void MeshMix2::ReleaseOwnedResources()
     SAFE_RELEASE(m_D3DEffect);
 }
 
+void MeshMix2::CorrectBlenderOfficialAxisTransforms(LPD3DXFRAME frame,
+                                                     const bool skipCurrentFrame)
+{
+    if (frame == nullptr)
+    {
+        return;
+    }
+
+    if (!skipCurrentFrame)
+    {
+        // Blender's official DirectX exporter converts mesh vertices to DirectX axes,
+        // then includes the same conversion at the start of every exported Frame matrix.
+        // MeshMix2 consumes the already converted vertices, so remove that duplicate
+        // frame conversion. Pre-multiplication preserves the exported translation row.
+        D3DXMATRIX blenderAxisConversion;
+        D3DXMatrixIdentity(&blenderAxisConversion);
+        blenderAxisConversion._11 = -1.0f;
+        blenderAxisConversion._22 = 0.0f;
+        blenderAxisConversion._23 = 1.0f;
+        blenderAxisConversion._32 = 1.0f;
+        blenderAxisConversion._33 = 0.0f;
+        frame->TransformationMatrix = blenderAxisConversion * frame->TransformationMatrix;
+    }
+
+    CorrectBlenderOfficialAxisTransforms(frame->pFrameSibling, false);
+    CorrectBlenderOfficialAxisTransforms(frame->pFrameFirstChild, false);
+}
+
 void MeshMix2::Render()
 {
     if (!m_loaded || !m_enabled || m_D3DEffect == nullptr)
@@ -175,13 +223,20 @@ void MeshMix2::Render()
     const D3DXVECTOR4 lightDirection = Light::GetLightDir();
     const D3DXVECTOR4 lightColor(Light::GetLightColor());
     const D3DXVECTOR4 cameraPosition(Camera::GetEyePos(), 1.0f);
-    m_D3DEffect->SetVector("g_lightDir", &lightDirection);
-    m_D3DEffect->SetVector("g_lightColor", &lightColor);
-    m_D3DEffect->SetVector("g_cameraPos", &cameraPosition);
-    m_D3DEffect->SetFloat("g_fSunLightIntensity", Light::GetBrightness());
-    m_D3DEffect->SetFloat("g_fAmbientIntensity", Light::GetAmbientBrightness());
-    m_D3DEffect->SetBool("g_damageFlash", m_damageFlash);
-    m_D3DEffect->SetTechnique("TechniqueNoSkin");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetVector("g_lightDir", &lightDirection),
+                            "MeshMix2 failed to set g_lightDir.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetVector("g_lightColor", &lightColor),
+                            "MeshMix2 failed to set g_lightColor.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetVector("g_cameraPos", &cameraPosition),
+                            "MeshMix2 failed to set g_cameraPos.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_fSunLightIntensity", Light::GetBrightness()),
+                            "MeshMix2 failed to set g_fSunLightIntensity.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_fAmbientIntensity", Light::GetAmbientBrightness()),
+                            "MeshMix2 failed to set g_fAmbientIntensity.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetBool("g_damageFlash", m_damageFlash),
+                            "MeshMix2 failed to set g_damageFlash.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetTechnique("TechniqueNoSkin"),
+                            "MeshMix2 failed to set TechniqueNoSkin.");
 
     const D3DXMATRIX viewProjectionMatrix = Camera::GetViewMatrix() * Camera::GetProjMatrix();
     RenderFrameHierarchy(m_frameRoot, m_D3DEffect, viewProjectionMatrix, true);
@@ -243,12 +298,15 @@ void MeshMix2::RenderMeshContainer(const MeshMix2Frame& frame,
     }
 
     const D3DXMATRIX worldViewProjection = frame.m_combinedMatrix * viewProjectionMatrix;
-    effect->SetMatrix("g_matWorld", &frame.m_combinedMatrix);
-    effect->SetMatrix("g_matWorldViewProj", &worldViewProjection);
+    ThrowIfEffectCallFailed(effect->SetMatrix("g_matWorld", &frame.m_combinedMatrix),
+                            "MeshMix2 failed to set g_matWorld.");
+    ThrowIfEffectCallFailed(effect->SetMatrix("g_matWorldViewProj", &worldViewProjection),
+                            "MeshMix2 failed to set g_matWorldViewProj.");
     const D3DXHANDLE viewProjectionHandle = effect->GetParameterByName(nullptr, "g_matViewProj");
     if (viewProjectionHandle != nullptr)
     {
-        effect->SetMatrix(viewProjectionHandle, &viewProjectionMatrix);
+        ThrowIfEffectCallFailed(effect->SetMatrix(viewProjectionHandle, &viewProjectionMatrix),
+                                "MeshMix2 failed to set g_matViewProj.");
     }
 
     DWORD subsetCount = container.NumMaterials;
@@ -288,12 +346,15 @@ void MeshMix2::RenderMeshContainer(const MeshMix2Frame& frame,
             if (subsetIndex < container.m_textureList.size() &&
                 container.m_textureList[subsetIndex] != nullptr)
             {
-                effect->SetTexture("g_textureSampler", container.m_textureList[subsetIndex]);
+                ThrowIfEffectCallFailed(
+                    effect->SetTexture("g_texture", container.m_textureList[subsetIndex]),
+                    "MeshMix2 failed to set g_texture.");
                 hasTexture = true;
             }
             else
             {
-                effect->SetTexture("g_textureSampler", nullptr);
+                ThrowIfEffectCallFailed(effect->SetTexture("g_texture", nullptr),
+                                        "MeshMix2 failed to clear g_texture.");
             }
 
             BOOL treatTextureAsWhite = FALSE;
@@ -301,13 +362,18 @@ void MeshMix2::RenderMeshContainer(const MeshMix2Frame& frame,
             {
                 treatTextureAsWhite = TRUE;
             }
-            effect->SetBool("g_treatTextureAsWhite", treatTextureAsWhite);
-            effect->SetVector("g_diffuse", &diffuse);
-            effect->SetFloat("g_specularIntensity", specularIntensity);
-            effect->SetFloat("g_specularPower", specularPower);
+            ThrowIfEffectCallFailed(effect->SetBool("g_treatTextureAsWhite", treatTextureAsWhite),
+                                    "MeshMix2 failed to set g_treatTextureAsWhite.");
+            ThrowIfEffectCallFailed(effect->SetVector("g_diffuse", &diffuse),
+                                    "MeshMix2 failed to set g_diffuse.");
+            ThrowIfEffectCallFailed(effect->SetFloat("g_specularIntensity", specularIntensity),
+                                    "MeshMix2 failed to set g_specularIntensity.");
+            ThrowIfEffectCallFailed(effect->SetFloat("g_specularPower", specularPower),
+                                    "MeshMix2 failed to set g_specularPower.");
         }
 
-        effect->CommitChanges();
+        ThrowIfEffectCallFailed(effect->CommitChanges(),
+                                "MeshMix2 failed to commit effect changes.");
         UINT passCount = 0;
         const HRESULT beginResult = effect->Begin(&passCount, 0);
         if (FAILED(beginResult))
@@ -327,9 +393,11 @@ void MeshMix2::RenderMeshContainer(const MeshMix2Frame& frame,
                 effect->End();
                 throw std::runtime_error("MeshMix2 failed to draw a mesh subset.");
             }
-            effect->EndPass();
+            ThrowIfEffectCallFailed(effect->EndPass(),
+                                    "MeshMix2 failed to end an effect pass.");
         }
-        effect->End();
+        ThrowIfEffectCallFailed(effect->End(),
+                                "MeshMix2 failed to end an effect.");
     }
 }
 
