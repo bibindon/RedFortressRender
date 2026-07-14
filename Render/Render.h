@@ -873,6 +873,7 @@ public:
                        const float squareWidth = 10.0f,
                        const float squareHeight = 10.0f,
                        const D3DXVECTOR3& rotation = D3DXVECTOR3(0.f, 0.f, 0.f));
+    void ClearPointLights();
 
 private:
 

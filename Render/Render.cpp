@@ -6169,6 +6169,11 @@ void Render::AddPointLight(const D3DXVECTOR3& pos,
     Light::AddPointLight(pos, color, brightness, shape, lineLength, squareWidth, squareHeight, rotation);
 }
 
+void Render::ClearPointLights()
+{
+    Light::ClearPointLights();
+}
+
 void Render::PlaceParticleEffect(const ParticleEffectPreset preset, const D3DXVECTOR3& origin)
 {
     m_particleSystem.PlaceEffect(preset, origin);
