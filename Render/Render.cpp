@@ -2649,6 +2649,13 @@ void Render::Draw()
         }
     }
 
+    if (m_gBufferEnabled && m_postEffectTAAEnabled)
+    {
+        EnsurePostEffectTAAInitialized();
+        m_postEffectTAA.Draw(pTempTexture, pWorkTexture);
+        SwapPostEffectBuffers(pTempTexture, pWorkTexture);
+    }
+
     const bool lightEffectEnabled = m_gBufferEnabled &&
         (m_postEffectBloomEnabled || m_postEffectHaloEnabled || m_postEffectStarBurstEnabled);
     LPDIRECT3DTEXTURE9 pLightEffectSource = pTempTexture;
@@ -2726,13 +2733,6 @@ void Render::Draw()
     {
         EnsurePostEffectFXAAInitialized();
         m_postEffectFXAA.Draw(pTempTexture, pWorkTexture);
-        SwapPostEffectBuffers(pTempTexture, pWorkTexture);
-    }
-
-    if (m_gBufferEnabled && m_postEffectTAAEnabled)
-    {
-        EnsurePostEffectTAAInitialized();
-        m_postEffectTAA.Draw(pTempTexture, pWorkTexture);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
