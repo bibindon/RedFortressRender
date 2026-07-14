@@ -124,6 +124,26 @@ void Light::RemovePointLightsByOwnerTag(const std::wstring& ownerTag)
     }
 }
 
+bool Light::SetPointLightPositionByOwnerTag(const std::wstring& ownerTag,
+                                            const D3DXVECTOR3& pos)
+{
+    if (ownerTag.empty())
+    {
+        return false;
+    }
+
+    bool updated = false;
+    for (auto& pointLight : m_pointLightList)
+    {
+        if (pointLight.m_ownerTag == ownerTag)
+        {
+            pointLight.m_pos = pos;
+            updated = true;
+        }
+    }
+    return updated;
+}
+
 void Light::ClearPointLights()
 {
     m_pointLightList.clear();
