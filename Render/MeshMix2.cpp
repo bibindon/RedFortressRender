@@ -49,6 +49,11 @@ void ThrowIfEffectCallFailed(const HRESULT result, const char* operation)
     }
 }
 
+float PointLightShapeToShaderValue(const PointLightShape shape)
+{
+    return static_cast<float>(static_cast<int>(shape));
+}
+
 }
 
 MeshMix2::MeshMix2(const std::wstring& filename,
@@ -237,6 +242,76 @@ void MeshMix2::Render()
                             "MeshMix2 failed to set g_fAmbientIntensity.");
     ThrowIfEffectCallFailed(m_D3DEffect->SetBool("g_damageFlash", m_damageFlash),
                             "MeshMix2 failed to set g_damageFlash.");
+
+    const std::deque<PointLightInfo> pointLightList = Light::GetPointLightList();
+    D3DXVECTOR4 pointLightPositions[16];
+    float pointLightBrightness[16] { };
+    float pointLightShapes[16] { };
+    float pointLightLineLengths[16] { };
+    float pointLightSquareWidths[16] { };
+    float pointLightSquareHeights[16] { };
+    D3DXVECTOR4 pointLightRotations[16];
+    D3DXVECTOR4 pointLightColors[16];
+    ZeroMemory(pointLightPositions, sizeof(pointLightPositions));
+    ZeroMemory(pointLightRotations, sizeof(pointLightRotations));
+    ZeroMemory(pointLightColors, sizeof(pointLightColors));
+
+    for (std::size_t index = 0; index < 16; ++index)
+    {
+        if (index >= pointLightList.size())
+        {
+            continue;
+        }
+
+        const PointLightInfo& pointLight = pointLightList.at(index);
+        pointLightPositions[index].x = pointLight.m_pos.x;
+        pointLightPositions[index].y = pointLight.m_pos.y;
+        pointLightPositions[index].z = pointLight.m_pos.z;
+        pointLightBrightness[index] = pointLight.m_brightness;
+        pointLightShapes[index] = PointLightShapeToShaderValue(pointLight.m_shape);
+        pointLightLineLengths[index] = pointLight.m_lineLength;
+        pointLightSquareWidths[index] = pointLight.m_squareWidth;
+        pointLightSquareHeights[index] = pointLight.m_squareHeight;
+        pointLightRotations[index].x = pointLight.m_rotation.x;
+        pointLightRotations[index].y = pointLight.m_rotation.y;
+        pointLightRotations[index].z = pointLight.m_rotation.z;
+        pointLightColors[index].x = pointLight.m_color.r;
+        pointLightColors[index].y = pointLight.m_color.g;
+        pointLightColors[index].z = pointLight.m_color.b;
+    }
+
+    ThrowIfEffectCallFailed(m_D3DEffect->SetVectorArray("g_pointLightPos",
+                                                         pointLightPositions,
+                                                         16),
+                            "MeshMix2 failed to set g_pointLightPos.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloatArray("g_pointLightBrightness",
+                                                        pointLightBrightness,
+                                                        16),
+                            "MeshMix2 failed to set g_pointLightBrightness.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloatArray("g_pointLightShape",
+                                                        pointLightShapes,
+                                                        16),
+                            "MeshMix2 failed to set g_pointLightShape.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloatArray("g_pointLightLineLength",
+                                                        pointLightLineLengths,
+                                                        16),
+                            "MeshMix2 failed to set g_pointLightLineLength.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloatArray("g_pointLightSquareWidth",
+                                                        pointLightSquareWidths,
+                                                        16),
+                            "MeshMix2 failed to set g_pointLightSquareWidth.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloatArray("g_pointLightSquareHeight",
+                                                        pointLightSquareHeights,
+                                                        16),
+                            "MeshMix2 failed to set g_pointLightSquareHeight.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetVectorArray("g_pointLightRotation",
+                                                         pointLightRotations,
+                                                         16),
+                            "MeshMix2 failed to set g_pointLightRotation.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetVectorArray("g_pointLightColor",
+                                                         pointLightColors,
+                                                         16),
+                            "MeshMix2 failed to set g_pointLightColor.");
     ThrowIfEffectCallFailed(m_D3DEffect->SetTechnique("TechniqueNoSkin"),
                             "MeshMix2 failed to set TechniqueNoSkin.");
 
