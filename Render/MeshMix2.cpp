@@ -199,7 +199,8 @@ void MeshMix2::CorrectBlenderOfficialAxisTransforms(LPD3DXFRAME frame,
         // then includes a Y/Z conversion at the start of every exported Frame matrix.
         // Apply only the Y/Z correction here. Keep the X conversion in the Frame
         // matrix so it cancels the matching X conversion already applied to vertices.
-        // Pre-multiplication preserves the exported translation row.
+        // The exporter also negates the X component of each Frame translation, which
+        // must be restored separately because pre-multiplication preserves that row.
         D3DXMATRIX blenderAxisConversion;
         D3DXMatrixIdentity(&blenderAxisConversion);
         blenderAxisConversion._22 = 0.0f;
@@ -207,6 +208,7 @@ void MeshMix2::CorrectBlenderOfficialAxisTransforms(LPD3DXFRAME frame,
         blenderAxisConversion._32 = 1.0f;
         blenderAxisConversion._33 = 0.0f;
         frame->TransformationMatrix = blenderAxisConversion * frame->TransformationMatrix;
+        frame->TransformationMatrix._41 = -frame->TransformationMatrix._41;
     }
 
     CorrectBlenderOfficialAxisTransforms(frame->pFrameSibling, false);
