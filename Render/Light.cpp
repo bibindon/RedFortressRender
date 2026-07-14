@@ -1,6 +1,7 @@
 ﻿#include "Light.h"
 #include "Util.h"
 #include <deque>
+#include <stdexcept>
 
 namespace NSRender
 {
@@ -71,8 +72,14 @@ void Light::AddPointLight(const D3DXVECTOR3& pos,
                           const float squareWidth,
                           const float squareHeight,
                           const D3DXVECTOR3& rotation,
+                          const float range,
                           const std::wstring& ownerTag)
 {
+    if (range <= 0.0f)
+    {
+        throw std::invalid_argument("Point light range must be greater than zero.");
+    }
+
     PointLightInfo pointLightInfo;
 
     pointLightInfo.m_pos = pos;
@@ -83,6 +90,7 @@ void Light::AddPointLight(const D3DXVECTOR3& pos,
     pointLightInfo.m_squareWidth = squareWidth;
     pointLightInfo.m_squareHeight = squareHeight;
     pointLightInfo.m_rotation = rotation;
+    pointLightInfo.m_range = range;
     pointLightInfo.m_ownerTag = ownerTag;
 
     m_pointLightList.push_back(pointLightInfo);

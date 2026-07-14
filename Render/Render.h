@@ -880,6 +880,7 @@ public:
                        const float squareWidth = 10.0f,
                        const float squareHeight = 10.0f,
                        const D3DXVECTOR3& rotation = D3DXVECTOR3(0.f, 0.f, 0.f),
+                       const float range = 8.0f,
                        const std::wstring& ownerTag = L"");
     bool SetPointLightPositionByOwnerTag(const std::wstring& ownerTag,
                                          const D3DXVECTOR3& pos);

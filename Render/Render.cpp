@@ -6245,9 +6245,19 @@ void Render::AddPointLight(const D3DXVECTOR3& pos,
                            const float squareWidth,
                            const float squareHeight,
                            const D3DXVECTOR3& rotation,
+                           const float range,
                            const std::wstring& ownerTag)
 {
-    Light::AddPointLight(pos, color, brightness, shape, lineLength, squareWidth, squareHeight, rotation, ownerTag);
+    Light::AddPointLight(pos,
+                         color,
+                         brightness,
+                         shape,
+                         lineLength,
+                         squareWidth,
+                         squareHeight,
+                         rotation,
+                         range,
+                         ownerTag);
 }
 
 bool Render::SetPointLightPositionByOwnerTag(const std::wstring& ownerTag,

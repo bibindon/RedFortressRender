@@ -19,13 +19,12 @@ namespace
 
 float GetMaterialSpecularIntensity(const D3DMATERIAL9& material)
 {
-    return (std::max)(material.Specular.r,
-           (std::max)(material.Specular.g, material.Specular.b));
+    return (std::max)(0.0f, (std::min)(material.Power / 500.0f, 1.0f));
 }
 
-float ClampSpecularPower(const float power)
+float ConvertMaterialSpecularPower(const D3DMATERIAL9& material)
 {
-    return (std::max)(1.0f, (std::min)(power, 128.0f));
+    return GetMaterialSpecularIntensity(material) * 128.0f;
 }
 
 std::wstring ResolveRuntimePath(const std::wstring& path)
@@ -250,6 +249,7 @@ void MeshMix2::Render()
     float pointLightLineLengths[16] { };
     float pointLightSquareWidths[16] { };
     float pointLightSquareHeights[16] { };
+    float pointLightRanges[16] { };
     D3DXVECTOR4 pointLightRotations[16];
     D3DXVECTOR4 pointLightColors[16];
     ZeroMemory(pointLightPositions, sizeof(pointLightPositions));
@@ -272,6 +272,7 @@ void MeshMix2::Render()
         pointLightLineLengths[index] = pointLight.m_lineLength;
         pointLightSquareWidths[index] = pointLight.m_squareWidth;
         pointLightSquareHeights[index] = pointLight.m_squareHeight;
+        pointLightRanges[index] = pointLight.m_range;
         pointLightRotations[index].x = pointLight.m_rotation.x;
         pointLightRotations[index].y = pointLight.m_rotation.y;
         pointLightRotations[index].z = pointLight.m_rotation.z;
@@ -304,6 +305,10 @@ void MeshMix2::Render()
                                                         pointLightSquareHeights,
                                                         16),
                             "MeshMix2 failed to set g_pointLightSquareHeight.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloatArray("g_pointLightRange",
+                                                        pointLightRanges,
+                                                        16),
+                            "MeshMix2 failed to set g_pointLightRange.");
     ThrowIfEffectCallFailed(m_D3DEffect->SetVectorArray("g_pointLightRotation",
                                                          pointLightRotations,
                                                          16),
@@ -420,7 +425,7 @@ void MeshMix2::RenderMeshContainer(const MeshMix2Frame& frame,
                                       material.Diffuse.b,
                                       material.Diffuse.a);
                 specularIntensity = GetMaterialSpecularIntensity(material);
-                specularPower = ClampSpecularPower(material.Power);
+                specularPower = ConvertMaterialSpecularPower(material);
             }
 
             if (m_param.specularIntensityOverrideEnabled)
