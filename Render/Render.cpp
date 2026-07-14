@@ -2455,6 +2455,8 @@ void Render::ToggleSettingsDialog()
 
 void Render::Draw()
 {
+    using ProfileClock = std::chrono::steady_clock;
+    const auto totalStartTime = ProfileClock::now();
     HRESULT hResult = E_FAIL;
 
     if (!m_windowManager.EnsureDeviceReady())
@@ -2468,6 +2470,7 @@ void Render::Draw()
         ShowFPS(fps);
     }
 
+    const auto sceneUpdateStartTime = ProfileClock::now();
     const float frameDeltaSeconds = CalcFrameDeltaSeconds();
     if (!m_sceneUpdatePaused)
     {
@@ -2475,10 +2478,16 @@ void Render::Draw()
         m_loadingScreen.Update(frameDeltaSeconds);
         UpdateMovingPlatforms(frameDeltaSeconds);
         UpdateFade(frameDeltaSeconds);
-        UpdateSkinAnimationState();
-        UpdateBoneAttachments();
-        UpdateMeshMixSkinAnimBlink();
+        if (m_skinAnimationUpdateEnabled)
+        {
+            UpdateSkinAnimationState();
+            UpdateBoneAttachments();
+            UpdateMeshMixSkinAnimBlink();
+        }
     }
+    const auto sceneUpdateEndTime = ProfileClock::now();
+    m_lastFrameProfile.sceneUpdateMilliseconds =
+        std::chrono::duration<double, std::milli>(sceneUpdateEndTime - sceneUpdateStartTime).count();
     CameraShakeFrameScope cameraShakeFrameScope;
     ApplyTAAProjectionJitter();
 
@@ -2492,6 +2501,7 @@ void Render::Draw()
     LPDIRECT3DTEXTURE9 pTexTempNoral = NULL;
     LPDIRECT3DTEXTURE9 pTexTempThickness = NULL;
     LPDIRECT3DTEXTURE9 pTexTempBackDepth = NULL;
+    const auto gBufferStartTime = ProfileClock::now();
     if (m_gBufferEnabled)
     {
         EnsureGBufferInitialized();
@@ -2512,7 +2522,11 @@ void Render::Draw()
     {
         MeshMixManager::SetSharedThicknessTexture(NULL);
     }
+    const auto gBufferEndTime = ProfileClock::now();
+    m_lastFrameProfile.gBufferMilliseconds =
+        std::chrono::duration<double, std::milli>(gBufferEndTime - gBufferStartTime).count();
 
+    const auto mirrorStartTime = ProfileClock::now();
     int activeMirrorMeshIndex = FindActiveMirrorMeshIndex();
     D3DXMATRIX mirrorViewProj;
     D3DXMatrixIdentity(&mirrorViewProj);
@@ -2526,14 +2540,22 @@ void Render::Draw()
     {
         activeMirrorMeshIndex = -1;
     }
+    const auto mirrorEndTime = ProfileClock::now();
+    m_lastFrameProfile.mirrorMilliseconds =
+        std::chrono::duration<double, std::milli>(mirrorEndTime - mirrorStartTime).count();
 
+    const auto mainPassStartTime = ProfileClock::now();
     DrawPass1(true, activeMirrorMeshIndex);
+    const auto mainPassEndTime = ProfileClock::now();
+    m_lastFrameProfile.mainPassMilliseconds =
+        std::chrono::duration<double, std::milli>(mainPassEndTime - mainPassStartTime).count();
 
     //---------------------------------------------------------------
     // ポストエフェクト
     // 共通の HDR 作業バッファ 2 枚を ping-pong して使う。
     //---------------------------------------------------------------
 
+    const auto postEffectStartTime = ProfileClock::now();
     LPDIRECT3DTEXTURE9 pTempTexture = m_pRenderTarget1;
     LPDIRECT3DTEXTURE9 pWorkTexture = m_pRenderTarget2;
 
@@ -2735,8 +2757,12 @@ void Render::Draw()
     {
         m_postEffectEnd.Draw(pTempTexture);
     }
+    const auto postEffectEndTime = ProfileClock::now();
+    m_lastFrameProfile.postEffectMilliseconds =
+        std::chrono::duration<double, std::milli>(postEffectEndTime - postEffectStartTime).count();
 
     // 文字と画像は彩度フィルタの影響を受けないようにする
+    const auto draw2DStartTime = ProfileClock::now();
     Draw2D();
 
     if (m_postEffectZShadowEnabled && m_postEffectZShadowDebugLightDepthEnabled)
@@ -2758,11 +2784,22 @@ void Render::Draw()
                                                        debugFarY,
                                                        debugLightDepthSize,
                                                        debugLightDepthSize,
-                                                       1);
+                                                        1);
     }
+    const auto draw2DEndTime = ProfileClock::now();
+    m_lastFrameProfile.draw2DMilliseconds =
+        std::chrono::duration<double, std::milli>(draw2DEndTime - draw2DStartTime).count();
 
+    const auto frameWaitStartTime = ProfileClock::now();
     WaitForTargetFrameRate();
+    const auto frameWaitEndTime = ProfileClock::now();
+    m_lastFrameProfile.frameWaitMilliseconds =
+        std::chrono::duration<double, std::milli>(frameWaitEndTime - frameWaitStartTime).count();
+    const auto presentStartTime = ProfileClock::now();
     hResult = Common::D3DDevice()->Present(NULL, NULL, NULL, NULL);
+    const auto presentEndTime = ProfileClock::now();
+    m_lastFrameProfile.presentMilliseconds =
+        std::chrono::duration<double, std::milli>(presentEndTime - presentStartTime).count();
     ClearTAAProjectionJitter();
     if (hResult == D3DERR_DEVICELOST)
     {
@@ -2772,6 +2809,10 @@ void Render::Draw()
     assert(hResult == S_OK);
 
     m_windowManager.ChangeWindowMode();
+
+    const auto totalEndTime = ProfileClock::now();
+    m_lastFrameProfile.totalMilliseconds =
+        std::chrono::duration<double, std::milli>(totalEndTime - totalStartTime).count();
 
 }
 
@@ -5982,6 +6023,16 @@ void Render::SetShowFPS(const bool arg)
 bool Render::IsShowFPS() const
 {
     return m_bShowFPS;
+}
+
+void Render::SetSkinAnimationUpdateEnabled(bool enabled)
+{
+    m_skinAnimationUpdateEnabled = enabled;
+}
+
+const RenderFrameProfile& Render::GetLastFrameProfile() const
+{
+    return m_lastFrameProfile;
 }
 
 void Render::SetShowCameraPosition(const bool arg)

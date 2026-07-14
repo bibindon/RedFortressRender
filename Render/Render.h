@@ -71,6 +71,19 @@
 namespace NSRender
 {
 
+struct RenderFrameProfile
+{
+    double sceneUpdateMilliseconds = 0.0;
+    double gBufferMilliseconds = 0.0;
+    double mirrorMilliseconds = 0.0;
+    double mainPassMilliseconds = 0.0;
+    double postEffectMilliseconds = 0.0;
+    double draw2DMilliseconds = 0.0;
+    double frameWaitMilliseconds = 0.0;
+    double presentMilliseconds = 0.0;
+    double totalMilliseconds = 0.0;
+};
+
 enum class DebugGBufferView
 {
     None = 0,
@@ -803,6 +816,8 @@ public:
 
     void SetShowFPS(const bool arg);
     bool IsShowFPS() const;
+    void SetSkinAnimationUpdateEnabled(bool enabled);
+    const RenderFrameProfile& GetLastFrameProfile() const;
     void SetShowCameraPosition(const bool arg);
     void SetSceneUpdatePaused(const bool paused);
     bool IsSceneUpdatePaused() const;
@@ -1151,6 +1166,8 @@ private:
     //-----------------------------------------------------------------
 
     bool m_bShowFPS = true;
+    bool m_skinAnimationUpdateEnabled = true;
+    RenderFrameProfile m_lastFrameProfile;
     bool m_bShowCameraPosition = false;
 
     float CalcFPS();
