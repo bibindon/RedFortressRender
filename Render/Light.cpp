@@ -87,7 +87,7 @@ void Light::AddPointLight(const D3DXVECTOR3& pos,
 
     m_pointLightList.push_back(pointLightInfo);
 
-    if (m_pointLightList.size() > 10)
+    if (m_pointLightList.size() > 16)
     {
         m_pointLightList.pop_front();
     }
