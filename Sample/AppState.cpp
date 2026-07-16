@@ -1254,6 +1254,10 @@ bool RemoveLoadedModel(const size_t modelIndex)
     {
         removed = g_Render.RemoveMeshMix(model.m_renderId);
     }
+    else if (model.m_type == L"MeshMix2")
+    {
+        removed = g_Render.RemoveMeshMix2(model.m_renderId);
+    }
     else if (model.m_type == L"MeshPBR" || model.m_type == L"MeshPBRManager")
     {
         removed = g_Render.RemoveMeshPBR(model.m_renderId);
