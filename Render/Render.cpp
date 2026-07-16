@@ -452,6 +452,7 @@ bool Render::LoadXFileListFromCsv(const std::wstring& csvPath,
             else if (loadType == L"meshmix2")
             {
                 m_csvMeshMix2RenderIds.push_back(renderId);
+                m_csvIdToMeshMix2RenderId[csvId] = renderId;
             }
             else
             {
@@ -515,6 +516,7 @@ void Render::ClearCsvLoadedMeshes()
     }
 
     m_csvIdToRenderId.clear();
+    m_csvIdToMeshMix2RenderId.clear();
     m_csvSkinAnimRenderIds.clear();
     m_csvMeshMix2RenderIds.clear();
     m_csvInstancingFilePaths.clear();
@@ -606,16 +608,32 @@ bool Render::LoadXFileListMoveFromCsv(const std::wstring& csvPath,
             }
 
             const int renderId = std::stoi(renderIdText);
+            int resolvedRenderId = -1;
+            bool usesMeshMix2 = false;
             const auto found = m_csvIdToRenderId.find(renderId);
-            if (found == m_csvIdToRenderId.end())
+            if (found != m_csvIdToRenderId.end())
+            {
+                resolvedRenderId = found->second;
+            }
+            else
+            {
+                const auto meshMix2Found = m_csvIdToMeshMix2RenderId.find(renderId);
+                if (meshMix2Found != m_csvIdToMeshMix2RenderId.end())
+                {
+                    resolvedRenderId = meshMix2Found->second;
+                    usesMeshMix2 = true;
+                }
+            }
+            if (resolvedRenderId < 0)
             {
                 ++localSkippedCount;
                 continue;
             }
 
             MovingPlatform platform;
-            platform.renderId = found->second;
+            platform.renderId = resolvedRenderId;
             platform.csvId = renderId;
+            platform.usesMeshMix2 = usesMeshMix2;
             platform.startPos = D3DXVECTOR3(std::stof(TrimCsvField(fields[10])),
                                             std::stof(TrimCsvField(fields[11])),
                                             std::stof(TrimCsvField(fields[12])));
@@ -659,7 +677,14 @@ void Render::UpdateMovingPlatforms(const float deltaSeconds)
         const float pingPong = (std::sin(t * D3DX_PI * 2.0f) + 1.0f) * 0.5f;
         const D3DXVECTOR3 pos = platform.startPos + (platform.endPos - platform.startPos) * pingPong;
 
-        SetMeshMixPos(platform.renderId, pos);
+        if (platform.usesMeshMix2)
+        {
+            SetMeshMix2Pos(platform.renderId, pos);
+        }
+        else
+        {
+            SetMeshMixPos(platform.renderId, pos);
+        }
     }
 }
 
@@ -2434,6 +2459,7 @@ void Render::Finalize()
     }
     m_meshMix2List.clear();
     m_csvIdToRenderId.clear();
+    m_csvIdToMeshMix2RenderId.clear();
     m_csvSkinAnimRenderIds.clear();
     m_csvMeshMix2RenderIds.clear();
 
@@ -3403,6 +3429,18 @@ bool Render::RemoveMeshMix2(const int id)
 
     SAFE_DELETE(m_meshMix2List.at(id));
     return true;
+}
+
+void Render::SetMeshMix2Pos(const int id, const D3DXVECTOR3& pos)
+{
+    if (id < 0 ||
+        id >= static_cast<int>(m_meshMix2List.size()) ||
+        m_meshMix2List.at(id) == nullptr)
+    {
+        return;
+    }
+
+    m_meshMix2List.at(id)->SetPos(pos);
 }
 
 bool Render::IsMeshMixSlotUsed(const int id) const

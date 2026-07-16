@@ -295,6 +295,7 @@ public:
                     float scale,
                     bool async = true);
     bool RemoveMeshMix2(int id);
+    void SetMeshMix2Pos(int id, const D3DXVECTOR3& pos);
     bool LoadXFileListFromCsv(const std::wstring& csvPath,
                               const float scale = 1.0f,
                               int* loadedCount = nullptr,
@@ -388,6 +389,7 @@ public:
     {
         int renderId = -1;
         int csvId = -1;
+        bool usesMeshMix2 = false;
         D3DXVECTOR3 startPos;
         D3DXVECTOR3 endPos;
         float duration = 10.0f;
@@ -928,6 +930,7 @@ private:
     bool m_meshInstancingHighQualityEnabled = false;
 
     std::unordered_map<int, int> m_csvIdToRenderId;
+    std::unordered_map<int, int> m_csvIdToMeshMix2RenderId;
     std::vector<std::wstring> m_csvInstancingFilePaths;
     std::vector<int> m_csvSkinAnimRenderIds;
     std::vector<int> m_csvMeshMix2RenderIds;
