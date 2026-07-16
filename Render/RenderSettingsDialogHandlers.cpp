@@ -723,6 +723,11 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
         {
             render->SetPostEffectDepthBufferShadowDebugLightDepth(IsSettingsCheckboxChecked(hWnd, id));
         }
+        else if (id == 31614)
+        {
+            render->SetPostEffectDepthBufferShadowMeshMixManagerReceiverEnabled(
+                IsSettingsCheckboxChecked(hWnd, id));
+        }
         else if (id == 31007)
         {
             render->SetPostEffectSSGI(IsSettingsCheckboxChecked(hWnd, id));

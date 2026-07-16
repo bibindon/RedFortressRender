@@ -635,6 +635,17 @@ void PostEffectZShadow::RenderTechnique2(const int cascadeIndex)
         assert(hr == S_OK);
     }
 
+    DWORD meshMixManagerOldColorWriteEnable = 0;
+    if (!m_meshMixManagerReceiverEnabled)
+    {
+        hr = Common::D3DDevice()->GetRenderState(D3DRS_COLORWRITEENABLE,
+                                                 &meshMixManagerOldColorWriteEnable);
+        assert(hr == S_OK);
+
+        hr = Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE, 0);
+        assert(hr == S_OK);
+    }
+
     hr = g_fxDepthBufferShadow->SetTechnique(GetWriteShadowTechniqueName());
     assert(hr == S_OK);
 
@@ -714,6 +725,36 @@ void PostEffectZShadow::RenderTechnique2(const int cascadeIndex)
 
     hr = g_fxDepthBufferShadow->End();
     assert(hr == S_OK);
+
+    if (!m_meshMixManagerReceiverEnabled)
+    {
+        hr = Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE,
+                                                 meshMixManagerOldColorWriteEnable);
+        assert(hr == S_OK);
+    }
+
+    if (m_pMeshMix2List != nullptr)
+    {
+        hr = g_fxDepthBufferShadow->SetTechnique(GetWriteShadowTechniqueName());
+        assert(hr == S_OK);
+
+        hr = g_fxDepthBufferShadow->SetBool("g_useMeshAlphaCutout", FALSE);
+        assert(hr == S_OK);
+
+        hr = g_fxDepthBufferShadow->SetTexture("g_texMeshAlpha", nullptr);
+        assert(hr == S_OK);
+
+        hr = g_fxDepthBufferShadow->CommitChanges();
+        assert(hr == S_OK);
+
+        for (auto& mesh : *m_pMeshMix2List)
+        {
+            if (mesh != nullptr && mesh->IsDepthBufferShadowEnabled())
+            {
+                mesh->RenderToEffect(g_fxDepthBufferShadow, mViewProj);
+            }
+        }
+    }
 
     // MeshMixAnimNoBone participates in the light-depth pass as a caster.
     // It already wrote depth-only above, so it occludes receiver shadows
@@ -963,6 +1004,11 @@ void PostEffectZShadow::SetCompositeTapCount(const int tapCount)
 void PostEffectZShadow::SetShadowTextureScaleDivisor(const int scaleDivisor)
 {
     m_shadowTextureScaleDivisor = NormalizeShadowTextureScaleDivisor(scaleDivisor);
+}
+
+void PostEffectZShadow::SetMeshMixManagerReceiverEnabled(const bool enabled)
+{
+    m_meshMixManagerReceiverEnabled = enabled;
 }
 
 void PostEffectZShadow::OnDeviceLost()

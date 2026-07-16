@@ -704,8 +704,10 @@ public:
     void SetPostEffectDepthBufferShadowCompositeTapCount(const int tapCount);
     void SetPostEffectDepthBufferShadowTexSizeDivisor(const int scaleDivisor);
     void SetPostEffectDepthBufferShadowDebugLightDepth(const bool enabled);
+    void SetPostEffectDepthBufferShadowMeshMixManagerReceiverEnabled(bool enabled);
     bool IsPostEffectDepthBufferShadowEnabled() const;
     bool IsPostEffectDepthBufferShadowDebugLightDepthEnabled() const;
+    bool IsPostEffectDepthBufferShadowMeshMixManagerReceiverEnabled() const;
     float GetPostEffectDepthBufferShadowIntensity() const;
     float GetPostEffectDepthBufferShadowSaturationBoost() const;
     float GetPostEffectDepthBufferShadowCoverage() const;
@@ -1096,6 +1098,7 @@ private:
     bool m_gBufferEnabled = true;
     bool m_postEffectZShadowEnabled = true;
     bool m_postEffectZShadowDebugLightDepthEnabled = false;
+    bool m_postEffectZShadowMeshMixManagerReceiverEnabled = false;
     bool m_postEffectSSAOEnabled = true;
     bool m_postEffectSSGIEnabled = false;
     bool m_postEffectFogZEnabled = true;

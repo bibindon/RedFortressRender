@@ -582,6 +582,7 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     SendMessage(zTexSizeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/16"));
     SendMessage(zTexSizeCombo, CB_SETCURSEL, 0, 0);
     CreateSettingsCheckbox(hWnd, 31613, L"Show Light Depth", 24, zY + 28, 150, 22);
+    CreateSettingsCheckbox(hWnd, 31614, L"MeshMixManager Receives Shadow", 180, zY + 28, 280, 22);
     y += 188;
     CreateSettingsGroupBox(hWnd, L"SSGI", 8, y, 504, 104);
     CreateSettingsStatic(hWnd, L"SSGI Sample Count", 24, y + 24, 138, 18);

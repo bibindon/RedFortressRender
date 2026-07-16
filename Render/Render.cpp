@@ -843,6 +843,17 @@ void Render::ApplySettings()
         }
     }
 
+    bool meshMixManagerShadowReceiverEnabled = false;
+    const auto meshMixManagerShadowReceiverEnable =
+        m_settings.find(L"MeshMixManagerShadowReceiverEnable");
+    if (meshMixManagerShadowReceiverEnable != m_settings.end())
+    {
+        TryParseBoolSetting(meshMixManagerShadowReceiverEnable->second,
+                            meshMixManagerShadowReceiverEnabled);
+    }
+    SetPostEffectDepthBufferShadowMeshMixManagerReceiverEnabled(
+        meshMixManagerShadowReceiverEnabled);
+
     const auto zShadowTexSize = m_settings.find(L"ZShadowTexSize");
     if (zShadowTexSize != m_settings.end())
     {
@@ -5648,6 +5659,12 @@ void Render::SetPostEffectDepthBufferShadowDebugLightDepth(const bool enabled)
     m_postEffectZShadowDebugLightDepthEnabled = enabled;
 }
 
+void Render::SetPostEffectDepthBufferShadowMeshMixManagerReceiverEnabled(const bool enabled)
+{
+    m_postEffectZShadowMeshMixManagerReceiverEnabled = enabled;
+    m_postEffectZShadow.SetMeshMixManagerReceiverEnabled(enabled);
+}
+
 float Render::GetPostEffectSaturate() const { return m_postEffectSaturateLevel; }
 bool Render::IsPostEffectSaturateEnabled() const { return m_postEffectSaturateEnabled; }
 bool Render::IsPostEffectGaussianFilterEnabled() const { return m_postEffectGaussEnabled; }
@@ -5666,6 +5683,7 @@ float Render::GetPostEffectMotionBlurCameraMaxBlurPixels() const { return m_moti
 int Render::GetPostEffectMotionBlurCameraSampleCount() const { return m_motionBlurCameraSampleCount; }
 bool Render::IsPostEffectDepthBufferShadowEnabled() const { return m_postEffectZShadowEnabled; }
 bool Render::IsPostEffectDepthBufferShadowDebugLightDepthEnabled() const { return m_postEffectZShadowDebugLightDepthEnabled; }
+bool Render::IsPostEffectDepthBufferShadowMeshMixManagerReceiverEnabled() const { return m_postEffectZShadowMeshMixManagerReceiverEnabled; }
 float Render::GetPostEffectDepthBufferShadowIntensity() const { return m_postEffectDepthBufferShadowIntensity; }
 float Render::GetPostEffectDepthBufferShadowSaturationBoost() const { return m_postEffectDepthBufferShadowSaturationBoost; }
 float Render::GetPostEffectDepthBufferShadowCoverage() const { return m_postEffectDepthBufferShadowCoverage; }
