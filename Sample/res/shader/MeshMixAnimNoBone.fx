@@ -30,6 +30,7 @@ float  g_pointLightShape[16];
 float  g_pointLightLineLength[16];
 float  g_pointLightSquareWidth[16];
 float  g_pointLightSquareHeight[16];
+float  g_pointLightRange[16];
 float4 g_pointLightRotation[16];
 float3 g_pointLightColor[16];
 
@@ -158,6 +159,7 @@ float3 ClosestPointOnPointLightShape(float3 lightPos,
 
 void AccumulateSingleLightSample(float3 samplePos,
                                  float sampleBrightness,
+                                 float sampleRange,
                                  float3 lightColor,
                                  float3 worldPos,
                                  float3 normal,
@@ -172,7 +174,12 @@ void AccumulateSingleLightSample(float3 samplePos,
     float NdotL = saturate(dot(normal, L));
     float3 H = normalize(L + cameraDirWS);
     float NdotH = saturate(dot(normal, H));
-    float atten = saturate(1.0 / max(dist, 1e-6));
+    float fadeStart = sampleRange * 0.5f;
+    float fadeLength = max(sampleRange - fadeStart, 1e-6f);
+    float fadeProgress = saturate((dist - fadeStart) / fadeLength);
+    float smoothFade = fadeProgress * fadeProgress * (3.0f - 2.0f * fadeProgress);
+    float rangeFalloff = 1.0f - smoothFade;
+    float atten = saturate(1.0f / max(dist, 1e-6f)) * rangeFalloff;
 
     float diff = sampleBrightness * atten * NdotL;
     float spec = 0.0f;
@@ -367,6 +374,7 @@ void PixelShaderPointLight(in  float4 inPosition    : POSITION,
         float3 sampleSpecular = 0.0f;
         AccumulateSingleLightSample(lightSurfacePos,
                                     g_pointLightBrightness[i],
+                                    g_pointLightRange[i],
                                     g_pointLightColor[i],
                                     inPosWorld,
                                     N,
