@@ -16,6 +16,10 @@ public:
 
     static std::wstring GetExeDir();
 
+    static void WriteDebugAndFileLog(const std::wstring& fileName,
+                                     const std::wstring& source,
+                                     const std::wstring& message);
+
     // 値一致で削除：c から value をすべて取り除く（戻り値なし）
     template <class Seq, class T>
     static void Remove(Seq& c, const T& value)

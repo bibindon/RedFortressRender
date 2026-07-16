@@ -1,6 +1,7 @@
 ﻿#include "MeshMix2Hierarchy.h"
 
 #include "Common.h"
+#include "CustomXLoader.h"
 #include "Util.h"
 
 #include <stdexcept>
@@ -95,6 +96,9 @@ STDMETHODIMP MeshMix2MeshAlloc::CreateMeshContainer(LPCSTR meshName,
 
         if (FAILED(result))
         {
+            CUSTOM_X_LOADER_LOG(L"MeshMix2 allocator failed: CloneMeshFVF. Mesh=" +
+                                Util::Utf8ToWstring(meshName) +
+                                L" HR=" + FormatHRESULT(result));
             return E_FAIL;
         }
 
@@ -127,6 +131,9 @@ STDMETHODIMP MeshMix2MeshAlloc::CreateMeshContainer(LPCSTR meshName,
                                                      &tangentMesh);
     if (FAILED(result) || tangentMesh == nullptr)
     {
+        CUSTOM_X_LOADER_LOG(L"MeshMix2 allocator failed: tangent CloneMesh. Mesh=" +
+                            Util::Utf8ToWstring(meshName) +
+                            L" HR=" + FormatHRESULT(result));
         return E_FAIL;
     }
 
@@ -134,6 +141,9 @@ STDMETHODIMP MeshMix2MeshAlloc::CreateMeshContainer(LPCSTR meshName,
     result = tangentMesh->GenerateAdjacency(1e-6f, tangentAdjacency.data());
     if (FAILED(result))
     {
+        CUSTOM_X_LOADER_LOG(L"MeshMix2 allocator failed: tangent GenerateAdjacency. Mesh=" +
+                            Util::Utf8ToWstring(meshName) +
+                            L" HR=" + FormatHRESULT(result));
         SAFE_RELEASE(tangentMesh);
         return E_FAIL;
     }
@@ -156,6 +166,9 @@ STDMETHODIMP MeshMix2MeshAlloc::CreateMeshContainer(LPCSTR meshName,
                                        nullptr);
     if (FAILED(result))
     {
+        CUSTOM_X_LOADER_LOG(L"MeshMix2 allocator failed: D3DXComputeTangentFrameEx. Mesh=" +
+                            Util::Utf8ToWstring(meshName) +
+                            L" HR=" + FormatHRESULT(result));
         SAFE_RELEASE(tangentMesh);
         return E_FAIL;
     }

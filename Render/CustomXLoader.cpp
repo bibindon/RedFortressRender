@@ -16,8 +16,9 @@
 namespace NSRender
 {
 
-void WriteMeshMixSkinAnimLoadLog(const std::wstring& /*message*/)
+void WriteMeshMixSkinAnimLoadLog(const std::wstring& message)
 {
+    Util::WriteDebugAndFileLog(L"CustomXLoader.log", L"CustomXLoader", message);
 }
 
 std::wstring FormatHRESULT(const HRESULT hr)
@@ -1220,6 +1221,11 @@ bool CreateCustomXMeshContainer(const std::string& meshName,
         meshData.positions.empty() || meshData.faces.empty() ||
         meshData.materials.empty())
     {
+        CUSTOM_X_LOADER_LOG(L"Custom mesh container rejected invalid input. Mesh=" +
+                            AnsiTextToWideText(meshName) +
+                            L" Vertices=" + std::to_wstring(meshData.positions.size()) +
+                            L" Faces=" + std::to_wstring(meshData.faces.size()) +
+                            L" Materials=" + std::to_wstring(meshData.materials.size()));
         return false;
     }
 
@@ -1248,6 +1254,8 @@ bool CreateCustomXMeshContainer(const std::string& meshName,
 
     if (triangleCount == 0)
     {
+        CUSTOM_X_LOADER_LOG(L"Custom mesh container has no triangles. Mesh=" +
+                            AnsiTextToWideText(meshName));
         return false;
     }
 
@@ -1261,11 +1269,18 @@ bool CreateCustomXMeshContainer(const std::string& meshName,
                                     &mesh);
     if (FAILED(hr) || mesh == nullptr)
     {
+        CUSTOM_X_LOADER_LOG(L"Custom mesh failed: D3DXCreateMeshFVF failed. Mesh=" +
+                            AnsiTextToWideText(meshName) +
+                            L" HR=" + FormatHRESULT(hr) +
+                            L" Vertices=" + std::to_wstring(meshData.positions.size()) +
+                            L" Triangles=" + std::to_wstring(triangleCount));
         return false;
     }
 
     if (!FillCustomXMeshBuffers(meshData, mesh, triangleMaterialIndices))
     {
+        CUSTOM_X_LOADER_LOG(L"Custom mesh failed: buffer fill failed. Mesh=" +
+                            AnsiTextToWideText(meshName));
         SAFE_RELEASE(mesh);
         return false;
     }
@@ -1330,6 +1345,12 @@ bool CreateCustomXMeshContainer(const std::string& meshName,
                                          &adjacency[0],
                                          skinInfo,
                                          meshContainer);
+    if (FAILED(hr) || meshContainer == nullptr || *meshContainer == nullptr)
+    {
+        CUSTOM_X_LOADER_LOG(L"Custom mesh failed: allocator CreateMeshContainer failed. Mesh=" +
+                            AnsiTextToWideText(meshName) +
+                            L" HR=" + FormatHRESULT(hr));
+    }
     if (SUCCEEDED(hr) &&
         meshContainer != nullptr &&
         *meshContainer != nullptr &&
@@ -1897,6 +1918,8 @@ bool ParseCustomXMesh(XTextTokenizer& tokenizer,
                     LPD3DXMESHCONTAINER meshContainer = nullptr;
                     if (!CreateCustomXMeshContainer(meshName, meshData, allocator, &meshContainer))
                     {
+                        CUSTOM_X_LOADER_LOG(L"Custom mesh parse failed while creating container. Mesh=" +
+                                            AnsiTextToWideText(meshName));
                         return false;
                     }
 

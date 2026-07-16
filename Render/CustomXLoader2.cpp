@@ -18,8 +18,9 @@ namespace NSRender
 namespace CustomXLoader2
 {
 
-void WriteMeshMixSkinAnimLoadLog(const std::wstring& /*message*/)
+void WriteMeshMixSkinAnimLoadLog(const std::wstring& message)
 {
+    Util::WriteDebugAndFileLog(L"CustomXLoader.log", L"CustomXLoader2", message);
 }
 
 std::wstring FormatHRESULT(const HRESULT hr)
@@ -3219,7 +3220,7 @@ CustomXSkinningDiagnosticResult DiagnoseCustomXSkinningForTest(const std::wstrin
     DestroyCustomXFrameHierarchyWithAllocator(frameRoot, allocator);
     return result;
 }
-
+
 }
 
 } // namespace NSRender

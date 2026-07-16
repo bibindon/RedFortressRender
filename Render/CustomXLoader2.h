@@ -12,11 +12,7 @@ namespace NSRender
 namespace CustomXLoader2
 {
 
-#ifdef ENABLE_CUSTOM_X_LOADER_LOG
 #define CUSTOM_X_LOADER_LOG(message) WriteMeshMixSkinAnimLoadLog(message)
-#else
-#define CUSTOM_X_LOADER_LOG(message) do { } while (0)
-#endif
 
 enum class CustomXLoadPurpose
 {
@@ -108,7 +104,7 @@ void DestroyCustomXFrameHierarchyWithAllocator(LPD3DXFRAME frame, SkinAnimMeshAl
 int CountCustomXFrames(const LPD3DXFRAME frame);
 
 int CountCustomXMeshContainers(const LPD3DXFRAME frame);
-
+
 }
 
 }

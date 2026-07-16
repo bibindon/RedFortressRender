@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <exception>
 #include <fstream>
 #include <iterator>
@@ -141,9 +142,11 @@ void MeshMix2::Initialize(const bool async)
 void MeshMix2::InitializeInternal()
 {
     const std::wstring meshPath = ResolveRuntimePath(m_meshName);
+    CUSTOM_X_LOADER_LOG(L"MeshMix2 load start. Path=" + meshPath);
     std::ifstream file(meshPath, std::ios::binary);
     if (!file)
     {
+        CUSTOM_X_LOADER_LOG(L"MeshMix2 failed to open file. Path=" + meshPath);
         throw std::runtime_error("MeshMix2 failed to open a Blender 5.1.2 DirectX X file.");
     }
 
@@ -154,6 +157,10 @@ void MeshMix2::InitializeInternal()
                                                                  &m_frameRoot,
                                                                  nullptr,
                                                                  CustomXLoadPurpose::MeshAndAnimation);
+    CUSTOM_X_LOADER_LOG(L"MeshMix2 load result. Path=" + meshPath +
+                        L" HR=" + FormatHRESULT(loadResult) +
+                        L" FrameRoot=" +
+                        std::to_wstring(reinterpret_cast<std::uintptr_t>(m_frameRoot)));
     if (FAILED(loadResult) || m_frameRoot == nullptr)
     {
         throw std::runtime_error("MeshMix2 failed to load a Blender 5.1.2 DirectX X hierarchy.");
