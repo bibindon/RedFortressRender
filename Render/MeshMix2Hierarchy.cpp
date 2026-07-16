@@ -4,10 +4,186 @@
 #include "CustomXLoader.h"
 #include "Util.h"
 
+#include <cmath>
 #include <stdexcept>
 
 namespace NSRender
 {
+namespace
+{
+
+struct TangentVertex
+{
+    D3DXVECTOR3 position;
+    D3DXVECTOR3 normal;
+    D3DXVECTOR2 texcoord;
+    D3DXVECTOR3 tangent;
+    D3DXVECTOR3 binormal;
+};
+
+static_assert(sizeof(TangentVertex) == 56, "Unexpected MeshMix2 tangent vertex layout.");
+
+bool NormalizeVector(D3DXVECTOR3& vector)
+{
+    constexpr float kMinimumLengthSquared = 1.0e-12f;
+    if (D3DXVec3LengthSq(&vector) <= kMinimumLengthSquared)
+    {
+        return false;
+    }
+
+    D3DXVec3Normalize(&vector, &vector);
+    return true;
+}
+
+D3DXVECTOR3 BuildPerpendicularVector(const D3DXVECTOR3& normal)
+{
+    D3DXVECTOR3 referenceAxis(0.0f, 1.0f, 0.0f);
+    if (std::fabs(normal.y) >= 0.999f)
+    {
+        referenceAxis = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
+    }
+
+    D3DXVECTOR3 perpendicular;
+    D3DXVec3Cross(&perpendicular, &referenceAxis, &normal);
+    NormalizeVector(perpendicular);
+    return perpendicular;
+}
+
+HRESULT ComputeTangentFrameFallback(LPD3DXMESH mesh)
+{
+    if (mesh == nullptr ||
+        !(mesh->GetOptions() & D3DXMESH_32BIT) ||
+        mesh->GetNumBytesPerVertex() != sizeof(TangentVertex))
+    {
+        return E_INVALIDARG;
+    }
+
+    TangentVertex* vertices = nullptr;
+    HRESULT result = mesh->LockVertexBuffer(0, reinterpret_cast<void**>(&vertices));
+    if (FAILED(result) || vertices == nullptr)
+    {
+        return E_FAIL;
+    }
+
+    DWORD* indices = nullptr;
+    result = mesh->LockIndexBuffer(D3DLOCK_READONLY, reinterpret_cast<void**>(&indices));
+    if (FAILED(result) || indices == nullptr)
+    {
+        mesh->UnlockVertexBuffer();
+        return E_FAIL;
+    }
+
+    const DWORD vertexCount = mesh->GetNumVertices();
+    const DWORD faceCount = mesh->GetNumFaces();
+    for (DWORD vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex)
+    {
+        vertices[vertexIndex].tangent = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+        vertices[vertexIndex].binormal = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+    }
+
+    bool hasInvalidIndex = false;
+    constexpr float kMinimumUvDeterminant = 1.0e-12f;
+    for (DWORD faceIndex = 0; faceIndex < faceCount; ++faceIndex)
+    {
+        const DWORD indexOffset = faceIndex * 3;
+        const DWORD index0 = indices[indexOffset];
+        const DWORD index1 = indices[indexOffset + 1];
+        const DWORD index2 = indices[indexOffset + 2];
+        if (index0 >= vertexCount || index1 >= vertexCount || index2 >= vertexCount)
+        {
+            hasInvalidIndex = true;
+            break;
+        }
+
+        const TangentVertex& vertex0 = vertices[index0];
+        const TangentVertex& vertex1 = vertices[index1];
+        const TangentVertex& vertex2 = vertices[index2];
+        const D3DXVECTOR3 edge1 = vertex1.position - vertex0.position;
+        const D3DXVECTOR3 edge2 = vertex2.position - vertex0.position;
+        const float deltaU1 = vertex1.texcoord.x - vertex0.texcoord.x;
+        const float deltaV1 = vertex1.texcoord.y - vertex0.texcoord.y;
+        const float deltaU2 = vertex2.texcoord.x - vertex0.texcoord.x;
+        const float deltaV2 = vertex2.texcoord.y - vertex0.texcoord.y;
+        const float determinant = deltaU1 * deltaV2 - deltaV1 * deltaU2;
+
+        D3DXVECTOR3 tangent;
+        D3DXVECTOR3 binormal;
+        if (std::fabs(determinant) > kMinimumUvDeterminant)
+        {
+            const float inverseDeterminant = 1.0f / determinant;
+            tangent = (edge1 * deltaV2 - edge2 * deltaV1) * inverseDeterminant;
+            binormal = (edge2 * deltaU1 - edge1 * deltaU2) * inverseDeterminant;
+        }
+        else
+        {
+            D3DXVECTOR3 faceNormal;
+            D3DXVec3Cross(&faceNormal, &edge1, &edge2);
+            if (!NormalizeVector(faceNormal))
+            {
+                continue;
+            }
+
+            tangent = edge1;
+            const float normalComponent = D3DXVec3Dot(&tangent, &faceNormal);
+            tangent -= faceNormal * normalComponent;
+            if (!NormalizeVector(tangent))
+            {
+                tangent = BuildPerpendicularVector(faceNormal);
+            }
+            D3DXVec3Cross(&binormal, &faceNormal, &tangent);
+        }
+
+        vertices[index0].tangent += tangent;
+        vertices[index1].tangent += tangent;
+        vertices[index2].tangent += tangent;
+        vertices[index0].binormal += binormal;
+        vertices[index1].binormal += binormal;
+        vertices[index2].binormal += binormal;
+    }
+
+    if (!hasInvalidIndex)
+    {
+        for (DWORD vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex)
+        {
+            TangentVertex& vertex = vertices[vertexIndex];
+            D3DXVECTOR3 normal = vertex.normal;
+            if (!NormalizeVector(normal))
+            {
+                normal = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
+            }
+
+            D3DXVECTOR3 tangent = vertex.tangent;
+            const float normalComponent = D3DXVec3Dot(&tangent, &normal);
+            tangent -= normal * normalComponent;
+            if (!NormalizeVector(tangent))
+            {
+                tangent = BuildPerpendicularVector(normal);
+            }
+
+            D3DXVECTOR3 binormal;
+            D3DXVec3Cross(&binormal, &normal, &tangent);
+            if (D3DXVec3Dot(&binormal, &vertex.binormal) < 0.0f)
+            {
+                binormal *= -1.0f;
+            }
+            NormalizeVector(binormal);
+
+            vertex.normal = normal;
+            vertex.tangent = tangent;
+            vertex.binormal = binormal;
+        }
+    }
+
+    mesh->UnlockIndexBuffer();
+    mesh->UnlockVertexBuffer();
+    if (hasInvalidIndex)
+    {
+        return E_FAIL;
+    }
+    return S_OK;
+}
+
+}
 
 MeshMix2MeshAlloc::MeshMix2MeshAlloc(const std::wstring &xFilename)
     : m_xFilename(xFilename)
@@ -166,11 +342,20 @@ STDMETHODIMP MeshMix2MeshAlloc::CreateMeshContainer(LPCSTR meshName,
                                        nullptr);
     if (FAILED(result))
     {
-        CUSTOM_X_LOADER_LOG(L"MeshMix2 allocator failed: D3DXComputeTangentFrameEx. Mesh=" +
+        CUSTOM_X_LOADER_LOG(L"MeshMix2 allocator D3DXComputeTangentFrameEx failed; using fallback. Mesh=" +
                             Util::Utf8ToWstring(meshName) +
                             L" HR=" + FormatHRESULT(result));
-        SAFE_RELEASE(tangentMesh);
-        return E_FAIL;
+        result = ComputeTangentFrameFallback(tangentMesh);
+        if (FAILED(result))
+        {
+            CUSTOM_X_LOADER_LOG(L"MeshMix2 allocator tangent fallback failed. Mesh=" +
+                                Util::Utf8ToWstring(meshName) +
+                                L" HR=" + FormatHRESULT(result));
+            SAFE_RELEASE(tangentMesh);
+            return E_FAIL;
+        }
+        CUSTOM_X_LOADER_LOG(L"MeshMix2 allocator tangent fallback succeeded. Mesh=" +
+                            Util::Utf8ToWstring(meshName));
     }
 
     SAFE_RELEASE(m_container->MeshData.pMesh);
