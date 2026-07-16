@@ -48,6 +48,7 @@
     <FxCompile Include="..\Render\shader\MeshMix.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
+    <FxCompile Include="..\Render\shader\MeshMix2.fx" />
     <FxCompile Include="..\Render\shader\MeshMixSkinAnim.fx">
       <Filter>リソース ファイル</Filter>
     </FxCompile>

@@ -18,6 +18,8 @@ const wchar_t* LoadedModelTypeToText(const RenderSettingsDialogState::LoadedMode
     {
     case RenderSettingsDialogState::LoadedModelType::MeshMix:
         return L"MeshMix";
+    case RenderSettingsDialogState::LoadedModelType::MeshMix2:
+        return L"MeshMix2";
     case RenderSettingsDialogState::LoadedModelType::MeshPBR:
         return L"MeshPBR";
     case RenderSettingsDialogState::LoadedModelType::MeshInstancing:
@@ -67,6 +69,8 @@ RenderSettingsDialogState::LoadedModelType ToDialogLoadedModelType(const RenderL
     {
     case RenderLoadedModelType::MeshMix:
         return RenderSettingsDialogState::LoadedModelType::MeshMix;
+    case RenderLoadedModelType::MeshMix2:
+        return RenderSettingsDialogState::LoadedModelType::MeshMix2;
     case RenderLoadedModelType::MeshPBR:
         return RenderSettingsDialogState::LoadedModelType::MeshPBR;
     case RenderLoadedModelType::MeshInstancing:
@@ -439,6 +443,9 @@ void RemoveSelectedLoadedModel(HWND hWnd)
     case RenderSettingsDialogState::LoadedModelType::MeshMix:
         removed = state->render->RemoveMeshMix(record.renderId);
         break;
+    case RenderSettingsDialogState::LoadedModelType::MeshMix2:
+        removed = state->render->RemoveMeshMix2(record.renderId);
+        break;
     case RenderSettingsDialogState::LoadedModelType::MeshPBR:
         removed = state->render->RemoveMeshPBR(record.renderId);
         break;
@@ -456,7 +463,8 @@ void RemoveSelectedLoadedModel(HWND hWnd)
         return;
     }
     state->loadedModels.erase(state->loadedModels.begin() + index);
-    if (record.type != RenderSettingsDialogState::LoadedModelType::MeshInstancing)
+    if (record.type != RenderSettingsDialogState::LoadedModelType::MeshInstancing &&
+        record.type != RenderSettingsDialogState::LoadedModelType::MeshMix2)
     {
         AdjustLoadedModelIdsAfterRemove(state, record.type, record.renderId);
     }

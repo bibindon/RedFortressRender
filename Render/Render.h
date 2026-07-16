@@ -122,6 +122,7 @@ struct RenderingQualitySettings
 enum class RenderLoadedModelType
 {
     MeshMix,
+    MeshMix2,
     MeshPBR,
     MeshInstancing,
     MeshMixSkinAnim

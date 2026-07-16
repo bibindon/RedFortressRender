@@ -2301,6 +2301,7 @@ void Render::Finalize()
     m_settingsDialog.Finalize();
 
     MeshMixManager::SetSharedThicknessTexture(NULL);
+    MeshMix2::SetSharedThicknessTexture(NULL);
 
     m_postEffectZShadow.Finalize();
     m_postEffectSSGI.Finalize();
@@ -2559,10 +2560,12 @@ void Render::Draw()
                        &pTexTempThickness,
                        &pTexTempBackDepth);
         MeshMixManager::SetSharedThicknessTexture(pTexTempThickness);
+        MeshMix2::SetSharedThicknessTexture(pTexTempThickness);
     }
     else
     {
         MeshMixManager::SetSharedThicknessTexture(NULL);
+        MeshMix2::SetSharedThicknessTexture(NULL);
     }
     const auto gBufferEndTime = ProfileClock::now();
     m_lastFrameProfile.gBufferMilliseconds =
@@ -2574,9 +2577,12 @@ void Render::Draw()
     D3DXMatrixIdentity(&mirrorViewProj);
     MeshMixManager::SetSharedMirrorTexture(NULL);
     MeshMixManager::SetSharedMirrorViewProj(mirrorViewProj);
+    MeshMix2::SetSharedMirrorTexture(NULL);
+    MeshMix2::SetSharedMirrorViewProj(mirrorViewProj);
     if (activeMirrorMeshIndex >= 0 && RenderMirrorTexture(activeMirrorMeshIndex))
     {
         MeshMixManager::SetSharedMirrorTexture(m_pMirrorRenderTarget);
+        MeshMix2::SetSharedMirrorTexture(m_pMirrorRenderTarget);
     }
     else
     {
@@ -3343,7 +3349,8 @@ int Render::AddMeshMix2(const std::wstring& filePath,
                         const float scale,
                         const bool async)
 {
-    MeshMix2Param param;
+    stMeshParam param = GetMeshParamPreset(eMeshParamPreset::GRASS);
+    param.smooth = false;
     param.saturateShadow = m_meshMixSaturateShadowEnabled;
     param.saturateShadowIntensity = m_meshMixSaturateShadowIntensity;
     param.shadowDarkness = m_meshMixShadowDarkness;
@@ -3351,6 +3358,12 @@ int Render::AddMeshMix2(const std::wstring& filePath,
     param.specularEdge = m_meshMixSpecularEdge;
     param.specularIntensityOverrideEnabled = m_meshMixSpecularIntensityOverrideEnabled;
     param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
+    param.fresnelIntensity = m_meshMixFresnelIntensity;
+    param.cubeMappingRate = m_meshMixCubeMappingRate;
+    param.sss = m_meshMixSSSEnabled;
+    param.sssIntensity = m_meshMixSSSIntensity;
+    param.sssColor = m_meshMixSSSColor;
+    param.treatTextureAsWhite = m_phongTreatTextureAsWhiteEnabled;
 
     MeshMix2* mesh = NEW MeshMix2(filePath, pos, rot, scale, param);
     try
@@ -4117,6 +4130,23 @@ std::vector<RenderLoadedModelInfo> Render::GetLoadedModelInfoList()
         models.push_back(info);
     }
 
+    for (int i = 0; i < static_cast<int>(m_meshMix2List.size()); ++i)
+    {
+        const MeshMix2* mesh = m_meshMix2List.at(i);
+        if (mesh == nullptr)
+        {
+            continue;
+        }
+
+        RenderLoadedModelInfo info;
+        info.type = RenderLoadedModelType::MeshMix2;
+        info.renderId = i;
+        info.filePath = mesh->GetMeshName();
+        info.scale = mesh->GetScale();
+        info.pos = mesh->GetPos();
+        models.push_back(info);
+    }
+
     int instancingIndex = 0;
     for (const auto& mesh : m_meshInstancingMap)
     {
@@ -4186,6 +4216,14 @@ void Render::SetMeshMixSaturateShadow(const bool enabled)
         }
     }
 
+    for (auto* mesh : m_meshMix2List)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->SetSaturateShadow(enabled);
+        }
+    }
+
     for (auto& mesh : m_meshMixSkinAnimList)
     {
         if (mesh != nullptr)
@@ -4204,6 +4242,14 @@ void Render::SetMeshMixSaturateShadowIntensity(const float intensity)
         if (IsMeshMixSlotUsed(i))
         {
             m_meshMixList.at(i).SetSaturateShadowIntensity(intensity);
+        }
+    }
+
+    for (auto* mesh : m_meshMix2List)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->SetSaturateShadowIntensity(intensity);
         }
     }
 
@@ -4228,6 +4274,14 @@ void Render::SetMeshMixShadowDarkness(const float darkness)
         }
     }
 
+    for (auto* mesh : m_meshMix2List)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->SetShadowDarkness(darkness);
+        }
+    }
+
     for (auto& mesh : m_meshMixSkinAnimList)
     {
         if (mesh != nullptr)
@@ -4246,6 +4300,14 @@ void Render::SetMeshMixSpecularIntensity(const float intensity)
         if (IsMeshMixSlotUsed(i))
         {
             m_meshMixList.at(i).SetSpecularIntensity(intensity);
+        }
+    }
+
+    for (auto* mesh : m_meshMix2List)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->SetSpecularIntensity(intensity);
         }
     }
 
@@ -4270,6 +4332,14 @@ void Render::SetMeshMixSpecularEdge(const float edge)
         }
     }
 
+    for (auto* mesh : m_meshMix2List)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->SetSpecularEdge(edge);
+        }
+    }
+
     for (auto& mesh : m_meshMixSkinAnimList)
     {
         if (mesh != nullptr)
@@ -4291,6 +4361,14 @@ void Render::SetMeshMixFresnelIntensity(const float intensity)
         }
     }
 
+    for (auto* mesh : m_meshMix2List)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->SetFresnelIntensity(m_meshMixFresnelIntensity);
+        }
+    }
+
     for (auto& mesh : m_meshMixSkinAnimList)
     {
         if (mesh != nullptr)
@@ -4309,6 +4387,14 @@ void Render::SetMeshMixEnvMapBlend(const float blend)
         if (IsMeshMixSlotUsed(i))
         {
             m_meshMixList.at(i).SetCubeMappingRate(blend);
+        }
+    }
+
+    for (auto* mesh : m_meshMix2List)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->SetCubeMappingRate(blend);
         }
     }
 
@@ -4404,6 +4490,14 @@ void Render::SetMeshMixSpecularIntensityOverrideEnabled(const bool enabled)
         }
     }
 
+    for (auto* mesh : m_meshMix2List)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->SetSpecularIntensityOverrideEnabled(enabled);
+        }
+    }
+
     for (auto& mesh : m_meshMixSkinAnimList)
     {
         if (mesh != nullptr)
@@ -4422,6 +4516,14 @@ void Render::SetMeshMixSpecularEdgeOverrideEnabled(const bool enabled)
         if (IsMeshMixSlotUsed(i))
         {
             m_meshMixList.at(i).SetSpecularEdgeOverrideEnabled(enabled);
+        }
+    }
+
+    for (auto* mesh : m_meshMix2List)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->SetSpecularEdgeOverrideEnabled(enabled);
         }
     }
 
@@ -4446,6 +4548,14 @@ void Render::SetPhongTreatTextureAsWhite(const bool enabled)
         }
     }
 
+    for (auto* mesh : m_meshMix2List)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->SetTreatTextureAsWhite(enabled);
+        }
+    }
+
     for (auto& mesh : m_meshMixSkinAnimList)
     {
         if (mesh != nullptr)
@@ -4466,6 +4576,14 @@ void Render::SetMeshMixSSS(const bool enabled)
             m_meshMixList.at(i).SetSSS(enabled);
         }
     }
+
+    for (auto* mesh : m_meshMix2List)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->SetSSS(enabled);
+        }
+    }
 }
 
 void Render::SetMeshMixSSSIntensity(const float intensity)
@@ -4479,6 +4597,14 @@ void Render::SetMeshMixSSSIntensity(const float intensity)
             m_meshMixList.at(i).SetSSSIntensity(intensity);
         }
     }
+
+    for (auto* mesh : m_meshMix2List)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->SetSSSIntensity(intensity);
+        }
+    }
 }
 
 void Render::SetMeshMixSSSColor(const DWORD color)
@@ -4490,6 +4616,14 @@ void Render::SetMeshMixSSSColor(const DWORD color)
         if (IsMeshMixSlotUsed(i))
         {
             m_meshMixList.at(i).SetSSSColor(color);
+        }
+    }
+
+    for (auto* mesh : m_meshMix2List)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->SetSSSColor(color);
         }
     }
 }
@@ -4570,6 +4704,7 @@ void Render::SetGBufferEnable(const bool enabled)
     if (!m_gBufferEnabled)
     {
         MeshMixManager::SetSharedThicknessTexture(NULL);
+        MeshMix2::SetSharedThicknessTexture(NULL);
         m_GBuffer.Finalize();
     }
 }
@@ -6454,14 +6589,17 @@ bool Render::RenderMirrorTexture(const int activeMirrorMeshIndex)
 
     const D3DXMATRIX mirrorViewProj = Camera::GetViewMatrix() * Camera::GetProjMatrix();
     MeshMixManager::SetSharedMirrorViewProj(mirrorViewProj);
+    MeshMix2::SetSharedMirrorViewProj(mirrorViewProj);
 
     MeshMixManager::SetSharedMirrorClipPlane(true, clipPlane);
+    MeshMix2::SetSharedMirrorClipPlane(true, clipPlane);
     MeshMixSkinAnim::SetSharedMirrorClipPlane(true, clipPlane);
 
     DrawPass1(false, activeMirrorMeshIndex);
 
     const D3DXVECTOR4 disabledClipPlane(0.0f, 1.0f, 0.0f, 0.0f);
     MeshMixManager::SetSharedMirrorClipPlane(false, disabledClipPlane);
+    MeshMix2::SetSharedMirrorClipPlane(false, disabledClipPlane);
     MeshMixSkinAnim::SetSharedMirrorClipPlane(false, disabledClipPlane);
 
     Camera::SetEyePos(originalEye);

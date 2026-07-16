@@ -23,6 +23,7 @@ struct RenderSettingsDialogState
     enum class LoadedModelType
     {
         MeshMix,
+        MeshMix2,
         MeshPBR,
         MeshInstancing,
         MeshMixSkinAnim

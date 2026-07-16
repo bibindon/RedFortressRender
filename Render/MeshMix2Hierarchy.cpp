@@ -110,6 +110,59 @@ STDMETHODIMP MeshMix2MeshAlloc::CreateMeshContainer(LPCSTR meshName,
         meshData->pMesh->AddRef();
     }
 
+    D3DVERTEXELEMENT9 tangentDeclaration[] =
+    {
+        { 0, 0, D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0 },
+        { 0, 12, D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_NORMAL, 0 },
+        { 0, 24, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0 },
+        { 0, 32, D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TANGENT, 0 },
+        { 0, 44, D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_BINORMAL, 0 },
+        D3DDECL_END()
+    };
+
+    LPD3DXMESH tangentMesh = nullptr;
+    result = m_container->MeshData.pMesh->CloneMesh(D3DXMESH_MANAGED | D3DXMESH_32BIT,
+                                                     tangentDeclaration,
+                                                     Common::D3DDevice(),
+                                                     &tangentMesh);
+    if (FAILED(result) || tangentMesh == nullptr)
+    {
+        return E_FAIL;
+    }
+
+    std::vector<DWORD> tangentAdjacency(tangentMesh->GetNumFaces() * 3);
+    result = tangentMesh->GenerateAdjacency(1e-6f, tangentAdjacency.data());
+    if (FAILED(result))
+    {
+        SAFE_RELEASE(tangentMesh);
+        return E_FAIL;
+    }
+
+    result = D3DXComputeTangentFrameEx(tangentMesh,
+                                       D3DDECLUSAGE_TEXCOORD,
+                                       0,
+                                       D3DDECLUSAGE_TANGENT,
+                                       0,
+                                       D3DDECLUSAGE_BINORMAL,
+                                       0,
+                                       D3DDECLUSAGE_NORMAL,
+                                       0,
+                                       D3DXTANGENT_WEIGHT_BY_AREA | D3DXTANGENT_GENERATE_IN_PLACE,
+                                       tangentAdjacency.data(),
+                                       0.01f,
+                                       0.01f,
+                                       0.0f,
+                                       nullptr,
+                                       nullptr);
+    if (FAILED(result))
+    {
+        SAFE_RELEASE(tangentMesh);
+        return E_FAIL;
+    }
+
+    SAFE_RELEASE(m_container->MeshData.pMesh);
+    m_container->MeshData.pMesh = tangentMesh;
+
     DWORD adjacency_count = meshData->pMesh->GetNumFaces() * 3;
     m_container->pAdjacency = NEW DWORD[adjacency_count];
 

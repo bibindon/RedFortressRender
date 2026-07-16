@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Common.h"
+#include "MeshMix.h"
 #include "MeshMix2Hierarchy.h"
 
 #include <atomic>
@@ -9,28 +10,19 @@
 namespace NSRender
 {
 
-struct MeshMix2Param
-{
-    bool saturateShadow = true;
-    float saturateShadowIntensity = 1.2f;
-    float shadowDarkness = 1.0f;
-    float specularIntensity = 0.0f;
-    float specularEdge = 0.0f;
-    bool specularIntensityOverrideEnabled = false;
-    bool specularEdgeOverrideEnabled = false;
-    bool treatTextureAsWhite = false;
-    bool shadow = true;
-    bool ssao = true;
-};
-
 class MeshMix2 : public IDeviceResettable
 {
 public:
+    static void SetSharedThicknessTexture(LPDIRECT3DTEXTURE9 texture);
+    static void SetSharedMirrorTexture(LPDIRECT3DTEXTURE9 texture);
+    static void SetSharedMirrorViewProj(const D3DXMATRIX& matrix);
+    static void SetSharedMirrorClipPlane(bool enabled, const D3DXVECTOR4& plane);
+
     MeshMix2(const std::wstring& filename,
              const D3DXVECTOR3& pos,
              const D3DXVECTOR3& rotate,
              float scale,
-             const MeshMix2Param& param);
+             const stMeshParam& param);
     ~MeshMix2();
 
     MeshMix2(const MeshMix2&) = delete;
@@ -40,7 +32,7 @@ public:
     void WaitForLoad();
     void Finalize();
 
-    void Render();
+    void Render(bool renderAsMirrorSurface = false);
     void RenderToEffect(LPD3DXEFFECT effect);
     void RenderToEffect(LPD3DXEFFECT effect, const D3DXMATRIX& viewProjectionMatrix);
 
@@ -54,9 +46,14 @@ public:
     void SetShadowDarkness(float darkness);
     void SetSpecularIntensity(float intensity);
     void SetSpecularEdge(float edge);
+    void SetFresnelIntensity(float intensity);
+    void SetCubeMappingRate(float rate);
     void SetSpecularIntensityOverrideEnabled(bool enabled);
     void SetSpecularEdgeOverrideEnabled(bool enabled);
     void SetTreatTextureAsWhite(bool enabled);
+    void SetSSS(bool enabled);
+    void SetSSSIntensity(float intensity);
+    void SetSSSColor(DWORD color);
 
     D3DXVECTOR3 GetPos() const;
     D3DXVECTOR3 GetRot() const;
@@ -73,7 +70,7 @@ public:
     void OnDeviceReset() override;
 
 private:
-    static constexpr const wchar_t* kShaderFilename = L".\\MeshMixAnimNoBone.cso";
+    static constexpr const wchar_t* kShaderFilename = L".\\MeshMix2.cso";
 
     std::wstring m_meshName;
     MeshMix2MeshAlloc m_allocator;
@@ -89,7 +86,7 @@ private:
     bool m_enabled = true;
     bool m_damageFlash = false;
     bool m_deviceResourceRegistered = false;
-    MeshMix2Param m_param;
+    stMeshParam m_param;
     std::thread m_loadThread;
 
     void InitializeInternal();
@@ -99,12 +96,14 @@ private:
     void RenderFrameHierarchy(LPD3DXFRAME frame,
                               LPD3DXEFFECT effect,
                               const D3DXMATRIX& viewProjectionMatrix,
-                              bool configureMaterial);
+                              bool configureMaterial,
+                              bool renderAsMirrorSurface);
     void RenderMeshContainer(const MeshMix2Frame& frame,
                              MeshMix2MeshContainer& container,
                              LPD3DXEFFECT effect,
                              const D3DXMATRIX& viewProjectionMatrix,
-                             bool configureMaterial);
+                             bool configureMaterial,
+                             bool renderAsMirrorSurface);
     void CalculateRadius(LPD3DXFRAME frame, float& maxDistanceSquared) const;
     D3DXMATRIX BuildWorldMatrix() const;
 };

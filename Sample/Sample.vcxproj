@@ -224,6 +224,7 @@ exit /B %ERRORLEVEL%</Command>
     <FxCompile Include="..\Render\shader\GBuffer.fx" />
     <FxCompile Include="..\Render\shader\MeshInstancing.fx" />
     <FxCompile Include="..\Render\shader\MeshMix.fx" />
+    <FxCompile Include="..\Render\shader\MeshMix2.fx" />
     <FxCompile Include="..\Render\shader\MeshPBR.fx" />
     <FxCompile Include="..\Render\shader\MeshMixSkinAnim.fx" />
     <FxCompile Include="..\Render\shader\MeshNoLighting.fx" />
