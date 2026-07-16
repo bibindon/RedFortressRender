@@ -264,7 +264,7 @@ bool HandleSampleKeyDown(HWND hWnd, const WPARAM wParam)
 
     if (wParam == 'M' && !shift && !control)
     {
-        SpawnMeshMixAtLookAt(L"..\\..\\Sample\\res\\model2\\monkey.blend.x");
+        SpawnMeshMix2AtLookAt(L"..\\..\\Sample\\res\\model2\\monkey.blend.x");
     }
     else if (wParam == 'M' && shift && control)
     {

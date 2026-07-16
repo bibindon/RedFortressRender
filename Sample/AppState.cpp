@@ -1375,10 +1375,8 @@ void SpawnMeshAtLookAt(const std::wstring& filePath)
     SpawnMeshAtTransform(filePath, pos, D3DXToDegree(yaw));
 }
 
-void SpawnMeshMixAtLookAt(const std::wstring& filePath)
+void SpawnMeshMix2AtLookAt(const std::wstring& filePath)
 {
-    // MeshMix は現在選択中の shader mode に応じて
-    // POM / NormalMapping の切り替えを伴って生成される。
     if (filePath.empty())
     {
         return;
@@ -1390,7 +1388,8 @@ void SpawnMeshMixAtLookAt(const std::wstring& filePath)
 
     const float yaw = atan2f(forward.x, forward.z);
     const D3DXVECTOR3 rot(0.0f, yaw, 0.0f);
-    SpawnMeshMixAtTransform(filePath, pos, rot);
+    const int renderId = g_Render.AddMeshMix2(filePath, pos, rot, g_modelLoadScale);
+    RegisterLoadedModel(L"MeshMix2", filePath, pos, g_modelLoadScale, renderId);
 }
 
 void SpawnMeshPBRAtLookAt(const std::wstring& filePath)

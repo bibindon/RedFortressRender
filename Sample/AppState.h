@@ -643,7 +643,7 @@ void RegisterLoadedModel(const std::wstring& type,
 bool RemoveLoadedModel(size_t modelIndex);
 
 void SpawnMeshAtLookAt(const std::wstring& filePath);
-void SpawnMeshMixAtLookAt(const std::wstring& filePath);
+void SpawnMeshMix2AtLookAt(const std::wstring& filePath);
 void SpawnMeshPBRAtLookAt(const std::wstring& filePath);
 void SpawnMeshInstancingAtLookAt(const std::wstring& filePath);
 void SpawnAnimMeshAtLookAt(const std::wstring& filePath);
