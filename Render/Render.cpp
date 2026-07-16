@@ -3443,6 +3443,18 @@ void Render::SetMeshMix2Pos(const int id, const D3DXVECTOR3& pos)
     m_meshMix2List.at(id)->SetPos(pos);
 }
 
+D3DXVECTOR3 Render::GetMeshMix2Pos(const int id) const
+{
+    if (id < 0 ||
+        id >= static_cast<int>(m_meshMix2List.size()) ||
+        m_meshMix2List.at(id) == nullptr)
+    {
+        return D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+    }
+
+    return m_meshMix2List.at(id)->GetPos();
+}
+
 bool Render::IsMeshMixSlotUsed(const int id) const
 {
     if (id < 0 ||

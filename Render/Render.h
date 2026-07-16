@@ -296,6 +296,7 @@ public:
                     bool async = true);
     bool RemoveMeshMix2(int id);
     void SetMeshMix2Pos(int id, const D3DXVECTOR3& pos);
+    D3DXVECTOR3 GetMeshMix2Pos(int id) const;
     bool LoadXFileListFromCsv(const std::wstring& csvPath,
                               const float scale = 1.0f,
                               int* loadedCount = nullptr,
