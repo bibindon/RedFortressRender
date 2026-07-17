@@ -7216,6 +7216,7 @@ void Render::StartFadeIn(const float durationSeconds)
     }
 
     m_fadeDuration = durationSeconds;
+    m_fadeAlpha = 1.0f;
     m_fadeStartAlpha = 1.0f;
     m_fadeTargetAlpha = 0.0f;
     m_fadeElapsed = 0.0f;
@@ -7232,6 +7233,7 @@ void Render::StartFadeOut(const float durationSeconds)
     }
 
     m_fadeDuration = durationSeconds;
+    m_fadeAlpha = 0.0f;
     m_fadeStartAlpha = 0.0f;
     m_fadeTargetAlpha = 1.0f;
     m_fadeElapsed = 0.0f;
