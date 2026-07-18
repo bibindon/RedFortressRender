@@ -41,12 +41,25 @@ HWND CreateSettingsCheckbox(HWND parent, int id, const wchar_t* text, int x, int
     SetDefaultGuiFont(control);
     return control;
 }
-HWND CreateSettingsRadio(HWND parent, int id, const wchar_t* text, int x, int y, int w, int h)
+HWND CreateSettingsRadio(HWND parent,
+                         int id,
+                         const wchar_t* text,
+                         int x,
+                         int y,
+                         int w,
+                         int h,
+                         const bool beginGroup)
 {
+    DWORD style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON;
+    if (beginGroup)
+    {
+        style |= WS_GROUP;
+    }
+
     HWND control = CreateWindowExW(0,
                                    L"BUTTON",
                                    text,
-                                   WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON,
+                                   style,
                                    x,
                                    y,
                                    w,
@@ -334,7 +347,7 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     constexpr int width = 494;
     int y = 12;
     CreateSettingsStatic(hWnd, L"Window Mode", left, y + 3, 120, 20);
-    HWND windowRadio = CreateSettingsRadio(hWnd, IDC_RENDER_SETTINGS_WINDOW_MODE_WINDOW, L"Window", 158, y, 72, 22);
+    HWND windowRadio = CreateSettingsRadio(hWnd, IDC_RENDER_SETTINGS_WINDOW_MODE_WINDOW, L"Window", 158, y, 72, 22, true);
     CreateSettingsRadio(hWnd, IDC_RENDER_SETTINGS_WINDOW_MODE_BORDERLESS, L"Borderless", 232, y, 88, 22);
     CreateSettingsRadio(hWnd, IDC_RENDER_SETTINGS_WINDOW_MODE_FULLSCREEN, L"Fullscreen", 328, y, 96, 22);
     SendMessage(windowRadio, BM_SETCHECK, BST_CHECKED, 0);
@@ -400,7 +413,7 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     CreateSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_FOG_ENABLE, L"Fog", 264, y + 18, 62, 22);
     CreateSettingsCheckbox(hWnd, 31008, L"Height Fog", 344, y + 18, 104, 22);
     CreateSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_SATURATE_ENABLE, L"Saturate Filter", 22, y + 40, 116, 22);
-    CreateSettingsRadio(hWnd, 31009, L"DOF Off", 160, y + 40, 72, 22);
+    CreateSettingsRadio(hWnd, 31009, L"DOF Off", 160, y + 40, 72, 22, true);
     CreateSettingsRadio(hWnd, 31010, L"DOF On", 234, y + 40, 72, 22);
     CreateSettingsRadio(hWnd, 31011, L"DOF Aut", 306, y + 40, 76, 22);
     SendDlgItemMessage(hWnd, 31009, BM_SETCHECK, BST_CHECKED, 0);
@@ -912,6 +925,44 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     SetSettingsTrackbarRange(hWnd, 32143, 0, 100);
     SetSettingsTrackbarRange(hWnd, 32150, 0, 1000);
     SetSettingsTrackbarRange(hWnd, 32151, 0, 1000);
+
+    CreateSettingsGroupBox(hWnd, L"GBuffer Texture Formats", 8, y, 504, 184);
+    const wchar_t* textureLabels[] = {
+        L"Depth", L"Fog Depth", L"World Position", L"Normal", L"Thickness", L"Back Depth"
+    };
+    const int firstFormatIds[] = {
+        IDC_RENDER_SETTINGS_GBUFFER_DEPTH_R32F,
+        IDC_RENDER_SETTINGS_GBUFFER_FOG_DEPTH_R32F,
+        IDC_RENDER_SETTINGS_GBUFFER_POSITION_RGBA16F,
+        IDC_RENDER_SETTINGS_GBUFFER_NORMAL_RGBA16F,
+        IDC_RENDER_SETTINGS_GBUFFER_THICKNESS_RGBA16F,
+        IDC_RENDER_SETTINGS_GBUFFER_BACK_DEPTH_R32F
+    };
+    const int secondFormatIds[] = {
+        IDC_RENDER_SETTINGS_GBUFFER_DEPTH_R16F,
+        IDC_RENDER_SETTINGS_GBUFFER_FOG_DEPTH_R16F,
+        IDC_RENDER_SETTINGS_GBUFFER_POSITION_ABGR8,
+        IDC_RENDER_SETTINGS_GBUFFER_NORMAL_ABGR8,
+        IDC_RENDER_SETTINGS_GBUFFER_THICKNESS_ABGR8,
+        IDC_RENDER_SETTINGS_GBUFFER_BACK_DEPTH_R16F
+    };
+    for (int i = 0; i < 6; ++i)
+    {
+        const int formatY = y + 20 + i * 26;
+        const bool scalarFormat = i < 2 || i == 5;
+        const wchar_t* firstLabel = L"A16B16G16R16F";
+        const wchar_t* secondLabel = L"ABGR8";
+        if (scalarFormat)
+        {
+            firstLabel = L"R32F";
+            secondLabel = L"R16F";
+        }
+
+        CreateSettingsStatic(hWnd, textureLabels[i], 24, formatY + 3, 126, 20);
+        CreateSettingsRadio(hWnd, firstFormatIds[i], firstLabel, 158, formatY, 166, 22, true);
+        CreateSettingsRadio(hWnd, secondFormatIds[i], secondLabel, 336, formatY, 116, 22);
+    }
+    y += 194;
 
     CreateSettingsButton(hWnd, L"OK", 310, y, 88, 24, IDOK);
     CreateSettingsButton(hWnd, L"Cancel", 424, y, 88, 24, IDCANCEL);

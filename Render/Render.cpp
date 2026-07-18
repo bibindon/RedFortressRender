@@ -858,6 +858,51 @@ void Render::ApplySettings()
         }
     }
 
+    const auto applyScalarGBufferFormat = [this](const wchar_t* key,
+                                                  void (Render::*setter)(GBufferScalarFormat))
+    {
+        const auto setting = m_settings.find(key);
+        if (setting == m_settings.end())
+        {
+            return;
+        }
+
+        if (setting->second == L"R16F")
+        {
+            (this->*setter)(GBufferScalarFormat::R16F);
+        }
+        else if (setting->second == L"R32F")
+        {
+            (this->*setter)(GBufferScalarFormat::R32F);
+        }
+    };
+
+    const auto applyVectorGBufferFormat = [this](const wchar_t* key,
+                                                  void (Render::*setter)(GBufferVectorFormat))
+    {
+        const auto setting = m_settings.find(key);
+        if (setting == m_settings.end())
+        {
+            return;
+        }
+
+        if (setting->second == L"A8B8G8R8" || setting->second == L"ABGR8")
+        {
+            (this->*setter)(GBufferVectorFormat::A8B8G8R8);
+        }
+        else if (setting->second == L"A16B16G16R16F")
+        {
+            (this->*setter)(GBufferVectorFormat::A16B16G16R16F);
+        }
+    };
+
+    applyScalarGBufferFormat(L"GBufferDepthFormat", &Render::SetGBufferDepthFormat);
+    applyScalarGBufferFormat(L"GBufferFogDepthFormat", &Render::SetGBufferFogDepthFormat);
+    applyVectorGBufferFormat(L"GBufferPositionFormat", &Render::SetGBufferPositionFormat);
+    applyVectorGBufferFormat(L"GBufferNormalFormat", &Render::SetGBufferNormalFormat);
+    applyVectorGBufferFormat(L"GBufferThicknessFormat", &Render::SetGBufferThicknessFormat);
+    applyScalarGBufferFormat(L"GBufferBackDepthFormat", &Render::SetGBufferBackDepthFormat);
+
     const auto depthBufferShadowEnable = m_settings.find(L"DepthBufferShadowEnable");
     if (depthBufferShadowEnable != m_settings.end())
     {
@@ -4781,6 +4826,79 @@ void Render::SetGBufferClipPlanes(const float nearPlane, const float farPlane)
     m_postEffectDepthOfField.SetPositionRange(positionRange);
 }
 
+void Render::InvalidateGBufferResources()
+{
+    MeshMixManager::SetSharedThicknessTexture(NULL);
+    MeshMix2::SetSharedThicknessTexture(NULL);
+    m_GBuffer.Finalize();
+}
+
+void Render::SetGBufferDepthFormat(const GBufferScalarFormat format)
+{
+    if (m_GBuffer.GetDepthFormat() == format)
+    {
+        return;
+    }
+
+    m_GBuffer.SetDepthFormat(format);
+    InvalidateGBufferResources();
+}
+
+void Render::SetGBufferFogDepthFormat(const GBufferScalarFormat format)
+{
+    if (m_GBuffer.GetFogDepthFormat() == format)
+    {
+        return;
+    }
+
+    m_GBuffer.SetFogDepthFormat(format);
+    InvalidateGBufferResources();
+}
+
+void Render::SetGBufferPositionFormat(const GBufferVectorFormat format)
+{
+    if (m_GBuffer.GetPositionFormat() == format)
+    {
+        return;
+    }
+
+    m_GBuffer.SetPositionFormat(format);
+    InvalidateGBufferResources();
+}
+
+void Render::SetGBufferNormalFormat(const GBufferVectorFormat format)
+{
+    if (m_GBuffer.GetNormalFormat() == format)
+    {
+        return;
+    }
+
+    m_GBuffer.SetNormalFormat(format);
+    InvalidateGBufferResources();
+}
+
+void Render::SetGBufferThicknessFormat(const GBufferVectorFormat format)
+{
+    if (m_GBuffer.GetThicknessFormat() == format)
+    {
+        return;
+    }
+
+    m_GBuffer.SetThicknessFormat(format);
+    InvalidateGBufferResources();
+}
+
+void Render::SetGBufferBackDepthFormat(const GBufferScalarFormat format)
+{
+    if (m_GBuffer.GetBackDepthFormat() == format)
+    {
+        return;
+    }
+
+    m_GBuffer.SetBackDepthFormat(format);
+    InvalidateGBufferResources();
+}
+
 float Render::GetCameraNearPlane() const
 {
     return Camera::GetNear();
@@ -4819,6 +4937,36 @@ float Render::GetGBufferNearPlane() const
 float Render::GetGBufferFarPlane() const
 {
     return m_gBufferFarPlane;
+}
+
+GBufferScalarFormat Render::GetGBufferDepthFormat() const
+{
+    return m_GBuffer.GetDepthFormat();
+}
+
+GBufferScalarFormat Render::GetGBufferFogDepthFormat() const
+{
+    return m_GBuffer.GetFogDepthFormat();
+}
+
+GBufferVectorFormat Render::GetGBufferPositionFormat() const
+{
+    return m_GBuffer.GetPositionFormat();
+}
+
+GBufferVectorFormat Render::GetGBufferNormalFormat() const
+{
+    return m_GBuffer.GetNormalFormat();
+}
+
+GBufferVectorFormat Render::GetGBufferThicknessFormat() const
+{
+    return m_GBuffer.GetThicknessFormat();
+}
+
+GBufferScalarFormat Render::GetGBufferBackDepthFormat() const
+{
+    return m_GBuffer.GetBackDepthFormat();
 }
 
 RenderingQualitySettings Render::SetRenderQuality(const std::wstring& quality)

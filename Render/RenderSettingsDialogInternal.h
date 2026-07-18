@@ -109,11 +109,30 @@ enum RenderSettingsControlId
     IDC_RENDER_SETTINGS_WINDOW_MODE_WINDOW,
     IDC_RENDER_SETTINGS_WINDOW_MODE_BORDERLESS,
     IDC_RENDER_SETTINGS_WINDOW_MODE_FULLSCREEN,
+    IDC_RENDER_SETTINGS_GBUFFER_DEPTH_R32F,
+    IDC_RENDER_SETTINGS_GBUFFER_DEPTH_R16F,
+    IDC_RENDER_SETTINGS_GBUFFER_FOG_DEPTH_R32F,
+    IDC_RENDER_SETTINGS_GBUFFER_FOG_DEPTH_R16F,
+    IDC_RENDER_SETTINGS_GBUFFER_POSITION_RGBA16F,
+    IDC_RENDER_SETTINGS_GBUFFER_POSITION_ABGR8,
+    IDC_RENDER_SETTINGS_GBUFFER_NORMAL_RGBA16F,
+    IDC_RENDER_SETTINGS_GBUFFER_NORMAL_ABGR8,
+    IDC_RENDER_SETTINGS_GBUFFER_THICKNESS_RGBA16F,
+    IDC_RENDER_SETTINGS_GBUFFER_THICKNESS_ABGR8,
+    IDC_RENDER_SETTINGS_GBUFFER_BACK_DEPTH_R32F,
+    IDC_RENDER_SETTINGS_GBUFFER_BACK_DEPTH_R16F,
 };
 void SetDefaultGuiFont(HWND hWnd);
 void CreateSettingsStatic(HWND parent, const wchar_t* text, int x, int y, int w, int h);
 HWND CreateSettingsCheckbox(HWND parent, int id, const wchar_t* text, int x, int y, int w, int h);
-HWND CreateSettingsRadio(HWND parent, int id, const wchar_t* text, int x, int y, int w, int h);
+HWND CreateSettingsRadio(HWND parent,
+                         int id,
+                         const wchar_t* text,
+                         int x,
+                         int y,
+                         int w,
+                         int h,
+                         bool beginGroup = false);
 void CreateSettingsGroupBox(HWND parent, const wchar_t* text, int x, int y, int w, int h);
 void CreateSettingsButton(HWND parent, const wchar_t* text, int x, int y, int w, int h, int id = 0);
 void CreateSettingsEdit(HWND parent, const wchar_t* text, int x, int y, int w, int h, int id = 0);

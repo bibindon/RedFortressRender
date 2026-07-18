@@ -442,9 +442,21 @@ public:
     float GetCameraShakeIntensity() const;
     void SetGBufferEnable(const bool enabled);
     void SetGBufferClipPlanes(const float nearPlane, const float farPlane);
+    void SetGBufferDepthFormat(GBufferScalarFormat format);
+    void SetGBufferFogDepthFormat(GBufferScalarFormat format);
+    void SetGBufferPositionFormat(GBufferVectorFormat format);
+    void SetGBufferNormalFormat(GBufferVectorFormat format);
+    void SetGBufferThicknessFormat(GBufferVectorFormat format);
+    void SetGBufferBackDepthFormat(GBufferScalarFormat format);
     bool IsGBufferEnabled() const;
     float GetGBufferNearPlane() const;
     float GetGBufferFarPlane() const;
+    GBufferScalarFormat GetGBufferDepthFormat() const;
+    GBufferScalarFormat GetGBufferFogDepthFormat() const;
+    GBufferVectorFormat GetGBufferPositionFormat() const;
+    GBufferVectorFormat GetGBufferNormalFormat() const;
+    GBufferVectorFormat GetGBufferThicknessFormat() const;
+    GBufferScalarFormat GetGBufferBackDepthFormat() const;
     RenderingQualitySettings SetRenderQuality(const std::wstring& quality);
     std::wstring GetRenderQuality() const;
 
@@ -1049,6 +1061,7 @@ private:
     void UpdateBoneAttachments();
     void LoadSettingsCsv(const std::wstring& settingsCsvPath);
     void ApplySettings();
+    void InvalidateGBufferResources();
     void EnsureGBufferInitialized();
     void EnsurePostEffectSaturateInitialized();
     void EnsurePostEffectGaussInitialized();

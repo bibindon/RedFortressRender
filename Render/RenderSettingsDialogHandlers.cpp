@@ -707,6 +707,54 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
         {
             render->SetGBufferEnable(IsSettingsCheckboxChecked(hWnd, id));
         }
+        else if (id == IDC_RENDER_SETTINGS_GBUFFER_DEPTH_R32F)
+        {
+            render->SetGBufferDepthFormat(GBufferScalarFormat::R32F);
+        }
+        else if (id == IDC_RENDER_SETTINGS_GBUFFER_DEPTH_R16F)
+        {
+            render->SetGBufferDepthFormat(GBufferScalarFormat::R16F);
+        }
+        else if (id == IDC_RENDER_SETTINGS_GBUFFER_FOG_DEPTH_R32F)
+        {
+            render->SetGBufferFogDepthFormat(GBufferScalarFormat::R32F);
+        }
+        else if (id == IDC_RENDER_SETTINGS_GBUFFER_FOG_DEPTH_R16F)
+        {
+            render->SetGBufferFogDepthFormat(GBufferScalarFormat::R16F);
+        }
+        else if (id == IDC_RENDER_SETTINGS_GBUFFER_POSITION_RGBA16F)
+        {
+            render->SetGBufferPositionFormat(GBufferVectorFormat::A16B16G16R16F);
+        }
+        else if (id == IDC_RENDER_SETTINGS_GBUFFER_POSITION_ABGR8)
+        {
+            render->SetGBufferPositionFormat(GBufferVectorFormat::A8B8G8R8);
+        }
+        else if (id == IDC_RENDER_SETTINGS_GBUFFER_NORMAL_RGBA16F)
+        {
+            render->SetGBufferNormalFormat(GBufferVectorFormat::A16B16G16R16F);
+        }
+        else if (id == IDC_RENDER_SETTINGS_GBUFFER_NORMAL_ABGR8)
+        {
+            render->SetGBufferNormalFormat(GBufferVectorFormat::A8B8G8R8);
+        }
+        else if (id == IDC_RENDER_SETTINGS_GBUFFER_THICKNESS_RGBA16F)
+        {
+            render->SetGBufferThicknessFormat(GBufferVectorFormat::A16B16G16R16F);
+        }
+        else if (id == IDC_RENDER_SETTINGS_GBUFFER_THICKNESS_ABGR8)
+        {
+            render->SetGBufferThicknessFormat(GBufferVectorFormat::A8B8G8R8);
+        }
+        else if (id == IDC_RENDER_SETTINGS_GBUFFER_BACK_DEPTH_R32F)
+        {
+            render->SetGBufferBackDepthFormat(GBufferScalarFormat::R32F);
+        }
+        else if (id == IDC_RENDER_SETTINGS_GBUFFER_BACK_DEPTH_R16F)
+        {
+            render->SetGBufferBackDepthFormat(GBufferScalarFormat::R16F);
+        }
         else if (id == IDC_RENDER_SETTINGS_GAUSSIAN_ENABLE)
         {
             render->SetPostEffectGaussianFilter(IsSettingsCheckboxChecked(hWnd, id));

@@ -70,6 +70,86 @@ void GBuffer::SetFogDepthRange(const float nearPlane, const float farPlane)
     m_fogFarPlane = farPlane;
 }
 
+void GBuffer::SetDepthFormat(const GBufferScalarFormat format)
+{
+    m_depthFormat = format;
+}
+
+void GBuffer::SetFogDepthFormat(const GBufferScalarFormat format)
+{
+    m_fogDepthFormat = format;
+}
+
+void GBuffer::SetPositionFormat(const GBufferVectorFormat format)
+{
+    m_positionFormat = format;
+}
+
+void GBuffer::SetNormalFormat(const GBufferVectorFormat format)
+{
+    m_normalFormat = format;
+}
+
+void GBuffer::SetThicknessFormat(const GBufferVectorFormat format)
+{
+    m_thicknessFormat = format;
+}
+
+void GBuffer::SetBackDepthFormat(const GBufferScalarFormat format)
+{
+    m_backDepthFormat = format;
+}
+
+GBufferScalarFormat GBuffer::GetDepthFormat() const
+{
+    return m_depthFormat;
+}
+
+GBufferScalarFormat GBuffer::GetFogDepthFormat() const
+{
+    return m_fogDepthFormat;
+}
+
+GBufferVectorFormat GBuffer::GetPositionFormat() const
+{
+    return m_positionFormat;
+}
+
+GBufferVectorFormat GBuffer::GetNormalFormat() const
+{
+    return m_normalFormat;
+}
+
+GBufferVectorFormat GBuffer::GetThicknessFormat() const
+{
+    return m_thicknessFormat;
+}
+
+GBufferScalarFormat GBuffer::GetBackDepthFormat() const
+{
+    return m_backDepthFormat;
+}
+
+D3DFORMAT GBuffer::ToD3DFormat(const GBufferScalarFormat format)
+{
+    if (format == GBufferScalarFormat::R16F)
+    {
+        return D3DFMT_R16F;
+    }
+
+    return D3DFMT_R32F;
+}
+
+D3DFORMAT GBuffer::ToD3DFormat(const GBufferVectorFormat format)
+{
+    if (format == GBufferVectorFormat::A8B8G8R8)
+    {
+        return D3DFMT_A8B8G8R8;
+    }
+
+    return D3DFMT_A16B16G16R16F;
+}
+
 bool GBuffer::IsInitialized() const
 {
     return m_isInitialized;
@@ -85,8 +165,7 @@ void GBuffer::CreateRawResource()
                                 Common::ScreenH(),
                                 1,
                                 D3DUSAGE_RENDERTARGET,
-                                D3DFMT_R32F,
-                                //D3DFMT_R16F,
+                                ToD3DFormat(m_depthFormat),
                                 D3DPOOL_DEFAULT,
                                 &m_texRenderTargetZ);
     assert(hResult == S_OK);
@@ -97,7 +176,7 @@ void GBuffer::CreateRawResource()
                                 Common::ScreenH(),
                                 1,
                                 D3DUSAGE_RENDERTARGET,
-                                D3DFMT_R32F,
+                                ToD3DFormat(m_fogDepthFormat),
                                 D3DPOOL_DEFAULT,
                                 &m_texRenderTargetFogZ);
     assert(hResult == S_OK);
@@ -108,8 +187,7 @@ void GBuffer::CreateRawResource()
                                 Common::ScreenH(),
                                 1,
                                 D3DUSAGE_RENDERTARGET,
-                                D3DFMT_A16B16G16R16F,
-                                //D3DFMT_A8R8G8B8,
+                                ToD3DFormat(m_positionFormat),
                                 D3DPOOL_DEFAULT,
                                 &m_texRenderTargetPos);
     assert(hResult == S_OK);
@@ -119,8 +197,7 @@ void GBuffer::CreateRawResource()
                                 Common::ScreenH(),
                                 1,
                                 D3DUSAGE_RENDERTARGET,
-                                D3DFMT_A16B16G16R16F,
-                                //D3DFMT_A8R8G8B8,
+                                ToD3DFormat(m_normalFormat),
                                 D3DPOOL_DEFAULT,
                                 &m_texRenderTargetNormal);
     assert(hResult == S_OK);
@@ -131,8 +208,7 @@ void GBuffer::CreateRawResource()
                                 Common::ScreenH(),
                                 1,
                                 D3DUSAGE_RENDERTARGET,
-                                D3DFMT_A16B16G16R16F,
-                                //D3DFMT_A8R8G8B8,
+                                ToD3DFormat(m_thicknessFormat),
                                 D3DPOOL_DEFAULT,
                                 &m_texRenderTargetThickness);
     assert(hResult == S_OK);
@@ -143,7 +219,7 @@ void GBuffer::CreateRawResource()
                                 Common::ScreenH(),
                                 1,
                                 D3DUSAGE_RENDERTARGET,
-                                D3DFMT_R32F,
+                                ToD3DFormat(m_backDepthFormat),
                                 D3DPOOL_DEFAULT,
                                 &m_texRenderTargetBackDepth);
     assert(hResult == S_OK);

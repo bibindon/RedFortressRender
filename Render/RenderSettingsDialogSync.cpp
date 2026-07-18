@@ -15,6 +15,42 @@ void SyncRenderSettingsDialogFromRender(HWND hWnd)
     SetSettingsComboSelection(hWnd, 31001, RenderingQualityToComboIndex(render->GetRenderQuality()));
     SetSettingsCheckbox(hWnd, 31002, render->IsShowFPS());
     SetSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_GBUFFER_ENABLE, render->IsGBufferEnabled());
+    SetSettingsCheckbox(hWnd,
+                        IDC_RENDER_SETTINGS_GBUFFER_DEPTH_R32F,
+                        render->GetGBufferDepthFormat() == GBufferScalarFormat::R32F);
+    SetSettingsCheckbox(hWnd,
+                        IDC_RENDER_SETTINGS_GBUFFER_DEPTH_R16F,
+                        render->GetGBufferDepthFormat() == GBufferScalarFormat::R16F);
+    SetSettingsCheckbox(hWnd,
+                        IDC_RENDER_SETTINGS_GBUFFER_FOG_DEPTH_R32F,
+                        render->GetGBufferFogDepthFormat() == GBufferScalarFormat::R32F);
+    SetSettingsCheckbox(hWnd,
+                        IDC_RENDER_SETTINGS_GBUFFER_FOG_DEPTH_R16F,
+                        render->GetGBufferFogDepthFormat() == GBufferScalarFormat::R16F);
+    SetSettingsCheckbox(hWnd,
+                        IDC_RENDER_SETTINGS_GBUFFER_POSITION_RGBA16F,
+                        render->GetGBufferPositionFormat() == GBufferVectorFormat::A16B16G16R16F);
+    SetSettingsCheckbox(hWnd,
+                        IDC_RENDER_SETTINGS_GBUFFER_POSITION_ABGR8,
+                        render->GetGBufferPositionFormat() == GBufferVectorFormat::A8B8G8R8);
+    SetSettingsCheckbox(hWnd,
+                        IDC_RENDER_SETTINGS_GBUFFER_NORMAL_RGBA16F,
+                        render->GetGBufferNormalFormat() == GBufferVectorFormat::A16B16G16R16F);
+    SetSettingsCheckbox(hWnd,
+                        IDC_RENDER_SETTINGS_GBUFFER_NORMAL_ABGR8,
+                        render->GetGBufferNormalFormat() == GBufferVectorFormat::A8B8G8R8);
+    SetSettingsCheckbox(hWnd,
+                        IDC_RENDER_SETTINGS_GBUFFER_THICKNESS_RGBA16F,
+                        render->GetGBufferThicknessFormat() == GBufferVectorFormat::A16B16G16R16F);
+    SetSettingsCheckbox(hWnd,
+                        IDC_RENDER_SETTINGS_GBUFFER_THICKNESS_ABGR8,
+                        render->GetGBufferThicknessFormat() == GBufferVectorFormat::A8B8G8R8);
+    SetSettingsCheckbox(hWnd,
+                        IDC_RENDER_SETTINGS_GBUFFER_BACK_DEPTH_R32F,
+                        render->GetGBufferBackDepthFormat() == GBufferScalarFormat::R32F);
+    SetSettingsCheckbox(hWnd,
+                        IDC_RENDER_SETTINGS_GBUFFER_BACK_DEPTH_R16F,
+                        render->GetGBufferBackDepthFormat() == GBufferScalarFormat::R16F);
     SetSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_SATURATE_ENABLE, render->IsPostEffectSaturateEnabled());
     SetSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_GAUSSIAN_ENABLE, render->IsPostEffectGaussianFilterEnabled());
     SetSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_BLOOM_ENABLE, render->IsPostEffectBloomEnabled());
