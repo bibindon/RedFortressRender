@@ -5,7 +5,7 @@ AnimTicksPerSecond {
 }
 Material ceilingMaterial {
 	 0.800000; 0.800000; 0.800000; 1.000000;;
-	 11.313708;
+	 500.000000;
 	 0.500000; 0.500000; 0.500000;;
 	 0.000000; 0.000000; 0.000000;;
 	TextureFileName {"whiteWall.png";}
