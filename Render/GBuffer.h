@@ -87,12 +87,12 @@ private:
     float m_fogNearPlane = 0.1f;
     float m_fogFarPlane = 30'000.0f;
     float m_positionRange = 30'000.0f;
-    GBufferScalarFormat m_depthFormat = GBufferScalarFormat::R32F;
-    GBufferScalarFormat m_fogDepthFormat = GBufferScalarFormat::R32F;
-    GBufferVectorFormat m_positionFormat = GBufferVectorFormat::A16B16G16R16F;
-    GBufferVectorFormat m_normalFormat = GBufferVectorFormat::A16B16G16R16F;
-    GBufferVectorFormat m_thicknessFormat = GBufferVectorFormat::A16B16G16R16F;
-    GBufferScalarFormat m_backDepthFormat = GBufferScalarFormat::R32F;
+    GBufferScalarFormat m_depthFormat = GBufferScalarFormat::R16F;
+    GBufferScalarFormat m_fogDepthFormat = GBufferScalarFormat::R16F;
+    GBufferVectorFormat m_positionFormat = GBufferVectorFormat::A8B8G8R8;
+    GBufferVectorFormat m_normalFormat = GBufferVectorFormat::A8B8G8R8;
+    GBufferVectorFormat m_thicknessFormat = GBufferVectorFormat::A8B8G8R8;
+    GBufferScalarFormat m_backDepthFormat = GBufferScalarFormat::R16F;
     bool m_isInitialized = false;
     bool m_isRegisteredForDeviceReset = false;
 
