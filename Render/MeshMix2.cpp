@@ -236,15 +236,15 @@ void MeshMix2::CorrectBlenderOfficialAxisTransforms(LPD3DXFRAME frame,
     {
         // Blender's DirectX exporter applies the Blender-to-DirectX basis to both
         // mesh vertices and the exported Frame matrix. Remove the duplicate Frame
-        // rotation while preserving Blender's depth direction. The exported vertex
-        // basis is (-X, Z, Y), so the corrected result must be (X, Z, Y).
+        // rotation with the inverse basis. The negative sign is required because
+        // this is a 90-degree rotation, not a simple Y/Z reflection.
         // The exporter also negates the X component of each Frame translation, which
         // must be restored separately because pre-multiplication preserves that row.
         D3DXMATRIX blenderAxisConversion;
         D3DXMatrixIdentity(&blenderAxisConversion);
         blenderAxisConversion._22 = 0.0f;
         blenderAxisConversion._23 = 1.0f;
-        blenderAxisConversion._32 = 1.0f;
+        blenderAxisConversion._32 = -1.0f;
         blenderAxisConversion._33 = 0.0f;
         frame->TransformationMatrix = blenderAxisConversion * frame->TransformationMatrix;
         frame->TransformationMatrix._41 = -frame->TransformationMatrix._41;

@@ -2,7 +2,7 @@
 SaturateLevel,1.0
 ,
 HalfLambertShadowSaturation,2.0
-HalfLambertShadowDarkness,1.0
+HalfLambertShadowDarkness,0.7
 ,
 GaussianEnable,0
 GaussianSampleSize,101

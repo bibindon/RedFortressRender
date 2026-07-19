@@ -2044,7 +2044,7 @@ void LoadSampleSettingsFromCsv(const std::wstring& settingsCsvPath)
             {
                 g_halfLambertShadowSaturation = std::stof(value);
             }
-            else if (key == L"ShadowDarkness")
+            else if (key == L"HalfLambertShadowDarkness" || key == L"ShadowDarkness")
             {
                 g_shadowDarkness = std::stof(value);
             }
