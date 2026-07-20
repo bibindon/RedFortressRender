@@ -136,6 +136,18 @@ void InitializeSampleScene(HWND hWnd)
                                                   D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                                                   1.0f);
     RegisterLoadedModel(L"MeshMix2", L"..\\..\\Sample\\res\\model2\\floor\\floor.X", D3DXVECTOR3(0.0f, 0.0f, 0.0f), 1.0f, floorModelId);
+    const D3DXVECTOR3 clockwiseCubePosition(-1.0f, 1.0f, 1.5f);
+    const int clockwiseCubeId = g_Render.AddMeshMix2(L"..\\..\\Sample\\res\\model2\\winding-test\\clockwise\\clockwise_cube.X",
+                                                      clockwiseCubePosition,
+                                                      D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                                                      1.0f);
+    RegisterLoadedModel(L"MeshMix2", L"..\\..\\Sample\\res\\model2\\winding-test\\clockwise\\clockwise_cube.X", clockwiseCubePosition, 1.0f, clockwiseCubeId);
+    const D3DXVECTOR3 counterclockwiseCubePosition(1.0f, 1.0f, 1.5f);
+    const int counterclockwiseCubeId = g_Render.AddMeshMix2(L"..\\..\\Sample\\res\\model2\\winding-test\\counterclockwise\\counterclockwise_cube.X",
+                                                             counterclockwiseCubePosition,
+                                                             D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                                                             1.0f);
+    RegisterLoadedModel(L"MeshMix2", L"..\\..\\Sample\\res\\model2\\winding-test\\counterclockwise\\counterclockwise_cube.X", counterclockwiseCubePosition, 1.0f, counterclockwiseCubeId);
     const int cubeJumpId = g_Render.AddMeshMixAnimNoBone(L"..\\..\\Sample\\res\\model2\\cubeJump.x",
                                                          D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                                                          D3DXVECTOR3(0.0f, 0.0f, 0.0f),
