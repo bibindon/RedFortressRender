@@ -1031,7 +1031,7 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
                 if (D3DXVec3LengthSq(&towardCamera) > 0.000001f)
                 {
                     D3DXVec3Normalize(&towardCamera, &towardCamera);
-                    yaw = atan2f(towardCamera.x, towardCamera.z);
+                    yaw = atan2f(towardCamera.x, towardCamera.z) + D3DX_PI;
                 }
                 const D3DXVECTOR3 rot(0.0f, yaw, 0.0f);
                 int renderId = render->AddMeshMix2(state->meshMixPath,

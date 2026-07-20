@@ -1390,7 +1390,7 @@ void SpawnMeshMix2AtLookAt(const std::wstring& filePath)
     if (D3DXVec3LengthSq(&towardCamera) > 0.000001f)
     {
         D3DXVec3Normalize(&towardCamera, &towardCamera);
-        yaw = atan2f(towardCamera.x, towardCamera.z);
+        yaw = atan2f(towardCamera.x, towardCamera.z) + D3DX_PI;
     }
     const D3DXVECTOR3 rot(0.0f, yaw, 0.0f);
     const int renderId = g_Render.AddMeshMix2(filePath, pos, rot, g_modelLoadScale);
