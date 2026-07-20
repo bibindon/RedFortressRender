@@ -68,6 +68,45 @@ All files: CRLF line endings. Do not introduce LF-only files.
 - `Sample\RenderSettings.csv` is read by both Sample (window state) and Render (render parameters).
 - Settings keys consumed by `Render::ApplySettings()` must stay in sync.
 - Sample has variants: `RenderSettings.light.csv`, `RenderSettings.night.csv`.
+- The demo's intended startup Lambert Darkness is `HalfLambertShadowDarkness,0.7` in `Sample\RenderSettings.csv`; changing only the dialog default does not control startup behavior.
+
+## Blender 5.1.2 / DirectX `.x` export contract
+
+These rules are the result of fixing the stage-select depth reversal. Do not compensate for an export-axis problem by changing the camera or adding ad-hoc rotations to CSV files.
+
+- Use Blender **5.1.2** and its DirectX `.x` exporter.
+- Always set the exporter axes explicitly: **Forward = `Z`**, **Up = `Y`**, **Scale = `1.0`**, text `.x` format. Do not rely on settings left in the exporter UI from a previous export.
+- Export meshes with modifiers, normals, UVs, materials, and textures enabled. Keep the existing armature/weights/animation options when the source asset uses them. The stage assets were exported with triangulation and unweld enabled.
+- Blender `(X, Y, Z)` is represented by exported `.x` data as `(X, Z, -Y)`. `MeshMix2::CorrectBlenderOfficialAxisTransforms()` converts it to this renderer's `(X, Z, Y)` convention. It corrects both the frame basis and the frame translation (`_43`). Do not add another axis conversion in the caller or CSV.
+- Never mix assets exported with `Forward = Z` and `Forward = -Z`. The old stage-select 1, 2, and 4 files used `-Z`; objects baked at the origin could appear correct while objects positioned by frame transforms appeared depth-reversed. This was the cause of the misleading "only some objects are reversed" symptom.
+- `.x`/`.X` output must remain UTF-8 without BOM and use CRLF. Texture paths must be relative and every referenced texture must exist. Keep textures with the model folder where practical.
+- For the demo floor and ceiling, preserve the Blender source in each model folder, keep each folder's textures local, and export material specular power as `500`. The ceiling must remain a textured six-face box, not a single plane.
+
+### Stage-select export boundaries
+
+Stage source files live under `..\RedFortress2\MultiPassRendering\res\model\stage-select*`. Preserve the existing exported-file split; exporting every mesh into every output changes scene contents even when the axes are correct.
+
+- Stage 1, `world1.blend`: `stageSelectSea.x` contains only `StageSelect_DeepSea.001`, `StageSelect_ShallowWaterRing.001`, `RF1_Portal_00_Ring`, and `RF1_Portal_09_Ring`. All other mesh objects go to `stageSelectIsland.x`.
+- Stage 2, `world2.blend`: export all mesh objects to `stageSelectCave.x`.
+- Stage 3, `world3.blend`: export only `RF3_StarField` to `stageSelectMoonMountainStars.x`; export all other mesh objects to `stageSelectMoonMountain.x`.
+- Stage 4, `world4.blend`: export all mesh objects to `stageSelectDawnIsland.x`.
+- Keep world-scene placement at the authored coordinates. A correctly exported world model normally uses zero position/rotation and scale `1` in its placement CSV. Do not use `RotY = 180` to hide a bad export.
+
+### MeshMix2 loading and camera-facing placement
+
+- Blender 5.1.2 static `.x` world models in placement CSV must use `loadType=meshmix2`. `normal` selects the older `MeshMixManager` path and has different transform behavior.
+- The render settings dialog must also preserve `meshmix2`: CSV loading and the dialog's direct model-open action call `AddMeshMix2`, and CSV IDs are registered with `RegisterCsvMeshMix2IdMapping`.
+- CSV-authored rotations are authoritative and are loaded unchanged.
+- Only interactive "place at look-at point and face the camera" operations apply a facing correction. For MeshMix2 this is `atan2f(towardCamera.x, towardCamera.z) + D3DX_PI` in both `Sample\AppState.cpp::SpawnMeshMix2AtLookAt()` and the direct-open handler in `Render\RenderSettingsDialogHandlers.cpp`. Keep these two call sites consistent.
+- Do not duplicate that 180-degree facing correction in the Blender model, the CSV, or `MeshMix2`; doing so makes either M-key placement or settings-dialog placement face backward again.
+
+### Regression checks after re-export or transform changes
+
+- Compare exported frame/object names with the previous `.x` file, especially for split stage files.
+- Check several non-origin frame translations, not only geometry baked at the origin.
+- Verify all referenced textures exist and material power values remain intact.
+- Test both a stage loaded from CSV and `monkey.blend.x` placed interactively with the M key and through the settings dialog. The monkey must face the camera in both paths.
+- For the RedFortress2 game, a link-time `LNK1201` on `RedFortress2\x64\Release\simple-directx9.pdb` can be caused by a running game or Visual Studio holding the PDB. Treat that as a file-lock problem, not an axis-conversion source failure.
 
 ## Known gotchas
 
