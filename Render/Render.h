@@ -125,7 +125,8 @@ enum class RenderLoadedModelType
     MeshMix2,
     MeshPBR,
     MeshInstancing,
-    MeshMixSkinAnim
+    MeshMixSkinAnim,
+    MeshMixAnimNoBone
 };
 
 struct RenderLoadedModelInfo

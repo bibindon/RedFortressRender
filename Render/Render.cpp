@@ -4287,6 +4287,23 @@ std::vector<RenderLoadedModelInfo> Render::GetLoadedModelInfoList()
         models.push_back(info);
     }
 
+    for (int i = 0; i < static_cast<int>(m_meshMixAnimNoBoneList.size()); ++i)
+    {
+        const MeshMixAnimNoBone* mesh = m_meshMixAnimNoBoneList.at(i);
+        if (mesh == nullptr)
+        {
+            continue;
+        }
+
+        RenderLoadedModelInfo info;
+        info.type = RenderLoadedModelType::MeshMixAnimNoBone;
+        info.renderId = i;
+        info.filePath = mesh->GetMeshName();
+        info.scale = mesh->GetScale();
+        info.pos = mesh->GetPos();
+        models.push_back(info);
+    }
+
     return models;
 }
 
