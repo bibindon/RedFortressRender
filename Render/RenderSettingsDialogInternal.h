@@ -122,6 +122,11 @@ enum RenderSettingsControlId
     IDC_RENDER_SETTINGS_GBUFFER_THICKNESS_ABGR8,
     IDC_RENDER_SETTINGS_GBUFFER_BACK_DEPTH_R32F,
     IDC_RENDER_SETTINGS_GBUFFER_BACK_DEPTH_R16F,
+    IDC_RENDER_SETTINGS_DEBUG_WORLD_POS,
+    IDC_RENDER_SETTINGS_DEBUG_NORMAL,
+    IDC_RENDER_SETTINGS_DEBUG_DEPTH,
+    IDC_RENDER_SETTINGS_DEBUG_THICKNESS,
+    IDC_RENDER_SETTINGS_DEBUG_BACK_DEPTH,
 };
 void SetDefaultGuiFont(HWND hWnd);
 void CreateSettingsStatic(HWND parent, const wchar_t* text, int x, int y, int w, int h);
@@ -205,6 +210,7 @@ void ScrollRenderSettingsTo(HWND hWnd, int newScrollPos);
 void HandleRenderSettingsVScroll(HWND hWnd, WPARAM wParam);
 void HandleRenderSettingsHScroll(HWND hWnd, LPARAM lParam);
 void HandleRenderSettingsNotify(HWND hWnd, LPARAM lParam);
+void SyncDebugGBufferCheckboxes(HWND hWnd, Render* render);
 void SyncRenderSettingsDialogFromRender(HWND hWnd);
 LRESULT CALLBACK RenderSettingsDialogProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 bool EnsureRenderSettingsDialogClass(HINSTANCE hInstance);

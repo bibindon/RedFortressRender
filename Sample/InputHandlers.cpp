@@ -16,6 +16,7 @@ void ToggleDebugGBufferView(const NSRender::DebugGBufferView view)
 {
     // 同じデバッグビューをもう一度押したときは解除し、
     // 一つのキーで ON/OFF を切り替えられるようにする。
+    g_debugGBufferView = g_Render.GetDebugGBufferView();
     if (g_debugGBufferView == view)
     {
         g_debugGBufferView = NSRender::DebugGBufferView::None;

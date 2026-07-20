@@ -678,6 +678,52 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
     }
     return false;
 }
+bool HandleDebugGBufferCheckbox(HWND hWnd, Render* render, const int id)
+{
+    DebugGBufferView view = DebugGBufferView::None;
+    bool isDebugGBufferCheckbox = true;
+    if (id == IDC_RENDER_SETTINGS_DEBUG_WORLD_POS)
+    {
+        view = DebugGBufferView::WorldPos;
+    }
+    else if (id == IDC_RENDER_SETTINGS_DEBUG_NORMAL)
+    {
+        view = DebugGBufferView::Normal;
+    }
+    else if (id == IDC_RENDER_SETTINGS_DEBUG_DEPTH)
+    {
+        view = DebugGBufferView::Depth;
+    }
+    else if (id == IDC_RENDER_SETTINGS_DEBUG_THICKNESS)
+    {
+        view = DebugGBufferView::Thickness;
+    }
+    else if (id == IDC_RENDER_SETTINGS_DEBUG_BACK_DEPTH)
+    {
+        view = DebugGBufferView::BackDepth;
+    }
+    else
+    {
+        isDebugGBufferCheckbox = false;
+    }
+
+    if (!isDebugGBufferCheckbox)
+    {
+        return false;
+    }
+
+    if (IsSettingsCheckboxChecked(hWnd, id))
+    {
+        render->SetDebugGBufferView(view);
+    }
+    else if (render->GetDebugGBufferView() == view)
+    {
+        render->SetDebugGBufferView(DebugGBufferView::None);
+    }
+    SyncDebugGBufferCheckboxes(hWnd, render);
+    return true;
+}
+
 void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
 {
     RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
@@ -694,6 +740,10 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
     }
     if (notifyCode == BN_CLICKED)
     {
+        if (HandleDebugGBufferCheckbox(hWnd, render, id))
+        {
+            return;
+        }
         if (id == 31002)
         {
             render->SetShowFPS(IsSettingsCheckboxChecked(hWnd, id));

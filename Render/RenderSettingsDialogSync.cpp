@@ -3,6 +3,26 @@ namespace NSRender
 {
 namespace RenderSettingsDialogInternal
 {
+void SyncDebugGBufferCheckboxes(HWND hWnd, Render* render)
+{
+    const DebugGBufferView view = render->GetDebugGBufferView();
+    SetSettingsCheckbox(hWnd,
+                        IDC_RENDER_SETTINGS_DEBUG_WORLD_POS,
+                        view == DebugGBufferView::WorldPos);
+    SetSettingsCheckbox(hWnd,
+                        IDC_RENDER_SETTINGS_DEBUG_NORMAL,
+                        view == DebugGBufferView::Normal);
+    SetSettingsCheckbox(hWnd,
+                        IDC_RENDER_SETTINGS_DEBUG_DEPTH,
+                        view == DebugGBufferView::Depth);
+    SetSettingsCheckbox(hWnd,
+                        IDC_RENDER_SETTINGS_DEBUG_THICKNESS,
+                        view == DebugGBufferView::Thickness);
+    SetSettingsCheckbox(hWnd,
+                        IDC_RENDER_SETTINGS_DEBUG_BACK_DEPTH,
+                        view == DebugGBufferView::BackDepth);
+}
+
 void SyncRenderSettingsDialogFromRender(HWND hWnd)
 {
     RenderSettingsDialogState* state = reinterpret_cast<RenderSettingsDialogState*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
@@ -15,6 +35,7 @@ void SyncRenderSettingsDialogFromRender(HWND hWnd)
     SetSettingsComboSelection(hWnd, 31001, RenderingQualityToComboIndex(render->GetRenderQuality()));
     SetSettingsCheckbox(hWnd, 31002, render->IsShowFPS());
     SetSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_GBUFFER_ENABLE, render->IsGBufferEnabled());
+    SyncDebugGBufferCheckboxes(hWnd, render);
     SetSettingsCheckbox(hWnd,
                         IDC_RENDER_SETTINGS_GBUFFER_DEPTH_R32F,
                         render->GetGBufferDepthFormat() == GBufferScalarFormat::R32F);
