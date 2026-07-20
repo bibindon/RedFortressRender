@@ -1877,12 +1877,29 @@ void Render::ApplySettings()
         }
         catch (...)
         {
-            SetPostEffectDepthBufferShadowBias(0.0002f * (1.0f + (119.0f * m_postEffectDepthBufferShadowCoverage)));
+            SetPostEffectDepthBufferShadowBias(0.0004f);
         }
     }
     else
     {
-        SetPostEffectDepthBufferShadowBias(0.0002f * (1.0f + (119.0f * m_postEffectDepthBufferShadowCoverage)));
+        SetPostEffectDepthBufferShadowBias(0.0004f);
+    }
+
+    const auto shadowBiasFar = m_settings.find(L"ShadowBiasFar");
+    if (shadowBiasFar != m_settings.end())
+    {
+        try
+        {
+            SetPostEffectDepthBufferShadowBiasFar(std::stof(shadowBiasFar->second));
+        }
+        catch (...)
+        {
+            SetPostEffectDepthBufferShadowBiasFar(0.0002f * (1.0f + (119.0f * m_postEffectDepthBufferShadowCoverageFar)));
+        }
+    }
+    else
+    {
+        SetPostEffectDepthBufferShadowBiasFar(0.0002f * (1.0f + (119.0f * m_postEffectDepthBufferShadowCoverageFar)));
     }
 
     const auto shadowPcfTapCount = m_settings.find(L"ShadowPcfTapCount");
@@ -5857,6 +5874,12 @@ void Render::SetPostEffectDepthBufferShadowBias(const float shadowBias)
     m_postEffectZShadow.SetShadowBias(m_postEffectDepthBufferShadowBias);
 }
 
+void Render::SetPostEffectDepthBufferShadowBiasFar(const float shadowBias)
+{
+    m_postEffectDepthBufferShadowBiasFar = (std::max)(0.0f, shadowBias);
+    m_postEffectZShadow.SetShadowBiasFar(m_postEffectDepthBufferShadowBiasFar);
+}
+
 void Render::SetPostEffectDepthBufferShadowPcfTapCount(const int tapCount)
 {
     m_postEffectDepthBufferShadowPcfTapCount = tapCount;
@@ -5910,6 +5933,7 @@ float Render::GetPostEffectDepthBufferShadowSaturationBoost() const { return m_p
 float Render::GetPostEffectDepthBufferShadowCoverage() const { return m_postEffectDepthBufferShadowCoverage; }
 float Render::GetPostEffectDepthBufferShadowCoverageFar() const { return m_postEffectDepthBufferShadowCoverageFar; }
 float Render::GetPostEffectDepthBufferShadowBias() const { return m_postEffectDepthBufferShadowBias; }
+float Render::GetPostEffectDepthBufferShadowBiasFar() const { return m_postEffectDepthBufferShadowBiasFar; }
 int Render::GetPostEffectDepthBufferShadowPcfTapCount() const { return m_postEffectDepthBufferShadowPcfTapCount; }
 int Render::GetPostEffectDepthBufferShadowCompositeTapCount() const { return m_postEffectDepthBufferShadowCompositeTapCount; }
 int Render::GetPostEffectDepthBufferShadowTexSizeDivisor() const { return m_postEffectDepthBufferShadowTexSizeDivisor; }

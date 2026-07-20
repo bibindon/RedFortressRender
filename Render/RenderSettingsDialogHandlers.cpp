@@ -498,6 +498,12 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
         SetTrackbarFromFloat(hWnd, id - 10000, floatValue, 0.0f, 1.0f);
         return true;
     }
+    if (id == 42310 && TryGetSettingsEditFloat(hWnd, id, floatValue))
+    {
+        render->SetPostEffectDepthBufferShadowBiasFar(floatValue);
+        SetTrackbarFromFloat(hWnd, 32310, floatValue, 0.0f, 0.03f);
+        return true;
+    }
     if (id == 41710 && TryGetSettingsEditFloat(hWnd, id, floatValue))
     {
         render->SetPostEffectSSGIIndirectLightStrength(floatValue);
@@ -1567,6 +1573,10 @@ void HandleRenderSettingsHScroll(HWND hWnd, LPARAM lParam)
         break;
     case 31603:
         render->SetPostEffectDepthBufferShadowBias(TrackbarToFloat(trackbar, 0.0f, 0.03f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 0.03f), L"%.5f");
+        break;
+    case 32310:
+        render->SetPostEffectDepthBufferShadowBiasFar(TrackbarToFloat(trackbar, 0.0f, 0.03f));
         SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 0.03f), L"%.5f");
         break;
     case 31701:

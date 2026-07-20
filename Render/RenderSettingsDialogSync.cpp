@@ -156,10 +156,12 @@ void SyncRenderSettingsDialogFromRender(HWND hWnd)
     SetSettingsEditFloat(hWnd, 41601, render->GetPostEffectDepthBufferShadowSaturationBoost());
     SetSettingsEditFloat(hWnd, 41602, render->GetPostEffectDepthBufferShadowCoverage());
     SetSettingsEditFloat(hWnd, 41603, render->GetPostEffectDepthBufferShadowBias(), L"%.5f");
+    SetSettingsEditFloat(hWnd, 42310, render->GetPostEffectDepthBufferShadowBiasFar(), L"%.5f");
     SetTrackbarFromFloat(hWnd, 31600, render->GetPostEffectDepthBufferShadowIntensity(), 0.0f, 1.0f);
     SetTrackbarFromFloat(hWnd, 31601, render->GetPostEffectDepthBufferShadowSaturationBoost(), 0.0f, 1.0f);
     SetTrackbarFromFloat(hWnd, 31602, render->GetPostEffectDepthBufferShadowCoverage(), 0.0f, 1.0f);
     SetTrackbarFromFloat(hWnd, 31603, render->GetPostEffectDepthBufferShadowBias(), 0.0f, 0.03f);
+    SetTrackbarFromFloat(hWnd, 32310, render->GetPostEffectDepthBufferShadowBiasFar(), 0.0f, 0.03f);
     SetSettingsComboSelection(hWnd, 31610, TapCountToComboIndex(render->GetPostEffectDepthBufferShadowPcfTapCount()));
     SetSettingsComboSelection(hWnd, 31611, TapCountToComboIndex(render->GetPostEffectDepthBufferShadowCompositeTapCount()));
     SetSettingsComboSelection(hWnd, 31612, TexSizeDivisorToComboIndex(render->GetPostEffectDepthBufferShadowTexSizeDivisor()));

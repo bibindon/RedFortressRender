@@ -41,6 +41,8 @@ DepthBufferShadowEnable,0
 ShadowIntensity,0.25
 ShadowCoverage,0.05
 ShadowCoverageFar,0.80
+ShadowBias,0.0004
+ShadowBiasFar,0.01924
 ShadowSaturationBoost,1.0
 ShadowPcfTapCount,3
 ShadowCompositeTapCount,3

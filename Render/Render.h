@@ -717,6 +717,7 @@ public:
     void SetPostEffectDepthBufferShadowCoverage(const float coverage);
     void SetPostEffectDepthBufferShadowCoverageFar(const float coverage);
     void SetPostEffectDepthBufferShadowBias(const float shadowBias);
+    void SetPostEffectDepthBufferShadowBiasFar(const float shadowBias);
     void SetPostEffectDepthBufferShadowPcfTapCount(const int tapCount);
     void SetPostEffectDepthBufferShadowCompositeTapCount(const int tapCount);
     void SetPostEffectDepthBufferShadowTexSizeDivisor(const int scaleDivisor);
@@ -730,6 +731,7 @@ public:
     float GetPostEffectDepthBufferShadowCoverage() const;
     float GetPostEffectDepthBufferShadowCoverageFar() const;
     float GetPostEffectDepthBufferShadowBias() const;
+    float GetPostEffectDepthBufferShadowBiasFar() const;
     int GetPostEffectDepthBufferShadowPcfTapCount() const;
     int GetPostEffectDepthBufferShadowCompositeTapCount() const;
     int GetPostEffectDepthBufferShadowTexSizeDivisor() const;
@@ -1132,7 +1134,8 @@ private:
     float m_postEffectDepthBufferShadowSaturationBoost = 0.35f;
     float m_postEffectDepthBufferShadowCoverage = 0.05f;
     float m_postEffectDepthBufferShadowCoverageFar = 0.8f;
-    float m_postEffectDepthBufferShadowBias = 0.00139f;
+    float m_postEffectDepthBufferShadowBias = 0.0004f;
+    float m_postEffectDepthBufferShadowBiasFar = 0.01924f;
     int m_postEffectDepthBufferShadowPcfTapCount = 1;
     int m_postEffectDepthBufferShadowCompositeTapCount = 1;
     int m_postEffectDepthBufferShadowTexSizeDivisor = 1;

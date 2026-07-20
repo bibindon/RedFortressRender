@@ -557,8 +557,8 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     }
     y += 190;
     CreateSettingsGroupBox(hWnd, L"ZShadow", 8, y, 504, 174);
-    const wchar_t* zShadowLabels[] = { L"ZShadow Intensity", L"ZShadow Saturation", L"ZShadow Range", L"ZShadow Bias" };
-    const wchar_t* zShadowValues[] = { L"0.25", L"0.50", L"0.05", L"0.00139" };
+    const wchar_t* zShadowLabels[] = { L"ZShadow Intensity", L"ZShadow Saturation", L"ZShadow Range", L"ZShadow Bias Near" };
+    const wchar_t* zShadowValues[] = { L"0.25", L"0.50", L"0.05", L"0.00040" };
     int zY = y + 28;
     for (int i = 0; i < 4; ++i)
     {
@@ -853,6 +853,12 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     CreateSettingsGroupBox(hWnd, L"Load", 8, y, 504, 52);
     CreateSettingsButton(hWnd, L"Load Start", 24, y + 22, 96, 24, 32302);
     CreateSettingsButton(hWnd, L"Load End", 132, y + 22, 96, 24, 32303);
+    y += 60;
+
+    CreateSettingsGroupBox(hWnd, L"ZShadow Far Bias", 8, y, 504, 52);
+    CreateSettingsStatic(hWnd, L"ZShadow Far Bias", 24, y + 26, 142, 18);
+    CreateSettingsTrackbar(hWnd, 32310, 168, y + 20, 280, 30, 0, 100, 64);
+    CreateSettingsEdit(hWnd, L"0.01924", 456, y + 22, 52, 20, 42310);
     y += 60;
 
     SetSettingsTrackbarRange(hWnd, 31004, 0, 49);
