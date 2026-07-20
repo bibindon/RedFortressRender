@@ -994,6 +994,7 @@ technique TechniqueWriteShadow
 {
     pass P0
     {
+        CullMode    = NONE;
         VertexShader = compile vs_3_0 VS_Base();
         PixelShader  = compile ps_3_0 PS_WriteShadow();
     }
@@ -1003,6 +1004,7 @@ technique TechniqueWriteShadowSkin
 {
     pass P0
     {
+        CullMode    = NONE;
         VertexShader = (vsBaseSkinArray[g_currentBoneIndex]);
         PixelShader  = compile ps_3_0 PS_WriteShadow();
     }
@@ -1022,6 +1024,7 @@ technique TechniqueWriteShadow1
 {
     pass P0
     {
+        CullMode    = NONE;
         VertexShader = compile vs_3_0 VS_Base();
         PixelShader  = compile ps_3_0 PS_WriteShadow1();
     }
@@ -1031,6 +1034,7 @@ technique TechniqueWriteShadow3
 {
     pass P0
     {
+        CullMode    = NONE;
         VertexShader = compile vs_3_0 VS_Base();
         PixelShader  = compile ps_3_0 PS_WriteShadow3();
     }
@@ -1040,6 +1044,7 @@ technique TechniqueWriteShadow5
 {
     pass P0
     {
+        CullMode    = NONE;
         VertexShader = compile vs_3_0 VS_Base();
         PixelShader  = compile ps_3_0 PS_WriteShadow5();
     }
@@ -1049,6 +1054,7 @@ technique TechniqueWriteShadow7
 {
     pass P0
     {
+        CullMode    = NONE;
         VertexShader = compile vs_3_0 VS_Base();
         PixelShader  = compile ps_3_0 PS_WriteShadow7();
     }
@@ -1058,6 +1064,7 @@ technique TechniqueWriteShadow9
 {
     pass P0
     {
+        CullMode    = NONE;
         VertexShader = compile vs_3_0 VS_Base();
         PixelShader  = compile ps_3_0 PS_WriteShadow9();
     }
@@ -1067,6 +1074,7 @@ technique TechniqueWriteShadow11
 {
     pass P0
     {
+        CullMode    = NONE;
         VertexShader = compile vs_3_0 VS_Base();
         PixelShader  = compile ps_3_0 PS_WriteShadow11();
     }
@@ -1076,6 +1084,7 @@ technique TechniqueWriteShadowSkin1
 {
     pass P0
     {
+        CullMode    = NONE;
         VertexShader = (vsBaseSkinArray[g_currentBoneIndex]);
         PixelShader  = compile ps_3_0 PS_WriteShadow1();
     }
@@ -1085,6 +1094,7 @@ technique TechniqueWriteShadowSkin3
 {
     pass P0
     {
+        CullMode    = NONE;
         VertexShader = (vsBaseSkinArray[g_currentBoneIndex]);
         PixelShader  = compile ps_3_0 PS_WriteShadow3();
     }
@@ -1094,6 +1104,7 @@ technique TechniqueWriteShadowSkin5
 {
     pass P0
     {
+        CullMode    = NONE;
         VertexShader = (vsBaseSkinArray[g_currentBoneIndex]);
         PixelShader  = compile ps_3_0 PS_WriteShadow5();
     }
@@ -1103,6 +1114,7 @@ technique TechniqueWriteShadowSkin7
 {
     pass P0
     {
+        CullMode    = NONE;
         VertexShader = (vsBaseSkinArray[g_currentBoneIndex]);
         PixelShader  = compile ps_3_0 PS_WriteShadow7();
     }
@@ -1112,6 +1124,7 @@ technique TechniqueWriteShadowSkin9
 {
     pass P0
     {
+        CullMode    = NONE;
         VertexShader = (vsBaseSkinArray[g_currentBoneIndex]);
         PixelShader  = compile ps_3_0 PS_WriteShadow9();
     }
@@ -1121,6 +1134,7 @@ technique TechniqueWriteShadowSkin11
 {
     pass P0
     {
+        CullMode    = NONE;
         VertexShader = (vsBaseSkinArray[g_currentBoneIndex]);
         PixelShader  = compile ps_3_0 PS_WriteShadow11();
     }
