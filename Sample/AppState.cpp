@@ -1382,11 +1382,16 @@ void SpawnMeshMix2AtLookAt(const std::wstring& filePath)
         return;
     }
 
-    auto pos = g_Render.GetLookAtPos();
-    D3DXVECTOR3 forward = g_Render.GetCameraRotate();
-    D3DXVec3Normalize(&forward, &forward);
+    const D3DXVECTOR3 pos = g_Render.GetLookAtPos();
+    D3DXVECTOR3 towardCamera = g_Render.GetCameraPos() - pos;
+    towardCamera.y = 0.0f;
 
-    const float yaw = atan2f(forward.x, forward.z);
+    float yaw = 0.0f;
+    if (D3DXVec3LengthSq(&towardCamera) > 0.000001f)
+    {
+        D3DXVec3Normalize(&towardCamera, &towardCamera);
+        yaw = atan2f(towardCamera.x, towardCamera.z);
+    }
     const D3DXVECTOR3 rot(0.0f, yaw, 0.0f);
     const int renderId = g_Render.AddMeshMix2(filePath, pos, rot, g_modelLoadScale);
     RegisterLoadedModel(L"MeshMix2", filePath, pos, g_modelLoadScale, renderId);
