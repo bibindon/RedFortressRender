@@ -385,6 +385,7 @@ public:
     void UpdateMovingPlatforms(float deltaSeconds);
     void ResetMovingPlatforms();
     void RegisterCsvIdMapping(int csvId, int renderId);
+    void RegisterCsvMeshMix2IdMapping(int csvId, int renderId);
 
     struct MovingPlatform
     {

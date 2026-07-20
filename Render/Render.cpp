@@ -701,6 +701,12 @@ void Render::RegisterCsvIdMapping(const int csvId, const int renderId)
     m_csvIdToRenderId[csvId] = renderId;
 }
 
+void Render::RegisterCsvMeshMix2IdMapping(const int csvId, const int renderId)
+{
+    m_csvIdToMeshMix2RenderId[csvId] = renderId;
+    m_csvMeshMix2RenderIds.push_back(renderId);
+}
+
 const std::vector<Render::MovingPlatform>& Render::GetMovingPlatforms() const
 {
     return m_movingPlatforms;

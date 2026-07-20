@@ -170,6 +170,7 @@ bool LoadXFileListCsv(RenderSettingsDialogState* state,
         {
             loadType = TrimCsvField(fields[9]);
             if (loadType != L"normal" &&
+                loadType != L"meshmix2" &&
                 loadType != L"instancing" &&
                 loadType != L"skinanim" &&
                 loadType != L"skinanim2")
@@ -210,6 +211,11 @@ bool LoadXFileListCsv(RenderSettingsDialogState* state,
             {
                 renderId = state->render->AddMeshInstansing(resolvedPath, pos, rot, modelScale, resolvedInstancingCsvPath);
                 modelType = RenderSettingsDialogState::LoadedModelType::MeshInstancing;
+            }
+            else if (loadType == L"meshmix2")
+            {
+                renderId = state->render->AddMeshMix2(resolvedPath, pos, rot, modelScale);
+                modelType = RenderSettingsDialogState::LoadedModelType::MeshMix2;
             }
             else if (loadType == L"skinanim" || loadType == L"skinanim2")
             {
@@ -252,7 +258,14 @@ bool LoadXFileListCsv(RenderSettingsDialogState* state,
                                  pos);
 
             const int csvId = std::stoi(TrimCsvField(fields[0]));
-            state->render->RegisterCsvIdMapping(csvId, renderId);
+            if (loadType == L"meshmix2")
+            {
+                state->render->RegisterCsvMeshMix2IdMapping(csvId, renderId);
+            }
+            else
+            {
+                state->render->RegisterCsvIdMapping(csvId, renderId);
+            }
 
             ++loadedCount;
         }
@@ -1011,11 +1024,21 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
             {
                 SetDlgItemTextW(hWnd, 31310, state->meshMixPath.c_str());
                 const D3DXVECTOR3 pos = render->GetLookAtPos();
-                int renderId = render->AddMeshMix(state->meshMixPath,
-                                                        pos,
-                                                        D3DXVECTOR3(0.0f, 0.0f, 0.0f),
-                                                        state->modelLoadScale);
-                AddLoadedModelRecord(state, RenderSettingsDialogState::LoadedModelType::MeshMix, renderId, state->meshMixPath, pos);
+                D3DXVECTOR3 towardCamera = render->GetCameraPos() - pos;
+                towardCamera.y = 0.0f;
+
+                float yaw = 0.0f;
+                if (D3DXVec3LengthSq(&towardCamera) > 0.000001f)
+                {
+                    D3DXVec3Normalize(&towardCamera, &towardCamera);
+                    yaw = atan2f(towardCamera.x, towardCamera.z);
+                }
+                const D3DXVECTOR3 rot(0.0f, yaw, 0.0f);
+                int renderId = render->AddMeshMix2(state->meshMixPath,
+                                                   pos,
+                                                   rot,
+                                                   state->modelLoadScale);
+                AddLoadedModelRecord(state, RenderSettingsDialogState::LoadedModelType::MeshMix2, renderId, state->meshMixPath, pos);
             }
         }
         else if (id == 32211)

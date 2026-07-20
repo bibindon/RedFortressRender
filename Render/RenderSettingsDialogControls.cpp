@@ -457,7 +457,7 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
         row += 18;
     }
     y += 342;
-    CreateSettingsStatic(hWnd, L"MeshMixManager (x)", 24, y + 5, 138, 18);
+    CreateSettingsStatic(hWnd, L"MeshMix2 (x)", 24, y + 5, 138, 18);
     CreateSettingsEdit(hWnd, L"", 162, y, 124, 20, 31310);
     CreateSettingsButton(hWnd, L"Open...", 298, y - 2, 42, 24, 31311);
     CreateSettingsCheckbox(hWnd, 31300, L"HighQuality", 350, y, 104, 22);
