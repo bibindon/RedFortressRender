@@ -1135,7 +1135,7 @@ private:
     DebugGBufferView m_debugGBufferView = DebugGBufferView::None;
     float m_postEffectDepthBufferShadowIntensity = 0.5f;
     float m_postEffectDepthBufferShadowSaturationBoost = 0.35f;
-    float m_postEffectDepthBufferShadowCoverage = 0.05f;
+    float m_postEffectDepthBufferShadowCoverage = 0.3f;
     float m_postEffectDepthBufferShadowCoverageFar = 0.8f;
     float m_postEffectDepthBufferShadowBias = 0.0004f;
     float m_postEffectDepthBufferShadowBiasFar = 0.01924f;

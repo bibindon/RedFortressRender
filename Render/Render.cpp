@@ -1851,12 +1851,12 @@ void Render::ApplySettings()
         }
         catch (...)
         {
-            SetPostEffectDepthBufferShadowCoverage(0.5f);
+            SetPostEffectDepthBufferShadowCoverage(0.3f);
         }
     }
     else
     {
-        SetPostEffectDepthBufferShadowCoverage(0.5f);
+        SetPostEffectDepthBufferShadowCoverage(0.3f);
     }
 
     const auto shadowCoverageFar = m_settings.find(L"ShadowCoverageFar");
@@ -1919,12 +1919,12 @@ void Render::ApplySettings()
         }
         catch (...)
         {
-            SetPostEffectDepthBufferShadowPcfTapCount(11);
+            SetPostEffectDepthBufferShadowPcfTapCount(1);
         }
     }
     else
     {
-        SetPostEffectDepthBufferShadowPcfTapCount(11);
+        SetPostEffectDepthBufferShadowPcfTapCount(1);
     }
 
     const auto shadowCompositeTapCount = m_settings.find(L"ShadowCompositeTapCount");
@@ -1936,12 +1936,12 @@ void Render::ApplySettings()
         }
         catch (...)
         {
-            SetPostEffectDepthBufferShadowCompositeTapCount(11);
+            SetPostEffectDepthBufferShadowCompositeTapCount(1);
         }
     }
     else
     {
-        SetPostEffectDepthBufferShadowCompositeTapCount(11);
+        SetPostEffectDepthBufferShadowCompositeTapCount(1);
     }
 
     const auto ssaoSampleRadius = m_settings.find(L"SSAOSampleRadius");
@@ -5061,7 +5061,7 @@ RenderingQualitySettings Render::SetRenderQuality(const std::wstring& quality)
         settings.motionBlurCameraEnabled = false;
         settings.depthBufferShadowEnabled = true;
         settings.ssaoEnabled = true;
-        settings.ssgiEnabled = true;
+        settings.ssgiEnabled = false;
         settings.fogEnabled = true;
         settings.heightFogEnabled = true;
         settings.bloomEnabled = true;

@@ -563,7 +563,7 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     y += 190;
     CreateSettingsGroupBox(hWnd, L"ZShadow", 8, y, 504, 196);
     const wchar_t* zShadowLabels[] = { L"ZShadow Intensity", L"ZShadow Saturation", L"ZShadow Range", L"ZShadow Bias Near" };
-    const wchar_t* zShadowValues[] = { L"0.25", L"0.50", L"0.05", L"0.00040" };
+    const wchar_t* zShadowValues[] = { L"0.25", L"0.50", L"0.30", L"0.00040" };
     int zY = y + 28;
     for (int i = 0; i < 4; ++i)
     {
