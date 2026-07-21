@@ -893,6 +893,210 @@ bool BuildFarLightCoordinates(float3 worldPosition,
     return !any(lightUV < 0.0f) && !any(lightUV > 1.0f);
 }
 
+#define DEFINE_NEAR_SHADOW_FIXED(FUNCTION_NAME, RADIUS) \
+float FUNCTION_NAME(float2 lightUV, float lightDepth) \
+{ \
+    float shadowSum = 0.0f; \
+    float sampleCount = 0.0f; \
+    [loop] \
+    for (int y = -(RADIUS); y <= (RADIUS); ++y) \
+    { \
+        [loop] \
+        for (int x = -(RADIUS); x <= (RADIUS); ++x) \
+        { \
+            float2 sampleUV = lightUV + float2((float)x * g_shadowTexelW, \
+                                               (float)y * g_shadowTexelH); \
+            if (!any(sampleUV < 0.0f) && !any(sampleUV > 1.0f)) \
+            { \
+                float shadowDepth = tex2Dlod(samplerLightZ, float4(sampleUV, 0.0f, 0.0f)).r; \
+                if (shadowDepth < (lightDepth - g_shadowBias)) \
+                { \
+                    shadowSum += 1.0f; \
+                } \
+                sampleCount += 1.0f; \
+            } \
+        } \
+    } \
+    return FinalizeShadowAmount(shadowSum, sampleCount); \
+}
+
+#define DEFINE_FAR_SHADOW_FIXED(FUNCTION_NAME, RADIUS) \
+float FUNCTION_NAME(float2 lightUV, float lightDepth) \
+{ \
+    float shadowSum = 0.0f; \
+    float sampleCount = 0.0f; \
+    [loop] \
+    for (int y = -(RADIUS); y <= (RADIUS); ++y) \
+    { \
+        [loop] \
+        for (int x = -(RADIUS); x <= (RADIUS); ++x) \
+        { \
+            float2 sampleUV = lightUV + float2((float)x * g_shadowFarTexelW, \
+                                               (float)y * g_shadowFarTexelH); \
+            if (!any(sampleUV < 0.0f) && !any(sampleUV > 1.0f)) \
+            { \
+                float shadowDepth = tex2Dlod(samplerLightZFar, float4(sampleUV, 0.0f, 0.0f)).r; \
+                if (shadowDepth < (lightDepth - g_shadowBiasFar)) \
+                { \
+                    shadowSum += 1.0f; \
+                } \
+                sampleCount += 1.0f; \
+            } \
+        } \
+    } \
+    return FinalizeShadowAmount(shadowSum, sampleCount); \
+}
+
+float SampleNearShadowFixed1(float2 lightUV, float lightDepth)
+{
+    float shadowDepth = tex2Dlod(samplerLightZ, float4(lightUV, 0.0f, 0.0f)).r;
+    if (shadowDepth < (lightDepth - g_shadowBias))
+    {
+        return 1.0f;
+    }
+    return 0.0f;
+}
+
+float SampleFarShadowFixed1(float2 lightUV, float lightDepth)
+{
+    float shadowDepth = tex2Dlod(samplerLightZFar, float4(lightUV, 0.0f, 0.0f)).r;
+    if (shadowDepth < (lightDepth - g_shadowBiasFar))
+    {
+        return 1.0f;
+    }
+    return 0.0f;
+}
+
+DEFINE_NEAR_SHADOW_FIXED(SampleNearShadowFixed3, 1)
+DEFINE_NEAR_SHADOW_FIXED(SampleNearShadowFixed5, 2)
+DEFINE_NEAR_SHADOW_FIXED(SampleNearShadowFixed7, 3)
+DEFINE_NEAR_SHADOW_FIXED(SampleNearShadowFixed9, 4)
+DEFINE_NEAR_SHADOW_FIXED(SampleNearShadowFixed11, 5)
+DEFINE_FAR_SHADOW_FIXED(SampleFarShadowFixed3, 1)
+DEFINE_FAR_SHADOW_FIXED(SampleFarShadowFixed5, 2)
+DEFINE_FAR_SHADOW_FIXED(SampleFarShadowFixed7, 3)
+DEFINE_FAR_SHADOW_FIXED(SampleFarShadowFixed9, 4)
+DEFINE_FAR_SHADOW_FIXED(SampleFarShadowFixed11, 5)
+
+#define DEFINE_DIRECT_SHADOW_EVALUATOR(FUNCTION_NAME, NEAR_SAMPLE_FUNCTION, FAR_SAMPLE_FUNCTION) \
+float FUNCTION_NAME(float2 uv, float receiverMask, float sceneEncodedDepth) \
+{ \
+    float3 worldPosition; \
+    if (!ReconstructDirectShadowWorldPosition(uv, receiverMask, sceneEncodedDepth, worldPosition)) \
+    { \
+        return 0.0f; \
+    } \
+    float2 nearLightUV; \
+    float nearLightDepth; \
+    float nearCascadeWeight; \
+    bool isInsideNearCascade = BuildNearLightCoordinates(worldPosition, \
+                                                         nearLightUV, \
+                                                         nearLightDepth, \
+                                                         nearCascadeWeight); \
+    float nearShadow = 0.0f; \
+    if (isInsideNearCascade) \
+    { \
+        nearShadow = NEAR_SAMPLE_FUNCTION(nearLightUV, nearLightDepth); \
+    } \
+    if (!g_farCascadeEnabled) \
+    { \
+        return nearShadow; \
+    } \
+    float2 farLightUV; \
+    float farLightDepth; \
+    float farShadow = 0.0f; \
+    if (BuildFarLightCoordinates(worldPosition, farLightUV, farLightDepth)) \
+    { \
+        farShadow = FAR_SAMPLE_FUNCTION(farLightUV, farLightDepth); \
+    } \
+    if (!isInsideNearCascade) \
+    { \
+        nearCascadeWeight = 0.0f; \
+    } \
+    return lerp(farShadow, nearShadow, saturate(nearCascadeWeight)); \
+}
+
+DEFINE_DIRECT_SHADOW_EVALUATOR(EvaluateDirectShadowFixed1, SampleNearShadowFixed1, SampleFarShadowFixed1)
+DEFINE_DIRECT_SHADOW_EVALUATOR(EvaluateDirectShadowFixed3, SampleNearShadowFixed3, SampleFarShadowFixed3)
+DEFINE_DIRECT_SHADOW_EVALUATOR(EvaluateDirectShadowFixed5, SampleNearShadowFixed5, SampleFarShadowFixed5)
+DEFINE_DIRECT_SHADOW_EVALUATOR(EvaluateDirectShadowFixed7, SampleNearShadowFixed7, SampleFarShadowFixed7)
+DEFINE_DIRECT_SHADOW_EVALUATOR(EvaluateDirectShadowFixed9, SampleNearShadowFixed9, SampleFarShadowFixed9)
+DEFINE_DIRECT_SHADOW_EVALUATOR(EvaluateDirectShadowFixed11, SampleNearShadowFixed11, SampleFarShadowFixed11)
+
+#define DEFINE_DIRECT_COMPOSITE_ONE(FUNCTION_NAME, EVALUATE_FUNCTION) \
+float4 FUNCTION_NAME(float4 inPos : POSITION, float2 inUV : TEXCOORD0) : COLOR0 \
+{ \
+    float2 uv = inUV + float2(0.5f * g_compositeTexelW, 0.5f * g_compositeTexelH); \
+    float4 baseColor = tex2D(samplerBase, uv); \
+    float sceneDepth = tex2D(samplerSceneDepth, uv).r; \
+    float4 encodedNormal = tex2D(samplerSceneNormal, uv); \
+    float shadowPresence = EVALUATE_FUNCTION(uv, encodedNormal.a, sceneDepth); \
+    float shadowAmount = saturate(shadowPresence * g_shadowIntensity); \
+    float3 shadowedColor = lerp(baseColor.rgb, float3(0.0f, 0.0f, 0.0f), shadowAmount); \
+    float saturationAmount = lerp(1.0f, 1.0f + g_shadowSaturationBoost, saturate(shadowPresence)); \
+    return float4(IncreaseSaturation(shadowedColor, saturationAmount), baseColor.a); \
+}
+
+#define DEFINE_DIRECT_COMPOSITE_FILTERED(FUNCTION_NAME, EVALUATE_FUNCTION, RADIUS) \
+float4 FUNCTION_NAME(float4 inPos : POSITION, float2 inUV : TEXCOORD0) : COLOR0 \
+{ \
+    float2 uv = inUV + float2(0.5f * g_compositeTexelW, 0.5f * g_compositeTexelH); \
+    float4 baseColor = tex2D(samplerBase, uv); \
+    float centerDepth = tex2D(samplerSceneDepth, uv).r; \
+    float4 centerEncodedNormal = tex2D(samplerSceneNormal, uv); \
+    float3 centerNormalValue = centerEncodedNormal.rgb * 2.0f - 1.0f; \
+    float3 centerNormal = centerNormalValue * rsqrt(max(dot(centerNormalValue, centerNormalValue), 0.00000001f)); \
+    float shadowSum = 0.0f; \
+    float sampleCount = 0.0f; \
+    [loop] \
+    for (int y = -(RADIUS); y <= (RADIUS); ++y) \
+    { \
+        [loop] \
+        for (int x = -(RADIUS); x <= (RADIUS); ++x) \
+        { \
+            float2 sampleUV = uv + float2((float)x * g_compositeTexelW, \
+                                          (float)y * g_compositeTexelH); \
+            float sampleDepth = tex2Dlod(samplerSceneDepth, float4(sampleUV, 0.0f, 0.0f)).r; \
+            float4 sampleEncodedNormal = tex2Dlod(samplerSceneNormal, float4(sampleUV, 0.0f, 0.0f)); \
+            float3 sampleNormalValue = sampleEncodedNormal.rgb * 2.0f - 1.0f; \
+            float3 sampleNormal = sampleNormalValue * rsqrt(max(dot(sampleNormalValue, sampleNormalValue), 0.00000001f)); \
+            float insideWeight = step(0.0f, sampleUV.x) * step(sampleUV.x, 1.0f); \
+            insideWeight *= step(0.0f, sampleUV.y) * step(sampleUV.y, 1.0f); \
+            float depthWeight = 1.0f - step(g_edgeDepthThreshold, abs(sampleDepth - centerDepth)); \
+            float normalWeight = step(g_edgeNormalThreshold, dot(centerNormal, sampleNormal)); \
+            float sampleWeight = insideWeight * depthWeight * normalWeight; \
+            shadowSum += EVALUATE_FUNCTION(sampleUV, sampleEncodedNormal.a, sampleDepth) * sampleWeight; \
+            sampleCount += sampleWeight; \
+        } \
+    } \
+    float shadowPresence = FinalizeShadowAmount(shadowSum, sampleCount); \
+    float shadowAmount = saturate(shadowPresence * g_shadowIntensity); \
+    float3 shadowedColor = lerp(baseColor.rgb, float3(0.0f, 0.0f, 0.0f), shadowAmount); \
+    float saturationAmount = lerp(1.0f, 1.0f + g_shadowSaturationBoost, saturate(shadowPresence)); \
+    return float4(IncreaseSaturation(shadowedColor, saturationAmount), baseColor.a); \
+}
+
+DEFINE_DIRECT_COMPOSITE_ONE(PS_DirectP1C1, EvaluateDirectShadowFixed1)
+DEFINE_DIRECT_COMPOSITE_ONE(PS_DirectP3C1, EvaluateDirectShadowFixed3)
+DEFINE_DIRECT_COMPOSITE_ONE(PS_DirectP5C1, EvaluateDirectShadowFixed5)
+DEFINE_DIRECT_COMPOSITE_ONE(PS_DirectP7C1, EvaluateDirectShadowFixed7)
+DEFINE_DIRECT_COMPOSITE_ONE(PS_DirectP9C1, EvaluateDirectShadowFixed9)
+DEFINE_DIRECT_COMPOSITE_ONE(PS_DirectP11C1, EvaluateDirectShadowFixed11)
+
+#define DEFINE_DIRECT_COMPOSITE_SET(PCF_NAME, EVALUATE_FUNCTION) \
+DEFINE_DIRECT_COMPOSITE_FILTERED(PS_Direct##PCF_NAME##C3, EVALUATE_FUNCTION, 1) \
+DEFINE_DIRECT_COMPOSITE_FILTERED(PS_Direct##PCF_NAME##C5, EVALUATE_FUNCTION, 2) \
+DEFINE_DIRECT_COMPOSITE_FILTERED(PS_Direct##PCF_NAME##C7, EVALUATE_FUNCTION, 3) \
+DEFINE_DIRECT_COMPOSITE_FILTERED(PS_Direct##PCF_NAME##C9, EVALUATE_FUNCTION, 4) \
+DEFINE_DIRECT_COMPOSITE_FILTERED(PS_Direct##PCF_NAME##C11, EVALUATE_FUNCTION, 5)
+
+DEFINE_DIRECT_COMPOSITE_SET(P1, EvaluateDirectShadowFixed1)
+DEFINE_DIRECT_COMPOSITE_SET(P3, EvaluateDirectShadowFixed3)
+DEFINE_DIRECT_COMPOSITE_SET(P5, EvaluateDirectShadowFixed5)
+DEFINE_DIRECT_COMPOSITE_SET(P7, EvaluateDirectShadowFixed7)
+DEFINE_DIRECT_COMPOSITE_SET(P9, EvaluateDirectShadowFixed9)
+DEFINE_DIRECT_COMPOSITE_SET(P11, EvaluateDirectShadowFixed11)
+
 float SampleNearShadowDirect(float2 lightUV, float lightDepth)
 {
     int radius = clamp((g_shadowPcfTapCount - 1) / 2, 0, 5);
@@ -1535,19 +1739,6 @@ technique TechniqueBuildShadowFromGBuffer11
     }
 }
 
-technique TechniqueDirectComposite
-{
-    pass P0
-    {
-        CullMode         = NONE;
-        ZEnable          = FALSE;
-        ZWriteEnable     = FALSE;
-        AlphaBlendEnable = FALSE;
-        VertexShader     = compile vs_3_0 VS_Composite();
-        PixelShader      = compile ps_3_0 PS_DirectComposite();
-    }
-}
-
 technique TechniqueDirectComposite1
 {
     pass P0
@@ -1560,6 +1751,57 @@ technique TechniqueDirectComposite1
         PixelShader      = compile ps_3_0 PS_DirectComposite1();
     }
 }
+
+#define DEFINE_DIRECT_TECHNIQUE(TECHNIQUE_NAME, PIXEL_SHADER_NAME) \
+technique TECHNIQUE_NAME \
+{ \
+    pass P0 \
+    { \
+        CullMode         = NONE; \
+        ZEnable          = FALSE; \
+        ZWriteEnable     = FALSE; \
+        AlphaBlendEnable = FALSE; \
+        VertexShader     = compile vs_3_0 VS_Composite(); \
+        PixelShader      = compile ps_3_0 PIXEL_SHADER_NAME(); \
+    } \
+}
+
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP1C1, PS_DirectP1C1)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP1C3, PS_DirectP1C3)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP1C5, PS_DirectP1C5)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP1C7, PS_DirectP1C7)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP1C9, PS_DirectP1C9)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP1C11, PS_DirectP1C11)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP3C1, PS_DirectP3C1)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP3C3, PS_DirectP3C3)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP3C5, PS_DirectP3C5)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP3C7, PS_DirectP3C7)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP3C9, PS_DirectP3C9)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP3C11, PS_DirectP3C11)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP5C1, PS_DirectP5C1)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP5C3, PS_DirectP5C3)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP5C5, PS_DirectP5C5)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP5C7, PS_DirectP5C7)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP5C9, PS_DirectP5C9)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP5C11, PS_DirectP5C11)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP7C1, PS_DirectP7C1)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP7C3, PS_DirectP7C3)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP7C5, PS_DirectP7C5)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP7C7, PS_DirectP7C7)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP7C9, PS_DirectP7C9)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP7C11, PS_DirectP7C11)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP9C1, PS_DirectP9C1)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP9C3, PS_DirectP9C3)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP9C5, PS_DirectP9C5)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP9C7, PS_DirectP9C7)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP9C9, PS_DirectP9C9)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP9C11, PS_DirectP9C11)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP11C1, PS_DirectP11C1)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP11C3, PS_DirectP11C3)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP11C5, PS_DirectP11C5)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP11C7, PS_DirectP11C7)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP11C9, PS_DirectP11C9)
+DEFINE_DIRECT_TECHNIQUE(TechniqueDirectP11C11, PS_DirectP11C11)
 
 technique TechniqueComposite
 {

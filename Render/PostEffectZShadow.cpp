@@ -70,6 +70,48 @@ int NormalizeShadowBlurTapCount(const int tapCount)
     return (std::max)(SHADOW_BLUR_TAP_COUNT_MIN, normalized);
 }
 
+int ShadowTapCountToIndex(const int tapCount)
+{
+    switch (tapCount)
+    {
+    case 3:
+        return 1;
+    case 5:
+        return 2;
+    case 7:
+        return 3;
+    case 9:
+        return 4;
+    case 11:
+        return 5;
+    default:
+        return 0;
+    }
+}
+
+const char* GetFixedDirectCompositeTechniqueName(const int pcfTapCount,
+                                                 const int compositeTapCount)
+{
+    static const char* techniqueNames[6][6] =
+    {
+        { "TechniqueDirectP1C1", "TechniqueDirectP1C3", "TechniqueDirectP1C5",
+          "TechniqueDirectP1C7", "TechniqueDirectP1C9", "TechniqueDirectP1C11" },
+        { "TechniqueDirectP3C1", "TechniqueDirectP3C3", "TechniqueDirectP3C5",
+          "TechniqueDirectP3C7", "TechniqueDirectP3C9", "TechniqueDirectP3C11" },
+        { "TechniqueDirectP5C1", "TechniqueDirectP5C3", "TechniqueDirectP5C5",
+          "TechniqueDirectP5C7", "TechniqueDirectP5C9", "TechniqueDirectP5C11" },
+        { "TechniqueDirectP7C1", "TechniqueDirectP7C3", "TechniqueDirectP7C5",
+          "TechniqueDirectP7C7", "TechniqueDirectP7C9", "TechniqueDirectP7C11" },
+        { "TechniqueDirectP9C1", "TechniqueDirectP9C3", "TechniqueDirectP9C5",
+          "TechniqueDirectP9C7", "TechniqueDirectP9C9", "TechniqueDirectP9C11" },
+        { "TechniqueDirectP11C1", "TechniqueDirectP11C3", "TechniqueDirectP11C5",
+          "TechniqueDirectP11C7", "TechniqueDirectP11C9", "TechniqueDirectP11C11" },
+    };
+    const int pcfIndex = ShadowTapCountToIndex(pcfTapCount);
+    const int compositeIndex = ShadowTapCountToIndex(compositeTapCount);
+    return techniqueNames[pcfIndex][compositeIndex];
+}
+
 float CoverageToViewSize(const float coverage)
 {
     return SHADOW_VIEW_SIZE_MIN + ((SHADOW_VIEW_SIZE_MAX - SHADOW_VIEW_SIZE_MIN) * ClampZeroToOne(coverage));
@@ -1040,11 +1082,8 @@ void PostEffectZShadow::RenderTechnique3Direct()
     D3DXMATRIX farLightViewProjection =
         mLightView[SHADOW_CASCADE_FAR] * mLightProj[SHADOW_CASCADE_FAR];
 
-    const char* directCompositeTechnique = "TechniqueDirectComposite";
-    if (m_pcfTapCount == 1 && m_compositeTapCount == 1)
-    {
-        directCompositeTechnique = "TechniqueDirectComposite1";
-    }
+    const char* directCompositeTechnique =
+        GetFixedDirectCompositeTechniqueName(m_pcfTapCount, m_compositeTapCount);
     hr = g_fxDepthBufferShadow->SetTechnique(directCompositeTechnique);
     assert(hr == S_OK);
     hr = g_fxDepthBufferShadow->SetMatrix("g_matInverseView", &inverseViewMatrix);
