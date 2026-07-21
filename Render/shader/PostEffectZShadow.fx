@@ -12,6 +12,10 @@ float    g_lightFar;
 float4x4 g_matLightViewProj;
 float4x4 g_matInverseView;
 float4x4 g_matInverseProjection;
+float4x4 g_matLightViewFar;
+float4x4 g_matLightViewProjFar;
+float    g_lightNearFarCascade;
+float    g_lightFarFarCascade;
 float    g_receiverDepthNear;
 float    g_receiverDepthFar;
 float    g_sceneDepthNear;
@@ -30,6 +34,8 @@ int g_currentBoneIndex;
 
 float g_shadowTexelW;
 float g_shadowTexelH;
+float g_shadowFarTexelW;
+float g_shadowFarTexelH;
 float g_compositeTexelW;
 float g_compositeTexelH;
 float g_compositeFarTexelW;
@@ -37,6 +43,7 @@ float g_compositeFarTexelH;
 
 // 影の端に表示されるギザギザを抑制。0.002～0.005 で調整
 float g_shadowBias;
+float g_shadowBiasFar;
 
 // 影の濃さ(0 ~ 1)
 float g_shadowIntensity;
@@ -51,6 +58,17 @@ texture g_texLightZ;
 sampler samplerLightZ = sampler_state
 {
     Texture   = (g_texLightZ);
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = NONE;
+    AddressU  = CLAMP;
+    AddressV  = CLAMP;
+};
+
+texture g_texLightZFar;
+sampler samplerLightZFar = sampler_state
+{
+    Texture   = (g_texLightZFar);
     MinFilter = POINT;
     MagFilter = POINT;
     MipFilter = NONE;
@@ -808,6 +826,296 @@ void VS_Composite(in  float4 inPos  : POSITION,
 }
 
 // 2枚の画像を線形補間で合成する
+bool ReconstructDirectShadowWorldPosition(float2 uv,
+                                          float receiverMask,
+                                          float sceneEncodedDepth,
+                                          out float3 worldPosition)
+{
+    float receiverEncodedDepth = tex2Dlod(samplerReceiverDepth, float4(uv, 0.0f, 0.0f)).r;
+    if (receiverMask < 0.5f || receiverEncodedDepth >= 0.99999f)
+    {
+        worldPosition = 0.0f;
+        return false;
+    }
+
+    float viewDepth = lerp(g_receiverDepthNear,
+                           g_receiverDepthFar,
+                           saturate(receiverEncodedDepth));
+    if (sceneEncodedDepth < 0.99999f)
+    {
+        viewDepth = lerp(g_sceneDepthNear,
+                         g_sceneDepthFar,
+                         saturate(sceneEncodedDepth));
+    }
+
+    float2 ndcPosition = float2(uv.x * 2.0f - 1.0f,
+                                1.0f - uv.y * 2.0f);
+    float4 viewRay = mul(float4(ndcPosition, 1.0f, 1.0f), g_matInverseProjection);
+    viewRay.xyz /= viewRay.w;
+    if (viewRay.z <= 0.00001f)
+    {
+        worldPosition = 0.0f;
+        return false;
+    }
+
+    float3 viewPosition = viewRay.xyz * (viewDepth / viewRay.z);
+    worldPosition = mul(float4(viewPosition, 1.0f), g_matInverseView).xyz;
+    return true;
+}
+
+bool BuildNearLightCoordinates(float3 worldPosition,
+                               out float2 lightUV,
+                               out float lightDepth,
+                               out float cascadeWeight)
+{
+    float4 lightViewPosition = mul(float4(worldPosition, 1.0f), g_matLightView);
+    lightDepth = saturate((lightViewPosition.z - g_lightNear) / (g_lightFar - g_lightNear));
+    float4 lightClipPosition = mul(float4(worldPosition, 1.0f), g_matLightViewProj);
+    float2 normalizedLightPosition = lightClipPosition.xy / lightClipPosition.w;
+    lightUV = normalizedLightPosition * float2(0.5f, -0.5f) + 0.5f;
+    lightUV += float2(0.5f * g_shadowTexelW, 0.5f * g_shadowTexelH);
+    float edgeDistance = max(abs(normalizedLightPosition.x), abs(normalizedLightPosition.y));
+    cascadeWeight = smoothstep(0.0f, 1.0f, saturate((1.0f - edgeDistance) / 0.15f));
+    return !any(lightUV < 0.0f) && !any(lightUV > 1.0f);
+}
+
+bool BuildFarLightCoordinates(float3 worldPosition,
+                              out float2 lightUV,
+                              out float lightDepth)
+{
+    float4 lightViewPosition = mul(float4(worldPosition, 1.0f), g_matLightViewFar);
+    lightDepth = saturate((lightViewPosition.z - g_lightNearFarCascade) /
+                          (g_lightFarFarCascade - g_lightNearFarCascade));
+    float4 lightClipPosition = mul(float4(worldPosition, 1.0f), g_matLightViewProjFar);
+    float2 normalizedLightPosition = lightClipPosition.xy / lightClipPosition.w;
+    lightUV = normalizedLightPosition * float2(0.5f, -0.5f) + 0.5f;
+    lightUV += float2(0.5f * g_shadowFarTexelW, 0.5f * g_shadowFarTexelH);
+    return !any(lightUV < 0.0f) && !any(lightUV > 1.0f);
+}
+
+float SampleNearShadowDirect(float2 lightUV, float lightDepth)
+{
+    int radius = clamp((g_shadowPcfTapCount - 1) / 2, 0, 5);
+    float shadowSum = 0.0f;
+    float sampleCount = 0.0f;
+    [loop]
+    for (int y = -radius; y <= radius; ++y)
+    {
+        [loop]
+        for (int x = -radius; x <= radius; ++x)
+        {
+            float2 sampleUV = lightUV + float2((float)x * g_shadowTexelW,
+                                               (float)y * g_shadowTexelH);
+            if (any(sampleUV < 0.0f) || any(sampleUV > 1.0f))
+            {
+                continue;
+            }
+            float shadowDepth = tex2Dlod(samplerLightZ, float4(sampleUV, 0.0f, 0.0f)).r;
+            if (shadowDepth < (lightDepth - g_shadowBias))
+            {
+                shadowSum += 1.0f;
+            }
+            sampleCount += 1.0f;
+        }
+    }
+    return FinalizeShadowAmount(shadowSum, sampleCount);
+}
+
+float SampleFarShadowDirect(float2 lightUV, float lightDepth)
+{
+    int radius = clamp((g_shadowPcfTapCount - 1) / 2, 0, 5);
+    float shadowSum = 0.0f;
+    float sampleCount = 0.0f;
+    [loop]
+    for (int y = -radius; y <= radius; ++y)
+    {
+        [loop]
+        for (int x = -radius; x <= radius; ++x)
+        {
+            float2 sampleUV = lightUV + float2((float)x * g_shadowFarTexelW,
+                                               (float)y * g_shadowFarTexelH);
+            if (any(sampleUV < 0.0f) || any(sampleUV > 1.0f))
+            {
+                continue;
+            }
+            float shadowDepth = tex2Dlod(samplerLightZFar, float4(sampleUV, 0.0f, 0.0f)).r;
+            if (shadowDepth < (lightDepth - g_shadowBiasFar))
+            {
+                shadowSum += 1.0f;
+            }
+            sampleCount += 1.0f;
+        }
+    }
+    return FinalizeShadowAmount(shadowSum, sampleCount);
+}
+
+float EvaluateDirectShadow(float2 uv, float receiverMask, float sceneEncodedDepth)
+{
+    float3 worldPosition;
+    if (!ReconstructDirectShadowWorldPosition(uv,
+                                              receiverMask,
+                                              sceneEncodedDepth,
+                                              worldPosition))
+    {
+        return 0.0f;
+    }
+
+    float2 nearLightUV;
+    float nearLightDepth;
+    float nearCascadeWeight;
+    bool isInsideNearCascade = BuildNearLightCoordinates(worldPosition,
+                                                         nearLightUV,
+                                                         nearLightDepth,
+                                                         nearCascadeWeight);
+    float nearShadow = 0.0f;
+    if (isInsideNearCascade)
+    {
+        nearShadow = SampleNearShadowDirect(nearLightUV, nearLightDepth);
+    }
+
+    if (!g_farCascadeEnabled)
+    {
+        return nearShadow;
+    }
+
+    float2 farLightUV;
+    float farLightDepth;
+    float farShadow = 0.0f;
+    if (BuildFarLightCoordinates(worldPosition, farLightUV, farLightDepth))
+    {
+        farShadow = SampleFarShadowDirect(farLightUV, farLightDepth);
+    }
+
+    if (!isInsideNearCascade)
+    {
+        nearCascadeWeight = 0.0f;
+    }
+    return lerp(farShadow, nearShadow, saturate(nearCascadeWeight));
+}
+
+float SampleFarShadow1Direct(float2 lightUV, float lightDepth)
+{
+    float shadowDepth = tex2Dlod(samplerLightZFar, float4(lightUV, 0.0f, 0.0f)).r;
+    if (shadowDepth < (lightDepth - g_shadowBiasFar))
+    {
+        return 1.0f;
+    }
+    return 0.0f;
+}
+
+float EvaluateDirectShadow1(float2 uv, float receiverMask, float sceneEncodedDepth)
+{
+    float3 worldPosition;
+    if (!ReconstructDirectShadowWorldPosition(uv,
+                                              receiverMask,
+                                              sceneEncodedDepth,
+                                              worldPosition))
+    {
+        return 0.0f;
+    }
+
+    float2 nearLightUV;
+    float nearLightDepth;
+    float nearCascadeWeight;
+    bool isInsideNearCascade = BuildNearLightCoordinates(worldPosition,
+                                                         nearLightUV,
+                                                         nearLightDepth,
+                                                         nearCascadeWeight);
+    float nearShadow = 0.0f;
+    if (isInsideNearCascade)
+    {
+        nearShadow = SampleShadowAmount1(nearLightUV, nearLightDepth);
+    }
+
+    if (!g_farCascadeEnabled)
+    {
+        return nearShadow;
+    }
+
+    float2 farLightUV;
+    float farLightDepth;
+    float farShadow = 0.0f;
+    if (BuildFarLightCoordinates(worldPosition, farLightUV, farLightDepth))
+    {
+        farShadow = SampleFarShadow1Direct(farLightUV, farLightDepth);
+    }
+
+    if (!isInsideNearCascade)
+    {
+        nearCascadeWeight = 0.0f;
+    }
+    return lerp(farShadow, nearShadow, saturate(nearCascadeWeight));
+}
+
+float4 PS_DirectComposite1(float4 inPos : POSITION, float2 inUV : TEXCOORD0) : COLOR0
+{
+    float2 uv = inUV + float2(0.5f * g_compositeTexelW, 0.5f * g_compositeTexelH);
+    float4 baseColor = tex2D(samplerBase, uv);
+    float sceneDepth = tex2D(samplerSceneDepth, uv).r;
+    float4 encodedNormal = tex2D(samplerSceneNormal, uv);
+    float shadowPresence = EvaluateDirectShadow1(uv, encodedNormal.a, sceneDepth);
+    float shadowAmount = saturate(shadowPresence * g_shadowIntensity);
+    float3 shadowedColor = lerp(baseColor.rgb, float3(0.0f, 0.0f, 0.0f), shadowAmount);
+    float saturationAmount = lerp(1.0f,
+                                  1.0f + g_shadowSaturationBoost,
+                                  saturate(shadowPresence));
+    return float4(IncreaseSaturation(shadowedColor, saturationAmount), baseColor.a);
+}
+
+float4 PS_DirectComposite(float4 inPos : POSITION, float2 inUV : TEXCOORD0) : COLOR0
+{
+    float2 uv = inUV + float2(0.5f * g_compositeTexelW, 0.5f * g_compositeTexelH);
+    float4 baseColor = tex2D(samplerBase, uv);
+    float centerDepth = tex2D(samplerSceneDepth, uv).r;
+    float4 centerEncodedNormal = tex2D(samplerSceneNormal, uv);
+    float3 centerNormal = DecodeWorldNormal(centerEncodedNormal.rgb);
+
+    int radius = clamp((g_shadowCompositeTapCount - 1) / 2, 0, 5);
+    float shadowSum = 0.0f;
+    float sampleCount = 0.0f;
+    [loop]
+    for (int y = -radius; y <= radius; ++y)
+    {
+        [loop]
+        for (int x = -radius; x <= radius; ++x)
+        {
+            float2 sampleUV = uv + float2((float)x * g_compositeTexelW,
+                                          (float)y * g_compositeTexelH);
+            if (any(sampleUV < 0.0f) || any(sampleUV > 1.0f))
+            {
+                continue;
+            }
+
+            float sampleDepth = tex2Dlod(samplerSceneDepth, float4(sampleUV, 0.0f, 0.0f)).r;
+            if (abs(sampleDepth - centerDepth) > g_edgeDepthThreshold)
+            {
+                continue;
+            }
+
+            float4 sampleEncodedNormal = tex2Dlod(samplerSceneNormal,
+                                                  float4(sampleUV, 0.0f, 0.0f));
+            float3 sampleNormal = DecodeWorldNormal(sampleEncodedNormal.rgb);
+            if (dot(centerNormal, sampleNormal) < g_edgeNormalThreshold)
+            {
+                continue;
+            }
+
+            shadowSum += EvaluateDirectShadow(sampleUV,
+                                              sampleEncodedNormal.a,
+                                              sampleDepth);
+            sampleCount += 1.0f;
+        }
+    }
+
+    float shadowPresence = FinalizeShadowAmount(shadowSum, sampleCount);
+    float shadowAmount = saturate(shadowPresence * g_shadowIntensity);
+    float3 shadowedColor = lerp(baseColor.rgb, float3(0.0f, 0.0f, 0.0f), shadowAmount);
+    float saturationAmount = lerp(1.0f,
+                                  1.0f + g_shadowSaturationBoost,
+                                  saturate(shadowPresence));
+    return float4(IncreaseSaturation(shadowedColor, saturationAmount), baseColor.a);
+}
+
 float4 SampleCombinedShadow(float2 uv)
 {
     float4 nearShadow = tex2D(samplerShadow, uv);
@@ -1224,6 +1532,32 @@ technique TechniqueBuildShadowFromGBuffer11
         ZWriteEnable = FALSE;
         VertexShader = compile vs_3_0 VS_Composite();
         PixelShader  = compile ps_3_0 PS_BuildShadowFromGBuffer11();
+    }
+}
+
+technique TechniqueDirectComposite
+{
+    pass P0
+    {
+        CullMode         = NONE;
+        ZEnable          = FALSE;
+        ZWriteEnable     = FALSE;
+        AlphaBlendEnable = FALSE;
+        VertexShader     = compile vs_3_0 VS_Composite();
+        PixelShader      = compile ps_3_0 PS_DirectComposite();
+    }
+}
+
+technique TechniqueDirectComposite1
+{
+    pass P0
+    {
+        CullMode         = NONE;
+        ZEnable          = FALSE;
+        ZWriteEnable     = FALSE;
+        AlphaBlendEnable = FALSE;
+        VertexShader     = compile vs_3_0 VS_Composite();
+        PixelShader      = compile ps_3_0 PS_DirectComposite1();
     }
 }
 

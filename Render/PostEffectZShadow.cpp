@@ -234,13 +234,11 @@ void PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_sceneDepthFar = sceneDepthFar;
 
     RenderTechnique1(SHADOW_CASCADE_NEAR);
-    RenderTechnique2FromGBuffer(SHADOW_CASCADE_NEAR);
     if (m_farCascadeEnabled)
     {
         RenderTechnique1(SHADOW_CASCADE_FAR);
-        RenderTechnique2FromGBuffer(SHADOW_CASCADE_FAR);
     }
-    RenderTechnique3();
+    RenderTechnique3Direct();
 
     m_pMeshList = nullptr;
     m_pSkinAnimMeshList = nullptr;
@@ -459,8 +457,16 @@ void PostEffectZShadow::RenderTechnique1(const int cascadeIndex)
     hr = Common::D3DDevice()->EndScene();
     assert(hr == S_OK);
 
+    hr = Common::D3DDevice()->SetRenderTarget(0, oldRT0);
+    assert(hr == S_OK);
+
+    hr = Common::D3DDevice()->SetDepthStencilSurface(oldZ);
+    assert(hr == S_OK);
+
     SAFE_RELEASE(surfaceLightZ);
-    
+    SAFE_RELEASE(oldRT0);
+    SAFE_RELEASE(oldZ);
+
     Common::D3DDevice()->SetViewport(&oldViewPort);
 }
 
@@ -971,6 +977,191 @@ void PostEffectZShadow::RenderTechnique2(const int cascadeIndex)
 
     SAFE_RELEASE(oldRT0);
     SAFE_RELEASE(oldZ);
+}
+
+void PostEffectZShadow::RenderTechnique3Direct()
+{
+    HRESULT hr = E_FAIL;
+    LPDIRECT3DSURFACE9 previousRenderTarget = NULL;
+    LPDIRECT3DSURFACE9 previousDepthStencil = NULL;
+    LPDIRECT3DSURFACE9 compositeSurface = NULL;
+    D3DVIEWPORT9 previousViewport{};
+
+    hr = Common::D3DDevice()->GetRenderTarget(0, &previousRenderTarget);
+    assert(hr == S_OK);
+    hr = Common::D3DDevice()->GetDepthStencilSurface(&previousDepthStencil);
+    assert(hr == S_OK);
+    hr = Common::D3DDevice()->GetViewport(&previousViewport);
+    assert(hr == S_OK);
+    hr = m_texCompositeTarget->GetSurfaceLevel(0, &compositeSurface);
+    assert(hr == S_OK);
+    hr = Common::D3DDevice()->SetRenderTarget(0, compositeSurface);
+    assert(hr == S_OK);
+    hr = Common::D3DDevice()->SetDepthStencilSurface(NULL);
+    assert(hr == S_OK);
+
+    D3DSURFACE_DESC compositeDescription{};
+    hr = m_texCompositeTarget->GetLevelDesc(0, &compositeDescription);
+    assert(hr == S_OK);
+    D3DVIEWPORT9 compositeViewport{};
+    compositeViewport.X = 0;
+    compositeViewport.Y = 0;
+    compositeViewport.Width = compositeDescription.Width;
+    compositeViewport.Height = compositeDescription.Height;
+    compositeViewport.MinZ = 0.0f;
+    compositeViewport.MaxZ = 1.0f;
+    hr = Common::D3DDevice()->SetViewport(&compositeViewport);
+    assert(hr == S_OK);
+
+    LPDIRECT3DTEXTURE9 nearLightDepthTexture = GetActiveLightZTexture(SHADOW_CASCADE_NEAR);
+    LPDIRECT3DTEXTURE9 farLightDepthTexture = GetActiveLightZTexture(SHADOW_CASCADE_FAR);
+    D3DSURFACE_DESC nearLightDepthDescription{};
+    D3DSURFACE_DESC farLightDepthDescription{};
+    hr = nearLightDepthTexture->GetLevelDesc(0, &nearLightDepthDescription);
+    assert(hr == S_OK);
+    hr = farLightDepthTexture->GetLevelDesc(0, &farLightDepthDescription);
+    assert(hr == S_OK);
+
+    const D3DXMATRIX viewMatrix = Camera::GetViewMatrix();
+    const D3DXMATRIX projectionMatrix = Camera::GetProjMatrix();
+    D3DXMATRIX inverseViewMatrix;
+    D3DXMATRIX inverseProjectionMatrix;
+    if (D3DXMatrixInverse(&inverseViewMatrix, NULL, &viewMatrix) == NULL ||
+        D3DXMatrixInverse(&inverseProjectionMatrix, NULL, &projectionMatrix) == NULL)
+    {
+        SAFE_RELEASE(compositeSurface);
+        SAFE_RELEASE(previousRenderTarget);
+        SAFE_RELEASE(previousDepthStencil);
+        throw std::runtime_error("Failed to invert the camera matrix for direct Z shadow composition.");
+    }
+
+    D3DXMATRIX nearLightViewProjection =
+        mLightView[SHADOW_CASCADE_NEAR] * mLightProj[SHADOW_CASCADE_NEAR];
+    D3DXMATRIX farLightViewProjection =
+        mLightView[SHADOW_CASCADE_FAR] * mLightProj[SHADOW_CASCADE_FAR];
+
+    const char* directCompositeTechnique = "TechniqueDirectComposite";
+    if (m_pcfTapCount == 1 && m_compositeTapCount == 1)
+    {
+        directCompositeTechnique = "TechniqueDirectComposite1";
+    }
+    hr = g_fxDepthBufferShadow->SetTechnique(directCompositeTechnique);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetMatrix("g_matInverseView", &inverseViewMatrix);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetMatrix("g_matInverseProjection", &inverseProjectionMatrix);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetMatrix("g_matLightView", &mLightView[SHADOW_CASCADE_NEAR]);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetMatrix("g_matLightViewProj", &nearLightViewProjection);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetMatrix("g_matLightViewFar", &mLightView[SHADOW_CASCADE_FAR]);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetMatrix("g_matLightViewProjFar", &farLightViewProjection);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_lightNear", fLightNear[SHADOW_CASCADE_NEAR]);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_lightFar", fLightFar[SHADOW_CASCADE_NEAR]);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_lightNearFarCascade", fLightNear[SHADOW_CASCADE_FAR]);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_lightFarFarCascade", fLightFar[SHADOW_CASCADE_FAR]);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_receiverDepthNear", Camera::GetNear());
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_receiverDepthFar", Camera::GetFar());
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_sceneDepthNear", m_sceneDepthNear);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_sceneDepthFar", m_sceneDepthFar);
+    assert(hr == S_OK);
+    const float compositeTexelWidth = 1.0f / static_cast<float>(compositeDescription.Width);
+    const float compositeTexelHeight = 1.0f / static_cast<float>(compositeDescription.Height);
+    hr = g_fxDepthBufferShadow->SetFloat("g_receiverTexelW", compositeTexelWidth);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_receiverTexelH", compositeTexelHeight);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_compositeTexelW", compositeTexelWidth);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_compositeTexelH", compositeTexelHeight);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_shadowTexelW",
+                                         1.0f / static_cast<float>(nearLightDepthDescription.Width));
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_shadowTexelH",
+                                         1.0f / static_cast<float>(nearLightDepthDescription.Height));
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_shadowFarTexelW",
+                                         1.0f / static_cast<float>(farLightDepthDescription.Width));
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_shadowFarTexelH",
+                                         1.0f / static_cast<float>(farLightDepthDescription.Height));
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_shadowBias", m_shadowBias);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_shadowBiasFar", m_shadowBiasFar);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_shadowIntensity", m_shadowIntensity);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_shadowSaturationBoost", m_shadowSaturationBoost);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_edgeDepthThreshold", 0.010f);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_edgeNormalThreshold", 0.50f);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetInt("g_shadowPcfTapCount", m_pcfTapCount);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetInt("g_shadowCompositeTapCount", m_compositeTapCount);
+    assert(hr == S_OK);
+    BOOL farCascadeEnabled = FALSE;
+    if (m_farCascadeEnabled)
+    {
+        farCascadeEnabled = TRUE;
+    }
+    hr = g_fxDepthBufferShadow->SetBool("g_farCascadeEnabled", farCascadeEnabled);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetTexture("g_texBase", g_texTemp);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetTexture("g_texSceneDepth", m_sceneDepthTexture);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetTexture("g_texReceiverDepth", m_receiverDepthTexture);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetTexture("g_texSceneNormal", m_sceneNormalTexture);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetTexture("g_texLightZ", nearLightDepthTexture);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetTexture("g_texLightZFar", farLightDepthTexture);
+    assert(hr == S_OK);
+
+    hr = Common::D3DDevice()->BeginScene();
+    assert(hr == S_OK);
+    UINT passCount = 0;
+    hr = g_fxDepthBufferShadow->Begin(&passCount, 0);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->BeginPass(0);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->CommitChanges();
+    assert(hr == S_OK);
+
+    DrawFullscreenQuad();
+
+    hr = g_fxDepthBufferShadow->EndPass();
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->End();
+    assert(hr == S_OK);
+    hr = Common::D3DDevice()->EndScene();
+    assert(hr == S_OK);
+
+    hr = Common::D3DDevice()->SetRenderTarget(0, previousRenderTarget);
+    assert(hr == S_OK);
+    hr = Common::D3DDevice()->SetDepthStencilSurface(previousDepthStencil);
+    assert(hr == S_OK);
+    hr = Common::D3DDevice()->SetViewport(&previousViewport);
+    assert(hr == S_OK);
+
+    SAFE_RELEASE(compositeSurface);
+    SAFE_RELEASE(previousRenderTarget);
+    SAFE_RELEASE(previousDepthStencil);
 }
 
 void PostEffectZShadow::RenderTechnique3()

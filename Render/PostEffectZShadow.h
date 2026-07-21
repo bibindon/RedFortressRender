@@ -67,6 +67,7 @@ private:
     void RenderTechnique2(const int cascadeIndex);
     void RenderTechnique2FromGBuffer(const int cascadeIndex);
     void RenderTechnique3();
+    void RenderTechnique3Direct();
 
 
     float m_shadowIntensity = 0.5f;
