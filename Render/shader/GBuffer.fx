@@ -377,6 +377,20 @@ technique TechniqueGBuffer
     }
 }
 
+technique TechniqueGBufferCulled
+{
+    pass P0
+    {
+        CullMode         = CCW;
+        ZEnable          = TRUE;
+        ZWriteEnable     = TRUE;
+        AlphaBlendEnable = FALSE;
+
+        VertexShader = compile vs_3_0 VS_GBuffer();
+        PixelShader  = compile ps_3_0 PS_GBuffer();
+    }
+}
+
 // バックフェイスのみ描画して背面深度を取得（厚み = 背面深度 - 前面深度）
 technique TechniqueGBufferInstancing
 {
@@ -392,11 +406,39 @@ technique TechniqueGBufferInstancing
     }
 }
 
+technique TechniqueGBufferInstancingCulled
+{
+    pass P0
+    {
+        CullMode         = CCW;
+        ZEnable          = TRUE;
+        ZWriteEnable     = TRUE;
+        AlphaBlendEnable = FALSE;
+
+        VertexShader = compile vs_3_0 VS_GBufferInstancing();
+        PixelShader  = compile ps_3_0 PS_GBufferInstancing();
+    }
+}
+
 technique TechniqueGBufferParticle
 {
     pass P0
     {
         CullMode         = NONE;
+        ZEnable          = TRUE;
+        ZWriteEnable     = TRUE;
+        AlphaBlendEnable = FALSE;
+
+        VertexShader = compile vs_3_0 VS_GBufferParticle();
+        PixelShader  = compile ps_3_0 PS_GBufferParticle();
+    }
+}
+
+technique TechniqueGBufferParticleCulled
+{
+    pass P0
+    {
+        CullMode         = CCW;
         ZEnable          = TRUE;
         ZWriteEnable     = TRUE;
         AlphaBlendEnable = FALSE;
@@ -425,6 +467,20 @@ technique TechniqueGBufferSkin
     pass P0
     {
         CullMode         = NONE;
+        ZEnable          = TRUE;
+        ZWriteEnable     = TRUE;
+        AlphaBlendEnable = FALSE;
+
+        VertexShader = (vsSkinArray[g_currentBoneIndex]);
+        PixelShader  = compile ps_3_0 PS_GBufferSkin();
+    }
+}
+
+technique TechniqueGBufferSkinCulled
+{
+    pass P0
+    {
+        CullMode         = CCW;
         ZEnable          = TRUE;
         ZWriteEnable     = TRUE;
         AlphaBlendEnable = FALSE;

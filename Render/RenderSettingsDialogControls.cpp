@@ -401,6 +401,13 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     y += 124;
     CreateSettingsGroupBox(hWnd, L"GBuffer", left - 4, y, width + 8, 108);
     CreateSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_GBUFFER_ENABLE, L"GBuffer", 22, y + 18, 110, 22);
+    CreateSettingsCheckbox(hWnd,
+                           IDC_RENDER_SETTINGS_GBUFFER_FRONT_BACKFACE_CULLING_ENABLE,
+                           L"Front Backface Cull",
+                           142,
+                           y + 18,
+                           180,
+                           22);
     CreateSettingsStatic(hWnd, L"GBuffer Near", 22, y + 42, 100, 18);
     CreateSettingsEdit(hWnd, L"0.100", 158, y + 38, 72, 20, 41010);
     CreateSettingsStatic(hWnd, L"GBuffer Far", 264, y + 42, 100, 18);

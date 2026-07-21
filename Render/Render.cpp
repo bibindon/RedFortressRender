@@ -864,6 +864,17 @@ void Render::ApplySettings()
         }
     }
 
+    const auto gBufferFrontBackfaceCullingEnable =
+        m_settings.find(L"GBufferFrontBackfaceCullingEnable");
+    if (gBufferFrontBackfaceCullingEnable != m_settings.end())
+    {
+        bool enabled = false;
+        if (TryParseBoolSetting(gBufferFrontBackfaceCullingEnable->second, enabled))
+        {
+            SetGBufferFrontBackfaceCullingEnable(enabled);
+        }
+    }
+
     const auto applyScalarGBufferFormat = [this](const wchar_t* key,
                                                   void (Render::*setter)(GBufferScalarFormat))
     {
@@ -2667,6 +2678,7 @@ void Render::Draw()
                        m_meshInstancing2Map,
                        &m_particleSystem,
                        m_postEffectZShadowMeshMixManagerReceiverEnabled,
+                       m_gBufferFrontBackfaceCullingEnabled,
                        m_debugGBufferView == DebugGBufferView::BackDepth,
                        &pTexTempZ,
                        &pTexTempCameraZ,
@@ -4868,6 +4880,11 @@ void Render::SetGBufferEnable(const bool enabled)
     }
 }
 
+void Render::SetGBufferFrontBackfaceCullingEnable(const bool enabled)
+{
+    m_gBufferFrontBackfaceCullingEnabled = enabled;
+}
+
 void Render::SetGBufferClipPlanes(const float nearPlane, const float farPlane)
 {
     m_gBufferNearPlane = nearPlane;
@@ -4980,6 +4997,11 @@ float Render::GetCameraShakeIntensity() const
 bool Render::IsGBufferEnabled() const
 {
     return m_gBufferEnabled;
+}
+
+bool Render::IsGBufferFrontBackfaceCullingEnabled() const
+{
+    return m_gBufferFrontBackfaceCullingEnabled;
 }
 
 float Render::GetGBufferNearPlane() const

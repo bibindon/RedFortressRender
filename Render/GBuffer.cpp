@@ -258,6 +258,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
                    const std::unordered_map<std::wstring, MeshInstancing2*>& meshInstancing2Map,
                    ParticleSystem* particleSystem,
                    const bool meshMixManagerShadowReceiverEnabled,
+                   const bool frontBackfaceCullingEnabled,
                    const bool generateBackDepth,
                    LPDIRECT3DTEXTURE9* Z,
                    LPDIRECT3DTEXTURE9* CameraZ,
@@ -329,6 +330,18 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     }
     m_fxGBuffer->SetBool("g_shadowReceiverEnabled", shadowReceiverEnabled);
 
+    const char* frontTechnique = "TechniqueGBuffer";
+    const char* frontSkinTechnique = "TechniqueGBufferSkin";
+    const char* frontInstancingTechnique = "TechniqueGBufferInstancing";
+    const char* frontParticleTechnique = "TechniqueGBufferParticle";
+    if (frontBackfaceCullingEnabled)
+    {
+        frontTechnique = "TechniqueGBufferCulled";
+        frontSkinTechnique = "TechniqueGBufferSkinCulled";
+        frontInstancingTechnique = "TechniqueGBufferInstancingCulled";
+        frontParticleTechnique = "TechniqueGBufferParticleCulled";
+    }
+
     for (auto& mesh : meshList)
     {
         if (!mesh.IsEnabled())
@@ -350,7 +363,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         const D3DXMATRIX matWorld = mesh.GetWorldMatrix();
 
         m_fxGBuffer->SetMatrix("g_matWorld", &matWorld);
-        m_fxGBuffer->SetTechnique("TechniqueGBuffer");
+        m_fxGBuffer->SetTechnique(frontTechnique);
         m_fxGBuffer->Begin(NULL, 0);
         m_fxGBuffer->BeginPass(0);
 
@@ -371,7 +384,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     }
 
     m_fxGBuffer->SetBool("g_shadowReceiverEnabled", TRUE);
-    m_fxGBuffer->SetTechnique("TechniqueGBufferSkin");
+    m_fxGBuffer->SetTechnique(frontSkinTechnique);
     for (auto& mesh : meshMixSkinAnimList)
     {
         if (mesh != nullptr)
@@ -381,7 +394,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     }
 
     m_fxGBuffer->SetBool("g_shadowReceiverEnabled", FALSE);
-    m_fxGBuffer->SetTechnique("TechniqueGBuffer");
+    m_fxGBuffer->SetTechnique(frontTechnique);
     for (auto& mesh : meshMixAnimNoBoneList)
     {
         if (mesh != nullptr)
@@ -400,6 +413,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
                 meshShadowReceiverEnabled = TRUE;
             }
             m_fxGBuffer->SetBool("g_shadowReceiverEnabled", meshShadowReceiverEnabled);
+            m_fxGBuffer->SetTechnique(frontTechnique);
             mesh->RenderToEffect(m_fxGBuffer, viewProjectionMatrix);
         }
     }
@@ -409,7 +423,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     {
         if (mesh.second != nullptr)
         {
-            mesh.second->RenderToGBufferEffect(m_fxGBuffer, "TechniqueGBufferInstancing");
+            mesh.second->RenderToGBufferEffect(m_fxGBuffer, frontInstancingTechnique);
         }
     }
 
@@ -417,7 +431,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     {
         if (mesh.second != nullptr)
         {
-            mesh.second->RenderToGBufferEffect(m_fxGBuffer, "TechniqueGBufferInstancing");
+            mesh.second->RenderToGBufferEffect(m_fxGBuffer, frontInstancingTechnique);
         }
     }
 
@@ -426,7 +440,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         particleSystem->RenderDustToGBufferEffect(m_fxGBuffer,
                                                   mView,
                                                   mProj,
-                                                  "TechniqueGBufferParticle");
+                                                  frontParticleTechnique);
     }
 
     hr = Common::D3DDevice()->EndScene();

@@ -776,6 +776,10 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
         {
             render->SetGBufferEnable(IsSettingsCheckboxChecked(hWnd, id));
         }
+        else if (id == IDC_RENDER_SETTINGS_GBUFFER_FRONT_BACKFACE_CULLING_ENABLE)
+        {
+            render->SetGBufferFrontBackfaceCullingEnable(IsSettingsCheckboxChecked(hWnd, id));
+        }
         else if (id == IDC_RENDER_SETTINGS_GBUFFER_DEPTH_R32F)
         {
             render->SetGBufferDepthFormat(GBufferScalarFormat::R32F);

@@ -35,6 +35,9 @@ void SyncRenderSettingsDialogFromRender(HWND hWnd)
     SetSettingsComboSelection(hWnd, 31001, RenderingQualityToComboIndex(render->GetRenderQuality()));
     SetSettingsCheckbox(hWnd, 31002, render->IsShowFPS());
     SetSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_GBUFFER_ENABLE, render->IsGBufferEnabled());
+    SetSettingsCheckbox(hWnd,
+                        IDC_RENDER_SETTINGS_GBUFFER_FRONT_BACKFACE_CULLING_ENABLE,
+                        render->IsGBufferFrontBackfaceCullingEnabled());
     SyncDebugGBufferCheckboxes(hWnd, render);
     SetSettingsCheckbox(hWnd,
                         IDC_RENDER_SETTINGS_GBUFFER_DEPTH_R32F,

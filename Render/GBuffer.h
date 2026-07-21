@@ -61,6 +61,7 @@ public:
               const std::unordered_map<std::wstring, MeshInstancing2*>& meshInstancing2Map,
               ParticleSystem* particleSystem,
               bool meshMixManagerShadowReceiverEnabled,
+              bool frontBackfaceCullingEnabled,
               bool generateBackDepth,
               LPDIRECT3DTEXTURE9* Z,
               LPDIRECT3DTEXTURE9* CameraZ,

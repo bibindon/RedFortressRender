@@ -127,6 +127,7 @@ enum RenderSettingsControlId
     IDC_RENDER_SETTINGS_DEBUG_DEPTH,
     IDC_RENDER_SETTINGS_DEBUG_THICKNESS,
     IDC_RENDER_SETTINGS_DEBUG_BACK_DEPTH,
+    IDC_RENDER_SETTINGS_GBUFFER_FRONT_BACKFACE_CULLING_ENABLE,
 };
 void SetDefaultGuiFont(HWND hWnd);
 void CreateSettingsStatic(HWND parent, const wchar_t* text, int x, int y, int w, int h);

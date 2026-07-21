@@ -443,6 +443,7 @@ public:
     float GetCameraShakeDuration() const;
     float GetCameraShakeIntensity() const;
     void SetGBufferEnable(const bool enabled);
+    void SetGBufferFrontBackfaceCullingEnable(const bool enabled);
     void SetGBufferClipPlanes(const float nearPlane, const float farPlane);
     void SetGBufferDepthFormat(GBufferScalarFormat format);
     void SetGBufferFogDepthFormat(GBufferScalarFormat format);
@@ -451,6 +452,7 @@ public:
     void SetGBufferThicknessFormat(GBufferVectorFormat format);
     void SetGBufferBackDepthFormat(GBufferScalarFormat format);
     bool IsGBufferEnabled() const;
+    bool IsGBufferFrontBackfaceCullingEnabled() const;
     float GetGBufferNearPlane() const;
     float GetGBufferFarPlane() const;
     GBufferScalarFormat GetGBufferDepthFormat() const;
@@ -1119,6 +1121,7 @@ private:
     bool m_postEffectMotionBlurCameraEnabled = false;
     unsigned int m_taaFrameIndex = 0;
     bool m_gBufferEnabled = true;
+    bool m_gBufferFrontBackfaceCullingEnabled = false;
     bool m_postEffectZShadowEnabled = true;
     bool m_postEffectZShadowDebugLightDepthEnabled = false;
     bool m_postEffectZShadowFarEnabled = false;
