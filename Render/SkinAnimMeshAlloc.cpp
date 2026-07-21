@@ -3,6 +3,7 @@
 #include "Common.h"
 #include "Util.h"
 #include "SkinAnimMeshAlloc.h"
+#include <stdexcept>
 
 namespace NSRender
 {
@@ -302,7 +303,9 @@ LPDIRECT3DTEXTURE9 SkinAnimMeshAlloc::LoadTextureCached(const std::wstring& text
                                            &texture);
     if (FAILED(hr) || texture == nullptr)
     {
-        return nullptr;
+        const std::string message = "Failed to load a skin animation texture: " +
+                                    Util::WstringToUtf8(texturePath);
+        throw std::runtime_error(message);
     }
 
     texture->AddRef();
