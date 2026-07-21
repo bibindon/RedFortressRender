@@ -60,6 +60,7 @@ public:
               const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap,
               const std::unordered_map<std::wstring, MeshInstancing2*>& meshInstancing2Map,
               ParticleSystem* particleSystem,
+              bool generateBackDepth,
               LPDIRECT3DTEXTURE9* Z,
               LPDIRECT3DTEXTURE9* CameraZ,
               LPDIRECT3DTEXTURE9* Pos,
@@ -80,6 +81,7 @@ private:
     LPDIRECT3DTEXTURE9 m_texRenderTargetNormal = NULL;
     LPDIRECT3DTEXTURE9 m_texRenderTargetThickness = NULL;
     LPDIRECT3DTEXTURE9 m_texRenderTargetBackDepth = NULL;
+    LPDIRECT3DSURFACE9 m_surfaceThicknessDepthStencil = NULL;
 
     LPD3DXEFFECT m_fxGBuffer = NULL;
     float m_nearPlane = 0.1f;

@@ -2666,6 +2666,7 @@ void Render::Draw()
                        m_meshInstancingMap,
                        m_meshInstancing2Map,
                        &m_particleSystem,
+                       m_debugGBufferView == DebugGBufferView::BackDepth,
                        &pTexTempZ,
                        &pTexTempCameraZ,
                        &pTexTempPos,

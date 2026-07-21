@@ -170,6 +170,8 @@ bool GBuffer::IsInitialized() const
 void GBuffer::CreateRawResource()
 {
     HRESULT hResult = E_FAIL;
+    const UINT thicknessWidth = static_cast<UINT>((std::max)(1, Common::ScreenW() / 2));
+    const UINT thicknessHeight = static_cast<UINT>((std::max)(1, Common::ScreenH() / 2));
 
     // Z画像
     hResult = D3DXCreateTexture(Common::D3DDevice(),
@@ -216,8 +218,8 @@ void GBuffer::CreateRawResource()
 
     // 厚み情報（バックフェイス深度）
     hResult = D3DXCreateTexture(Common::D3DDevice(),
-                                Common::ScreenW(),
-                                Common::ScreenH(),
+                                thicknessWidth,
+                                thicknessHeight,
                                 1,
                                 D3DUSAGE_RENDERTARGET,
                                 ToD3DFormat(m_thicknessFormat),
@@ -227,13 +229,24 @@ void GBuffer::CreateRawResource()
 
     // バックフェイスパスで実際に描いた線形深度
     hResult = D3DXCreateTexture(Common::D3DDevice(),
-                                Common::ScreenW(),
-                                Common::ScreenH(),
+                                thicknessWidth,
+                                thicknessHeight,
                                 1,
                                 D3DUSAGE_RENDERTARGET,
                                 ToD3DFormat(m_backDepthFormat),
                                 D3DPOOL_DEFAULT,
                                 &m_texRenderTargetBackDepth);
+    assert(hResult == S_OK);
+
+    hResult = Common::D3DDevice()->CreateDepthStencilSurface(
+        thicknessWidth,
+        thicknessHeight,
+        D3DFMT_D16,
+        D3DMULTISAMPLE_NONE,
+        0,
+        TRUE,
+        &m_surfaceThicknessDepthStencil,
+        NULL);
     assert(hResult == S_OK);
 }
 
@@ -244,6 +257,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
                    const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap,
                    const std::unordered_map<std::wstring, MeshInstancing2*>& meshInstancing2Map,
                    ParticleSystem* particleSystem,
+                   const bool generateBackDepth,
                    LPDIRECT3DTEXTURE9* Z,
                    LPDIRECT3DTEXTURE9* CameraZ,
                    LPDIRECT3DTEXTURE9* Pos,
@@ -416,12 +430,35 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     LPDIRECT3DSURFACE9 surfaceThickness = NULL;
     LPDIRECT3DSURFACE9 surfaceBackDepth = NULL;
     m_texRenderTargetThickness->GetSurfaceLevel(0, &surfaceThickness);
-    m_texRenderTargetBackDepth->GetSurfaceLevel(0, &surfaceBackDepth);
+    if (generateBackDepth)
+    {
+        m_texRenderTargetBackDepth->GetSurfaceLevel(0, &surfaceBackDepth);
+    }
 
     LPDIRECT3DSURFACE9 surfaceOld2 = NULL;
+    LPDIRECT3DSURFACE9 surfaceOldDepthStencil = NULL;
+    D3DVIEWPORT9 oldViewport{};
     Common::D3DDevice()->GetRenderTarget(0, &surfaceOld2);
+    Common::D3DDevice()->GetDepthStencilSurface(&surfaceOldDepthStencil);
+    Common::D3DDevice()->GetViewport(&oldViewport);
     Common::D3DDevice()->SetRenderTarget(0, surfaceThickness);
-    Common::D3DDevice()->SetRenderTarget(1, surfaceBackDepth);
+    Common::D3DDevice()->SetRenderTarget(1, NULL);
+    if (generateBackDepth)
+    {
+        Common::D3DDevice()->SetRenderTarget(1, surfaceBackDepth);
+    }
+    Common::D3DDevice()->SetDepthStencilSurface(m_surfaceThicknessDepthStencil);
+
+    D3DSURFACE_DESC thicknessDescription{};
+    m_texRenderTargetThickness->GetLevelDesc(0, &thicknessDescription);
+    D3DVIEWPORT9 thicknessViewport{};
+    thicknessViewport.X = 0;
+    thicknessViewport.Y = 0;
+    thicknessViewport.Width = thicknessDescription.Width;
+    thicknessViewport.Height = thicknessDescription.Height;
+    thicknessViewport.MinZ = 0.0f;
+    thicknessViewport.MaxZ = 1.0f;
+    Common::D3DDevice()->SetViewport(&thicknessViewport);
 
     Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
                                D3DCOLOR_RGBA(0, 0, 0, 0), 1.0f, 0);
@@ -497,8 +534,11 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     Common::D3DDevice()->EndScene();
     Common::D3DDevice()->SetRenderTarget(1, NULL);
     Common::D3DDevice()->SetRenderTarget(0, surfaceOld2);
+    Common::D3DDevice()->SetDepthStencilSurface(surfaceOldDepthStencil);
+    Common::D3DDevice()->SetViewport(&oldViewport);
     SAFE_RELEASE(surfaceBackDepth);
     SAFE_RELEASE(surfaceThickness);
+    SAFE_RELEASE(surfaceOldDepthStencil);
     SAFE_RELEASE(surfaceOld2);
 
     *Z = m_texRenderTargetZ;
@@ -524,6 +564,7 @@ void GBuffer::Finalize()
     SAFE_RELEASE(m_texRenderTargetNormal);
     SAFE_RELEASE(m_texRenderTargetThickness);
     SAFE_RELEASE(m_texRenderTargetBackDepth);
+    SAFE_RELEASE(m_surfaceThicknessDepthStencil);
 
     m_isInitialized = false;
 }
@@ -542,6 +583,7 @@ void GBuffer::OnDeviceLost()
     SAFE_RELEASE(m_texRenderTargetNormal);
     SAFE_RELEASE(m_texRenderTargetThickness);
     SAFE_RELEASE(m_texRenderTargetBackDepth);
+    SAFE_RELEASE(m_surfaceThicknessDepthStencil);
 }
 
 void GBuffer::OnDeviceReset()
