@@ -62,6 +62,7 @@ sampler sampSkinAlpha = sampler_state
 };
 
 bool g_useSkinAlphaCutout = false;
+bool g_shadowReceiverEnabled = false;
 
 struct VS_INPUT
 {
@@ -275,7 +276,12 @@ void PS_GBuffer(VS_OUTPUT inputData,
 
     // ---- RT2: WS 法線を 0..1 にエンコード ----
     float3 n01 = saturate(inputData.normalWorld * 0.5f + 0.5f);
-    outRT2 = float4(n01, 1.0f);
+    float shadowReceiverMask = 0.0f;
+    if (g_shadowReceiverEnabled)
+    {
+        shadowReceiverMask = 1.0f;
+    }
+    outRT2 = float4(n01, shadowReceiverMask);
 }
 
 // バックフェイスの線形深度だけを出力する（厚み情報用）

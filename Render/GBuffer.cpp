@@ -257,6 +257,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
                    const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap,
                    const std::unordered_map<std::wstring, MeshInstancing2*>& meshInstancing2Map,
                    ParticleSystem* particleSystem,
+                   const bool meshMixManagerShadowReceiverEnabled,
                    const bool generateBackDepth,
                    LPDIRECT3DTEXTURE9* Z,
                    LPDIRECT3DTEXTURE9* CameraZ,
@@ -321,6 +322,13 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     m_fxGBuffer->SetFloat("g_fogFar", m_fogFarPlane);
     m_fxGBuffer->SetFloat("g_posRange", m_positionRange);
 
+    BOOL shadowReceiverEnabled = FALSE;
+    if (meshMixManagerShadowReceiverEnabled)
+    {
+        shadowReceiverEnabled = TRUE;
+    }
+    m_fxGBuffer->SetBool("g_shadowReceiverEnabled", shadowReceiverEnabled);
+
     for (auto& mesh : meshList)
     {
         if (!mesh.IsEnabled())
@@ -362,6 +370,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         m_fxGBuffer->End();
     }
 
+    m_fxGBuffer->SetBool("g_shadowReceiverEnabled", TRUE);
     m_fxGBuffer->SetTechnique("TechniqueGBufferSkin");
     for (auto& mesh : meshMixSkinAnimList)
     {
@@ -371,6 +380,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         }
     }
 
+    m_fxGBuffer->SetBool("g_shadowReceiverEnabled", FALSE);
     m_fxGBuffer->SetTechnique("TechniqueGBuffer");
     for (auto& mesh : meshMixAnimNoBoneList)
     {
@@ -384,10 +394,17 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     {
         if (mesh != nullptr && mesh->IsSsaoEnabled())
         {
+            BOOL meshShadowReceiverEnabled = FALSE;
+            if (mesh->IsDepthBufferShadowEnabled())
+            {
+                meshShadowReceiverEnabled = TRUE;
+            }
+            m_fxGBuffer->SetBool("g_shadowReceiverEnabled", meshShadowReceiverEnabled);
             mesh->RenderToEffect(m_fxGBuffer, viewProjectionMatrix);
         }
     }
 
+    m_fxGBuffer->SetBool("g_shadowReceiverEnabled", FALSE);
     for (const auto& mesh : meshInstancingMap)
     {
         if (mesh.second != nullptr)

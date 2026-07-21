@@ -25,7 +25,10 @@ public:
     void Draw(LPDIRECT3DTEXTURE9 texSource,
               LPDIRECT3DTEXTURE9 texTarget,
               LPDIRECT3DTEXTURE9 sceneDepthTexture,
+              LPDIRECT3DTEXTURE9 receiverDepthTexture,
               LPDIRECT3DTEXTURE9 sceneNormalTexture,
+              float sceneDepthNear,
+              float sceneDepthFar,
               const std::deque<MeshMixManager>& meshMixList,
               const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
               const std::vector<MeshMixAnimNoBone*>& meshMixAnimNoBoneList,
@@ -62,6 +65,7 @@ private:
 
     void RenderTechnique1(const int cascadeIndex);
     void RenderTechnique2(const int cascadeIndex);
+    void RenderTechnique2FromGBuffer(const int cascadeIndex);
     void RenderTechnique3();
 
 
@@ -119,8 +123,11 @@ private:
     const std::unordered_map<std::wstring, MeshInstancing*>* m_pMeshInstancingMap = nullptr;
     const std::unordered_map<std::wstring, MeshInstancing2*>* m_pMeshInstancing2Map = nullptr;
     LPDIRECT3DTEXTURE9 m_sceneDepthTexture = NULL;
+    LPDIRECT3DTEXTURE9 m_receiverDepthTexture = NULL;
     LPDIRECT3DTEXTURE9 m_sceneNormalTexture = NULL;
     LPDIRECT3DTEXTURE9 m_texCompositeTarget = NULL;
+    float m_sceneDepthNear = 0.1f;
+    float m_sceneDepthFar = 30'000.0f;
 
     void CreateRawResource();
     LPDIRECT3DTEXTURE9 GetActiveLightZTexture(const int cascadeIndex) const;
@@ -128,6 +135,7 @@ private:
     LPDIRECT3DTEXTURE9 GetActiveShadowTexture(const int cascadeIndex) const;
     LPDIRECT3DSURFACE9 GetActiveShadowDepthStencil(const int cascadeIndex) const;
     int GetActiveShadowTexVariantIndex() const;
+    const char* GetBuildShadowFromGBufferTechniqueName() const;
     const char* GetWriteShadowTechniqueName() const;
     const char* GetWriteShadowSkinTechniqueName() const;
     const char* GetCompositeTechniqueName() const;

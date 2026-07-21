@@ -1,5 +1,7 @@
 ﻿#include "PostEffectZShadow.h"
 
+#include <stdexcept>
+
 #include "Camera.h"
 #include "MeshInstancing.h"
 #include "MeshInstancing2.h"
@@ -206,8 +208,11 @@ void PostEffectZShadow::Finalize()
 void PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                              LPDIRECT3DTEXTURE9 texTarget,
                              LPDIRECT3DTEXTURE9 sceneDepthTexture,
-                              LPDIRECT3DTEXTURE9 sceneNormalTexture,
-                              const std::deque<MeshMixManager>& meshMixList,
+                             LPDIRECT3DTEXTURE9 receiverDepthTexture,
+                             LPDIRECT3DTEXTURE9 sceneNormalTexture,
+                             const float sceneDepthNear,
+                             const float sceneDepthFar,
+                             const std::deque<MeshMixManager>& meshMixList,
                               const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
                               const std::vector<MeshMixAnimNoBone*>& meshMixAnimNoBoneList,
                               const std::vector<MeshMix2*>& meshMix2List,
@@ -223,14 +228,17 @@ void PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_pMeshInstancingMap = &meshInstancingMap;
     m_pMeshInstancing2Map = &meshInstancing2Map;
     m_sceneDepthTexture = sceneDepthTexture;
+    m_receiverDepthTexture = receiverDepthTexture;
     m_sceneNormalTexture = sceneNormalTexture;
+    m_sceneDepthNear = sceneDepthNear;
+    m_sceneDepthFar = sceneDepthFar;
 
     RenderTechnique1(SHADOW_CASCADE_NEAR);
-    RenderTechnique2(SHADOW_CASCADE_NEAR);
+    RenderTechnique2FromGBuffer(SHADOW_CASCADE_NEAR);
     if (m_farCascadeEnabled)
     {
         RenderTechnique1(SHADOW_CASCADE_FAR);
-        RenderTechnique2(SHADOW_CASCADE_FAR);
+        RenderTechnique2FromGBuffer(SHADOW_CASCADE_FAR);
     }
     RenderTechnique3();
 
@@ -241,6 +249,7 @@ void PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_pMeshInstancingMap = nullptr;
     m_pMeshInstancing2Map = nullptr;
     m_sceneDepthTexture = NULL;
+    m_receiverDepthTexture = NULL;
     m_sceneNormalTexture = NULL;
     m_texCompositeTarget = NULL;
 }
@@ -453,6 +462,145 @@ void PostEffectZShadow::RenderTechnique1(const int cascadeIndex)
     SAFE_RELEASE(surfaceLightZ);
     
     Common::D3DDevice()->SetViewport(&oldViewPort);
+}
+
+void PostEffectZShadow::RenderTechnique2FromGBuffer(const int cascadeIndex)
+{
+    HRESULT hr = E_FAIL;
+    LPDIRECT3DTEXTURE9 activeLightZTexture = GetActiveLightZTexture(cascadeIndex);
+    LPDIRECT3DTEXTURE9 activeShadowTexture = GetActiveShadowTexture(cascadeIndex);
+
+    LPDIRECT3DSURFACE9 surfaceShadow = NULL;
+    hr = activeShadowTexture->GetSurfaceLevel(0, &surfaceShadow);
+    assert(hr == S_OK);
+
+    D3DVIEWPORT9 oldViewport{};
+    hr = Common::D3DDevice()->GetViewport(&oldViewport);
+    assert(hr == S_OK);
+
+    D3DSURFACE_DESC shadowDescription{};
+    hr = activeShadowTexture->GetLevelDesc(0, &shadowDescription);
+    assert(hr == S_OK);
+
+    D3DSURFACE_DESC lightDepthDescription{};
+    hr = activeLightZTexture->GetLevelDesc(0, &lightDepthDescription);
+    assert(hr == S_OK);
+
+    D3DVIEWPORT9 shadowViewport{};
+    shadowViewport.X = 0;
+    shadowViewport.Y = 0;
+    shadowViewport.Width = shadowDescription.Width;
+    shadowViewport.Height = shadowDescription.Height;
+    shadowViewport.MinZ = 0.0f;
+    shadowViewport.MaxZ = 1.0f;
+
+    hr = Common::D3DDevice()->SetRenderTarget(0, surfaceShadow);
+    assert(hr == S_OK);
+
+    hr = Common::D3DDevice()->SetDepthStencilSurface(NULL);
+    assert(hr == S_OK);
+
+    hr = Common::D3DDevice()->SetViewport(&shadowViewport);
+    assert(hr == S_OK);
+
+    const D3DXMATRIX viewMatrix = Camera::GetViewMatrix();
+    const D3DXMATRIX projectionMatrix = Camera::GetProjMatrix();
+    D3DXMATRIX inverseViewMatrix;
+    D3DXMATRIX inverseProjectionMatrix;
+    if (D3DXMatrixInverse(&inverseViewMatrix, NULL, &viewMatrix) == NULL ||
+        D3DXMatrixInverse(&inverseProjectionMatrix, NULL, &projectionMatrix) == NULL)
+    {
+        SAFE_RELEASE(surfaceShadow);
+        throw std::runtime_error("Failed to invert the camera matrix for Z shadow reconstruction.");
+    }
+
+    D3DXMATRIX lightViewProjectionMatrix = mLightView[cascadeIndex] * mLightProj[cascadeIndex];
+
+    hr = Common::D3DDevice()->BeginScene();
+    assert(hr == S_OK);
+
+    hr = g_fxDepthBufferShadow->SetTechnique(GetBuildShadowFromGBufferTechniqueName());
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetMatrix("g_matInverseView", &inverseViewMatrix);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetMatrix("g_matInverseProjection", &inverseProjectionMatrix);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetMatrix("g_matLightView", &mLightView[cascadeIndex]);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetMatrix("g_matLightViewProj", &lightViewProjectionMatrix);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_lightNear", fLightNear[cascadeIndex]);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_lightFar", fLightFar[cascadeIndex]);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_receiverDepthNear", Camera::GetNear());
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_receiverDepthFar", Camera::GetFar());
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_sceneDepthNear", m_sceneDepthNear);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_sceneDepthFar", m_sceneDepthFar);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_receiverTexelW", 1.0f / static_cast<float>(shadowDescription.Width));
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_receiverTexelH", 1.0f / static_cast<float>(shadowDescription.Height));
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_shadowTexelW", 1.0f / static_cast<float>(lightDepthDescription.Width));
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_shadowTexelH", 1.0f / static_cast<float>(lightDepthDescription.Height));
+    assert(hr == S_OK);
+    float activeShadowBias = m_shadowBias;
+    if (cascadeIndex == SHADOW_CASCADE_FAR)
+    {
+        activeShadowBias = m_shadowBiasFar;
+    }
+    hr = g_fxDepthBufferShadow->SetFloat("g_shadowBias", activeShadowBias);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetFloat("g_shadowIntensity", m_shadowIntensity);
+    assert(hr == S_OK);
+    BOOL writeNearCascade = FALSE;
+    if (cascadeIndex == SHADOW_CASCADE_NEAR)
+    {
+        writeNearCascade = TRUE;
+    }
+    hr = g_fxDepthBufferShadow->SetBool("g_writeNearCascade", writeNearCascade);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetTexture("g_texLightZ", activeLightZTexture);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetTexture("g_texReceiverDepth", m_receiverDepthTexture);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetTexture("g_texSceneDepth", m_sceneDepthTexture);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->SetTexture("g_texSceneNormal", m_sceneNormalTexture);
+    assert(hr == S_OK);
+
+    UINT passCount = 0;
+    hr = g_fxDepthBufferShadow->Begin(&passCount, 0);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->BeginPass(0);
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->CommitChanges();
+    assert(hr == S_OK);
+
+    DrawFullscreenQuad();
+
+    hr = g_fxDepthBufferShadow->EndPass();
+    assert(hr == S_OK);
+    hr = g_fxDepthBufferShadow->End();
+    assert(hr == S_OK);
+    hr = Common::D3DDevice()->EndScene();
+    assert(hr == S_OK);
+
+    hr = Common::D3DDevice()->SetRenderTarget(0, oldRT0);
+    assert(hr == S_OK);
+    hr = Common::D3DDevice()->SetDepthStencilSurface(oldZ);
+    assert(hr == S_OK);
+    hr = Common::D3DDevice()->SetViewport(&oldViewport);
+    assert(hr == S_OK);
+
+    SAFE_RELEASE(surfaceShadow);
+    SAFE_RELEASE(oldRT0);
+    SAFE_RELEASE(oldZ);
 }
 
 void PostEffectZShadow::RenderTechnique2(const int cascadeIndex)
@@ -1193,6 +1341,36 @@ LPDIRECT3DSURFACE9 PostEffectZShadow::GetActiveShadowDepthStencil(const int casc
 int PostEffectZShadow::GetActiveShadowTexVariantIndex() const
 {
     return ShadowTextureScaleDivisorToVariantIndex(m_shadowTextureScaleDivisor);
+}
+
+const char* PostEffectZShadow::GetBuildShadowFromGBufferTechniqueName() const
+{
+    if (m_pcfTapCount == 1)
+    {
+        return "TechniqueBuildShadowFromGBuffer1";
+    }
+
+    if (m_pcfTapCount == 3)
+    {
+        return "TechniqueBuildShadowFromGBuffer3";
+    }
+
+    if (m_pcfTapCount == 5)
+    {
+        return "TechniqueBuildShadowFromGBuffer5";
+    }
+
+    if (m_pcfTapCount == 7)
+    {
+        return "TechniqueBuildShadowFromGBuffer7";
+    }
+
+    if (m_pcfTapCount == 9)
+    {
+        return "TechniqueBuildShadowFromGBuffer9";
+    }
+
+    return "TechniqueBuildShadowFromGBuffer11";
 }
 
 const char* PostEffectZShadow::GetWriteShadowTechniqueName() const

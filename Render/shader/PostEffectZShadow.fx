@@ -10,6 +10,14 @@ float4x4 g_matLightView;
 float    g_lightNear;
 float    g_lightFar;
 float4x4 g_matLightViewProj;
+float4x4 g_matInverseView;
+float4x4 g_matInverseProjection;
+float    g_receiverDepthNear;
+float    g_receiverDepthFar;
+float    g_sceneDepthNear;
+float    g_sceneDepthFar;
+float    g_receiverTexelW;
+float    g_receiverTexelH;
 float    g_instancingAlphaClipThreshold;
 float    g_meshAlphaClipThreshold;
 int      g_swayMode;
@@ -80,6 +88,17 @@ texture g_texSceneDepth;
 sampler samplerSceneDepth = sampler_state
 {
     Texture   = (g_texSceneDepth);
+    MipFilter = NONE;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    AddressU  = CLAMP;
+    AddressV  = CLAMP;
+};
+
+texture g_texReceiverDepth;
+sampler samplerReceiverDepth = sampler_state
+{
+    Texture   = (g_texReceiverDepth);
     MipFilter = NONE;
     MinFilter = POINT;
     MagFilter = POINT;
@@ -542,6 +561,125 @@ float4 BuildWriteShadowColor(float3 inWorldPos, float nShadowColor)
     }
     outColor.a = nShadowColor * g_shadowIntensity;
     return outColor;
+}
+
+bool BuildShadowCoordinatesFromGBuffer(float2 inUV,
+                                       out float3 outWorldPos,
+                                       out float2 outLightUV,
+                                       out float outLightDepth)
+{
+    float2 receiverUV = inUV + float2(0.5f * g_receiverTexelW, 0.5f * g_receiverTexelH);
+    float receiverMask = tex2D(samplerSceneNormal, receiverUV).a;
+    float encodedDepth = tex2D(samplerReceiverDepth, receiverUV).r;
+    if (receiverMask < 0.5f || encodedDepth >= 0.99999f)
+    {
+        outWorldPos = 0.0f;
+        outLightUV = 0.0f;
+        outLightDepth = 0.0f;
+        return false;
+    }
+
+    float sceneEncodedDepth = tex2D(samplerSceneDepth, receiverUV).r;
+    float viewDepth = lerp(g_receiverDepthNear, g_receiverDepthFar, saturate(encodedDepth));
+    if (sceneEncodedDepth < 0.99999f)
+    {
+        viewDepth = lerp(g_sceneDepthNear, g_sceneDepthFar, saturate(sceneEncodedDepth));
+    }
+    float2 ndcPosition = float2(receiverUV.x * 2.0f - 1.0f,
+                                1.0f - receiverUV.y * 2.0f);
+    float4 viewRay = mul(float4(ndcPosition, 1.0f, 1.0f), g_matInverseProjection);
+    viewRay.xyz /= viewRay.w;
+    if (viewRay.z <= 0.00001f)
+    {
+        outWorldPos = 0.0f;
+        outLightUV = 0.0f;
+        outLightDepth = 0.0f;
+        return false;
+    }
+
+    float3 viewPosition = viewRay.xyz * (viewDepth / viewRay.z);
+    outWorldPos = mul(float4(viewPosition, 1.0f), g_matInverseView).xyz;
+
+    float4 lightViewPosition = mul(float4(outWorldPos, 1.0f), g_matLightView);
+    outLightDepth = saturate((lightViewPosition.z - g_lightNear) / (g_lightFar - g_lightNear));
+
+    float4 lightClipPosition = mul(float4(outWorldPos, 1.0f), g_matLightViewProj);
+    float2 normalizedLightPosition = lightClipPosition.xy / lightClipPosition.w;
+    outLightUV = normalizedLightPosition * float2(0.5f, -0.5f) + 0.5f;
+    outLightUV += float2(0.5f * g_shadowTexelW, 0.5f * g_shadowTexelH);
+    return true;
+}
+
+float4 PS_BuildShadowFromGBuffer1(float4 inPos : POSITION0, float2 inUV : TEXCOORD0) : COLOR0
+{
+    float3 worldPosition;
+    float2 lightUV;
+    float lightDepth;
+    if (!BuildShadowCoordinatesFromGBuffer(inUV, worldPosition, lightUV, lightDepth))
+    {
+        return 0.0f;
+    }
+    return BuildWriteShadowColor(worldPosition, SampleShadowAmount1(lightUV, lightDepth));
+}
+
+float4 PS_BuildShadowFromGBuffer3(float4 inPos : POSITION0, float2 inUV : TEXCOORD0) : COLOR0
+{
+    float3 worldPosition;
+    float2 lightUV;
+    float lightDepth;
+    if (!BuildShadowCoordinatesFromGBuffer(inUV, worldPosition, lightUV, lightDepth))
+    {
+        return 0.0f;
+    }
+    return BuildWriteShadowColor(worldPosition, SampleShadowAmount3(lightUV, lightDepth));
+}
+
+float4 PS_BuildShadowFromGBuffer5(float4 inPos : POSITION0, float2 inUV : TEXCOORD0) : COLOR0
+{
+    float3 worldPosition;
+    float2 lightUV;
+    float lightDepth;
+    if (!BuildShadowCoordinatesFromGBuffer(inUV, worldPosition, lightUV, lightDepth))
+    {
+        return 0.0f;
+    }
+    return BuildWriteShadowColor(worldPosition, SampleShadowAmount5(lightUV, lightDepth));
+}
+
+float4 PS_BuildShadowFromGBuffer7(float4 inPos : POSITION0, float2 inUV : TEXCOORD0) : COLOR0
+{
+    float3 worldPosition;
+    float2 lightUV;
+    float lightDepth;
+    if (!BuildShadowCoordinatesFromGBuffer(inUV, worldPosition, lightUV, lightDepth))
+    {
+        return 0.0f;
+    }
+    return BuildWriteShadowColor(worldPosition, SampleShadowAmount7(lightUV, lightDepth));
+}
+
+float4 PS_BuildShadowFromGBuffer9(float4 inPos : POSITION0, float2 inUV : TEXCOORD0) : COLOR0
+{
+    float3 worldPosition;
+    float2 lightUV;
+    float lightDepth;
+    if (!BuildShadowCoordinatesFromGBuffer(inUV, worldPosition, lightUV, lightDepth))
+    {
+        return 0.0f;
+    }
+    return BuildWriteShadowColor(worldPosition, SampleShadowAmount9(lightUV, lightDepth));
+}
+
+float4 PS_BuildShadowFromGBuffer11(float4 inPos : POSITION0, float2 inUV : TEXCOORD0) : COLOR0
+{
+    float3 worldPosition;
+    float2 lightUV;
+    float lightDepth;
+    if (!BuildShadowCoordinatesFromGBuffer(inUV, worldPosition, lightUV, lightDepth))
+    {
+        return 0.0f;
+    }
+    return BuildWriteShadowColor(worldPosition, SampleShadowAmount11(lightUV, lightDepth));
 }
 
 void ApplyMeshAlphaCutoutShadow(float2 uv)
@@ -1017,6 +1155,78 @@ technique TechniqueWriteShadowSkin
 }
 
 // 二つの画像を合成するテクニック
+technique TechniqueBuildShadowFromGBuffer1
+{
+    pass P0
+    {
+        CullMode     = NONE;
+        ZEnable      = FALSE;
+        ZWriteEnable = FALSE;
+        VertexShader = compile vs_3_0 VS_Composite();
+        PixelShader  = compile ps_3_0 PS_BuildShadowFromGBuffer1();
+    }
+}
+
+technique TechniqueBuildShadowFromGBuffer3
+{
+    pass P0
+    {
+        CullMode     = NONE;
+        ZEnable      = FALSE;
+        ZWriteEnable = FALSE;
+        VertexShader = compile vs_3_0 VS_Composite();
+        PixelShader  = compile ps_3_0 PS_BuildShadowFromGBuffer3();
+    }
+}
+
+technique TechniqueBuildShadowFromGBuffer5
+{
+    pass P0
+    {
+        CullMode     = NONE;
+        ZEnable      = FALSE;
+        ZWriteEnable = FALSE;
+        VertexShader = compile vs_3_0 VS_Composite();
+        PixelShader  = compile ps_3_0 PS_BuildShadowFromGBuffer5();
+    }
+}
+
+technique TechniqueBuildShadowFromGBuffer7
+{
+    pass P0
+    {
+        CullMode     = NONE;
+        ZEnable      = FALSE;
+        ZWriteEnable = FALSE;
+        VertexShader = compile vs_3_0 VS_Composite();
+        PixelShader  = compile ps_3_0 PS_BuildShadowFromGBuffer7();
+    }
+}
+
+technique TechniqueBuildShadowFromGBuffer9
+{
+    pass P0
+    {
+        CullMode     = NONE;
+        ZEnable      = FALSE;
+        ZWriteEnable = FALSE;
+        VertexShader = compile vs_3_0 VS_Composite();
+        PixelShader  = compile ps_3_0 PS_BuildShadowFromGBuffer9();
+    }
+}
+
+technique TechniqueBuildShadowFromGBuffer11
+{
+    pass P0
+    {
+        CullMode     = NONE;
+        ZEnable      = FALSE;
+        ZWriteEnable = FALSE;
+        VertexShader = compile vs_3_0 VS_Composite();
+        PixelShader  = compile ps_3_0 PS_BuildShadowFromGBuffer11();
+    }
+}
+
 technique TechniqueComposite
 {
     pass P0
