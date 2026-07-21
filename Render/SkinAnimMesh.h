@@ -14,7 +14,7 @@ namespace NSRender
 
 {
 
-const DWORD MAX_MATRICES = 32;
+const DWORD MAX_MATRICES = 64;
 
 class SkinAnimMesh : public IDeviceResettable
 {
