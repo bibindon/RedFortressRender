@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <stdexcept>
 
 #include "Common.h"
 #include "Camera.h"
@@ -45,6 +46,17 @@ void GBuffer::Initialize()
                                   &m_fxGBuffer,
                                   NULL);
     assert(hResult == S_OK);
+
+    D3DCAPS9 deviceCaps{};
+    hResult = Common::D3DDevice()->GetDeviceCaps(&deviceCaps);
+    if (FAILED(hResult))
+    {
+        throw std::runtime_error("Failed to query DirectX 9 device capabilities for GBuffer.");
+    }
+    if (deviceCaps.NumSimultaneousRTs < 4)
+    {
+        throw std::runtime_error("GBuffer requires four simultaneous render targets.");
+    }
 
     CreateRawResource();
 
@@ -245,19 +257,32 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     LPDIRECT3DSURFACE9 surfaceOld = NULL;
     hr = Common::D3DDevice()->GetRenderTarget(0, &surfaceOld);
 
-    // Z と POS のサーフェスを取得
+    // GBuffer の各サーフェスを取得
     LPDIRECT3DSURFACE9 surfaceZ = NULL;
+    LPDIRECT3DSURFACE9 surfaceFogZ = NULL;
     LPDIRECT3DSURFACE9 surfacePos = NULL;
     LPDIRECT3DSURFACE9 surfaceNorm = NULL;
 
     hr = m_texRenderTargetZ->GetSurfaceLevel(0, &surfaceZ);
+    hr = m_texRenderTargetFogZ->GetSurfaceLevel(0, &surfaceFogZ);
     hr = m_texRenderTargetPos->GetSurfaceLevel(0, &surfacePos);
     hr = m_texRenderTargetNormal->GetSurfaceLevel(0, &surfaceNorm);
 
-    // MRT×2 をセット
+    // 通常深度と Fog 深度は同じカメラから別の距離範囲でエンコードする。
+    // RT3 へ Fog 深度を同時出力し、専用のシーン再描画を不要にする。
     hr = Common::D3DDevice()->SetRenderTarget(0, surfaceZ);
     hr = Common::D3DDevice()->SetRenderTarget(1, surfacePos);
     hr = Common::D3DDevice()->SetRenderTarget(2, surfaceNorm);
+    hr = Common::D3DDevice()->SetRenderTarget(3, surfaceFogZ);
+    if (FAILED(hr))
+    {
+        SAFE_RELEASE(surfaceZ);
+        SAFE_RELEASE(surfaceFogZ);
+        SAFE_RELEASE(surfacePos);
+        SAFE_RELEASE(surfaceNorm);
+        SAFE_RELEASE(surfaceOld);
+        throw std::runtime_error("Failed to bind the fourth GBuffer render target.");
+    }
 
     // クリア。Zバッファも一緒に初期化して素直に全描画
     hr = Common::D3DDevice()->Clear(0,
@@ -278,6 +303,8 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     m_fxGBuffer->SetMatrix("g_matProj",  &mProj);
     m_fxGBuffer->SetFloat("g_fNear", m_nearPlane);
     m_fxGBuffer->SetFloat("g_fFar",  m_farPlane);
+    m_fxGBuffer->SetFloat("g_fogNear", m_fogNearPlane);
+    m_fxGBuffer->SetFloat("g_fogFar", m_fogFarPlane);
     m_fxGBuffer->SetFloat("g_posRange", m_positionRange);
 
     for (auto& mesh : meshList)
@@ -374,131 +401,16 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     hr = Common::D3DDevice()->EndScene();
 
     // MRT を外し、RT0 を元に戻す
+    Common::D3DDevice()->SetRenderTarget(3, NULL);
     Common::D3DDevice()->SetRenderTarget(2, NULL);
     Common::D3DDevice()->SetRenderTarget(1, NULL);
     Common::D3DDevice()->SetRenderTarget(0, surfaceOld);
 
     SAFE_RELEASE(surfaceZ);
+    SAFE_RELEASE(surfaceFogZ);
     SAFE_RELEASE(surfacePos);
     SAFE_RELEASE(surfaceNorm);
     SAFE_RELEASE(surfaceOld);
-
-    // --- Fog 専用深度パス ---
-    LPDIRECT3DSURFACE9 surfaceFogZ = NULL;
-    m_texRenderTargetFogZ->GetSurfaceLevel(0, &surfaceFogZ);
-
-    LPDIRECT3DSURFACE9 surfaceOldFog = NULL;
-    Common::D3DDevice()->GetRenderTarget(0, &surfaceOldFog);
-    Common::D3DDevice()->SetRenderTarget(0, surfaceFogZ);
-
-    Common::D3DDevice()->Clear(0,
-                               NULL,
-                               D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
-                               D3DCOLOR_XRGB(255, 255, 255),
-                               1.0f,
-                               0);
-    Common::D3DDevice()->BeginScene();
-
-    m_fxGBuffer->SetFloat("g_fNear", m_fogNearPlane);
-    m_fxGBuffer->SetFloat("g_fFar", m_fogFarPlane);
-
-    for (auto& mesh : meshList)
-    {
-        if (!mesh.IsEnabled())
-        {
-            continue;
-        }
-
-        if (!mesh.IsLoaded())
-        {
-            continue;
-        }
-
-        if (!mesh.IsSsaoEnabled())
-        {
-            continue;
-        }
-
-        const D3DXMATRIX matWorld = mesh.GetWorldMatrix();
-
-        m_fxGBuffer->SetMatrix("g_matWorld", &matWorld);
-        m_fxGBuffer->SetTechnique("TechniqueGBuffer");
-        m_fxGBuffer->Begin(NULL, 0);
-        m_fxGBuffer->BeginPass(0);
-
-        LPD3DXMESH d3dMesh = mesh.GetD3DMesh();
-        DWORD subsetCount = 1;
-        if (mesh.GetSubsetCount() > 0)
-        {
-            subsetCount = mesh.GetSubsetCount();
-        }
-        for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
-        {
-            d3dMesh->DrawSubset(subsetIndex);
-        }
-
-        m_fxGBuffer->EndPass();
-        m_fxGBuffer->End();
-    }
-
-    m_fxGBuffer->SetTechnique("TechniqueGBufferSkin");
-    for (auto& mesh : meshMixSkinAnimList)
-    {
-        if (mesh != nullptr)
-        {
-            mesh->RenderToEffect(m_fxGBuffer);
-        }
-    }
-
-    m_fxGBuffer->SetTechnique("TechniqueGBuffer");
-    for (auto& mesh : meshMixAnimNoBoneList)
-    {
-        if (mesh != nullptr)
-        {
-            mesh->RenderToEffect(m_fxGBuffer, viewProjectionMatrix);
-        }
-    }
-
-    for (auto& mesh : meshMix2List)
-    {
-        if (mesh != nullptr && mesh->IsSsaoEnabled())
-        {
-            mesh->RenderToEffect(m_fxGBuffer, viewProjectionMatrix);
-        }
-    }
-
-    for (const auto& mesh : meshInstancingMap)
-    {
-        if (mesh.second != nullptr)
-        {
-            mesh.second->RenderToGBufferEffect(m_fxGBuffer, "TechniqueGBufferInstancingFog");
-        }
-    }
-
-    for (const auto& mesh : meshInstancing2Map)
-    {
-        if (mesh.second != nullptr)
-        {
-            mesh.second->RenderToGBufferEffect(m_fxGBuffer, "TechniqueGBufferInstancingFog");
-        }
-    }
-
-    if (particleSystem != nullptr)
-    {
-        particleSystem->RenderDustToGBufferEffect(m_fxGBuffer,
-                                                  mView,
-                                                  mProj,
-                                                  "TechniqueGBufferParticleFog");
-    }
-
-    Common::D3DDevice()->EndScene();
-    Common::D3DDevice()->SetRenderTarget(0, surfaceOldFog);
-    SAFE_RELEASE(surfaceFogZ);
-    SAFE_RELEASE(surfaceOldFog);
-
-    // 後続パス向けに GBuffer の深度レンジへ戻す
-    m_fxGBuffer->SetFloat("g_fNear", m_nearPlane);
-    m_fxGBuffer->SetFloat("g_fFar", m_farPlane);
 
     // --- 厚みパス（バックフェイス深度）---
     LPDIRECT3DSURFACE9 surfaceThickness = NULL;

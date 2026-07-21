@@ -208,8 +208,11 @@ void PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
 
     RenderTechnique1(SHADOW_CASCADE_NEAR);
     RenderTechnique2(SHADOW_CASCADE_NEAR);
-    RenderTechnique1(SHADOW_CASCADE_FAR);
-    RenderTechnique2(SHADOW_CASCADE_FAR);
+    if (m_farCascadeEnabled)
+    {
+        RenderTechnique1(SHADOW_CASCADE_FAR);
+        RenderTechnique2(SHADOW_CASCADE_FAR);
+    }
     RenderTechnique3();
 
     m_pMeshList = nullptr;
@@ -847,6 +850,12 @@ void PostEffectZShadow::RenderTechnique3()
     g_fxDepthBufferShadow->SetTexture("g_texShadowFar", activeShadowTextureFar);
     g_fxDepthBufferShadow->SetTexture("g_texSceneDepth", m_sceneDepthTexture);
     g_fxDepthBufferShadow->SetTexture("g_texSceneNormal", m_sceneNormalTexture);
+    BOOL farCascadeEnabled = FALSE;
+    if (m_farCascadeEnabled)
+    {
+        farCascadeEnabled = TRUE;
+    }
+    g_fxDepthBufferShadow->SetBool("g_farCascadeEnabled", farCascadeEnabled);
     g_fxDepthBufferShadow->SetFloat("g_shadowIntensity", m_shadowIntensity);
     g_fxDepthBufferShadow->SetFloat("g_shadowSaturationBoost", m_shadowSaturationBoost);
     g_fxDepthBufferShadow->SetFloat("g_edgeDepthThreshold", 0.010f);
@@ -874,6 +883,11 @@ void PostEffectZShadow::DrawDebugLightDepthOverlay(const int x,
                                                    const int height,
                                                    const int cascadeIndex)
 {
+    if (cascadeIndex == SHADOW_CASCADE_FAR && !m_farCascadeEnabled)
+    {
+        return;
+    }
+
     int activeCascadeIndex = SHADOW_CASCADE_NEAR;
     if (cascadeIndex >= 0 && cascadeIndex < SHADOW_CASCADE_COUNT)
     {
@@ -1014,6 +1028,11 @@ void PostEffectZShadow::SetCompositeTapCount(const int tapCount)
 void PostEffectZShadow::SetShadowTextureScaleDivisor(const int scaleDivisor)
 {
     m_shadowTextureScaleDivisor = NormalizeShadowTextureScaleDivisor(scaleDivisor);
+}
+
+void PostEffectZShadow::SetFarCascadeEnabled(const bool enabled)
+{
+    m_farCascadeEnabled = enabled;
 }
 
 void PostEffectZShadow::SetMeshMixManagerReceiverEnabled(const bool enabled)

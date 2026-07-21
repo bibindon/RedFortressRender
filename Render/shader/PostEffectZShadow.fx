@@ -37,6 +37,7 @@ float g_edgeDepthThreshold;
 float g_edgeNormalThreshold;
 int g_shadowPcfTapCount;
 int g_shadowCompositeTapCount;
+bool g_farCascadeEnabled = false;
 
 texture g_texLightZ;
 sampler samplerLightZ = sampler_state
@@ -671,11 +672,16 @@ void VS_Composite(in  float4 inPos  : POSITION,
 // 2枚の画像を線形補間で合成する
 float4 SampleCombinedShadow(float2 uv)
 {
+    float4 nearShadow = tex2D(samplerShadow, uv);
+    if (!g_farCascadeEnabled)
+    {
+        return nearShadow;
+    }
+
     float2 farUv = uv;
     farUv -= float2(0.5f * g_compositeTexelW, 0.5f * g_compositeTexelH);
     farUv += float2(0.5f * g_compositeFarTexelW, 0.5f * g_compositeFarTexelH);
 
-    float4 nearShadow = tex2D(samplerShadow, uv);
     float4 farShadow = tex2D(samplerShadowFar, farUv);
     float nearCascadeWeight = saturate(nearShadow.b);
     return lerp(farShadow, nearShadow, nearCascadeWeight);

@@ -930,6 +930,14 @@ void Render::ApplySettings()
     SetPostEffectDepthBufferShadowMeshMixManagerReceiverEnabled(
         meshMixManagerShadowReceiverEnabled);
 
+    bool farShadowEnabled = false;
+    const auto farShadowEnable = m_settings.find(L"DepthBufferShadowFarEnable");
+    if (farShadowEnable != m_settings.end())
+    {
+        TryParseBoolSetting(farShadowEnable->second, farShadowEnabled);
+    }
+    SetPostEffectDepthBufferShadowFarEnabled(farShadowEnabled);
+
     const auto zShadowTexSize = m_settings.find(L"ZShadowTexSize");
     if (zShadowTexSize != m_settings.end())
     {
@@ -5903,6 +5911,12 @@ void Render::SetPostEffectDepthBufferShadowDebugLightDepth(const bool enabled)
     m_postEffectZShadowDebugLightDepthEnabled = enabled;
 }
 
+void Render::SetPostEffectDepthBufferShadowFarEnabled(const bool enabled)
+{
+    m_postEffectZShadowFarEnabled = enabled;
+    m_postEffectZShadow.SetFarCascadeEnabled(enabled);
+}
+
 void Render::SetPostEffectDepthBufferShadowMeshMixManagerReceiverEnabled(const bool enabled)
 {
     m_postEffectZShadowMeshMixManagerReceiverEnabled = enabled;
@@ -5927,6 +5941,7 @@ float Render::GetPostEffectMotionBlurCameraMaxBlurPixels() const { return m_moti
 int Render::GetPostEffectMotionBlurCameraSampleCount() const { return m_motionBlurCameraSampleCount; }
 bool Render::IsPostEffectDepthBufferShadowEnabled() const { return m_postEffectZShadowEnabled; }
 bool Render::IsPostEffectDepthBufferShadowDebugLightDepthEnabled() const { return m_postEffectZShadowDebugLightDepthEnabled; }
+bool Render::IsPostEffectDepthBufferShadowFarEnabled() const { return m_postEffectZShadowFarEnabled; }
 bool Render::IsPostEffectDepthBufferShadowMeshMixManagerReceiverEnabled() const { return m_postEffectZShadowMeshMixManagerReceiverEnabled; }
 float Render::GetPostEffectDepthBufferShadowIntensity() const { return m_postEffectDepthBufferShadowIntensity; }
 float Render::GetPostEffectDepthBufferShadowSaturationBoost() const { return m_postEffectDepthBufferShadowSaturationBoost; }

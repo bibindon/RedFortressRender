@@ -188,6 +188,7 @@ void SyncRenderSettingsDialogFromRender(HWND hWnd)
     SetSettingsComboSelection(hWnd, 31612, TexSizeDivisorToComboIndex(render->GetPostEffectDepthBufferShadowTexSizeDivisor()));
     SetSettingsCheckbox(hWnd, 31613, render->IsPostEffectDepthBufferShadowDebugLightDepthEnabled());
     SetSettingsCheckbox(hWnd, 31614, render->IsPostEffectDepthBufferShadowMeshMixManagerReceiverEnabled());
+    SetSettingsCheckbox(hWnd, 31615, render->IsPostEffectDepthBufferShadowFarEnabled());
     SetSettingsComboSelection(hWnd, 31700, SampleCountToComboIndex(render->GetPostEffectSSGISampleCount()));
     SetSettingsEditFloat(hWnd, 41710, render->GetPostEffectSSGIIndirectLightStrength());
     SetSettingsEditFloat(hWnd, 41711, render->GetPostEffectSSGIIndirectLightMaxContribution());

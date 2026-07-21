@@ -561,7 +561,7 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
         pbrY += 20;
     }
     y += 190;
-    CreateSettingsGroupBox(hWnd, L"ZShadow", 8, y, 504, 174);
+    CreateSettingsGroupBox(hWnd, L"ZShadow", 8, y, 504, 196);
     const wchar_t* zShadowLabels[] = { L"ZShadow Intensity", L"ZShadow Saturation", L"ZShadow Range", L"ZShadow Bias Near" };
     const wchar_t* zShadowValues[] = { L"0.25", L"0.50", L"0.05", L"0.00040" };
     int zY = y + 28;
@@ -601,7 +601,8 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     SendMessage(zTexSizeCombo, CB_SETCURSEL, 0, 0);
     CreateSettingsCheckbox(hWnd, 31613, L"Show Light Depth", 24, zY + 28, 150, 22);
     CreateSettingsCheckbox(hWnd, 31614, L"MeshMixManager Receives Shadow", 180, zY + 28, 280, 22);
-    y += 188;
+    CreateSettingsCheckbox(hWnd, 31615, L"Far Shadow Cascade", 24, zY + 50, 180, 22);
+    y += 210;
     CreateSettingsGroupBox(hWnd, L"SSGI", 8, y, 504, 104);
     CreateSettingsStatic(hWnd, L"SSGI Sample Count", 24, y + 24, 138, 18);
     HWND ssgiSampleCombo = CreateSettingsCombo(hWnd, 31700, 266, y + 20, 72, 120);

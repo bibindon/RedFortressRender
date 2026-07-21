@@ -42,6 +42,7 @@ public:
     void SetPcfTapCount(const int tapCount);
     void SetCompositeTapCount(const int tapCount);
     void SetShadowTextureScaleDivisor(const int scaleDivisor);
+    void SetFarCascadeEnabled(bool enabled);
     void SetMeshMixManagerReceiverEnabled(bool enabled);
     void DrawDebugLightDepthOverlay(const int x,
                                     const int y,
@@ -73,6 +74,7 @@ private:
     int m_pcfTapCount = 11;
     int m_compositeTapCount = 11;
     int m_shadowTextureScaleDivisor = 1;
+    bool m_farCascadeEnabled = false;
     bool m_meshMixManagerReceiverEnabled = false;
 
     LPD3DXEFFECT g_fxDepthBufferShadow = NULL;
