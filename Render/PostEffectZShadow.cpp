@@ -23,6 +23,12 @@ constexpr int SHADOW_TEX_SIZE_DIVISOR_4 = 4;
 constexpr int SHADOW_TEX_SIZE_DIVISOR_8 = 8;
 constexpr int SHADOW_TEX_SIZE_DIVISOR_16 = 16;
 constexpr int SHADOW_FAR_RESOLUTION_DIVISOR = 2;
+constexpr int SHADOW_REFERENCE_SCREEN_WIDTH = 1600;
+constexpr int SHADOW_REFERENCE_SCREEN_HEIGHT = 900;
+constexpr int SHADOW_REFERENCE_LIGHT_Z_SIZE = 1024;
+constexpr int SHADOW_LIGHT_Z_SIZE_MIN = 512;
+constexpr int SHADOW_LIGHT_Z_SIZE_MAX = 2048;
+constexpr int SHADOW_LIGHT_Z_SIZE_ALIGNMENT = 64;
 const D3DXVECTOR3 SHADOW_CAMERA_OFFSET(40.0f, 50.0f, -40.0f);
 
 D3DXMATRIX BuildMeshWorldMatrix(const MeshMixManager& mesh)
@@ -115,10 +121,23 @@ int VariantIndexToShadowTextureScaleDivisor(const int variantIndex)
     }
 }
 
-UINT ComputeLightZTextureSize(const int screenSize, const int scaleDivisor)
+UINT ComputeLightZTextureSize(const int screenWidth,
+                              const int screenHeight,
+                              const int scaleDivisor)
 {
+    const float widthScale = static_cast<float>(screenWidth) /
+        static_cast<float>(SHADOW_REFERENCE_SCREEN_WIDTH);
+    const float heightScale = static_cast<float>(screenHeight) /
+        static_cast<float>(SHADOW_REFERENCE_SCREEN_HEIGHT);
+    const float renderScale = (std::min)(widthScale, heightScale);
+    const int scaledSize = static_cast<int>(
+        static_cast<float>(SHADOW_REFERENCE_LIGHT_Z_SIZE) * renderScale + 0.5f);
+    const int alignedSize = ((scaledSize + SHADOW_LIGHT_Z_SIZE_ALIGNMENT / 2) /
+        SHADOW_LIGHT_Z_SIZE_ALIGNMENT) * SHADOW_LIGHT_Z_SIZE_ALIGNMENT;
+    const int clampedSize = (std::max)(SHADOW_LIGHT_Z_SIZE_MIN,
+        (std::min)(alignedSize, SHADOW_LIGHT_Z_SIZE_MAX));
     const int normalizedDivisor = NormalizeShadowTextureScaleDivisor(scaleDivisor);
-    return static_cast<UINT>((std::max)(1, (screenSize * 2) / normalizedDivisor));
+    return static_cast<UINT>((std::max)(1, clampedSize / normalizedDivisor));
 }
 
 UINT ComputeShadowTextureSize(const int screenSize, const int scaleDivisor)
@@ -1083,8 +1102,11 @@ void PostEffectZShadow::CreateRawResource()
         for (int variantIndex = 0; variantIndex < SHADOW_TEX_SIZE_VARIANT_COUNT; ++variantIndex)
         {
             const int scaleDivisor = VariantIndexToShadowTextureScaleDivisor(variantIndex);
-            UINT lightZWidth = ComputeLightZTextureSize(Common::ScreenW(), scaleDivisor);
-            UINT lightZHeight = ComputeLightZTextureSize(Common::ScreenH(), scaleDivisor);
+            const UINT lightZSize = ComputeLightZTextureSize(Common::ScreenW(),
+                                                             Common::ScreenH(),
+                                                             scaleDivisor);
+            UINT lightZWidth = lightZSize;
+            UINT lightZHeight = lightZSize;
             UINT shadowWidth = ComputeShadowTextureSize(Common::ScreenW(), scaleDivisor);
             UINT shadowHeight = ComputeShadowTextureSize(Common::ScreenH(), scaleDivisor);
             if (cascadeIndex == SHADOW_CASCADE_FAR)
