@@ -9,6 +9,7 @@
 #include <exception>
 #include <fstream>
 #include <iterator>
+#include <stdexcept>
 #include <string>
 
 #include "Camera.h"
@@ -934,6 +935,62 @@ void MeshMixSkinAnim::ApplyAnimationFrameTransformsToMeshHierarchy(const LPD3DXF
     }
 }
 
+void MeshMixSkinAnim::CollectUnknownAnimationFrames(const LPD3DXFRAME animationFrameBase,
+                                                    std::vector<std::string>* unknownNames) const
+{
+    if (animationFrameBase == nullptr)
+    {
+        return;
+    }
+
+    if (animationFrameBase->Name != nullptr &&
+        D3DXFrameFind(m_frameRoot, animationFrameBase->Name) == nullptr)
+    {
+        unknownNames->push_back(animationFrameBase->Name);
+    }
+
+    if (animationFrameBase->pFrameSibling != nullptr)
+    {
+        CollectUnknownAnimationFrames(animationFrameBase->pFrameSibling, unknownNames);
+    }
+
+    if (animationFrameBase->pFrameFirstChild != nullptr)
+    {
+        CollectUnknownAnimationFrames(animationFrameBase->pFrameFirstChild, unknownNames);
+    }
+}
+
+void MeshMixSkinAnim::ThrowIfAnimationHasUnknownFrames(const LPD3DXFRAME animationFrameRoot,
+                                                       const std::wstring& animationFilePath) const
+{
+    std::vector<std::string> unknownNames;
+    CollectUnknownAnimationFrames(animationFrameRoot, &unknownNames);
+    if (unknownNames.empty())
+    {
+        return;
+    }
+
+    std::sort(unknownNames.begin(), unknownNames.end());
+    unknownNames.erase(std::unique(unknownNames.begin(), unknownNames.end()), unknownNames.end());
+
+    std::wstring message = L"Animation file contains frames that do not exist in the mesh. Mesh=" +
+                           m_meshName + L" Animation=" + animationFilePath +
+                           L" UnknownFrameCount=" + std::to_wstring(unknownNames.size()) +
+                           L" UnknownFrames=";
+    const std::size_t maxListed = 20;
+    for (std::size_t i = 0; i < unknownNames.size() && i < maxListed; ++i)
+    {
+        if (i > 0)
+        {
+            message += L",";
+        }
+        message += Util::Utf8ToWstring(unknownNames.at(i));
+    }
+
+    WriteMeshMixSkinAnimLoadLog(L"Animation frame validation failed. " + message);
+    throw std::runtime_error(Util::WstringToUtf8(message));
+}
+
 void MeshMixSkinAnim::SetAnimationSpeed(const float speed)
 {
     m_animationSpeed = speed;
@@ -1107,6 +1164,8 @@ bool MeshMixSkinAnim::LoadAnimationClip(const AnimationInfo& info)
         SAFE_DELETE(clip.allocator);
         return false;
     }
+
+    ThrowIfAnimationHasUnknownFrames(clip.frameRoot, info.filePath);
 
     ReleaseMeshContainersRecursive(clip.frameRoot, *clip.allocator);
     if (clip.controller != nullptr)

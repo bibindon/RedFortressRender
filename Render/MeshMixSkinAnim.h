@@ -109,6 +109,10 @@ private:
     void UpdateFrameMatrix(const LPD3DXFRAME frameBase, const LPD3DXMATRIX matParent);
     void ApplyAnimationFrameTransformsToMeshHierarchy(const LPD3DXFRAME meshFrameBase,
                                                       const LPD3DXFRAME animationFrameRoot);
+    void CollectUnknownAnimationFrames(const LPD3DXFRAME animationFrameBase,
+                                       std::vector<std::string>* unknownNames) const;
+    void ThrowIfAnimationHasUnknownFrames(const LPD3DXFRAME animationFrameRoot,
+                                          const std::wstring& animationFilePath) const;
     void UpdateActiveAnimationClip();
     bool LoadAnimationCsv();
     bool LoadAnimationClip(const AnimationInfo& info);

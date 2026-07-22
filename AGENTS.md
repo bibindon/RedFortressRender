@@ -110,6 +110,7 @@ Stage source files live under `..\RedFortress2\MultiPassRendering\res\model\stag
 
 ## Known gotchas
 
+- `MeshMixSkinAnim` / `MeshMixSkinAnim2` validate CSV-listed animation `.x` files at load: every frame in the animation hierarchy must exist in the mesh frame hierarchy. On mismatch they throw `std::runtime_error` (details in `CustomXLoader.log`), which is fatal to the host app. When bones are removed from a model, its animation `.x` files must be reduced to the same bone set (see `RedFortress2/.../marine_512_low`, kept in sync at 28 bones).
 - `AddMeshInstansing` is intentionally misspelled (missing 't' from "Instancing").
 - Resource paths are relative to the **runtime working directory**, not the project directory.
 - Device loss handling: classes implement `IDeviceResettable::OnDeviceLost` / `OnDeviceReset`. `Common` tracks all registered resources.

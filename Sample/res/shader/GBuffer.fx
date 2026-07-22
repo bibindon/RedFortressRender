@@ -10,6 +10,8 @@ int g_currentBoneIndex;
 
 float g_fNear  = 1.0f;
 float g_fFar   = 1000.0f;
+float g_fogNear = 1.0f;
+float g_fogFar = 1000.0f;
 
 float g_posRange = 50.0f;
 int g_swayMode = 0;
@@ -60,6 +62,7 @@ sampler sampSkinAlpha = sampler_state
 };
 
 bool g_useSkinAlphaCutout = false;
+bool g_shadowReceiverEnabled = false;
 
 struct VS_INPUT
 {
@@ -253,12 +256,17 @@ void VS_GBufferSkin(in  float4 inPosition     : POSITION,
 void PS_GBuffer(VS_OUTPUT inputData,
                  out float4 outRT0 : COLOR0,
                  out float4 outRT1 : COLOR1,
-                 out float4 outRT2 : COLOR2)
+                 out float4 outRT2 : COLOR2,
+                 out float4 outRT3 : COLOR3)
 {
     float linearZ = (inputData.viewSpaceZ - g_fNear) / (g_fFar - g_fNear);
     linearZ = saturate(linearZ);
 
+    float fogLinearZ = (inputData.viewSpaceZ - g_fogNear) / (g_fogFar - g_fogNear);
+    fogLinearZ = saturate(fogLinearZ);
+
     outRT0 = float4(linearZ, 0.0f, 0.0f, 1.0f);
+    outRT3 = float4(fogLinearZ, 0.0f, 0.0f, 1.0f);
 
     float3 normalized = inputData.positionWorld / g_posRange;
     float3 world01 = normalized * 0.5f + 0.5f;
@@ -268,17 +276,23 @@ void PS_GBuffer(VS_OUTPUT inputData,
 
     // ---- RT2: WS 法線を 0..1 にエンコード ----
     float3 n01 = saturate(inputData.normalWorld * 0.5f + 0.5f);
-    outRT2 = float4(n01, 1.0f);
+    float shadowReceiverMask = 0.0f;
+    if (g_shadowReceiverEnabled)
+    {
+        shadowReceiverMask = 1.0f;
+    }
+    outRT2 = float4(n01, shadowReceiverMask);
 }
 
 // バックフェイスの線形深度だけを出力する（厚み情報用）
 void PS_GBufferInstancing(VS_OUTPUT inputData,
                           out float4 outRT0 : COLOR0,
                           out float4 outRT1 : COLOR1,
-                          out float4 outRT2 : COLOR2)
+                          out float4 outRT2 : COLOR2,
+                          out float4 outRT3 : COLOR3)
 {
     clip(tex2D(sampInstancingAlpha, inputData.alphaUV).a - 0.1f);
-    PS_GBuffer(inputData, outRT0, outRT1, outRT2);
+    PS_GBuffer(inputData, outRT0, outRT1, outRT2, outRT3);
 }
 
 void PS_GBufferSkin(float  viewSpaceZ  : TEXCOORD0,
@@ -288,7 +302,8 @@ void PS_GBufferSkin(float  viewSpaceZ  : TEXCOORD0,
                     float2 alphaUV     : TEXCOORD4,
                     out float4 outRT0  : COLOR0,
                     out float4 outRT1  : COLOR1,
-                    out float4 outRT2  : COLOR2)
+                    out float4 outRT2  : COLOR2,
+                    out float4 outRT3  : COLOR3)
 {
     if (g_useSkinAlphaCutout)
     {
@@ -302,36 +317,17 @@ void PS_GBufferSkin(float  viewSpaceZ  : TEXCOORD0,
     inputData.normalWorld = worldNormal;
     inputData.screenUV = screenUV;
     inputData.alphaUV = alphaUV;
-    PS_GBuffer(inputData, outRT0, outRT1, outRT2);
-}
-
-void PS_GBufferInstancingFog(VS_OUTPUT inputData,
-                             out float4 outRT0 : COLOR0)
-{
-    clip(tex2D(sampInstancingAlpha, inputData.alphaUV).a - 0.1f);
-
-    float linearZ = (inputData.viewSpaceZ - g_fNear) / (g_fFar - g_fNear);
-    linearZ = saturate(linearZ);
-    outRT0 = float4(linearZ, 0.0f, 0.0f, 1.0f);
+    PS_GBuffer(inputData, outRT0, outRT1, outRT2, outRT3);
 }
 
 void PS_GBufferParticle(VS_OUTPUT inputData,
                         out float4 outRT0 : COLOR0,
                         out float4 outRT1 : COLOR1,
-                        out float4 outRT2 : COLOR2)
+                        out float4 outRT2 : COLOR2,
+                        out float4 outRT3 : COLOR3)
 {
     clip(tex2D(sampParticleAlpha, inputData.alphaUV).a - 0.1f);
-    PS_GBuffer(inputData, outRT0, outRT1, outRT2);
-}
-
-void PS_GBufferParticleFog(VS_OUTPUT inputData,
-                           out float4 outRT0 : COLOR0)
-{
-    clip(tex2D(sampParticleAlpha, inputData.alphaUV).a - 0.1f);
-
-    float linearZ = (inputData.viewSpaceZ - g_fNear) / (g_fFar - g_fNear);
-    linearZ = saturate(linearZ);
-    outRT0 = float4(linearZ, 0.0f, 0.0f, 1.0f);
+    PS_GBuffer(inputData, outRT0, outRT1, outRT2, outRT3);
 }
 
 void PS_GBufferBackFace(VS_OUTPUT inputData,
@@ -381,6 +377,20 @@ technique TechniqueGBuffer
     }
 }
 
+technique TechniqueGBufferCulled
+{
+    pass P0
+    {
+        CullMode         = CCW;
+        ZEnable          = TRUE;
+        ZWriteEnable     = TRUE;
+        AlphaBlendEnable = FALSE;
+
+        VertexShader = compile vs_3_0 VS_GBuffer();
+        PixelShader  = compile ps_3_0 PS_GBuffer();
+    }
+}
+
 // バックフェイスのみ描画して背面深度を取得（厚み = 背面深度 - 前面深度）
 technique TechniqueGBufferInstancing
 {
@@ -396,17 +406,17 @@ technique TechniqueGBufferInstancing
     }
 }
 
-technique TechniqueGBufferInstancingFog
+technique TechniqueGBufferInstancingCulled
 {
     pass P0
     {
-        CullMode         = NONE;
+        CullMode         = CCW;
         ZEnable          = TRUE;
         ZWriteEnable     = TRUE;
         AlphaBlendEnable = FALSE;
 
         VertexShader = compile vs_3_0 VS_GBufferInstancing();
-        PixelShader  = compile ps_3_0 PS_GBufferInstancingFog();
+        PixelShader  = compile ps_3_0 PS_GBufferInstancing();
     }
 }
 
@@ -424,17 +434,17 @@ technique TechniqueGBufferParticle
     }
 }
 
-technique TechniqueGBufferParticleFog
+technique TechniqueGBufferParticleCulled
 {
     pass P0
     {
-        CullMode         = NONE;
+        CullMode         = CCW;
         ZEnable          = TRUE;
         ZWriteEnable     = TRUE;
         AlphaBlendEnable = FALSE;
 
         VertexShader = compile vs_3_0 VS_GBufferParticle();
-        PixelShader  = compile ps_3_0 PS_GBufferParticleFog();
+        PixelShader  = compile ps_3_0 PS_GBufferParticle();
     }
 }
 
@@ -457,6 +467,20 @@ technique TechniqueGBufferSkin
     pass P0
     {
         CullMode         = NONE;
+        ZEnable          = TRUE;
+        ZWriteEnable     = TRUE;
+        AlphaBlendEnable = FALSE;
+
+        VertexShader = (vsSkinArray[g_currentBoneIndex]);
+        PixelShader  = compile ps_3_0 PS_GBufferSkin();
+    }
+}
+
+technique TechniqueGBufferSkinCulled
+{
+    pass P0
+    {
+        CullMode         = CCW;
         ZEnable          = TRUE;
         ZWriteEnable     = TRUE;
         AlphaBlendEnable = FALSE;
