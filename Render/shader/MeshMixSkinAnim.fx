@@ -300,7 +300,8 @@ void PixelShader1(in  float3 inPosWorld    : TEXCOORD0,
                   out float4 outColor      : COLOR0,
                   out float4 outDepth      : COLOR1,
                   out float4 outPosition   : COLOR2,
-                  out float4 outNormal     : COLOR3)
+                  out float4 outNormal     : COLOR3,
+                  uniform int pointLightCount)
 {
     ApplyMirrorClip(inPosWorld);
     ApplyAlphaClip(inTexCoord);
@@ -359,8 +360,40 @@ void PixelShader1(in  float3 inPosWorld    : TEXCOORD0,
     float fresnel = g_fresnelEnable ? (CalcFresnelFactor(normal, cameraDir) * g_fresnelIntensity) : 0.0f;
     float3 fresnelColor = g_specularColor.rgb * fresnel;
 
-    outColor = saturate(float4(ambient + lambert + specular + fresnelColor,
-                               textureColor.a * g_diffuse.a));
+    float3 pointLightDiffuse = 0.0f;
+    float3 pointLightSpecular = 0.0f;
+    for (int pointLightIndex = 0; pointLightIndex < pointLightCount; ++pointLightIndex)
+    {
+        if (g_pointLightBrightness[pointLightIndex] <= 0.0f)
+        {
+            continue;
+        }
+
+        float3 lightSurfacePos = ClosestPointOnPointLightShape(g_pointLightPos[pointLightIndex],
+                                                               g_pointLightShape[pointLightIndex],
+                                                               g_pointLightLineLength[pointLightIndex],
+                                                               g_pointLightSquareWidth[pointLightIndex],
+                                                               g_pointLightSquareHeight[pointLightIndex],
+                                                               g_pointLightRotation[pointLightIndex].xyz,
+                                                               inPosWorld);
+        float3 sampleDiffuse = 0.0f;
+        float3 sampleSpecular = 0.0f;
+        AccumulateSingleLightSample(lightSurfacePos,
+                                    g_pointLightBrightness[pointLightIndex],
+                                    g_pointLightColor[pointLightIndex],
+                                    inPosWorld,
+                                    normal,
+                                    cameraDir,
+                                    sampleDiffuse,
+                                    sampleSpecular);
+        pointLightDiffuse += sampleDiffuse;
+        pointLightSpecular += sampleSpecular;
+    }
+
+    float3 baseColor = saturate(ambient + lambert + specular + fresnelColor);
+    float3 pointLightColor = (albedo * pointLightDiffuse) + pointLightSpecular;
+    outColor = float4(baseColor + pointLightColor,
+                      saturate(textureColor.a * g_diffuse.a));
 }
 
 void PixelShaderPointLight(in  float4 inPosition    : POSITION,
@@ -445,6 +478,15 @@ void PixelShaderAlphaDepthPrePass(in  float3 inPosWorld    : TEXCOORD0,
                            outNormal);
 }
 
+PixelShader pixelShaderPointLightVariants[4] =
+{
+    compile ps_3_0 PixelShader1(0),
+    compile ps_3_0 PixelShader1(4),
+    compile ps_3_0 PixelShader1(8),
+    compile ps_3_0 PixelShader1(16)
+};
+int g_currentPointLightShaderIndex = 0;
+
 technique Technique1
 {
     pass Pass0
@@ -459,19 +501,7 @@ technique Technique1
         CullMode = NONE;
 
         VertexShader = (vsArray[g_currentBoneIndex]);
-        PixelShader = compile ps_3_0 PixelShader1();
-    }
-
-    pass PassPointLight
-    {
-        AlphaBlendEnable = TRUE;
-        SrcBlend = ONE;
-        DestBlend = ONE;
-        ColorWriteEnable = 15;
-        CullMode = NONE;
-
-        VertexShader = (vsArray[g_currentBoneIndex]);
-        PixelShader = compile ps_3_0 PixelShaderPointLight();
+        PixelShader = (pixelShaderPointLightVariants[g_currentPointLightShaderIndex]);
     }
 }
 
@@ -509,19 +539,7 @@ technique TechniqueAlphaClip
         CullMode = NONE;
 
         VertexShader = (vsArray[g_currentBoneIndex]);
-        PixelShader = compile ps_3_0 PixelShader1();
-    }
-
-    pass PassPointLight
-    {
-        AlphaBlendEnable = TRUE;
-        SrcBlend = ONE;
-        DestBlend = ONE;
-        ColorWriteEnable = 15;
-        CullMode = NONE;
-
-        VertexShader = (vsArray[g_currentBoneIndex]);
-        PixelShader = compile ps_3_0 PixelShaderPointLight();
+        PixelShader = (pixelShaderPointLightVariants[g_currentPointLightShaderIndex]);
     }
 }
 
@@ -539,22 +557,7 @@ technique Technique1Integrated
         CullMode = NONE;
 
         VertexShader = (vsArray[g_currentBoneIndex]);
-        PixelShader = compile ps_3_0 PixelShader1();
-    }
-
-    pass PassPointLight
-    {
-        AlphaBlendEnable = TRUE;
-        SrcBlend = ONE;
-        DestBlend = ONE;
-        ColorWriteEnable = 15;
-        ColorWriteEnable1 = 0;
-        ColorWriteEnable2 = 0;
-        ColorWriteEnable3 = 0;
-        CullMode = NONE;
-
-        VertexShader = (vsArray[g_currentBoneIndex]);
-        PixelShader = compile ps_3_0 PixelShaderPointLight();
+        PixelShader = (pixelShaderPointLightVariants[g_currentPointLightShaderIndex]);
     }
 }
 
@@ -592,21 +595,6 @@ technique TechniqueAlphaClipIntegrated
         CullMode = NONE;
 
         VertexShader = (vsArray[g_currentBoneIndex]);
-        PixelShader = compile ps_3_0 PixelShader1();
-    }
-
-    pass PassPointLight
-    {
-        AlphaBlendEnable = TRUE;
-        SrcBlend = ONE;
-        DestBlend = ONE;
-        ColorWriteEnable = 15;
-        ColorWriteEnable1 = 0;
-        ColorWriteEnable2 = 0;
-        ColorWriteEnable3 = 0;
-        CullMode = NONE;
-
-        VertexShader = (vsArray[g_currentBoneIndex]);
-        PixelShader = compile ps_3_0 PixelShaderPointLight();
+        PixelShader = (pixelShaderPointLightVariants[g_currentPointLightShaderIndex]);
     }
 }

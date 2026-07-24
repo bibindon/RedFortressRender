@@ -54,6 +54,23 @@ float PointLightShapeToShaderValue(const PointLightShape shape)
     return static_cast<float>(static_cast<int>(shape));
 }
 
+int GetPointLightShaderIndex(const std::size_t pointLightCount)
+{
+    if (pointLightCount == 0)
+    {
+        return 0;
+    }
+    if (pointLightCount <= 4)
+    {
+        return 1;
+    }
+    if (pointLightCount <= 8)
+    {
+        return 2;
+    }
+    return 3;
+}
+
 bool& GetSharedMirrorClipEnabled()
 {
     static bool sharedMirrorClipEnabled = false;
@@ -750,9 +767,11 @@ void MeshMixSkinAnim2::Render()
     m_D3DEffect->SetFloat("g_fShadowDarkness", m_param.shadowDarkness);
     m_D3DEffect->SetFloat("g_specularIntensity", m_param.specularIntensity);
 
+    std::size_t activePointLightCount = 0;
     if (m_param.pointLight && Light::IsPointLightEnabled())
     {
         auto pointLightList = Light::GetPointLightList();
+        activePointLightCount = (std::min)(pointLightList.size(), static_cast<std::size_t>(16));
 
         D3DXVECTOR4 pos[16];
         float brightness[16] { };
@@ -797,6 +816,8 @@ void MeshMixSkinAnim2::Render()
         m_D3DEffect->SetVectorArray("g_pointLightRotation", rotation, 16);
         m_D3DEffect->SetVectorArray("g_pointLightColor", color, 16);
     }
+    const int pointLightShaderIndex = GetPointLightShaderIndex(activePointLightCount);
+    m_D3DEffect->SetInt("g_currentPointLightShaderIndex", pointLightShaderIndex);
 
     D3DXMATRIX viewProjectionMatrix = Camera::GetViewMatrix() * Camera::GetProjMatrix();
     m_D3DEffect->SetMatrix("g_matViewProj", &viewProjectionMatrix);
@@ -1570,31 +1591,6 @@ void MeshMixSkinAnim2::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBa
         m_D3DEffect->SetTechnique(techniqueName);
         m_D3DEffect->Begin(nullptr, 0);
         if (FAILED(m_D3DEffect->BeginPass(0)))
-        {
-            if (disableZWrite || useAlphaDepthPrePass)
-            {
-                Common::D3DDevice()->SetRenderState(D3DRS_ZWRITEENABLE, oldZWriteEnable);
-            }
-            m_D3DEffect->End();
-            throw std::exception("Failed 'BeginPass' function.");
-        }
-
-        m_D3DEffect->CommitChanges();
-        container->MeshData.pMesh->DrawSubset(i);
-        m_D3DEffect->EndPass();
-        m_D3DEffect->End();
-
-        if (!m_param.pointLight || !Light::IsPointLightEnabled())
-        {
-            if (disableZWrite || useAlphaDepthPrePass)
-            {
-                Common::D3DDevice()->SetRenderState(D3DRS_ZWRITEENABLE, oldZWriteEnable);
-            }
-            continue;
-        }
-
-        m_D3DEffect->Begin(nullptr, 0);
-        if (FAILED(m_D3DEffect->BeginPass(1)))
         {
             if (disableZWrite || useAlphaDepthPrePass)
             {

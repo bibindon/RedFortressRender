@@ -544,7 +544,8 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
                   out float4 outColor     : COLOR0,
                   out float4 outDepth     : COLOR1,
                   out float4 outPosition  : COLOR2,
-                  out float4 outNormal    : COLOR3)
+                  out float4 outNormal    : COLOR3,
+                  uniform int pointLightCount)
 {
     ApplyMirrorClip(inPosWorld);
 
@@ -689,7 +690,39 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
         finalColor += sssColor * sssBlend;
     }
 
-    outColor = saturate(float4(finalColor, surfaceAlpha));
+    float3 pointLightDiffuse = 0.0f;
+    float3 pointLightSpecular = 0.0f;
+    for (int pointLightIndex = 0; pointLightIndex < pointLightCount; ++pointLightIndex)
+    {
+        if (g_pointLightBrightness[pointLightIndex] <= 0.0f)
+        {
+            continue;
+        }
+
+        float3 lightSurfacePos = ClosestPointOnPointLightShape(g_pointLightPos[pointLightIndex],
+                                                               g_pointLightShape[pointLightIndex],
+                                                               g_pointLightLineLength[pointLightIndex],
+                                                               g_pointLightSquareWidth[pointLightIndex],
+                                                               g_pointLightSquareHeight[pointLightIndex],
+                                                               g_pointLightRotation[pointLightIndex].xyz,
+                                                               inPosWorld);
+        float3 sampleDiffuse = 0.0f;
+        float3 sampleSpecular = 0.0f;
+        AccumulateSingleLightSample(lightSurfacePos,
+                                    g_pointLightBrightness[pointLightIndex],
+                                    g_pointLightColor[pointLightIndex],
+                                    inPosWorld,
+                                    shadingNormal,
+                                    cameraDir,
+                                    sampleDiffuse,
+                                    sampleSpecular);
+        pointLightDiffuse += sampleDiffuse;
+        pointLightSpecular += sampleSpecular;
+    }
+
+    float3 baseColor = saturate(finalColor);
+    float3 pointLightColor = (albedo * pointLightDiffuse) + pointLightSpecular;
+    outColor = float4(baseColor + pointLightColor, saturate(surfaceAlpha));
     WriteIntegratedGBuffer(inPosWorld, shadingNormal, outDepth, outPosition, outNormal);
 
     if (false)
@@ -982,6 +1015,15 @@ float2 CalcUVCoordWithPOM(float3 inNormalizedNormalWS,
     return inTexCoord;
 }
 
+PixelShader pixelShaderPointLightVariants[4] =
+{
+    compile ps_3_0 PixelShader1(0),
+    compile ps_3_0 PixelShader1(4),
+    compile ps_3_0 PixelShader1(8),
+    compile ps_3_0 PixelShader1(16)
+};
+int g_currentPointLightShaderIndex = 0;
+
 technique Technique1
 {
     pass Pass1
@@ -993,7 +1035,7 @@ technique Technique1
         SrcBlend        = ONE;
         DestBlend       = ZERO;
         VertexShader = compile vs_3_0 VertexShader1();
-        PixelShader = compile ps_3_0 PixelShader1();
+        PixelShader = (pixelShaderPointLightVariants[g_currentPointLightShaderIndex]);
     }
 
     pass PassCubeMapping
@@ -1020,19 +1062,6 @@ technique Technique1
 
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShaderGlass();
-    }
-
-    pass PassPointLight
-    {
-        CullMode = NONE;
-        AlphaBlendEnable = TRUE;
-        SrcBlend = ONE;
-        DestBlend = ONE;
-        ZEnable = TRUE;
-        ZWriteEnable = TRUE;
-
-        VertexShader = compile vs_3_0 VertexShader1();
-        PixelShader = compile ps_3_0 PixelShaderPointLight();
     }
 
     pass PassEmit
@@ -1071,7 +1100,7 @@ technique Technique1
         ColorWriteEnable2 = 0;
         ColorWriteEnable3 = 0;
         VertexShader = compile vs_3_0 VertexShader1();
-        PixelShader = compile ps_3_0 PixelShader1();
+        PixelShader = (pixelShaderPointLightVariants[g_currentPointLightShaderIndex]);
     }
 
 }

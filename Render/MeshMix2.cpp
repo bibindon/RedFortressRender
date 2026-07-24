@@ -55,6 +55,23 @@ float PointLightShapeToShaderValue(const PointLightShape shape)
     return static_cast<float>(static_cast<int>(shape));
 }
 
+int GetPointLightShaderIndex(const std::size_t pointLightCount)
+{
+    if (pointLightCount == 0)
+    {
+        return 0;
+    }
+    if (pointLightCount <= 4)
+    {
+        return 1;
+    }
+    if (pointLightCount <= 8)
+    {
+        return 2;
+    }
+    return 3;
+}
+
 LPDIRECT3DTEXTURE9 g_meshMix2ThicknessTexture = nullptr;
 LPDIRECT3DTEXTURE9 g_meshMix2MirrorTexture = nullptr;
 D3DXMATRIX g_meshMix2MirrorViewProjection;
@@ -370,6 +387,15 @@ void MeshMix2::Render(const bool renderAsMirrorSurface)
                             "MeshMix2 failed to clear g_texHeightMap.");
 
     const std::deque<PointLightInfo> pointLightList = Light::GetPointLightList();
+    std::size_t activePointLightCount = 0;
+    if (m_param.pointLight && Light::IsPointLightEnabled())
+    {
+        activePointLightCount = (std::min)(pointLightList.size(), static_cast<std::size_t>(16));
+    }
+    const int pointLightShaderIndex = GetPointLightShaderIndex(activePointLightCount);
+    ThrowIfEffectCallFailed(m_D3DEffect->SetInt("g_currentPointLightShaderIndex",
+                                                pointLightShaderIndex),
+                            "MeshMix2 failed to set g_currentPointLightShaderIndex.");
     D3DXVECTOR4 pointLightPositions[16];
     float pointLightBrightness[16] { };
     float pointLightShapes[16] { };
@@ -645,19 +671,13 @@ void MeshMix2::RenderMeshContainer(const MeshMix2Frame& frame,
                 drawPass = false;
                 if (renderAsMirrorSurface && m_param.mirror)
                 {
-                    drawPass = passIndex == 5;
+                    drawPass = passIndex == 4;
                 }
                 else if (m_param.emit)
                 {
-                    drawPass = passIndex == 4;
+                    drawPass = passIndex == 3;
                 }
                 else if (passIndex == 0)
-                {
-                    drawPass = true;
-                }
-                else if (passIndex == 3 &&
-                         m_param.pointLight &&
-                         Light::IsPointLightEnabled())
                 {
                     drawPass = true;
                 }
