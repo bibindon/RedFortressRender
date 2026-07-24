@@ -256,8 +256,7 @@ void VS_GBufferSkin(in  float4 inPosition     : POSITION,
 void PS_GBuffer(VS_OUTPUT inputData,
                  out float4 outRT0 : COLOR0,
                  out float4 outRT1 : COLOR1,
-                 out float4 outRT2 : COLOR2,
-                 out float4 outRT3 : COLOR3)
+                 out float4 outRT2 : COLOR2)
 {
     float linearZ = (inputData.viewSpaceZ - g_fNear) / (g_fFar - g_fNear);
     linearZ = saturate(linearZ);
@@ -265,8 +264,7 @@ void PS_GBuffer(VS_OUTPUT inputData,
     float fogLinearZ = (inputData.viewSpaceZ - g_fogNear) / (g_fogFar - g_fogNear);
     fogLinearZ = saturate(fogLinearZ);
 
-    outRT0 = float4(linearZ, 0.0f, 0.0f, 1.0f);
-    outRT3 = float4(fogLinearZ, 0.0f, 0.0f, 1.0f);
+    outRT0 = float4(linearZ, fogLinearZ, 0.0f, 1.0f);
 
     float3 normalized = inputData.positionWorld / g_posRange;
     float3 world01 = normalized * 0.5f + 0.5f;
@@ -288,11 +286,10 @@ void PS_GBuffer(VS_OUTPUT inputData,
 void PS_GBufferInstancing(VS_OUTPUT inputData,
                           out float4 outRT0 : COLOR0,
                           out float4 outRT1 : COLOR1,
-                          out float4 outRT2 : COLOR2,
-                          out float4 outRT3 : COLOR3)
+                          out float4 outRT2 : COLOR2)
 {
     clip(tex2D(sampInstancingAlpha, inputData.alphaUV).a - 0.1f);
-    PS_GBuffer(inputData, outRT0, outRT1, outRT2, outRT3);
+    PS_GBuffer(inputData, outRT0, outRT1, outRT2);
 }
 
 void PS_GBufferSkin(float  viewSpaceZ  : TEXCOORD0,
@@ -302,8 +299,7 @@ void PS_GBufferSkin(float  viewSpaceZ  : TEXCOORD0,
                     float2 alphaUV     : TEXCOORD4,
                     out float4 outRT0  : COLOR0,
                     out float4 outRT1  : COLOR1,
-                    out float4 outRT2  : COLOR2,
-                    out float4 outRT3  : COLOR3)
+                    out float4 outRT2  : COLOR2)
 {
     if (g_useSkinAlphaCutout)
     {
@@ -317,17 +313,16 @@ void PS_GBufferSkin(float  viewSpaceZ  : TEXCOORD0,
     inputData.normalWorld = worldNormal;
     inputData.screenUV = screenUV;
     inputData.alphaUV = alphaUV;
-    PS_GBuffer(inputData, outRT0, outRT1, outRT2, outRT3);
+    PS_GBuffer(inputData, outRT0, outRT1, outRT2);
 }
 
 void PS_GBufferParticle(VS_OUTPUT inputData,
                         out float4 outRT0 : COLOR0,
                         out float4 outRT1 : COLOR1,
-                        out float4 outRT2 : COLOR2,
-                        out float4 outRT3 : COLOR3)
+                        out float4 outRT2 : COLOR2)
 {
     clip(tex2D(sampParticleAlpha, inputData.alphaUV).a - 0.1f);
-    PS_GBuffer(inputData, outRT0, outRT1, outRT2, outRT3);
+    PS_GBuffer(inputData, outRT0, outRT1, outRT2);
 }
 
 void PS_GBufferBackFace(VS_OUTPUT inputData,

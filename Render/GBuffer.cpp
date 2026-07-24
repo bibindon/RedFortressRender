@@ -20,6 +20,15 @@
 namespace NSRender
 {
 
+namespace
+{
+float g_integratedNearPlane = 0.1f;
+float g_integratedFarPlane = 30'000.0f;
+float g_integratedFogNearPlane = 0.1f;
+float g_integratedFogFarPlane = 30'000.0f;
+float g_integratedPositionRange = 30'000.0f;
+}
+
 float GBuffer::ComputePositionRange(const float nearPlane, const float farPlane)
 {
     const float absoluteNear = fabsf(nearPlane);
@@ -75,12 +84,17 @@ void GBuffer::SetDepthRange(const float nearPlane, const float farPlane)
     m_nearPlane = nearPlane;
     m_farPlane = farPlane;
     m_positionRange = ComputePositionRange(nearPlane, farPlane);
+    g_integratedNearPlane = nearPlane;
+    g_integratedFarPlane = farPlane;
+    g_integratedPositionRange = m_positionRange;
 }
 
 void GBuffer::SetFogDepthRange(const float nearPlane, const float farPlane)
 {
     m_fogNearPlane = nearPlane;
     m_fogFarPlane = farPlane;
+    g_integratedFogNearPlane = nearPlane;
+    g_integratedFogFarPlane = farPlane;
 }
 
 void GBuffer::SetDepthFormat(const GBufferScalarFormat format)
@@ -163,6 +177,17 @@ D3DFORMAT GBuffer::ToD3DFormat(const GBufferVectorFormat format)
     return D3DFMT_A16B16G16R16F;
 }
 
+D3DFORMAT GBuffer::GetPackedDepthFormat() const
+{
+    if (m_depthFormat == GBufferScalarFormat::R32F ||
+        m_fogDepthFormat == GBufferScalarFormat::R32F)
+    {
+        return D3DFMT_G32R32F;
+    }
+
+    return D3DFMT_G16R16F;
+}
+
 bool GBuffer::IsInitialized() const
 {
     return m_isInitialized;
@@ -185,20 +210,9 @@ void GBuffer::CreateRawResource()
                                 Common::ScreenH(),
                                 1,
                                 D3DUSAGE_RENDERTARGET,
-                                ToD3DFormat(m_depthFormat),
+                                GetPackedDepthFormat(),
                                 D3DPOOL_DEFAULT,
                                 &m_texRenderTargetZ);
-    assert(hResult == S_OK);
-
-    // Fog 専用 Z 画像
-    hResult = D3DXCreateTexture(Common::D3DDevice(),
-                                Common::ScreenW(),
-                                Common::ScreenH(),
-                                1,
-                                D3DUSAGE_RENDERTARGET,
-                                ToD3DFormat(m_fogDepthFormat),
-                                D3DPOOL_DEFAULT,
-                                &m_texRenderTargetFogZ);
     assert(hResult == S_OK);
 
     // World座標
@@ -284,38 +298,47 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
 
     // GBuffer の各サーフェスを取得
     LPDIRECT3DSURFACE9 surfaceZ = NULL;
-    LPDIRECT3DSURFACE9 surfaceFogZ = NULL;
     LPDIRECT3DSURFACE9 surfacePos = NULL;
     LPDIRECT3DSURFACE9 surfaceNorm = NULL;
 
     hr = m_texRenderTargetZ->GetSurfaceLevel(0, &surfaceZ);
-    hr = m_texRenderTargetFogZ->GetSurfaceLevel(0, &surfaceFogZ);
     hr = m_texRenderTargetPos->GetSurfaceLevel(0, &surfacePos);
     hr = m_texRenderTargetNormal->GetSurfaceLevel(0, &surfaceNorm);
 
-    // 通常深度と Fog 深度は同じカメラから別の距離範囲でエンコードする。
-    // RT3 へ Fog 深度を同時出力し、専用のシーン再描画を不要にする。
+    // 通常深度を R、Fog 用カメラ深度を G に格納する。
     hr = Common::D3DDevice()->SetRenderTarget(0, surfaceZ);
     hr = Common::D3DDevice()->SetRenderTarget(1, surfacePos);
     hr = Common::D3DDevice()->SetRenderTarget(2, surfaceNorm);
-    hr = Common::D3DDevice()->SetRenderTarget(3, surfaceFogZ);
+    hr = Common::D3DDevice()->SetRenderTarget(3, NULL);
     if (FAILED(hr))
     {
         SAFE_RELEASE(surfaceZ);
-        SAFE_RELEASE(surfaceFogZ);
         SAFE_RELEASE(surfacePos);
         SAFE_RELEASE(surfaceNorm);
         SAFE_RELEASE(surfaceOld);
-        throw std::runtime_error("Failed to bind the fourth GBuffer render target.");
+        throw std::runtime_error("Failed to bind the packed GBuffer render targets.");
     }
 
-    // クリア。Zバッファも一緒に初期化して素直に全描画
+    // 未描画領域は通常深度・Fog 深度とも最遠方にする。
+    hr = Common::D3DDevice()->SetRenderTarget(1, NULL);
+    assert(hr == S_OK);
+    hr = Common::D3DDevice()->SetRenderTarget(2, NULL);
+    assert(hr == S_OK);
     hr = Common::D3DDevice()->Clear(0,
                                     NULL,
                                     D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
-                                    D3DCOLOR_XRGB(255, 0, 0),
+                                    D3DCOLOR_XRGB(255, 255, 255),
                                     1.0f,
                                     0);
+    assert(hr == S_OK);
+    hr = Common::D3DDevice()->ColorFill(surfacePos, NULL, D3DCOLOR_XRGB(255, 0, 0));
+    assert(hr == S_OK);
+    hr = Common::D3DDevice()->ColorFill(surfaceNorm, NULL, D3DCOLOR_XRGB(255, 0, 0));
+    assert(hr == S_OK);
+    hr = Common::D3DDevice()->SetRenderTarget(1, surfacePos);
+    assert(hr == S_OK);
+    hr = Common::D3DDevice()->SetRenderTarget(2, surfaceNorm);
+    assert(hr == S_OK);
 
     hr = Common::D3DDevice()->BeginScene();
 
@@ -398,7 +421,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     m_fxGBuffer->SetTechnique(frontSkinTechnique);
     for (auto& mesh : meshMixSkinAnimList)
     {
-        if (mesh != nullptr)
+        if (mesh != nullptr && !mesh->UsesIntegratedGBuffer())
         {
             mesh->RenderToEffect(m_fxGBuffer);
             ++m_lastFrameProfile.frontObjectDraws;
@@ -416,33 +439,8 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         }
     }
 
-    for (auto& mesh : meshMix2List)
-    {
-        if (mesh != nullptr && mesh->IsSsaoEnabled())
-        {
-            BOOL meshShadowReceiverEnabled = FALSE;
-            if (mesh->IsDepthBufferShadowEnabled())
-            {
-                meshShadowReceiverEnabled = TRUE;
-            }
-            m_fxGBuffer->SetBool("g_shadowReceiverEnabled", meshShadowReceiverEnabled);
-            m_fxGBuffer->SetTechnique(frontTechnique);
-            mesh->RenderToEffect(m_fxGBuffer, viewProjectionMatrix);
-            ++m_lastFrameProfile.frontObjectDraws;
-        }
-    }
-
     m_fxGBuffer->SetBool("g_shadowReceiverEnabled", FALSE);
     for (const auto& mesh : meshInstancingMap)
-    {
-        if (mesh.second != nullptr)
-        {
-            mesh.second->RenderToGBufferEffect(m_fxGBuffer, frontInstancingTechnique);
-            ++m_lastFrameProfile.frontObjectDraws;
-        }
-    }
-
-    for (const auto& mesh : meshInstancing2Map)
     {
         if (mesh.second != nullptr)
         {
@@ -462,13 +460,11 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     hr = Common::D3DDevice()->EndScene();
 
     // MRT を外し、RT0 を元に戻す
-    Common::D3DDevice()->SetRenderTarget(3, NULL);
     Common::D3DDevice()->SetRenderTarget(2, NULL);
     Common::D3DDevice()->SetRenderTarget(1, NULL);
     Common::D3DDevice()->SetRenderTarget(0, surfaceOld);
 
     SAFE_RELEASE(surfaceZ);
-    SAFE_RELEASE(surfaceFogZ);
     SAFE_RELEASE(surfacePos);
     SAFE_RELEASE(surfaceNorm);
     SAFE_RELEASE(surfaceOld);
@@ -601,11 +597,77 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         std::chrono::duration<double, std::milli>(thicknessEndTime - thicknessStartTime).count();
 
     *Z = m_texRenderTargetZ;
-    *CameraZ = m_texRenderTargetFogZ;
+    *CameraZ = m_texRenderTargetZ;
     *Pos = m_texRenderTargetPos;
     *Normal = m_texRenderTargetNormal;
     *Thickness = m_texRenderTargetThickness;
     *BackDepth = m_texRenderTargetBackDepth;
+}
+
+void GBuffer::BindIntegratedRenderTargets()
+{
+    LPDIRECT3DSURFACE9 depthSurface = NULL;
+    LPDIRECT3DSURFACE9 positionSurface = NULL;
+    LPDIRECT3DSURFACE9 normalSurface = NULL;
+
+    HRESULT hResult = m_texRenderTargetZ->GetSurfaceLevel(0, &depthSurface);
+    assert(hResult == S_OK);
+    hResult = m_texRenderTargetPos->GetSurfaceLevel(0, &positionSurface);
+    assert(hResult == S_OK);
+    hResult = m_texRenderTargetNormal->GetSurfaceLevel(0, &normalSurface);
+    assert(hResult == S_OK);
+
+    hResult = Common::D3DDevice()->SetRenderTarget(1, depthSurface);
+    assert(hResult == S_OK);
+    hResult = Common::D3DDevice()->SetRenderTarget(2, positionSurface);
+    assert(hResult == S_OK);
+    hResult = Common::D3DDevice()->SetRenderTarget(3, normalSurface);
+    assert(hResult == S_OK);
+
+    SAFE_RELEASE(normalSurface);
+    SAFE_RELEASE(positionSurface);
+    SAFE_RELEASE(depthSurface);
+}
+
+void GBuffer::UnbindIntegratedRenderTargets()
+{
+    HRESULT hResult = Common::D3DDevice()->SetRenderTarget(3, NULL);
+    assert(hResult == S_OK);
+    hResult = Common::D3DDevice()->SetRenderTarget(2, NULL);
+    assert(hResult == S_OK);
+    hResult = Common::D3DDevice()->SetRenderTarget(1, NULL);
+    assert(hResult == S_OK);
+}
+
+void GBuffer::ApplyIntegratedEffectParameters(LPD3DXEFFECT effect,
+                                               const bool shadowReceiverEnabled)
+{
+    if (effect == NULL)
+    {
+        throw std::runtime_error("Integrated GBuffer effect is null.");
+    }
+
+    const D3DXMATRIX viewMatrix = Camera::GetViewMatrix();
+    HRESULT hResult = effect->SetMatrix("g_gBufferView", &viewMatrix);
+    assert(hResult == S_OK);
+    hResult = effect->SetFloat("g_gBufferNear", g_integratedNearPlane);
+    assert(hResult == S_OK);
+    hResult = effect->SetFloat("g_gBufferFar", g_integratedFarPlane);
+    assert(hResult == S_OK);
+    hResult = effect->SetFloat("g_gBufferFogNear", g_integratedFogNearPlane);
+    assert(hResult == S_OK);
+    hResult = effect->SetFloat("g_gBufferFogFar", g_integratedFogFarPlane);
+    assert(hResult == S_OK);
+    hResult = effect->SetFloat("g_gBufferPositionRange", g_integratedPositionRange);
+    assert(hResult == S_OK);
+
+    BOOL enabled = FALSE;
+    if (shadowReceiverEnabled)
+    {
+        enabled = TRUE;
+    }
+    hResult = effect->SetBool("g_gBufferShadowReceiverEnabled", enabled);
+    assert(hResult == S_OK);
 }
 
 void GBuffer::Finalize()
@@ -618,7 +680,6 @@ void GBuffer::Finalize()
 
     SAFE_RELEASE(m_fxGBuffer);
     SAFE_RELEASE(m_texRenderTargetZ);
-    SAFE_RELEASE(m_texRenderTargetFogZ);
     SAFE_RELEASE(m_texRenderTargetPos);
     SAFE_RELEASE(m_texRenderTargetNormal);
     SAFE_RELEASE(m_texRenderTargetThickness);
@@ -637,7 +698,6 @@ void GBuffer::OnDeviceLost()
 
     m_fxGBuffer->OnLostDevice();
     SAFE_RELEASE(m_texRenderTargetZ);
-    SAFE_RELEASE(m_texRenderTargetFogZ);
     SAFE_RELEASE(m_texRenderTargetPos);
     SAFE_RELEASE(m_texRenderTargetNormal);
     SAFE_RELEASE(m_texRenderTargetThickness);

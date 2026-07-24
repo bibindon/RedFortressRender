@@ -1,6 +1,7 @@
 ﻿#include "MeshMix2.h"
 
 #include "Camera.h"
+#include "GBuffer.h"
 #include "CustomXLoader.h"
 #include "Light.h"
 #include "Util.h"
@@ -444,6 +445,23 @@ void MeshMix2::Render(const bool renderAsMirrorSurface)
                             "MeshMix2 failed to set g_pointLightColor.");
     ThrowIfEffectCallFailed(m_D3DEffect->SetTechnique("Technique1"),
                             "MeshMix2 failed to set Technique1.");
+    GBuffer::ApplyIntegratedEffectParameters(m_D3DEffect, m_param.shadow);
+
+    DWORD oldDepthColorWrite = 15;
+    DWORD oldPositionColorWrite = 15;
+    DWORD oldNormalColorWrite = 15;
+    Common::D3DDevice()->GetRenderState(D3DRS_COLORWRITEENABLE1, &oldDepthColorWrite);
+    Common::D3DDevice()->GetRenderState(D3DRS_COLORWRITEENABLE2, &oldPositionColorWrite);
+    Common::D3DDevice()->GetRenderState(D3DRS_COLORWRITEENABLE3, &oldNormalColorWrite);
+
+    DWORD gBufferColorWrite = 0;
+    if (m_param.ssao)
+    {
+        gBufferColorWrite = 15;
+    }
+    Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE1, gBufferColorWrite);
+    Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE2, gBufferColorWrite);
+    Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE3, gBufferColorWrite);
 
     const D3DXMATRIX viewProjectionMatrix = Camera::GetViewMatrix() * Camera::GetProjMatrix();
     RenderFrameHierarchy(m_frameRoot,
@@ -451,6 +469,10 @@ void MeshMix2::Render(const bool renderAsMirrorSurface)
                          viewProjectionMatrix,
                          true,
                          renderAsMirrorSurface);
+
+    Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE1, oldDepthColorWrite);
+    Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE2, oldPositionColorWrite);
+    Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE3, oldNormalColorWrite);
 }
 
 void MeshMix2::RenderToEffect(LPD3DXEFFECT effect)

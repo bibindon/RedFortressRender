@@ -60,7 +60,7 @@ float FogAmountAt(float2 uv)
 
     if (g_EnableZ)
     {
-        float encodedDepth = tex2D(sZ, uv).r;
+        float encodedDepth = tex2D(sZ, uv).g;
         float decodedDepth = lerp(g_DepthDecodeNear, g_DepthDecodeFar, saturate(encodedDepth));
         float fogDepth = saturate((decodedDepth - g_FogNear) / max(g_FogFar - g_FogNear, 0.0001));
         float trans = exp(-g_IntensityZ * fogDepth);

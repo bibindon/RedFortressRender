@@ -13,6 +13,7 @@
 #include <string>
 
 #include "Camera.h"
+#include "GBuffer.h"
 #include "Common.h"
 #include "CustomXLoader2.h"
 #include "Light.h"
@@ -795,10 +796,11 @@ void MeshMixSkinAnim2::Render()
 
     D3DXMATRIX viewProjectionMatrix = Camera::GetViewMatrix() * Camera::GetProjMatrix();
     m_D3DEffect->SetMatrix("g_matViewProj", &viewProjectionMatrix);
-    const char* techniqueName = "Technique1";
+    GBuffer::ApplyIntegratedEffectParameters(m_D3DEffect, true);
+    const char* techniqueName = "Technique1Integrated";
     if (m_alphaClipEnabled)
     {
-        techniqueName = "TechniqueAlphaClip";
+        techniqueName = "TechniqueAlphaClipIntegrated";
     }
     m_D3DEffect->SetTechnique(techniqueName);
     RenderFrame(m_frameRoot);
@@ -1531,7 +1533,7 @@ void MeshMixSkinAnim2::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBa
         const bool useAlphaDepthPrePass = !m_alphaClipEnabled && !m_ignoreTransparentMaterial && hasTexture;
         if (useAlphaDepthPrePass)
         {
-            m_D3DEffect->SetTechnique("TechniqueAlphaDepthPrePass");
+            m_D3DEffect->SetTechnique("TechniqueAlphaDepthPrePassIntegrated");
             m_D3DEffect->Begin(nullptr, 0);
             if (FAILED(m_D3DEffect->BeginPass(0)))
             {
@@ -1552,10 +1554,14 @@ void MeshMixSkinAnim2::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBa
             Common::D3DDevice()->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
         }
 
-        const char* techniqueName = "Technique1";
+        const char* techniqueName = "Technique1Integrated";
+        if (useAlphaDepthPrePass)
+        {
+            techniqueName = "Technique1";
+        }
         if (m_alphaClipEnabled)
         {
-            techniqueName = "TechniqueAlphaClip";
+            techniqueName = "TechniqueAlphaClipIntegrated";
         }
         m_D3DEffect->SetTechnique(techniqueName);
         m_D3DEffect->Begin(nullptr, 0);
@@ -1847,6 +1853,11 @@ void MeshMixSkinAnim2::SetScale(const float scale)
 D3DXVECTOR3 MeshMixSkinAnim2::GetRot() const
 {
     return m_rotate;
+}
+
+bool MeshMixSkinAnim2::UsesIntegratedGBuffer() const
+{
+    return true;
 }
 
 D3DXVECTOR3 MeshMixSkinAnim2::GetPos() const

@@ -75,6 +75,7 @@ public:
     bool PlayAnimation(const std::wstring& name);
     void SetAnimationSpeed(float speed);
     bool IsLoaded() const;
+    bool UsesIntegratedGBuffer() const override;
 
     void OnDeviceLost() override;
     void OnDeviceReset() override;

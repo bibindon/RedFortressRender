@@ -63,6 +63,10 @@ public:
     GBufferScalarFormat GetBackDepthFormat() const;
     bool IsInitialized() const;
     const GBufferFrameProfile& GetLastFrameProfile() const;
+    void BindIntegratedRenderTargets();
+    void UnbindIntegratedRenderTargets();
+    static void ApplyIntegratedEffectParameters(LPD3DXEFFECT effect,
+                                                bool shadowReceiverEnabled);
 
     void Draw(const std::deque<MeshMixManager>& meshList,
               const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
@@ -89,7 +93,6 @@ public:
 private:
 
     LPDIRECT3DTEXTURE9 m_texRenderTargetZ = NULL;
-    LPDIRECT3DTEXTURE9 m_texRenderTargetFogZ = NULL;
     LPDIRECT3DTEXTURE9 m_texRenderTargetPos = NULL;
     LPDIRECT3DTEXTURE9 m_texRenderTargetNormal = NULL;
     LPDIRECT3DTEXTURE9 m_texRenderTargetThickness = NULL;
@@ -115,6 +118,7 @@ private:
     void CreateRawResource();
     static D3DFORMAT ToD3DFormat(GBufferScalarFormat format);
     static D3DFORMAT ToD3DFormat(GBufferVectorFormat format);
+    D3DFORMAT GetPackedDepthFormat() const;
 };
 
 }

@@ -65,6 +65,10 @@ public:
     virtual bool PlayAnimation(const std::wstring& name) = 0;
     virtual void SetAnimationSpeed(float speed) = 0;
     virtual bool IsLoaded() const = 0;
+    virtual bool UsesIntegratedGBuffer() const
+    {
+        return false;
+    }
 };
 
 }

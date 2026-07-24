@@ -2595,6 +2595,7 @@ void Render::Finalize()
 
     SAFE_RELEASE(m_pRenderTarget1);
     SAFE_RELEASE(m_pRenderTarget2);
+    SAFE_RELEASE(m_pMirrorDepthStencil);
     SAFE_RELEASE(m_pLightEffectSourceTexture);
     SAFE_RELEASE(m_pMirrorRenderTarget);
 
@@ -6897,6 +6898,8 @@ bool Render::RenderMirrorTexture(const int activeMirrorMeshIndex)
 
     hResult = Common::D3DDevice()->SetRenderTarget(0, mirrorRenderSurface);
     assert(hResult == S_OK);
+    hResult = Common::D3DDevice()->SetDepthStencilSurface(m_pMirrorDepthStencil);
+    assert(hResult == S_OK);
 
     const D3DXVECTOR3 eye = Camera::GetEyePos();
     const D3DXVECTOR3 target = Camera::GetLookAtPos();
@@ -7128,7 +7131,6 @@ void Render::DrawPass1(const bool renderToSceneRenderTargets, const int activeMi
 
     LPDIRECT3DSURFACE9 surfaceOld = NULL;
     LPDIRECT3DSURFACE9 surfaceRenderTarget0 = NULL;
-    LPDIRECT3DSURFACE9 surfaceRenderTarget1 = NULL;
 
     if (renderToSceneRenderTargets)
     {
@@ -7138,13 +7140,10 @@ void Render::DrawPass1(const bool renderToSceneRenderTargets, const int activeMi
         hResult = m_pRenderTarget1->GetSurfaceLevel(0, &surfaceRenderTarget0);
         assert(hResult == S_OK);
 
-        hResult = m_pRenderTarget2->GetSurfaceLevel(0, &surfaceRenderTarget1);
-        assert(hResult == S_OK);
-
         hResult = Common::D3DDevice()->SetRenderTarget(0, surfaceRenderTarget0);
         assert(hResult == S_OK);
 
-        hResult = Common::D3DDevice()->SetRenderTarget(1, surfaceRenderTarget1);
+        hResult = Common::D3DDevice()->SetRenderTarget(1, NULL);
         assert(hResult == S_OK);
     }
     else
@@ -7153,14 +7152,24 @@ void Render::DrawPass1(const bool renderToSceneRenderTargets, const int activeMi
         assert(hResult == S_OK);
     }
 
+    DWORD clearFlags = D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER;
+    if (renderToSceneRenderTargets && m_gBufferEnabled)
+    {
+        clearFlags = D3DCLEAR_TARGET;
+    }
     hResult = Common::D3DDevice()->Clear(0,
-                                         NULL,
-                                         D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
-                                         D3DCOLOR_RGBA(200, 200, 200, 255),
-                                         1.0f,
-                                         0);
+                                        NULL,
+                                        clearFlags,
+                                        D3DCOLOR_RGBA(200, 200, 200, 255),
+                                        1.0f,
+                                        0);
 
     assert(hResult == S_OK);
+
+    if (renderToSceneRenderTargets && m_gBufferEnabled)
+    {
+        m_GBuffer.BindIntegratedRenderTargets();
+    }
 
     hResult = Common::D3DDevice()->BeginScene();
     assert(hResult == S_OK);
@@ -7172,15 +7181,16 @@ void Render::DrawPass1(const bool renderToSceneRenderTargets, const int activeMi
 
     if (renderToSceneRenderTargets)
     {
-        hResult = Common::D3DDevice()->SetRenderTarget(1, NULL);
-        assert(hResult == S_OK);
+        if (m_gBufferEnabled)
+        {
+            m_GBuffer.UnbindIntegratedRenderTargets();
+        }
 
         hResult = Common::D3DDevice()->SetRenderTarget(0, surfaceOld);
         assert(hResult == S_OK);
     }
 
     SAFE_RELEASE(surfaceRenderTarget0);
-    SAFE_RELEASE(surfaceRenderTarget1);
     SAFE_RELEASE(surfaceOld);
 }
 
@@ -7743,6 +7753,7 @@ void Render::OnDeviceLost()
 {
     SAFE_RELEASE(m_pRenderTarget1);
     SAFE_RELEASE(m_pRenderTarget2);
+    SAFE_RELEASE(m_pMirrorDepthStencil);
     SAFE_RELEASE(m_pLightEffectSourceTexture);
     SAFE_RELEASE(m_pMirrorRenderTarget);
     m_sprite.OnDeviceLost();
@@ -7813,6 +7824,25 @@ void Render::CreateTexture()
                            D3DFMT_A16B16G16R16F,
                            D3DPOOL_DEFAULT,
                            &m_pMirrorRenderTarget);
+    assert(hr == S_OK);
+
+    LPDIRECT3DSURFACE9 currentDepthStencil = NULL;
+    hr = Common::D3DDevice()->GetDepthStencilSurface(&currentDepthStencil);
+    assert(hr == S_OK);
+    D3DSURFACE_DESC depthDescription{};
+    hr = currentDepthStencil->GetDesc(&depthDescription);
+    assert(hr == S_OK);
+    SAFE_RELEASE(currentDepthStencil);
+
+    hr = Common::D3DDevice()->CreateDepthStencilSurface(
+        Common::ScreenW(),
+        Common::ScreenH(),
+        depthDescription.Format,
+        D3DMULTISAMPLE_NONE,
+        0,
+        TRUE,
+        &m_pMirrorDepthStencil,
+        NULL);
     assert(hr == S_OK);
 
 }

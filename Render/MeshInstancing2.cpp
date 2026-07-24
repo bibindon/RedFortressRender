@@ -1,5 +1,6 @@
 ﻿#include "MeshInstancing2.h"
 #include "Camera.h"
+#include "GBuffer.h"
 #include "CustomXLoader.h"
 #include "Light.h"
 #include "SkinAnimMeshAlloc.h"
@@ -544,6 +545,7 @@ void MeshInstancing2::Draw()
 
     hResult = m_pEffect->SetFloat("g_time", static_cast<float>(GetTickCount64()) * 0.001f);
     assert(hResult == S_OK);
+    GBuffer::ApplyIntegratedEffectParameters(m_pEffect, false);
 
     LPDIRECT3DVERTEXBUFFER9 pVB = nullptr;
     m_pMesh->GetVertexBuffer(&pVB);
@@ -560,10 +562,10 @@ void MeshInstancing2::Draw()
     Common::D3DDevice()->SetIndices(pIB);
     pIB->Release();
 
-    const char* techniqueName = "TechniqueNormal";
+    const char* techniqueName = "TechniqueNormalIntegrated";
     if (m_highQualityEnabled)
     {
-        techniqueName = "TechniqueHighQuality";
+        techniqueName = "TechniqueHighQualityIntegrated";
     }
     hResult = m_pEffect->SetTechnique(techniqueName);
     assert(hResult == S_OK);
@@ -587,14 +589,30 @@ void MeshInstancing2::Draw()
         assert(hResult == S_OK);
 
         DWORD oldZWriteEnable = TRUE;
+        DWORD oldDepthColorWrite = 15;
+        DWORD oldPositionColorWrite = 15;
+        DWORD oldNormalColorWrite = 15;
         if (m_highQualityEnabled && IsSubsetAlphaMaterial(i))
         {
             Common::D3DDevice()->GetRenderState(D3DRS_ZWRITEENABLE, &oldZWriteEnable);
             Common::D3DDevice()->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+            Common::D3DDevice()->GetRenderState(D3DRS_COLORWRITEENABLE1, &oldDepthColorWrite);
+            Common::D3DDevice()->GetRenderState(D3DRS_COLORWRITEENABLE2, &oldPositionColorWrite);
+            Common::D3DDevice()->GetRenderState(D3DRS_COLORWRITEENABLE3, &oldNormalColorWrite);
+            Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE1, 0);
+            Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE2, 0);
+            Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE3, 0);
         }
 
         hResult = m_pEffect->CommitChanges();
         assert(hResult == S_OK);
+        if (m_highQualityEnabled && IsSubsetAlphaMaterial(i))
+        {
+            Common::D3DDevice()->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+            Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE1, 0);
+            Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE2, 0);
+            Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE3, 0);
+        }
 
         hResult = DrawInstancedSubset(i);
         assert(hResult == S_OK);
@@ -602,6 +620,9 @@ void MeshInstancing2::Draw()
         if (m_highQualityEnabled && IsSubsetAlphaMaterial(i))
         {
             Common::D3DDevice()->SetRenderState(D3DRS_ZWRITEENABLE, oldZWriteEnable);
+            Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE1, oldDepthColorWrite);
+            Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE2, oldPositionColorWrite);
+            Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE3, oldNormalColorWrite);
         }
     }
 

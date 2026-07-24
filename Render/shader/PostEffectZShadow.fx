@@ -588,7 +588,7 @@ bool BuildShadowCoordinatesFromGBuffer(float2 inUV,
 {
     float2 receiverUV = inUV + float2(0.5f * g_receiverTexelW, 0.5f * g_receiverTexelH);
     float receiverMask = tex2D(samplerSceneNormal, receiverUV).a;
-    float encodedDepth = tex2D(samplerReceiverDepth, receiverUV).r;
+    float encodedDepth = tex2D(samplerReceiverDepth, receiverUV).g;
     if (receiverMask < 0.5f || encodedDepth >= 0.99999f)
     {
         outWorldPos = 0.0f;
@@ -831,7 +831,7 @@ bool ReconstructDirectShadowWorldPosition(float2 uv,
                                           float sceneEncodedDepth,
                                           out float3 worldPosition)
 {
-    float receiverEncodedDepth = tex2Dlod(samplerReceiverDepth, float4(uv, 0.0f, 0.0f)).r;
+    float receiverEncodedDepth = tex2Dlod(samplerReceiverDepth, float4(uv, 0.0f, 0.0f)).g;
     if (receiverMask < 0.5f || receiverEncodedDepth >= 0.99999f)
     {
         worldPosition = 0.0f;

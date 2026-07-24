@@ -1222,6 +1222,7 @@ private:
 
     LPDIRECT3DTEXTURE9 m_pRenderTarget1 = NULL;
     LPDIRECT3DTEXTURE9 m_pRenderTarget2 = NULL;
+    LPDIRECT3DSURFACE9 m_pMirrorDepthStencil = NULL;
     LPDIRECT3DTEXTURE9 m_pLightEffectSourceTexture = NULL;
     LPDIRECT3DTEXTURE9 m_pMirrorRenderTarget = NULL;
 
