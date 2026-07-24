@@ -2,6 +2,7 @@
 #include "GBuffer.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <stdexcept>
 
@@ -167,6 +168,11 @@ bool GBuffer::IsInitialized() const
     return m_isInitialized;
 }
 
+const GBufferFrameProfile& GBuffer::GetLastFrameProfile() const
+{
+    return m_lastFrameProfile;
+}
+
 void GBuffer::CreateRawResource()
 {
     HRESULT hResult = E_FAIL;
@@ -267,6 +273,9 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
                    LPDIRECT3DTEXTURE9* Thickness,
                    LPDIRECT3DTEXTURE9* BackDepth)
 {
+    using ProfileClock = std::chrono::steady_clock;
+    m_lastFrameProfile = GBufferFrameProfile();
+    const auto frontStartTime = ProfileClock::now();
     HRESULT hr = E_FAIL;
 
     // 既存の RT0 を退避
@@ -377,7 +386,9 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
         {
             d3dMesh->DrawSubset(subsetIndex);
+            ++m_lastFrameProfile.frontStaticSubsetDraws;
         }
+        ++m_lastFrameProfile.frontObjectDraws;
 
         m_fxGBuffer->EndPass();
         m_fxGBuffer->End();
@@ -390,6 +401,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         if (mesh != nullptr)
         {
             mesh->RenderToEffect(m_fxGBuffer);
+            ++m_lastFrameProfile.frontObjectDraws;
         }
     }
 
@@ -400,6 +412,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         if (mesh != nullptr)
         {
             mesh->RenderToEffect(m_fxGBuffer, viewProjectionMatrix);
+            ++m_lastFrameProfile.frontObjectDraws;
         }
     }
 
@@ -415,6 +428,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
             m_fxGBuffer->SetBool("g_shadowReceiverEnabled", meshShadowReceiverEnabled);
             m_fxGBuffer->SetTechnique(frontTechnique);
             mesh->RenderToEffect(m_fxGBuffer, viewProjectionMatrix);
+            ++m_lastFrameProfile.frontObjectDraws;
         }
     }
 
@@ -424,6 +438,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         if (mesh.second != nullptr)
         {
             mesh.second->RenderToGBufferEffect(m_fxGBuffer, frontInstancingTechnique);
+            ++m_lastFrameProfile.frontObjectDraws;
         }
     }
 
@@ -432,6 +447,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         if (mesh.second != nullptr)
         {
             mesh.second->RenderToGBufferEffect(m_fxGBuffer, frontInstancingTechnique);
+            ++m_lastFrameProfile.frontObjectDraws;
         }
     }
 
@@ -456,8 +472,12 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     SAFE_RELEASE(surfacePos);
     SAFE_RELEASE(surfaceNorm);
     SAFE_RELEASE(surfaceOld);
+    const auto frontEndTime = ProfileClock::now();
+    m_lastFrameProfile.frontMilliseconds =
+        std::chrono::duration<double, std::milli>(frontEndTime - frontStartTime).count();
 
     // --- 厚みパス（バックフェイス深度）---
+    const auto thicknessStartTime = ProfileClock::now();
     LPDIRECT3DSURFACE9 surfaceThickness = NULL;
     LPDIRECT3DSURFACE9 surfaceBackDepth = NULL;
     m_texRenderTargetThickness->GetSurfaceLevel(0, &surfaceThickness);
@@ -530,7 +550,9 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
         {
             d3dMesh->DrawSubset(subsetIndex);
+            ++m_lastFrameProfile.thicknessStaticSubsetDraws;
         }
+        ++m_lastFrameProfile.thicknessObjectDraws;
 
         m_fxGBuffer->EndPass();
         m_fxGBuffer->End();
@@ -542,6 +564,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         if (mesh != nullptr)
         {
             mesh->RenderToEffect(m_fxGBuffer);
+            ++m_lastFrameProfile.thicknessObjectDraws;
         }
     }
 
@@ -551,6 +574,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         if (mesh != nullptr)
         {
             mesh->RenderToEffect(m_fxGBuffer, viewProjectionMatrix);
+            ++m_lastFrameProfile.thicknessObjectDraws;
         }
     }
 
@@ -559,6 +583,7 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         if (mesh != nullptr && mesh->IsSsaoEnabled())
         {
             mesh->RenderToEffect(m_fxGBuffer, viewProjectionMatrix);
+            ++m_lastFrameProfile.thicknessObjectDraws;
         }
     }
 
@@ -571,6 +596,9 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     SAFE_RELEASE(surfaceThickness);
     SAFE_RELEASE(surfaceOldDepthStencil);
     SAFE_RELEASE(surfaceOld2);
+    const auto thicknessEndTime = ProfileClock::now();
+    m_lastFrameProfile.thicknessMilliseconds =
+        std::chrono::duration<double, std::milli>(thicknessEndTime - thicknessStartTime).count();
 
     *Z = m_texRenderTargetZ;
     *CameraZ = m_texRenderTargetFogZ;

@@ -77,6 +77,12 @@ struct RenderFrameProfile
 {
     double sceneUpdateMilliseconds = 0.0;
     double gBufferMilliseconds = 0.0;
+    double gBufferFrontMilliseconds = 0.0;
+    double gBufferThicknessMilliseconds = 0.0;
+    unsigned int gBufferFrontStaticSubsetDraws = 0;
+    unsigned int gBufferThicknessStaticSubsetDraws = 0;
+    unsigned int gBufferFrontObjectDraws = 0;
+    unsigned int gBufferThicknessObjectDraws = 0;
     double mirrorMilliseconds = 0.0;
     double mainPassMilliseconds = 0.0;
     double postEffectMilliseconds = 0.0;
@@ -1229,6 +1235,7 @@ private:
     void ShowCameraPosition();
     float CalcFrameDeltaSeconds();
     void WaitForTargetFrameRate();
+    void WritePerformanceProfileLog();
 
     int m_fontID = -1;
     int m_cameraPositionFontId = -1;
@@ -1238,6 +1245,7 @@ private:
     std::chrono::steady_clock::time_point m_lastFramePacingTime {};
     bool m_hasLastFramePacingTime = false;
     DWORD m_lastSleepMs = 0;
+    unsigned int m_performanceLogFrameCounter = 0;
     bool m_hasRequestedTimerResolution = false;
 
     D3DXVECTOR3 m_fadeColor = D3DXVECTOR3(0.0f, 0.0f, 0.0f);

@@ -20,6 +20,8 @@ public:
     static void SetSharedMirrorTexture(LPDIRECT3DTEXTURE9 texture);
     static void SetSharedMirrorViewProj(const D3DXMATRIX& matrix);
     static void SetSharedMirrorClipPlane(bool enabled, const D3DXVECTOR4& plane);
+    static void BeginRenderBatch();
+    static void EndRenderBatch();
 
     MeshMixManager(const std::wstring& filename,
                    const D3DXVECTOR3& pos,

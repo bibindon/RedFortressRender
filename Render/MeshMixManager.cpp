@@ -9,6 +9,7 @@
 #include <cwctype>
 #include <fstream>
 #include <sstream>
+#include <stdexcept>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -104,6 +105,12 @@ bool& GetSharedEffectLostState()
 {
     static bool lostState = false;
     return lostState;
+}
+
+unsigned int& GetSharedEffectBatchDepth()
+{
+    static unsigned int batchDepth = 0;
+    return batchDepth;
 }
 
 LPDIRECT3DTEXTURE9& GetSharedThicknessTexture()
@@ -544,6 +551,7 @@ void ReleaseSharedEffectRef()
     {
         SAFE_RELEASE(GetSharedEffect());
         GetSharedEffectLostState() = false;
+        GetSharedEffectBatchDepth() = 0;
     }
 }
 
@@ -1536,6 +1544,62 @@ void MeshMixManager::SetSharedMirrorClipPlane(const bool enabled, const D3DXVECT
     }
 }
 
+void MeshMixManager::BeginRenderBatch()
+{
+    unsigned int& batchDepth = GetSharedEffectBatchDepth();
+    if (batchDepth > 0)
+    {
+        ++batchDepth;
+        return;
+    }
+
+    LPD3DXEFFECT sharedEffect = GetSharedEffect();
+    if (sharedEffect == nullptr)
+    {
+        return;
+    }
+
+    HRESULT hResult = sharedEffect->SetTechnique("Technique1");
+    if (FAILED(hResult))
+    {
+        throw std::runtime_error("MeshMixManager failed to set Technique1.");
+    }
+
+    hResult = sharedEffect->Begin(nullptr, 0);
+    if (FAILED(hResult))
+    {
+        throw std::runtime_error("MeshMixManager failed to begin the shared effect.");
+    }
+    batchDepth = 1;
+}
+
+void MeshMixManager::EndRenderBatch()
+{
+    unsigned int& batchDepth = GetSharedEffectBatchDepth();
+    if (batchDepth == 0)
+    {
+        return;
+    }
+
+    --batchDepth;
+    if (batchDepth > 0)
+    {
+        return;
+    }
+
+    LPD3DXEFFECT sharedEffect = GetSharedEffect();
+    if (sharedEffect == nullptr)
+    {
+        throw std::runtime_error("MeshMixManager lost the shared effect during a render batch.");
+    }
+
+    const HRESULT hResult = sharedEffect->End();
+    if (FAILED(hResult))
+    {
+        throw std::runtime_error("MeshMixManager failed to end the shared effect.");
+    }
+}
+
 void MeshMixManager::SetSpecularIntensityOverrideEnabled(const bool enabled)
 {
     m_param.specularIntensityOverrideEnabled = enabled;
@@ -1730,6 +1794,12 @@ void MeshMixManager::Render(const bool renderAsMirrorSurface)
         return;
     }
 
+    const bool ownsRenderBatch = GetSharedEffectBatchDepth() == 0;
+    if (ownsRenderBatch)
+    {
+        BeginRenderBatch();
+    }
+
     HRESULT hResult = E_FAIL;
 
     D3DXVECTOR4 normal = Light::GetLightDir();
@@ -1777,12 +1847,6 @@ void MeshMixManager::Render(const bool renderAsMirrorSurface)
         static_cast<float>(Common::ScreenH())
     };
     hResult = sharedEffect->SetFloatArray("g_screenSize", screenSize, 2);
-    assert(hResult == S_OK);
-
-    hResult = sharedEffect->SetTechnique("Technique1");
-    assert(hResult == S_OK);
-
-    hResult = sharedEffect->Begin(nullptr, 0);
     assert(hResult == S_OK);
 
     hResult = sharedEffect->SetTexture("g_texCubeMap", m_texCubeMap);
@@ -1982,9 +2046,6 @@ void MeshMixManager::Render(const bool renderAsMirrorSurface)
         assert(hResult == S_OK);
     }
 
-    hResult = sharedEffect->CommitChanges();
-    assert(hResult == S_OK);
-
     if (renderAsMirrorSurface && m_param.mirror)
     {
         DrawAllSubsets(sharedEffect, 5);
@@ -2008,11 +2069,16 @@ void MeshMixManager::Render(const bool renderAsMirrorSurface)
             DrawAllSubsets(sharedEffect, 2);
         }
 
-        DrawAllSubsets(sharedEffect, 3);
+        if (m_param.pointLight)
+        {
+            DrawAllSubsets(sharedEffect, 3);
+        }
     }
 
-    hResult = sharedEffect->End();
-    assert(hResult == S_OK);
+    if (ownsRenderBatch)
+    {
+        EndRenderBatch();
+    }
 }
 
 void MeshMixManager::DrawAllSubsets(LPD3DXEFFECT sharedEffect, const UINT passIndex)

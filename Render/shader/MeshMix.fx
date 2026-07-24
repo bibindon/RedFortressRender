@@ -941,7 +941,12 @@ technique Technique1
 {
     pass Pass1
     {
-        CullMode = NONE;
+        CullMode        = NONE;
+        ZEnable         = TRUE;
+        ZWriteEnable    = TRUE;
+        AlphaBlendEnable = FALSE;
+        SrcBlend        = ONE;
+        DestBlend       = ZERO;
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShader1();
     }
@@ -952,6 +957,8 @@ technique Technique1
         AlphaBlendEnable = TRUE;
         SrcBlend = SRCALPHA;
         DestBlend = INVSRCALPHA;
+        ZEnable = TRUE;
+        ZWriteEnable = TRUE;
 
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShaderCubeMapping();
@@ -963,6 +970,8 @@ technique Technique1
         AlphaBlendEnable = TRUE;
         SrcBlend = SRCALPHA;
         DestBlend = INVSRCALPHA;
+        ZEnable = TRUE;
+        ZWriteEnable = TRUE;
 
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShaderGlass();
@@ -974,6 +983,8 @@ technique Technique1
         AlphaBlendEnable = TRUE;
         SrcBlend = ONE;
         DestBlend = ONE;
+        ZEnable = TRUE;
+        ZWriteEnable = TRUE;
 
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShaderPointLight();
@@ -982,6 +993,11 @@ technique Technique1
     pass PassEmit
     {
         CullMode = NONE;
+        ZEnable = TRUE;
+        ZWriteEnable = TRUE;
+        AlphaBlendEnable = FALSE;
+        SrcBlend = ONE;
+        DestBlend = ZERO;
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShaderEmit();
     }
@@ -989,6 +1005,11 @@ technique Technique1
     pass PassMirror
     {
         CullMode = NONE;
+        ZEnable = TRUE;
+        ZWriteEnable = TRUE;
+        AlphaBlendEnable = FALSE;
+        SrcBlend = ONE;
+        DestBlend = ZERO;
         VertexShader = compile vs_3_0 VertexShaderMirror();
         PixelShader = compile ps_3_0 PixelShaderMirror();
     }
@@ -999,6 +1020,7 @@ technique Technique1
         AlphaBlendEnable = TRUE;
         SrcBlend = SRCALPHA;
         DestBlend = INVSRCALPHA;
+        ZEnable = TRUE;
         ZWriteEnable = FALSE;
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShader1();

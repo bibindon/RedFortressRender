@@ -21,6 +21,16 @@ enum class GBufferVectorFormat
     A8B8G8R8,
 };
 
+struct GBufferFrameProfile
+{
+    double frontMilliseconds = 0.0;
+    double thicknessMilliseconds = 0.0;
+    unsigned int frontStaticSubsetDraws = 0;
+    unsigned int thicknessStaticSubsetDraws = 0;
+    unsigned int frontObjectDraws = 0;
+    unsigned int thicknessObjectDraws = 0;
+};
+
 class IMeshMixSkinAnim;
 class MeshMixAnimNoBone;
 class MeshMix2;
@@ -52,6 +62,7 @@ public:
     GBufferVectorFormat GetThicknessFormat() const;
     GBufferScalarFormat GetBackDepthFormat() const;
     bool IsInitialized() const;
+    const GBufferFrameProfile& GetLastFrameProfile() const;
 
     void Draw(const std::deque<MeshMixManager>& meshList,
               const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
@@ -99,6 +110,7 @@ private:
     GBufferScalarFormat m_backDepthFormat = GBufferScalarFormat::R16F;
     bool m_isInitialized = false;
     bool m_isRegisteredForDeviceReset = false;
+    GBufferFrameProfile m_lastFrameProfile;
 
     void CreateRawResource();
     static D3DFORMAT ToD3DFormat(GBufferScalarFormat format);

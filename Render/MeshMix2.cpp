@@ -550,6 +550,13 @@ void MeshMix2::RenderMeshContainer(const MeshMix2Frame& frame,
         subsetCount = 1;
     }
 
+    UINT passCount = 0;
+    const HRESULT beginResult = effect->Begin(&passCount, 0);
+    if (FAILED(beginResult))
+    {
+        throw std::runtime_error("MeshMix2 failed to begin an effect.");
+    }
+
     for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
     {
         if (configureMaterial)
@@ -605,17 +612,9 @@ void MeshMix2::RenderMeshContainer(const MeshMix2Frame& frame,
             ThrowIfEffectCallFailed(effect->SetFloat("g_specularIntensity", specularIntensity),
                                     "MeshMix2 failed to set g_specularIntensity.");
             ThrowIfEffectCallFailed(effect->SetFloat("g_specularPower", specularPower),
-                                    "MeshMix2 failed to set g_specularPower.");
+                                     "MeshMix2 failed to set g_specularPower.");
         }
 
-        ThrowIfEffectCallFailed(effect->CommitChanges(),
-                                "MeshMix2 failed to commit effect changes.");
-        UINT passCount = 0;
-        const HRESULT beginResult = effect->Begin(&passCount, 0);
-        if (FAILED(beginResult))
-        {
-            throw std::runtime_error("MeshMix2 failed to begin an effect.");
-        }
         for (UINT passIndex = 0; passIndex < passCount; ++passIndex)
         {
             bool drawPass = true;
@@ -630,7 +629,11 @@ void MeshMix2::RenderMeshContainer(const MeshMix2Frame& frame,
                 {
                     drawPass = passIndex == 4;
                 }
-                else if (passIndex == 0 || passIndex == 3)
+                else if (passIndex == 0)
+                {
+                    drawPass = true;
+                }
+                else if (passIndex == 3 && m_param.pointLight)
                 {
                     drawPass = true;
                 }
@@ -663,9 +666,10 @@ void MeshMix2::RenderMeshContainer(const MeshMix2Frame& frame,
             ThrowIfEffectCallFailed(effect->EndPass(),
                                     "MeshMix2 failed to end an effect pass.");
         }
-        ThrowIfEffectCallFailed(effect->End(),
-                                "MeshMix2 failed to end an effect.");
     }
+
+    ThrowIfEffectCallFailed(effect->End(),
+                            "MeshMix2 failed to end an effect.");
 }
 
 void MeshMix2::UpdateFrameMatrices(LPD3DXFRAME frame, const D3DXMATRIX* parentMatrix)

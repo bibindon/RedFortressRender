@@ -39,6 +39,7 @@
 #include <set>
 #include <algorithm>
 #include <fstream>
+#include <iomanip>
 #include <unordered_set>
 #include <sstream>
 #include <cwctype>
@@ -2667,6 +2668,12 @@ void Render::Draw()
     LPDIRECT3DTEXTURE9 pTexTempThickness = NULL;
     LPDIRECT3DTEXTURE9 pTexTempBackDepth = NULL;
     const auto gBufferStartTime = ProfileClock::now();
+    m_lastFrameProfile.gBufferFrontMilliseconds = 0.0;
+    m_lastFrameProfile.gBufferThicknessMilliseconds = 0.0;
+    m_lastFrameProfile.gBufferFrontStaticSubsetDraws = 0;
+    m_lastFrameProfile.gBufferThicknessStaticSubsetDraws = 0;
+    m_lastFrameProfile.gBufferFrontObjectDraws = 0;
+    m_lastFrameProfile.gBufferThicknessObjectDraws = 0;
     if (m_gBufferEnabled)
     {
         EnsureGBufferInitialized();
@@ -2686,6 +2693,13 @@ void Render::Draw()
                        &pTexTempNoral,
                        &pTexTempThickness,
                        &pTexTempBackDepth);
+        const GBufferFrameProfile& gBufferProfile = m_GBuffer.GetLastFrameProfile();
+        m_lastFrameProfile.gBufferFrontMilliseconds = gBufferProfile.frontMilliseconds;
+        m_lastFrameProfile.gBufferThicknessMilliseconds = gBufferProfile.thicknessMilliseconds;
+        m_lastFrameProfile.gBufferFrontStaticSubsetDraws = gBufferProfile.frontStaticSubsetDraws;
+        m_lastFrameProfile.gBufferThicknessStaticSubsetDraws = gBufferProfile.thicknessStaticSubsetDraws;
+        m_lastFrameProfile.gBufferFrontObjectDraws = gBufferProfile.frontObjectDraws;
+        m_lastFrameProfile.gBufferThicknessObjectDraws = gBufferProfile.thicknessObjectDraws;
         MeshMixManager::SetSharedThicknessTexture(pTexTempThickness);
         MeshMix2::SetSharedThicknessTexture(pTexTempThickness);
     }
@@ -2993,6 +3007,7 @@ void Render::Draw()
     const auto totalEndTime = ProfileClock::now();
     m_lastFrameProfile.totalMilliseconds =
         std::chrono::duration<double, std::milli>(totalEndTime - totalStartTime).count();
+    WritePerformanceProfileLog();
 
 }
 
@@ -7001,6 +7016,7 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
 
     const D3DXVECTOR3 eyePos = Camera::GetEyePos();
     std::vector<size_t> transparentWaterMeshIndices;
+    MeshMixManager::BeginRenderBatch();
     for (size_t i = 0; i < m_meshMixList.size(); ++i)
     {
         if (!IsMeshMixSlotUsed(static_cast<int>(i)))
@@ -7024,6 +7040,7 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
             static_cast<int>(i) == activeMirrorMeshIndex;
         m_meshMixList[i].Render(renderAsMirror);
     }
+    MeshMixManager::EndRenderBatch();
 
     for (auto& elem : m_meshMixSkinAnimList)
     {
@@ -7070,10 +7087,12 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
                          return lhsDistanceSq > rhsDistanceSq;
                      });
 
+    MeshMixManager::BeginRenderBatch();
     for (const size_t index : transparentWaterMeshIndices)
     {
         m_meshMixList[index].Render(false);
     }
+    MeshMixManager::EndRenderBatch();
 
     m_particleSystem.Draw(Camera::GetViewMatrix(), Camera::GetProjMatrix());
 }
@@ -7277,6 +7296,39 @@ void Render::WaitForTargetFrameRate()
     }
 
     m_lastFramePacingTime = currentTime;
+}
+
+void Render::WritePerformanceProfileLog()
+{
+    ++m_performanceLogFrameCounter;
+    if (m_performanceLogFrameCounter < 120)
+    {
+        return;
+    }
+    m_performanceLogFrameCounter = 0;
+
+    std::wostringstream message;
+    message << std::fixed << std::setprecision(3)
+            << L"screen=" << Common::ScreenW() << L"x" << Common::ScreenH()
+            << L" quality=" << m_renderingQualitySettings.quality
+            << L" totalMs=" << m_lastFrameProfile.totalMilliseconds
+            << L" gBufferMs=" << m_lastFrameProfile.gBufferMilliseconds
+            << L" gBufferFrontMs=" << m_lastFrameProfile.gBufferFrontMilliseconds
+            << L" gBufferThicknessMs=" << m_lastFrameProfile.gBufferThicknessMilliseconds
+            << L" mainPassMs=" << m_lastFrameProfile.mainPassMilliseconds
+            << L" postEffectMs=" << m_lastFrameProfile.postEffectMilliseconds
+            << L" draw2DMs=" << m_lastFrameProfile.draw2DMilliseconds
+            << L" waitMs=" << m_lastFrameProfile.frameWaitMilliseconds
+            << L" presentMs=" << m_lastFrameProfile.presentMilliseconds
+            << L" sleepMs=" << m_lastSleepMs
+            << L" frontStaticSubsets=" << m_lastFrameProfile.gBufferFrontStaticSubsetDraws
+            << L" thicknessStaticSubsets=" << m_lastFrameProfile.gBufferThicknessStaticSubsetDraws
+            << L" frontObjects=" << m_lastFrameProfile.gBufferFrontObjectDraws
+            << L" thicknessObjects=" << m_lastFrameProfile.gBufferThicknessObjectDraws
+            << L" dofMode=" << static_cast<int>(m_postEffectDepthOfFieldMode)
+            << L" ssao=" << static_cast<int>(m_postEffectSSAOEnabled)
+            << L" depthShadow=" << static_cast<int>(m_postEffectZShadowEnabled);
+    Util::WriteDebugAndFileLog(L"PerformanceProfile.log", L"Render", message.str());
 }
 
 void Render::DrawWorldTextImpl(const WorldTextInfo& worldText)
