@@ -646,7 +646,7 @@ void MeshMix::Render()
     //--------------------------------------------------------
     // ポイントライト
     //--------------------------------------------------------
-    if (m_param.pointLight)
+    if (m_param.pointLight && Light::IsPointLightEnabled())
     {
         auto pointLightList = Light::GetPointLightList();
 
@@ -769,7 +769,10 @@ void MeshMix::Render()
     // パス3
     // ポイントライト
     //--------------------------------------------------------
-    drawAllSubsets(3);
+    if (m_param.pointLight && Light::IsPointLightEnabled())
+    {
+        drawAllSubsets(3);
+    }
 
     hResult = m_D3DEffect->End();
     assert(hResult == S_OK);

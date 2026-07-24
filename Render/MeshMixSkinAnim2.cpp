@@ -745,7 +745,7 @@ void MeshMixSkinAnim2::Render()
     m_D3DEffect->SetFloat("g_fShadowDarkness", m_param.shadowDarkness);
     m_D3DEffect->SetFloat("g_specularIntensity", m_param.specularIntensity);
 
-    if (m_param.pointLight)
+    if (m_param.pointLight && Light::IsPointLightEnabled())
     {
         auto pointLightList = Light::GetPointLightList();
 
@@ -1574,7 +1574,7 @@ void MeshMixSkinAnim2::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBa
         m_D3DEffect->EndPass();
         m_D3DEffect->End();
 
-        if (!m_param.pointLight)
+        if (!m_param.pointLight || !Light::IsPointLightEnabled())
         {
             if (disableZWrite || useAlphaDepthPrePass)
             {

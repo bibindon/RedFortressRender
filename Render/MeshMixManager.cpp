@@ -1983,7 +1983,7 @@ void MeshMixManager::Render(const bool renderAsMirrorSurface)
     hResult = sharedEffect->SetFloat("g_waveDensity", 20.0f);
     assert(hResult == S_OK);
 
-    if (m_param.pointLight)
+    if (m_param.pointLight && Light::IsPointLightEnabled())
     {
         auto pointLightList = Light::GetPointLightList();
 
@@ -2069,7 +2069,7 @@ void MeshMixManager::Render(const bool renderAsMirrorSurface)
             DrawAllSubsets(sharedEffect, 2);
         }
 
-        if (m_param.pointLight)
+        if (m_param.pointLight && Light::IsPointLightEnabled())
         {
             DrawAllSubsets(sharedEffect, 3);
         }

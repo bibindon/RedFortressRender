@@ -74,6 +74,8 @@ public:
     static void ClearPointLights();
 
     static std::deque<PointLightInfo> GetPointLightList();
+    static void SetPointLightEnabled(bool enabled);
+    static bool IsPointLightEnabled();
 
 private:
 
@@ -85,6 +87,7 @@ private:
     static D3DXCOLOR m_ambientColor;
 
     static std::deque<PointLightInfo> m_pointLightList;
+    static bool m_pointLightEnabled;
 };
 }
 

@@ -862,6 +862,10 @@ public:
 
     void SetShowFPS(const bool arg);
     bool IsShowFPS() const;
+    void SetPointLightEnabled(bool enabled);
+    bool IsPointLightEnabled() const;
+    void SetFrameRateSleepEnabled(bool enabled);
+    bool IsFrameRateSleepEnabled() const;
     void SetSkinAnimationUpdateEnabled(bool enabled);
     const RenderFrameProfile& GetLastFrameProfile() const;
     void SetShowCameraPosition(const bool arg);
@@ -1244,6 +1248,7 @@ private:
     bool m_hasLastFrameTime = false;
     std::chrono::steady_clock::time_point m_lastFramePacingTime {};
     bool m_hasLastFramePacingTime = false;
+    bool m_frameRateSleepEnabled = true;
     DWORD m_lastSleepMs = 0;
     unsigned int m_performanceLogFrameCounter = 0;
     bool m_hasRequestedTimerResolution = false;

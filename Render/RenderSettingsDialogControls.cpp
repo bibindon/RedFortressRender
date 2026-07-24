@@ -399,6 +399,22 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     CreateSettingsTrackbar(hWnd, 31005, 326, y + 76, 98, 32, 0, 100, 20);
     CreateSettingsEdit(hWnd, L"0.12", 436, y + 78, 68, 20, 41005);
     y += 124;
+    CreateSettingsGroupBox(hWnd, L"Performance", left - 4, y, width + 8, 50);
+    CreateSettingsCheckbox(hWnd,
+                           IDC_RENDER_SETTINGS_POINT_LIGHT_DISABLE,
+                           L"PointLight OFF",
+                           22,
+                           y + 18,
+                           180,
+                           22);
+    CreateSettingsCheckbox(hWnd,
+                           IDC_RENDER_SETTINGS_FRAME_RATE_SLEEP_DISABLE,
+                           L"60 FPS Sleep OFF",
+                           264,
+                           y + 18,
+                           180,
+                           22);
+    y += 60;
     CreateSettingsGroupBox(hWnd, L"GBuffer", left - 4, y, width + 8, 108);
     CreateSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_GBUFFER_ENABLE, L"GBuffer", 22, y + 18, 110, 22);
     CreateSettingsCheckbox(hWnd,

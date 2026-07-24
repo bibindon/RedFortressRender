@@ -11,6 +11,7 @@ float Light::m_Brightness = 1.0f;
 float Light::m_ambientBrightness = 1.0f;
 
 std::deque<PointLightInfo> Light::m_pointLightList;
+bool Light::m_pointLightEnabled = true;
 D3DXCOLOR Light::m_color = D3DXCOLOR(1.f, 1.f, 1.f, 1.f);
 D3DXCOLOR Light::m_ambientColor = D3DXCOLOR(0.2f, 0.2f, 0.2f, 1.f);
 
@@ -160,6 +161,16 @@ void Light::ClearPointLights()
 std::deque<PointLightInfo> Light::GetPointLightList()
 {
     return m_pointLightList;
+}
+
+void Light::SetPointLightEnabled(const bool enabled)
+{
+    m_pointLightEnabled = enabled;
+}
+
+bool Light::IsPointLightEnabled()
+{
+    return m_pointLightEnabled;
 }
 
 }

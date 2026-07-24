@@ -383,7 +383,7 @@ void MeshMix2::Render(const bool renderAsMirrorSurface)
 
     for (std::size_t index = 0; index < 16; ++index)
     {
-        if (!m_param.pointLight)
+        if (!m_param.pointLight || !Light::IsPointLightEnabled())
         {
             continue;
         }
@@ -633,7 +633,9 @@ void MeshMix2::RenderMeshContainer(const MeshMix2Frame& frame,
                 {
                     drawPass = true;
                 }
-                else if (passIndex == 3 && m_param.pointLight)
+                else if (passIndex == 3 &&
+                         m_param.pointLight &&
+                         Light::IsPointLightEnabled())
                 {
                     drawPass = true;
                 }

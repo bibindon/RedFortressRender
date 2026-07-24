@@ -34,6 +34,12 @@ void SyncRenderSettingsDialogFromRender(HWND hWnd)
     SetSettingsComboTextSelection(hWnd, 31000, FormatResolutionLabel(Common::ScreenW(), Common::ScreenH()));
     SetSettingsComboSelection(hWnd, 31001, RenderingQualityToComboIndex(render->GetRenderQuality()));
     SetSettingsCheckbox(hWnd, 31002, render->IsShowFPS());
+    SetSettingsCheckbox(hWnd,
+                        IDC_RENDER_SETTINGS_POINT_LIGHT_DISABLE,
+                        !render->IsPointLightEnabled());
+    SetSettingsCheckbox(hWnd,
+                        IDC_RENDER_SETTINGS_FRAME_RATE_SLEEP_DISABLE,
+                        !render->IsFrameRateSleepEnabled());
     SetSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_GBUFFER_ENABLE, render->IsGBufferEnabled());
     SetSettingsCheckbox(hWnd,
                         IDC_RENDER_SETTINGS_GBUFFER_FRONT_BACKFACE_CULLING_ENABLE,

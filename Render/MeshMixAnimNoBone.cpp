@@ -501,8 +501,19 @@ void MeshMixAnimNoBone::RenderFrameHierarchy(LPD3DXFRAME frame, LPD3DXEFFECT e, 
             e->SetBool("g_treatTextureAsWhite", subsetTreatTextureAsWhite);
             e->SetBool("g_alphaClipEnabled", subsetAlphaClipEnabled);
             e->SetVector("g_diffuse", &d); e->CommitChanges();
-            UINT pn = 0; e->Begin(&pn, 0);
-            for (UINT p = 0; p < pn; ++p) { e->BeginPass(p); m->DrawSubset(i); e->EndPass(); }
+            UINT pn = 0;
+            e->Begin(&pn, 0);
+            for (UINT p = 0; p < pn; ++p)
+            {
+                if (p == 1 &&
+                    (!m_param.pointLight || !Light::IsPointLightEnabled()))
+                {
+                    continue;
+                }
+                e->BeginPass(p);
+                m->DrawSubset(i);
+                e->EndPass();
+            }
             e->End();
         }
     }

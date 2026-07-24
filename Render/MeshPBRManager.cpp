@@ -1358,7 +1358,7 @@ void MeshPBRManager::Render(const bool renderAsMirrorSurface)
     ZeroMemory(rotation, sizeof(rotation));
     ZeroMemory(color, sizeof(color));
 
-    if (m_param.pointLight)
+    if (m_param.pointLight && Light::IsPointLightEnabled())
     {
         for (int i = 0; i < 16; ++i)
         {

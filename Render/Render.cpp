@@ -6615,6 +6615,28 @@ bool Render::IsShowFPS() const
     return m_bShowFPS;
 }
 
+void Render::SetPointLightEnabled(const bool enabled)
+{
+    Light::SetPointLightEnabled(enabled);
+}
+
+bool Render::IsPointLightEnabled() const
+{
+    return Light::IsPointLightEnabled();
+}
+
+void Render::SetFrameRateSleepEnabled(const bool enabled)
+{
+    m_frameRateSleepEnabled = enabled;
+    m_hasLastFramePacingTime = false;
+    m_lastSleepMs = 0;
+}
+
+bool Render::IsFrameRateSleepEnabled() const
+{
+    return m_frameRateSleepEnabled;
+}
+
 void Render::SetSkinAnimationUpdateEnabled(bool enabled)
 {
     m_skinAnimationUpdateEnabled = enabled;
@@ -6966,11 +6988,14 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
         }
     }
 
-    for (size_t i = 0; i < m_meshPointLightList.size(); ++i)
+    if (Light::IsPointLightEnabled())
     {
-        if (i < m_meshPointLightEnabledList.size() && m_meshPointLightEnabledList[i])
+        for (size_t i = 0; i < m_meshPointLightList.size(); ++i)
         {
-            m_meshPointLightList[i].Draw();
+            if (i < m_meshPointLightEnabledList.size() && m_meshPointLightEnabledList[i])
+            {
+                m_meshPointLightList[i].Draw();
+            }
         }
     }
 
@@ -7267,6 +7292,12 @@ void Render::WaitForTargetFrameRate()
     const ClockType::time_point now = ClockType::now();
 
     m_lastSleepMs = 0;
+
+    if (!m_frameRateSleepEnabled)
+    {
+        m_hasLastFramePacingTime = false;
+        return;
+    }
 
     if (!m_hasLastFramePacingTime)
     {

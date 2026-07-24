@@ -748,6 +748,14 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
         {
             render->SetShowFPS(IsSettingsCheckboxChecked(hWnd, id));
         }
+        else if (id == IDC_RENDER_SETTINGS_POINT_LIGHT_DISABLE)
+        {
+            render->SetPointLightEnabled(!IsSettingsCheckboxChecked(hWnd, id));
+        }
+        else if (id == IDC_RENDER_SETTINGS_FRAME_RATE_SLEEP_DISABLE)
+        {
+            render->SetFrameRateSleepEnabled(!IsSettingsCheckboxChecked(hWnd, id));
+        }
         else if (id == IDC_RENDER_SETTINGS_SATURATE_ENABLE)
         {
             render->SetPostEffectSaturateEnable(IsSettingsCheckboxChecked(hWnd, id));
