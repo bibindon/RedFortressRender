@@ -26,7 +26,9 @@ struct RenderSettingsDialogState
         MeshMix2,
         MeshPBR,
         MeshInstancing,
+        MeshInstancing2,
         MeshMixSkinAnim,
+        MeshMixSkinAnim2,
         MeshMixAnimNoBone
     };
     struct LoadedModelRecord

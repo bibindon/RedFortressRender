@@ -131,7 +131,9 @@ enum class RenderLoadedModelType
     MeshMix2,
     MeshPBR,
     MeshInstancing,
+    MeshInstancing2,
     MeshMixSkinAnim,
+    MeshMixSkinAnim2,
     MeshMixAnimNoBone
 };
 
@@ -329,7 +331,7 @@ public:
                            const float radius = -1.f,
                            const bool useParallaxOcclusionMapping = false,
                            const bool useNormalMapping = false,
-                           const MeshMixSkinAnimLoadMode loadMode = MeshMixSkinAnimLoadMode::DirectX);
+                           const MeshMixSkinAnimLoadMode loadMode = MeshMixSkinAnimLoadMode::Blender512Custom);
     int AddMeshMixSkinAnim(const std::wstring& meshFilePath,
                            const std::wstring& animationFilePath,
                            const D3DXVECTOR3& pos,
@@ -339,7 +341,7 @@ public:
                            const float radius = -1.f,
                            const bool useParallaxOcclusionMapping = false,
                            const bool useNormalMapping = false,
-                           const MeshMixSkinAnimLoadMode loadMode = MeshMixSkinAnimLoadMode::DirectX);
+                           const MeshMixSkinAnimLoadMode loadMode = MeshMixSkinAnimLoadMode::Blender512Custom);
     int AddMeshMixSkinAnim2(const std::wstring& filePath,
                             const D3DXVECTOR3& pos,
                             const D3DXVECTOR3& rot,
@@ -347,7 +349,8 @@ public:
                             const AnimSetMap& animSetMap,
                             const float radius = -1.f,
                             const bool useParallaxOcclusionMapping = false,
-                            const bool useNormalMapping = false);
+                            const bool useNormalMapping = false,
+                            MeshMixSkinAnimLoadMode loadMode = MeshMixSkinAnimLoadMode::Blender512Custom);
     int AddMeshMixSkinAnim2(const std::wstring& meshFilePath,
                             const std::wstring& animationFilePath,
                             const D3DXVECTOR3& pos,
@@ -356,7 +359,8 @@ public:
                             const AnimSetMap& animSetMap,
                             const float radius = -1.f,
                             const bool useParallaxOcclusionMapping = false,
-                            const bool useNormalMapping = false);
+                            const bool useNormalMapping = false,
+                            MeshMixSkinAnimLoadMode loadMode = MeshMixSkinAnimLoadMode::Blender512Custom);
     bool RemoveMeshMixSkinAnim(int id);
     const std::vector<MeshMixSkinAnimAnimationInfo>* GetMeshMixSkinAnimAnimationInfoList(int id) const;
     bool PlayMeshMixSkinAnimAnimation(int id, const std::wstring& name);

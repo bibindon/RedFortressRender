@@ -402,7 +402,8 @@ MeshMixSkinAnim2::MeshMixSkinAnim2(const std::wstring& filename,
                                    const D3DXVECTOR3& rotate,
                                    const float scale,
                                    const stMeshParam& param,
-                                   const AnimSetMap& animSetMap)
+                                   const AnimSetMap& animSetMap,
+                                   const MeshMixSkinAnimLoadMode loadMode)
     : m_meshName(filename)
     , m_animationMeshName(filename)
     , m_allocator(filename)
@@ -410,6 +411,7 @@ MeshMixSkinAnim2::MeshMixSkinAnim2(const std::wstring& filename,
     , m_pos(pos)
     , m_rotate(D3DXVECTOR3(rotate.x, rotate.y + D3DX_PI, rotate.z))
     , m_scale(scale)
+    , m_loadMode(loadMode)
     , m_param(param)
     , m_animSetMap(animSetMap)
 {
@@ -421,7 +423,8 @@ MeshMixSkinAnim2::MeshMixSkinAnim2(const std::wstring& meshFilename,
                                    const D3DXVECTOR3& rotate,
                                    const float scale,
                                    const stMeshParam& param,
-                                   const AnimSetMap& animSetMap)
+                                   const AnimSetMap& animSetMap,
+                                   const MeshMixSkinAnimLoadMode loadMode)
     : m_meshName(meshFilename)
     , m_animationMeshName(animationFilename)
     , m_allocator(meshFilename)
@@ -429,6 +432,7 @@ MeshMixSkinAnim2::MeshMixSkinAnim2(const std::wstring& meshFilename,
     , m_pos(pos)
     , m_rotate(D3DXVECTOR3(rotate.x, rotate.y + D3DX_PI, rotate.z))
     , m_scale(scale)
+    , m_loadMode(loadMode)
     , m_param(param)
     , m_animSetMap(animSetMap)
 {

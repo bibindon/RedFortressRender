@@ -50,6 +50,18 @@ namespace NSRender
 namespace
 {
 constexpr std::chrono::duration<double> kTargetFrameDuration(1.0 / 60.0);
+constexpr int kMeshMix2CompatibilityIdBase = 0x40000000;
+
+bool TryDecodeMeshMix2CompatibilityId(const int id, int& meshMix2Id)
+{
+    if (id < kMeshMix2CompatibilityIdBase)
+    {
+        return false;
+    }
+
+    meshMix2Id = id - kMeshMix2CompatibilityIdBase;
+    return true;
+}
 
 float ClampNormalizedTextPosition(const float value)
 {
@@ -426,7 +438,7 @@ bool Render::LoadXFileListFromCsv(const std::wstring& csvPath,
             }
             else
             {
-                renderId = AddMeshMix(resolvedPath, pos, rot, modelScale, 1.0f);
+                renderId = AddMeshMix2(resolvedPath, pos, rot, modelScale);
             }
 
             if (renderId < 0)
@@ -450,14 +462,10 @@ bool Render::LoadXFileListFromCsv(const std::wstring& csvPath,
             {
                 m_csvSkinAnimRenderIds.push_back(renderId);
             }
-            else if (loadType == L"meshmix2")
+            else if (loadType == L"meshmix2" || loadType == L"normal")
             {
                 m_csvMeshMix2RenderIds.push_back(renderId);
                 m_csvIdToMeshMix2RenderId[csvId] = renderId;
-            }
-            else
-            {
-                m_csvIdToRenderId[csvId] = renderId;
             }
 
             ++localLoadedCount;
@@ -3337,37 +3345,20 @@ int Render::AddMeshInstansing(const std::wstring& filePath,
                               const float scale,
                               const std::wstring& csvPath)
 {
-    if (m_meshInstancingMap.find(filePath) == m_meshInstancingMap.end())
-    {
-        MeshInstancing* mesh = NEW MeshInstancing();
-        if (csvPath.empty())
-        {
-            mesh->Initialize(filePath, true);
-        }
-        else
-        {
-            mesh->Initialize(filePath, csvPath, true);
-        }
-        mesh->SetHighQuality(m_meshInstancingHighQualityEnabled);
-
-        m_meshInstancingMap[filePath] = mesh;
-    }
-
-    m_meshInstancingMap[filePath]->AddInstance(pos, rot.y);
-    return 0;
+    return AddMeshInstansing2(filePath, pos, rot, scale, csvPath);
 }
 
 bool Render::RemoveMeshInstancing(const std::wstring& filePath)
 {
     const auto found = m_meshInstancingMap.find(filePath);
-    if (found == m_meshInstancingMap.end())
+    if (found != m_meshInstancingMap.end())
     {
-        return false;
+        SAFE_DELETE(found->second);
+        m_meshInstancingMap.erase(found);
+        return true;
     }
 
-    SAFE_DELETE(found->second);
-    m_meshInstancingMap.erase(found);
-    return true;
+    return RemoveMeshInstancing2(filePath);
 }
 
 int Render::AddMeshInstansing2(const std::wstring& filePath,
@@ -3448,36 +3439,45 @@ int Render::AddMeshMix(const std::wstring& filePath,
     param.shadowDarkness = m_meshMixShadowDarkness;
     param.specularIntensity = m_meshMixSpecularIntensity;
     param.specularEdge = m_meshMixSpecularEdge;
+    param.fresnelIntensity = m_meshMixFresnelIntensity;
     param.specularIntensityOverrideEnabled = m_meshMixSpecularIntensityOverrideEnabled;
     param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
     param.cubeMappingRate = m_meshMixCubeMappingRate;
     param.sss = m_meshMixSSSEnabled;
     param.sssIntensity = m_meshMixSSSIntensity;
     param.sssColor = m_meshMixSSSColor;
+    param.treatTextureAsWhite = m_phongTreatTextureAsWhiteEnabled;
 
-    auto mesh = MeshMixManager(filePath, pos, rot, scale, param);
-    for (int i = 0; i < static_cast<int>(m_meshMixSlotUsedList.size()); ++i)
+    (void)radius;
+
+    MeshMix2* mesh = NEW MeshMix2(filePath, pos, rot, scale, param);
+    try
     {
-        if (m_meshMixSlotUsedList.at(i))
-        {
-            continue;
-        }
-
-        m_meshMixList.at(i) = std::move(mesh);
-        m_meshMixSlotUsedList.at(i) = true;
-        m_meshMixList.at(i).Initialize(async);
-        return i;
+        mesh->Initialize(async);
+        m_meshMix2List.push_back(mesh);
+    }
+    catch (...)
+    {
+        SAFE_DELETE(mesh);
+        throw;
     }
 
-    m_meshMixList.push_back(std::move(mesh));
-    m_meshMixSlotUsedList.push_back(true);
-    m_meshMixList.rbegin()->Initialize(async);
-
-    return static_cast<int>(m_meshMixList.size()) - 1;
+    const int meshMix2Id = static_cast<int>(m_meshMix2List.size()) - 1;
+    if (meshMix2Id >= kMeshMix2CompatibilityIdBase)
+    {
+        std::abort();
+    }
+    return kMeshMix2CompatibilityIdBase + meshMix2Id;
 }
 
 bool Render::RemoveMeshMix(const int id)
 {
+    int meshMix2Id = -1;
+    if (TryDecodeMeshMix2CompatibilityId(id, meshMix2Id))
+    {
+        return RemoveMeshMix2(meshMix2Id);
+    }
+
     if (!IsMeshMixSlotUsed(id))
     {
         return false;
@@ -3566,6 +3566,14 @@ D3DXVECTOR3 Render::GetMeshMix2Pos(const int id) const
 
 bool Render::IsMeshMixSlotUsed(const int id) const
 {
+    int meshMix2Id = -1;
+    if (TryDecodeMeshMix2CompatibilityId(id, meshMix2Id))
+    {
+        return meshMix2Id >= 0 &&
+               meshMix2Id < static_cast<int>(m_meshMix2List.size()) &&
+               m_meshMix2List.at(meshMix2Id) != nullptr;
+    }
+
     if (id < 0 ||
         id >= static_cast<int>(m_meshMixList.size()) ||
         id >= static_cast<int>(m_meshMixSlotUsedList.size()))
@@ -3631,6 +3639,13 @@ bool Render::RemoveMeshPBR(const int id)
 
 void Render::SetMeshMixPos(const int id, const D3DXVECTOR3& pos)
 {
+    int meshMix2Id = -1;
+    if (TryDecodeMeshMix2CompatibilityId(id, meshMix2Id))
+    {
+        SetMeshMix2Pos(meshMix2Id, pos);
+        return;
+    }
+
     if (!IsMeshMixSlotUsed(id))
     {
         return;
@@ -3641,6 +3656,12 @@ void Render::SetMeshMixPos(const int id, const D3DXVECTOR3& pos)
 
 D3DXVECTOR3 Render::GetMeshMixPos(const int id) const
 {
+    int meshMix2Id = -1;
+    if (TryDecodeMeshMix2CompatibilityId(id, meshMix2Id))
+    {
+        return GetMeshMix2Pos(meshMix2Id);
+    }
+
     if (!IsMeshMixSlotUsed(id))
     {
         return D3DXVECTOR3(0.0f, 0.0f, 0.0f);
@@ -3651,6 +3672,18 @@ D3DXVECTOR3 Render::GetMeshMixPos(const int id) const
 
 void Render::SetMeshMixRotY(const int id, const float rotY)
 {
+    int meshMix2Id = -1;
+    if (TryDecodeMeshMix2CompatibilityId(id, meshMix2Id))
+    {
+        if (meshMix2Id >= 0 &&
+            meshMix2Id < static_cast<int>(m_meshMix2List.size()) &&
+            m_meshMix2List.at(meshMix2Id) != nullptr)
+        {
+            m_meshMix2List.at(meshMix2Id)->SetRotY(rotY);
+        }
+        return;
+    }
+
     if (!IsMeshMixSlotUsed(id))
     {
         return;
@@ -3661,6 +3694,18 @@ void Render::SetMeshMixRotY(const int id, const float rotY)
 
 void Render::SetMeshMixWorldMatrix(const int id, const D3DXMATRIX& mat)
 {
+    int meshMix2Id = -1;
+    if (TryDecodeMeshMix2CompatibilityId(id, meshMix2Id))
+    {
+        if (meshMix2Id >= 0 &&
+            meshMix2Id < static_cast<int>(m_meshMix2List.size()) &&
+            m_meshMix2List.at(meshMix2Id) != nullptr)
+        {
+            m_meshMix2List.at(meshMix2Id)->SetWorldMatrix(mat);
+        }
+        return;
+    }
+
     if (!IsMeshMixSlotUsed(id))
     {
         return;
@@ -3671,6 +3716,18 @@ void Render::SetMeshMixWorldMatrix(const int id, const D3DXMATRIX& mat)
 
 void Render::SetMeshMixEnabled(const int id, const bool enabled)
 {
+    int meshMix2Id = -1;
+    if (TryDecodeMeshMix2CompatibilityId(id, meshMix2Id))
+    {
+        if (meshMix2Id >= 0 &&
+            meshMix2Id < static_cast<int>(m_meshMix2List.size()) &&
+            m_meshMix2List.at(meshMix2Id) != nullptr)
+        {
+            m_meshMix2List.at(meshMix2Id)->SetEnabled(enabled);
+        }
+        return;
+    }
+
     if (!IsMeshMixSlotUsed(id))
     {
         return;
@@ -3681,6 +3738,18 @@ void Render::SetMeshMixEnabled(const int id, const bool enabled)
 
 void Render::SetMeshMixDamageFlash(const int id, const bool enabled)
 {
+    int meshMix2Id = -1;
+    if (TryDecodeMeshMix2CompatibilityId(id, meshMix2Id))
+    {
+        if (meshMix2Id >= 0 &&
+            meshMix2Id < static_cast<int>(m_meshMix2List.size()) &&
+            m_meshMix2List.at(meshMix2Id) != nullptr)
+        {
+            m_meshMix2List.at(meshMix2Id)->SetDamageFlash(enabled);
+        }
+        return;
+    }
+
     if (!IsMeshMixSlotUsed(id))
     {
         return;
@@ -3691,6 +3760,18 @@ void Render::SetMeshMixDamageFlash(const int id, const bool enabled)
 
 D3DXVECTOR3 Render::GetMeshMixRot(const int id) const
 {
+    int meshMix2Id = -1;
+    if (TryDecodeMeshMix2CompatibilityId(id, meshMix2Id))
+    {
+        if (meshMix2Id >= 0 &&
+            meshMix2Id < static_cast<int>(m_meshMix2List.size()) &&
+            m_meshMix2List.at(meshMix2Id) != nullptr)
+        {
+            return m_meshMix2List.at(meshMix2Id)->GetRot();
+        }
+        return D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+    }
+
     if (!IsMeshMixSlotUsed(id))
     {
         return D3DXVECTOR3(0.0f, 0.0f, 0.0f);
@@ -3732,7 +3813,7 @@ void Render::UpdateBoneAttachments()
         {
             if (IsMeshMixSlotUsed(attach.childMeshId))
             {
-                m_meshMixList.at(attach.childMeshId).SetEnabled(false);
+                SetMeshMixEnabled(attach.childMeshId, false);
             }
         };
 
@@ -3774,13 +3855,22 @@ void Render::UpdateBoneAttachments()
                               attach.localOffset.y,
                               attach.localOffset.z);
 
-        const float childScale = m_meshMixList.at(attach.childMeshId).GetScale();
+        float childScale = 1.0f;
+        int meshMix2Id = -1;
+        if (TryDecodeMeshMix2CompatibilityId(attach.childMeshId, meshMix2Id))
+        {
+            childScale = m_meshMix2List.at(meshMix2Id)->GetScale();
+        }
+        else
+        {
+            childScale = m_meshMixList.at(attach.childMeshId).GetScale();
+        }
         D3DXMATRIX matScale;
         D3DXMatrixScaling(&matScale, childScale, childScale, childScale);
 
         D3DXMATRIX finalMatrix = matScale * matLocal * matTranslate * boneWorldMatrix;
 
-        m_meshMixList.at(attach.childMeshId).SetWorldMatrix(finalMatrix);
+        SetMeshMixWorldMatrix(attach.childMeshId, finalMatrix);
     }
 }
 
@@ -3960,35 +4050,15 @@ int Render::AddMeshMixSkinAnim(const std::wstring& filePath,
                                const bool useNormalMapping,
                                const MeshMixSkinAnimLoadMode loadMode)
 {
-    auto param = GetMeshParamPreset(eMeshParamPreset::GRASS);
-    param.smooth = false;
-    param.parallaxOcclusionMapping = useParallaxOcclusionMapping;
-    param.normalMapping = useNormalMapping;
-    param.saturateShadow = m_meshMixSaturateShadowEnabled;
-    param.saturateShadowIntensity = m_meshMixSaturateShadowIntensity;
-    param.shadowDarkness = m_meshMixShadowDarkness;
-    param.specularIntensity = m_meshMixSpecularIntensity;
-    param.specularEdge = m_meshMixSpecularEdge;
-    param.fresnelIntensity = m_meshMixFresnelIntensity;
-    param.specularIntensityOverrideEnabled = m_meshMixSpecularIntensityOverrideEnabled;
-    param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
-    param.treatTextureAsWhite = m_phongTreatTextureAsWhiteEnabled;
-
-    IMeshMixSkinAnim* mesh = NEW MeshMixSkinAnim(filePath, pos, rot, scale, param, animSetMap, loadMode);
-    mesh->SetAlphaClipEnabled(m_meshMixSkinAnimAlphaClipEnabled);
-    mesh->SetIgnoreTransparentMaterial(m_meshMixSkinAnimIgnoreTransparentMaterialEnabled);
-    try
-    {
-        mesh->Initialize(true);
-        m_meshMixSkinAnimList.push_back(mesh);
-    }
-    catch (...)
-    {
-        SAFE_DELETE(mesh);
-        throw;
-    }
-
-    return static_cast<int>(m_meshMixSkinAnimList.size()) - 1;
+    return AddMeshMixSkinAnim2(filePath,
+                               pos,
+                               rot,
+                               scale,
+                               animSetMap,
+                               radius,
+                               useParallaxOcclusionMapping,
+                               useNormalMapping,
+                               loadMode);
 }
 
 int Render::AddMeshMixSkinAnim(const std::wstring& meshFilePath,
@@ -4002,42 +4072,16 @@ int Render::AddMeshMixSkinAnim(const std::wstring& meshFilePath,
                                const bool useNormalMapping,
                                const MeshMixSkinAnimLoadMode loadMode)
 {
-    auto param = GetMeshParamPreset(eMeshParamPreset::GRASS);
-    param.smooth = false;
-    param.parallaxOcclusionMapping = useParallaxOcclusionMapping;
-    param.normalMapping = useNormalMapping;
-    param.saturateShadow = m_meshMixSaturateShadowEnabled;
-    param.saturateShadowIntensity = m_meshMixSaturateShadowIntensity;
-    param.shadowDarkness = m_meshMixShadowDarkness;
-    param.specularIntensity = m_meshMixSpecularIntensity;
-    param.specularEdge = m_meshMixSpecularEdge;
-    param.fresnelIntensity = m_meshMixFresnelIntensity;
-    param.specularIntensityOverrideEnabled = m_meshMixSpecularIntensityOverrideEnabled;
-    param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
-    param.treatTextureAsWhite = m_phongTreatTextureAsWhiteEnabled;
-
-    IMeshMixSkinAnim* mesh = NEW MeshMixSkinAnim(meshFilePath,
-                                                animationFilePath,
-                                                pos,
-                                                rot,
-                                                scale,
-                                                param,
-                                                animSetMap,
-                                                loadMode);
-    mesh->SetAlphaClipEnabled(m_meshMixSkinAnimAlphaClipEnabled);
-    mesh->SetIgnoreTransparentMaterial(m_meshMixSkinAnimIgnoreTransparentMaterialEnabled);
-    try
-    {
-        mesh->Initialize(true);
-        m_meshMixSkinAnimList.push_back(mesh);
-    }
-    catch (...)
-    {
-        SAFE_DELETE(mesh);
-        throw;
-    }
-
-    return static_cast<int>(m_meshMixSkinAnimList.size()) - 1;
+    return AddMeshMixSkinAnim2(meshFilePath,
+                               animationFilePath,
+                               pos,
+                               rot,
+                               scale,
+                               animSetMap,
+                               radius,
+                               useParallaxOcclusionMapping,
+                               useNormalMapping,
+                               loadMode);
 }
 
 int Render::AddMeshMixSkinAnim2(const std::wstring& filePath,
@@ -4047,7 +4091,8 @@ int Render::AddMeshMixSkinAnim2(const std::wstring& filePath,
                                 const AnimSetMap& animSetMap,
                                 const float radius,
                                 const bool useParallaxOcclusionMapping,
-                                const bool useNormalMapping)
+                                const bool useNormalMapping,
+                                const MeshMixSkinAnimLoadMode loadMode)
 {
     auto param = GetMeshParamPreset(eMeshParamPreset::GRASS);
     param.smooth = false;
@@ -4063,7 +4108,13 @@ int Render::AddMeshMixSkinAnim2(const std::wstring& filePath,
     param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
     param.treatTextureAsWhite = m_phongTreatTextureAsWhiteEnabled;
 
-    IMeshMixSkinAnim* mesh = NEW MeshMixSkinAnim2(filePath, pos, rot, scale, param, animSetMap);
+    IMeshMixSkinAnim* mesh = NEW MeshMixSkinAnim2(filePath,
+                                                 pos,
+                                                 rot,
+                                                 scale,
+                                                 param,
+                                                 animSetMap,
+                                                 loadMode);
     mesh->SetAlphaClipEnabled(m_meshMixSkinAnimAlphaClipEnabled);
     mesh->SetIgnoreTransparentMaterial(m_meshMixSkinAnimIgnoreTransparentMaterialEnabled);
     try
@@ -4088,7 +4139,8 @@ int Render::AddMeshMixSkinAnim2(const std::wstring& meshFilePath,
                                 const AnimSetMap& animSetMap,
                                 const float radius,
                                 const bool useParallaxOcclusionMapping,
-                                const bool useNormalMapping)
+                                const bool useNormalMapping,
+                                const MeshMixSkinAnimLoadMode loadMode)
 {
     auto param = GetMeshParamPreset(eMeshParamPreset::GRASS);
     param.smooth = false;
@@ -4110,7 +4162,8 @@ int Render::AddMeshMixSkinAnim2(const std::wstring& meshFilePath,
                                                  rot,
                                                  scale,
                                                  param,
-                                                 animSetMap);
+                                                 animSetMap,
+                                                 loadMode);
     mesh->SetAlphaClipEnabled(m_meshMixSkinAnimAlphaClipEnabled);
     mesh->SetIgnoreTransparentMaterial(m_meshMixSkinAnimIgnoreTransparentMaterialEnabled);
     try
@@ -4328,6 +4381,17 @@ std::vector<RenderLoadedModelInfo> Render::GetLoadedModelInfoList()
         ++instancingIndex;
     }
 
+    instancingIndex = 0;
+    for (const auto& mesh : m_meshInstancing2Map)
+    {
+        RenderLoadedModelInfo info;
+        info.type = RenderLoadedModelType::MeshInstancing2;
+        info.renderId = instancingIndex;
+        info.filePath = mesh.first;
+        models.push_back(info);
+        ++instancingIndex;
+    }
+
     for (int i = 0; i < static_cast<int>(m_meshMixSkinAnimList.size()); ++i)
     {
         const IMeshMixSkinAnim* mesh = m_meshMixSkinAnimList.at(i);
@@ -4337,7 +4401,14 @@ std::vector<RenderLoadedModelInfo> Render::GetLoadedModelInfoList()
         }
 
         RenderLoadedModelInfo info;
-        info.type = RenderLoadedModelType::MeshMixSkinAnim;
+        if (mesh->UsesIntegratedGBuffer())
+        {
+            info.type = RenderLoadedModelType::MeshMixSkinAnim2;
+        }
+        else
+        {
+            info.type = RenderLoadedModelType::MeshMixSkinAnim;
+        }
         info.renderId = i;
         info.filePath = mesh->GetMeshName();
         info.scale = mesh->GetScale();

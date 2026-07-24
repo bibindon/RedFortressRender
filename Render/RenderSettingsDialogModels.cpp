@@ -23,9 +23,13 @@ const wchar_t* LoadedModelTypeToText(const RenderSettingsDialogState::LoadedMode
     case RenderSettingsDialogState::LoadedModelType::MeshPBR:
         return L"MeshPBR";
     case RenderSettingsDialogState::LoadedModelType::MeshInstancing:
-        return L"Instancing";
+        return L"MeshInstancing";
+    case RenderSettingsDialogState::LoadedModelType::MeshInstancing2:
+        return L"MeshInstancing2";
     case RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim:
-        return L"SkinAnim";
+        return L"MeshMixSkinAnim";
+    case RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim2:
+        return L"MeshMixSkinAnim2";
     case RenderSettingsDialogState::LoadedModelType::MeshMixAnimNoBone:
         return L"AnimNoBone";
     default:
@@ -77,8 +81,12 @@ RenderSettingsDialogState::LoadedModelType ToDialogLoadedModelType(const RenderL
         return RenderSettingsDialogState::LoadedModelType::MeshPBR;
     case RenderLoadedModelType::MeshInstancing:
         return RenderSettingsDialogState::LoadedModelType::MeshInstancing;
+    case RenderLoadedModelType::MeshInstancing2:
+        return RenderSettingsDialogState::LoadedModelType::MeshInstancing2;
     case RenderLoadedModelType::MeshMixSkinAnim:
         return RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim;
+    case RenderLoadedModelType::MeshMixSkinAnim2:
+        return RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim2;
     case RenderLoadedModelType::MeshMixAnimNoBone:
         return RenderSettingsDialogState::LoadedModelType::MeshMixAnimNoBone;
     default:
@@ -364,7 +372,8 @@ void PopulateAnimationListForModel(RenderSettingsDialogState* state, int modelIn
         return;
     }
     const auto& model = state->loadedModels.at(modelIndex);
-    if (model.type != RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim)
+    if (model.type != RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim &&
+        model.type != RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim2)
     {
         return;
     }
@@ -407,7 +416,8 @@ void AddLoadedModelRecord(RenderSettingsDialogState* state,
     record.pos = pos;
     state->loadedModels.push_back(record);
     UpdateLoadedModelsList(state);
-    if (type == RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim)
+    if (type == RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim ||
+        type == RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim2)
     {
         PopulateAnimationListForModel(state, static_cast<int>(state->loadedModels.size()) - 1);
     }
@@ -456,7 +466,13 @@ void RemoveSelectedLoadedModel(HWND hWnd)
     case RenderSettingsDialogState::LoadedModelType::MeshInstancing:
         removed = state->render->RemoveMeshInstancing(record.filePath);
         break;
+    case RenderSettingsDialogState::LoadedModelType::MeshInstancing2:
+        removed = state->render->RemoveMeshInstancing2(record.filePath);
+        break;
     case RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim:
+        removed = state->render->RemoveMeshMixSkinAnim(record.renderId);
+        break;
+    case RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim2:
         removed = state->render->RemoveMeshMixSkinAnim(record.renderId);
         break;
     case RenderSettingsDialogState::LoadedModelType::MeshMixAnimNoBone:
@@ -471,7 +487,11 @@ void RemoveSelectedLoadedModel(HWND hWnd)
     }
     state->loadedModels.erase(state->loadedModels.begin() + index);
     if (record.type != RenderSettingsDialogState::LoadedModelType::MeshInstancing &&
+        record.type != RenderSettingsDialogState::LoadedModelType::MeshInstancing2 &&
+        record.type != RenderSettingsDialogState::LoadedModelType::MeshMix &&
         record.type != RenderSettingsDialogState::LoadedModelType::MeshMix2 &&
+        record.type != RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim &&
+        record.type != RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim2 &&
         record.type != RenderSettingsDialogState::LoadedModelType::MeshMixAnimNoBone)
     {
         AdjustLoadedModelIdsAfterRemove(state, record.type, record.renderId);

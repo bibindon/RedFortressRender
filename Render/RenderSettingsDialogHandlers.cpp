@@ -210,7 +210,7 @@ bool LoadXFileListCsv(RenderSettingsDialogState* state,
             if (loadType == L"instancing")
             {
                 renderId = state->render->AddMeshInstansing(resolvedPath, pos, rot, modelScale, resolvedInstancingCsvPath);
-                modelType = RenderSettingsDialogState::LoadedModelType::MeshInstancing;
+                modelType = RenderSettingsDialogState::LoadedModelType::MeshInstancing2;
             }
             else if (loadType == L"meshmix2")
             {
@@ -243,12 +243,12 @@ bool LoadXFileListCsv(RenderSettingsDialogState* state,
                                                                  false,
                                                                  GetMeshMixSkinAnimLoadMode(state));
                 }
-                modelType = RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim;
+                modelType = RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim2;
             }
             else
             {
-                renderId = state->render->AddMeshMix(resolvedPath, pos, rot, modelScale);
-                modelType = RenderSettingsDialogState::LoadedModelType::MeshMix;
+                renderId = state->render->AddMeshMix2(resolvedPath, pos, rot, modelScale);
+                modelType = RenderSettingsDialogState::LoadedModelType::MeshMix2;
             }
 
             AddLoadedModelRecord(state,
@@ -258,7 +258,7 @@ bool LoadXFileListCsv(RenderSettingsDialogState* state,
                                  pos);
 
             const int csvId = std::stoi(TrimCsvField(fields[0]));
-            if (loadType == L"meshmix2")
+            if (loadType == L"meshmix2" || loadType == L"normal")
             {
                 state->render->RegisterCsvMeshMix2IdMapping(csvId, renderId);
             }
@@ -1144,7 +1144,7 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
                                           D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                                           state->modelLoadScale);
                 AddLoadedModelRecord(state,
-                                     RenderSettingsDialogState::LoadedModelType::MeshInstancing,
+                                     RenderSettingsDialogState::LoadedModelType::MeshInstancing2,
                                      -1,
                                      state->meshInstancingPath,
                                      pos);
@@ -1186,7 +1186,7 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
                                                           GetMeshMixSkinAnimLoadMode(state));
                 }
                 AddLoadedModelRecord(state,
-                                     RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim,
+                                     RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim2,
                                      renderId,
                                      state->meshMixSkinAnimPath,
                                      pos);
@@ -1281,7 +1281,7 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
                                                           GetMeshMixSkinAnimLoadMode(state));
                 }
                 AddLoadedModelRecord(state,
-                                     RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim,
+                                     RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim2,
                                      renderId,
                                      state->meshMixSkinNonAnimPath,
                                      pos);
