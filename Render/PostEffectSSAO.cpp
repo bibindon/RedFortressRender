@@ -1,12 +1,30 @@
 ﻿#include "PostEffectSSAO.h"
 
-#include "Camera.h"
-#include "GBuffer.h"
+#include <stdexcept>
 
+#include "Camera.h"
 #include "Util.h"
 
 namespace NSRender
 {
+namespace
+{
+void ThrowIfSsaoCallFailed(const HRESULT result, const char* operation)
+{
+    if (FAILED(result))
+    {
+        throw std::runtime_error(operation);
+    }
+}
+
+void ThrowIfSsaoResourceIsNull(const void* resource, const char* operation)
+{
+    if (resource == nullptr)
+    {
+        throw std::runtime_error(operation);
+    }
+}
+}
 
 void PostEffectSSAO::Initialize()
 {
@@ -24,7 +42,8 @@ void PostEffectSSAO::Initialize()
                                                NULL,
                                                &m_fxSSAO,
                                                NULL);
-    assert(SUCCEEDED(hResult));
+    ThrowIfSsaoCallFailed(hResult, "PostEffectSSAO failed to create its effect.");
+    ThrowIfSsaoResourceIsNull(m_fxSSAO, "PostEffectSSAO effect creation returned a null effect.");
 
     CreateResources();
     if (!m_isRegisteredForDeviceReset)
@@ -61,7 +80,8 @@ void PostEffectSSAO::CreateResources()
                                         D3DFMT_A16B16G16R16F,
                                         D3DPOOL_DEFAULT,
                                         &m_rtAoTex);
-    assert(SUCCEEDED(hResult));
+    ThrowIfSsaoCallFailed(hResult, "PostEffectSSAO failed to create its AO render-target texture.");
+    ThrowIfSsaoResourceIsNull(m_rtAoTex, "PostEffectSSAO AO texture creation returned a null texture.");
 
     hResult = D3DXCreateTexture(Common::D3DDevice(),
                                 textureWidth,
@@ -71,26 +91,33 @@ void PostEffectSSAO::CreateResources()
                                 D3DFMT_A16B16G16R16F,
                                 D3DPOOL_DEFAULT,
                                 &m_rtAoTempTex);
-    assert(SUCCEEDED(hResult));
+    ThrowIfSsaoCallFailed(hResult, "PostEffectSSAO failed to create its temporary AO render-target texture.");
+    ThrowIfSsaoResourceIsNull(m_rtAoTempTex,
+                              "PostEffectSSAO temporary AO texture creation returned a null texture.");
 }
 
 void PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                            LPDIRECT3DTEXTURE9 texTarget,
                            LPDIRECT3DTEXTURE9 texRenderTargetZ,
-                           LPDIRECT3DTEXTURE9 texRenderTargetPos,
                            LPDIRECT3DTEXTURE9 texRenderTargetNormal,
                            LPDIRECT3DTEXTURE9 texRenderTargetThickness)
 {
     if (!m_isInitialized || m_fxSSAO == NULL)
     {
-        return;
+        throw std::runtime_error("PostEffectSSAO was drawn before successful initialization.");
     }
 
-    D3DSURFACE_DESC descZ = { };
-    texRenderTargetZ->GetLevelDesc(0, &descZ);
+    ThrowIfSsaoResourceIsNull(renderTarget, "PostEffectSSAO source texture is null.");
+    ThrowIfSsaoResourceIsNull(texTarget, "PostEffectSSAO target texture is null.");
+    ThrowIfSsaoResourceIsNull(texRenderTargetZ, "PostEffectSSAO depth texture is null.");
+    ThrowIfSsaoResourceIsNull(texRenderTargetNormal, "PostEffectSSAO normal texture is null.");
+    ThrowIfSsaoResourceIsNull(texRenderTargetThickness, "PostEffectSSAO thickness texture is null.");
+    ThrowIfSsaoResourceIsNull(m_rtAoTex, "PostEffectSSAO AO texture is null.");
+    ThrowIfSsaoResourceIsNull(m_rtAoTempTex, "PostEffectSSAO temporary AO texture is null.");
 
     D3DSURFACE_DESC descAO = { };
-    m_rtAoTex->GetLevelDesc(0, &descAO);
+    ThrowIfSsaoCallFailed(m_rtAoTex->GetLevelDesc(0, &descAO),
+                          "PostEffectSSAO failed to get the AO texture description.");
     D3DXVECTOR2 invSize(1.0f / static_cast<float>(descAO.Width),
                         1.0f / static_cast<float>(descAO.Height));
 
@@ -98,10 +125,13 @@ void PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     D3DXMATRIX matrixProj = Camera::GetProjMatrix();
 
     LPDIRECT3DSURFACE9 oldRt0 = NULL;
-    Common::D3DDevice()->GetRenderTarget(0, &oldRt0);
+    ThrowIfSsaoCallFailed(Common::D3DDevice()->GetRenderTarget(0, &oldRt0),
+                          "PostEffectSSAO failed to get the current render target.");
+    ThrowIfSsaoResourceIsNull(oldRt0, "PostEffectSSAO current render target is null.");
 
     D3DVIEWPORT9 oldViewport { };
-    Common::D3DDevice()->GetViewport(&oldViewport);
+    ThrowIfSsaoCallFailed(Common::D3DDevice()->GetViewport(&oldViewport),
+                          "PostEffectSSAO failed to get the current viewport.");
 
     D3DVIEWPORT9 aoViewport { };
     aoViewport.X = 0;
@@ -116,82 +146,158 @@ void PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     LPDIRECT3DSURFACE9 surfRenderTarget = NULL;
     LPDIRECT3DTEXTURE9 aoTextureForComposite = m_rtAoTex;
 
-    m_rtAoTex->GetSurfaceLevel(0, &surfAO);
-    m_rtAoTempTex->GetSurfaceLevel(0, &surfAOTemp);
-    texTarget->GetSurfaceLevel(0, &surfRenderTarget);
+    ThrowIfSsaoCallFailed(m_rtAoTex->GetSurfaceLevel(0, &surfAO),
+                          "PostEffectSSAO failed to get the AO render-target surface.");
+    ThrowIfSsaoCallFailed(m_rtAoTempTex->GetSurfaceLevel(0, &surfAOTemp),
+                          "PostEffectSSAO failed to get the temporary AO render-target surface.");
+    ThrowIfSsaoCallFailed(texTarget->GetSurfaceLevel(0, &surfRenderTarget),
+                          "PostEffectSSAO failed to get the output render-target surface.");
+    ThrowIfSsaoResourceIsNull(surfAO, "PostEffectSSAO AO render-target surface is null.");
+    ThrowIfSsaoResourceIsNull(surfAOTemp, "PostEffectSSAO temporary AO render-target surface is null.");
+    ThrowIfSsaoResourceIsNull(surfRenderTarget, "PostEffectSSAO output render-target surface is null.");
 
-    Common::D3DDevice()->SetRenderTarget(0, surfAO);
-    Common::D3DDevice()->SetViewport(&aoViewport);
-    Common::D3DDevice()->SetRenderTarget(1, NULL);
-    Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DCOLOR_RGBA(255, 255, 255, 255), 1.0f, 0);
+    ThrowIfSsaoCallFailed(Common::D3DDevice()->SetRenderTarget(0, surfAO),
+                          "PostEffectSSAO failed to set the AO render target.");
+    ThrowIfSsaoCallFailed(Common::D3DDevice()->SetViewport(&aoViewport),
+                          "PostEffectSSAO failed to set the AO viewport.");
+    ThrowIfSsaoCallFailed(Common::D3DDevice()->SetRenderTarget(1, NULL),
+                          "PostEffectSSAO failed to clear the secondary render target.");
+    ThrowIfSsaoCallFailed(
+        Common::D3DDevice()->Clear(0,
+                                   NULL,
+                                   D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
+                                   D3DCOLOR_RGBA(255, 255, 255, 255),
+                                   1.0f,
+                                   0),
+        "PostEffectSSAO failed to clear the AO render target.");
 
-    m_fxSSAO->SetMatrix("g_matView", &matrixView);
-    m_fxSSAO->SetMatrix("g_matProj", &matrixProj);
-    m_fxSSAO->SetFloat("g_fNear", m_nearPlane);
-    m_fxSSAO->SetFloat("g_fFar", m_farPlane);
-    m_fxSSAO->SetFloat("g_posRange", m_positionRange);
-    m_fxSSAO->SetFloatArray("g_invSize", reinterpret_cast<FLOAT*>(&invSize), 2);
-    m_fxSSAO->SetTexture("texZ", texRenderTargetZ);
-    m_fxSSAO->SetTexture("texPos", texRenderTargetPos);
-    m_fxSSAO->SetTexture("texNormal", texRenderTargetNormal);
-    m_fxSSAO->SetTexture("texThickness", texRenderTargetThickness);
-    m_fxSSAO->SetFloat("g_sampleRadius", m_sampleRadius);
-    m_fxSSAO->SetInt("g_sampleCount", m_sampleCount);
-    m_fxSSAO->SetBool("g_useRandomSamplingDirection", m_randomSamplingDirectionEnabled);
-    m_fxSSAO->SetBool("g_enableDepthScaledSampleDistance", m_depthScaledSampleDistanceEnabled);
-    m_fxSSAO->SetFloat("g_depthCompareThreshold", 0.0f);
-    m_fxSSAO->SetFloat("g_depthBiasScale", 1.0f);
-    m_fxSSAO->SetFloat("g_normalBiasScale", 1.0f);
+    ThrowIfSsaoCallFailed(m_fxSSAO->SetMatrix("g_matView", &matrixView),
+                          "PostEffectSSAO failed to set g_matView.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->SetMatrix("g_matProj", &matrixProj),
+                          "PostEffectSSAO failed to set g_matProj.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->SetFloat("g_fNear", m_nearPlane),
+                          "PostEffectSSAO failed to set g_fNear.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->SetFloat("g_fFar", m_farPlane),
+                          "PostEffectSSAO failed to set g_fFar.");
+    ThrowIfSsaoCallFailed(
+        m_fxSSAO->SetFloatArray("g_invSize", reinterpret_cast<FLOAT*>(&invSize), 2),
+        "PostEffectSSAO failed to set g_invSize.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->SetTexture("texZ", texRenderTargetZ),
+                          "PostEffectSSAO failed to set texZ.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->SetTexture("texNormal", texRenderTargetNormal),
+                          "PostEffectSSAO failed to set texNormal.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->SetTexture("texThickness", texRenderTargetThickness),
+                          "PostEffectSSAO failed to set texThickness.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->SetFloat("g_sampleRadius", m_sampleRadius),
+                          "PostEffectSSAO failed to set g_sampleRadius.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->SetInt("g_sampleCount", m_sampleCount),
+                          "PostEffectSSAO failed to set g_sampleCount.");
+    ThrowIfSsaoCallFailed(
+        m_fxSSAO->SetBool("g_useRandomSamplingDirection", m_randomSamplingDirectionEnabled),
+        "PostEffectSSAO failed to set g_useRandomSamplingDirection.");
+    ThrowIfSsaoCallFailed(
+        m_fxSSAO->SetBool("g_enableDepthScaledSampleDistance", m_depthScaledSampleDistanceEnabled),
+        "PostEffectSSAO failed to set g_enableDepthScaledSampleDistance.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->SetFloat("g_depthCompareThreshold", 0.0f),
+                          "PostEffectSSAO failed to set g_depthCompareThreshold.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->SetFloat("g_depthBiasScale", 1.0f),
+                          "PostEffectSSAO failed to set g_depthBiasScale.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->SetFloat("g_normalBiasScale", 1.0f),
+                          "PostEffectSSAO failed to set g_normalBiasScale.");
 
-    m_fxSSAO->SetTechnique(GetCreateTechniqueName());
-    m_fxSSAO->Begin(NULL, 0);
-    m_fxSSAO->BeginPass(0);
+    ThrowIfSsaoCallFailed(m_fxSSAO->SetTechnique(GetCreateTechniqueName()),
+                          "PostEffectSSAO failed to set the AO creation technique.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->Begin(NULL, 0), "PostEffectSSAO failed to begin its AO effect.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->BeginPass(0), "PostEffectSSAO failed to begin its AO pass.");
     DrawFullscreenQuad();
-    m_fxSSAO->EndPass();
-    m_fxSSAO->End();
+    ThrowIfSsaoCallFailed(m_fxSSAO->EndPass(), "PostEffectSSAO failed to end its AO pass.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->End(), "PostEffectSSAO failed to end its AO effect.");
 
     if (m_blurEnabled)
     {
         if (m_separableBlurEnabled)
         {
-            Common::D3DDevice()->SetRenderTarget(0, surfAOTemp);
-            Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(255, 255, 255, 255), 1.0f, 0);
-            m_fxSSAO->SetTexture("texAO", m_rtAoTex);
-            m_fxSSAO->SetTechnique(GetHorizontalBlurTechniqueName());
-            m_fxSSAO->Begin(NULL, 0);
-            m_fxSSAO->BeginPass(0);
+            ThrowIfSsaoCallFailed(Common::D3DDevice()->SetRenderTarget(0, surfAOTemp),
+                                  "PostEffectSSAO failed to set the horizontal-blur render target.");
+            ThrowIfSsaoCallFailed(
+                Common::D3DDevice()->Clear(0,
+                                           NULL,
+                                           D3DCLEAR_TARGET,
+                                           D3DCOLOR_RGBA(255, 255, 255, 255),
+                                           1.0f,
+                                           0),
+                "PostEffectSSAO failed to clear the horizontal-blur render target.");
+            ThrowIfSsaoCallFailed(m_fxSSAO->SetTexture("texAO", m_rtAoTex),
+                                  "PostEffectSSAO failed to set texAO for horizontal blur.");
+            ThrowIfSsaoCallFailed(m_fxSSAO->SetTechnique(GetHorizontalBlurTechniqueName()),
+                                  "PostEffectSSAO failed to set the horizontal-blur technique.");
+            ThrowIfSsaoCallFailed(m_fxSSAO->Begin(NULL, 0),
+                                  "PostEffectSSAO failed to begin its horizontal-blur effect.");
+            ThrowIfSsaoCallFailed(m_fxSSAO->BeginPass(0),
+                                  "PostEffectSSAO failed to begin its horizontal-blur pass.");
             DrawFullscreenQuad();
-            m_fxSSAO->EndPass();
-            m_fxSSAO->End();
+            ThrowIfSsaoCallFailed(m_fxSSAO->EndPass(),
+                                  "PostEffectSSAO failed to end its horizontal-blur pass.");
+            ThrowIfSsaoCallFailed(m_fxSSAO->End(),
+                                  "PostEffectSSAO failed to end its horizontal-blur effect.");
 
-            Common::D3DDevice()->SetRenderTarget(0, surfAO);
-            Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(255, 255, 255, 255), 1.0f, 0);
-            m_fxSSAO->SetTexture("texAO", m_rtAoTempTex);
-            m_fxSSAO->SetTechnique(GetVerticalBlurTechniqueName());
-            m_fxSSAO->Begin(NULL, 0);
-            m_fxSSAO->BeginPass(0);
+            ThrowIfSsaoCallFailed(Common::D3DDevice()->SetRenderTarget(0, surfAO),
+                                  "PostEffectSSAO failed to set the vertical-blur render target.");
+            ThrowIfSsaoCallFailed(
+                Common::D3DDevice()->Clear(0,
+                                           NULL,
+                                           D3DCLEAR_TARGET,
+                                           D3DCOLOR_RGBA(255, 255, 255, 255),
+                                           1.0f,
+                                           0),
+                "PostEffectSSAO failed to clear the vertical-blur render target.");
+            ThrowIfSsaoCallFailed(m_fxSSAO->SetTexture("texAO", m_rtAoTempTex),
+                                  "PostEffectSSAO failed to set texAO for vertical blur.");
+            ThrowIfSsaoCallFailed(m_fxSSAO->SetTechnique(GetVerticalBlurTechniqueName()),
+                                  "PostEffectSSAO failed to set the vertical-blur technique.");
+            ThrowIfSsaoCallFailed(m_fxSSAO->Begin(NULL, 0),
+                                  "PostEffectSSAO failed to begin its vertical-blur effect.");
+            ThrowIfSsaoCallFailed(m_fxSSAO->BeginPass(0),
+                                  "PostEffectSSAO failed to begin its vertical-blur pass.");
             DrawFullscreenQuad();
-            m_fxSSAO->EndPass();
-            m_fxSSAO->End();
+            ThrowIfSsaoCallFailed(m_fxSSAO->EndPass(),
+                                  "PostEffectSSAO failed to end its vertical-blur pass.");
+            ThrowIfSsaoCallFailed(m_fxSSAO->End(),
+                                  "PostEffectSSAO failed to end its vertical-blur effect.");
             aoTextureForComposite = m_rtAoTex;
         }
         else
         {
-            Common::D3DDevice()->SetRenderTarget(0, surfAOTemp);
-            Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(255, 255, 255, 255), 1.0f, 0);
-            m_fxSSAO->SetTexture("texAO", m_rtAoTex);
-            m_fxSSAO->SetTechnique(GetBlurTechniqueName());
-            m_fxSSAO->Begin(NULL, 0);
-            m_fxSSAO->BeginPass(0);
+            ThrowIfSsaoCallFailed(Common::D3DDevice()->SetRenderTarget(0, surfAOTemp),
+                                  "PostEffectSSAO failed to set the blur render target.");
+            ThrowIfSsaoCallFailed(
+                Common::D3DDevice()->Clear(0,
+                                           NULL,
+                                           D3DCLEAR_TARGET,
+                                           D3DCOLOR_RGBA(255, 255, 255, 255),
+                                           1.0f,
+                                           0),
+                "PostEffectSSAO failed to clear the blur render target.");
+            ThrowIfSsaoCallFailed(m_fxSSAO->SetTexture("texAO", m_rtAoTex),
+                                  "PostEffectSSAO failed to set texAO for blur.");
+            ThrowIfSsaoCallFailed(m_fxSSAO->SetTechnique(GetBlurTechniqueName()),
+                                  "PostEffectSSAO failed to set the blur technique.");
+            ThrowIfSsaoCallFailed(m_fxSSAO->Begin(NULL, 0),
+                                  "PostEffectSSAO failed to begin its blur effect.");
+            ThrowIfSsaoCallFailed(m_fxSSAO->BeginPass(0),
+                                  "PostEffectSSAO failed to begin its blur pass.");
             DrawFullscreenQuad();
-            m_fxSSAO->EndPass();
-            m_fxSSAO->End();
+            ThrowIfSsaoCallFailed(m_fxSSAO->EndPass(),
+                                  "PostEffectSSAO failed to end its blur pass.");
+            ThrowIfSsaoCallFailed(m_fxSSAO->End(),
+                                  "PostEffectSSAO failed to end its blur effect.");
             aoTextureForComposite = m_rtAoTempTex;
         }
     }
 
     D3DSURFACE_DESC descTarget = { };
-    texTarget->GetLevelDesc(0, &descTarget);
+    ThrowIfSsaoCallFailed(texTarget->GetLevelDesc(0, &descTarget),
+                          "PostEffectSSAO failed to get the target texture description.");
     D3DVIEWPORT9 targetViewport { };
     targetViewport.X = 0;
     targetViewport.Y = 0;
@@ -205,24 +311,49 @@ void PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     D3DXVECTOR2 aoInvSize(1.0f / static_cast<float>(descAO.Width),
                           1.0f / static_cast<float>(descAO.Height));
 
-    Common::D3DDevice()->SetRenderTarget(0, surfRenderTarget);
-    Common::D3DDevice()->SetViewport(&targetViewport);
-    Common::D3DDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 0, 255), 1.0f, 0);
-    m_fxSSAO->SetFloatArray("g_invSize", reinterpret_cast<FLOAT*>(&targetInvSize), 2);
-    m_fxSSAO->SetFloatArray("g_aoInvSize", reinterpret_cast<FLOAT*>(&aoInvSize), 2);
-    m_fxSSAO->SetTexture("texColor", renderTarget);
-    m_fxSSAO->SetTexture("texAO", aoTextureForComposite);
-    m_fxSSAO->SetFloat("g_shadowStrength", m_shadowStrength);
-    m_fxSSAO->SetFloat("g_aoSaturationBoost", m_saturationBoost);
-    m_fxSSAO->SetBool("g_enableMaxDarknessClamp", m_maxDarknessClampEnabled);
-    m_fxSSAO->SetTechnique(GetCompositeTechniqueName());
-    m_fxSSAO->Begin(NULL, 0);
-    m_fxSSAO->BeginPass(0);
+    ThrowIfSsaoCallFailed(Common::D3DDevice()->SetRenderTarget(0, surfRenderTarget),
+                          "PostEffectSSAO failed to set the composite render target.");
+    ThrowIfSsaoCallFailed(Common::D3DDevice()->SetViewport(&targetViewport),
+                          "PostEffectSSAO failed to set the composite viewport.");
+    ThrowIfSsaoCallFailed(
+        Common::D3DDevice()->Clear(0,
+                                   NULL,
+                                   D3DCLEAR_TARGET,
+                                   D3DCOLOR_RGBA(0, 0, 0, 255),
+                                   1.0f,
+                                   0),
+        "PostEffectSSAO failed to clear the composite render target.");
+    ThrowIfSsaoCallFailed(
+        m_fxSSAO->SetFloatArray("g_invSize", reinterpret_cast<FLOAT*>(&targetInvSize), 2),
+        "PostEffectSSAO failed to set composite g_invSize.");
+    ThrowIfSsaoCallFailed(
+        m_fxSSAO->SetFloatArray("g_aoInvSize", reinterpret_cast<FLOAT*>(&aoInvSize), 2),
+        "PostEffectSSAO failed to set g_aoInvSize.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->SetTexture("texColor", renderTarget),
+                          "PostEffectSSAO failed to set texColor.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->SetTexture("texAO", aoTextureForComposite),
+                          "PostEffectSSAO failed to set composite texAO.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->SetFloat("g_shadowStrength", m_shadowStrength),
+                          "PostEffectSSAO failed to set g_shadowStrength.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->SetFloat("g_aoSaturationBoost", m_saturationBoost),
+                          "PostEffectSSAO failed to set g_aoSaturationBoost.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->SetBool("g_enableMaxDarknessClamp", m_maxDarknessClampEnabled),
+                          "PostEffectSSAO failed to set g_enableMaxDarknessClamp.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->SetTechnique(GetCompositeTechniqueName()),
+                          "PostEffectSSAO failed to set the composite technique.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->Begin(NULL, 0),
+                          "PostEffectSSAO failed to begin its composite effect.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->BeginPass(0),
+                          "PostEffectSSAO failed to begin its composite pass.");
     DrawFullscreenQuad();
-    m_fxSSAO->EndPass();
-    m_fxSSAO->End();
-    Common::D3DDevice()->SetRenderTarget(0, oldRt0);
-    Common::D3DDevice()->SetViewport(&oldViewport);
+    ThrowIfSsaoCallFailed(m_fxSSAO->EndPass(),
+                          "PostEffectSSAO failed to end its composite pass.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->End(),
+                          "PostEffectSSAO failed to end its composite effect.");
+    ThrowIfSsaoCallFailed(Common::D3DDevice()->SetRenderTarget(0, oldRt0),
+                          "PostEffectSSAO failed to restore the render target.");
+    ThrowIfSsaoCallFailed(Common::D3DDevice()->SetViewport(&oldViewport),
+                          "PostEffectSSAO failed to restore the viewport.");
 
     SAFE_RELEASE(surfAO);
     SAFE_RELEASE(surfAOTemp);
@@ -249,9 +380,18 @@ void PostEffectSSAO::DrawFullscreenQuad()
     };
 
     LPDIRECT3DVERTEXDECLARATION9 vertexDecl = NULL;
-    Common::D3DDevice()->CreateVertexDeclaration(decl, &vertexDecl);
-    Common::D3DDevice()->SetVertexDeclaration(vertexDecl);
-    Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, vertices, sizeof(FullscreenVertex));
+    ThrowIfSsaoCallFailed(Common::D3DDevice()->CreateVertexDeclaration(decl, &vertexDecl),
+                          "PostEffectSSAO failed to create its fullscreen vertex declaration.");
+    ThrowIfSsaoResourceIsNull(vertexDecl,
+                              "PostEffectSSAO fullscreen vertex declaration creation returned null.");
+    ThrowIfSsaoCallFailed(Common::D3DDevice()->SetVertexDeclaration(vertexDecl),
+                          "PostEffectSSAO failed to set its fullscreen vertex declaration.");
+    ThrowIfSsaoCallFailed(
+        Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP,
+                                              2,
+                                              vertices,
+                                              sizeof(FullscreenVertex)),
+        "PostEffectSSAO failed to draw its fullscreen quad.");
     SAFE_RELEASE(vertexDecl);
 }
 
@@ -331,7 +471,6 @@ void PostEffectSSAO::SetDepthRange(const float nearPlane, const float farPlane)
 {
     m_nearPlane = nearPlane;
     m_farPlane = farPlane;
-    m_positionRange = GBuffer::ComputePositionRange(nearPlane, farPlane);
 }
 
 const char* PostEffectSSAO::GetCreateTechniqueName() const
@@ -503,7 +642,8 @@ void PostEffectSSAO::OnDeviceLost()
 
     if (m_fxSSAO != NULL)
     {
-        m_fxSSAO->OnLostDevice();
+        ThrowIfSsaoCallFailed(m_fxSSAO->OnLostDevice(),
+                              "PostEffectSSAO failed to process device loss.");
     }
     SAFE_RELEASE(m_rtAoTex);
     SAFE_RELEASE(m_rtAoTempTex);
@@ -518,7 +658,8 @@ void PostEffectSSAO::OnDeviceReset()
 
     if (m_fxSSAO != NULL)
     {
-        m_fxSSAO->OnResetDevice();
+        ThrowIfSsaoCallFailed(m_fxSSAO->OnResetDevice(),
+                              "PostEffectSSAO failed to process device reset.");
     }
     CreateResources();
 }

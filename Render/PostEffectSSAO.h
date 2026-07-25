@@ -15,7 +15,6 @@ public:
     void Draw(LPDIRECT3DTEXTURE9 texSource,
               LPDIRECT3DTEXTURE9 texTarget,
               LPDIRECT3DTEXTURE9 texRenderTargetZ,
-              LPDIRECT3DTEXTURE9 texRenderTargetPos,
               LPDIRECT3DTEXTURE9 texRenderTargetNormal,
               LPDIRECT3DTEXTURE9 texRenderTargetThickness);
 
@@ -52,7 +51,6 @@ private:
     bool m_maxDarknessClampEnabled = true;
     float m_nearPlane = 0.1f;
     float m_farPlane = 30'000.0f;
-    float m_positionRange = 30'000.0f;
 
     LPD3DXEFFECT m_fxSSAO = NULL;
     bool m_isInitialized = false;
