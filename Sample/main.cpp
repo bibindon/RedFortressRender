@@ -150,7 +150,7 @@ void InitializeSampleScene(HWND hWnd)
     RegisterLoadedModel(L"MeshMix2", L"..\\..\\Sample\\res\\model2\\winding-test\\counterclockwise\\counterclockwise_cube.X", counterclockwiseCubePosition, 1.0f, counterclockwiseCubeId);
     const std::wstring cubeJumpPath =
         L"..\\..\\Sample\\res\\model2\\cubeJump2\\cube_jump_blender_5_1_2.x";
-    const D3DXVECTOR3 cubeJumpPosition(0.0f, 0.0f, 0.0f);
+    const D3DXVECTOR3 cubeJumpPosition(5.0f, 1.0f, 0.0f);
     const int cubeJumpId = g_Render.AddMeshMixAnimNoBone2(cubeJumpPath,
                                                           cubeJumpPosition,
                                                           D3DXVECTOR3(0.0f, 0.0f, 0.0f),

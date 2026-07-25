@@ -111,11 +111,10 @@ def main():
     if not hasattr(bpy.ops.export_scene, "directx_x"):
         bpy.ops.preferences.addon_enable(module="bl_ext.blender_org.io_directx_x")
 
-    clockwise_faces = tuple(tuple(reversed(face)) for face in COUNTERCLOCKWISE_FACES)
     export_cube(
         "clockwise",
         "clockwise_cube",
-        clockwise_faces,
+        COUNTERCLOCKWISE_FACES,
     )
     export_cube(
         "counterclockwise",
