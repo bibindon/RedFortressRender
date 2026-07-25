@@ -106,10 +106,8 @@ void PostEffectBloom::Draw(LPDIRECT3DTEXTURE9 renderSource,
     m_d3dEffect->SetFloat("g_Threshold", m_threshold);
 
     float bloomWeightsA[4] { };
-    float bloomWeightsB[4] { };
     bloomWeightsA[0] = m_weightSum * m_intensity;
     m_d3dEffect->SetFloatArray("g_BloomWeightsA", bloomWeightsA, 4);
-    m_d3dEffect->SetFloatArray("g_BloomWeightsB", bloomWeightsB, 4);
 
     DrawFullscreenQuad(renderSource, m_texDownsample[0], "BrightPassDownsample");
     DrawFullscreenQuad(m_texDownsample[0], m_texBlur[0], "Blur5x5");
