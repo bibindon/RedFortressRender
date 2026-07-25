@@ -508,7 +508,8 @@ float4 PS_Composite(VS_OUT inputData) : COLOR0
         indirectAmount = g_indirectLightMaxContribution;
     }
 
-    float3 resultColor = sourceColor.rgb + (giData.rgb - sourceColor.rgb) * indirectAmount;
+    float3 indirectLight = giData.rgb * indirectAmount;
+    float3 resultColor = sourceColor.rgb * (1.0f + indirectLight);
     return float4(max(resultColor, 0.0f), sourceColor.a);
 }
 
