@@ -78,6 +78,8 @@ private:
     MeshMix2MeshAlloc m_allocator;
     LPD3DXFRAME m_frameRoot = nullptr;
     LPD3DXEFFECT m_D3DEffect = nullptr;
+    LPDIRECT3DBASETEXTURE9 m_csvCubeMap = nullptr;
+    LPDIRECT3DBASETEXTURE9 m_csvNormalMap = nullptr;
     D3DXVECTOR3 m_pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
     D3DXVECTOR3 m_rotate = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
     float m_scale = 1.0f;
@@ -88,7 +90,9 @@ private:
     bool m_enabled = true;
     bool m_damageFlash = false;
     bool m_deviceResourceRegistered = false;
+    bool m_autoPointLightAdded = false;
     stMeshParam m_param;
+    std::wstring m_autoPointLightOwnerTag;
     std::thread m_loadThread;
 
     void InitializeInternal();
@@ -108,6 +112,8 @@ private:
                              bool renderAsMirrorSurface);
     void CalculateRadius(LPD3DXFRAME frame, float& maxDistanceSquared) const;
     D3DXMATRIX BuildWorldMatrix() const;
+    void AddAutoPointLight();
+    void UpdateAutoPointLightPosition();
 };
 
 }

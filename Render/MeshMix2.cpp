@@ -9,15 +9,512 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <cwctype>
 #include <exception>
 #include <fstream>
 #include <iterator>
+#include <sstream>
 #include <stdexcept>
 
 namespace NSRender
 {
 namespace
 {
+
+enum class MeshCsvType
+{
+    None,
+    POM,
+    Glass,
+    Mirror,
+    Emit,
+    Water,
+    WaterMirror
+};
+
+template<typename T>
+struct CsvValue
+{
+    bool defined = false;
+    T value { };
+};
+
+struct MeshCsvParam
+{
+    MeshCsvType meshType = MeshCsvType::None;
+    CsvValue<float> emitIntensity;
+    CsvValue<DWORD> emitColor;
+    CsvValue<bool> fresnel;
+    CsvValue<float> fresnelIntensity;
+    CsvValue<bool> smooth;
+    CsvValue<bool> sss;
+    CsvValue<float> sssIntensity;
+    CsvValue<DWORD> sssColor;
+    CsvValue<bool> sway;
+    CsvValue<float> swayIntensity;
+    CsvValue<bool> wave;
+    CsvValue<float> waveIntensity;
+    CsvValue<bool> litByPointLight;
+    CsvValue<bool> shadow;
+    CsvValue<bool> lambertShadow;
+    CsvValue<bool> ssao;
+    CsvValue<bool> collision;
+    CsvValue<bool> normalMap;
+    std::wstring normalMapFileName;
+    CsvValue<bool> envMap;
+    std::wstring envMapFileName;
+    CsvValue<float> cubeMappingRate;
+    CsvValue<float> cubeMappingGauss;
+    CsvValue<bool> autoHide;
+};
+
+std::wstring TrimCsvText(std::wstring text)
+{
+    if (!text.empty() && text.front() == 0xfeff)
+    {
+        text.erase(text.begin());
+    }
+
+    const auto first = std::find_if(text.begin(),
+                                    text.end(),
+                                    [](const wchar_t ch) { return std::iswspace(ch) == 0; });
+    const auto last = std::find_if(text.rbegin(),
+                                   text.rend(),
+                                   [](const wchar_t ch) { return std::iswspace(ch) == 0; }).base();
+    if (first >= last)
+    {
+        return L"";
+    }
+    return std::wstring(first, last);
+}
+
+std::wstring NormalizeCsvText(const std::wstring& text)
+{
+    std::wstring result = TrimCsvText(text);
+    std::transform(result.begin(),
+                   result.end(),
+                   result.begin(),
+                   [](const wchar_t ch) { return static_cast<wchar_t>(std::towlower(ch)); });
+    return result;
+}
+
+std::wstring TrimCsvStringValue(const std::wstring& text)
+{
+    std::wstring result = TrimCsvText(text);
+    if (result.size() >= 2 && result.front() == L'"' && result.back() == L'"')
+    {
+        result = result.substr(1, result.size() - 2);
+    }
+    return TrimCsvText(result);
+}
+
+bool IsCsvTrueValue(const std::wstring& value)
+{
+    return value == L"y" || value == L"yes" || value == L"true" || value == L"1";
+}
+
+bool IsCsvFalseValue(const std::wstring& value)
+{
+    return value == L"n" || value == L"no" || value == L"false" || value == L"0";
+}
+
+float ParseCsvFloat(const std::wstring& value)
+{
+    std::size_t parsedLength = 0;
+    const float parsedValue = std::stof(value, &parsedLength);
+    if (parsedLength != value.size() || !std::isfinite(parsedValue))
+    {
+        throw std::runtime_error("MeshMix2 found an invalid numeric value in its CSV file.");
+    }
+    return parsedValue;
+}
+
+DWORD ParseCsvRgbColor(const std::wstring& value)
+{
+    std::wstringstream stream(value);
+    std::wstring token;
+    int rgb[3] = { 0, 0, 0 };
+    int componentIndex = 0;
+    while (std::getline(stream, token, L','))
+    {
+        if (componentIndex >= 3)
+        {
+            throw std::runtime_error("MeshMix2 found too many color components in its CSV file.");
+        }
+
+        const std::wstring trimmedToken = TrimCsvText(token);
+        std::size_t parsedLength = 0;
+        rgb[componentIndex] = std::stoi(trimmedToken, &parsedLength);
+        if (parsedLength != trimmedToken.size() ||
+            rgb[componentIndex] < 0 ||
+            rgb[componentIndex] > 255)
+        {
+            throw std::runtime_error("MeshMix2 found an invalid color component in its CSV file.");
+        }
+        ++componentIndex;
+    }
+    if (componentIndex != 3)
+    {
+        throw std::runtime_error("MeshMix2 requires three color components in its CSV file.");
+    }
+
+    return (static_cast<DWORD>(rgb[0]) << 16) |
+           (static_cast<DWORD>(rgb[1]) << 8) |
+           static_cast<DWORD>(rgb[2]);
+}
+
+std::wstring BuildCsvPath(const std::wstring& meshPath)
+{
+    const std::wstring::size_type slashPosition = meshPath.find_last_of(L"\\/");
+    const std::wstring::size_type dotPosition = meshPath.find_last_of(L'.');
+    if (dotPosition != std::wstring::npos &&
+        (slashPosition == std::wstring::npos || dotPosition > slashPosition))
+    {
+        return meshPath.substr(0, dotPosition) + L".csv";
+    }
+    return meshPath + L".csv";
+}
+
+MeshCsvParam ReadMeshCsvParam(const std::wstring& meshPath)
+{
+    MeshCsvParam result;
+    const std::wstring csvPath = BuildCsvPath(meshPath);
+    std::wifstream csvFile(csvPath);
+    if (!csvFile.is_open())
+    {
+        return result;
+    }
+
+    std::wstring line;
+    while (std::getline(csvFile, line))
+    {
+        const std::wstring::size_type commaPosition = line.find(L',');
+        if (commaPosition == std::wstring::npos)
+        {
+            continue;
+        }
+
+        const std::wstring key = NormalizeCsvText(line.substr(0, commaPosition));
+        const std::wstring rawValue = line.substr(commaPosition + 1);
+        const std::wstring value = NormalizeCsvText(rawValue);
+        if (key == L"meshtype")
+        {
+            if (value == L"pom")
+            {
+                result.meshType = MeshCsvType::POM;
+            }
+            else if (value == L"glass")
+            {
+                result.meshType = MeshCsvType::Glass;
+            }
+            else if (value == L"mirror")
+            {
+                result.meshType = MeshCsvType::Mirror;
+            }
+            else if (value == L"emit")
+            {
+                result.meshType = MeshCsvType::Emit;
+            }
+            else if (value == L"water")
+            {
+                result.meshType = MeshCsvType::Water;
+            }
+            else if (value == L"watermirror")
+            {
+                result.meshType = MeshCsvType::WaterMirror;
+            }
+        }
+        else if (key == L"emitintensity")
+        {
+            result.emitIntensity.defined = true;
+            result.emitIntensity.value = (std::max)(0.0f, ParseCsvFloat(value));
+        }
+        else if (key == L"emitcolor")
+        {
+            result.emitColor.defined = true;
+            result.emitColor.value = ParseCsvRgbColor(rawValue);
+        }
+        else if (key == L"fresnel")
+        {
+            result.fresnel.defined = true;
+            result.fresnel.value = !IsCsvFalseValue(value);
+        }
+        else if (key == L"fresnelintensity")
+        {
+            result.fresnelIntensity.defined = true;
+            result.fresnelIntensity.value = (std::max)(0.0f, ParseCsvFloat(value));
+        }
+        else if (key == L"smooth")
+        {
+            result.smooth.defined = true;
+            result.smooth.value = IsCsvTrueValue(value);
+        }
+        else if (key == L"sss")
+        {
+            result.sss.defined = true;
+            result.sss.value = IsCsvTrueValue(value);
+        }
+        else if (key == L"sssintensity")
+        {
+            result.sssIntensity.defined = true;
+            result.sssIntensity.value = ParseCsvFloat(value);
+        }
+        else if (key == L"ssscolor")
+        {
+            result.sssColor.defined = true;
+            result.sssColor.value = ParseCsvRgbColor(rawValue);
+        }
+        else if (key == L"sway")
+        {
+            result.sway.defined = true;
+            result.sway.value = IsCsvTrueValue(value);
+        }
+        else if (key == L"swayintensity")
+        {
+            result.swayIntensity.defined = true;
+            result.swayIntensity.value = ParseCsvFloat(value);
+        }
+        else if (key == L"wave")
+        {
+            result.wave.defined = true;
+            result.wave.value = IsCsvTrueValue(value);
+        }
+        else if (key == L"waveintensity")
+        {
+            result.waveIntensity.defined = true;
+            result.waveIntensity.value = ParseCsvFloat(value);
+        }
+        else if (key == L"litbypointlight")
+        {
+            result.litByPointLight.defined = true;
+            result.litByPointLight.value = IsCsvTrueValue(value);
+        }
+        else if (key == L"shadow" || key == L"zshadow")
+        {
+            result.shadow.defined = true;
+            result.shadow.value = !IsCsvFalseValue(value);
+        }
+        else if (key == L"lambertshadow")
+        {
+            result.lambertShadow.defined = true;
+            result.lambertShadow.value = !IsCsvFalseValue(value);
+        }
+        else if (key == L"ssao")
+        {
+            result.ssao.defined = true;
+            result.ssao.value = !IsCsvFalseValue(value);
+        }
+        else if (key == L"collision")
+        {
+            result.collision.defined = true;
+            result.collision.value = IsCsvTrueValue(value);
+        }
+        else if (key == L"normalmap")
+        {
+            result.normalMap.defined = true;
+            result.normalMap.value = IsCsvTrueValue(value);
+        }
+        else if (key == L"normalmapfilename")
+        {
+            result.normalMapFileName = TrimCsvStringValue(rawValue);
+        }
+        else if (key == L"envmap")
+        {
+            result.envMap.defined = true;
+            result.envMap.value = IsCsvTrueValue(value);
+        }
+        else if (key == L"envmapfilename")
+        {
+            result.envMapFileName = TrimCsvStringValue(rawValue);
+        }
+        else if (key == L"cubemappingrate")
+        {
+            result.cubeMappingRate.defined = true;
+            result.cubeMappingRate.value =
+                (std::max)(0.0f, (std::min)(ParseCsvFloat(value), 1.0f));
+        }
+        else if (key == L"cubemappinggauss")
+        {
+            result.cubeMappingGauss.defined = true;
+            result.cubeMappingGauss.value =
+                (std::max)(0.0f, (std::min)(ParseCsvFloat(value), 1.0f));
+        }
+        else if (key == L"autohide")
+        {
+            result.autoHide.defined = true;
+            result.autoHide.value = IsCsvTrueValue(value);
+        }
+    }
+    if (csvFile.bad())
+    {
+        throw std::runtime_error("MeshMix2 failed while reading its CSV file.");
+    }
+    return result;
+}
+
+void ApplyMeshCsvParam(const MeshCsvParam& csvParam, stMeshParam& param)
+{
+    if (csvParam.meshType == MeshCsvType::POM)
+    {
+        param.parallaxOcclusionMapping = true;
+        param.normalMapping = true;
+    }
+    else if (csvParam.meshType == MeshCsvType::Glass)
+    {
+        param.glass = true;
+    }
+    else if (csvParam.meshType == MeshCsvType::Mirror)
+    {
+        param.mirror = true;
+    }
+    else if (csvParam.meshType == MeshCsvType::Emit)
+    {
+        param.emit = true;
+        param.ssao = false;
+        param.shadow = false;
+        param.saturateShadow = false;
+        param.shadowDarkness = 0.0f;
+    }
+    else if (csvParam.meshType == MeshCsvType::Water)
+    {
+        param.wave = true;
+        param.waveIntensity = 0.12f;
+        param.shadow = true;
+        param.saturateShadow = true;
+        param.shadowDarkness = 0.5f;
+    }
+    else if (csvParam.meshType == MeshCsvType::WaterMirror)
+    {
+        param.wave = true;
+        param.waveIntensity = 0.01f;
+        param.shadow = true;
+        param.saturateShadow = true;
+        param.shadowDarkness = 0.5f;
+        param.waterMirror = true;
+        param.fresnel = true;
+        param.fresnelIntensity = 0.5f;
+    }
+
+    if (csvParam.emitIntensity.defined)
+    {
+        param.emitIntensity = csvParam.emitIntensity.value;
+    }
+    if (csvParam.emitColor.defined)
+    {
+        param.emitColor = csvParam.emitColor.value;
+    }
+    if (csvParam.fresnel.defined)
+    {
+        param.fresnel = csvParam.fresnel.value;
+    }
+    if (csvParam.fresnelIntensity.defined)
+    {
+        param.fresnelIntensity = csvParam.fresnelIntensity.value;
+    }
+    if (csvParam.smooth.defined)
+    {
+        param.smooth = csvParam.smooth.value;
+    }
+    if (csvParam.sss.defined)
+    {
+        param.sss = csvParam.sss.value;
+    }
+    if (csvParam.sssIntensity.defined)
+    {
+        param.sssIntensity = csvParam.sssIntensity.value;
+    }
+    if (csvParam.sssColor.defined)
+    {
+        param.sssColor = csvParam.sssColor.value;
+    }
+    if (csvParam.sway.defined)
+    {
+        param.sway = csvParam.sway.value;
+    }
+    if (csvParam.swayIntensity.defined)
+    {
+        param.swayIntensity = csvParam.swayIntensity.value;
+    }
+    if (csvParam.wave.defined)
+    {
+        param.wave = csvParam.wave.value;
+    }
+    if (csvParam.waveIntensity.defined)
+    {
+        param.waveIntensity = csvParam.waveIntensity.value;
+    }
+    if (csvParam.litByPointLight.defined)
+    {
+        param.pointLight = csvParam.litByPointLight.value;
+    }
+    if (csvParam.shadow.defined)
+    {
+        param.shadow = csvParam.shadow.value;
+    }
+    if (csvParam.lambertShadow.defined && !csvParam.lambertShadow.value)
+    {
+        param.shadowDarkness = 0.0f;
+        param.saturateShadow = false;
+    }
+    if (csvParam.ssao.defined)
+    {
+        param.ssao = csvParam.ssao.value;
+    }
+    if (csvParam.collision.defined)
+    {
+        param.collision = csvParam.collision.value;
+    }
+    if (csvParam.normalMap.defined)
+    {
+        param.normalMapping = csvParam.normalMap.value;
+    }
+    if (csvParam.envMap.defined)
+    {
+        param.cubeMapping = csvParam.envMap.value;
+    }
+    if (csvParam.cubeMappingRate.defined)
+    {
+        param.cubeMappingRate = csvParam.cubeMappingRate.value;
+    }
+    if (csvParam.cubeMappingGauss.defined)
+    {
+        param.cubeMappingGauss = csvParam.cubeMappingGauss.value;
+    }
+    if (csvParam.autoHide.defined)
+    {
+        param.autoHide = csvParam.autoHide.value;
+    }
+}
+
+std::wstring ResolveCsvTexturePath(const std::wstring& meshPath,
+                                   const std::wstring& texturePath)
+{
+    if (!PathIsRelative(texturePath.c_str()))
+    {
+        return texturePath;
+    }
+    const std::wstring::size_type slashPosition = meshPath.find_last_of(L"\\/");
+    if (slashPosition == std::wstring::npos)
+    {
+        return texturePath;
+    }
+    return meshPath.substr(0, slashPosition + 1) + texturePath;
+}
+
+D3DXCOLOR ConvertRgbDwordToColor(const DWORD color)
+{
+    return D3DXCOLOR(static_cast<float>((color >> 16) & 0xff) / 255.0f,
+                     static_cast<float>((color >> 8) & 0xff) / 255.0f,
+                     static_cast<float>(color & 0xff) / 255.0f,
+                     1.0f);
+}
+
+std::wstring BuildAutoPointLightOwnerTag(const void* owner)
+{
+    std::wstringstream stream;
+    stream << L"emit_mesh_" << owner;
+    return stream.str();
+}
 
 float GetMaterialSpecularIntensity(const D3DMATERIAL9& material)
 {
@@ -160,6 +657,40 @@ void MeshMix2::Initialize(const bool async)
 void MeshMix2::InitializeInternal()
 {
     const std::wstring meshPath = ResolveRuntimePath(m_meshName);
+    const MeshCsvParam csvParam = ReadMeshCsvParam(meshPath);
+    ApplyMeshCsvParam(csvParam, m_param);
+
+    if (!csvParam.normalMapFileName.empty())
+    {
+        const std::wstring texturePath =
+            ResolveCsvTexturePath(meshPath, csvParam.normalMapFileName);
+        LPDIRECT3DTEXTURE9 normalMap = nullptr;
+        const HRESULT textureResult = D3DXCreateTextureFromFile(Common::D3DDevice(),
+                                                                texturePath.c_str(),
+                                                                &normalMap);
+        if (FAILED(textureResult) || normalMap == nullptr)
+        {
+            throw std::runtime_error(
+                "MeshMix2 failed to load the normal map specified by its CSV file.");
+        }
+        m_csvNormalMap = normalMap;
+    }
+    if (!csvParam.envMapFileName.empty())
+    {
+        const std::wstring texturePath =
+            ResolveCsvTexturePath(meshPath, csvParam.envMapFileName);
+        LPDIRECT3DCUBETEXTURE9 cubeMap = nullptr;
+        const HRESULT textureResult = D3DXCreateCubeTextureFromFile(Common::D3DDevice(),
+                                                                    texturePath.c_str(),
+                                                                    &cubeMap);
+        if (FAILED(textureResult) || cubeMap == nullptr)
+        {
+            throw std::runtime_error(
+                "MeshMix2 failed to load the environment map specified by its CSV file.");
+        }
+        m_csvCubeMap = cubeMap;
+    }
+
     CUSTOM_X_LOADER_LOG(L"MeshMix2 load start. Path=" + meshPath);
     std::ifstream file(meshPath, std::ios::binary);
     if (!file)
@@ -202,6 +733,7 @@ void MeshMix2::InitializeInternal()
 
     Common::AddDeviceLostResource(this);
     m_deviceResourceRegistered = true;
+    AddAutoPointLight();
     m_loaded = true;
 }
 
@@ -239,6 +771,14 @@ void MeshMix2::ReleaseOwnedResources()
         m_frameRoot = nullptr;
     }
 
+    if (m_autoPointLightAdded)
+    {
+        Light::RemovePointLightsByOwnerTag(m_autoPointLightOwnerTag);
+        m_autoPointLightAdded = false;
+    }
+
+    SAFE_RELEASE(m_csvCubeMap);
+    SAFE_RELEASE(m_csvNormalMap);
     SAFE_RELEASE(m_D3DEffect);
 }
 
@@ -379,10 +919,10 @@ void MeshMix2::Render(const bool renderAsMirrorSurface)
                             "MeshMix2 failed to set g_mirrorClipEnable.");
     ThrowIfEffectCallFailed(m_D3DEffect->SetVector("g_mirrorClipPlane", &g_meshMix2MirrorClipPlane),
                             "MeshMix2 failed to set g_mirrorClipPlane.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetTexture("g_texCubeMap", nullptr),
-                            "MeshMix2 failed to clear g_texCubeMap.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetTexture("g_texNormalMap", nullptr),
-                            "MeshMix2 failed to clear g_texNormalMap.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetTexture("g_texCubeMap", m_csvCubeMap),
+                            "MeshMix2 failed to set g_texCubeMap.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetTexture("g_texNormalMap", m_csvNormalMap),
+                            "MeshMix2 failed to set g_texNormalMap.");
     ThrowIfEffectCallFailed(m_D3DEffect->SetTexture("g_texHeightMap", nullptr),
                             "MeshMix2 failed to clear g_texHeightMap.");
 
@@ -804,6 +1344,7 @@ void MeshMix2::SetPos(const D3DXVECTOR3& pos)
         const D3DXMATRIX worldMatrix = BuildWorldMatrix();
         UpdateFrameMatrices(m_frameRoot, &worldMatrix);
     }
+    UpdateAutoPointLightPosition();
 }
 
 void MeshMix2::SetRotY(const float rotY)
@@ -825,6 +1366,7 @@ void MeshMix2::SetWorldMatrix(const D3DXMATRIX& matrix)
     {
         UpdateFrameMatrices(m_frameRoot, &m_matrixOverride);
     }
+    UpdateAutoPointLightPosition();
 }
 
 void MeshMix2::SetEnabled(const bool enabled) { m_enabled = enabled; }
@@ -875,6 +1417,54 @@ bool MeshMix2::TryGetMirrorPlaneWorld(D3DXVECTOR3& planePoint, D3DXVECTOR3& plan
 }
 
 std::wstring MeshMix2::GetMeshName() const { return m_meshName; }
+
+void MeshMix2::AddAutoPointLight()
+{
+    if (!m_param.emit || m_autoPointLightAdded)
+    {
+        return;
+    }
+    if (m_autoPointLightOwnerTag.empty())
+    {
+        m_autoPointLightOwnerTag = BuildAutoPointLightOwnerTag(this);
+    }
+
+    D3DXVECTOR3 lightPosition = m_pos;
+    if (m_useMatrixOverride)
+    {
+        lightPosition = D3DXVECTOR3(m_matrixOverride._41,
+                                    m_matrixOverride._42,
+                                    m_matrixOverride._43);
+    }
+    Light::AddPointLight(lightPosition,
+                         ConvertRgbDwordToColor(m_param.emitColor),
+                         m_param.emitIntensity,
+                         PointLightShape::Point,
+                         12.0f,
+                         10.0f,
+                         10.0f,
+                         D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                         12.0f,
+                         m_autoPointLightOwnerTag);
+    m_autoPointLightAdded = true;
+}
+
+void MeshMix2::UpdateAutoPointLightPosition()
+{
+    if (!m_autoPointLightAdded)
+    {
+        return;
+    }
+
+    D3DXVECTOR3 lightPosition = m_pos;
+    if (m_useMatrixOverride)
+    {
+        lightPosition = D3DXVECTOR3(m_matrixOverride._41,
+                                    m_matrixOverride._42,
+                                    m_matrixOverride._43);
+    }
+    Light::SetPointLightPositionByOwnerTag(m_autoPointLightOwnerTag, lightPosition);
+}
 
 void MeshMix2::OnDeviceLost()
 {
