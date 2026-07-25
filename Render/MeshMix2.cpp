@@ -44,6 +44,8 @@ struct MeshCsvParam
     MeshCsvType meshType = MeshCsvType::None;
     CsvValue<float> emitIntensity;
     CsvValue<DWORD> emitColor;
+    CsvValue<float> emitPointLightIntensity;
+    CsvValue<float> emitPointLightRange;
     CsvValue<bool> fresnel;
     CsvValue<float> fresnelIntensity;
     CsvValue<bool> smooth;
@@ -234,6 +236,21 @@ MeshCsvParam ReadMeshCsvParam(const std::wstring& meshPath)
             result.emitColor.defined = true;
             result.emitColor.value = ParseCsvRgbColor(rawValue);
         }
+        else if (key == L"emitpointlightintensity")
+        {
+            result.emitPointLightIntensity.defined = true;
+            result.emitPointLightIntensity.value = (std::max)(0.0f, ParseCsvFloat(value));
+        }
+        else if (key == L"emitpointlightrange")
+        {
+            result.emitPointLightRange.defined = true;
+            result.emitPointLightRange.value = ParseCsvFloat(value);
+            if (result.emitPointLightRange.value <= 0.0f)
+            {
+                throw std::runtime_error(
+                    "MeshMix2 requires a positive EmitPointLightRange in its CSV file.");
+            }
+        }
         else if (key == L"fresnel")
         {
             result.fresnel.defined = true;
@@ -402,6 +419,15 @@ void ApplyMeshCsvParam(const MeshCsvParam& csvParam, stMeshParam& param)
     if (csvParam.emitColor.defined)
     {
         param.emitColor = csvParam.emitColor.value;
+    }
+    param.emitPointLightIntensity = (std::min)(param.emitIntensity * 0.1f, 1.0f);
+    if (csvParam.emitPointLightIntensity.defined)
+    {
+        param.emitPointLightIntensity = csvParam.emitPointLightIntensity.value;
+    }
+    if (csvParam.emitPointLightRange.defined)
+    {
+        param.emitPointLightRange = csvParam.emitPointLightRange.value;
     }
     if (csvParam.fresnel.defined)
     {
@@ -938,6 +964,7 @@ void MeshMix2::Render(const bool renderAsMirrorSurface)
                             "MeshMix2 failed to set g_currentPointLightShaderIndex.");
     D3DXVECTOR4 pointLightPositions[16];
     float pointLightBrightness[16] { };
+    float pointLightRanges[16] { };
     float pointLightShapes[16] { };
     float pointLightLineLengths[16] { };
     float pointLightSquareWidths[16] { };
@@ -965,6 +992,7 @@ void MeshMix2::Render(const bool renderAsMirrorSurface)
         pointLightPositions[index].y = pointLight.m_pos.y;
         pointLightPositions[index].z = pointLight.m_pos.z;
         pointLightBrightness[index] = pointLight.m_brightness;
+        pointLightRanges[index] = pointLight.m_range;
         pointLightShapes[index] = PointLightShapeToShaderValue(pointLight.m_shape);
         pointLightLineLengths[index] = pointLight.m_lineLength;
         pointLightSquareWidths[index] = pointLight.m_squareWidth;
@@ -985,6 +1013,10 @@ void MeshMix2::Render(const bool renderAsMirrorSurface)
                                                         pointLightBrightness,
                                                         16),
                             "MeshMix2 failed to set g_pointLightBrightness.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloatArray("g_pointLightRange",
+                                                        pointLightRanges,
+                                                        16),
+                            "MeshMix2 failed to set g_pointLightRange.");
     ThrowIfEffectCallFailed(m_D3DEffect->SetFloatArray("g_pointLightShape",
                                                         pointLightShapes,
                                                         16),
@@ -1438,13 +1470,13 @@ void MeshMix2::AddAutoPointLight()
     }
     Light::AddPointLight(lightPosition,
                          ConvertRgbDwordToColor(m_param.emitColor),
-                         m_param.emitIntensity,
+                         m_param.emitPointLightIntensity,
                          PointLightShape::Point,
                          12.0f,
                          10.0f,
                          10.0f,
                          D3DXVECTOR3(0.0f, 0.0f, 0.0f),
-                         12.0f,
+                         m_param.emitPointLightRange,
                          m_autoPointLightOwnerTag);
     m_autoPointLightAdded = true;
 }

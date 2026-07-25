@@ -661,6 +661,7 @@ void MeshPBR::Render()
 
     D3DXVECTOR4 pos[16];
     float brightness[16] { };
+    float range[16] { };
     float shape[16] { };
     float lineLength[16] { };
     float squareWidth[16] { };
@@ -682,6 +683,7 @@ void MeshPBR::Render()
                 pos[i].y = pointLightList.at(i).m_pos.y;
                 pos[i].z = pointLightList.at(i).m_pos.z;
                 brightness[i] = pointLightList.at(i).m_brightness;
+                range[i] = pointLightList.at(i).m_range;
                 shape[i] = PointLightShapeToShaderValue(pointLightList.at(i).m_shape);
                 lineLength[i] = pointLightList.at(i).m_lineLength;
                 squareWidth[i] = pointLightList.at(i).m_squareWidth;
@@ -700,6 +702,9 @@ void MeshPBR::Render()
     assert(hResult == S_OK);
 
     hResult = m_D3DEffect->SetFloatArray("g_pointLightBrightness", brightness, 16);
+    assert(hResult == S_OK);
+
+    hResult = m_D3DEffect->SetFloatArray("g_pointLightRange", range, 16);
     assert(hResult == S_OK);
 
     hResult = m_D3DEffect->SetFloatArray("g_pointLightShape", shape, 16);

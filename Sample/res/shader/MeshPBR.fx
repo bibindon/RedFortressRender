@@ -42,6 +42,7 @@ float4 g_emitColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 float3 g_pointLightPos[16];
 float  g_pointLightBrightness[16];
+float  g_pointLightRange[16];
 float  g_pointLightShape[16];
 float  g_pointLightLineLength[16];
 float  g_pointLightSquareWidth[16];
@@ -52,6 +53,16 @@ float3 g_pointLightColor[16];
 static const float POINT_LIGHT_CUBE_HALF_SIZE = 4.0f;
 static const float POINT_LIGHT_SPHERE_RADIUS = 5.0f;
 static const float PI = 3.14159265f;
+
+float CalculatePointLightAttenuation(float distanceToLight, float lightRange)
+{
+    float fadeStart = lightRange * 0.5f;
+    float fadeLength = max(lightRange - fadeStart, 1e-6f);
+    float fadeProgress = saturate((distanceToLight - fadeStart) / fadeLength);
+    float smoothFade = fadeProgress * fadeProgress * (3.0f - 2.0f * fadeProgress);
+    float rangeFalloff = 1.0f - smoothFade;
+    return saturate(1.0f / max(distanceToLight, 1e-6f)) * rangeFalloff;
+}
 
 texture g_texture;
 sampler2D g_textureSampler = sampler_state
@@ -388,7 +399,8 @@ float4 PixelShaderBase(VSOut i) : COLOR0
                                                                i.posWorld);
         float3 lightVector = lightSurfacePos - i.posWorld;
         float distanceToLight = length(lightVector);
-        float attenuation = saturate(1.0f / max(distanceToLight, 1e-6f));
+        float attenuation =
+            CalculatePointLightAttenuation(distanceToLight, g_pointLightRange[lightIndex]);
         float3 pointLightDir = lightVector / max(distanceToLight, 1e-6f);
         float3 pointRadiance = g_pointLightColor[lightIndex] * g_pointLightBrightness[lightIndex] * attenuation;
         directColor += EvaluatePbrLight(N,
@@ -442,7 +454,8 @@ float4 PixelShaderPointLight(VSOut i) : COLOR0
                                                                i.posWorld);
         float3 lightVector = lightSurfacePos - i.posWorld;
         float distanceToLight = length(lightVector);
-        float attenuation = saturate(1.0f / max(distanceToLight, 1e-6f));
+        float attenuation =
+            CalculatePointLightAttenuation(distanceToLight, g_pointLightRange[lightIndex]);
         float3 L = lightVector / max(distanceToLight, 1e-6f);
         float3 radiance = g_pointLightColor[lightIndex] * g_pointLightBrightness[lightIndex] * attenuation;
         color += EvaluatePbrLight(N, V, L, radiance, albedo, roughness, metallic, F0);

@@ -39,6 +39,8 @@ struct stMeshParam
     bool emit = false;
     float emitIntensity = 1.0f;
     DWORD emitColor = 0x00ffffff;
+    float emitPointLightIntensity = 0.1f;
+    float emitPointLightRange = 6.0f;
     bool wave = false;
     float waveIntensity = 0.1f;
     bool sway = false;
