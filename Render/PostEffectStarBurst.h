@@ -63,7 +63,7 @@ private:
 
     // どれくらいの明るさからブルームの対象とするか
     // 0.0 ~ 1.0
-    float m_threshold = 1.0f;
+    float m_threshold = 0.9f;
 
     // ブルームの明るさ
     // 0.0 ~ 1.0

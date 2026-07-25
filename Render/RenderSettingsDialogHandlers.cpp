@@ -557,7 +557,12 @@ bool HandleRenderSettingsEditCommit(HWND hWnd, int id)
         if (id == 41972) render->SetPostEffectHaloThreshold(floatValue);
         if (id == 41980) render->SetPostEffectStarBurstThreshold(floatValue);
         if (id == 41981) render->SetPostEffectStarBurstDistanceFade(floatValue);
-        SetTrackbarFromFloat(hWnd, id - 10000, floatValue, (id == 41971) ? 1.0f : 0.0f, (id == 41971) ? 100.0f : ((id == 41981) ? 1.0f : 5.0f));
+        float maxValue = 5.0f;
+        if (id == 41971 || id == 41981)
+        {
+            maxValue = 1.0f;
+        }
+        SetTrackbarFromFloat(hWnd, id - 10000, floatValue, 0.0f, maxValue);
         return true;
     }
     if (id >= 42000 && id <= 42007 && TryGetSettingsEditFloat(hWnd, id, floatValue))
@@ -1648,8 +1653,8 @@ void HandleRenderSettingsHScroll(HWND hWnd, LPARAM lParam)
         SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 5.0f), L"%.3f");
         break;
     case 31971:
-        render->SetPostEffectBloomWeightSum(TrackbarToFloat(trackbar, 1.0f, 100.0f));
-        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 1.0f, 100.0f), L"%.3f");
+        render->SetPostEffectBloomWeightSum(TrackbarToFloat(trackbar, 0.0f, 1.0f));
+        SetEditFloat(hWnd, trackbar, TrackbarToFloat(trackbar, 0.0f, 1.0f), L"%.3f");
         break;
     case 31972:
         render->SetPostEffectHaloThreshold(TrackbarToFloat(trackbar, 0.0f, 5.0f));

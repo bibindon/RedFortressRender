@@ -34,7 +34,7 @@ private:
     LPDIRECT3DTEXTURE9 m_texBright = NULL;
     LPDIRECT3DTEXTURE9 m_texHalo = NULL;
 
-    float m_threshold = 2.5f;
+    float m_threshold = 1.5f;
     float m_intensity = 1.0f;
 
     struct ScreenVertex

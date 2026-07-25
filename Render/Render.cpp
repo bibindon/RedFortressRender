@@ -2066,12 +2066,12 @@ void Render::ApplySettings()
         }
         catch (...)
         {
-            SetPostEffectBloomThreshold(2.5f);
+            SetPostEffectBloomThreshold(0.95f);
         }
     }
     else
     {
-        SetPostEffectBloomThreshold(2.5f);
+        SetPostEffectBloomThreshold(0.95f);
     }
 
     const auto bloomWeightSum = m_settings.find(L"BloomWeightSum");
@@ -2083,12 +2083,12 @@ void Render::ApplySettings()
         }
         catch (...)
         {
-            SetPostEffectBloomWeightSum(1.0f);
+            SetPostEffectBloomWeightSum(0.1f);
         }
     }
     else
     {
-        SetPostEffectBloomWeightSum(1.0f);
+        SetPostEffectBloomWeightSum(0.1f);
     }
 
     const auto haloEnable = m_settings.find(L"HaloEnable");
@@ -2110,12 +2110,12 @@ void Render::ApplySettings()
         }
         catch (...)
         {
-            SetPostEffectHaloThreshold(2.5f);
+            SetPostEffectHaloThreshold(1.5f);
         }
     }
     else
     {
-        SetPostEffectHaloThreshold(2.5f);
+        SetPostEffectHaloThreshold(1.5f);
     }
 
     const auto depthOfFieldMode = m_settings.find(L"DepthOfFieldMode");
@@ -2242,12 +2242,12 @@ void Render::ApplySettings()
         }
         catch (...)
         {
-            SetPostEffectStarBurstThreshold(2.8f);
+            SetPostEffectStarBurstThreshold(0.9f);
         }
     }
     else
     {
-        SetPostEffectStarBurstThreshold(2.8f);
+        SetPostEffectStarBurstThreshold(0.9f);
     }
 
     const auto starBurstDistanceFade = m_settings.find(L"StarBurstDistanceFade");

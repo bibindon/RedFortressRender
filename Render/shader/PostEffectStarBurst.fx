@@ -108,7 +108,7 @@ sampler BlurSampler6 = sampler_state
     AddressV = CLAMP;
 };
 
-float g_Threshold = 2.8f;
+float g_Threshold = 0.9f;
 float2 g_TexelSize;
 float2 g_StarBurstDirection = float2(1.0f, 1.0f);
 float4 g_BurstWeightsA = float4(0.32f, 0.23f, 0.16f, 0.11f);

@@ -75,7 +75,7 @@ sampler AddSampler = sampler_state
     AddressV = CLAMP;
 };
 
-float g_Threshold = 2.5f;
+float g_Threshold = 0.95f;
 float2 g_TexelSize;
 float4 g_BloomWeightsA = float4(0.25f, 0.25f, 0.25f, 0.25f);
 

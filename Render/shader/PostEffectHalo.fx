@@ -31,7 +31,7 @@ sampler HaloSampler = sampler_state
     AddressV = CLAMP;
 };
 
-float  g_Threshold = 2.5f;
+float  g_Threshold = 1.5f;
 float  g_HaloIntensity = 1.0f;
 float2 g_TexelSize = float2(1.0f / 1600.0f, 1.0f / 900.0f);
 

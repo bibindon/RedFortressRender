@@ -1608,12 +1608,12 @@ float SliderValueToBloomThreshold(const int sliderValue)
 
 int BloomWeightSumToSliderValue(const float weightSum)
 {
-    return static_cast<int>(std::lround(ClampBloomWeightSum(weightSum)));
+    return static_cast<int>(std::lround(ClampBloomWeightSum(weightSum) / BLOOM_WEIGHT_SUM_STEP));
 }
 
 float SliderValueToBloomWeightSum(const int sliderValue)
 {
-    return ClampBloomWeightSum(static_cast<float>(sliderValue));
+    return ClampBloomWeightSum(static_cast<float>(sliderValue) * BLOOM_WEIGHT_SUM_STEP);
 }
 
 int HaloThresholdToSliderValue(const float threshold)

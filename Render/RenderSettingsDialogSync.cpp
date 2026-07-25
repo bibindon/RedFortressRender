@@ -244,7 +244,7 @@ void SyncRenderSettingsDialogFromRender(HWND hWnd)
     SetSettingsEditFloat(hWnd, 41980, render->GetPostEffectStarBurstThreshold(), L"%.3f");
     SetSettingsEditFloat(hWnd, 41981, render->GetPostEffectStarBurstDistanceFade());
     SetTrackbarFromFloat(hWnd, 31970, render->GetPostEffectBloomThreshold(), 0.0f, 5.0f);
-    SetTrackbarFromFloat(hWnd, 31971, render->GetPostEffectBloomWeightSum(), 1.0f, 100.0f);
+    SetTrackbarFromFloat(hWnd, 31971, render->GetPostEffectBloomWeightSum(), 0.0f, 1.0f);
     SetTrackbarFromFloat(hWnd, 31972, render->GetPostEffectHaloThreshold(), 0.0f, 5.0f);
     SetTrackbarFromFloat(hWnd, 31980, render->GetPostEffectStarBurstThreshold(), 0.0f, 5.0f);
     SetTrackbarFromFloat(hWnd, 31981, render->GetPostEffectStarBurstDistanceFade(), 0.0f, 1.0f);
