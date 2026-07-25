@@ -362,32 +362,35 @@ void PixelShader1(in  float3 inPosWorld    : TEXCOORD0,
 
     float3 pointLightDiffuse = 0.0f;
     float3 pointLightSpecular = 0.0f;
-    for (int pointLightIndex = 0; pointLightIndex < pointLightCount; ++pointLightIndex)
+    if (pointLightCount > 0)
     {
-        if (g_pointLightBrightness[pointLightIndex] <= 0.0f)
+        for (int pointLightIndex = 0; pointLightIndex < pointLightCount; ++pointLightIndex)
         {
-            continue;
-        }
+            if (g_pointLightBrightness[pointLightIndex] <= 0.0f)
+            {
+                continue;
+            }
 
-        float3 lightSurfacePos = ClosestPointOnPointLightShape(g_pointLightPos[pointLightIndex],
-                                                               g_pointLightShape[pointLightIndex],
-                                                               g_pointLightLineLength[pointLightIndex],
-                                                               g_pointLightSquareWidth[pointLightIndex],
-                                                               g_pointLightSquareHeight[pointLightIndex],
-                                                               g_pointLightRotation[pointLightIndex].xyz,
-                                                               inPosWorld);
-        float3 sampleDiffuse = 0.0f;
-        float3 sampleSpecular = 0.0f;
-        AccumulateSingleLightSample(lightSurfacePos,
-                                    g_pointLightBrightness[pointLightIndex],
-                                    g_pointLightColor[pointLightIndex],
-                                    inPosWorld,
-                                    normal,
-                                    cameraDir,
-                                    sampleDiffuse,
-                                    sampleSpecular);
-        pointLightDiffuse += sampleDiffuse;
-        pointLightSpecular += sampleSpecular;
+            float3 lightSurfacePos = ClosestPointOnPointLightShape(g_pointLightPos[pointLightIndex],
+                                                                   g_pointLightShape[pointLightIndex],
+                                                                   g_pointLightLineLength[pointLightIndex],
+                                                                   g_pointLightSquareWidth[pointLightIndex],
+                                                                   g_pointLightSquareHeight[pointLightIndex],
+                                                                   g_pointLightRotation[pointLightIndex].xyz,
+                                                                   inPosWorld);
+            float3 sampleDiffuse = 0.0f;
+            float3 sampleSpecular = 0.0f;
+            AccumulateSingleLightSample(lightSurfacePos,
+                                        g_pointLightBrightness[pointLightIndex],
+                                        g_pointLightColor[pointLightIndex],
+                                        inPosWorld,
+                                        normal,
+                                        cameraDir,
+                                        sampleDiffuse,
+                                        sampleSpecular);
+            pointLightDiffuse += sampleDiffuse;
+            pointLightSpecular += sampleSpecular;
+        }
     }
 
     float3 baseColor = saturate(ambient + lambert + specular + fresnelColor);
