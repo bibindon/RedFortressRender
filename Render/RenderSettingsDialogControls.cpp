@@ -252,7 +252,7 @@ void CreateSettingsTrackbar(HWND parent,
                             int currentValue)
 {
     (void)h;
-    constexpr int TRACKBAR_HEIGHT = 12;
+    constexpr int TRACKBAR_HEIGHT = 18;
     HWND control = CreateWindowExW(0,
                                    TRACKBAR_CLASSW,
                                    L"",
@@ -468,12 +468,12 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
         row += 22;
     }
     CreateSettingsCheckbox(hWnd, 31120, L"SSS", 22, y + 184, 72, 22);
-    CreateSettingsCheckbox(hWnd, 31121, L"Treat Texture As White", 348, y + 128, 154, 22);
-    CreateSettingsCheckbox(hWnd, 31122, L"Use Override", 348, y + 150, 132, 22);
-    CreateSettingsCheckbox(hWnd, 31123, L"Use Override", 348, y + 172, 132, 22);
-    CreateSettingsStatic(hWnd, L"Fresne", 348, y + 202, 52, 18);
-    CreateSettingsTrackbar(hWnd, 31124, 386, y + 194, 82, 30, 0, 100, 8);
-    CreateSettingsEdit(hWnd, L"0.08", 474, y + 198, 30, 20, 41124);
+    CreateSettingsCheckbox(hWnd, 31121, L"Treat Texture As White", 348, y + 140, 154, 22);
+    CreateSettingsCheckbox(hWnd, 31122, L"Use Override", 348, y + 162, 132, 22);
+    CreateSettingsCheckbox(hWnd, 31123, L"Use Override", 348, y + 184, 132, 22);
+    CreateSettingsStatic(hWnd, L"Fresne", 348, y + 214, 52, 18);
+    CreateSettingsTrackbar(hWnd, 31124, 386, y + 206, 82, 30, 0, 100, 8);
+    CreateSettingsEdit(hWnd, L"0.08", 474, y + 210, 30, 20, 41124);
     row = y + 28;
     const wchar_t* colorLabels[] = { L"Sun R", L"Sun G", L"Sun B", L"Amb R", L"Amb G", L"Amb B" };
     const wchar_t* colorValues[] = { L"1.00", L"1.00", L"1.00", L"0.20", L"0.20", L"0.20" };
