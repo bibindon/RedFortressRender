@@ -116,7 +116,7 @@ void GBuffer::SetNormalFormat(const GBufferVectorFormat format)
     m_normalFormat = format;
 }
 
-void GBuffer::SetThicknessFormat(const GBufferVectorFormat format)
+void GBuffer::SetThicknessFormat(const GBufferScalarFormat format)
 {
     m_thicknessFormat = format;
 }
@@ -146,7 +146,7 @@ GBufferVectorFormat GBuffer::GetNormalFormat() const
     return m_normalFormat;
 }
 
-GBufferVectorFormat GBuffer::GetThicknessFormat() const
+GBufferScalarFormat GBuffer::GetThicknessFormat() const
 {
     return m_thicknessFormat;
 }
@@ -271,11 +271,8 @@ void GBuffer::CreateRawResource()
 
 void GBuffer::Draw(const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
                    const std::vector<MeshMixAnimNoBone2*>& meshMixAnimNoBone2List,
-                   const std::vector<MeshMix2*>& meshMix2List,
-                   const std::unordered_map<std::wstring, MeshInstancing2*>& meshInstancing2Map,
                    ParticleSystem* particleSystem,
                    const bool frontBackfaceCullingEnabled,
-                   const bool generateBackDepth,
                    LPDIRECT3DTEXTURE9* Z,
                    LPDIRECT3DTEXTURE9* CameraZ,
                    LPDIRECT3DTEXTURE9* Pos,
@@ -408,8 +405,22 @@ void GBuffer::Draw(const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
     m_lastFrameProfile.frontMilliseconds =
         std::chrono::duration<double, std::milli>(frontEndTime - frontStartTime).count();
 
-    // --- 厚みパス（バックフェイス深度）---
+    *Z = m_texRenderTargetZ;
+    *CameraZ = m_texRenderTargetZ;
+    *Pos = m_texRenderTargetPos;
+    *Normal = m_texRenderTargetNormal;
+    *Thickness = m_texRenderTargetThickness;
+    *BackDepth = m_texRenderTargetBackDepth;
+}
+
+void GBuffer::DrawThickness(const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
+                            const std::vector<MeshMixAnimNoBone2*>& meshMixAnimNoBone2List,
+                            const std::vector<MeshMix2*>& meshMix2List,
+                            const bool generateBackDepth)
+{
+    using ProfileClock = std::chrono::steady_clock;
     const auto thicknessStartTime = ProfileClock::now();
+    const D3DXMATRIX viewProjectionMatrix = Camera::GetViewMatrix() * Camera::GetProjMatrix();
     LPDIRECT3DSURFACE9 surfaceThickness = NULL;
     LPDIRECT3DSURFACE9 surfaceBackDepth = NULL;
     m_texRenderTargetThickness->GetSurfaceLevel(0, &surfaceThickness);
@@ -490,13 +501,6 @@ void GBuffer::Draw(const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
     const auto thicknessEndTime = ProfileClock::now();
     m_lastFrameProfile.thicknessMilliseconds =
         std::chrono::duration<double, std::milli>(thicknessEndTime - thicknessStartTime).count();
-
-    *Z = m_texRenderTargetZ;
-    *CameraZ = m_texRenderTargetZ;
-    *Pos = m_texRenderTargetPos;
-    *Normal = m_texRenderTargetNormal;
-    *Thickness = m_texRenderTargetThickness;
-    *BackDepth = m_texRenderTargetBackDepth;
 }
 
 void GBuffer::BindIntegratedRenderTargets()

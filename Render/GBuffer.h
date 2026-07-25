@@ -50,13 +50,13 @@ public:
     void SetFogDepthFormat(GBufferScalarFormat format);
     void SetPositionFormat(GBufferVectorFormat format);
     void SetNormalFormat(GBufferVectorFormat format);
-    void SetThicknessFormat(GBufferVectorFormat format);
+    void SetThicknessFormat(GBufferScalarFormat format);
     void SetBackDepthFormat(GBufferScalarFormat format);
     GBufferScalarFormat GetDepthFormat() const;
     GBufferScalarFormat GetFogDepthFormat() const;
     GBufferVectorFormat GetPositionFormat() const;
     GBufferVectorFormat GetNormalFormat() const;
-    GBufferVectorFormat GetThicknessFormat() const;
+    GBufferScalarFormat GetThicknessFormat() const;
     GBufferScalarFormat GetBackDepthFormat() const;
     bool IsInitialized() const;
     const GBufferFrameProfile& GetLastFrameProfile() const;
@@ -67,17 +67,18 @@ public:
 
     void Draw(const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
               const std::vector<MeshMixAnimNoBone2*>& meshMixAnimNoBone2List,
-              const std::vector<MeshMix2*>& meshMix2List,
-              const std::unordered_map<std::wstring, MeshInstancing2*>& meshInstancing2Map,
               ParticleSystem* particleSystem,
               bool frontBackfaceCullingEnabled,
-              bool generateBackDepth,
               LPDIRECT3DTEXTURE9* Z,
               LPDIRECT3DTEXTURE9* CameraZ,
               LPDIRECT3DTEXTURE9* Pos,
               LPDIRECT3DTEXTURE9* Normal,
               LPDIRECT3DTEXTURE9* Thickness,
               LPDIRECT3DTEXTURE9* BackDepth);
+    void DrawThickness(const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
+                       const std::vector<MeshMixAnimNoBone2*>& meshMixAnimNoBone2List,
+                       const std::vector<MeshMix2*>& meshMix2List,
+                       bool generateBackDepth);
 
     void Finalize();
 
@@ -103,7 +104,7 @@ private:
     GBufferScalarFormat m_fogDepthFormat = GBufferScalarFormat::R16F;
     GBufferVectorFormat m_positionFormat = GBufferVectorFormat::A8B8G8R8;
     GBufferVectorFormat m_normalFormat = GBufferVectorFormat::A8B8G8R8;
-    GBufferVectorFormat m_thicknessFormat = GBufferVectorFormat::A8B8G8R8;
+    GBufferScalarFormat m_thicknessFormat = GBufferScalarFormat::R16F;
     GBufferScalarFormat m_backDepthFormat = GBufferScalarFormat::R16F;
     bool m_isInitialized = false;
     bool m_isRegisteredForDeviceReset = false;

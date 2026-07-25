@@ -70,11 +70,11 @@ void SyncRenderSettingsDialogFromRender(HWND hWnd)
                         IDC_RENDER_SETTINGS_GBUFFER_NORMAL_ABGR8,
                         render->GetGBufferNormalFormat() == GBufferVectorFormat::A8B8G8R8);
     SetSettingsCheckbox(hWnd,
-                        IDC_RENDER_SETTINGS_GBUFFER_THICKNESS_RGBA16F,
-                        render->GetGBufferThicknessFormat() == GBufferVectorFormat::A16B16G16R16F);
+                        IDC_RENDER_SETTINGS_GBUFFER_THICKNESS_R32F,
+                        render->GetGBufferThicknessFormat() == GBufferScalarFormat::R32F);
     SetSettingsCheckbox(hWnd,
-                        IDC_RENDER_SETTINGS_GBUFFER_THICKNESS_ABGR8,
-                        render->GetGBufferThicknessFormat() == GBufferVectorFormat::A8B8G8R8);
+                        IDC_RENDER_SETTINGS_GBUFFER_THICKNESS_R16F,
+                        render->GetGBufferThicknessFormat() == GBufferScalarFormat::R16F);
     SetSettingsCheckbox(hWnd,
                         IDC_RENDER_SETTINGS_GBUFFER_BACK_DEPTH_R32F,
                         render->GetGBufferBackDepthFormat() == GBufferScalarFormat::R32F);

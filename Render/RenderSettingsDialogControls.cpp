@@ -966,7 +966,7 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
         IDC_RENDER_SETTINGS_GBUFFER_FOG_DEPTH_R32F,
         IDC_RENDER_SETTINGS_GBUFFER_POSITION_RGBA16F,
         IDC_RENDER_SETTINGS_GBUFFER_NORMAL_RGBA16F,
-        IDC_RENDER_SETTINGS_GBUFFER_THICKNESS_RGBA16F,
+        IDC_RENDER_SETTINGS_GBUFFER_THICKNESS_R32F,
         IDC_RENDER_SETTINGS_GBUFFER_BACK_DEPTH_R32F
     };
     const int secondFormatIds[] = {
@@ -974,13 +974,13 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
         IDC_RENDER_SETTINGS_GBUFFER_FOG_DEPTH_R16F,
         IDC_RENDER_SETTINGS_GBUFFER_POSITION_ABGR8,
         IDC_RENDER_SETTINGS_GBUFFER_NORMAL_ABGR8,
-        IDC_RENDER_SETTINGS_GBUFFER_THICKNESS_ABGR8,
+        IDC_RENDER_SETTINGS_GBUFFER_THICKNESS_R16F,
         IDC_RENDER_SETTINGS_GBUFFER_BACK_DEPTH_R16F
     };
     for (int i = 0; i < 6; ++i)
     {
         const int formatY = y + 20 + i * 26;
-        const bool scalarFormat = i < 2 || i == 5;
+        const bool scalarFormat = i < 2 || i == 4 || i == 5;
         const wchar_t* firstLabel = L"A16B16G16R16F";
         const wchar_t* secondLabel = L"ABGR8";
         if (scalarFormat)

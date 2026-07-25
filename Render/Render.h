@@ -451,7 +451,7 @@ public:
     void SetGBufferFogDepthFormat(GBufferScalarFormat format);
     void SetGBufferPositionFormat(GBufferVectorFormat format);
     void SetGBufferNormalFormat(GBufferVectorFormat format);
-    void SetGBufferThicknessFormat(GBufferVectorFormat format);
+    void SetGBufferThicknessFormat(GBufferScalarFormat format);
     void SetGBufferBackDepthFormat(GBufferScalarFormat format);
     bool IsGBufferEnabled() const;
     bool IsGBufferFrontBackfaceCullingEnabled() const;
@@ -461,7 +461,7 @@ public:
     GBufferScalarFormat GetGBufferFogDepthFormat() const;
     GBufferVectorFormat GetGBufferPositionFormat() const;
     GBufferVectorFormat GetGBufferNormalFormat() const;
-    GBufferVectorFormat GetGBufferThicknessFormat() const;
+    GBufferScalarFormat GetGBufferThicknessFormat() const;
     GBufferScalarFormat GetGBufferBackDepthFormat() const;
     RenderingQualitySettings SetRenderQuality(const std::wstring& quality);
     std::wstring GetRenderQuality() const;

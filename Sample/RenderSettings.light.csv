@@ -25,7 +25,7 @@ GBufferDepthFormat,R16F
 GBufferFogDepthFormat,R16F
 GBufferPositionFormat,ABGR8
 GBufferNormalFormat,ABGR8
-GBufferThicknessFormat,ABGR8
+GBufferThicknessFormat,R16F
 GBufferBackDepthFormat,R16F
 ,
 SSSEnable,0

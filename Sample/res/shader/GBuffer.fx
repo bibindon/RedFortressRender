@@ -447,7 +447,7 @@ technique TechniqueGBufferBackFace
 {
     pass P0
     {
-        CullMode         = CW;
+        CullMode         = CCW;
         ZEnable          = TRUE;
         ZWriteEnable     = TRUE;
         AlphaBlendEnable = FALSE;
@@ -489,7 +489,7 @@ technique TechniqueGBufferSkinBackFace
 {
     pass P0
     {
-        CullMode         = CW;
+        CullMode         = CCW;
         ZEnable          = TRUE;
         ZWriteEnable     = TRUE;
         AlphaBlendEnable = FALSE;

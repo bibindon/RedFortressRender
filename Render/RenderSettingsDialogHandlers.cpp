@@ -795,13 +795,13 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
         {
             render->SetGBufferNormalFormat(GBufferVectorFormat::A8B8G8R8);
         }
-        else if (id == IDC_RENDER_SETTINGS_GBUFFER_THICKNESS_RGBA16F)
+        else if (id == IDC_RENDER_SETTINGS_GBUFFER_THICKNESS_R32F)
         {
-            render->SetGBufferThicknessFormat(GBufferVectorFormat::A16B16G16R16F);
+            render->SetGBufferThicknessFormat(GBufferScalarFormat::R32F);
         }
-        else if (id == IDC_RENDER_SETTINGS_GBUFFER_THICKNESS_ABGR8)
+        else if (id == IDC_RENDER_SETTINGS_GBUFFER_THICKNESS_R16F)
         {
-            render->SetGBufferThicknessFormat(GBufferVectorFormat::A8B8G8R8);
+            render->SetGBufferThicknessFormat(GBufferScalarFormat::R16F);
         }
         else if (id == IDC_RENDER_SETTINGS_GBUFFER_BACK_DEPTH_R32F)
         {

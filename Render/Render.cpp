@@ -900,7 +900,7 @@ void Render::ApplySettings()
     applyScalarGBufferFormat(L"GBufferFogDepthFormat", &Render::SetGBufferFogDepthFormat);
     applyVectorGBufferFormat(L"GBufferPositionFormat", &Render::SetGBufferPositionFormat);
     applyVectorGBufferFormat(L"GBufferNormalFormat", &Render::SetGBufferNormalFormat);
-    applyVectorGBufferFormat(L"GBufferThicknessFormat", &Render::SetGBufferThicknessFormat);
+    applyScalarGBufferFormat(L"GBufferThicknessFormat", &Render::SetGBufferThicknessFormat);
     applyScalarGBufferFormat(L"GBufferBackDepthFormat", &Render::SetGBufferBackDepthFormat);
 
     const auto depthBufferShadowEnable = m_settings.find(L"DepthBufferShadowEnable");
@@ -2638,11 +2638,8 @@ void Render::Draw()
         EnsureGBufferInitialized();
         m_GBuffer.Draw(m_meshMixSkinAnimList,
                        m_meshMixAnimNoBone2List,
-                       m_meshMix2List,
-                       m_meshInstancing2Map,
                        &m_particleSystem,
                        m_gBufferFrontBackfaceCullingEnabled,
-                       m_debugGBufferView == DebugGBufferView::BackDepth,
                        &pTexTempZ,
                        &pTexTempCameraZ,
                        &pTexTempPos,
@@ -2656,7 +2653,6 @@ void Render::Draw()
         m_lastFrameProfile.gBufferThicknessStaticSubsetDraws = gBufferProfile.thicknessStaticSubsetDraws;
         m_lastFrameProfile.gBufferFrontObjectDraws = gBufferProfile.frontObjectDraws;
         m_lastFrameProfile.gBufferThicknessObjectDraws = gBufferProfile.thicknessObjectDraws;
-        MeshMix2::SetSharedThicknessTexture(pTexTempThickness);
     }
     else
     {
@@ -2689,6 +2685,20 @@ void Render::Draw()
     const auto mainPassEndTime = ProfileClock::now();
     m_lastFrameProfile.mainPassMilliseconds =
         std::chrono::duration<double, std::milli>(mainPassEndTime - mainPassStartTime).count();
+
+    if (m_gBufferEnabled)
+    {
+        m_GBuffer.DrawThickness(m_meshMixSkinAnimList,
+                                m_meshMixAnimNoBone2List,
+                                m_meshMix2List,
+                                m_debugGBufferView == DebugGBufferView::BackDepth);
+        const GBufferFrameProfile& gBufferProfile = m_GBuffer.GetLastFrameProfile();
+        m_lastFrameProfile.gBufferThicknessMilliseconds = gBufferProfile.thicknessMilliseconds;
+        m_lastFrameProfile.gBufferThicknessStaticSubsetDraws = gBufferProfile.thicknessStaticSubsetDraws;
+        m_lastFrameProfile.gBufferThicknessObjectDraws = gBufferProfile.thicknessObjectDraws;
+        m_lastFrameProfile.gBufferMilliseconds += gBufferProfile.thicknessMilliseconds;
+        MeshMix2::SetSharedThicknessTexture(pTexTempThickness);
+    }
 
     //---------------------------------------------------------------
     // ポストエフェクト
@@ -4692,7 +4702,7 @@ void Render::SetGBufferNormalFormat(const GBufferVectorFormat format)
     InvalidateGBufferResources();
 }
 
-void Render::SetGBufferThicknessFormat(const GBufferVectorFormat format)
+void Render::SetGBufferThicknessFormat(const GBufferScalarFormat format)
 {
     if (m_GBuffer.GetThicknessFormat() == format)
     {
@@ -4779,7 +4789,7 @@ GBufferVectorFormat Render::GetGBufferNormalFormat() const
     return m_GBuffer.GetNormalFormat();
 }
 
-GBufferVectorFormat Render::GetGBufferThicknessFormat() const
+GBufferScalarFormat Render::GetGBufferThicknessFormat() const
 {
     return m_GBuffer.GetThicknessFormat();
 }
