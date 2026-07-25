@@ -376,6 +376,12 @@ void PostEffectZShadow::RenderTechnique1(const int cascadeIndex)
     hr = g_fxDepthBufferShadow->SetTechnique("TechniqueDepthFromLight");
     assert(hr == S_OK);
 
+    hr = g_fxDepthBufferShadow->SetBool("g_useMeshAlphaCutout", FALSE);
+    assert(hr == S_OK);
+
+    hr = g_fxDepthBufferShadow->SetTexture("g_texMeshAlpha", nullptr);
+    assert(hr == S_OK);
+
     for (auto& mesh : *m_pMeshMix2List)
     {
         if (mesh != nullptr && mesh->IsDepthBufferShadowEnabled())

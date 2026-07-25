@@ -1453,7 +1453,11 @@ void MeshMixSkinAnim2::RenderMeshContainerToEffect(const LPD3DXMESHCONTAINER con
         const D3DMATERIAL9& material = container->pMaterials[materialIndex].MatD3D;
         const bool hasTexture = materialIndex < container->m_textureList.size() &&
                                 container->m_textureList[materialIndex] != nullptr;
-        bool useAlphaCutout = m_alphaClipEnabled;
+        bool useAlphaCutout = false;
+        if (m_alphaClipEnabled && hasTexture)
+        {
+            useAlphaCutout = true;
+        }
         if (m_ignoreTransparentMaterial && material.Diffuse.a <= 0.001f)
         {
             useAlphaCutout = false;
@@ -1490,6 +1494,24 @@ void MeshMixSkinAnim2::RenderMeshContainerToEffect(const LPD3DXMESHCONTAINER con
         effect->CommitChanges();
         container->MeshData.pMesh->DrawSubset(i);
     }
+
+    if (skinAlphaCutoutHandle != nullptr)
+    {
+        effect->SetBool(skinAlphaCutoutHandle, FALSE);
+    }
+    if (skinAlphaTextureHandle != nullptr)
+    {
+        effect->SetTexture(skinAlphaTextureHandle, nullptr);
+    }
+    if (meshAlphaCutoutHandle != nullptr)
+    {
+        effect->SetBool(meshAlphaCutoutHandle, FALSE);
+    }
+    if (meshAlphaTextureHandle != nullptr)
+    {
+        effect->SetTexture(meshAlphaTextureHandle, nullptr);
+    }
+    effect->CommitChanges();
 
     effect->EndPass();
     effect->End();
