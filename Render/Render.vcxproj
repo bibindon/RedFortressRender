@@ -34,8 +34,7 @@
     <ClCompile Include="MeshParam.cpp" />
     <ClCompile Include="MeshPBR.cpp" />
     <ClCompile Include="MeshMixSkinAnim2.cpp" />
-    <ClCompile Include="MeshMixAnimNoBone.cpp" />
-    <ClCompile Include="MeshMixAnimNoBoneAlloc.cpp" />
+    <ClCompile Include="MeshMixAnimNoBone2.cpp" />
     <ClCompile Include="MeshMix2.cpp" />
     <ClCompile Include="MeshMix2Hierarchy.cpp" />
     <ClCompile Include="MeshPBRManager.cpp" />
@@ -93,8 +92,7 @@
     <ClInclude Include="GBuffer.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="LoadingScreen.h" />
-    <ClInclude Include="MeshMixAnimNoBone.h" />
-    <ClInclude Include="MeshMixAnimNoBoneAlloc.h" />
+    <ClInclude Include="MeshMixAnimNoBone2.h" />
     <ClInclude Include="MeshMix2.h" />
     <ClInclude Include="MeshMix2Hierarchy.h" />
     <ClInclude Include="MeshOld.h" />
@@ -252,14 +250,6 @@
       <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</EnableDebuggingInformation>
     </FxCompile>
     <FxCompile Include="shader\Particle.fx" />
-    <FxCompile Include="shader\MeshMixAnimNoBone.fx">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Effect</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">2.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Effect</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">2.0</ShaderModel>
-      <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableOptimizations>
-      <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</EnableDebuggingInformation>
-    </FxCompile>
     <FxCompile Include="shader\simple.fx">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Effect</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">2.0</ShaderModel>

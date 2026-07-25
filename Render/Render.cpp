@@ -2637,7 +2637,7 @@ void Render::Draw()
     {
         EnsureGBufferInitialized();
         m_GBuffer.Draw(m_meshMixSkinAnimList,
-                       m_meshMixAnimNoBoneList,
+                       m_meshMixAnimNoBone2List,
                        m_meshMix2List,
                        m_meshInstancing2Map,
                        &m_particleSystem,
@@ -2710,7 +2710,7 @@ void Render::Draw()
                                  m_gBufferNearPlane,
                                  m_gBufferFarPlane,
                                  m_meshMixSkinAnimList,
-                                 m_meshMixAnimNoBoneList,
+                                 m_meshMixAnimNoBone2List,
                                  m_meshMix2List,
                                  m_meshInstancing2Map);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
@@ -2983,7 +2983,7 @@ void Render::UpdateSkinAnimationState()
         }
     }
 
-    for (auto& elem : m_meshMixAnimNoBoneList)
+    for (auto& elem : m_meshMixAnimNoBone2List)
     {
         if (elem != nullptr)
         {
@@ -4006,13 +4006,11 @@ bool Render::RemoveMeshMixSkinAnim(const int id)
     return true;
 }
 
-int Render::AddMeshMixAnimNoBone(const std::wstring& filePath,
+int Render::AddMeshMixAnimNoBone2(const std::wstring& filePath,
                                   const D3DXVECTOR3& pos,
                                   const D3DXVECTOR3& rot,
                                   const float scale,
-                                  const AnimSetMap& animSetMap,
-                                  const float radius,
-                                  const MeshMixSkinAnimLoadMode loadMode)
+                                  const AnimSetMap& animSetMap)
 {
     auto param = GetMeshParamPreset(eMeshParamPreset::GRASS);
     param.smooth = false;
@@ -4025,13 +4023,13 @@ int Render::AddMeshMixAnimNoBone(const std::wstring& filePath,
     param.specularIntensityOverrideEnabled = m_meshMixSpecularIntensityOverrideEnabled;
     param.specularEdgeOverrideEnabled = m_meshMixSpecularEdgeOverrideEnabled;
 
-    MeshMixAnimNoBone* mesh = NEW MeshMixAnimNoBone(filePath, pos, rot, scale, param, animSetMap, loadMode);
+    MeshMixAnimNoBone2* mesh = NEW MeshMixAnimNoBone2(filePath, pos, rot, scale, param, animSetMap);
     mesh->SetAlphaClipEnabled(m_meshMixSkinAnimAlphaClipEnabled);
     mesh->SetIgnoreTransparentMaterial(m_meshMixSkinAnimIgnoreTransparentMaterialEnabled);
     try
     {
         mesh->Initialize(true);
-        m_meshMixAnimNoBoneList.push_back(mesh);
+        m_meshMixAnimNoBone2List.push_back(mesh);
     }
     catch (...)
     {
@@ -4039,58 +4037,58 @@ int Render::AddMeshMixAnimNoBone(const std::wstring& filePath,
         throw;
     }
 
-    return static_cast<int>(m_meshMixAnimNoBoneList.size()) - 1;
+    return static_cast<int>(m_meshMixAnimNoBone2List.size()) - 1;
 }
 
-bool Render::RemoveMeshMixAnimNoBone(const int id)
+bool Render::RemoveMeshMixAnimNoBone2(const int id)
 {
-    if (id < 0 || id >= static_cast<int>(m_meshMixAnimNoBoneList.size()) || m_meshMixAnimNoBoneList.at(id) == nullptr)
+    if (id < 0 || id >= static_cast<int>(m_meshMixAnimNoBone2List.size()) || m_meshMixAnimNoBone2List.at(id) == nullptr)
     {
         return false;
     }
 
-    SAFE_DELETE(m_meshMixAnimNoBoneList.at(id));
+    SAFE_DELETE(m_meshMixAnimNoBone2List.at(id));
     return true;
 }
 
-void Render::SetMeshMixAnimNoBonePos(const int id, const D3DXVECTOR3& pos)
+void Render::SetMeshMixAnimNoBone2Pos(const int id, const D3DXVECTOR3& pos)
 {
-    if (id < 0 || id >= static_cast<int>(m_meshMixAnimNoBoneList.size()) || m_meshMixAnimNoBoneList.at(id) == nullptr)
+    if (id < 0 || id >= static_cast<int>(m_meshMixAnimNoBone2List.size()) || m_meshMixAnimNoBone2List.at(id) == nullptr)
     {
         return;
     }
 
-    m_meshMixAnimNoBoneList.at(id)->SetPos(pos);
+    m_meshMixAnimNoBone2List.at(id)->SetPos(pos);
 }
 
-void Render::SetMeshMixAnimNoBoneRotY(const int id, const float rotY)
+void Render::SetMeshMixAnimNoBone2RotY(const int id, const float rotY)
 {
-    if (id < 0 || id >= static_cast<int>(m_meshMixAnimNoBoneList.size()) || m_meshMixAnimNoBoneList.at(id) == nullptr)
+    if (id < 0 || id >= static_cast<int>(m_meshMixAnimNoBone2List.size()) || m_meshMixAnimNoBone2List.at(id) == nullptr)
     {
         return;
     }
 
-    m_meshMixAnimNoBoneList.at(id)->SetRotY(rotY);
+    m_meshMixAnimNoBone2List.at(id)->SetRotY(rotY);
 }
 
-void Render::SetMeshMixAnimNoBoneScale(const int id, const float scale)
+void Render::SetMeshMixAnimNoBone2Scale(const int id, const float scale)
 {
-    if (id < 0 || id >= static_cast<int>(m_meshMixAnimNoBoneList.size()) || m_meshMixAnimNoBoneList.at(id) == nullptr)
+    if (id < 0 || id >= static_cast<int>(m_meshMixAnimNoBone2List.size()) || m_meshMixAnimNoBone2List.at(id) == nullptr)
     {
         return;
     }
 
-    m_meshMixAnimNoBoneList.at(id)->SetScale(scale);
+    m_meshMixAnimNoBone2List.at(id)->SetScale(scale);
 }
 
-void Render::SetMeshMixAnimNoBoneEnabled(const int id, const bool enabled)
+void Render::SetMeshMixAnimNoBone2Enabled(const int id, const bool enabled)
 {
-    if (id < 0 || id >= static_cast<int>(m_meshMixAnimNoBoneList.size()) || m_meshMixAnimNoBoneList.at(id) == nullptr)
+    if (id < 0 || id >= static_cast<int>(m_meshMixAnimNoBone2List.size()) || m_meshMixAnimNoBone2List.at(id) == nullptr)
     {
         return;
     }
 
-    m_meshMixAnimNoBoneList.at(id)->SetEnabled(enabled);
+    m_meshMixAnimNoBone2List.at(id)->SetEnabled(enabled);
 }
 
 const std::vector<MeshMixSkinAnimAnimationInfo>* Render::GetMeshMixSkinAnimAnimationInfoList(const int id) const
@@ -4183,16 +4181,16 @@ std::vector<RenderLoadedModelInfo> Render::GetLoadedModelInfoList()
         models.push_back(info);
     }
 
-    for (int i = 0; i < static_cast<int>(m_meshMixAnimNoBoneList.size()); ++i)
+    for (int i = 0; i < static_cast<int>(m_meshMixAnimNoBone2List.size()); ++i)
     {
-        const MeshMixAnimNoBone* mesh = m_meshMixAnimNoBoneList.at(i);
+        const MeshMixAnimNoBone2* mesh = m_meshMixAnimNoBone2List.at(i);
         if (mesh == nullptr)
         {
             continue;
         }
 
         RenderLoadedModelInfo info;
-        info.type = RenderLoadedModelType::MeshMixAnimNoBone;
+        info.type = RenderLoadedModelType::MeshMixAnimNoBone2;
         info.renderId = i;
         info.filePath = mesh->GetMeshName();
         info.scale = mesh->GetScale();
@@ -6772,7 +6770,7 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
         }
     }
 
-    for (auto& elem : m_meshMixAnimNoBoneList)
+    for (auto& elem : m_meshMixAnimNoBone2List)
     {
         if (elem != nullptr)
         {

@@ -9,7 +9,7 @@
 #include "Common.h"
 #include "Camera.h"
 #include "MeshInstancing2.h"
-#include "MeshMixAnimNoBone.h"
+#include "MeshMixAnimNoBone2.h"
 #include "MeshMix2.h"
 #include "MeshMixSkinAnimCommon.h"
 #include "ParticleSystem.h"
@@ -270,7 +270,7 @@ void GBuffer::CreateRawResource()
 }
 
 void GBuffer::Draw(const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
-                   const std::vector<MeshMixAnimNoBone*>& meshMixAnimNoBoneList,
+                   const std::vector<MeshMixAnimNoBone2*>& meshMixAnimNoBone2List,
                    const std::vector<MeshMix2*>& meshMix2List,
                    const std::unordered_map<std::wstring, MeshInstancing2*>& meshInstancing2Map,
                    ParticleSystem* particleSystem,
@@ -376,9 +376,9 @@ void GBuffer::Draw(const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
 
     m_fxGBuffer->SetBool("g_shadowReceiverEnabled", FALSE);
     m_fxGBuffer->SetTechnique(frontTechnique);
-    for (auto& mesh : meshMixAnimNoBoneList)
+    for (auto& mesh : meshMixAnimNoBone2List)
     {
-        if (mesh != nullptr)
+        if (mesh != nullptr && !mesh->UsesIntegratedGBuffer())
         {
             mesh->RenderToEffect(m_fxGBuffer, viewProjectionMatrix);
             ++m_lastFrameProfile.frontObjectDraws;
@@ -459,8 +459,7 @@ void GBuffer::Draw(const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
         }
     }
 
-    m_fxGBuffer->SetTechnique("TechniqueGBufferBackFace");
-    for (auto& mesh : meshMixAnimNoBoneList)
+    for (auto& mesh : meshMixAnimNoBone2List)
     {
         if (mesh != nullptr)
         {
@@ -469,6 +468,7 @@ void GBuffer::Draw(const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
         }
     }
 
+    m_fxGBuffer->SetTechnique("TechniqueGBufferBackFace");
     for (auto& mesh : meshMix2List)
     {
         if (mesh != nullptr && mesh->IsSsaoEnabled())

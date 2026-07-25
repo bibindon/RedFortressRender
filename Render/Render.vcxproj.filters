@@ -189,10 +189,7 @@
     <ClCompile Include="CustomXLoader2.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="MeshMixAnimNoBone.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="MeshMixAnimNoBoneAlloc.cpp">
+    <ClCompile Include="MeshMixAnimNoBone2.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="MeshMix2.cpp">
@@ -374,10 +371,7 @@
     <ClInclude Include="AnimMesh.h">
       <Filter>ヘッダー ファイル\Trial</Filter>
     </ClInclude>
-    <ClInclude Include="MeshMixAnimNoBoneAlloc.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="MeshMixAnimNoBone.h">
+    <ClInclude Include="MeshMixAnimNoBone2.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="MeshMix2.h">
@@ -497,9 +491,6 @@
       <Filter>シェーダー</Filter>
     </FxCompile>
     <FxCompile Include="shader\Particle.fx">
-      <Filter>シェーダー</Filter>
-    </FxCompile>
-    <FxCompile Include="shader\MeshMixAnimNoBone.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
     <FxCompile Include="shader\MeshMix2.fx">

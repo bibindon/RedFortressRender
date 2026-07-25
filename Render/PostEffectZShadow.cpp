@@ -4,7 +4,7 @@
 
 #include "Camera.h"
 #include "MeshInstancing2.h"
-#include "MeshMixAnimNoBone.h"
+#include "MeshMixAnimNoBone2.h"
 #include "MeshMix2.h"
 #include "MeshMixSkinAnimCommon.h"
 
@@ -232,14 +232,14 @@ void PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                              const float sceneDepthNear,
                              const float sceneDepthFar,
                              const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
-                              const std::vector<MeshMixAnimNoBone*>& meshMixAnimNoBoneList,
+                              const std::vector<MeshMixAnimNoBone2*>& meshMixAnimNoBone2List,
                               const std::vector<MeshMix2*>& meshMix2List,
                               const std::unordered_map<std::wstring, MeshInstancing2*>& meshInstancing2Map)
 {
     g_texTemp = renderTarget;
     m_texCompositeTarget = texTarget;
     m_pSkinAnimMeshList = &meshMixSkinAnimList;
-    m_pMeshMixAnimNoBoneList = &meshMixAnimNoBoneList;
+    m_pMeshMixAnimNoBone2List = &meshMixAnimNoBone2List;
     m_pMeshMix2List = &meshMix2List;
     m_pMeshInstancing2Map = &meshInstancing2Map;
     m_sceneDepthTexture = sceneDepthTexture;
@@ -256,7 +256,7 @@ void PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     RenderTechnique3Direct();
 
     m_pSkinAnimMeshList = nullptr;
-    m_pMeshMixAnimNoBoneList = nullptr;
+    m_pMeshMixAnimNoBone2List = nullptr;
     m_pMeshMix2List = nullptr;
     m_pMeshInstancing2Map = nullptr;
     m_sceneDepthTexture = NULL;
@@ -376,14 +376,6 @@ void PostEffectZShadow::RenderTechnique1(const int cascadeIndex)
     hr = g_fxDepthBufferShadow->SetTechnique("TechniqueDepthFromLight");
     assert(hr == S_OK);
 
-    for (auto& mesh : *m_pMeshMixAnimNoBoneList)
-    {
-        if (mesh != nullptr)
-        {
-            mesh->RenderToEffect(g_fxDepthBufferShadow, mLightViewProj);
-        }
-    }
-
     for (auto& mesh : *m_pMeshMix2List)
     {
         if (mesh != nullptr && mesh->IsDepthBufferShadowEnabled())
@@ -394,6 +386,14 @@ void PostEffectZShadow::RenderTechnique1(const int cascadeIndex)
 
     hr = g_fxDepthBufferShadow->SetTechnique("TechniqueDepthFromLightSkin");
     assert(hr == S_OK);
+
+    for (auto& mesh : *m_pMeshMixAnimNoBone2List)
+    {
+        if (mesh != nullptr)
+        {
+            mesh->RenderToEffect(g_fxDepthBufferShadow, mLightViewProj);
+        }
+    }
 
     for (auto& mesh : *m_pSkinAnimMeshList)
     {
@@ -684,7 +684,7 @@ void PostEffectZShadow::RenderTechnique2(const int cascadeIndex)
         assert(hr == S_OK);
     }
 
-    if (m_pMeshMixAnimNoBoneList != nullptr)
+    if (m_pMeshMixAnimNoBone2List != nullptr)
     {
         DWORD oldColorWriteEnable = 0;
         hr = Common::D3DDevice()->GetRenderState(D3DRS_COLORWRITEENABLE, &oldColorWriteEnable);
@@ -693,7 +693,7 @@ void PostEffectZShadow::RenderTechnique2(const int cascadeIndex)
         hr = Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE, 0);
         assert(hr == S_OK);
 
-        hr = g_fxDepthBufferShadow->SetTechnique(GetWriteShadowTechniqueName());
+        hr = g_fxDepthBufferShadow->SetTechnique(GetWriteShadowSkinTechniqueName());
         assert(hr == S_OK);
 
         hr = g_fxDepthBufferShadow->SetBool("g_useMeshAlphaCutout", FALSE);
@@ -705,7 +705,7 @@ void PostEffectZShadow::RenderTechnique2(const int cascadeIndex)
         hr = g_fxDepthBufferShadow->CommitChanges();
         assert(hr == S_OK);
 
-        for (auto& mesh : *m_pMeshMixAnimNoBoneList)
+        for (auto& mesh : *m_pMeshMixAnimNoBone2List)
         {
             if (mesh != nullptr)
             {
@@ -764,7 +764,7 @@ void PostEffectZShadow::RenderTechnique2(const int cascadeIndex)
         }
     }
 
-    // MeshMixAnimNoBone participates in the light-depth pass as a caster.
+    // MeshMixAnimNoBone2 participates in the light-depth pass as a caster.
     // It already wrote depth-only above, so it occludes receiver shadows
     // behind it without drawing self-shadow color onto its own surface.
 

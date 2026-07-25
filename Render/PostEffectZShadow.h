@@ -7,7 +7,7 @@
 namespace NSRender
 {
 class MeshInstancing2;
-class MeshMixAnimNoBone;
+class MeshMixAnimNoBone2;
 class MeshMix2;
 class IMeshMixSkinAnim;
 
@@ -27,7 +27,7 @@ public:
               float sceneDepthNear,
               float sceneDepthFar,
               const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
-              const std::vector<MeshMixAnimNoBone*>& meshMixAnimNoBoneList,
+              const std::vector<MeshMixAnimNoBone2*>& meshMixAnimNoBone2List,
               const std::vector<MeshMix2*>& meshMix2List,
               const std::unordered_map<std::wstring, MeshInstancing2*>& meshInstancing2Map);
 
@@ -111,7 +111,7 @@ private:
     float fLightFar[SHADOW_CASCADE_COUNT] { 200.0f, 200.0f };
 
     const std::vector<IMeshMixSkinAnim*>* m_pSkinAnimMeshList = nullptr;
-    const std::vector<MeshMixAnimNoBone*>* m_pMeshMixAnimNoBoneList = nullptr;
+    const std::vector<MeshMixAnimNoBone2*>* m_pMeshMixAnimNoBone2List = nullptr;
     const std::vector<MeshMix2*>* m_pMeshMix2List = nullptr;
     const std::unordered_map<std::wstring, MeshInstancing2*>* m_pMeshInstancing2Map = nullptr;
     LPDIRECT3DTEXTURE9 m_sceneDepthTexture = NULL;

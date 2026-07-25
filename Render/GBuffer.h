@@ -30,7 +30,7 @@ struct GBufferFrameProfile
 };
 
 class IMeshMixSkinAnim;
-class MeshMixAnimNoBone;
+class MeshMixAnimNoBone2;
 class MeshMix2;
 class MeshInstancing2;
 class ParticleSystem;
@@ -66,7 +66,7 @@ public:
                                                 bool shadowReceiverEnabled);
 
     void Draw(const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
-              const std::vector<MeshMixAnimNoBone*>& meshMixAnimNoBoneList,
+              const std::vector<MeshMixAnimNoBone2*>& meshMixAnimNoBone2List,
               const std::vector<MeshMix2*>& meshMix2List,
               const std::unordered_map<std::wstring, MeshInstancing2*>& meshInstancing2Map,
               ParticleSystem* particleSystem,

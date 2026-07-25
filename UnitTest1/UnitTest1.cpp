@@ -3,9 +3,11 @@
 
 #include "../Render/Common.h"
 #include "../Render/CustomXLoader.h"
+#include "../Render/CustomXLoader2.h"
 #include "../Render/MeshInstancing2.h"
 #include "../Render/MeshMixSkinAnim2.h"
 #include "../Render/Render.h"
+#include "../Render/SkinAnimMeshAlloc.h"
 
 #include <algorithm>
 #include <cmath>
@@ -193,6 +195,37 @@ namespace UnitTest1
             return L"Sample\\res\\Blender5.1.2Sample\\CylinderSkinned_Separated\\" + fileName;
         }
 
+        std::wstring GetCubeJump2FilePath()
+        {
+            wchar_t currentDirectory[MAX_PATH] { };
+            const DWORD length = GetCurrentDirectoryW(_countof(currentDirectory), currentDirectory);
+            if (length == 0 || length >= _countof(currentDirectory))
+            {
+                return L"Sample\\res\\model2\\cubeJump2\\cube_jump_blender_5_1_2.x";
+            }
+
+            std::wstring directory(currentDirectory);
+            for (int i = 0; i < 8; ++i)
+            {
+                const std::wstring candidate =
+                    directory + L"\\Sample\\res\\model2\\cubeJump2\\cube_jump_blender_5_1_2.x";
+                if (FileExists(candidate))
+                {
+                    return candidate;
+                }
+
+                const std::size_t slashPos = directory.find_last_of(L"\\/");
+                if (slashPos == std::wstring::npos)
+                {
+                    break;
+                }
+
+                directory = directory.substr(0, slashPos);
+            }
+
+            return L"Sample\\res\\model2\\cubeJump2\\cube_jump_blender_5_1_2.x";
+        }
+
         std::wstring GetCompiledShaderDirectory()
         {
             wchar_t currentDirectory[MAX_PATH] { };
@@ -377,6 +410,71 @@ namespace UnitTest1
     TEST_CLASS(CustomXLoaderTests)
     {
     public:
+        TEST_METHOD(LoadAndAdvanceBlender512CubeJumpAnimation)
+        {
+            const std::wstring filePath = GetCubeJump2FilePath();
+            Assert::IsTrue(FileExists(filePath), L"Blender 5.1.2 cube jump X file was not found.");
+
+            std::ifstream file(filePath, std::ios::binary);
+            Assert::IsTrue(file.good(), L"Failed to open the cube jump X file.");
+            const std::string fileText((std::istreambuf_iterator<char>(file)),
+                                       std::istreambuf_iterator<char>());
+
+            NSRender::SkinAnimMeshAlloc allocator(filePath);
+            LPD3DXFRAME frameRoot = nullptr;
+            std::vector<NSRender::CustomXLoader2::CustomXAnimationSet> animationSets;
+            NSRender::CustomXLoader2::CustomXLoadOptions options;
+            options.allowDuplicateSkinWeightsCount = true;
+            options.transposeAnimationMatrixKeys = true;
+            options.invertRecalculatedMeshNormals = false;
+
+            const HRESULT parseHr =
+                NSRender::CustomXLoader2::LoadCustomXFrameHierarchyFromText(
+                    fileText,
+                    &allocator,
+                    &frameRoot,
+                    &animationSets,
+                    NSRender::CustomXLoader2::CustomXLoadPurpose::AnimationOnly,
+                    options);
+            Assert::IsTrue(SUCCEEDED(parseHr), L"Failed to parse the Blender 5.1.2 cube jump X file.");
+            Assert::IsNotNull(frameRoot, L"Cube jump frame hierarchy was null.");
+            Assert::AreEqual(static_cast<std::size_t>(1), animationSets.size());
+            Assert::AreEqual(std::string("Jump"), animationSets.front().name);
+
+            LPD3DXANIMATIONCONTROLLER controller = nullptr;
+            const HRESULT controllerHr =
+                NSRender::CustomXLoader2::CreateAnimationControllerFromParsedData(
+                    animationSets,
+                    frameRoot,
+                    &controller,
+                    options);
+            Assert::IsTrue(SUCCEEDED(controllerHr), L"Failed to create the cube jump animation controller.");
+            Assert::IsNotNull(controller, L"Cube jump animation controller was null.");
+
+            LPD3DXFRAME jumpFrame = D3DXFrameFind(frameRoot, "JumpRoot");
+            Assert::IsNotNull(jumpFrame, L"JumpRoot frame was not found.");
+
+            controller->SetTrackPosition(0, 1.0 / 30.0);
+            controller->AdvanceTime(0.0, nullptr);
+            const float startHeight = jumpFrame->TransformationMatrix._42;
+
+            controller->SetTrackPosition(0, 16.0 / 30.0);
+            controller->AdvanceTime(0.0, nullptr);
+            const float peakHeight = jumpFrame->TransformationMatrix._42;
+
+            controller->SetTrackPosition(0, 31.0 / 30.0);
+            controller->AdvanceTime(0.0, nullptr);
+            const float endHeight = jumpFrame->TransformationMatrix._42;
+
+            Assert::AreEqual(0.5f, startHeight, 0.001f);
+            Assert::AreEqual(2.0f, peakHeight, 0.001f);
+            Assert::AreEqual(0.5f, endHeight, 0.001f);
+
+            controller->Release();
+            controller = nullptr;
+            NSRender::CustomXLoader2::DestroyCustomXFrameHierarchyWithAllocator(frameRoot, allocator);
+        }
+
 
         TEST_METHOD(LoadWolfMeshFrameHierarchy)
         {

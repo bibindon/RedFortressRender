@@ -34,7 +34,7 @@
 #include "MeshMix2.h"
 #include "MeshPBRManager.h"
 #include "MeshMixSkinAnim2.h"
-#include "MeshMixAnimNoBone.h"
+#include "MeshMixAnimNoBone2.h"
 #include "MeshSSS.h"
 #include "MeshPOM.h"
 
@@ -128,7 +128,7 @@ enum class RenderLoadedModelType
     MeshPBR,
     MeshInstancing2,
     MeshMixSkinAnim2,
-    MeshMixAnimNoBone
+    MeshMixAnimNoBone2
 };
 
 struct RenderLoadedModelInfo
@@ -371,18 +371,16 @@ public:
     bool IsMeshMixSkinAnimEnabled(int id) const;
     std::vector<RenderLoadedModelInfo> GetLoadedModelInfoList();
 
-    int AddMeshMixAnimNoBone(const std::wstring& filePath,
+    int AddMeshMixAnimNoBone2(const std::wstring& filePath,
                              const D3DXVECTOR3& pos,
                              const D3DXVECTOR3& rot,
                              const float scale,
-                             const AnimSetMap& animSetMap = AnimSetMap(),
-                             const float radius = -1.f,
-                             const MeshMixSkinAnimLoadMode loadMode = MeshMixSkinAnimLoadMode::DirectX);
-    bool RemoveMeshMixAnimNoBone(int id);
-    void SetMeshMixAnimNoBonePos(const int id, const D3DXVECTOR3& pos);
-    void SetMeshMixAnimNoBoneRotY(const int id, const float rotY);
-    void SetMeshMixAnimNoBoneScale(const int id, const float scale);
-    void SetMeshMixAnimNoBoneEnabled(int id, bool enabled);
+                             const AnimSetMap& animSetMap = AnimSetMap());
+    bool RemoveMeshMixAnimNoBone2(int id);
+    void SetMeshMixAnimNoBone2Pos(const int id, const D3DXVECTOR3& pos);
+    void SetMeshMixAnimNoBone2RotY(const int id, const float rotY);
+    void SetMeshMixAnimNoBone2Scale(const int id, const float scale);
+    void SetMeshMixAnimNoBone2Enabled(int id, bool enabled);
 
     bool LoadXFileListMoveFromCsv(const std::wstring& csvPath,
                                   int* loadedCount = nullptr,
@@ -935,7 +933,7 @@ private:
     std::vector<AnimMesh*> m_animMeshList;
     std::vector<SkinAnimMesh*> m_skinAnimMeshList;
     std::vector<IMeshMixSkinAnim*> m_meshMixSkinAnimList;
-    std::vector<MeshMixAnimNoBone*> m_meshMixAnimNoBoneList;
+    std::vector<MeshMixAnimNoBone2*> m_meshMixAnimNoBone2List;
     std::deque<MeshSmooth> m_meshSmoothList;
     std::deque<MeshSSSLike> m_meshSSSLikeList;
     std::deque<MeshSSS> m_meshSSSList;
