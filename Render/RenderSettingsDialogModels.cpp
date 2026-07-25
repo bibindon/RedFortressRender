@@ -25,7 +25,7 @@ const wchar_t* LoadedModelTypeToText(const RenderSettingsDialogState::LoadedMode
     case RenderSettingsDialogState::LoadedModelType::MeshMixSkinAnim2:
         return L"MeshMixSkinAnim2";
     case RenderSettingsDialogState::LoadedModelType::MeshMixAnimNoBone2:
-        return L"AnimNoBone";
+        return L"AnimNoBone2";
     default:
         return L"Model";
     }

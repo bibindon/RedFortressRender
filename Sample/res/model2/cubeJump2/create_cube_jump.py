@@ -5,6 +5,10 @@ from pathlib import Path
 output_directory = Path(__file__).resolve().parent
 blend_path = output_directory / "cube_jump_blender_5_1_2.blend"
 x_path = output_directory / "cube_jump_blender_5_1_2.x"
+texture_path = output_directory / "cube_jump_texture.png"
+
+if not texture_path.exists():
+    raise RuntimeError(f"Texture file does not exist: {texture_path}")
 
 bpy.ops.object.select_all(action="SELECT")
 bpy.ops.object.delete(use_global=False)
@@ -19,6 +23,18 @@ material = bpy.data.materials.new(name="JumpCubeBlue")
 material.diffuse_color = (0.12, 0.42, 0.95, 1.0)
 material.specular_intensity = 0.35
 material.roughness = 0.4
+material.use_nodes = True
+material.node_tree.nodes.clear()
+output_node = material.node_tree.nodes.new("ShaderNodeOutputMaterial")
+shader_node = material.node_tree.nodes.new("ShaderNodeBsdfPrincipled")
+texture_node = material.node_tree.nodes.new("ShaderNodeTexImage")
+texture_image = bpy.data.images.load(str(texture_path), check_existing=True)
+texture_image.filepath = "//cube_jump_texture.png"
+texture_node.image = texture_image
+texture_node.extension = "REPEAT"
+material.node_tree.links.new(texture_node.outputs["Color"], shader_node.inputs["Base Color"])
+material.node_tree.links.new(texture_node.outputs["Alpha"], shader_node.inputs["Alpha"])
+material.node_tree.links.new(shader_node.outputs["BSDF"], output_node.inputs["Surface"])
 cube.data.materials.append(material)
 
 bpy.ops.object.armature_add(enter_editmode=True, location=(0.0, 0.0, 0.0))
@@ -53,6 +69,7 @@ if armature.animation_data is not None and armature.animation_data.action is not
     armature.animation_data.action.name = "Jump"
 
 bpy.context.scene.frame_set(1)
+bpy.context.preferences.filepaths.save_version = 0
 bpy.ops.wm.save_as_mainfile(filepath=str(blend_path))
 
 bpy.ops.object.select_all(action="DESELECT")
@@ -71,7 +88,7 @@ bpy.ops.export_scene.directx_x(
     export_normals=True,
     export_uvs=True,
     export_materials=True,
-    export_textures=False,
+    export_textures=True,
     export_armature=True,
     export_weights=True,
     export_animation=True,

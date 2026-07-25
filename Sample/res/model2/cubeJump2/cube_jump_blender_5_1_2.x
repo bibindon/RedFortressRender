@@ -8,6 +8,7 @@ Material JumpCubeBlue {
 	 11.313708;
 	 0.500000; 0.500000; 0.500000;;
 	 0.000000; 0.000000; 0.000000;;
+	TextureFileName {"cube_jump_texture.png";}
 }
 Frame JumpRoot {
 	FrameTransformMatrix {
