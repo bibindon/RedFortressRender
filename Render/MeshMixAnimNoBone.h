@@ -8,8 +8,8 @@
 #include <atomic>
 #include <thread>
 
-#include "MeshMix.h"
-#include "MeshMixSkinAnim.h"
+#include "MeshParam.h"
+#include "MeshMixSkinAnimCommon.h"
 #include "Common.h"
 #include "AnimController.h"
 #include "MeshMixAnimNoBoneAlloc.h"

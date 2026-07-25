@@ -22,18 +22,15 @@ struct RenderSettingsDialogState
 {
     enum class LoadedModelType
     {
-        MeshMix,
         MeshMix2,
         MeshPBR,
-        MeshInstancing,
         MeshInstancing2,
-        MeshMixSkinAnim,
         MeshMixSkinAnim2,
         MeshMixAnimNoBone
     };
     struct LoadedModelRecord
     {
-        LoadedModelType type = LoadedModelType::MeshMix;
+        LoadedModelType type = LoadedModelType::MeshMix2;
         int renderId = -1;
         std::wstring filePath;
         float scale = 1.0f;
@@ -72,8 +69,6 @@ struct RenderSettingsDialogState
     std::wstring meshMixSkinAnimPath;
     std::wstring meshMixSkinNonAnimPath;
     std::wstring meshMixSkinAnimOnlyPath;
-    bool useCustomMeshMixSkinAnimLoader = true;
-    bool useMeshMixSkinAnim2 = true;
     std::wstring xFileListPath;
     std::wstring xFileListMovePath;
     std::wstring maskedGaussianMaskPath;

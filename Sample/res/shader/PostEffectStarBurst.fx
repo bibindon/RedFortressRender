@@ -119,7 +119,7 @@ float4 BrightPassPS(float2 uv : TEXCOORD0) : COLOR
 {
     const float4 c = tex2D(SrcSampler, uv);
     const float lum = dot(c.rgb, float3(0.299f, 0.587f, 0.114f));
-    const float depth = tex2D(ZSampler, uv).r;
+    const float depth = tex2D(ZSampler, uv).g;
     const float distanceFade = saturate(1.0f - depth * g_DistanceFadeStrength);
     if (lum > g_Threshold)
     {

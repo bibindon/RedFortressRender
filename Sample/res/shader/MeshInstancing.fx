@@ -1,4 +1,11 @@
 float4x4 g_matWorldViewProj;
+float4x4 g_gBufferView;
+float g_gBufferNear = 0.1f;
+float g_gBufferFar = 30000.0f;
+float g_gBufferFogNear = 0.1f;
+float g_gBufferFogFar = 30000.0f;
+float g_gBufferPositionRange = 30000.0f;
+bool g_gBufferShadowReceiverEnabled = false;
 float4 g_lightDir = { 0.3f, 1.0f, 0.5f, 0.0f };
 float4 g_lightColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 float4 g_ambient = { 0.2f, 0.2f, 0.2f, 1.0f };
@@ -25,7 +32,9 @@ void VertexShader1(in  float4 inPosition  : POSITION,
 
                    out float4 outPosition : POSITION,
                    out float4 outDiffuse  : COLOR0,
-                   out float4 outTexCood  : TEXCOORD0)
+                   out float4 outTexCood  : TEXCOORD0,
+                   out float3 outWorldPos : TEXCOORD1,
+                   out float3 outWorldNormal : TEXCOORD2)
 {
     float scale = inInstanceScale.x;
     float rotationY = inInstancePosRot.w;
@@ -72,6 +81,33 @@ void VertexShader1(in  float4 inPosition  : POSITION,
     outDiffuse.a = 1.0f;
 
     outTexCood = inTexCood;
+    outWorldPos = worldPos;
+    outWorldNormal = normalize(rotatedNormal);
+}
+
+void WriteIntegratedGBuffer(float3 worldPos,
+                            float3 worldNormal,
+                            out float4 outDepth,
+                            out float4 outPosition,
+                            out float4 outNormal)
+{
+    float viewSpaceZ = mul(float4(worldPos, 1.0f), g_gBufferView).z;
+    float linearDepth = saturate((viewSpaceZ - g_gBufferNear) /
+                                 max(g_gBufferFar - g_gBufferNear, 0.0001f));
+    float fogLinearDepth = saturate((viewSpaceZ - g_gBufferFogNear) /
+                                    max(g_gBufferFogFar - g_gBufferFogNear, 0.0001f));
+    outDepth = float4(linearDepth, fogLinearDepth, 0.0f, 1.0f);
+
+    float3 world01 = saturate((worldPos / g_gBufferPositionRange) * 0.5f + 0.5f);
+    outPosition = float4(world01, 1.0f);
+
+    float shadowReceiverMask = 0.0f;
+    if (g_gBufferShadowReceiverEnabled)
+    {
+        shadowReceiverMask = 1.0f;
+    }
+    outNormal = float4(saturate(normalize(worldNormal) * 0.5f + 0.5f),
+                       shadowReceiverMask);
 }
 
 float Bayer4x4Threshold(float2 screenPos)
@@ -114,27 +150,47 @@ float Bayer4x4Threshold(float2 screenPos)
 void PixelShaderNormal(in float2 inScreenPos   : VPOS,
                        in float4 inScreenColor : COLOR0,
                        in float2 inTexCood     : TEXCOORD0,
+                       in float3 inWorldPos    : TEXCOORD1,
+                       in float3 inWorldNormal : TEXCOORD2,
 
-                       out float4 outColor     : COLOR)
+                       out float4 outColor     : COLOR0,
+                       out float4 outDepth     : COLOR1,
+                       out float4 outPosition  : COLOR2,
+                       out float4 outNormal    : COLOR3)
 {
     float4 workColor = (float4)0;
     workColor = tex2D(textureSampler, inTexCood);
     clip(workColor.a - 0.5f);
     outColor.rgb = inScreenColor.rgb * workColor.rgb;
     outColor.a = 1.0f;
+    WriteIntegratedGBuffer(inWorldPos,
+                           inWorldNormal,
+                           outDepth,
+                           outPosition,
+                           outNormal);
 }
 
 void PixelShaderHighQuality(in float2 inScreenPos   : VPOS,
                             in float4 inScreenColor : COLOR0,
                             in float2 inTexCood     : TEXCOORD0,
+                            in float3 inWorldPos    : TEXCOORD1,
+                            in float3 inWorldNormal : TEXCOORD2,
 
-                            out float4 outColor     : COLOR)
+                            out float4 outColor     : COLOR0,
+                            out float4 outDepth     : COLOR1,
+                            out float4 outPosition  : COLOR2,
+                            out float4 outNormal    : COLOR3)
 {
     float4 workColor = (float4)0;
     workColor = tex2D(textureSampler, inTexCood);
     clip(workColor.a - (1.0f / 255.0f));
     outColor.rgb = inScreenColor.rgb * workColor.rgb;
     outColor.a = workColor.a;
+    WriteIntegratedGBuffer(inWorldPos,
+                           inWorldNormal,
+                           outDepth,
+                           outPosition,
+                           outNormal);
 }
 
 technique TechniqueNormal
@@ -144,6 +200,9 @@ technique TechniqueNormal
       AlphaBlendEnable = FALSE;
       AlphaTestEnable = FALSE;
       CullMode = NONE;
+      ColorWriteEnable1 = 0;
+      ColorWriteEnable2 = 0;
+      ColorWriteEnable3 = 0;
       VertexShader = compile vs_3_0 VertexShader1();
       PixelShader = compile ps_3_0 PixelShaderNormal();
    }
@@ -158,6 +217,41 @@ technique TechniqueHighQuality
       DestBlend = INVSRCALPHA;
       AlphaTestEnable = FALSE;
       CullMode = NONE;
+      ColorWriteEnable1 = 0;
+      ColorWriteEnable2 = 0;
+      ColorWriteEnable3 = 0;
+      VertexShader = compile vs_3_0 VertexShader1();
+      PixelShader = compile ps_3_0 PixelShaderHighQuality();
+   }
+}
+
+technique TechniqueNormalIntegrated
+{
+   pass Pass1
+   {
+      AlphaBlendEnable = FALSE;
+      AlphaTestEnable = FALSE;
+      CullMode = NONE;
+      ColorWriteEnable1 = 15;
+      ColorWriteEnable2 = 15;
+      ColorWriteEnable3 = 15;
+      VertexShader = compile vs_3_0 VertexShader1();
+      PixelShader = compile ps_3_0 PixelShaderNormal();
+   }
+}
+
+technique TechniqueHighQualityIntegrated
+{
+   pass Pass1
+   {
+      AlphaBlendEnable = TRUE;
+      SrcBlend = SRCALPHA;
+      DestBlend = INVSRCALPHA;
+      AlphaTestEnable = FALSE;
+      CullMode = NONE;
+      ColorWriteEnable1 = 15;
+      ColorWriteEnable2 = 15;
+      ColorWriteEnable3 = 15;
       VertexShader = compile vs_3_0 VertexShader1();
       PixelShader = compile ps_3_0 PixelShaderHighQuality();
    }

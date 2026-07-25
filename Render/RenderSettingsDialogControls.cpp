@@ -502,9 +502,6 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     CreateSettingsCheckbox(hWnd, 31302, L"Clip", 476, y, 52, 22);
     CreateSettingsCheckbox(hWnd, 31303, L"NoAlpha0", 534, y, 76, 22);
     y += 28;
-    CreateSettingsCheckbox(hWnd, 31304, L"Use Custom X Loader", 24, y, 170, 22);
-    CreateSettingsCheckbox(hWnd, 31305, L"Use SkinAnim2", 206, y, 132, 22);
-    y += 28;
     CreateSettingsButton(hWnd, L"Load Move...", 24, y, 116, 24, 31333);
     CreateSettingsButton(hWnd, L"Reset Move", 148, y, 88, 24, 31334);
     y += 28;
@@ -623,7 +620,6 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     SendMessage(zTexSizeCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1/16"));
     SendMessage(zTexSizeCombo, CB_SETCURSEL, 0, 0);
     CreateSettingsCheckbox(hWnd, 31613, L"Show Light Depth", 24, zY + 28, 150, 22);
-    CreateSettingsCheckbox(hWnd, 31614, L"MeshMixManager Receives Shadow", 180, zY + 28, 280, 22);
     CreateSettingsCheckbox(hWnd, 31615, L"Far Shadow Cascade", 24, zY + 50, 180, 22);
     y += 210;
     CreateSettingsGroupBox(hWnd, L"SSGI", 8, y, 504, 104);

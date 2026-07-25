@@ -3,6 +3,13 @@ float4x4 g_matWorld;
 float4x4 g_matViewProj;
 float4x4 g_matWorldViewProj;
 float4x4 g_matMirrorViewProj;
+float4x4 g_gBufferView;
+float g_gBufferNear = 0.1f;
+float g_gBufferFar = 30000.0f;
+float g_gBufferFogNear = 0.1f;
+float g_gBufferFogFar = 30000.0f;
+float g_gBufferPositionRange = 30000.0f;
+bool g_gBufferShadowReceiverEnabled = false;
 
 float4 g_lightDir = { 0.3f, 1.0f, 0.5f, 0.0f };
 float4 g_lightPos = { -5.f, 7.f, -10.f, 0.0f };
@@ -387,6 +394,31 @@ float3 SampleMirrorColor(float3 worldPos)
     return tex2D(g_mirrorSampler, mirrorUV).rgb;
 }
 
+void WriteIntegratedGBuffer(float3 worldPos,
+                            float3 worldNormal,
+                            out float4 outDepth,
+                            out float4 outPosition,
+                            out float4 outNormal)
+{
+    float viewSpaceZ = mul(float4(worldPos, 1.0f), g_gBufferView).z;
+    float linearDepth = saturate((viewSpaceZ - g_gBufferNear) /
+                                 max(g_gBufferFar - g_gBufferNear, 0.0001f));
+    float fogLinearDepth = saturate((viewSpaceZ - g_gBufferFogNear) /
+                                    max(g_gBufferFogFar - g_gBufferFogNear, 0.0001f));
+    outDepth = float4(linearDepth, fogLinearDepth, 0.0f, 1.0f);
+
+    float3 world01 = saturate((worldPos / g_gBufferPositionRange) * 0.5f + 0.5f);
+    outPosition = float4(world01, 1.0f);
+
+    float shadowReceiverMask = 0.0f;
+    if (g_gBufferShadowReceiverEnabled)
+    {
+        shadowReceiverMask = 1.0f;
+    }
+    outNormal = float4(saturate(normalize(worldNormal) * 0.5f + 0.5f),
+                       shadowReceiverMask);
+}
+
 //---------------------------------------------------------
 // 頂点シェーダー
 // 視差マッピングは「1パス目では実施せず、2パス目で実装する」というようなことはできない
@@ -509,12 +541,17 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
                   in float3 invViewTS     : TEXCOORD7,
                   in float2 invParallaxOffsetTS  : TEXCOORD8,
 
-                  out float4 outColor     : COLOR)
+                  out float4 outColor     : COLOR0,
+                  out float4 outDepth     : COLOR1,
+                  out float4 outPosition  : COLOR2,
+                  out float4 outNormal    : COLOR3,
+                  uniform int pointLightCount)
 {
     ApplyMirrorClip(inPosWorld);
 
     // 正規化はピクセルシェーダーでやらないといけない
     float3 normal = normalize(inNormalWorld);
+    WriteIntegratedGBuffer(inPosWorld, normal, outDepth, outPosition, outNormal);
     float3 lightDir = normalize(g_lightDir.xyz);
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float3 halfVector = normalize(lightDir + cameraDir);
@@ -653,7 +690,40 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
         finalColor += sssColor * sssBlend;
     }
 
-    outColor = saturate(float4(finalColor, surfaceAlpha));
+    float3 pointLightDiffuse = 0.0f;
+    float3 pointLightSpecular = 0.0f;
+    for (int pointLightIndex = 0; pointLightIndex < pointLightCount; ++pointLightIndex)
+    {
+        if (g_pointLightBrightness[pointLightIndex] <= 0.0f)
+        {
+            continue;
+        }
+
+        float3 lightSurfacePos = ClosestPointOnPointLightShape(g_pointLightPos[pointLightIndex],
+                                                               g_pointLightShape[pointLightIndex],
+                                                               g_pointLightLineLength[pointLightIndex],
+                                                               g_pointLightSquareWidth[pointLightIndex],
+                                                               g_pointLightSquareHeight[pointLightIndex],
+                                                               g_pointLightRotation[pointLightIndex].xyz,
+                                                               inPosWorld);
+        float3 sampleDiffuse = 0.0f;
+        float3 sampleSpecular = 0.0f;
+        AccumulateSingleLightSample(lightSurfacePos,
+                                    g_pointLightBrightness[pointLightIndex],
+                                    g_pointLightColor[pointLightIndex],
+                                    inPosWorld,
+                                    shadingNormal,
+                                    cameraDir,
+                                    sampleDiffuse,
+                                    sampleSpecular);
+        pointLightDiffuse += sampleDiffuse;
+        pointLightSpecular += sampleSpecular;
+    }
+
+    float3 baseColor = saturate(finalColor);
+    float3 pointLightColor = (albedo * pointLightDiffuse) + pointLightSpecular;
+    outColor = float4(baseColor + pointLightColor, saturate(surfaceAlpha));
+    WriteIntegratedGBuffer(inPosWorld, shadingNormal, outDepth, outPosition, outNormal);
 
     if (false)
     {
@@ -844,13 +914,17 @@ void PixelShaderEmit(in  float4 inPosition     : POSITION,
                      in  float3 invLightTS     : TEXCOORD6,
                      in  float3 invViewTS      : TEXCOORD7,
                      in  float2 invParallaxOffsetTS  : TEXCOORD8,
-                     out float4 outColor       : COLOR)
+                     out float4 outColor       : COLOR0,
+                     out float4 outDepth       : COLOR1,
+                     out float4 outPosition    : COLOR2,
+                     out float4 outNormal      : COLOR3)
 {
     ApplyMirrorClip(inPosWorld);
 
     ApplyAlphaCutout(inTexCoord);
     float3 albedo = SampleBaseTextureColor(inTexCoord) * g_diffuse.rgb;
     float3 normal = normalize(inNormalWorld);
+    WriteIntegratedGBuffer(inPosWorld, normal, outDepth, outPosition, outNormal);
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float fresnel = g_fresnelEnable ? (CalcFresnelFactor(normal, cameraDir) * g_fresnelIntensity) : 0.0f;
     outColor = float4((albedo * g_emitColor.rgb * g_emitIntensity) + (g_specularColor.xyz * fresnel), 1.0f);
@@ -876,7 +950,10 @@ void VertexShaderMirror(in  float4 inPosition   : POSITION,
 void PixelShaderMirror(in float4 inMirrorProj : TEXCOORD0,
                        in float3 inPosWorld   : TEXCOORD1,
                        in float3 inNormalWorld : TEXCOORD2,
-                       out float4 outColor    : COLOR)
+                       out float4 outColor    : COLOR0,
+                       out float4 outDepth    : COLOR1,
+                       out float4 outPosition : COLOR2,
+                       out float4 outNormal   : COLOR3)
 {
     float2 uv;
     uv.x = inMirrorProj.x / inMirrorProj.w * 0.5f + 0.5f;
@@ -884,6 +961,7 @@ void PixelShaderMirror(in float4 inMirrorProj : TEXCOORD0,
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float fresnel = g_fresnelEnable ? (CalcFresnelFactor(inNormalWorld, cameraDir) * g_fresnelIntensity) : 0.0f;
     float4 mirrorColor = tex2D(g_mirrorSampler, uv);
+    WriteIntegratedGBuffer(inPosWorld, inNormalWorld, outDepth, outPosition, outNormal);
     float mirrorBrightness = saturate(0.8f + fresnel);
     outColor = saturate(float4((mirrorColor.rgb * mirrorBrightness) + fresnel.xxx, mirrorColor.a * mirrorBrightness));
 }
@@ -937,13 +1015,27 @@ float2 CalcUVCoordWithPOM(float3 inNormalizedNormalWS,
     return inTexCoord;
 }
 
+PixelShader pixelShaderPointLightVariants[4] =
+{
+    compile ps_3_0 PixelShader1(0),
+    compile ps_3_0 PixelShader1(4),
+    compile ps_3_0 PixelShader1(8),
+    compile ps_3_0 PixelShader1(16)
+};
+int g_currentPointLightShaderIndex = 0;
+
 technique Technique1
 {
     pass Pass1
     {
-        CullMode = NONE;
+        CullMode        = NONE;
+        ZEnable         = TRUE;
+        ZWriteEnable    = TRUE;
+        AlphaBlendEnable = FALSE;
+        SrcBlend        = ONE;
+        DestBlend       = ZERO;
         VertexShader = compile vs_3_0 VertexShader1();
-        PixelShader = compile ps_3_0 PixelShader1();
+        PixelShader = (pixelShaderPointLightVariants[g_currentPointLightShaderIndex]);
     }
 
     pass PassCubeMapping
@@ -952,6 +1044,8 @@ technique Technique1
         AlphaBlendEnable = TRUE;
         SrcBlend = SRCALPHA;
         DestBlend = INVSRCALPHA;
+        ZEnable = TRUE;
+        ZWriteEnable = TRUE;
 
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShaderCubeMapping();
@@ -963,25 +1057,21 @@ technique Technique1
         AlphaBlendEnable = TRUE;
         SrcBlend = SRCALPHA;
         DestBlend = INVSRCALPHA;
+        ZEnable = TRUE;
+        ZWriteEnable = TRUE;
 
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShaderGlass();
     }
 
-    pass PassPointLight
-    {
-        CullMode = NONE;
-        AlphaBlendEnable = TRUE;
-        SrcBlend = ONE;
-        DestBlend = ONE;
-
-        VertexShader = compile vs_3_0 VertexShader1();
-        PixelShader = compile ps_3_0 PixelShaderPointLight();
-    }
-
     pass PassEmit
     {
         CullMode = NONE;
+        ZEnable = TRUE;
+        ZWriteEnable = TRUE;
+        AlphaBlendEnable = FALSE;
+        SrcBlend = ONE;
+        DestBlend = ZERO;
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = compile ps_3_0 PixelShaderEmit();
     }
@@ -989,6 +1079,11 @@ technique Technique1
     pass PassMirror
     {
         CullMode = NONE;
+        ZEnable = TRUE;
+        ZWriteEnable = TRUE;
+        AlphaBlendEnable = FALSE;
+        SrcBlend = ONE;
+        DestBlend = ZERO;
         VertexShader = compile vs_3_0 VertexShaderMirror();
         PixelShader = compile ps_3_0 PixelShaderMirror();
     }
@@ -999,9 +1094,13 @@ technique Technique1
         AlphaBlendEnable = TRUE;
         SrcBlend = SRCALPHA;
         DestBlend = INVSRCALPHA;
+        ZEnable = TRUE;
         ZWriteEnable = FALSE;
+        ColorWriteEnable1 = 0;
+        ColorWriteEnable2 = 0;
+        ColorWriteEnable3 = 0;
         VertexShader = compile vs_3_0 VertexShader1();
-        PixelShader = compile ps_3_0 PixelShader1();
+        PixelShader = (pixelShaderPointLightVariants[g_currentPointLightShaderIndex]);
     }
 
 }

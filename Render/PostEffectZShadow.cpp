@@ -3,11 +3,10 @@
 #include <stdexcept>
 
 #include "Camera.h"
-#include "MeshInstancing.h"
 #include "MeshInstancing2.h"
 #include "MeshMixAnimNoBone.h"
 #include "MeshMix2.h"
-#include "MeshMixSkinAnim.h"
+#include "MeshMixSkinAnimCommon.h"
 
 #include "Util.h"
 
@@ -32,28 +31,6 @@ constexpr int SHADOW_LIGHT_Z_SIZE_MIN = 512;
 constexpr int SHADOW_LIGHT_Z_SIZE_MAX = 2048;
 constexpr int SHADOW_LIGHT_Z_SIZE_ALIGNMENT = 64;
 const D3DXVECTOR3 SHADOW_CAMERA_OFFSET(40.0f, 50.0f, -40.0f);
-
-D3DXMATRIX BuildMeshWorldMatrix(const MeshMixManager& mesh)
-{
-    D3DXMATRIX matWorld{};
-    D3DXMatrixIdentity(&matWorld);
-
-    D3DXMATRIX matWork{};
-    D3DXMatrixIdentity(&matWork);
-
-    D3DXMatrixScaling(&matWork, mesh.GetScale(), mesh.GetScale(), mesh.GetScale());
-    matWorld *= matWork;
-
-    const D3DXVECTOR3 rotation = mesh.GetRot();
-    D3DXMatrixRotationYawPitchRoll(&matWork, rotation.y, rotation.x, rotation.z);
-    matWorld *= matWork;
-
-    const D3DXVECTOR3 position = mesh.GetPos();
-    D3DXMatrixTranslation(&matWork, position.x, position.y, position.z);
-    matWorld *= matWork;
-
-    return matWorld;
-}
 
 float ClampZeroToOne(const float value)
 {
@@ -254,20 +231,16 @@ void PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                              LPDIRECT3DTEXTURE9 sceneNormalTexture,
                              const float sceneDepthNear,
                              const float sceneDepthFar,
-                             const std::deque<MeshMixManager>& meshMixList,
-                              const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
+                             const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
                               const std::vector<MeshMixAnimNoBone*>& meshMixAnimNoBoneList,
                               const std::vector<MeshMix2*>& meshMix2List,
-                              const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap,
                               const std::unordered_map<std::wstring, MeshInstancing2*>& meshInstancing2Map)
 {
     g_texTemp = renderTarget;
     m_texCompositeTarget = texTarget;
-    m_pMeshList = &meshMixList;
     m_pSkinAnimMeshList = &meshMixSkinAnimList;
     m_pMeshMixAnimNoBoneList = &meshMixAnimNoBoneList;
     m_pMeshMix2List = &meshMix2List;
-    m_pMeshInstancingMap = &meshInstancingMap;
     m_pMeshInstancing2Map = &meshInstancing2Map;
     m_sceneDepthTexture = sceneDepthTexture;
     m_receiverDepthTexture = receiverDepthTexture;
@@ -282,11 +255,9 @@ void PostEffectZShadow::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     }
     RenderTechnique3Direct();
 
-    m_pMeshList = nullptr;
     m_pSkinAnimMeshList = nullptr;
     m_pMeshMixAnimNoBoneList = nullptr;
     m_pMeshMix2List = nullptr;
-    m_pMeshInstancingMap = nullptr;
     m_pMeshInstancing2Map = nullptr;
     m_sceneDepthTexture = NULL;
     m_receiverDepthTexture = NULL;
@@ -398,70 +369,6 @@ void PostEffectZShadow::RenderTechnique1(const int cascadeIndex)
 
     g_fxDepthBufferShadow->Begin(NULL, 0);
     g_fxDepthBufferShadow->BeginPass(0);
-
-    for (auto& mesh : *m_pMeshList)
-    {
-        if (!mesh.IsEnabled())
-        {
-            continue;
-        }
-
-        if (!mesh.IsLoaded())
-        {
-            continue;
-        }
-
-        if (!mesh.IsDepthBufferShadowEnabled())
-        {
-            continue;
-        }
-
-        D3DXMATRIX mWorld = BuildMeshWorldMatrix(mesh);
-        D3DXMATRIX mWorldViewProjLight;
-
-        mWorldViewProjLight = mWorld * mLightView[cascadeIndex] * mLightProj[cascadeIndex];
-        
-        hr = g_fxDepthBufferShadow->SetMatrix("g_matWorld", &mWorld);
-        assert(hr == S_OK);
-
-        hr = g_fxDepthBufferShadow->SetMatrix("g_matWorldViewProj", &mWorldViewProjLight);
-        assert(hr == S_OK);
-
-        hr = g_fxDepthBufferShadow->CommitChanges();
-        assert(hr == S_OK);
-
-        // subset ごとに描画
-        LPD3DXMESH d3dMesh = mesh.GetD3DMesh();
-        DWORD subsetCount = 1;
-        if (mesh.GetSubsetCount() > 0)
-        {
-            subsetCount = mesh.GetSubsetCount();
-        }
-        for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
-        {
-            BOOL useAlphaCutout = FALSE;
-            if (mesh.IsAlphaCutoutSubset(subsetIndex))
-            {
-                useAlphaCutout = TRUE;
-            }
-            hr = g_fxDepthBufferShadow->SetBool("g_useMeshAlphaCutout", useAlphaCutout);
-            assert(hr == S_OK);
-
-            LPDIRECT3DBASETEXTURE9 alphaTexture = nullptr;
-            if (useAlphaCutout)
-            {
-                alphaTexture = mesh.GetSubsetTextureForShadow(subsetIndex);
-            }
-
-            hr = g_fxDepthBufferShadow->SetTexture("g_texMeshAlpha", alphaTexture);
-            assert(hr == S_OK);
-
-            hr = g_fxDepthBufferShadow->CommitChanges();
-            assert(hr == S_OK);
-
-            d3dMesh->DrawSubset(subsetIndex);
-        }
-    }
 
     g_fxDepthBufferShadow->EndPass();
     g_fxDepthBufferShadow->End();
@@ -753,30 +660,6 @@ void PostEffectZShadow::RenderTechnique2(const int cascadeIndex)
 
     D3DXMATRIX mViewProj = mView * mProj;
 
-    if (m_pMeshInstancingMap != nullptr)
-    {
-        DWORD oldColorWriteEnable = 0;
-        hr = Common::D3DDevice()->GetRenderState(D3DRS_COLORWRITEENABLE, &oldColorWriteEnable);
-        assert(hr == S_OK);
-
-        hr = Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE, 0);
-        assert(hr == S_OK);
-
-        const float alphaClipThreshold = 0.5f;
-        for (const auto& meshEntry : *m_pMeshInstancingMap)
-        {
-            if (meshEntry.second != nullptr)
-            {
-                meshEntry.second->RenderToShadowOccluderEffect(g_fxDepthBufferShadow,
-                                                               "TechniqueShadowOccluderInstancing",
-                                                               alphaClipThreshold);
-            }
-        }
-
-        hr = Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE, oldColorWriteEnable);
-        assert(hr == S_OK);
-    }
-
     if (m_pMeshInstancing2Map != nullptr)
     {
         DWORD oldColorWriteEnable = 0;
@@ -855,104 +738,6 @@ void PostEffectZShadow::RenderTechnique2(const int cascadeIndex)
         }
 
         hr = Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE, oldColorWriteEnable);
-        assert(hr == S_OK);
-    }
-
-    DWORD meshMixManagerOldColorWriteEnable = 0;
-    if (!m_meshMixManagerReceiverEnabled)
-    {
-        hr = Common::D3DDevice()->GetRenderState(D3DRS_COLORWRITEENABLE,
-                                                 &meshMixManagerOldColorWriteEnable);
-        assert(hr == S_OK);
-
-        hr = Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE, 0);
-        assert(hr == S_OK);
-    }
-
-    hr = g_fxDepthBufferShadow->SetTechnique(GetWriteShadowTechniqueName());
-    assert(hr == S_OK);
-
-    UINT nPassNum = 0;
-
-    hr = g_fxDepthBufferShadow->Begin(&nPassNum, 0);
-    assert(hr == S_OK);
-
-    hr = g_fxDepthBufferShadow->BeginPass(0);
-    assert(hr == S_OK);
-
-    for (auto& mesh : *m_pMeshList)
-    {
-        if (!mesh.IsEnabled())
-        {
-            continue;
-        }
-
-        if (!mesh.IsLoaded())
-        {
-            continue;
-        }
-
-        if (!mesh.IsDepthBufferShadowEnabled())
-        {
-            continue;
-        }
-
-        D3DXMATRIX mWorld = BuildMeshWorldMatrix(mesh);
-
-        D3DXMATRIX mWorldViewProj;
-        mWorldViewProj = mWorld * mView * mProj;
-
-        hr = g_fxDepthBufferShadow->SetMatrix("g_matWorld", &mWorld);
-        assert(hr == S_OK);
-
-        hr = g_fxDepthBufferShadow->SetMatrix("g_matWorldViewProj", &mWorldViewProj);
-        assert(hr == S_OK);
-
-        hr = g_fxDepthBufferShadow->CommitChanges();
-        assert(hr == S_OK);
-
-        DWORD subsetCount = 1;
-        if (mesh.GetSubsetCount() > 0)
-        {
-            subsetCount = mesh.GetSubsetCount();
-        }
-        for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
-        {
-            BOOL useAlphaCutout = FALSE;
-            if (mesh.IsAlphaCutoutSubset(subsetIndex))
-            {
-                useAlphaCutout = TRUE;
-            }
-            hr = g_fxDepthBufferShadow->SetBool("g_useMeshAlphaCutout", useAlphaCutout);
-            assert(hr == S_OK);
-
-            LPDIRECT3DBASETEXTURE9 alphaTexture = nullptr;
-            if (useAlphaCutout)
-            {
-                alphaTexture = mesh.GetSubsetTextureForShadow(subsetIndex);
-            }
-
-            hr = g_fxDepthBufferShadow->SetTexture("g_texMeshAlpha", alphaTexture);
-            assert(hr == S_OK);
-
-            hr = g_fxDepthBufferShadow->CommitChanges();
-            assert(hr == S_OK);
-
-            hr = mesh.GetD3DMesh()->DrawSubset(subsetIndex);
-            assert(hr == S_OK);
-        }
-    }
-
-    hr = g_fxDepthBufferShadow->EndPass();
-    assert(hr == S_OK);
-
-    hr = g_fxDepthBufferShadow->End();
-    assert(hr == S_OK);
-
-    if (!m_meshMixManagerReceiverEnabled)
-    {
-        hr = Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE,
-                                                 meshMixManagerOldColorWriteEnable);
         assert(hr == S_OK);
     }
 
@@ -1430,11 +1215,6 @@ void PostEffectZShadow::SetShadowTextureScaleDivisor(const int scaleDivisor)
 void PostEffectZShadow::SetFarCascadeEnabled(const bool enabled)
 {
     m_farCascadeEnabled = enabled;
-}
-
-void PostEffectZShadow::SetMeshMixManagerReceiverEnabled(const bool enabled)
-{
-    m_meshMixManagerReceiverEnabled = enabled;
 }
 
 void PostEffectZShadow::OnDeviceLost()

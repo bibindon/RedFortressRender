@@ -851,6 +851,29 @@ bool MeshMix2::IsEnabled() const { return m_enabled; }
 bool MeshMix2::IsLoaded() const { return m_loaded; }
 bool MeshMix2::IsSsaoEnabled() const { return m_param.ssao; }
 bool MeshMix2::IsDepthBufferShadowEnabled() const { return m_param.shadow; }
+bool MeshMix2::IsMirror() const { return m_param.mirror || m_param.waterMirror; }
+
+bool MeshMix2::TryGetMirrorPlaneWorld(D3DXVECTOR3& planePoint, D3DXVECTOR3& planeNormal) const
+{
+    if (!m_loaded || !IsMirror())
+    {
+        return false;
+    }
+
+    const D3DXVECTOR3 localPoint(0.0f, 0.0f, 0.0f);
+    const D3DXVECTOR3 localNormal(0.0f, 1.0f, 0.0f);
+    const D3DXMATRIX worldMatrix = BuildWorldMatrix();
+    D3DXVec3TransformCoord(&planePoint, &localPoint, &worldMatrix);
+    D3DXVec3TransformNormal(&planeNormal, &localNormal, &worldMatrix);
+    if (D3DXVec3LengthSq(&planeNormal) <= 0.0f)
+    {
+        return false;
+    }
+
+    D3DXVec3Normalize(&planeNormal, &planeNormal);
+    return true;
+}
+
 std::wstring MeshMix2::GetMeshName() const { return m_meshName; }
 
 void MeshMix2::OnDeviceLost()

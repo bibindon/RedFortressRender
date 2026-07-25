@@ -8,11 +8,10 @@
 
 #include "Common.h"
 #include "Camera.h"
-#include "MeshInstancing.h"
 #include "MeshInstancing2.h"
 #include "MeshMixAnimNoBone.h"
 #include "MeshMix2.h"
-#include "MeshMixSkinAnim.h"
+#include "MeshMixSkinAnimCommon.h"
 #include "ParticleSystem.h"
 
 #include "Util.h"
@@ -270,14 +269,11 @@ void GBuffer::CreateRawResource()
     assert(hResult == S_OK);
 }
 
-void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
-                   const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
+void GBuffer::Draw(const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
                    const std::vector<MeshMixAnimNoBone*>& meshMixAnimNoBoneList,
                    const std::vector<MeshMix2*>& meshMix2List,
-                   const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap,
                    const std::unordered_map<std::wstring, MeshInstancing2*>& meshInstancing2Map,
                    ParticleSystem* particleSystem,
-                   const bool meshMixManagerShadowReceiverEnabled,
                    const bool frontBackfaceCullingEnabled,
                    const bool generateBackDepth,
                    LPDIRECT3DTEXTURE9* Z,
@@ -355,13 +351,6 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     m_fxGBuffer->SetFloat("g_fogFar", m_fogFarPlane);
     m_fxGBuffer->SetFloat("g_posRange", m_positionRange);
 
-    BOOL shadowReceiverEnabled = FALSE;
-    if (meshMixManagerShadowReceiverEnabled)
-    {
-        shadowReceiverEnabled = TRUE;
-    }
-    m_fxGBuffer->SetBool("g_shadowReceiverEnabled", shadowReceiverEnabled);
-
     const char* frontTechnique = "TechniqueGBuffer";
     const char* frontSkinTechnique = "TechniqueGBufferSkin";
     const char* frontInstancingTechnique = "TechniqueGBufferInstancing";
@@ -372,49 +361,6 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         frontSkinTechnique = "TechniqueGBufferSkinCulled";
         frontInstancingTechnique = "TechniqueGBufferInstancingCulled";
         frontParticleTechnique = "TechniqueGBufferParticleCulled";
-    }
-
-    for (auto& mesh : meshList)
-    {
-        if (!mesh.IsEnabled())
-        {
-            continue;
-        }
-
-        if (!mesh.IsLoaded())
-        {
-            continue;
-        }
-
-        if (!mesh.IsSsaoEnabled())
-        {
-            continue;
-        }
-
-        // 必要な定数の投入
-        const D3DXMATRIX matWorld = mesh.GetWorldMatrix();
-
-        m_fxGBuffer->SetMatrix("g_matWorld", &matWorld);
-        m_fxGBuffer->SetTechnique(frontTechnique);
-        m_fxGBuffer->Begin(NULL, 0);
-        m_fxGBuffer->BeginPass(0);
-
-        // subset ごとに描画
-        LPD3DXMESH d3dMesh = mesh.GetD3DMesh();
-        DWORD subsetCount = 1;
-        if (mesh.GetSubsetCount() > 0)
-        {
-            subsetCount = mesh.GetSubsetCount();
-        }
-        for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
-        {
-            d3dMesh->DrawSubset(subsetIndex);
-            ++m_lastFrameProfile.frontStaticSubsetDraws;
-        }
-        ++m_lastFrameProfile.frontObjectDraws;
-
-        m_fxGBuffer->EndPass();
-        m_fxGBuffer->End();
     }
 
     m_fxGBuffer->SetBool("g_shadowReceiverEnabled", TRUE);
@@ -435,16 +381,6 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
         if (mesh != nullptr)
         {
             mesh->RenderToEffect(m_fxGBuffer, viewProjectionMatrix);
-            ++m_lastFrameProfile.frontObjectDraws;
-        }
-    }
-
-    m_fxGBuffer->SetBool("g_shadowReceiverEnabled", FALSE);
-    for (const auto& mesh : meshInstancingMap)
-    {
-        if (mesh.second != nullptr)
-        {
-            mesh.second->RenderToGBufferEffect(m_fxGBuffer, frontInstancingTechnique);
             ++m_lastFrameProfile.frontObjectDraws;
         }
     }
@@ -512,47 +448,6 @@ void GBuffer::Draw(const std::deque<MeshMixManager>& meshList,
     Common::D3DDevice()->BeginScene();
 
     m_fxGBuffer->SetTexture("g_texFrontDepth", m_texRenderTargetZ);
-
-    for (auto& mesh : meshList)
-    {
-        if (!mesh.IsEnabled())
-        {
-            continue;
-        }
-
-        if (!mesh.IsLoaded())
-        {
-            continue;
-        }
-
-        if (!mesh.IsSsaoEnabled())
-        {
-            continue;
-        }
-
-        const D3DXMATRIX matWorld = mesh.GetWorldMatrix();
-
-        m_fxGBuffer->SetMatrix("g_matWorld", &matWorld);
-        m_fxGBuffer->SetTechnique("TechniqueGBufferBackFace");
-        m_fxGBuffer->Begin(NULL, 0);
-        m_fxGBuffer->BeginPass(0);
-
-        LPD3DXMESH d3dMesh = mesh.GetD3DMesh();
-        DWORD subsetCount = 1;
-        if (mesh.GetSubsetCount() > 0)
-        {
-            subsetCount = mesh.GetSubsetCount();
-        }
-        for (DWORD subsetIndex = 0; subsetIndex < subsetCount; ++subsetIndex)
-        {
-            d3dMesh->DrawSubset(subsetIndex);
-            ++m_lastFrameProfile.thicknessStaticSubsetDraws;
-        }
-        ++m_lastFrameProfile.thicknessObjectDraws;
-
-        m_fxGBuffer->EndPass();
-        m_fxGBuffer->End();
-    }
 
     m_fxGBuffer->SetTechnique("TechniqueGBufferSkinBackFace");
     for (auto& mesh : meshMixSkinAnimList)

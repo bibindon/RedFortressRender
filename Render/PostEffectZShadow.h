@@ -1,14 +1,11 @@
 ﻿#pragma once
 
-#include <deque>
 #include <unordered_map>
 #include <vector>
 #include "Common.h"
-#include "MeshMixManager.h"
 
 namespace NSRender
 {
-class MeshInstancing;
 class MeshInstancing2;
 class MeshMixAnimNoBone;
 class MeshMix2;
@@ -29,11 +26,9 @@ public:
               LPDIRECT3DTEXTURE9 sceneNormalTexture,
               float sceneDepthNear,
               float sceneDepthFar,
-              const std::deque<MeshMixManager>& meshMixList,
               const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
               const std::vector<MeshMixAnimNoBone*>& meshMixAnimNoBoneList,
               const std::vector<MeshMix2*>& meshMix2List,
-              const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap,
               const std::unordered_map<std::wstring, MeshInstancing2*>& meshInstancing2Map);
 
     void SetShadowIntensity(const float intensity);
@@ -46,7 +41,6 @@ public:
     void SetCompositeTapCount(const int tapCount);
     void SetShadowTextureScaleDivisor(const int scaleDivisor);
     void SetFarCascadeEnabled(bool enabled);
-    void SetMeshMixManagerReceiverEnabled(bool enabled);
     void DrawDebugLightDepthOverlay(const int x,
                                     const int y,
                                     const int width,
@@ -80,7 +74,6 @@ private:
     int m_compositeTapCount = 1;
     int m_shadowTextureScaleDivisor = 1;
     bool m_farCascadeEnabled = false;
-    bool m_meshMixManagerReceiverEnabled = false;
 
     LPD3DXEFFECT g_fxDepthBufferShadow = NULL;
 
@@ -117,11 +110,9 @@ private:
     float fLightNear[SHADOW_CASCADE_COUNT] { 10.0f, 10.0f };
     float fLightFar[SHADOW_CASCADE_COUNT] { 200.0f, 200.0f };
 
-    const std::deque<MeshMixManager>* m_pMeshList;
     const std::vector<IMeshMixSkinAnim*>* m_pSkinAnimMeshList = nullptr;
     const std::vector<MeshMixAnimNoBone*>* m_pMeshMixAnimNoBoneList = nullptr;
     const std::vector<MeshMix2*>* m_pMeshMix2List = nullptr;
-    const std::unordered_map<std::wstring, MeshInstancing*>* m_pMeshInstancingMap = nullptr;
     const std::unordered_map<std::wstring, MeshInstancing2*>* m_pMeshInstancing2Map = nullptr;
     LPDIRECT3DTEXTURE9 m_sceneDepthTexture = NULL;
     LPDIRECT3DTEXTURE9 m_receiverDepthTexture = NULL;

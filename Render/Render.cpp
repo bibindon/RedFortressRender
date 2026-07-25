@@ -27,7 +27,6 @@
 #include "MeshOld.h"
 #include "AnimMesh.h"
 #include "SkinAnimMesh.h"
-#include "MeshMixSkinAnim.h"
 
 #include "Camera.h"
 #include "Light.h"
@@ -50,18 +49,6 @@ namespace NSRender
 namespace
 {
 constexpr std::chrono::duration<double> kTargetFrameDuration(1.0 / 60.0);
-constexpr int kMeshMix2CompatibilityIdBase = 0x40000000;
-
-bool TryDecodeMeshMix2CompatibilityId(const int id, int& meshMix2Id)
-{
-    if (id < kMeshMix2CompatibilityIdBase)
-    {
-        return false;
-    }
-
-    meshMix2Id = id - kMeshMix2CompatibilityIdBase;
-    return true;
-}
 
 float ClampNormalizedTextPosition(const float value)
 {
@@ -534,19 +521,6 @@ void Render::ClearCsvLoadedMeshes()
 
 bool Render::IsAllMeshLoaded() const
 {
-    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
-    {
-        if (!IsMeshMixSlotUsed(i))
-        {
-            continue;
-        }
-
-        if (!m_meshMixList.at(i).IsLoaded())
-        {
-            return false;
-        }
-    }
-
     for (const auto* mesh : m_meshMixSkinAnimList)
     {
         if (mesh != nullptr && !mesh->IsLoaded())
@@ -938,17 +912,6 @@ void Render::ApplySettings()
             SetPostEffectDepthBufferShadow(enabled);
         }
     }
-
-    bool meshMixManagerShadowReceiverEnabled = false;
-    const auto meshMixManagerShadowReceiverEnable =
-        m_settings.find(L"MeshMixManagerShadowReceiverEnable");
-    if (meshMixManagerShadowReceiverEnable != m_settings.end())
-    {
-        TryParseBoolSetting(meshMixManagerShadowReceiverEnable->second,
-                            meshMixManagerShadowReceiverEnabled);
-    }
-    SetPostEffectDepthBufferShadowMeshMixManagerReceiverEnabled(
-        meshMixManagerShadowReceiverEnabled);
 
     bool farShadowEnabled = false;
     const auto farShadowEnable = m_settings.find(L"DepthBufferShadowFarEnable");
@@ -2432,7 +2395,6 @@ void Render::Finalize()
 {
     m_settingsDialog.Finalize();
 
-    MeshMixManager::SetSharedThicknessTexture(NULL);
     MeshMix2::SetSharedThicknessTexture(NULL);
 
     m_postEffectZShadow.Finalize();
@@ -2530,12 +2492,6 @@ void Render::Finalize()
     }
     m_meshMixSkinAnimList.clear();
 
-    for (auto& mesh : m_meshInstancingMap)
-    {
-        SAFE_DELETE(mesh.second);
-    }
-    m_meshInstancingMap.clear();
-
     for (auto& mesh : m_meshInstancing2Map)
     {
         SAFE_DELETE(mesh.second);
@@ -2543,12 +2499,6 @@ void Render::Finalize()
     m_meshInstancing2Map.clear();
     m_csvInstancingFilePaths.clear();
 
-    for (auto& mesh : m_meshMixList)
-    {
-        mesh.Finalize();
-    }
-    m_meshMixList.clear();
-    m_meshMixSlotUsedList.clear();
     for (auto& mesh : m_meshMix2List)
     {
         SAFE_DELETE(mesh);
@@ -2686,14 +2636,11 @@ void Render::Draw()
     if (m_gBufferEnabled)
     {
         EnsureGBufferInitialized();
-        m_GBuffer.Draw(m_meshMixList,
-                       m_meshMixSkinAnimList,
+        m_GBuffer.Draw(m_meshMixSkinAnimList,
                        m_meshMixAnimNoBoneList,
                        m_meshMix2List,
-                       m_meshInstancingMap,
                        m_meshInstancing2Map,
                        &m_particleSystem,
-                       m_postEffectZShadowMeshMixManagerReceiverEnabled,
                        m_gBufferFrontBackfaceCullingEnabled,
                        m_debugGBufferView == DebugGBufferView::BackDepth,
                        &pTexTempZ,
@@ -2709,12 +2656,10 @@ void Render::Draw()
         m_lastFrameProfile.gBufferThicknessStaticSubsetDraws = gBufferProfile.thicknessStaticSubsetDraws;
         m_lastFrameProfile.gBufferFrontObjectDraws = gBufferProfile.frontObjectDraws;
         m_lastFrameProfile.gBufferThicknessObjectDraws = gBufferProfile.thicknessObjectDraws;
-        MeshMixManager::SetSharedThicknessTexture(pTexTempThickness);
         MeshMix2::SetSharedThicknessTexture(pTexTempThickness);
     }
     else
     {
-        MeshMixManager::SetSharedThicknessTexture(NULL);
         MeshMix2::SetSharedThicknessTexture(NULL);
     }
     const auto gBufferEndTime = ProfileClock::now();
@@ -2725,13 +2670,10 @@ void Render::Draw()
     int activeMirrorMeshIndex = FindActiveMirrorMeshIndex();
     D3DXMATRIX mirrorViewProj;
     D3DXMatrixIdentity(&mirrorViewProj);
-    MeshMixManager::SetSharedMirrorTexture(NULL);
-    MeshMixManager::SetSharedMirrorViewProj(mirrorViewProj);
     MeshMix2::SetSharedMirrorTexture(NULL);
     MeshMix2::SetSharedMirrorViewProj(mirrorViewProj);
     if (activeMirrorMeshIndex >= 0 && RenderMirrorTexture(activeMirrorMeshIndex))
     {
-        MeshMixManager::SetSharedMirrorTexture(m_pMirrorRenderTarget);
         MeshMix2::SetSharedMirrorTexture(m_pMirrorRenderTarget);
     }
     else
@@ -2767,11 +2709,9 @@ void Render::Draw()
                                  pTexTempNoral,
                                  m_gBufferNearPlane,
                                  m_gBufferFarPlane,
-                                 m_meshMixList,
                                  m_meshMixSkinAnimList,
                                  m_meshMixAnimNoBoneList,
                                  m_meshMix2List,
-                                 m_meshInstancingMap,
                                  m_meshInstancing2Map);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
@@ -3350,14 +3290,6 @@ int Render::AddMeshInstansing(const std::wstring& filePath,
 
 bool Render::RemoveMeshInstancing(const std::wstring& filePath)
 {
-    const auto found = m_meshInstancingMap.find(filePath);
-    if (found != m_meshInstancingMap.end())
-    {
-        SAFE_DELETE(found->second);
-        m_meshInstancingMap.erase(found);
-        return true;
-    }
-
     return RemoveMeshInstancing2(filePath);
 }
 
@@ -3403,14 +3335,6 @@ bool Render::RemoveMeshInstancing2(const std::wstring& filePath)
 void Render::SetMeshInstancingHighQuality(const bool enabled)
 {
     m_meshInstancingHighQualityEnabled = enabled;
-
-    for (auto& mesh : m_meshInstancingMap)
-    {
-        if (mesh.second != nullptr)
-        {
-            mesh.second->SetHighQuality(enabled);
-        }
-    }
 
     for (auto& mesh : m_meshInstancing2Map)
     {
@@ -3462,31 +3386,12 @@ int Render::AddMeshMix(const std::wstring& filePath,
         throw;
     }
 
-    const int meshMix2Id = static_cast<int>(m_meshMix2List.size()) - 1;
-    if (meshMix2Id >= kMeshMix2CompatibilityIdBase)
-    {
-        std::abort();
-    }
-    return kMeshMix2CompatibilityIdBase + meshMix2Id;
+    return static_cast<int>(m_meshMix2List.size()) - 1;
 }
 
 bool Render::RemoveMeshMix(const int id)
 {
-    int meshMix2Id = -1;
-    if (TryDecodeMeshMix2CompatibilityId(id, meshMix2Id))
-    {
-        return RemoveMeshMix2(meshMix2Id);
-    }
-
-    if (!IsMeshMixSlotUsed(id))
-    {
-        return false;
-    }
-
-    m_meshMixList.at(id).SetEnabled(false);
-    m_meshMixList.at(id).Finalize();
-    m_meshMixSlotUsedList.at(id) = false;
-    return true;
+    return RemoveMeshMix2(id);
 }
 
 int Render::AddMeshMix2(const std::wstring& filePath,
@@ -3566,22 +3471,9 @@ D3DXVECTOR3 Render::GetMeshMix2Pos(const int id) const
 
 bool Render::IsMeshMixSlotUsed(const int id) const
 {
-    int meshMix2Id = -1;
-    if (TryDecodeMeshMix2CompatibilityId(id, meshMix2Id))
-    {
-        return meshMix2Id >= 0 &&
-               meshMix2Id < static_cast<int>(m_meshMix2List.size()) &&
-               m_meshMix2List.at(meshMix2Id) != nullptr;
-    }
-
-    if (id < 0 ||
-        id >= static_cast<int>(m_meshMixList.size()) ||
-        id >= static_cast<int>(m_meshMixSlotUsedList.size()))
-    {
-        return false;
-    }
-
-    return m_meshMixSlotUsedList.at(id);
+    return id >= 0 &&
+           id < static_cast<int>(m_meshMix2List.size()) &&
+           m_meshMix2List.at(id) != nullptr;
 }
 
 int Render::AddMeshPBR(const std::wstring& filePath,
@@ -3639,145 +3531,62 @@ bool Render::RemoveMeshPBR(const int id)
 
 void Render::SetMeshMixPos(const int id, const D3DXVECTOR3& pos)
 {
-    int meshMix2Id = -1;
-    if (TryDecodeMeshMix2CompatibilityId(id, meshMix2Id))
+    if (IsMeshMixSlotUsed(id))
     {
-        SetMeshMix2Pos(meshMix2Id, pos);
-        return;
+        SetMeshMix2Pos(id, pos);
     }
-
-    if (!IsMeshMixSlotUsed(id))
-    {
-        return;
-    }
-
-    m_meshMixList.at(id).SetPos(pos);
 }
 
 D3DXVECTOR3 Render::GetMeshMixPos(const int id) const
 {
-    int meshMix2Id = -1;
-    if (TryDecodeMeshMix2CompatibilityId(id, meshMix2Id))
+    if (IsMeshMixSlotUsed(id))
     {
-        return GetMeshMix2Pos(meshMix2Id);
+        return GetMeshMix2Pos(id);
     }
 
-    if (!IsMeshMixSlotUsed(id))
-    {
-        return D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-    }
-
-    return m_meshMixList.at(id).GetPos();
+    return D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 }
 
 void Render::SetMeshMixRotY(const int id, const float rotY)
 {
-    int meshMix2Id = -1;
-    if (TryDecodeMeshMix2CompatibilityId(id, meshMix2Id))
+    if (IsMeshMixSlotUsed(id))
     {
-        if (meshMix2Id >= 0 &&
-            meshMix2Id < static_cast<int>(m_meshMix2List.size()) &&
-            m_meshMix2List.at(meshMix2Id) != nullptr)
-        {
-            m_meshMix2List.at(meshMix2Id)->SetRotY(rotY);
-        }
-        return;
+        m_meshMix2List.at(id)->SetRotY(rotY);
     }
-
-    if (!IsMeshMixSlotUsed(id))
-    {
-        return;
-    }
-
-    m_meshMixList.at(id).SetRotY(rotY);
 }
 
 void Render::SetMeshMixWorldMatrix(const int id, const D3DXMATRIX& mat)
 {
-    int meshMix2Id = -1;
-    if (TryDecodeMeshMix2CompatibilityId(id, meshMix2Id))
+    if (IsMeshMixSlotUsed(id))
     {
-        if (meshMix2Id >= 0 &&
-            meshMix2Id < static_cast<int>(m_meshMix2List.size()) &&
-            m_meshMix2List.at(meshMix2Id) != nullptr)
-        {
-            m_meshMix2List.at(meshMix2Id)->SetWorldMatrix(mat);
-        }
-        return;
+        m_meshMix2List.at(id)->SetWorldMatrix(mat);
     }
-
-    if (!IsMeshMixSlotUsed(id))
-    {
-        return;
-    }
-
-    m_meshMixList.at(id).SetWorldMatrix(mat);
 }
 
 void Render::SetMeshMixEnabled(const int id, const bool enabled)
 {
-    int meshMix2Id = -1;
-    if (TryDecodeMeshMix2CompatibilityId(id, meshMix2Id))
+    if (IsMeshMixSlotUsed(id))
     {
-        if (meshMix2Id >= 0 &&
-            meshMix2Id < static_cast<int>(m_meshMix2List.size()) &&
-            m_meshMix2List.at(meshMix2Id) != nullptr)
-        {
-            m_meshMix2List.at(meshMix2Id)->SetEnabled(enabled);
-        }
-        return;
+        m_meshMix2List.at(id)->SetEnabled(enabled);
     }
-
-    if (!IsMeshMixSlotUsed(id))
-    {
-        return;
-    }
-
-    m_meshMixList.at(id).SetEnabled(enabled);
 }
 
 void Render::SetMeshMixDamageFlash(const int id, const bool enabled)
 {
-    int meshMix2Id = -1;
-    if (TryDecodeMeshMix2CompatibilityId(id, meshMix2Id))
+    if (IsMeshMixSlotUsed(id))
     {
-        if (meshMix2Id >= 0 &&
-            meshMix2Id < static_cast<int>(m_meshMix2List.size()) &&
-            m_meshMix2List.at(meshMix2Id) != nullptr)
-        {
-            m_meshMix2List.at(meshMix2Id)->SetDamageFlash(enabled);
-        }
-        return;
+        m_meshMix2List.at(id)->SetDamageFlash(enabled);
     }
-
-    if (!IsMeshMixSlotUsed(id))
-    {
-        return;
-    }
-
-    m_meshMixList.at(id).SetDamageFlash(enabled);
 }
 
 D3DXVECTOR3 Render::GetMeshMixRot(const int id) const
 {
-    int meshMix2Id = -1;
-    if (TryDecodeMeshMix2CompatibilityId(id, meshMix2Id))
+    if (IsMeshMixSlotUsed(id))
     {
-        if (meshMix2Id >= 0 &&
-            meshMix2Id < static_cast<int>(m_meshMix2List.size()) &&
-            m_meshMix2List.at(meshMix2Id) != nullptr)
-        {
-            return m_meshMix2List.at(meshMix2Id)->GetRot();
-        }
-        return D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+        return m_meshMix2List.at(id)->GetRot();
     }
 
-    if (!IsMeshMixSlotUsed(id))
-    {
-        return D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-    }
-
-    return m_meshMixList.at(id).GetRot();
+    return D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 }
 
 void Render::AttachMeshToBone(const int childMeshId, const int parentSkinnedMeshId,
@@ -3856,15 +3665,7 @@ void Render::UpdateBoneAttachments()
                               attach.localOffset.z);
 
         float childScale = 1.0f;
-        int meshMix2Id = -1;
-        if (TryDecodeMeshMix2CompatibilityId(attach.childMeshId, meshMix2Id))
-        {
-            childScale = m_meshMix2List.at(meshMix2Id)->GetScale();
-        }
-        else
-        {
-            childScale = m_meshMixList.at(attach.childMeshId).GetScale();
-        }
+        childScale = m_meshMix2List.at(attach.childMeshId)->GetScale();
         D3DXMATRIX matScale;
         D3DXMatrixScaling(&matScale, childScale, childScale, childScale);
 
@@ -4326,22 +4127,6 @@ std::vector<RenderLoadedModelInfo> Render::GetLoadedModelInfoList()
 {
     std::vector<RenderLoadedModelInfo> models;
 
-    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
-    {
-        if (!IsMeshMixSlotUsed(i))
-        {
-            continue;
-        }
-
-        RenderLoadedModelInfo info;
-        info.type = RenderLoadedModelType::MeshMix;
-        info.renderId = i;
-        info.filePath = m_meshMixList.at(i).GetMeshName();
-        info.scale = m_meshMixList.at(i).GetScale();
-        info.pos = m_meshMixList.at(i).GetPos();
-        models.push_back(info);
-    }
-
     for (int i = 0; i < static_cast<int>(m_meshPBRList.size()); ++i)
     {
         RenderLoadedModelInfo info;
@@ -4371,17 +4156,6 @@ std::vector<RenderLoadedModelInfo> Render::GetLoadedModelInfoList()
     }
 
     int instancingIndex = 0;
-    for (const auto& mesh : m_meshInstancingMap)
-    {
-        RenderLoadedModelInfo info;
-        info.type = RenderLoadedModelType::MeshInstancing;
-        info.renderId = instancingIndex;
-        info.filePath = mesh.first;
-        models.push_back(info);
-        ++instancingIndex;
-    }
-
-    instancingIndex = 0;
     for (const auto& mesh : m_meshInstancing2Map)
     {
         RenderLoadedModelInfo info;
@@ -4401,14 +4175,7 @@ std::vector<RenderLoadedModelInfo> Render::GetLoadedModelInfoList()
         }
 
         RenderLoadedModelInfo info;
-        if (mesh->UsesIntegratedGBuffer())
-        {
-            info.type = RenderLoadedModelType::MeshMixSkinAnim2;
-        }
-        else
-        {
-            info.type = RenderLoadedModelType::MeshMixSkinAnim;
-        }
+        info.type = RenderLoadedModelType::MeshMixSkinAnim2;
         info.renderId = i;
         info.filePath = mesh->GetMeshName();
         info.scale = mesh->GetScale();
@@ -4466,14 +4233,6 @@ void Render::SetMeshMixSaturateShadow(const bool enabled)
 {
     m_meshMixSaturateShadowEnabled = enabled;
 
-    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
-    {
-        if (IsMeshMixSlotUsed(i))
-        {
-            m_meshMixList.at(i).SetSaturateShadow(enabled);
-        }
-    }
-
     for (auto* mesh : m_meshMix2List)
     {
         if (mesh != nullptr)
@@ -4494,14 +4253,6 @@ void Render::SetMeshMixSaturateShadow(const bool enabled)
 void Render::SetMeshMixSaturateShadowIntensity(const float intensity)
 {
     m_meshMixSaturateShadowIntensity = intensity;
-
-    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
-    {
-        if (IsMeshMixSlotUsed(i))
-        {
-            m_meshMixList.at(i).SetSaturateShadowIntensity(intensity);
-        }
-    }
 
     for (auto* mesh : m_meshMix2List)
     {
@@ -4524,14 +4275,6 @@ void Render::SetMeshMixShadowDarkness(const float darkness)
 {
     m_meshMixShadowDarkness = darkness;
 
-    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
-    {
-        if (IsMeshMixSlotUsed(i))
-        {
-            m_meshMixList.at(i).SetShadowDarkness(darkness);
-        }
-    }
-
     for (auto* mesh : m_meshMix2List)
     {
         if (mesh != nullptr)
@@ -4552,14 +4295,6 @@ void Render::SetMeshMixShadowDarkness(const float darkness)
 void Render::SetMeshMixSpecularIntensity(const float intensity)
 {
     m_meshMixSpecularIntensity = intensity;
-
-    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
-    {
-        if (IsMeshMixSlotUsed(i))
-        {
-            m_meshMixList.at(i).SetSpecularIntensity(intensity);
-        }
-    }
 
     for (auto* mesh : m_meshMix2List)
     {
@@ -4582,14 +4317,6 @@ void Render::SetMeshMixSpecularEdge(const float edge)
 {
     m_meshMixSpecularEdge = edge;
 
-    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
-    {
-        if (IsMeshMixSlotUsed(i))
-        {
-            m_meshMixList.at(i).SetSpecularEdge(edge);
-        }
-    }
-
     for (auto* mesh : m_meshMix2List)
     {
         if (mesh != nullptr)
@@ -4611,14 +4338,6 @@ void Render::SetMeshMixFresnelIntensity(const float intensity)
 {
     m_meshMixFresnelIntensity = (std::max)(0.0f, intensity);
 
-    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
-    {
-        if (IsMeshMixSlotUsed(i))
-        {
-            m_meshMixList.at(i).SetFresnelIntensity(m_meshMixFresnelIntensity);
-        }
-    }
-
     for (auto* mesh : m_meshMix2List)
     {
         if (mesh != nullptr)
@@ -4639,14 +4358,6 @@ void Render::SetMeshMixFresnelIntensity(const float intensity)
 void Render::SetMeshMixEnvMapBlend(const float blend)
 {
     m_meshMixCubeMappingRate = blend;
-
-    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
-    {
-        if (IsMeshMixSlotUsed(i))
-        {
-            m_meshMixList.at(i).SetCubeMappingRate(blend);
-        }
-    }
 
     for (auto* mesh : m_meshMix2List)
     {
@@ -4740,14 +4451,6 @@ void Render::SetMeshMixSpecularIntensityOverrideEnabled(const bool enabled)
 {
     m_meshMixSpecularIntensityOverrideEnabled = enabled;
 
-    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
-    {
-        if (IsMeshMixSlotUsed(i))
-        {
-            m_meshMixList.at(i).SetSpecularIntensityOverrideEnabled(enabled);
-        }
-    }
-
     for (auto* mesh : m_meshMix2List)
     {
         if (mesh != nullptr)
@@ -4768,14 +4471,6 @@ void Render::SetMeshMixSpecularIntensityOverrideEnabled(const bool enabled)
 void Render::SetMeshMixSpecularEdgeOverrideEnabled(const bool enabled)
 {
     m_meshMixSpecularEdgeOverrideEnabled = enabled;
-
-    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
-    {
-        if (IsMeshMixSlotUsed(i))
-        {
-            m_meshMixList.at(i).SetSpecularEdgeOverrideEnabled(enabled);
-        }
-    }
 
     for (auto* mesh : m_meshMix2List)
     {
@@ -4798,14 +4493,6 @@ void Render::SetPhongTreatTextureAsWhite(const bool enabled)
 {
     m_phongTreatTextureAsWhiteEnabled = enabled;
 
-    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
-    {
-        if (IsMeshMixSlotUsed(i))
-        {
-            m_meshMixList.at(i).SetTreatTextureAsWhite(enabled);
-        }
-    }
-
     for (auto* mesh : m_meshMix2List)
     {
         if (mesh != nullptr)
@@ -4827,14 +4514,6 @@ void Render::SetMeshMixSSS(const bool enabled)
 {
     m_meshMixSSSEnabled = enabled;
 
-    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
-    {
-        if (IsMeshMixSlotUsed(i))
-        {
-            m_meshMixList.at(i).SetSSS(enabled);
-        }
-    }
-
     for (auto* mesh : m_meshMix2List)
     {
         if (mesh != nullptr)
@@ -4848,14 +4527,6 @@ void Render::SetMeshMixSSSIntensity(const float intensity)
 {
     m_meshMixSSSIntensity = intensity;
 
-    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
-    {
-        if (IsMeshMixSlotUsed(i))
-        {
-            m_meshMixList.at(i).SetSSSIntensity(intensity);
-        }
-    }
-
     for (auto* mesh : m_meshMix2List)
     {
         if (mesh != nullptr)
@@ -4868,14 +4539,6 @@ void Render::SetMeshMixSSSIntensity(const float intensity)
 void Render::SetMeshMixSSSColor(const DWORD color)
 {
     m_meshMixSSSColor = color;
-
-    for (int i = 0; i < static_cast<int>(m_meshMixList.size()); ++i)
-    {
-        if (IsMeshMixSlotUsed(i))
-        {
-            m_meshMixList.at(i).SetSSSColor(color);
-        }
-    }
 
     for (auto* mesh : m_meshMix2List)
     {
@@ -4961,7 +4624,6 @@ void Render::SetGBufferEnable(const bool enabled)
 
     if (!m_gBufferEnabled)
     {
-        MeshMixManager::SetSharedThicknessTexture(NULL);
         MeshMix2::SetSharedThicknessTexture(NULL);
         m_GBuffer.Finalize();
     }
@@ -4985,7 +4647,6 @@ void Render::SetGBufferClipPlanes(const float nearPlane, const float farPlane)
 
 void Render::InvalidateGBufferResources()
 {
-    MeshMixManager::SetSharedThicknessTexture(NULL);
     MeshMix2::SetSharedThicknessTexture(NULL);
     m_GBuffer.Finalize();
 }
@@ -6031,12 +5692,6 @@ void Render::SetPostEffectDepthBufferShadowFarEnabled(const bool enabled)
     m_postEffectZShadow.SetFarCascadeEnabled(enabled);
 }
 
-void Render::SetPostEffectDepthBufferShadowMeshMixManagerReceiverEnabled(const bool enabled)
-{
-    m_postEffectZShadowMeshMixManagerReceiverEnabled = enabled;
-    m_postEffectZShadow.SetMeshMixManagerReceiverEnabled(enabled);
-}
-
 float Render::GetPostEffectSaturate() const { return m_postEffectSaturateLevel; }
 bool Render::IsPostEffectSaturateEnabled() const { return m_postEffectSaturateEnabled; }
 bool Render::IsPostEffectGaussianFilterEnabled() const { return m_postEffectGaussEnabled; }
@@ -6056,7 +5711,6 @@ int Render::GetPostEffectMotionBlurCameraSampleCount() const { return m_motionBl
 bool Render::IsPostEffectDepthBufferShadowEnabled() const { return m_postEffectZShadowEnabled; }
 bool Render::IsPostEffectDepthBufferShadowDebugLightDepthEnabled() const { return m_postEffectZShadowDebugLightDepthEnabled; }
 bool Render::IsPostEffectDepthBufferShadowFarEnabled() const { return m_postEffectZShadowFarEnabled; }
-bool Render::IsPostEffectDepthBufferShadowMeshMixManagerReceiverEnabled() const { return m_postEffectZShadowMeshMixManagerReceiverEnabled; }
 float Render::GetPostEffectDepthBufferShadowIntensity() const { return m_postEffectDepthBufferShadowIntensity; }
 float Render::GetPostEffectDepthBufferShadowSaturationBoost() const { return m_postEffectDepthBufferShadowSaturationBoost; }
 float Render::GetPostEffectDepthBufferShadowCoverage() const { return m_postEffectDepthBufferShadowCoverage; }
@@ -6919,15 +6573,15 @@ void Render::RotateCamera(const D3DXVECTOR3& rot)
 
 int Render::FindActiveMirrorMeshIndex() const
 {
-    for (int i = static_cast<int>(m_meshMixList.size()) - 1; i >= 0; --i)
+    for (int i = static_cast<int>(m_meshMix2List.size()) - 1; i >= 0; --i)
     {
-        if (!IsMeshMixSlotUsed(i))
+        const MeshMix2* mesh = m_meshMix2List[static_cast<size_t>(i)];
+        if (mesh == nullptr)
         {
             continue;
         }
 
-        const auto& mesh = m_meshMixList[static_cast<size_t>(i)];
-        if (mesh.IsEnabled() && mesh.IsLoaded() && mesh.IsMirror())
+        if (mesh->IsEnabled() && mesh->IsLoaded() && mesh->IsMirror())
         {
             return i;
         }
@@ -6939,8 +6593,8 @@ int Render::FindActiveMirrorMeshIndex() const
 bool Render::RenderMirrorTexture(const int activeMirrorMeshIndex)
 {
     if (activeMirrorMeshIndex < 0 ||
-        activeMirrorMeshIndex >= static_cast<int>(m_meshMixList.size()) ||
-        !IsMeshMixSlotUsed(activeMirrorMeshIndex) ||
+        activeMirrorMeshIndex >= static_cast<int>(m_meshMix2List.size()) ||
+        m_meshMix2List[static_cast<size_t>(activeMirrorMeshIndex)] == nullptr ||
         m_pMirrorRenderTarget == NULL)
     {
         return false;
@@ -6948,7 +6602,7 @@ bool Render::RenderMirrorTexture(const int activeMirrorMeshIndex)
 
     D3DXVECTOR3 planePoint;
     D3DXVECTOR3 planeNormal;
-    if (!m_meshMixList[static_cast<size_t>(activeMirrorMeshIndex)].TryGetMirrorPlaneWorld(planePoint, planeNormal))
+    if (!m_meshMix2List[static_cast<size_t>(activeMirrorMeshIndex)]->TryGetMirrorPlaneWorld(planePoint, planeNormal))
     {
         return false;
     }
@@ -7004,19 +6658,16 @@ bool Render::RenderMirrorTexture(const int activeMirrorMeshIndex)
     Camera::SetLookAtPos(reflectedTarget);
 
     const D3DXMATRIX mirrorViewProj = Camera::GetViewMatrix() * Camera::GetProjMatrix();
-    MeshMixManager::SetSharedMirrorViewProj(mirrorViewProj);
     MeshMix2::SetSharedMirrorViewProj(mirrorViewProj);
 
-    MeshMixManager::SetSharedMirrorClipPlane(true, clipPlane);
     MeshMix2::SetSharedMirrorClipPlane(true, clipPlane);
-    MeshMixSkinAnim::SetSharedMirrorClipPlane(true, clipPlane);
+    MeshMixSkinAnim2::SetSharedMirrorClipPlane(true, clipPlane);
 
     DrawPass1(false, activeMirrorMeshIndex);
 
     const D3DXVECTOR4 disabledClipPlane(0.0f, 1.0f, 0.0f, 0.0f);
-    MeshMixManager::SetSharedMirrorClipPlane(false, disabledClipPlane);
     MeshMix2::SetSharedMirrorClipPlane(false, disabledClipPlane);
-    MeshMixSkinAnim::SetSharedMirrorClipPlane(false, disabledClipPlane);
+    MeshMixSkinAnim2::SetSharedMirrorClipPlane(false, disabledClipPlane);
 
     Camera::SetEyePos(originalEye);
     Camera::SetLookAtPos(originalLookAt);
@@ -7113,34 +6764,6 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
         elem.Render();
     }
 
-    const D3DXVECTOR3 eyePos = Camera::GetEyePos();
-    std::vector<size_t> transparentWaterMeshIndices;
-    MeshMixManager::BeginRenderBatch();
-    for (size_t i = 0; i < m_meshMixList.size(); ++i)
-    {
-        if (!IsMeshMixSlotUsed(static_cast<int>(i)))
-        {
-            continue;
-        }
-
-        if (static_cast<int>(i) == skippedMeshMixIndex)
-        {
-            continue;
-        }
-
-        if (m_meshMixList[i].UsesWaterTextureAlpha())
-        {
-            transparentWaterMeshIndices.push_back(i);
-            continue;
-        }
-
-        const bool renderAsMirror =
-            renderActiveMirrorAsMirror &&
-            static_cast<int>(i) == activeMirrorMeshIndex;
-        m_meshMixList[i].Render(renderAsMirror);
-    }
-    MeshMixManager::EndRenderBatch();
-
     for (auto& elem : m_meshMixSkinAnimList)
     {
         if (elem != nullptr)
@@ -7157,41 +6780,27 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
         }
     }
 
-    for (auto& elem : m_meshMix2List)
+    for (size_t i = 0; i < m_meshMix2List.size(); ++i)
     {
+        MeshMix2* elem = m_meshMix2List[i];
         if (elem != nullptr)
         {
-            elem->Render();
-        }
-    }
+            if (static_cast<int>(i) == skippedMeshMixIndex)
+            {
+                continue;
+            }
 
-    for (auto& elem : m_meshInstancingMap)
-    {
-        elem.second->Draw();
+            const bool renderAsMirror =
+                renderActiveMirrorAsMirror &&
+                static_cast<int>(i) == activeMirrorMeshIndex;
+            elem->Render(renderAsMirror);
+        }
     }
 
     for (auto& elem : m_meshInstancing2Map)
     {
         elem.second->Draw();
     }
-
-    std::stable_sort(transparentWaterMeshIndices.begin(),
-                     transparentWaterMeshIndices.end(),
-                     [&](const size_t lhs, const size_t rhs)
-                     {
-                         const D3DXVECTOR3 lhsDelta = m_meshMixList[lhs].GetPos() - eyePos;
-                         const D3DXVECTOR3 rhsDelta = m_meshMixList[rhs].GetPos() - eyePos;
-                         const float lhsDistanceSq = D3DXVec3LengthSq(&lhsDelta);
-                         const float rhsDistanceSq = D3DXVec3LengthSq(&rhsDelta);
-                         return lhsDistanceSq > rhsDistanceSq;
-                     });
-
-    MeshMixManager::BeginRenderBatch();
-    for (const size_t index : transparentWaterMeshIndices)
-    {
-        m_meshMixList[index].Render(false);
-    }
-    MeshMixManager::EndRenderBatch();
 
     m_particleSystem.Draw(Camera::GetViewMatrix(), Camera::GetProjMatrix());
 }

@@ -122,7 +122,7 @@ void PixelShader1(in float2 inTexCoord : TEXCOORD0,
                   out float4 outColor  : COLOR0)
 {
     float2 sampleUv = saturate(inTexCoord + g_vTexelSize.xy * 0.5f);
-    float linearDepth = tex2D(depthSampler, sampleUv).r;
+    float linearDepth = tex2D(depthSampler, sampleUv).g;
     float2 velocity = GetVelocity(sampleUv, linearDepth);
     float4 finalColor = tex2D(colorSampler, sampleUv);
     if (g_iMotionBlurEnabled != 0)

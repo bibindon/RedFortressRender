@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "Common.h"
-#include "MeshMix.h"
+#include "MeshParam.h"
 #include "MeshMix2Hierarchy.h"
 
 #include <atomic>
@@ -64,6 +64,8 @@ public:
     bool IsLoaded() const;
     bool IsSsaoEnabled() const;
     bool IsDepthBufferShadowEnabled() const;
+    bool IsMirror() const;
+    bool TryGetMirrorPlaneWorld(D3DXVECTOR3& planePoint, D3DXVECTOR3& planeNormal) const;
     std::wstring GetMeshName() const;
 
     void OnDeviceLost() override;

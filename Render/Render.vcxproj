@@ -30,18 +30,14 @@
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="LoadingScreen.cpp" />
     <ClCompile Include="MeshOld.cpp" />
-    <ClCompile Include="MeshHierarchy.cpp" />
-    <ClCompile Include="MeshInstancing.cpp" />
     <ClCompile Include="MeshInstancing2.cpp" />
-    <ClCompile Include="MeshMix.cpp" />
+    <ClCompile Include="MeshParam.cpp" />
     <ClCompile Include="MeshPBR.cpp" />
-    <ClCompile Include="MeshMixSkinAnim.cpp" />
     <ClCompile Include="MeshMixSkinAnim2.cpp" />
     <ClCompile Include="MeshMixAnimNoBone.cpp" />
     <ClCompile Include="MeshMixAnimNoBoneAlloc.cpp" />
     <ClCompile Include="MeshMix2.cpp" />
     <ClCompile Include="MeshMix2Hierarchy.cpp" />
-    <ClCompile Include="MeshMixManager.cpp" />
     <ClCompile Include="MeshPBRManager.cpp" />
     <ClCompile Include="MeshNormalMapping.cpp" />
     <ClCompile Include="MeshPointLight.cpp" />
@@ -102,15 +98,11 @@
     <ClInclude Include="MeshMix2.h" />
     <ClInclude Include="MeshMix2Hierarchy.h" />
     <ClInclude Include="MeshOld.h" />
-    <ClInclude Include="MeshHierarchy.h" />
-    <ClInclude Include="MeshInstancing.h" />
     <ClInclude Include="MeshInstancing2.h" />
-    <ClInclude Include="MeshMix.h" />
+    <ClInclude Include="MeshParam.h" />
     <ClInclude Include="MeshPBR.h" />
-    <ClInclude Include="MeshMixSkinAnim.h" />
     <ClInclude Include="MeshMixSkinAnimCommon.h" />
     <ClInclude Include="MeshMixSkinAnim2.h" />
-    <ClInclude Include="MeshMixManager.h" />
     <ClInclude Include="MeshPBRManager.h" />
     <ClInclude Include="MeshNormalMapping.h" />
     <ClInclude Include="MeshPointLight.h" />
@@ -163,12 +155,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="shader\GBuffer.fx">
-      <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableOptimizations>
-      <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</EnableDebuggingInformation>
-    </FxCompile>
-    <FxCompile Include="shader\MeshMix.fx">
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DeploymentContent>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
       <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableOptimizations>
       <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</EnableDebuggingInformation>
     </FxCompile>

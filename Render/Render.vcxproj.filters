@@ -81,16 +81,10 @@
     <ClCompile Include="SkinAnimMeshAlloc.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="MeshInstancing.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="MeshMix.cpp">
+    <ClCompile Include="MeshParam.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="MeshPBR.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="MeshMixSkinAnim.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="MeshMixSkinAnim2.cpp">
@@ -127,9 +121,6 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="PostEffectZShadow.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="MeshMixManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="MeshPBRManager.cpp">
@@ -190,9 +181,6 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="MeshSSS.cpp">
-      <Filter>ソース ファイル\Trial</Filter>
-    </ClCompile>
-    <ClCompile Include="MeshHierarchy.cpp">
       <Filter>ソース ファイル\Trial</Filter>
     </ClCompile>
     <ClCompile Include="CustomXLoader.cpp">
@@ -269,16 +257,10 @@
     <ClInclude Include="SkinAnimMeshAlloc.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="MeshInstancing.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="MeshMix.h">
+    <ClInclude Include="MeshParam.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="MeshPBR.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="MeshMixSkinAnim.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="MeshMixSkinAnimCommon.h">
@@ -318,9 +300,6 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="PostEffectZShadow.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="MeshMixManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="MeshPBRManager.h">
@@ -381,9 +360,6 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="MeshSSS.h">
-      <Filter>ヘッダー ファイル\Trial</Filter>
-    </ClInclude>
-    <ClInclude Include="MeshHierarchy.h">
       <Filter>ヘッダー ファイル\Trial</Filter>
     </ClInclude>
     <ClInclude Include="CustomXLoader.h">
@@ -452,9 +428,6 @@
       <Filter>シェーダー</Filter>
     </FxCompile>
     <FxCompile Include="shader\PostEffectStarBurst.fx">
-      <Filter>シェーダー</Filter>
-    </FxCompile>
-    <FxCompile Include="shader\MeshMix.fx">
       <Filter>シェーダー</Filter>
     </FxCompile>
     <FxCompile Include="shader\MeshPBR.fx">

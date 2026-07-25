@@ -889,7 +889,7 @@ bool SpawnMeshMixAtTransform(const std::wstring& filePath,
                                              1.0f,
                                              usePOM,
                                              useNormalMapping);
-    RegisterLoadedModel(L"MeshMixManager", filePath, pos, g_modelLoadScale, renderId);
+    RegisterLoadedModel(L"MeshMix2", filePath, pos, g_modelLoadScale, renderId);
     return true;
 }
 
@@ -906,7 +906,7 @@ bool SpawnMeshInstancingAtTransform(const std::wstring& filePath,
                                                      pos,
                                                      rotRadians,
                                                      g_modelLoadScale);
-    RegisterLoadedModel(L"MeshInstancing", filePath, pos, g_modelLoadScale, renderId);
+    RegisterLoadedModel(L"MeshInstancing2", filePath, pos, g_modelLoadScale, renderId);
     return true;
 }
 
@@ -925,7 +925,7 @@ bool SpawnMeshMixSkinAnimAtTransform(const std::wstring& filePath,
                                                       rotRadians,
                                                       g_modelLoadScale,
                                                       emptyAnimSetMap);
-    RegisterLoadedModel(L"MeshMixSkinAnim", filePath, pos, g_modelLoadScale, renderId);
+    RegisterLoadedModel(L"MeshMixSkinAnim2", filePath, pos, g_modelLoadScale, renderId);
     return true;
 }
 
@@ -1250,10 +1250,6 @@ bool RemoveLoadedModel(const size_t modelIndex)
     {
         removed = g_Render.RemoveMesh(model.m_renderId);
     }
-    else if (model.m_type == L"MeshMix" || model.m_type == L"MeshMixManager")
-    {
-        removed = g_Render.RemoveMeshMix(model.m_renderId);
-    }
     else if (model.m_type == L"MeshMix2")
     {
         removed = g_Render.RemoveMeshMix2(model.m_renderId);
@@ -1262,7 +1258,7 @@ bool RemoveLoadedModel(const size_t modelIndex)
     {
         removed = g_Render.RemoveMeshPBR(model.m_renderId);
     }
-    else if (model.m_type == L"MeshMixSkinAnim")
+    else if (model.m_type == L"MeshMixSkinAnim2")
     {
         removed = g_Render.RemoveMeshMixSkinAnim(model.m_renderId);
     }
@@ -1290,7 +1286,7 @@ bool RemoveLoadedModel(const size_t modelIndex)
     {
         removed = g_Render.RemoveMeshNormalMapping(model.m_renderId);
     }
-    else if (model.m_type == L"Instancing")
+    else if (model.m_type == L"MeshInstancing2")
     {
         removed = g_Render.RemoveMeshInstancing(model.m_path);
     }
@@ -1301,9 +1297,7 @@ bool RemoveLoadedModel(const size_t modelIndex)
     }
 
     bool renderIdsShift = false;
-    if (model.m_type == L"MeshMix" || model.m_type == L"MeshMixManager" ||
-        model.m_type == L"MeshPBR" || model.m_type == L"MeshPBRManager" ||
-        model.m_type == L"MeshMixSkinAnim" ||
+    if (model.m_type == L"MeshPBR" || model.m_type == L"MeshPBRManager" ||
         model.m_type == L"AnimMesh" ||
         model.m_type == L"SkinAnimMesh")
     {
@@ -1312,11 +1306,6 @@ bool RemoveLoadedModel(const size_t modelIndex)
 
     auto usesSameRenderContainer = [&model](const LoadedModelInfo& info)
     {
-        if (model.m_type == L"MeshMix" || model.m_type == L"MeshMixManager")
-        {
-            return info.m_type == L"MeshMix" || info.m_type == L"MeshMixManager";
-        }
-
         if (model.m_type == L"MeshPBR" || model.m_type == L"MeshPBRManager")
         {
             return info.m_type == L"MeshPBR" || info.m_type == L"MeshPBRManager";
@@ -1341,7 +1330,7 @@ bool RemoveLoadedModel(const size_t modelIndex)
         }
     }
 
-    if (model.m_type == L"Instancing")
+    if (model.m_type == L"MeshInstancing2")
     {
         g_loadedModelList.erase(std::remove_if(g_loadedModelList.begin(),
                                                g_loadedModelList.end(),
@@ -1425,7 +1414,7 @@ void SpawnMeshInstancingAtLookAt(const std::wstring& filePath)
 
     const float yaw = atan2f(forward.x, forward.z);
     const int renderId = g_Render.AddMeshInstansing(filePath, pos, D3DXVECTOR3(0, yaw, 0.0f), g_modelLoadScale);
-    RegisterLoadedModel(L"Instancing", filePath, pos, g_modelLoadScale, renderId);
+    RegisterLoadedModel(L"MeshInstancing2", filePath, pos, g_modelLoadScale, renderId);
 }
 
 NSRender::AnimSetMap CreateDefaultAnimSetMap()
@@ -1494,7 +1483,7 @@ void SpawnMeshMixSkinAnimAtLookAt(const std::wstring& filePath)
                                                      1.0f,
                                                      usePOM,
                                                      useNormalMapping);
-    RegisterLoadedModel(L"MeshMixSkinAnim", filePath, pos, g_modelLoadScale, renderId);
+    RegisterLoadedModel(L"MeshMixSkinAnim2", filePath, pos, g_modelLoadScale, renderId);
 }
 
 bool SpawnSplitSkinAnimMeshAtLookAt(const std::wstring& nonAnimFilePath,
@@ -1524,7 +1513,7 @@ bool SpawnSplitSkinAnimMeshAtLookAt(const std::wstring& nonAnimFilePath,
                                                      1.0f,
                                                      usePOM,
                                                      useNormalMapping);
-    RegisterLoadedModel(L"MeshMixSkinAnim", resolvedNonAnimPath, pos, g_modelLoadScale, renderId);
+    RegisterLoadedModel(L"MeshMixSkinAnim2", resolvedNonAnimPath, pos, g_modelLoadScale, renderId);
     return true;
 }
 

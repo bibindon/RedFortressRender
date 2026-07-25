@@ -4,7 +4,7 @@
 #include "../Render/Common.h"
 #include "../Render/CustomXLoader.h"
 #include "../Render/MeshInstancing2.h"
-#include "../Render/MeshMixSkinAnim.h"
+#include "../Render/MeshMixSkinAnim2.h"
 #include "../Render/Render.h"
 
 #include <algorithm>
@@ -456,7 +456,7 @@ namespace UnitTest1
             D3DDeviceScope deviceScope(windowScope.GetHWnd());
             Assert::IsTrue(deviceScope.IsValid(), L"Failed to create a Direct3D9 test device.");
 
-            NSRender::MeshMixSkinAnim mesh(meshPath,
+            NSRender::MeshMixSkinAnim2 mesh(meshPath,
                                            animationPath,
                                            D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                                            D3DXVECTOR3(0.0f, 0.0f, 0.0f),
@@ -567,7 +567,7 @@ namespace UnitTest1
             Assert::IsTrue(deviceScope.IsValid(), L"Failed to create a Direct3D9 test device.");
 
             NSRender::AnimSetMap animSetMap;
-            NSRender::MeshMixSkinAnim mesh(GetBlender512CylinderSkinnedFilePath(),
+            NSRender::MeshMixSkinAnim2 mesh(GetBlender512CylinderSkinnedFilePath(),
                                            D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                                            D3DXVECTOR3(0.0f, 0.0f, 0.0f),
                                            1.0f,
@@ -608,7 +608,7 @@ namespace UnitTest1
             Assert::IsTrue(deviceScope.IsValid(), L"Failed to create a Direct3D9 test device.");
 
             NSRender::AnimSetMap animSetMap;
-            NSRender::MeshMixSkinAnim mesh(
+            NSRender::MeshMixSkinAnim2 mesh(
                 GetBlender512CylinderSkinnedSeparatedFilePath(L"untitled.nonAnim.X"),
                 GetBlender512CylinderSkinnedSeparatedFilePath(L"untitled.AnimOnly.X"),
                 D3DXVECTOR3(0.0f, 0.0f, 0.0f),

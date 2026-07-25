@@ -40,6 +40,13 @@ static const float POINT_LIGHT_SPHERE_RADIUS = 5.0f;
 
 float4x3 g_matWorldArray[MAX_MATRICES];
 float4x4 g_matViewProj;
+float4x4 g_gBufferView;
+float g_gBufferNear = 0.1f;
+float g_gBufferFar = 30000.0f;
+float g_gBufferFogNear = 0.1f;
+float g_gBufferFogFar = 30000.0f;
+float g_gBufferPositionRange = 30000.0f;
+bool g_gBufferShadowReceiverEnabled = true;
 
 texture g_texture;
 sampler g_textureSampler = sampler_state
@@ -200,6 +207,31 @@ void ApplyMirrorClip(float3 worldPos)
     }
 }
 
+void WriteIntegratedGBuffer(float3 worldPos,
+                            float3 worldNormal,
+                            out float4 outDepth,
+                            out float4 outPosition,
+                            out float4 outNormal)
+{
+    float viewSpaceZ = mul(float4(worldPos, 1.0f), g_gBufferView).z;
+    float linearDepth = saturate((viewSpaceZ - g_gBufferNear) /
+                                 max(g_gBufferFar - g_gBufferNear, 0.0001f));
+    float fogLinearDepth = saturate((viewSpaceZ - g_gBufferFogNear) /
+                                    max(g_gBufferFogFar - g_gBufferFogNear, 0.0001f));
+    outDepth = float4(linearDepth, fogLinearDepth, 0.0f, 1.0f);
+
+    float3 world01 = saturate((worldPos / g_gBufferPositionRange) * 0.5f + 0.5f);
+    outPosition = float4(world01, 1.0f);
+
+    float shadowReceiverMask = 0.0f;
+    if (g_gBufferShadowReceiverEnabled)
+    {
+        shadowReceiverMask = 1.0f;
+    }
+    outNormal = float4(saturate(normalize(worldNormal) * 0.5f + 0.5f),
+                       shadowReceiverMask);
+}
+
 void VertexShader1(in  float4 inPosition     : POSITION,
                    in  float4 inBlendWeights : BLENDWEIGHT,
                    in  float4 inBlendIndices : BLENDINDICES,
@@ -265,10 +297,19 @@ void VertexShader1(in  float4 inPosition     : POSITION,
 void PixelShader1(in  float3 inPosWorld    : TEXCOORD0,
                   in  float3 inNormalWorld : TEXCOORD1,
                   in  float2 inTexCoord    : TEXCOORD2,
-                  out float4 outColor      : COLOR)
+                  out float4 outColor      : COLOR0,
+                  out float4 outDepth      : COLOR1,
+                  out float4 outPosition   : COLOR2,
+                  out float4 outNormal     : COLOR3,
+                  uniform int pointLightCount)
 {
     ApplyMirrorClip(inPosWorld);
     ApplyAlphaClip(inTexCoord);
+    WriteIntegratedGBuffer(inPosWorld,
+                           inNormalWorld,
+                           outDepth,
+                           outPosition,
+                           outNormal);
 
     if (g_yellowFlash)
     {
@@ -319,8 +360,40 @@ void PixelShader1(in  float3 inPosWorld    : TEXCOORD0,
     float fresnel = g_fresnelEnable ? (CalcFresnelFactor(normal, cameraDir) * g_fresnelIntensity) : 0.0f;
     float3 fresnelColor = g_specularColor.rgb * fresnel;
 
-    outColor = saturate(float4(ambient + lambert + specular + fresnelColor,
-                               textureColor.a * g_diffuse.a));
+    float3 pointLightDiffuse = 0.0f;
+    float3 pointLightSpecular = 0.0f;
+    for (int pointLightIndex = 0; pointLightIndex < pointLightCount; ++pointLightIndex)
+    {
+        if (g_pointLightBrightness[pointLightIndex] <= 0.0f)
+        {
+            continue;
+        }
+
+        float3 lightSurfacePos = ClosestPointOnPointLightShape(g_pointLightPos[pointLightIndex],
+                                                               g_pointLightShape[pointLightIndex],
+                                                               g_pointLightLineLength[pointLightIndex],
+                                                               g_pointLightSquareWidth[pointLightIndex],
+                                                               g_pointLightSquareHeight[pointLightIndex],
+                                                               g_pointLightRotation[pointLightIndex].xyz,
+                                                               inPosWorld);
+        float3 sampleDiffuse = 0.0f;
+        float3 sampleSpecular = 0.0f;
+        AccumulateSingleLightSample(lightSurfacePos,
+                                    g_pointLightBrightness[pointLightIndex],
+                                    g_pointLightColor[pointLightIndex],
+                                    inPosWorld,
+                                    normal,
+                                    cameraDir,
+                                    sampleDiffuse,
+                                    sampleSpecular);
+        pointLightDiffuse += sampleDiffuse;
+        pointLightSpecular += sampleSpecular;
+    }
+
+    float3 baseColor = saturate(ambient + lambert + specular + fresnelColor);
+    float3 pointLightColor = (albedo * pointLightDiffuse) + pointLightSpecular;
+    outColor = float4(baseColor + pointLightColor,
+                      saturate(textureColor.a * g_diffuse.a));
 }
 
 void PixelShaderPointLight(in  float4 inPosition    : POSITION,
@@ -388,12 +461,31 @@ void PixelShaderPointLight(in  float4 inPosition    : POSITION,
     outColor = float4((albedo * diffuseAccum) + specularAccum, 0.0f);
 }
 
-void PixelShaderAlphaDepthPrePass(in  float2 inTexCoord : TEXCOORD2,
-                                  out float4 outColor   : COLOR)
+void PixelShaderAlphaDepthPrePass(in  float3 inPosWorld    : TEXCOORD0,
+                                  in  float3 inNormalWorld : TEXCOORD1,
+                                  in  float2 inTexCoord    : TEXCOORD2,
+                                  out float4 outColor      : COLOR0,
+                                  out float4 outDepth      : COLOR1,
+                                  out float4 outPosition   : COLOR2,
+                                  out float4 outNormal     : COLOR3)
 {
     clip(tex2D(g_textureSampler, inTexCoord).a - 0.5f);
     outColor = 0.0f;
+    WriteIntegratedGBuffer(inPosWorld,
+                           inNormalWorld,
+                           outDepth,
+                           outPosition,
+                           outNormal);
 }
+
+PixelShader pixelShaderPointLightVariants[4] =
+{
+    compile ps_3_0 PixelShader1(0),
+    compile ps_3_0 PixelShader1(4),
+    compile ps_3_0 PixelShader1(8),
+    compile ps_3_0 PixelShader1(16)
+};
+int g_currentPointLightShaderIndex = 0;
 
 technique Technique1
 {
@@ -403,22 +495,13 @@ technique Technique1
         SrcBlend = SRCALPHA;
         DestBlend = INVSRCALPHA;
         ColorWriteEnable = 15;
+        ColorWriteEnable1 = 0;
+        ColorWriteEnable2 = 0;
+        ColorWriteEnable3 = 0;
         CullMode = NONE;
 
         VertexShader = (vsArray[g_currentBoneIndex]);
-        PixelShader = compile ps_3_0 PixelShader1();
-    }
-
-    pass PassPointLight
-    {
-        AlphaBlendEnable = TRUE;
-        SrcBlend = ONE;
-        DestBlend = ONE;
-        ColorWriteEnable = 15;
-        CullMode = NONE;
-
-        VertexShader = (vsArray[g_currentBoneIndex]);
-        PixelShader = compile ps_3_0 PixelShaderPointLight();
+        PixelShader = (pixelShaderPointLightVariants[g_currentPointLightShaderIndex]);
     }
 }
 
@@ -431,6 +514,9 @@ technique TechniqueAlphaDepthPrePass
         AlphaBlendEnable = FALSE;
         AlphaTestEnable = FALSE;
         ColorWriteEnable = 0;
+        ColorWriteEnable1 = 0;
+        ColorWriteEnable2 = 0;
+        ColorWriteEnable3 = 0;
         CullMode = NONE;
 
         VertexShader = (vsArray[g_currentBoneIndex]);
@@ -447,21 +533,68 @@ technique TechniqueAlphaClip
         AlphaBlendEnable = FALSE;
         AlphaTestEnable = FALSE;
         ColorWriteEnable = 15;
+        ColorWriteEnable1 = 0;
+        ColorWriteEnable2 = 0;
+        ColorWriteEnable3 = 0;
         CullMode = NONE;
 
         VertexShader = (vsArray[g_currentBoneIndex]);
-        PixelShader = compile ps_3_0 PixelShader1();
+        PixelShader = (pixelShaderPointLightVariants[g_currentPointLightShaderIndex]);
     }
+}
 
-    pass PassPointLight
+technique Technique1Integrated
+{
+    pass Pass0
     {
         AlphaBlendEnable = TRUE;
-        SrcBlend = ONE;
-        DestBlend = ONE;
+        SrcBlend = SRCALPHA;
+        DestBlend = INVSRCALPHA;
         ColorWriteEnable = 15;
+        ColorWriteEnable1 = 15;
+        ColorWriteEnable2 = 15;
+        ColorWriteEnable3 = 15;
         CullMode = NONE;
 
         VertexShader = (vsArray[g_currentBoneIndex]);
-        PixelShader = compile ps_3_0 PixelShaderPointLight();
+        PixelShader = (pixelShaderPointLightVariants[g_currentPointLightShaderIndex]);
+    }
+}
+
+technique TechniqueAlphaDepthPrePassIntegrated
+{
+    pass Pass0
+    {
+        ZEnable = TRUE;
+        ZWriteEnable = TRUE;
+        AlphaBlendEnable = FALSE;
+        AlphaTestEnable = FALSE;
+        ColorWriteEnable = 0;
+        ColorWriteEnable1 = 15;
+        ColorWriteEnable2 = 15;
+        ColorWriteEnable3 = 15;
+        CullMode = NONE;
+
+        VertexShader = (vsArray[g_currentBoneIndex]);
+        PixelShader = compile ps_3_0 PixelShaderAlphaDepthPrePass();
+    }
+}
+
+technique TechniqueAlphaClipIntegrated
+{
+    pass Pass0
+    {
+        ZEnable = TRUE;
+        ZWriteEnable = TRUE;
+        AlphaBlendEnable = FALSE;
+        AlphaTestEnable = FALSE;
+        ColorWriteEnable = 15;
+        ColorWriteEnable1 = 15;
+        ColorWriteEnable2 = 15;
+        ColorWriteEnable3 = 15;
+        CullMode = NONE;
+
+        VertexShader = (vsArray[g_currentBoneIndex]);
+        PixelShader = (pixelShaderPointLightVariants[g_currentPointLightShaderIndex]);
     }
 }

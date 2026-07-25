@@ -1,11 +1,9 @@
 ﻿#pragma once
 
-#include <deque>
 #include <string>
 #include <unordered_map>
 #include <vector>
 #include "Common.h"
-#include "MeshMixManager.h"
 
 namespace NSRender
 {
@@ -34,7 +32,6 @@ struct GBufferFrameProfile
 class IMeshMixSkinAnim;
 class MeshMixAnimNoBone;
 class MeshMix2;
-class MeshInstancing;
 class MeshInstancing2;
 class ParticleSystem;
 
@@ -68,14 +65,11 @@ public:
     static void ApplyIntegratedEffectParameters(LPD3DXEFFECT effect,
                                                 bool shadowReceiverEnabled);
 
-    void Draw(const std::deque<MeshMixManager>& meshList,
-              const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
+    void Draw(const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
               const std::vector<MeshMixAnimNoBone*>& meshMixAnimNoBoneList,
               const std::vector<MeshMix2*>& meshMix2List,
-              const std::unordered_map<std::wstring, MeshInstancing*>& meshInstancingMap,
               const std::unordered_map<std::wstring, MeshInstancing2*>& meshInstancing2Map,
               ParticleSystem* particleSystem,
-              bool meshMixManagerShadowReceiverEnabled,
               bool frontBackfaceCullingEnabled,
               bool generateBackDepth,
               LPDIRECT3DTEXTURE9* Z,

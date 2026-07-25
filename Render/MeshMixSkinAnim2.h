@@ -11,7 +11,7 @@
 #include "CustomXLoader2.h"
 #include "AnimController.h"
 #include "MeshMixSkinAnimCommon.h"
-#include "MeshMix.h"
+#include "MeshParam.h"
 #include "SkinAnimMeshAlloc.h"
 
 namespace NSRender

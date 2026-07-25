@@ -30,11 +30,9 @@
 #include "MeshSSSLike.h"
 #include "MeshPointLight.h"
 #include "MeshNormalMapping.h"
-#include "MeshMix.h"
-#include "MeshMixManager.h"
+#include "MeshParam.h"
 #include "MeshMix2.h"
 #include "MeshPBRManager.h"
-#include "MeshMixSkinAnim.h"
 #include "MeshMixSkinAnim2.h"
 #include "MeshMixAnimNoBone.h"
 #include "MeshSSS.h"
@@ -43,7 +41,6 @@
 #include "AnimMesh.h"
 #include "SkinAnimMesh.h"
 
-#include "MeshInstancing.h"
 #include "MeshInstancing2.h"
 
 #include "PostEffectGauss.h"
@@ -127,19 +124,16 @@ struct RenderingQualitySettings
 
 enum class RenderLoadedModelType
 {
-    MeshMix,
     MeshMix2,
     MeshPBR,
-    MeshInstancing,
     MeshInstancing2,
-    MeshMixSkinAnim,
     MeshMixSkinAnim2,
     MeshMixAnimNoBone
 };
 
 struct RenderLoadedModelInfo
 {
-    RenderLoadedModelType type = RenderLoadedModelType::MeshMix;
+    RenderLoadedModelType type = RenderLoadedModelType::MeshMix2;
     int renderId = -1;
     std::wstring filePath;
     float scale = 1.0f;
@@ -735,11 +729,9 @@ public:
     void SetPostEffectDepthBufferShadowTexSizeDivisor(const int scaleDivisor);
     void SetPostEffectDepthBufferShadowDebugLightDepth(const bool enabled);
     void SetPostEffectDepthBufferShadowFarEnabled(bool enabled);
-    void SetPostEffectDepthBufferShadowMeshMixManagerReceiverEnabled(bool enabled);
     bool IsPostEffectDepthBufferShadowEnabled() const;
     bool IsPostEffectDepthBufferShadowDebugLightDepthEnabled() const;
     bool IsPostEffectDepthBufferShadowFarEnabled() const;
-    bool IsPostEffectDepthBufferShadowMeshMixManagerReceiverEnabled() const;
     float GetPostEffectDepthBufferShadowIntensity() const;
     float GetPostEffectDepthBufferShadowSaturationBoost() const;
     float GetPostEffectDepthBufferShadowCoverage() const;
@@ -955,12 +947,9 @@ private:
     std::deque<MeshPOM> m_meshPOMList;
     std::vector<bool> m_meshPOMEnabledList;
 
-    std::deque<MeshMixManager> m_meshMixList;
-    std::vector<bool> m_meshMixSlotUsedList;
     std::vector<MeshMix2*> m_meshMix2List;
     std::deque<MeshPBRManager> m_meshPBRList;
 
-    std::unordered_map<std::wstring, MeshInstancing*> m_meshInstancingMap;
     std::unordered_map<std::wstring, MeshInstancing2*> m_meshInstancing2Map;
     bool m_meshInstancingHighQualityEnabled = false;
 
@@ -1139,7 +1128,6 @@ private:
     bool m_postEffectZShadowEnabled = true;
     bool m_postEffectZShadowDebugLightDepthEnabled = false;
     bool m_postEffectZShadowFarEnabled = false;
-    bool m_postEffectZShadowMeshMixManagerReceiverEnabled = false;
     bool m_postEffectSSAOEnabled = true;
     bool m_postEffectSSGIEnabled = false;
     bool m_postEffectFogZEnabled = true;

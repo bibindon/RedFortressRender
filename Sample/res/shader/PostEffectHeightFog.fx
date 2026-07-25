@@ -37,7 +37,7 @@ float2 g_ProjectionOffset = float2(0.0, 0.0);
 
 float3 ReconstructWorldPosition(float2 uv)
 {
-    float encodedDepth = tex2D(sZ, uv).r;
+    float encodedDepth = tex2D(sZ, uv).g;
     float viewZ = lerp(g_DepthDecodeNear, g_DepthDecodeFar, saturate(encodedDepth));
     float2 ndc = float2((uv.x * 2.0f) - 1.0f, 1.0f - (uv.y * 2.0f));
     float3 viewPos = float3((ndc.x - g_ProjectionOffset.x) * viewZ / g_ProjectionScale.x,
@@ -53,7 +53,7 @@ float HeightFogDistanceAmountAt(float2 uv)
         return 1.0f;
     }
 
-    float encodedDepth = tex2D(sZ, uv).r;
+    float encodedDepth = tex2D(sZ, uv).g;
     float decodedDepth = lerp(g_DepthDecodeNear, g_DepthDecodeFar, saturate(encodedDepth));
     return saturate((decodedDepth - g_DistanceStart) / (g_DistanceMax - g_DistanceStart));
 }
