@@ -2803,18 +2803,18 @@ void Render::Draw()
     {
         EnsurePostEffectDepthOfFieldInitialized();
         m_postEffectDepthOfField.SetBlend(1.0f);
-        m_postEffectDepthOfField.Draw(pTempTexture, pTexTempPos, pWorkTexture);
+        m_postEffectDepthOfField.Draw(pTempTexture, pTexTempPos, pWorkTexture, false);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
     else if (m_gBufferEnabled && m_postEffectDepthOfFieldMode == DepthOfFieldMode::AutoNear)
     {
         EnsurePostEffectDepthOfFieldInitialized();
-        m_postEffectDepthOfField.UpdateAutoBlend(pTexTempPos);
-        if (m_postEffectDepthOfField.GetBlend() > 0.001f)
-        {
-            m_postEffectDepthOfField.Draw(pTempTexture, pTexTempPos, pWorkTexture);
-            SwapPostEffectBuffers(pTempTexture, pWorkTexture);
-        }
+        m_postEffectDepthOfField.UpdateAutoBlend(pTexTempCameraZ,
+                                                 m_gBufferNearPlane,
+                                                 m_gBufferFarPlane,
+                                                 frameDeltaSeconds);
+        m_postEffectDepthOfField.Draw(pTempTexture, pTexTempPos, pWorkTexture, true);
+        SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
 
     if (m_gBufferEnabled && m_postEffectTAAEnabled)
@@ -6192,6 +6192,7 @@ void Render::SetPostEffectDepthOfField(const bool arg)
 
 void Render::SetPostEffectDepthOfFieldMode(const DepthOfFieldMode mode)
 {
+    const DepthOfFieldMode previousMode = m_postEffectDepthOfFieldMode;
     m_postEffectDepthOfFieldMode = mode;
     if (mode != DepthOfFieldMode::Disabled)
     {
@@ -6205,6 +6206,11 @@ void Render::SetPostEffectDepthOfFieldMode(const DepthOfFieldMode mode)
     else if (mode == DepthOfFieldMode::Enabled)
     {
         m_postEffectDepthOfField.SetBlend(1.0f);
+    }
+    else if (mode == DepthOfFieldMode::AutoNear &&
+             previousMode != DepthOfFieldMode::AutoNear)
+    {
+        m_postEffectDepthOfField.ResetAutoBlend();
     }
 }
 

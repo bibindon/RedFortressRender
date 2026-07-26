@@ -1,7 +1,7 @@
 ﻿#include "PostEffectDepthOfField.h"
 
 #include <algorithm>
-#include <cfloat>
+#include <stdexcept>
 
 #include "Camera.h"
 
@@ -9,6 +9,13 @@
 
 namespace NSRender
 {
+
+namespace
+{
+const int kAutoDepthWidth = 80;
+const int kAutoDepthHeight = 45;
+const int kAutoReductionScale = 4;
+}
 
 void PostEffectDepthOfField::Initialize()
 {
@@ -28,7 +35,7 @@ void PostEffectDepthOfField::Initialize()
                                           NULL);
     assert(SUCCEEDED(hr));
 
-    CreateReadbackSurface();
+    CreateAutoResources();
 
     if (!m_isRegisteredForDeviceReset)
     {
@@ -41,7 +48,8 @@ void PostEffectDepthOfField::Initialize()
 
 void PostEffectDepthOfField::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                                   LPDIRECT3DTEXTURE9 texRenderTargetPos,
-                                  LPDIRECT3DTEXTURE9 texTarget)
+                                  LPDIRECT3DTEXTURE9 texTarget,
+                                  const bool useAutoBlendTexture)
 {
     if (!m_isInitialized || m_d3dEffect == NULL)
     {
@@ -64,6 +72,8 @@ void PostEffectDepthOfField::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     m_d3dEffect->SetFloat("g_blurRadiusPixels", m_blurRadiusPixels);
     m_d3dEffect->SetFloat("g_positionRange", m_positionRange);
     m_d3dEffect->SetFloat("g_dofBlend", m_blend);
+    m_d3dEffect->SetBool("g_useAutoBlendTexture", useAutoBlendTexture);
+    m_d3dEffect->SetTexture("g_AutoBlendTex", m_autoBlendTextures[m_autoBlendTextureIndex]);
 
     DrawFullscreenQuad(renderTarget, texRenderTargetPos, texTarget, "Technique1");
 }
@@ -75,7 +85,7 @@ void PostEffectDepthOfField::Finalize()
         Common::RemoveDeviceLostResource(this);
         m_isRegisteredForDeviceReset = false;
     }
-    SAFE_RELEASE(m_surfacePositionReadback);
+    ReleaseAutoResources();
     SAFE_RELEASE(m_d3dEffect);
     m_isInitialized = false;
 }
@@ -120,36 +130,117 @@ void PostEffectDepthOfField::SetPositionRange(float positionRange)
     m_positionRange = (std::max)(1.0f, positionRange);
 }
 
-float PostEffectDepthOfField::GetBlend() const
+void PostEffectDepthOfField::UpdateAutoBlend(LPDIRECT3DTEXTURE9 texCameraDepth,
+                                             const float nearPlane,
+                                             const float farPlane,
+                                             const float deltaTime)
 {
-    return m_blend;
+    if (!m_isInitialized ||
+        m_d3dEffect == NULL ||
+        texCameraDepth == NULL ||
+        m_autoDepthLevels.empty())
+    {
+        return;
+    }
+
+    LPDIRECT3DSURFACE9 previousRenderTarget = NULL;
+    HRESULT hr = Common::D3DDevice()->GetRenderTarget(0, &previousRenderTarget);
+    if (FAILED(hr))
+    {
+        throw std::runtime_error("Failed to get the render target before DOF auto depth reduction.");
+    }
+
+    D3DVIEWPORT9 previousViewport { };
+    hr = Common::D3DDevice()->GetViewport(&previousViewport);
+    if (FAILED(hr))
+    {
+        SAFE_RELEASE(previousRenderTarget);
+        throw std::runtime_error("Failed to get the viewport before DOF auto depth reduction.");
+    }
+
+    m_d3dEffect->SetFloat("g_autoCenterRadiusNdc", m_autoCenterRadiusNdc);
+    DrawAutoPass(texCameraDepth,
+                 m_autoDepthLevels.front().texture,
+                 m_autoDepthLevels.front().width,
+                 m_autoDepthLevels.front().height,
+                 "TechniqueAutoExtract");
+
+    for (std::size_t levelIndex = 1; levelIndex < m_autoDepthLevels.size(); ++levelIndex)
+    {
+        const AutoDepthLevel& sourceLevel = m_autoDepthLevels.at(levelIndex - 1);
+        const AutoDepthLevel& targetLevel = m_autoDepthLevels.at(levelIndex);
+        const float sourceTexelSize[2] =
+        {
+            1.0f / static_cast<float>(sourceLevel.width),
+            1.0f / static_cast<float>(sourceLevel.height)
+        };
+        const float targetSize[2] =
+        {
+            static_cast<float>(targetLevel.width),
+            static_cast<float>(targetLevel.height)
+        };
+        m_d3dEffect->SetFloatArray("g_AutoTexelSize", sourceTexelSize, 2);
+        m_d3dEffect->SetFloatArray("g_AutoTargetSize", targetSize, 2);
+        DrawAutoPass(sourceLevel.texture,
+                     targetLevel.texture,
+                     targetLevel.width,
+                     targetLevel.height,
+                     "TechniqueAutoReduce");
+    }
+
+    int nextBlendTextureIndex = 0;
+    if (m_autoBlendTextureIndex == 0)
+    {
+        nextBlendTextureIndex = 1;
+    }
+    m_d3dEffect->SetTexture("g_AutoPreviousBlendTex", m_autoBlendTextures[m_autoBlendTextureIndex]);
+    m_d3dEffect->SetFloat("g_autoNearPlane", nearPlane);
+    m_d3dEffect->SetFloat("g_autoFarPlane", farPlane);
+    m_d3dEffect->SetFloat("g_autoActivationDistanceMeters", m_autoActivationDistance);
+    m_d3dEffect->SetFloat("g_autoBlendSpeed", m_autoBlendSpeed);
+    m_d3dEffect->SetFloat("g_autoDeltaTime", (std::max)(0.0f, deltaTime));
+    DrawAutoPass(m_autoDepthLevels.back().texture,
+                 m_autoBlendTextures[nextBlendTextureIndex],
+                 1,
+                 1,
+                 "TechniqueAutoBlend");
+    m_autoBlendTextureIndex = nextBlendTextureIndex;
+
+    hr = Common::D3DDevice()->SetRenderTarget(0, previousRenderTarget);
+    SAFE_RELEASE(previousRenderTarget);
+    if (FAILED(hr))
+    {
+        throw std::runtime_error("Failed to restore the render target after DOF auto depth reduction.");
+    }
+    hr = Common::D3DDevice()->SetViewport(&previousViewport);
+    if (FAILED(hr))
+    {
+        throw std::runtime_error("Failed to restore the viewport after DOF auto depth reduction.");
+    }
 }
 
-void PostEffectDepthOfField::UpdateAutoBlend(LPDIRECT3DTEXTURE9 texRenderTargetPos)
+void PostEffectDepthOfField::ResetAutoBlend()
 {
-    const float nearestDistance = MeasureCenterNearestDistance(texRenderTargetPos);
-    float targetBlend = 0.0f;
-    if (nearestDistance < m_autoActivationDistance)
+    m_autoBlendTextureIndex = 0;
+    for (LPDIRECT3DTEXTURE9 texture : m_autoBlendTextures)
     {
-        targetBlend = 1.0f;
-    }
+        if (texture == NULL)
+        {
+            continue;
+        }
 
-    const DWORD currentTick = GetTickCount();
-    float deltaTime = 0.0f;
-    if (m_lastAutoBlendTick != 0)
-    {
-        deltaTime = static_cast<float>(currentTick - m_lastAutoBlendTick) * (1.0f / 1000.0f);
-    }
-    m_lastAutoBlendTick = currentTick;
-
-    const float blendStep = m_autoBlendSpeed * deltaTime;
-    if (m_blend < targetBlend)
-    {
-        m_blend = (std::min)(m_blend + blendStep, targetBlend);
-    }
-    else
-    {
-        m_blend = (std::max)(m_blend - blendStep, targetBlend);
+        LPDIRECT3DSURFACE9 surface = NULL;
+        const HRESULT surfaceResult = texture->GetSurfaceLevel(0, &surface);
+        if (FAILED(surfaceResult))
+        {
+            throw std::runtime_error("Failed to get a DOF auto blend surface.");
+        }
+        const HRESULT fillResult = Common::D3DDevice()->ColorFill(surface, NULL, D3DCOLOR_ARGB(0, 0, 0, 0));
+        SAFE_RELEASE(surface);
+        if (FAILED(fillResult))
+        {
+            throw std::runtime_error("Failed to clear a DOF auto blend surface.");
+        }
     }
 }
 
@@ -165,7 +256,7 @@ void PostEffectDepthOfField::OnDeviceLost()
         m_d3dEffect->OnLostDevice();
     }
 
-    SAFE_RELEASE(m_surfacePositionReadback);
+    ReleaseAutoResources();
 }
 
 void PostEffectDepthOfField::OnDeviceReset()
@@ -180,7 +271,7 @@ void PostEffectDepthOfField::OnDeviceReset()
         m_d3dEffect->OnResetDevice();
     }
 
-    CreateReadbackSurface();
+    CreateAutoResources();
 }
 
 void PostEffectDepthOfField::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
@@ -227,91 +318,145 @@ void PostEffectDepthOfField::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,
     Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
 }
 
-float PostEffectDepthOfField::MeasureCenterNearestDistance(LPDIRECT3DTEXTURE9 texRenderTargetPos)
+void PostEffectDepthOfField::DrawAutoPass(LPDIRECT3DTEXTURE9 texSource,
+                                          LPDIRECT3DTEXTURE9 texTarget,
+                                          const int targetWidth,
+                                          const int targetHeight,
+                                          const std::string& technique)
 {
-    if (texRenderTargetPos == NULL || m_surfacePositionReadback == NULL)
+    if (texSource == NULL || texTarget == NULL || targetWidth <= 0 || targetHeight <= 0)
     {
-        return FLT_MAX;
+        throw std::runtime_error("Invalid texture or size for a DOF auto pass.");
     }
 
-    LPDIRECT3DSURFACE9 sourceSurface = NULL;
-    if (FAILED(texRenderTargetPos->GetSurfaceLevel(0, &sourceSurface)))
+    for (DWORD samplerIndex = 0; samplerIndex < 16; ++samplerIndex)
     {
-        return FLT_MAX;
+        Common::D3DDevice()->SetTexture(samplerIndex, NULL);
     }
 
-    const HRESULT copyResult = Common::D3DDevice()->GetRenderTargetData(sourceSurface, m_surfacePositionReadback);
-    SAFE_RELEASE(sourceSurface);
-    if (FAILED(copyResult))
+    LPDIRECT3DSURFACE9 targetSurface = NULL;
+    HRESULT hr = texTarget->GetSurfaceLevel(0, &targetSurface);
+    if (FAILED(hr))
     {
-        return FLT_MAX;
+        throw std::runtime_error("Failed to get a DOF auto render-target surface.");
+    }
+    hr = Common::D3DDevice()->SetRenderTarget(0, targetSurface);
+    SAFE_RELEASE(targetSurface);
+    if (FAILED(hr))
+    {
+        throw std::runtime_error("Failed to set a DOF auto render target.");
     }
 
-    D3DLOCKED_RECT lockedRect { };
-    if (FAILED(m_surfacePositionReadback->LockRect(&lockedRect, NULL, D3DLOCK_READONLY)))
+    D3DVIEWPORT9 viewport { };
+    viewport.X = 0;
+    viewport.Y = 0;
+    viewport.Width = static_cast<DWORD>(targetWidth);
+    viewport.Height = static_cast<DWORD>(targetHeight);
+    viewport.MinZ = 0.0f;
+    viewport.MaxZ = 1.0f;
+    hr = Common::D3DDevice()->SetViewport(&viewport);
+    if (FAILED(hr))
     {
-        return FLT_MAX;
+        throw std::runtime_error("Failed to set a DOF auto viewport.");
     }
 
-    const int screenW = Common::ScreenW();
-    const int screenH = Common::ScreenH();
-    const float centerX = static_cast<float>(screenW) * 0.5f;
-    const float centerY = static_cast<float>(screenH) * 0.5f;
-    const float radiusPxX = (static_cast<float>(screenW) * 0.5f) * m_autoCenterRadiusNdc;
-    const float radiusPxY = (static_cast<float>(screenH) * 0.5f) * m_autoCenterRadiusNdc;
-    const int minX = (std::max)(0, static_cast<int>(centerX - radiusPxX));
-    const int maxX = (std::min)(screenW - 1, static_cast<int>(centerX + radiusPxX));
-    const int minY = (std::max)(0, static_cast<int>(centerY - radiusPxY));
-    const int maxY = (std::min)(screenH - 1, static_cast<int>(centerY + radiusPxY));
-    const int sampleStep = 8;
-    const D3DXVECTOR3 cameraPos = Camera::GetEyePos();
+    m_d3dEffect->SetTechnique(technique.c_str());
+    m_d3dEffect->SetTexture("g_AutoSourceTex", texSource);
 
-    float nearestDistance = FLT_MAX;
+    ScreenVertex quad[4] { };
+    quad[0] = { 0.0f,                            0.0f,                             0.0f, 1.0f, 0.0f, 0.0f };
+    quad[1] = { static_cast<float>(targetWidth), 0.0f,                             0.0f, 1.0f, 1.0f, 0.0f };
+    quad[2] = { 0.0f,                            static_cast<float>(targetHeight), 0.0f, 1.0f, 0.0f, 1.0f };
+    quad[3] = { static_cast<float>(targetWidth), static_cast<float>(targetHeight), 0.0f, 1.0f, 1.0f, 1.0f };
 
-    for (int y = minY; y <= maxY; y += sampleStep)
+    Common::D3DDevice()->SetVertexShader(NULL);
+    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
+    Common::D3DDevice()->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
+
+    hr = Common::D3DDevice()->BeginScene();
+    if (FAILED(hr))
     {
-        const float normalizedY = (static_cast<float>(y) - centerY) / (std::max)(radiusPxY, 0.0001f);
-        const BYTE* row = static_cast<const BYTE*>(lockedRect.pBits) + (lockedRect.Pitch * y);
-
-        for (int x = minX; x <= maxX; x += sampleStep)
-        {
-            const float normalizedX = (static_cast<float>(x) - centerX) / (std::max)(radiusPxX, 0.0001f);
-            if ((normalizedX * normalizedX) + (normalizedY * normalizedY) > 1.0f)
-            {
-                continue;
-            }
-
-            const auto* encodedPosition = reinterpret_cast<const D3DXFLOAT16*>(row + (x * sizeof(D3DXFLOAT16) * 4));
-            FLOAT decodedPosition[4] { };
-            D3DXFloat16To32Array(decodedPosition, encodedPosition, 4);
-            if (decodedPosition[3] <= 0.0f)
-            {
-                continue;
-            }
-
-            const D3DXVECTOR3 worldPos(((decodedPosition[0] * 2.0f) - 1.0f) * m_positionRange,
-                                       ((decodedPosition[1] * 2.0f) - 1.0f) * m_positionRange,
-                                       ((decodedPosition[2] * 2.0f) - 1.0f) * m_positionRange);
-            const D3DXVECTOR3 toObject = worldPos - cameraPos;
-            nearestDistance = (std::min)(nearestDistance, D3DXVec3Length(&toObject));
-        }
+        throw std::runtime_error("Failed to begin a DOF auto scene.");
     }
-
-    m_surfacePositionReadback->UnlockRect();
-    return nearestDistance;
+    m_d3dEffect->Begin(NULL, 0);
+    m_d3dEffect->BeginPass(0);
+    hr = Common::D3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, quad, sizeof(ScreenVertex));
+    m_d3dEffect->EndPass();
+    m_d3dEffect->End();
+    Common::D3DDevice()->EndScene();
+    Common::D3DDevice()->SetRenderState(D3DRS_ZENABLE, TRUE);
+    if (FAILED(hr))
+    {
+        throw std::runtime_error("Failed to draw a DOF auto pass.");
+    }
 }
 
-void PostEffectDepthOfField::CreateReadbackSurface()
+void PostEffectDepthOfField::CreateAutoResources()
 {
-    SAFE_RELEASE(m_surfacePositionReadback);
+    ReleaseAutoResources();
 
-    const HRESULT hr = Common::D3DDevice()->CreateOffscreenPlainSurface(Common::ScreenW(),
-                                                                        Common::ScreenH(),
-                                                                        D3DFMT_A16B16G16R16F,
-                                                                        D3DPOOL_SYSTEMMEM,
-                                                                        &m_surfacePositionReadback,
-                                                                        NULL);
-    assert(SUCCEEDED(hr));
+    int width = kAutoDepthWidth;
+    int height = kAutoDepthHeight;
+    while (true)
+    {
+        AutoDepthLevel level;
+        level.width = width;
+        level.height = height;
+        const HRESULT createResult = D3DXCreateTexture(Common::D3DDevice(),
+                                                       static_cast<UINT>(width),
+                                                       static_cast<UINT>(height),
+                                                       1,
+                                                       D3DUSAGE_RENDERTARGET,
+                                                       D3DFMT_G16R16F,
+                                                       D3DPOOL_DEFAULT,
+                                                       &level.texture);
+        if (FAILED(createResult))
+        {
+            ReleaseAutoResources();
+            throw std::runtime_error("Failed to create a DOF auto depth texture.");
+        }
+        m_autoDepthLevels.push_back(level);
+
+        if (width == 1 && height == 1)
+        {
+            break;
+        }
+
+        width = (width + kAutoReductionScale - 1) / kAutoReductionScale;
+        height = (height + kAutoReductionScale - 1) / kAutoReductionScale;
+    }
+
+    for (LPDIRECT3DTEXTURE9& texture : m_autoBlendTextures)
+    {
+        const HRESULT createResult = D3DXCreateTexture(Common::D3DDevice(),
+                                                       1,
+                                                       1,
+                                                       1,
+                                                       D3DUSAGE_RENDERTARGET,
+                                                       D3DFMT_G16R16F,
+                                                       D3DPOOL_DEFAULT,
+                                                       &texture);
+        if (FAILED(createResult))
+        {
+            ReleaseAutoResources();
+            throw std::runtime_error("Failed to create a DOF auto blend texture.");
+        }
+    }
+    ResetAutoBlend();
+}
+
+void PostEffectDepthOfField::ReleaseAutoResources()
+{
+    for (AutoDepthLevel& level : m_autoDepthLevels)
+    {
+        SAFE_RELEASE(level.texture);
+    }
+    m_autoDepthLevels.clear();
+    for (LPDIRECT3DTEXTURE9& texture : m_autoBlendTextures)
+    {
+        SAFE_RELEASE(texture);
+    }
+    m_autoBlendTextureIndex = 0;
 }
 
 }

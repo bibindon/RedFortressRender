@@ -7,6 +7,15 @@ float g_focusBandHalfWidthMeters = 2.0;
 float g_blurRadiusPixels = 1.0;
 float g_positionRange = 50.0;
 float g_dofBlend = 1.0;
+bool g_useAutoBlendTexture = false;
+float2 g_AutoTexelSize = float2(1.0, 1.0);
+float2 g_AutoTargetSize = float2(1.0, 1.0);
+float g_autoCenterRadiusNdc = 0.35;
+float g_autoNearPlane = 0.1;
+float g_autoFarPlane = 30000.0;
+float g_autoActivationDistanceMeters = 10.0;
+float g_autoBlendSpeed = 2.5;
+float g_autoDeltaTime = 0.0;
 
 // 焦点範囲の外側から、何mごとに 3x3 -> 5x5 -> 7x7 -> 9x9 -> 11x11 と強くするか。
 // C++ 側から渡さなくても、この初期値で動作します。
@@ -27,6 +36,39 @@ texture g_PositionTex;
 sampler positionSampler = sampler_state
 {
     Texture = (g_PositionTex);
+    MinFilter = NONE;
+    MagFilter = NONE;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+
+texture g_AutoBlendTex;
+sampler autoBlendSampler = sampler_state
+{
+    Texture = (g_AutoBlendTex);
+    MinFilter = NONE;
+    MagFilter = NONE;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+
+texture g_AutoSourceTex;
+sampler autoSourceSampler = sampler_state
+{
+    Texture = (g_AutoSourceTex);
+    MinFilter = NONE;
+    MagFilter = NONE;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+
+texture g_AutoPreviousBlendTex;
+sampler autoPreviousBlendSampler = sampler_state
+{
+    Texture = (g_AutoPreviousBlendTex);
     MinFilter = NONE;
     MagFilter = NONE;
     MipFilter = NONE;
@@ -158,6 +200,15 @@ float4 PS(in float2 uv : TEXCOORD0) : COLOR0
     }
 
     float4 baseColor = tex2D(colorSampler, sampleUv);
+    float dofBlend = g_dofBlend;
+    if (g_useAutoBlendTexture)
+    {
+        dofBlend = tex2Dlod(autoBlendSampler, float4(0.5f, 0.5f, 0.0f, 0.0f)).r;
+    }
+    if (dofBlend <= 0.001f)
+    {
+        return baseColor;
+    }
 
     float centerValid = 0.0f;
     float centerDistanceMeters = GetDistanceMeters(sampleUv, centerValid);
@@ -216,7 +267,63 @@ float4 PS(in float2 uv : TEXCOORD0) : COLOR0
     }
 
     const float4 blurredColor = sumColor / weightSum;
-    return lerp(baseColor, blurredColor, saturate(g_dofBlend));
+    return lerp(baseColor, blurredColor, saturate(dofBlend));
+}
+
+float4 PS_AutoExtract(in float2 uv : TEXCOORD0) : COLOR0
+{
+    float2 ellipsePosition = (uv * 2.0f) - 1.0f;
+    if (dot(ellipsePosition, ellipsePosition) > 1.0f)
+    {
+        return float4(1.0f, 0.0f, 0.0f, 1.0f);
+    }
+
+    float2 sampleUv = float2(0.5f, 0.5f);
+    sampleUv += (uv - 0.5f) * g_autoCenterRadiusNdc;
+    float linearDepth = tex2Dlod(autoSourceSampler, float4(sampleUv, 0.0f, 0.0f)).r;
+    return float4(linearDepth, 0.0f, 0.0f, 1.0f);
+}
+
+float4 PS_AutoReduce(in float2 uv : TEXCOORD0) : COLOR0
+{
+    float2 targetPixel = floor(uv * g_AutoTargetSize);
+    float2 sourceBasePixel = targetPixel * 4.0f;
+    float minimumDepth = 1.0f;
+    float2 minimumUv = g_AutoTexelSize * 0.5f;
+    float2 maximumUv = 1.0f - minimumUv;
+
+    [unroll]
+    for (int y = 0; y < 4; ++y)
+    {
+        [unroll]
+        for (int x = 0; x < 4; ++x)
+        {
+            float2 sourcePixel = sourceBasePixel + float2((float)x, (float)y);
+            float2 sampleUv = (sourcePixel + 0.5f) * g_AutoTexelSize;
+            sampleUv = clamp(sampleUv, minimumUv, maximumUv);
+            float depth = tex2Dlod(autoSourceSampler, float4(sampleUv, 0.0f, 0.0f)).r;
+            minimumDepth = min(minimumDepth, depth);
+        }
+    }
+
+    return float4(minimumDepth, 0.0f, 0.0f, 1.0f);
+}
+
+float4 PS_AutoBlend(in float2 uv : TEXCOORD0) : COLOR0
+{
+    float linearDepth = tex2Dlod(autoSourceSampler, float4(0.5f, 0.5f, 0.0f, 0.0f)).r;
+    float distanceMeters = lerp(g_autoNearPlane, g_autoFarPlane, saturate(linearDepth));
+    float targetBlend = 0.0f;
+    if (distanceMeters < g_autoActivationDistanceMeters)
+    {
+        targetBlend = 1.0f;
+    }
+
+    float previousBlend = tex2Dlod(autoPreviousBlendSampler,
+                                   float4(0.5f, 0.5f, 0.0f, 0.0f)).r;
+    float blendStep = saturate(g_autoBlendSpeed * g_autoDeltaTime);
+    float blend = previousBlend + ((targetBlend - previousBlend) * blendStep);
+    return float4(blend, 0.0f, 0.0f, 1.0f);
 }
 
 technique Technique1
@@ -226,5 +333,35 @@ technique Technique1
         CullMode = NONE;
         VertexShader = compile vs_3_0 VS();
         PixelShader = compile ps_3_0 PS();
+    }
+}
+
+technique TechniqueAutoExtract
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS();
+        PixelShader = compile ps_3_0 PS_AutoExtract();
+    }
+}
+
+technique TechniqueAutoReduce
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS();
+        PixelShader = compile ps_3_0 PS_AutoReduce();
+    }
+}
+
+technique TechniqueAutoBlend
+{
+    pass P0
+    {
+        CullMode = NONE;
+        VertexShader = compile vs_3_0 VS();
+        PixelShader = compile ps_3_0 PS_AutoBlend();
     }
 }

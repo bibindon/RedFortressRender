@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include <vector>
+
 #include "Common.h"
 
 namespace NSRender
@@ -20,7 +22,8 @@ public:
 
     void Draw(LPDIRECT3DTEXTURE9 texSource,
               LPDIRECT3DTEXTURE9 texRenderTargetPos,
-              LPDIRECT3DTEXTURE9 texTarget);
+              LPDIRECT3DTEXTURE9 texTarget,
+              bool useAutoBlendTexture = false);
 
     void Finalize();
 
@@ -32,8 +35,11 @@ public:
     void SetAutoActivationDistance(float autoActivationDistance);
     void SetBlend(float blend);
     void SetPositionRange(float positionRange);
-    float GetBlend() const;
-    void UpdateAutoBlend(LPDIRECT3DTEXTURE9 texRenderTargetPos);
+    void UpdateAutoBlend(LPDIRECT3DTEXTURE9 texCameraDepth,
+                         float nearPlane,
+                         float farPlane,
+                         float deltaTime);
+    void ResetAutoBlend();
 
     void OnDeviceLost();
     void OnDeviceReset();
@@ -50,13 +56,27 @@ private:
                             LPDIRECT3DTEXTURE9 texPosition,
                             LPDIRECT3DTEXTURE9 texTarget,
                             const std::string& technique);
-    float MeasureCenterNearestDistance(LPDIRECT3DTEXTURE9 texRenderTargetPos);
-    void CreateReadbackSurface();
+    void DrawAutoPass(LPDIRECT3DTEXTURE9 texSource,
+                      LPDIRECT3DTEXTURE9 texTarget,
+                      int targetWidth,
+                      int targetHeight,
+                      const std::string& technique);
+    void CreateAutoResources();
+    void ReleaseAutoResources();
+
+    struct AutoDepthLevel
+    {
+        LPDIRECT3DTEXTURE9 texture = NULL;
+        int width = 0;
+        int height = 0;
+    };
 
     LPD3DXEFFECT m_d3dEffect = NULL;
     bool m_isInitialized = false;
     bool m_isRegisteredForDeviceReset = false;
-    LPDIRECT3DSURFACE9 m_surfacePositionReadback = NULL;
+    std::vector<AutoDepthLevel> m_autoDepthLevels;
+    LPDIRECT3DTEXTURE9 m_autoBlendTextures[2] { NULL, NULL };
+    int m_autoBlendTextureIndex = 0;
 
     float m_focalDistance = 8.0f;
     float m_startNear = 0.0f;
@@ -68,7 +88,6 @@ private:
     float m_autoActivationDistance = 10.0f;
     float m_autoCenterRadiusNdc = 0.35f;
     float m_autoBlendSpeed = 2.5f;
-    DWORD m_lastAutoBlendTick = 0;
 };
 
 }
