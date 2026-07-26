@@ -537,6 +537,30 @@ bool Render::IsAllMeshLoaded() const
         }
     }
 
+    for (const auto* mesh : m_meshMixAnimNoBone2List)
+    {
+        if (mesh != nullptr && !mesh->IsLoaded())
+        {
+            return false;
+        }
+    }
+
+    for (const auto& mesh : m_meshPBRList)
+    {
+        if (!mesh.IsLoaded())
+        {
+            return false;
+        }
+    }
+
+    for (const auto& mesh : m_meshInstancing2Map)
+    {
+        if (mesh.second != nullptr && !mesh.second->IsLoaded())
+        {
+            return false;
+        }
+    }
+
     return true;
 }
 

@@ -284,6 +284,11 @@ void MeshInstancing2::WaitForLoad()
     }
 }
 
+bool MeshInstancing2::IsLoaded() const
+{
+    return m_bLoaded.load();
+}
+
 void MeshInstancing2::InitializeInternal()
 {
     std::ifstream file(m_filePath, std::ios::binary);

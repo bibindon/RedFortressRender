@@ -21,6 +21,7 @@ public:
     void Initialize(const std::wstring& filePath, bool async = true);
     void Initialize(const std::wstring& filePath, const std::wstring& csvPath, bool async = true);
     void WaitForLoad();
+    bool IsLoaded() const;
 
     void Finalize();
 
