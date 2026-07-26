@@ -5263,6 +5263,11 @@ void Render::DrawImage(const std::wstring& text,
     m_sprite.PlaceImage(text, X, Y, transparency);
 }
 
+void Render::PreloadImage(const std::wstring& filename)
+{
+    m_sprite.LoadImage_(filename);
+}
+
 void Render::DrawImageSized(const std::wstring& filename,
                             const int X,
                             const int Y,

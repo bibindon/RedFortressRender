@@ -597,6 +597,8 @@ public:
                    const int Y,
                    const int transparency = 255);
 
+    void PreloadImage(const std::wstring& filename);
+
     void DrawImageSized(const std::wstring& filename,
                         const int X,
                         const int Y,
