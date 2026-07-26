@@ -606,6 +606,14 @@ public:
                         const int height,
                         const int transparency = 255);
 
+    void DrawImageSizedEx(const std::wstring& filename,
+                          const int X,
+                          const int Y,
+                          const int width,
+                          const int height,
+                          const int transparency,
+                          const bool flipX);
+
     void DrawImageSizedRect(const std::wstring& filename,
                             const int X,
                             const int Y,

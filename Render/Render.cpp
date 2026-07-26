@@ -5284,6 +5284,23 @@ void Render::DrawImageSized(const std::wstring& filename,
     m_sprite.PlaceImage(filename, X, Y, width, height, transparency);
 }
 
+void Render::DrawImageSizedEx(const std::wstring& filename,
+                              const int X,
+                              const int Y,
+                              const int width,
+                              const int height,
+                              const int transparency,
+                              const bool flipX)
+{
+    if (width <= 0 || height <= 0)
+    {
+        return;
+    }
+
+    m_sprite.LoadImage_(filename);
+    m_sprite.PlaceImage(filename, X, Y, width, height, transparency, flipX);
+}
+
 void Render::DrawImageSizedRect(const std::wstring& filename,
                                 const int X,
                                 const int Y,
