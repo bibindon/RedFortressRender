@@ -1580,6 +1580,13 @@ void MeshMixSkinAnim2::RenderMeshContainer(const LPD3DXMESHCONTAINER containerBa
             m_D3DEffect->SetTexture("g_texture", nullptr);
         }
 
+        BOOL treatTextureAsWhite = FALSE;
+        if (m_param.treatTextureAsWhite || m_damageFlash || m_yellowFlash || m_customFlash || !hasTexture)
+        {
+            treatTextureAsWhite = TRUE;
+        }
+        m_D3DEffect->SetBool("g_treatTextureAsWhite", treatTextureAsWhite);
+
         const bool useAlphaDepthPrePass = !m_alphaClipEnabled && !m_ignoreTransparentMaterial && hasTexture;
         if (useAlphaDepthPrePass)
         {
