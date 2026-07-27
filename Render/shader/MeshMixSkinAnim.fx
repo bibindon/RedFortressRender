@@ -83,7 +83,7 @@ float3 SampleBaseTextureColor(float2 uv)
 
 void ApplyAlphaClip(float2 uv)
 {
-    if (g_alphaClipEnabled)
+    if (g_alphaClipEnabled && !g_treatTextureAsWhite)
     {
         clip(tex2D(g_textureSampler, uv).a - 0.5f);
     }
@@ -91,7 +91,7 @@ void ApplyAlphaClip(float2 uv)
 
 float GetSurfaceAlpha(float2 uv)
 {
-    if (g_alphaClipEnabled)
+    if (g_alphaClipEnabled && !g_treatTextureAsWhite)
     {
         return tex2D(g_textureSampler, uv).a;
     }
@@ -478,7 +478,7 @@ void PixelShaderPointLight(in  float4 inPosition    : POSITION,
         specularAccum += sampleSpecular;
     }
 
-    outColor = float4((albedo * diffuseAccum) + specularAccum, 0.0f);
+    outColor = float4((albedo * diffuseAccum) + specularAccum, GetSurfaceAlpha(inTexCoord));
 }
 
 void PixelShaderAlphaDepthPrePass(in  float3 inPosWorld    : TEXCOORD0,
