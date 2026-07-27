@@ -121,6 +121,38 @@ namespace UnitTest1
             return L"";
         }
 
+        std::wstring GetCrabAssetFilePath()
+        {
+            wchar_t currentDirectory[MAX_PATH] { };
+            const DWORD length = GetCurrentDirectoryW(_countof(currentDirectory), currentDirectory);
+            if (length == 0 || length >= _countof(currentDirectory))
+            {
+                return L"";
+            }
+
+            std::wstring directory(currentDirectory);
+            for (int i = 0; i < 8; ++i)
+            {
+                const std::wstring candidate =
+                    directory +
+                    L"\\RedFortress2\\MultiPassRendering\\res\\model2\\Crab\\enemy.x";
+                if (FileExists(candidate))
+                {
+                    return candidate;
+                }
+
+                const std::size_t slashPos = directory.find_last_of(L"\\/");
+                if (slashPos == std::wstring::npos)
+                {
+                    break;
+                }
+
+                directory = directory.substr(0, slashPos);
+            }
+
+            return L"";
+        }
+
         std::wstring GetLemonTreeBlender512FilePath()
         {
             const std::wstring filePath =
@@ -650,6 +682,68 @@ namespace UnitTest1
             Assert::IsTrue(SUCCEEDED(result.hr), result.message.c_str());
             Assert::IsTrue(result.frameCount >= 3);
             Assert::IsTrue(result.meshContainerCount >= 1);
+        }
+
+        TEST_METHOD(LoadCrabSkinnedWithCustomLoader)
+        {
+            HiddenWindowScope windowScope;
+            Assert::IsNotNull(windowScope.GetHWnd(), L"Failed to create a hidden test window.");
+
+            D3DDeviceScope deviceScope(windowScope.GetHWnd());
+            Assert::IsTrue(deviceScope.IsValid(), L"Failed to create a Direct3D9 test device.");
+
+            const std::wstring filePath = GetCrabAssetFilePath();
+            Assert::IsFalse(filePath.empty(), L"Crab enemy.x was not found.");
+
+            NSRender::CustomXLoader2::CustomXLoadOptions options;
+            options.allowDuplicateSkinWeightsCount = true;
+            options.transposeAnimationMatrixKeys = true;
+            options.invertRecalculatedMeshNormals = false;
+
+            std::ifstream file(filePath, std::ios::binary);
+            Assert::IsTrue(file.good(), L"Crab enemy.x could not be opened.");
+            const std::string fileText((std::istreambuf_iterator<char>(file)),
+                                       std::istreambuf_iterator<char>());
+            LPD3DXFRAME parsedFrameRoot = nullptr;
+            const HRESULT parseResult =
+                NSRender::CustomXLoader2::LoadCustomXFrameHierarchyFromText(
+                    fileText,
+                    nullptr,
+                    &parsedFrameRoot,
+                    nullptr,
+                    NSRender::CustomXLoader2::CustomXLoadPurpose::MeshAndAnimation,
+                    options);
+            NSRender::CustomXLoader2::DestroyCustomXFrameHierarchy(parsedFrameRoot);
+            Assert::IsTrue(SUCCEEDED(parseResult), L"Crab X syntax-only parsing failed.");
+
+            const NSRender::CustomXLoader2::CustomXSkinningDiagnosticResult result =
+                NSRender::CustomXLoader2::DiagnoseCustomXSkinningForTest(filePath, options);
+
+            Assert::IsTrue(SUCCEEDED(result.hr), result.message.c_str());
+            Assert::IsTrue(result.meshContainerCount >= 1);
+
+            const std::size_t slashPos = filePath.find_last_of(L"\\/");
+            Assert::AreNotEqual(std::wstring::npos, slashPos);
+            const std::wstring animationCsvPath =
+                filePath.substr(0, slashPos + 1) + L"enemy.csv";
+            Assert::IsTrue(FileExists(animationCsvPath), L"Crab enemy.csv was not found.");
+
+            const std::wstring shaderDirectory = GetCompiledShaderDirectory();
+            Assert::IsFalse(shaderDirectory.empty(), L"MeshMixSkinAnim.cso was not found.");
+            CurrentDirectoryScope currentDirectoryScope(shaderDirectory);
+
+            const NSRender::AnimSetMap animSetMap;
+            NSRender::MeshMixSkinAnim2 mesh(
+                filePath,
+                animationCsvPath,
+                D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                1.0f,
+                NSRender::GetMeshParamPreset(NSRender::eMeshParamPreset::GRASS),
+                animSetMap,
+                NSRender::MeshMixSkinAnimLoadMode::Blender512Custom);
+            mesh.Initialize(false);
+            Assert::IsTrue(mesh.GetAnimationInfoList().size() >= 7);
         }
 
         TEST_METHOD(AddBlender512CylinderSkinnedDirectXLoaderAnimationInfo)

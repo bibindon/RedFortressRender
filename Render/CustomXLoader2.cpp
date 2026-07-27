@@ -415,6 +415,35 @@ bool IsXTextSeparatorToken(const std::string& token)
     return token == "," || token == ";";
 }
 
+bool ReadCustomXNameUntilToken(XTextTokenizer& tokenizer,
+                               const char* terminator,
+                               std::string& name)
+{
+    name.clear();
+
+    std::string token;
+    while (tokenizer.ReadToken(token))
+    {
+        if (token == terminator)
+        {
+            return true;
+        }
+
+        if (IsXTextSeparatorToken(token) || token == "{" || token == "}")
+        {
+            return false;
+        }
+
+        if (!name.empty())
+        {
+            name += " ";
+        }
+        name += token;
+    }
+
+    return false;
+}
+
 struct CustomXMaterialData
 {
     D3DMATERIAL9 material { };
@@ -1092,15 +1121,21 @@ bool CreateCustomXSkinInfo(const CustomXMeshData& meshData,
 }
 
 bool CreateCustomXMeshContainer(const std::string& meshName,
-                                const CustomXMeshData& meshData,
-                                SkinAnimMeshAlloc* allocator,
-                                const bool invertRecalculatedMeshNormals,
-                                LPD3DXMESHCONTAINER* meshContainer)
+                                 const CustomXMeshData& meshData,
+                                 SkinAnimMeshAlloc* allocator,
+                                 const bool invertRecalculatedMeshNormals,
+                                 LPD3DXMESHCONTAINER* meshContainer)
 {
     if (allocator == nullptr || meshContainer == nullptr ||
         meshData.positions.empty() || meshData.faces.empty() ||
         meshData.materials.empty() || meshData.skinWeights.empty())
     {
+        CUSTOM_X_LOADER_LOG(L"Custom mesh rejected before creation. Mesh=" +
+                            AnsiTextToWideText(meshName) +
+                            L" Vertices=" + std::to_wstring(meshData.positions.size()) +
+                            L" Faces=" + std::to_wstring(meshData.faces.size()) +
+                            L" Materials=" + std::to_wstring(meshData.materials.size()) +
+                            L" SkinWeights=" + std::to_wstring(meshData.skinWeights.size()));
         return false;
     }
 
@@ -1142,11 +1177,16 @@ bool CreateCustomXMeshContainer(const std::string& meshName,
                                     &mesh);
     if (FAILED(hr) || mesh == nullptr)
     {
+        CUSTOM_X_LOADER_LOG(L"Custom mesh failed: D3DXCreateMeshFVF failed. Mesh=" +
+                            AnsiTextToWideText(meshName) +
+                            L" HR=" + FormatHRESULT(hr));
         return false;
     }
 
     if (!FillCustomXMeshBuffers(meshData, mesh, triangleMaterialIndices))
     {
+        CUSTOM_X_LOADER_LOG(L"Custom mesh failed: buffer fill failed. Mesh=" +
+                            AnsiTextToWideText(meshName));
         SAFE_RELEASE(mesh);
         return false;
     }
@@ -1447,6 +1487,7 @@ bool SplitCustomXMeshDataByBoneLimit(const CustomXMeshData& sourceMeshData,
     if (sourceMeshData.positions.empty() || sourceMeshData.faces.empty() ||
         sourceMeshData.skinWeights.empty())
     {
+        CUSTOM_X_LOADER_LOG(L"Custom mesh split rejected empty source data.");
         return false;
     }
 
@@ -1523,6 +1564,9 @@ bool SplitCustomXMeshDataByBoneLimit(const CustomXMeshData& sourceMeshData,
 
             if (triBones.size() > maxBonesPerPart)
             {
+                CUSTOM_X_LOADER_LOG(L"Custom mesh split failed: one triangle exceeds the bone limit. Bones=" +
+                                    std::to_wstring(triBones.size()) +
+                                    L" Limit=" + std::to_wstring(maxBonesPerPart));
                 return false;
             }
 
@@ -1680,13 +1724,19 @@ bool SplitCustomXMeshDataByBoneLimit(const CustomXMeshData& sourceMeshData,
 
         if (partMeshData.skinWeights.size() > maxBonesPerPart)
         {
-            return false;
+            CUSTOM_X_LOADER_LOG(L"Custom mesh split failed: generated part exceeds the bone limit. Part=" +
+                                std::to_wstring(partIndex) +
+                                L" Bones=" + std::to_wstring(partMeshData.skinWeights.size()) +
+                                L" Limit=" + std::to_wstring(maxBonesPerPart));
             return false;
         }
 
         outMeshParts.push_back(partMeshData);
     }
 
+    CUSTOM_X_LOADER_LOG(L"Custom mesh split completed. SourceBones=" +
+                        std::to_wstring(sourceMeshData.skinWeights.size()) +
+                        L" Parts=" + std::to_wstring(outMeshParts.size()));
     return true;
 }
 
@@ -1695,22 +1745,19 @@ bool ParseCustomXMesh(XTextTokenizer& tokenizer,
                       SkinAnimMeshAlloc* allocator,
                       CustomXParseContext* context)
 {
-    std::string token;
     std::string meshName = "CustomXMesh";
-    if (!tokenizer.ReadToken(token))
+    std::string parsedMeshName;
+    if (!ReadCustomXNameUntilToken(tokenizer, "{", parsedMeshName))
     {
         return false;
     }
 
-    if (token != "{")
+    if (!parsedMeshName.empty())
     {
-        meshName = token;
-        if (!ReadExpectedXToken(tokenizer, "{"))
-        {
-            return false;
-        }
+        meshName = parsedMeshName;
     }
 
+    std::string token;
     CustomXMeshData meshData;
     DWORD vertexCount = 0;
     if (!ReadXUIntToken(tokenizer, vertexCount))
@@ -1792,6 +1839,9 @@ bool ParseCustomXMesh(XTextTokenizer& tokenizer,
                 }
                 else
                 {
+                    CUSTOM_X_LOADER_LOG(L"Custom mesh requires bone-limit split. Mesh=" +
+                                        AnsiTextToWideText(meshName) +
+                                        L" Bones=" + std::to_wstring(meshData.skinWeights.size()));
                     std::vector<CustomXMeshData> meshParts;
                     if (!SplitCustomXMeshDataByBoneLimit(meshData,
                                                          MAX_SKININFO_BONES_PER_PART,
@@ -1880,12 +1930,7 @@ SkinAnimMeshFrame* ParseCustomXFrame(XTextTokenizer& tokenizer,
                                      const std::string& parentFrameName)
 {
     std::string frameName;
-    if (!tokenizer.ReadToken(frameName))
-    {
-        return nullptr;
-    }
-
-    if (!ReadExpectedXToken(tokenizer, "{"))
+    if (!ReadCustomXNameUntilToken(tokenizer, "{", frameName) || frameName.empty())
     {
         return nullptr;
     }
@@ -1965,18 +2010,10 @@ bool ParseCustomXFrameBody(XTextTokenizer& tokenizer,
         {
             if (loadPurpose == CustomXLoadPurpose::AnimationOnly)
             {
-                std::string meshToken;
-                if (!tokenizer.ReadToken(meshToken))
+                std::string unusedMeshName;
+                if (!ReadCustomXNameUntilToken(tokenizer, "{", unusedMeshName))
                 {
                     return false;
-                }
-
-                if (meshToken != "{")
-                {
-                    if (!ReadExpectedXToken(tokenizer, "{"))
-                    {
-                        return false;
-                    }
                 }
 
                 if (!tokenizer.SkipObjectBodyFast())
@@ -2111,22 +2148,13 @@ bool ParseCustomXAnimationBlockBody(XTextTokenizer& tokenizer, CustomXAnimation&
 bool ParseCustomXAnimationBlock(XTextTokenizer& tokenizer,
                                 std::vector<CustomXAnimation>& outAnimations)
 {
-    std::string token;
-    if (!tokenizer.ReadToken(token))
+    std::string optionalAnimName;
+    if (!ReadCustomXNameUntilToken(tokenizer, "{", optionalAnimName))
     {
         return false;
     }
 
-    std::string optionalAnimName;
-    if (token != "{")
-    {
-        optionalAnimName = token;
-        if (!ReadExpectedXToken(tokenizer, "{"))
-        {
-            return false;
-        }
-    }
-
+    std::string token;
     CustomXAnimation* currentAnim = nullptr;
     while (tokenizer.ReadToken(token))
     {
@@ -2143,19 +2171,14 @@ bool ParseCustomXAnimationBlock(XTextTokenizer& tokenizer,
         if (token == "{")
         {
             std::string boneName;
-            if (!tokenizer.ReadToken(boneName))
+            if (!ReadCustomXNameUntilToken(tokenizer, "}", boneName))
             {
                 return false;
             }
 
-            if (boneName == "}")
+            if (boneName.empty())
             {
                 continue;
-            }
-
-            if (!ReadExpectedXToken(tokenizer, "}"))
-            {
-                return false;
             }
 
             CustomXAnimation subAnim;
