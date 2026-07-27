@@ -553,7 +553,7 @@ void MeshMixSkinAnim2::InitializeInternal()
         SAFE_RELEASE(tempAnimController);
         throw std::exception("Failed to load skin animation mesh.");
     }
-
+    
     const bool loadedAnimationCsv = LoadAnimationCsv();
 
     if (loadedAnimationCsv)
