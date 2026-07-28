@@ -29,7 +29,7 @@ float g_HeightMax = -5.0;
 float g_DistanceStart = 0.0;
 float g_DistanceMax = 20.0;
 float g_DepthDecodeNear = 0.1;
-float g_DepthDecodeFar = 30000.0;
+float g_DepthDecodeFar = 33000.0;
 float4 g_CameraPos = float4(0.0, 0.0, 0.0, 1.0);
 float4x4 g_InvView;
 float2 g_ProjectionScale = float2(1.0, 1.0);

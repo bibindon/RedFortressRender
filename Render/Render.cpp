@@ -843,7 +843,7 @@ void Render::ApplySettings()
     if (gbufferNear != m_settings.end() || gbufferFar != m_settings.end())
     {
         float nearPlane = 0.1f;
-        float farPlane = 30'000.0f;
+        float farPlane = 33'000.0f;
         try
         {
             if (gbufferNear != m_settings.end())

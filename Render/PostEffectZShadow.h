@@ -119,7 +119,7 @@ private:
     LPDIRECT3DTEXTURE9 m_sceneNormalTexture = NULL;
     LPDIRECT3DTEXTURE9 m_texCompositeTarget = NULL;
     float m_sceneDepthNear = 0.1f;
-    float m_sceneDepthFar = 30'000.0f;
+    float m_sceneDepthFar = 33'000.0f;
 
     void CreateRawResource();
     LPDIRECT3DTEXTURE9 GetActiveLightZTexture(const int cascadeIndex) const;

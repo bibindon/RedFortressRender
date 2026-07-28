@@ -51,7 +51,7 @@ private:
     float m_distanceStart = 0.0f;
     float m_distanceMax = 20.0f;
     float m_depthDecodeNear = 0.1f;
-    float m_depthDecodeFar = 30'000.0f;
+    float m_depthDecodeFar = 33'000.0f;
     D3DXVECTOR4 m_fogColor = D3DXVECTOR4(0.72f, 0.78f, 0.86f, 1.0f);
 };
 

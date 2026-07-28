@@ -53,11 +53,11 @@ private:
     float m_intensityHeight = 0.3f;
 
     float m_heightStart= 0.0f;
-    float m_positionRange = 30'000.0f;
+    float m_positionRange = 33'000.0f;
     float m_depthDecodeNear = 0.1f;
-    float m_depthDecodeFar = 30'000.0f;
+    float m_depthDecodeFar = 33'000.0f;
     float m_fogNear = 0.1f;
-    float m_fogFar = 30'000.0f;
+    float m_fogFar = 33'000.0f;
     D3DXVECTOR4 m_fogColor = D3DXVECTOR4(0, 0, 0, 0);
 
 };

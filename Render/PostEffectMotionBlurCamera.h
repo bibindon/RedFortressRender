@@ -43,7 +43,7 @@ private:
     float m_maxBlurPixels = 24.0f;
     int m_sampleCount = 13;
     float m_depthNearPlane = 0.1f;
-    float m_depthFarPlane = 30'000.0f;
+    float m_depthFarPlane = 33'000.0f;
 
     bool ShouldApplyMotionBlur(const D3DXMATRIX& currentViewProj);
     float UpdateFrameMotionScale();

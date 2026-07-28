@@ -61,7 +61,7 @@ private:
     bool        m_reverseSampling = false;
     float       m_virtualProximityStrength = 1.5f;
     float       m_depthNearPlane = 0.1f;
-    float       m_depthFarPlane = 30'000.0f;
+    float       m_depthFarPlane = 33'000.0f;
 };
 
 }

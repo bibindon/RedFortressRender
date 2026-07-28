@@ -36,7 +36,7 @@ D3DXVECTOR3 NSRender::Camera::m_lookAtPos(0.0f, 0.0f, 0.0f);
 float NSRender::Camera::m_horizontalFovDegrees = CAMERA_DEFAULT_HORIZONTAL_FOV_DEGREES;
 float NSRender::Camera::m_viewAngle = HorizontalFovDegreesToVerticalAngle(m_horizontalFovDegrees);
 float NSRender::Camera::m_nearPlane = 0.1f;
-float NSRender::Camera::m_farPlane = 30'000.0f;
+float NSRender::Camera::m_farPlane = 33'000.0f;
 float NSRender::Camera::m_projectionJitterX = 0.0f;
 float NSRender::Camera::m_projectionJitterY = 0.0f;
 

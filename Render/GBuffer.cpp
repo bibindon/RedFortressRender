@@ -22,10 +22,10 @@ namespace NSRender
 namespace
 {
 float g_integratedNearPlane = 0.1f;
-float g_integratedFarPlane = 30'000.0f;
+float g_integratedFarPlane = 33'000.0f;
 float g_integratedFogNearPlane = 0.1f;
-float g_integratedFogFarPlane = 30'000.0f;
-float g_integratedPositionRange = 30'000.0f;
+float g_integratedFogFarPlane = 33'000.0f;
+float g_integratedPositionRange = 33'000.0f;
 }
 
 float GBuffer::ComputePositionRange(const float nearPlane, const float farPlane)

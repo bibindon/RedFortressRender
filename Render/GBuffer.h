@@ -96,10 +96,10 @@ private:
 
     LPD3DXEFFECT m_fxGBuffer = NULL;
     float m_nearPlane = 0.1f;
-    float m_farPlane = 30'000.0f;
+    float m_farPlane = 33'000.0f;
     float m_fogNearPlane = 0.1f;
-    float m_fogFarPlane = 30'000.0f;
-    float m_positionRange = 30'000.0f;
+    float m_fogFarPlane = 33'000.0f;
+    float m_positionRange = 33'000.0f;
     GBufferScalarFormat m_depthFormat = GBufferScalarFormat::R16F;
     GBufferScalarFormat m_fogDepthFormat = GBufferScalarFormat::R16F;
     GBufferVectorFormat m_positionFormat = GBufferVectorFormat::A8B8G8R8;

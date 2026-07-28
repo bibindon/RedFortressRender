@@ -46,9 +46,9 @@ float g_IntensityHeight = 0.00;
 float g_HeightStart = 0.00;
 float g_PosRange = 1000.0;
 float g_DepthDecodeNear = 0.1;
-float g_DepthDecodeFar = 30000.0;
+float g_DepthDecodeFar = 33000.0;
 float g_FogNear = 0.1;
-float g_FogFar = 30000.0;
+float g_FogFar = 33000.0;
 
 bool g_EnableZ = true;
 bool g_EnableHeight = false;

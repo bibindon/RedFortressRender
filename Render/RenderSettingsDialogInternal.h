@@ -54,7 +54,7 @@ struct RenderSettingsDialogState
     float settingsTextX = 0.1f;
     float settingsTextY = 0.1f;
     float cameraNearPlane = 0.1f;
-    float cameraFarPlane = 30000.0f;
+    float cameraFarPlane = 33000.0f;
     float cameraHorizontalFovDegrees = 90.0f;
     float cameraShakeDuration = 1.0f;
     float cameraShakeIntensity = 0.12f;

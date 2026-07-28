@@ -385,7 +385,7 @@ void InitializeRenderSettingsControls(HWND hWnd, RenderSettingsDialogState* stat
     CreateSettingsStatic(hWnd, L"Camera Near", 22, y + 24, 100, 20);
     CreateSettingsEdit(hWnd, L"0.100", 158, y + 22, 72, 20, 41000);
     CreateSettingsStatic(hWnd, L"Camera Far", 264, y + 24, 100, 20);
-    CreateSettingsEdit(hWnd, L"30000.000", 400, y + 22, 104, 20, 41001);
+    CreateSettingsEdit(hWnd, L"33000.000", 400, y + 22, 104, 20, 41001);
     CreateSettingsCheckbox(hWnd, 31002, L"Show FPS", 22, y + 50, 96, 22);
     CreateSettingsStatic(hWnd, L"H FOV", 118, y + 52, 56, 20);
     CreateSettingsTrackbar(hWnd, 31003, 174, y + 50, 238, 32, 1, 180, 90);

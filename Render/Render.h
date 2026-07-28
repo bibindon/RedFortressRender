@@ -1123,7 +1123,7 @@ private:
     float m_cameraShakeDurationSeconds = 1.0f;
     float m_cameraShakeIntensity = 0.12f;
     float m_gBufferNearPlane = 0.1f;
-    float m_gBufferFarPlane = 30'000.0f;
+    float m_gBufferFarPlane = 33'000.0f;
     RenderingQualitySettings m_renderingQualitySettings;
     float m_postEffectSaturateLevel = 1.0f;
     bool m_postEffectSaturateEnabled = false;

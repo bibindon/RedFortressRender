@@ -1,10 +1,10 @@
 float4x4 g_matWorldViewProj;
 float4x4 g_gBufferView;
 float g_gBufferNear = 0.1f;
-float g_gBufferFar = 30000.0f;
+float g_gBufferFar = 33000.0f;
 float g_gBufferFogNear = 0.1f;
-float g_gBufferFogFar = 30000.0f;
-float g_gBufferPositionRange = 30000.0f;
+float g_gBufferFogFar = 33000.0f;
+float g_gBufferPositionRange = 33000.0f;
 bool g_gBufferShadowReceiverEnabled = false;
 float4 g_lightDir = { 0.3f, 1.0f, 0.5f, 0.0f };
 float4 g_lightColor = { 1.0f, 1.0f, 1.0f, 1.0f };

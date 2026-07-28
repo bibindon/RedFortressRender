@@ -50,7 +50,7 @@ private:
     bool m_compositeGaussian3x3Enabled = false;
     bool m_maxDarknessClampEnabled = true;
     float m_nearPlane = 0.1f;
-    float m_farPlane = 30'000.0f;
+    float m_farPlane = 33'000.0f;
 
     LPD3DXEFFECT m_fxSSAO = NULL;
     bool m_isInitialized = false;

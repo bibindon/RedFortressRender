@@ -43,10 +43,10 @@ float4x3 g_matWorldArray[MAX_MATRICES];
 float4x4 g_matViewProj;
 float4x4 g_gBufferView;
 float g_gBufferNear = 0.1f;
-float g_gBufferFar = 30000.0f;
+float g_gBufferFar = 33000.0f;
 float g_gBufferFogNear = 0.1f;
-float g_gBufferFogFar = 30000.0f;
-float g_gBufferPositionRange = 30000.0f;
+float g_gBufferFogFar = 33000.0f;
+float g_gBufferPositionRange = 33000.0f;
 bool g_gBufferShadowReceiverEnabled = true;
 
 texture g_texture;

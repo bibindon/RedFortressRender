@@ -7,9 +7,9 @@ int g_iMotionBlurEnabled = 1;
 int g_iDebugGridEnabled = 0;
 float4 g_vTexelSize = { 1.0f / 1600.0f, 1.0f / 900.0f, 1600.0f, 900.0f };
 float g_fNear = 0.1f;
-float g_fFar = 30000.0f;
+float g_fFar = 33000.0f;
 float g_fDepthNear = 0.1f;
-float g_fDepthFar = 30000.0f;
+float g_fDepthFar = 33000.0f;
 
 texture texture1;
 sampler colorSampler = sampler_state
