@@ -657,7 +657,7 @@ namespace UnitTest1
             Assert::AreEqual(std::wstring(L"Root"), result.rootFrameName);
         }
 
-        TEST_METHOD(SkeletonRealIdleKeepsHipsBindRotation)
+        TEST_METHOD(SkeletonRealIdleKeepsBindPoseAndJointOrigins)
         {
             std::wstring filePath;
             {
@@ -720,18 +720,34 @@ namespace UnitTest1
             Assert::IsNotNull(controller);
 
             LPD3DXFRAME hipsFrame = D3DXFrameFind(frameRoot, "Hips");
+            LPD3DXFRAME leftUpperLegFrame = D3DXFrameFind(frameRoot, "L.UpperLeg");
+            LPD3DXFRAME leftUpperArmFrame = D3DXFrameFind(frameRoot, "L.UpperLeg.001");
             Assert::IsNotNull(hipsFrame);
+            Assert::IsNotNull(leftUpperLegFrame);
+            Assert::IsNotNull(leftUpperArmFrame);
 
             controller->SetTrackPosition(0, 0.5);
             controller->AdvanceTime(0.0, nullptr);
 
-            // Hips bind rotation is 90 degrees about Y (_13=1, _31=-1) with a
-            // translation near (0.013, 0.371, -0.121). The empty rotation
-            // channel must keep this bind pose instead of identity.
+            const D3DXMATRIX hipsCombined =
+                hipsFrame->TransformationMatrix * frameRoot->TransformationMatrix;
+            const D3DXMATRIX leftUpperLegCombined =
+                leftUpperLegFrame->TransformationMatrix * hipsCombined;
+            const D3DXMATRIX leftUpperArmCombined =
+                leftUpperArmFrame->TransformationMatrix * hipsCombined;
+
+            // Hips bind rotation is 90 degrees about Y (_13=1, _31=-1).
+            // The empty rotation channel must keep this bind pose instead of
+            // identity. Joint origins must remain at the hips and shoulder,
+            // rather than at the feet and hands.
             Assert::AreEqual(1.0f, hipsFrame->TransformationMatrix._13, 0.01f);
             Assert::AreEqual(-1.0f, hipsFrame->TransformationMatrix._31, 0.01f);
-            Assert::AreEqual(0.371f, hipsFrame->TransformationMatrix._42, 0.01f);
+            Assert::AreEqual(1.726f, hipsFrame->TransformationMatrix._42, 0.01f);
             Assert::AreEqual(-0.121f, hipsFrame->TransformationMatrix._43, 0.01f);
+            Assert::IsTrue(leftUpperLegCombined._42 > 1.0f &&
+                           leftUpperLegCombined._42 < 2.0f);
+            Assert::IsTrue(leftUpperArmCombined._42 > 2.5f &&
+                           leftUpperArmCombined._42 < 3.5f);
 
             controller->Release();
             controller = nullptr;
