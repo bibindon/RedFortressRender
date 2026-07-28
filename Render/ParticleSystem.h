@@ -31,7 +31,10 @@ public:
     void OnDeviceReset();
 
     void PlaceEffect(ParticleEffectPreset preset, const D3DXVECTOR3& origin);
-    void PlaceDashEffect(const D3DXVECTOR3& origin, const D3DXVECTOR3& direction);
+    void PlaceDashEffect(const D3DXVECTOR3& origin,
+                         const D3DXVECTOR3& direction,
+                         bool grounded,
+                         bool dashStarted);
     void ClearEffect();
     void SetDustFixedScreenSize(bool enabled);
     void SetExplosionScale(float scale);
@@ -62,6 +65,9 @@ private:
         DamageSpike,
         DamageSpark,
         DamageScatter,
+        DashStreak,
+        DashRing,
+        DashDust,
     };
 
     struct Particle
@@ -110,6 +116,7 @@ private:
         float fogEmitAccumulator = 0.0f;
         float dustEmitAccumulator = 0.0f;
         float rainEmitAccumulator = 0.0f;
+        int dashEmissionIndex = 0;
         unsigned long long generation = 0;
     };
 
@@ -137,7 +144,8 @@ private:
     void EmitRain(EffectInstance& effect, float deltaTime);
     void EmitExplosion(EffectInstance& effect);
     void EmitDamage(EffectInstance& effect);
-    void EmitDash(EffectInstance& effect);
+    void EmitDashStart(EffectInstance& effect, bool grounded);
+    void EmitDashTrail(EffectInstance& effect, bool grounded);
     void UpdateEffect(EffectInstance& effect, float deltaTime);
     void DrawEffect(const EffectInstance& effect, const D3DXMATRIX& view, const D3DXMATRIX& proj);
     int FillDustVertices(const EffectInstance& effectInstance,
@@ -164,6 +172,8 @@ private:
     LPDIRECT3DTEXTURE9 m_damageCoreTexture = NULL;
     LPDIRECT3DTEXTURE9 m_damageRingTexture = NULL;
     LPDIRECT3DTEXTURE9 m_damageSpikeTexture = NULL;
+    LPDIRECT3DTEXTURE9 m_dashStreakTexture = NULL;
+    LPDIRECT3DTEXTURE9 m_dashRingTexture = NULL;
     LPD3DXEFFECT m_effect = NULL;
     bool m_dustFixedScreenSizeEnabled = true;
     float m_explosionScale = 1.0f;

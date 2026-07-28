@@ -6538,9 +6538,12 @@ void Render::PlaceParticleEffect(const ParticleEffectPreset preset, const D3DXVE
     m_particleSystem.PlaceEffect(preset, origin);
 }
 
-void Render::PlaceDashParticleEffect(const D3DXVECTOR3& origin, const D3DXVECTOR3& direction)
+void Render::PlaceDashParticleEffect(const D3DXVECTOR3& origin,
+                                     const D3DXVECTOR3& direction,
+                                     const bool grounded,
+                                     const bool dashStarted)
 {
-    m_particleSystem.PlaceDashEffect(origin, direction);
+    m_particleSystem.PlaceDashEffect(origin, direction, grounded, dashStarted);
 }
 
 void Render::ClearParticleEffect()

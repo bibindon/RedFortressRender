@@ -74,6 +74,8 @@ void ParticleSystem::Finalize()
     SAFE_RELEASE_LOCAL(m_damageCoreTexture);
     SAFE_RELEASE_LOCAL(m_damageRingTexture);
     SAFE_RELEASE_LOCAL(m_damageSpikeTexture);
+    SAFE_RELEASE_LOCAL(m_dashStreakTexture);
+    SAFE_RELEASE_LOCAL(m_dashRingTexture);
     SAFE_RELEASE_LOCAL(m_effect);
 
     for (auto& effect : m_effects)
@@ -165,13 +167,17 @@ void ParticleSystem::PlaceEffect(const ParticleEffectPreset preset, const D3DXVE
     }
     else if (preset == ParticleEffectPreset::Dash)
     {
-        EmitDash(*target);
+        EmitDashStart(*target, false);
+        EmitDashTrail(*target, false);
     }
 
     m_lastPlacedPreset = preset;
 }
 
-void ParticleSystem::PlaceDashEffect(const D3DXVECTOR3& origin, const D3DXVECTOR3& direction)
+void ParticleSystem::PlaceDashEffect(const D3DXVECTOR3& origin,
+                                     const D3DXVECTOR3& direction,
+                                     const bool grounded,
+                                     const bool dashStarted)
 {
     Initialize();
     if (!m_initialized)
@@ -189,10 +195,26 @@ void ParticleSystem::PlaceDashEffect(const D3DXVECTOR3& origin, const D3DXVECTOR
     EffectInstance* target = nullptr;
     for (auto& effect : m_effects)
     {
-        if (effect.preset == ParticleEffectPreset::None)
+        if (effect.preset == ParticleEffectPreset::Dash)
         {
-            target = &effect;
-            break;
+            if (target == nullptr || effect.generation > target->generation)
+            {
+                target = &effect;
+            }
+        }
+    }
+
+    bool resetEffect = dashStarted;
+    if (target == nullptr)
+    {
+        resetEffect = true;
+        for (auto& effect : m_effects)
+        {
+            if (effect.preset == ParticleEffectPreset::None)
+            {
+                target = &effect;
+                break;
+            }
         }
     }
 
@@ -206,14 +228,23 @@ void ParticleSystem::PlaceDashEffect(const D3DXVECTOR3& origin, const D3DXVECTOR
                 target = &effect;
             }
         }
+        resetEffect = true;
     }
 
-    target->preset = ParticleEffectPreset::Dash;
+    if (resetEffect)
+    {
+        ClearParticles(*target);
+        target->preset = ParticleEffectPreset::Dash;
+        target->generation = m_nextGeneration++;
+    }
+
     target->origin = origin;
     target->direction = horizontalDirection;
-    target->generation = m_nextGeneration++;
-    ClearParticles(*target);
-    EmitDash(*target);
+    if (resetEffect)
+    {
+        EmitDashStart(*target, grounded);
+    }
+    EmitDashTrail(*target, grounded);
     m_lastPlacedPreset = ParticleEffectPreset::Dash;
 }
 
@@ -483,6 +514,8 @@ bool ParticleSystem::TryInitializeResources()
     const std::wstring damageCorePath = BuildAssetPath(L"particle_damage_core.png");
     const std::wstring damageRingPath = BuildAssetPath(L"particle_damage_ring.png");
     const std::wstring damageSpikePath = BuildAssetPath(L"particle_damage_spike.png");
+    const std::wstring dashStreakPath = BuildAssetPath(L"particle_dash_streak.png");
+    const std::wstring dashRingPath = BuildAssetPath(L"particle_dash_ring.png");
     const std::wstring effectPath = Util::GetExeDir() + L"Particle.cso";
 
     HRESULT hr = D3DXCreateTextureFromFile(Common::D3DDevice(), smokePath.c_str(), &m_smokeTexture);
@@ -548,6 +581,20 @@ bool ParticleSystem::TryInitializeResources()
                                  NarrowAscii(damageSpikePath) + "] HRESULT=" + std::to_string(hr));
     }
 
+    hr = D3DXCreateTextureFromFile(Common::D3DDevice(), dashStreakPath.c_str(), &m_dashStreakTexture);
+    if (FAILED(hr))
+    {
+        throw std::runtime_error("ParticleSystem: failed to load texture 'particle_dash_streak.png' [" +
+                                 NarrowAscii(dashStreakPath) + "] HRESULT=" + std::to_string(hr));
+    }
+
+    hr = D3DXCreateTextureFromFile(Common::D3DDevice(), dashRingPath.c_str(), &m_dashRingTexture);
+    if (FAILED(hr))
+    {
+        throw std::runtime_error("ParticleSystem: failed to load texture 'particle_dash_ring.png' [" +
+                                 NarrowAscii(dashRingPath) + "] HRESULT=" + std::to_string(hr));
+    }
+
     LPD3DXBUFFER compilationErrors = NULL;
     hr = D3DXCreateEffectFromFile(Common::D3DDevice(),
                                   effectPath.c_str(),
@@ -582,6 +629,7 @@ void ParticleSystem::ClearParticles(EffectInstance& effect)
     effect.fogEmitAccumulator = 0.0f;
     effect.dustEmitAccumulator = 0.0f;
     effect.rainEmitAccumulator = 0.0f;
+    effect.dashEmissionIndex = 0;
 
     for (auto& particle : effect.particles)
     {
@@ -1244,7 +1292,7 @@ void ParticleSystem::EmitDamage(EffectInstance& effect)
     }
 }
 
-void ParticleSystem::EmitDash(EffectInstance& effect)
+void ParticleSystem::EmitDashStart(EffectInstance& effect, const bool grounded)
 {
     D3DXVECTOR3 forward(effect.direction.x, 0.0f, effect.direction.z);
     if (D3DXVec3LengthSq(&forward) <= 0.0001f)
@@ -1269,30 +1317,123 @@ void ParticleSystem::EmitDash(EffectInstance& effect)
         D3DXVec3Normalize(&right, &right);
     }
 
-    for (int i = 0; i < 44; ++i)
-    {
-        const D3DXVECTOR3 pos = effect.origin +
-                                back * RandomFloat(0.12f, 1.20f) +
-                                right * RandomCenteredFloat(1.10f) +
-                                D3DXVECTOR3(0.0f, RandomCenteredFloat(0.92f), 0.0f);
-        const D3DXVECTOR3 velocity = back * RandomFloat(8.5f, 14.5f);
-        const float life = RandomFloat(0.18f, 0.32f);
-        const float startSize = RandomFloat(0.72f, 1.28f);
-        const float endSize = startSize * RandomFloat(0.42f, 0.78f);
-        const int alpha = static_cast<int>(RandomFloat(125.0f, 205.0f));
-        const int red = static_cast<int>(RandomFloat(205.0f, 245.0f));
-        const int green = static_cast<int>(RandomFloat(230.0f, 255.0f));
-        const D3DCOLOR color = D3DCOLOR_ARGB(alpha, red, green, 255);
+    SpawnParticle(effect,
+                  effect.origin + forward * 0.08f,
+                  D3DXVECTOR3(0.0f, 0.0f, 0.0f),
+                  0.14f,
+                  0.38f,
+                  1.35f,
+                  0.0f,
+                  0.0f,
+                  D3DCOLOR_ARGB(235, 224, 248, 255),
+                  ParticleVisualType::DashRing);
 
+    for (int i = 0; i < 4; ++i)
+    {
+        const D3DXVECTOR3 position = effect.origin +
+                                     back * RandomFloat(0.18f, 0.56f) +
+                                     right * RandomCenteredFloat(0.24f) +
+                                     D3DXVECTOR3(0.0f, RandomCenteredFloat(0.42f), 0.0f);
         SpawnParticle(effect,
-                      pos,
-                      velocity,
-                      life,
-                      startSize,
-                      endSize,
-                      RandomFloat(-0.10f, 0.10f),
-                      RandomFloat(-1.6f, 1.6f),
-                      color);
+                      position,
+                      back * RandomFloat(2.0f, 4.0f),
+                      RandomFloat(0.12f, 0.18f),
+                      RandomFloat(0.78f, 1.08f),
+                      RandomFloat(0.38f, 0.58f),
+                      0.0f,
+                      0.0f,
+                      D3DCOLOR_ARGB(220, 224, 246, 255),
+                      ParticleVisualType::DashStreak);
+    }
+
+    if (grounded)
+    {
+        for (int i = 0; i < 4; ++i)
+        {
+            const D3DXVECTOR3 groundPosition = effect.origin +
+                                               D3DXVECTOR3(0.0f, -0.80f, 0.0f) +
+                                               back * RandomFloat(0.08f, 0.35f) +
+                                               right * RandomCenteredFloat(0.32f);
+            const D3DXVECTOR3 dustVelocity = back * RandomFloat(1.0f, 2.2f) +
+                                             right * RandomCenteredFloat(0.9f) +
+                                             worldUp * RandomFloat(0.30f, 0.85f);
+            SpawnParticle(effect,
+                          groundPosition,
+                          dustVelocity,
+                          RandomFloat(0.20f, 0.32f),
+                          RandomFloat(0.16f, 0.26f),
+                          RandomFloat(0.48f, 0.72f),
+                          RandomFloat(-0.4f, 0.4f),
+                          RandomFloat(-1.2f, 1.2f),
+                          D3DCOLOR_ARGB(82, 184, 194, 204),
+                          ParticleVisualType::DashDust);
+        }
+    }
+}
+
+void ParticleSystem::EmitDashTrail(EffectInstance& effect, const bool grounded)
+{
+    D3DXVECTOR3 forward(effect.direction.x, 0.0f, effect.direction.z);
+    if (D3DXVec3LengthSq(&forward) <= 0.0001f)
+    {
+        return;
+    }
+    D3DXVec3Normalize(&forward, &forward);
+
+    const D3DXVECTOR3 back = forward * -1.0f;
+    const D3DXVECTOR3 worldUp(0.0f, 1.0f, 0.0f);
+    D3DXVECTOR3 right;
+    D3DXVec3Cross(&right, &worldUp, &forward);
+    if (D3DXVec3LengthSq(&right) <= 0.0001f)
+    {
+        right = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
+    }
+    else
+    {
+        D3DXVec3Normalize(&right, &right);
+    }
+
+    for (int i = 0; i < 2; ++i)
+    {
+        const float verticalOffset = RandomCenteredFloat(0.46f);
+        const D3DXVECTOR3 position = effect.origin +
+                                     back * RandomFloat(0.24f, 0.62f) +
+                                     right * RandomCenteredFloat(0.20f) +
+                                     D3DXVECTOR3(0.0f, verticalOffset, 0.0f);
+        const int alpha = static_cast<int>(RandomFloat(175.0f, 225.0f));
+        const int green = static_cast<int>(RandomFloat(234.0f, 250.0f));
+        SpawnParticle(effect,
+                      position,
+                      back * RandomFloat(1.6f, 3.2f),
+                      RandomFloat(0.11f, 0.17f),
+                      RandomFloat(0.64f, 0.94f),
+                      RandomFloat(0.30f, 0.48f),
+                      0.0f,
+                      0.0f,
+                      D3DCOLOR_ARGB(alpha, 218, green, 255),
+                      ParticleVisualType::DashStreak);
+    }
+
+    ++effect.dashEmissionIndex;
+    if (grounded && (effect.dashEmissionIndex % 2) == 0)
+    {
+        const D3DXVECTOR3 groundPosition = effect.origin +
+                                           D3DXVECTOR3(0.0f, -0.80f, 0.0f) +
+                                           back * 0.18f +
+                                           right * RandomCenteredFloat(0.28f);
+        const D3DXVECTOR3 dustVelocity = back * RandomFloat(0.8f, 1.7f) +
+                                         right * RandomCenteredFloat(0.7f) +
+                                         worldUp * RandomFloat(0.28f, 0.65f);
+        SpawnParticle(effect,
+                      groundPosition,
+                      dustVelocity,
+                      RandomFloat(0.20f, 0.28f),
+                      RandomFloat(0.14f, 0.22f),
+                      RandomFloat(0.42f, 0.62f),
+                      RandomFloat(-0.35f, 0.35f),
+                      RandomFloat(-1.0f, 1.0f),
+                      D3DCOLOR_ARGB(66, 178, 190, 202),
+                      ParticleVisualType::DashDust);
     }
 }
 
@@ -1573,18 +1714,45 @@ void ParticleSystem::UpdateEffect(EffectInstance& effect, const float deltaTime)
         }
         else if (effect.preset == ParticleEffectPreset::Dash)
         {
-            particle.velocity.x *= 0.942f;
-            particle.velocity.y *= 0.940f;
-            particle.velocity.z *= 0.942f;
-            particle.size = particle.startSize + (particle.endSize - particle.startSize) * age;
+            const int red = static_cast<int>((particle.color >> 16) & 0xff);
+            const int green = static_cast<int>((particle.color >> 8) & 0xff);
+            const int blue = static_cast<int>(particle.color & 0xff);
 
-            const float intensity = 1.0f - age;
-            const int alpha = static_cast<int>(ClampFloat(220.0f * intensity * particle.alphaBias,
-                                                          0.0f,
-                                                          225.0f));
-            particle.color = D3DCOLOR_ARGB(alpha, 218, 242, 255);
+            if (particle.visualType == ParticleVisualType::DashStreak)
+            {
+                particle.velocity.x *= 0.955f;
+                particle.velocity.y *= 0.955f;
+                particle.velocity.z *= 0.955f;
+                particle.size = particle.startSize + (particle.endSize - particle.startSize) * age;
+                const int alpha = static_cast<int>(ClampFloat(225.0f * (1.0f - age),
+                                                              0.0f,
+                                                              225.0f));
+                particle.color = D3DCOLOR_ARGB(alpha, red, green, blue);
+            }
+            else if (particle.visualType == ParticleVisualType::DashRing)
+            {
+                const float expansion = sqrtf(age);
+                particle.size = particle.startSize +
+                                (particle.endSize - particle.startSize) * expansion;
+                const float fade = 1.0f - age;
+                const int alpha = static_cast<int>(ClampFloat(235.0f * fade * fade,
+                                                              0.0f,
+                                                              235.0f));
+                particle.color = D3DCOLOR_ARGB(alpha, red, green, blue);
+            }
+            else if (particle.visualType == ParticleVisualType::DashDust)
+            {
+                particle.velocity.x *= 0.972f;
+                particle.velocity.z *= 0.972f;
+                particle.velocity.y -= 0.65f * deltaTime;
+                particle.size = particle.startSize +
+                                (particle.endSize - particle.startSize) * sqrtf(age);
+                const int alpha = static_cast<int>(ClampFloat(82.0f * (1.0f - age),
+                                                              0.0f,
+                                                              82.0f));
+                particle.color = D3DCOLOR_ARGB(alpha, red, green, blue);
+            }
         }
-
         particle.rotation += particle.rotationSpeed * deltaTime;
         particle.pos.x += particle.velocity.x * deltaTime;
         particle.pos.y += particle.velocity.y * deltaTime;
@@ -1643,7 +1811,7 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
         texture = m_damageCoreTexture;
         break;
     case ParticleEffectPreset::Dash:
-        texture = m_damageSpikeTexture;
+        texture = m_dashStreakTexture;
         break;
     default:
         return;
@@ -1718,7 +1886,8 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
                 }
 
                 if ((effectInstance.preset == ParticleEffectPreset::Explosion ||
-                     effectInstance.preset == ParticleEffectPreset::Damage) &&
+                     effectInstance.preset == ParticleEffectPreset::Damage ||
+                     effectInstance.preset == ParticleEffectPreset::Dash) &&
                     particle.visualType != visualTypeFilter)
                 {
                     continue;
@@ -1820,39 +1989,62 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
                 }
                 else if (effectInstance.preset == ParticleEffectPreset::Dash)
                 {
-                    D3DXVECTOR3 dashDirection = effectInstance.direction * -1.0f;
-                    if (D3DXVec3LengthSq(&dashDirection) <= 0.0001f)
+                    if (particle.visualType == ParticleVisualType::DashStreak)
                     {
-                        dashDirection = particle.velocity;
-                    }
-                    D3DXVec3Normalize(&dashDirection, &dashDirection);
+                        D3DXVECTOR3 dashAxis = effectInstance.direction;
+                        const float dashX = D3DXVec3Dot(&dashAxis, &cameraRight);
+                        const float dashY = D3DXVec3Dot(&dashAxis, &cameraUp);
+                        dashAxis = cameraRight * dashX + cameraUp * dashY;
+                        if (D3DXVec3LengthSq(&dashAxis) <= 0.0001f)
+                        {
+                            dashAxis = cameraRight;
+                        }
+                        else
+                        {
+                            D3DXVec3Normalize(&dashAxis, &dashAxis);
+                        }
 
-                    const float dashX = D3DXVec3Dot(&dashDirection, &cameraRight);
-                    const float dashY = D3DXVec3Dot(&dashDirection, &cameraUp);
-                    D3DXVECTOR3 dashUp = cameraRight * dashX + cameraUp * dashY;
-                    if (D3DXVec3LengthSq(&dashUp) <= 0.0001f)
-                    {
-                        dashUp = cameraUp;
-                    }
-                    else
-                    {
-                        D3DXVec3Normalize(&dashUp, &dashUp);
-                    }
+                        const float axisX = D3DXVec3Dot(&dashAxis, &cameraRight);
+                        const float axisY = D3DXVec3Dot(&dashAxis, &cameraUp);
+                        D3DXVECTOR3 dashPerpendicular = cameraRight * (-axisY) + cameraUp * axisX;
+                        if (D3DXVec3LengthSq(&dashPerpendicular) <= 0.0001f)
+                        {
+                            dashPerpendicular = cameraUp;
+                        }
+                        else
+                        {
+                            D3DXVec3Normalize(&dashPerpendicular, &dashPerpendicular);
+                        }
 
-                    D3DXVECTOR3 dashRight = cameraRight * (-dashY) + cameraUp * dashX;
-                    if (D3DXVec3LengthSq(&dashRight) <= 0.0001f)
-                    {
-                        dashRight = cameraRight;
+                        rotatedRight = dashAxis;
+                        rotatedUp = dashPerpendicular;
+                        halfWidth = particle.size * 1.48f;
+                        halfHeight = particle.size * 0.16f;
                     }
-                    else
+                    else if (particle.visualType == ParticleVisualType::DashRing)
                     {
-                        D3DXVec3Normalize(&dashRight, &dashRight);
+                        const D3DXVECTOR3 worldUp(0.0f, 1.0f, 0.0f);
+                        D3DXVECTOR3 ringRight;
+                        D3DXVec3Cross(&ringRight, &worldUp, &effectInstance.direction);
+                        if (D3DXVec3LengthSq(&ringRight) <= 0.0001f)
+                        {
+                            ringRight = cameraRight;
+                        }
+                        else
+                        {
+                            D3DXVec3Normalize(&ringRight, &ringRight);
+                        }
+                        rotatedRight = ringRight;
+                        rotatedUp = worldUp;
+                        halfWidth = particle.size * 0.82f;
+                        halfHeight = particle.size * 0.82f;
                     }
-
-                    rotatedRight = dashRight;
-                    rotatedUp = dashUp;
-                    halfWidth = particle.size * 0.055f;
-                    halfHeight = particle.size * 1.95f;
+                    else if (particle.visualType == ParticleVisualType::DashDust)
+                    {
+                        halfWidth = particle.size * 0.62f;
+                        halfHeight = particle.size * 0.42f;
+                        center.y += halfHeight * 0.20f;
+                    }
                 }
 
                 const D3DXVECTOR3 halfRight(rotatedRight.x * halfWidth,
@@ -1992,7 +2184,9 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
     }
     else if (effectInstance.preset == ParticleEffectPreset::Dash)
     {
-        drawBatch(m_damageSpikeTexture, ParticleVisualType::Default, "ParticleAdditiveTechnique");
+        drawBatch(m_dashStreakTexture, ParticleVisualType::DashStreak, "ParticleAdditiveTechnique");
+        drawBatch(m_dashRingTexture, ParticleVisualType::DashRing, "ParticleAdditiveTechnique");
+        drawBatch(m_dustTexture, ParticleVisualType::DashDust, "ParticleAlphaTechnique");
     }
     else
     {

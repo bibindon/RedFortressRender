@@ -680,7 +680,10 @@ public:
     void SetLoadingScreenShowTitle(bool show);
 
     void PlaceParticleEffect(const ParticleEffectPreset preset, const D3DXVECTOR3& origin);
-    void PlaceDashParticleEffect(const D3DXVECTOR3& origin, const D3DXVECTOR3& direction);
+    void PlaceDashParticleEffect(const D3DXVECTOR3& origin,
+                                 const D3DXVECTOR3& direction,
+                                 bool grounded,
+                                 bool dashStarted);
     void ClearParticleEffect();
     void SetDustFixedScreenSize(bool enabled);
     ParticleEffectPreset GetParticleEffectPreset() const;
