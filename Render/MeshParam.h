@@ -43,6 +43,10 @@ struct stMeshParam
     float emitPointLightRange = 6.0f;
     bool wave = false;
     float waveIntensity = 0.1f;
+    float waveSpeed = 5.0f;
+    float waveDensity = 20.0f;
+    float waterReflectionStrength = 0.25f;
+    float waterReflectionTint = 0.2f;
     bool sway = false;
     float swayIntensity = 0.1f;
     bool pointLight = true;

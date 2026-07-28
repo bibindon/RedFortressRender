@@ -26,6 +26,8 @@ float2 g_screenSize = { 1600.0f, 900.0f };
 bool g_fresnelEnable = true;
 float g_fresnelIntensity = 0.08f;
 bool g_waterMirrorEnable = false;
+float g_waterReflectionStrength = 0.25f;
+float g_waterReflectionTint = 0.2f;
 bool g_treatTextureAsWhite = false;
 bool g_damageFlash = false;
 bool g_mirrorClipEnable = false;
@@ -682,9 +684,10 @@ void PixelShader1(in float2 inScreenPos   : VPOS,
     float3 finalColor = ambient.rgb + lambert + specular + fresnelColor;
     if (g_waterMirrorEnable)
     {
-        float reflectionBlend = saturate(fresnel);
+        float reflectionBlend = saturate(g_waterReflectionStrength + fresnel);
         float3 mirrorColor = SampleMirrorColor(inPosWorld);
-        finalColor = lerp(finalColor, mirrorColor * albedo, reflectionBlend);
+        float3 reflectionTint = lerp(1.0f.xxx, saturate(albedo), g_waterReflectionTint);
+        finalColor = lerp(finalColor, mirrorColor * reflectionTint, reflectionBlend);
     }
 
     if (g_bSSS)
@@ -952,11 +955,19 @@ void VertexShaderMirror(in  float4 inPosition   : POSITION,
                         out float3 outPosWorld   : TEXCOORD1,
                         out float3 outNormalWorld : TEXCOORD2)
 {
-    float4 worldPos = mul(inPosition, g_matWorld);
-    outPosition = mul(inPosition, g_matWorldViewProj);
+    float4 localPosition = inPosition;
+    float3 localNormal = inNormal.xyz;
+    if (g_waveEnable)
+    {
+        localPosition.y += CalcWaveHeight(localPosition.x, localPosition.z);
+        localNormal = CalcWaveNormal(localPosition.x, localPosition.z);
+    }
+
+    float4 worldPos = mul(localPosition, g_matWorld);
+    outPosition = mul(localPosition, g_matWorldViewProj);
     outMirrorProj = mul(worldPos, g_matMirrorViewProj);
     outPosWorld = worldPos.xyz;
-    outNormalWorld = normalize(mul(inNormal.xyz, (float3x3)g_matWorld));
+    outNormalWorld = normalize(mul(localNormal, (float3x3)g_matWorld));
 }
 
 void PixelShaderMirror(in float4 inMirrorProj : TEXCOORD0,

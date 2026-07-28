@@ -9,10 +9,12 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <codecvt>
 #include <cwctype>
 #include <exception>
 #include <fstream>
 #include <iterator>
+#include <locale>
 #include <sstream>
 #include <stdexcept>
 
@@ -56,6 +58,10 @@ struct MeshCsvParam
     CsvValue<float> swayIntensity;
     CsvValue<bool> wave;
     CsvValue<float> waveIntensity;
+    CsvValue<float> waveSpeed;
+    CsvValue<float> waveDensity;
+    CsvValue<float> waterReflectionStrength;
+    CsvValue<float> waterReflectionTint;
     CsvValue<bool> litByPointLight;
     CsvValue<bool> shadow;
     CsvValue<bool> lambertShadow;
@@ -181,7 +187,10 @@ MeshCsvParam ReadMeshCsvParam(const std::wstring& meshPath)
 {
     MeshCsvParam result;
     const std::wstring csvPath = BuildCsvPath(meshPath);
-    std::wifstream csvFile(csvPath);
+    std::wifstream csvFile;
+    csvFile.imbue(std::locale(std::locale(),
+                                 new std::codecvt_utf8_utf16<wchar_t, 0x10ffff, std::consume_header>));
+    csvFile.open(csvPath);
     if (!csvFile.is_open())
     {
         return result;
@@ -300,6 +309,32 @@ MeshCsvParam ReadMeshCsvParam(const std::wstring& meshPath)
         {
             result.waveIntensity.defined = true;
             result.waveIntensity.value = ParseCsvFloat(value);
+        }
+        else if (key == L"wavespeed")
+        {
+            result.waveSpeed.defined = true;
+            result.waveSpeed.value = (std::max)(0.0f, ParseCsvFloat(value));
+        }
+        else if (key == L"wavedensity")
+        {
+            result.waveDensity.defined = true;
+            result.waveDensity.value = ParseCsvFloat(value);
+            if (result.waveDensity.value <= 0.0f)
+            {
+                throw std::runtime_error("MeshMix2 requires a positive WaveDensity in its CSV file.");
+            }
+        }
+        else if (key == L"waterreflectionstrength")
+        {
+            result.waterReflectionStrength.defined = true;
+            result.waterReflectionStrength.value =
+                (std::max)(0.0f, (std::min)(ParseCsvFloat(value), 1.0f));
+        }
+        else if (key == L"waterreflectiontint")
+        {
+            result.waterReflectionTint.defined = true;
+            result.waterReflectionTint.value =
+                (std::max)(0.0f, (std::min)(ParseCsvFloat(value), 1.0f));
         }
         else if (key == L"litbypointlight")
         {
@@ -468,6 +503,22 @@ void ApplyMeshCsvParam(const MeshCsvParam& csvParam, stMeshParam& param)
     if (csvParam.waveIntensity.defined)
     {
         param.waveIntensity = csvParam.waveIntensity.value;
+    }
+    if (csvParam.waveSpeed.defined)
+    {
+        param.waveSpeed = csvParam.waveSpeed.value;
+    }
+    if (csvParam.waveDensity.defined)
+    {
+        param.waveDensity = csvParam.waveDensity.value;
+    }
+    if (csvParam.waterReflectionStrength.defined)
+    {
+        param.waterReflectionStrength = csvParam.waterReflectionStrength.value;
+    }
+    if (csvParam.waterReflectionTint.defined)
+    {
+        param.waterReflectionTint = csvParam.waterReflectionTint.value;
     }
     if (csvParam.litByPointLight.defined)
     {
@@ -901,6 +952,10 @@ void MeshMix2::Render(const bool renderAsMirrorSurface)
                             "MeshMix2 failed to set g_cubeMappingGauss.");
     ThrowIfEffectCallFailed(m_D3DEffect->SetBool("g_waterMirrorEnable", m_param.waterMirror),
                             "MeshMix2 failed to set g_waterMirrorEnable.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_waterReflectionStrength", m_param.waterReflectionStrength),
+                            "MeshMix2 failed to set g_waterReflectionStrength.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_waterReflectionTint", m_param.waterReflectionTint),
+                            "MeshMix2 failed to set g_waterReflectionTint.");
     ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_emitIntensity", m_param.emitIntensity),
                             "MeshMix2 failed to set g_emitIntensity.");
     D3DXVECTOR4 emitColor;
@@ -910,8 +965,9 @@ void MeshMix2::Render(const bool renderAsMirrorSurface)
     emitColor.w = 1.0f;
     ThrowIfEffectCallFailed(m_D3DEffect->SetVector("g_emitColor", &emitColor),
                             "MeshMix2 failed to set g_emitColor.");
-    static float effectTime = 0.0f;
-    effectTime += 0.01f;
+    static const ULONGLONG effectStartTick = GetTickCount64();
+    const ULONGLONG currentEffectTick = GetTickCount64();
+    const float effectTime = static_cast<float>(currentEffectTick - effectStartTick) * 0.001f;
     ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_time", effectTime),
                             "MeshMix2 failed to set g_time.");
     ThrowIfEffectCallFailed(m_D3DEffect->SetBool("g_swayEnable", m_param.sway),
@@ -924,9 +980,9 @@ void MeshMix2::Render(const bool renderAsMirrorSurface)
                             "MeshMix2 failed to set g_waveEnable.");
     ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_waveAmount", m_param.waveIntensity),
                             "MeshMix2 failed to set g_waveAmount.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_waveSpeed", 5.0f),
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_waveSpeed", m_param.waveSpeed),
                             "MeshMix2 failed to set g_waveSpeed.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_waveDensity", 20.0f),
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_waveDensity", m_param.waveDensity),
                             "MeshMix2 failed to set g_waveDensity.");
     const float screenSize[2] =
     {
@@ -1241,7 +1297,7 @@ void MeshMix2::RenderMeshContainer(const MeshMix2Frame& frame,
             if (configureMaterial)
             {
                 drawPass = false;
-                if (renderAsMirrorSurface && m_param.mirror)
+                if (renderAsMirrorSurface && (m_param.mirror || m_param.waterMirror))
                 {
                     drawPass = passIndex == 4;
                 }
