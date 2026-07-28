@@ -989,6 +989,23 @@ void PixelShaderMirror(in float4 inMirrorProj : TEXCOORD0,
     outColor = saturate(float4((mirrorColor.rgb * mirrorBrightness) + fresnel.xxx, mirrorColor.a * mirrorBrightness));
 }
 
+void PixelShaderWaterMirror(in float4 inMirrorProj : TEXCOORD0,
+                            in float3 inPosWorld   : TEXCOORD1,
+                            in float3 inNormalWorld : TEXCOORD2,
+                            out float4 outColor    : COLOR0)
+{
+    float2 uv;
+    uv.x = inMirrorProj.x / inMirrorProj.w * 0.5f + 0.5f;
+    uv.y = -inMirrorProj.y / inMirrorProj.w * 0.5f + 0.5f;
+    float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
+    float fresnel = g_fresnelEnable ? (CalcFresnelFactor(inNormalWorld, cameraDir) * g_fresnelIntensity) : 0.0f;
+    float3 mirrorColor = tex2D(g_mirrorSampler, uv).rgb;
+    float reflectionBlend = saturate(g_waterReflectionStrength + fresnel);
+    float3 reflectedSurface = mirrorColor * saturate(0.8f + fresnel);
+    float3 waterColor = lerp(saturate(g_diffuse.rgb), reflectedSurface, reflectionBlend);
+    outColor = float4(saturate(waterColor), saturate(g_diffuse.a));
+}
+
 float2 CalcUVCoordWithPOM(float3 inNormalizedNormalWS,
                           float2 inTexCoord,
                           float3 invViewWS,
@@ -1124,6 +1141,21 @@ technique Technique1
         ColorWriteEnable3 = 0;
         VertexShader = compile vs_3_0 VertexShader1();
         PixelShader = (pixelShaderPointLightVariants[g_currentPointLightShaderIndex]);
+    }
+
+    pass PassWaterMirror
+    {
+        CullMode = NONE;
+        AlphaBlendEnable = TRUE;
+        SrcBlend = SRCALPHA;
+        DestBlend = INVSRCALPHA;
+        ZEnable = TRUE;
+        ZWriteEnable = FALSE;
+        ColorWriteEnable1 = 0;
+        ColorWriteEnable2 = 0;
+        ColorWriteEnable3 = 0;
+        VertexShader = compile vs_3_0 VertexShaderMirror();
+        PixelShader = compile ps_3_0 PixelShaderWaterMirror();
     }
 
 }

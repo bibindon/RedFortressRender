@@ -1297,7 +1297,11 @@ void MeshMix2::RenderMeshContainer(const MeshMix2Frame& frame,
             if (configureMaterial)
             {
                 drawPass = false;
-                if (renderAsMirrorSurface && (m_param.mirror || m_param.waterMirror))
+                if (renderAsMirrorSurface && m_param.waterMirror)
+                {
+                    drawPass = passIndex == 6;
+                }
+                else if (renderAsMirrorSurface && m_param.mirror)
                 {
                     drawPass = passIndex == 4;
                 }
