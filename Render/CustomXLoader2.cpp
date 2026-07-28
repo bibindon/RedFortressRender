@@ -2553,6 +2553,58 @@ HRESULT CreateAnimationControllerFromParsedData(const std::vector<CustomXAnimati
                 }
             }
 
+            // Blender's DirectX exporter writes empty AnimationKey blocks for
+            // channels that have no f-curve on a partially-keyed bone.
+            // D3DX evaluates missing channels as identity, which destroys the
+            // bind pose. Synthesize a static key from the frame's bind-pose
+            // local matrix so unkeyed channels keep their rest transform.
+            if (scaleKeys.empty() || rotKeys.empty() || posKeys.empty())
+            {
+                LPD3DXFRAME bindFrame = D3DXFrameFind(frameRoot, anim.frameName.c_str());
+                if (bindFrame != nullptr)
+                {
+                    D3DXVECTOR3 bindScale;
+                    D3DXQUATERNION bindRotation;
+                    D3DXVECTOR3 bindPosition;
+                    const HRESULT decomposeHr = D3DXMatrixDecompose(&bindScale,
+                                                                    &bindRotation,
+                                                                    &bindPosition,
+                                                                    &bindFrame->TransformationMatrix);
+                    if (SUCCEEDED(decomposeHr))
+                    {
+                        if (scaleKeys.empty())
+                        {
+                            D3DXKEY_VECTOR3 bindScaleKey;
+                            bindScaleKey.Time = 0.0f;
+                            bindScaleKey.Value = bindScale;
+                            scaleKeys.push_back(bindScaleKey);
+                        }
+                        if (rotKeys.empty())
+                        {
+                            // D3DX's keyframed animation sets compose rotation
+                            // keys into output matrices with the conjugate of
+                            // D3DXMatrixRotationQuaternion (i.e. the transpose
+                            // rotation). Feed the conjugate quaternion so the
+                            // output matches the bind pose.
+                            D3DXKEY_QUATERNION bindRotKey;
+                            bindRotKey.Time = 0.0f;
+                            bindRotKey.Value.w = bindRotation.w;
+                            bindRotKey.Value.x = -bindRotation.x;
+                            bindRotKey.Value.y = -bindRotation.y;
+                            bindRotKey.Value.z = -bindRotation.z;
+                            rotKeys.push_back(bindRotKey);
+                        }
+                        if (posKeys.empty())
+                        {
+                            D3DXKEY_VECTOR3 bindPosKey;
+                            bindPosKey.Time = 0.0f;
+                            bindPosKey.Value = bindPosition;
+                            posKeys.push_back(bindPosKey);
+                        }
+                    }
+                }
+            }
+
             std::sort(scaleKeys.begin(),
                       scaleKeys.end(),
                       [](const D3DXKEY_VECTOR3& a, const D3DXKEY_VECTOR3& b)

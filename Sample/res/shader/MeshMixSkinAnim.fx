@@ -83,10 +83,20 @@ float3 SampleBaseTextureColor(float2 uv)
 
 void ApplyAlphaClip(float2 uv)
 {
-    if (g_alphaClipEnabled)
+    if (g_alphaClipEnabled && !g_treatTextureAsWhite)
     {
         clip(tex2D(g_textureSampler, uv).a - 0.5f);
     }
+}
+
+float GetSurfaceAlpha(float2 uv)
+{
+    if (g_alphaClipEnabled && !g_treatTextureAsWhite)
+    {
+        return tex2D(g_textureSampler, uv).a;
+    }
+
+    return saturate(g_diffuse.a);
 }
 
 float3 RotateVectorXYZ(float3 inputVector, float3 rotation)
@@ -341,7 +351,6 @@ void PixelShader1(in  float3 inPosWorld    : TEXCOORD0,
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float3 halfVector = normalize(lightDir + cameraDir);
 
-    float4 textureColor = tex2D(g_textureSampler, inTexCoord);
     float3 albedo = SampleBaseTextureColor(inTexCoord) * g_diffuse.rgb;
 
     float NdotL = saturate(dot(normal, lightDir));
@@ -403,8 +412,7 @@ void PixelShader1(in  float3 inPosWorld    : TEXCOORD0,
 
     float3 baseColor = saturate(ambient + lambert + specular + fresnelColor);
     float3 pointLightColor = (albedo * pointLightDiffuse) + pointLightSpecular;
-    outColor = float4(baseColor + pointLightColor,
-                      saturate(textureColor.a * g_diffuse.a));
+    outColor = float4(baseColor + pointLightColor, GetSurfaceAlpha(inTexCoord));
 }
 
 void PixelShaderPointLight(in  float4 inPosition    : POSITION,
@@ -470,7 +478,7 @@ void PixelShaderPointLight(in  float4 inPosition    : POSITION,
         specularAccum += sampleSpecular;
     }
 
-    outColor = float4((albedo * diffuseAccum) + specularAccum, 0.0f);
+    outColor = float4((albedo * diffuseAccum) + specularAccum, GetSurfaceAlpha(inTexCoord));
 }
 
 void PixelShaderAlphaDepthPrePass(in  float3 inPosWorld    : TEXCOORD0,

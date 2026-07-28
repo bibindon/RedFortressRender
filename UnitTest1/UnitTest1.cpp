@@ -507,6 +507,97 @@ namespace UnitTest1
             NSRender::CustomXLoader2::DestroyCustomXFrameHierarchyWithAllocator(frameRoot, allocator);
         }
 
+        TEST_METHOD(EmptyAnimationChannelKeepsBindPose)
+        {
+            // Blender's DirectX exporter writes empty AnimationKey blocks for
+            // channels without f-curves on partially-keyed bones. The
+            // controller must keep the frame's bind-pose transform for those
+            // channels instead of evaluating them as identity.
+            const std::string fileText =
+                "xof 0303txt 0032\r\n"
+                "\r\n"
+                "AnimTicksPerSecond {\r\n"
+                "    30;\r\n"
+                "}\r\n"
+                "Frame Root {\r\n"
+                "    FrameTransformMatrix {\r\n"
+                "        1.000000,0.000000,0.000000,0.000000,0.000000,1.000000,0.000000,0.000000,0.000000,0.000000,1.000000,0.000000,0.000000,0.000000,0.000000,1.000000;;\r\n"
+                "    }\r\n"
+                "    Frame Bone {\r\n"
+                "        FrameTransformMatrix {\r\n"
+                "            0.866025,0.500000,0.000000,0.000000,-0.500000,0.866025,0.000000,0.000000,0.000000,0.000000,1.000000,0.000000,0.000000,0.500000,0.000000,1.000000;;\r\n"
+                "        }\r\n"
+                "    }\r\n"
+                "}\r\n"
+                "AnimationSet Test {\r\n"
+                "    Animation {\r\n"
+                "        { Bone }\r\n"
+                "        AnimationKey {\r\n"
+                "            0;\r\n"
+                "            0;\r\n"
+                ";\r\n"
+                "        }\r\n"
+                "        AnimationKey {\r\n"
+                "            2;\r\n"
+                "            2;\r\n"
+                "            0;3;0.000000,0.500000,0.000000;;,\r\n"
+                "            30;3;0.000000,0.600000,0.000000;;;\r\n"
+                "        }\r\n"
+                "    }\r\n"
+                "}\r\n";
+
+            NSRender::SkinAnimMeshAlloc allocator(L"synthetic_empty_channel.x");
+            LPD3DXFRAME frameRoot = nullptr;
+            std::vector<NSRender::CustomXLoader2::CustomXAnimationSet> animationSets;
+            NSRender::CustomXLoader2::CustomXLoadOptions options;
+
+            const HRESULT parseHr =
+                NSRender::CustomXLoader2::LoadCustomXFrameHierarchyFromText(
+                    fileText,
+                    &allocator,
+                    &frameRoot,
+                    &animationSets,
+                    NSRender::CustomXLoader2::CustomXLoadPurpose::AnimationOnly,
+                    options);
+            Assert::IsTrue(SUCCEEDED(parseHr), L"Failed to parse the synthetic X text.");
+            Assert::IsNotNull(frameRoot, L"Synthetic frame hierarchy was null.");
+            Assert::AreEqual(static_cast<std::size_t>(1), animationSets.size());
+
+            LPD3DXANIMATIONCONTROLLER controller = nullptr;
+            const HRESULT controllerHr =
+                NSRender::CustomXLoader2::CreateAnimationControllerFromParsedData(
+                    animationSets,
+                    frameRoot,
+                    &controller,
+                    options);
+            Assert::IsTrue(SUCCEEDED(controllerHr), L"Failed to create the animation controller.");
+            Assert::IsNotNull(controller, L"Animation controller was null.");
+
+            LPD3DXFRAME boneFrame = D3DXFrameFind(frameRoot, "Bone");
+            Assert::IsNotNull(boneFrame, L"Bone frame was not found.");
+
+            controller->SetTrackPosition(0, 0.0);
+            controller->AdvanceTime(0.0, nullptr);
+
+            // The rotation must remain the bind pose (30 degrees about Z),
+            // not the identity that D3DX produces for zero-key channels.
+            Assert::AreEqual(0.866025f, boneFrame->TransformationMatrix._11, 0.001f);
+            Assert::AreEqual(0.5f, boneFrame->TransformationMatrix._12, 0.001f);
+            Assert::AreEqual(-0.5f, boneFrame->TransformationMatrix._21, 0.001f);
+            Assert::AreEqual(0.866025f, boneFrame->TransformationMatrix._22, 0.001f);
+            Assert::AreEqual(0.5f, boneFrame->TransformationMatrix._42, 0.001f);
+
+            controller->SetTrackPosition(0, 0.5);
+            controller->AdvanceTime(0.0, nullptr);
+            Assert::AreEqual(0.866025f, boneFrame->TransformationMatrix._11, 0.001f);
+            Assert::AreEqual(0.5f, boneFrame->TransformationMatrix._12, 0.001f);
+            Assert::AreEqual(0.55f, boneFrame->TransformationMatrix._42, 0.001f);
+
+            controller->Release();
+            controller = nullptr;
+            NSRender::CustomXLoader2::DestroyCustomXFrameHierarchyWithAllocator(frameRoot, allocator);
+        }
+
 
         TEST_METHOD(LoadWolfMeshFrameHierarchy)
         {
@@ -564,6 +655,87 @@ namespace UnitTest1
             Assert::IsTrue(SUCCEEDED(result.hr), result.message.c_str());
             Assert::AreEqual(45, result.frameCount);
             Assert::AreEqual(std::wstring(L"Root"), result.rootFrameName);
+        }
+
+        TEST_METHOD(SkeletonRealIdleKeepsHipsBindRotation)
+        {
+            std::wstring filePath;
+            {
+                wchar_t currentDirectory[MAX_PATH] { };
+                const DWORD length = GetCurrentDirectoryW(_countof(currentDirectory), currentDirectory);
+                Assert::IsTrue(length > 0 && length < _countof(currentDirectory));
+                std::wstring directory(currentDirectory);
+                for (int i = 0; i < 8 && filePath.empty(); ++i)
+                {
+                    const std::wstring candidate =
+                        directory +
+                        L"\\RedFortress2\\MultiPassRendering\\res\\model2\\Skeleton\\enemy.idle.x";
+                    if (FileExists(candidate))
+                    {
+                        filePath = candidate;
+                        break;
+                    }
+                    const std::size_t slashPos = directory.find_last_of(L"\\/");
+                    if (slashPos == std::wstring::npos)
+                    {
+                        break;
+                    }
+                    directory = directory.substr(0, slashPos);
+                }
+            }
+            Assert::IsTrue(FileExists(filePath), L"Skeleton enemy.idle.x was not found.");
+
+            std::ifstream file(filePath, std::ios::binary);
+            Assert::IsTrue(file.good());
+            const std::string fileText((std::istreambuf_iterator<char>(file)),
+                                       std::istreambuf_iterator<char>());
+
+            NSRender::SkinAnimMeshAlloc allocator(filePath);
+            LPD3DXFRAME frameRoot = nullptr;
+            std::vector<NSRender::CustomXLoader2::CustomXAnimationSet> animationSets;
+            NSRender::CustomXLoader2::CustomXLoadOptions options;
+            options.allowDuplicateSkinWeightsCount = true;
+            options.transposeAnimationMatrixKeys = true;
+            options.invertRecalculatedMeshNormals = false;
+
+            const HRESULT parseHr =
+                NSRender::CustomXLoader2::LoadCustomXFrameHierarchyFromText(
+                    fileText,
+                    &allocator,
+                    &frameRoot,
+                    &animationSets,
+                    NSRender::CustomXLoader2::CustomXLoadPurpose::AnimationOnly,
+                    options);
+            Assert::IsTrue(SUCCEEDED(parseHr));
+            Assert::IsNotNull(frameRoot);
+
+            LPD3DXANIMATIONCONTROLLER controller = nullptr;
+            const HRESULT controllerHr =
+                NSRender::CustomXLoader2::CreateAnimationControllerFromParsedData(
+                    animationSets,
+                    frameRoot,
+                    &controller,
+                    options);
+            Assert::IsTrue(SUCCEEDED(controllerHr));
+            Assert::IsNotNull(controller);
+
+            LPD3DXFRAME hipsFrame = D3DXFrameFind(frameRoot, "Hips");
+            Assert::IsNotNull(hipsFrame);
+
+            controller->SetTrackPosition(0, 0.5);
+            controller->AdvanceTime(0.0, nullptr);
+
+            // Hips bind rotation is 90 degrees about Y (_13=1, _31=-1) with a
+            // translation near (0.013, 0.371, -0.121). The empty rotation
+            // channel must keep this bind pose instead of identity.
+            Assert::AreEqual(1.0f, hipsFrame->TransformationMatrix._13, 0.01f);
+            Assert::AreEqual(-1.0f, hipsFrame->TransformationMatrix._31, 0.01f);
+            Assert::AreEqual(0.371f, hipsFrame->TransformationMatrix._42, 0.01f);
+            Assert::AreEqual(-0.121f, hipsFrame->TransformationMatrix._43, 0.01f);
+
+            controller->Release();
+            controller = nullptr;
+            NSRender::CustomXLoader2::DestroyCustomXFrameHierarchyWithAllocator(frameRoot, allocator);
         }
 
         TEST_METHOD(SeparatedWolfCustomLoaderAnimationAdvances)
