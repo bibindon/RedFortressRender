@@ -1812,6 +1812,36 @@ bool ParseCustomXMesh(XTextTokenizer& tokenizer,
         {
             if (allocator != nullptr)
             {
+                if (meshData.skinWeights.empty())
+                {
+                    if (frame->Name == nullptr)
+                    {
+                        CUSTOM_X_LOADER_LOG(L"Rigid mesh binding failed: owner frame has no name. Mesh=" +
+                                            AnsiTextToWideText(meshName));
+                        return false;
+                    }
+
+                    CustomXSkinWeightsData rigidWeights;
+                    rigidWeights.boneName = frame->Name;
+                    rigidWeights.vertexIndices.resize(meshData.positions.size());
+                    rigidWeights.weights.resize(meshData.positions.size(), 1.0f);
+                    D3DXMatrixIdentity(&rigidWeights.offsetMatrix);
+                    for (DWORD vertexIndex = 0;
+                         vertexIndex < static_cast<DWORD>(meshData.positions.size());
+                         ++vertexIndex)
+                    {
+                        rigidWeights.vertexIndices[vertexIndex] = vertexIndex;
+                    }
+                    meshData.skinWeights.push_back(rigidWeights);
+
+                    CUSTOM_X_LOADER_LOG(L"Rigid mesh bound to owner frame. Mesh=" +
+                                        AnsiTextToWideText(meshName) +
+                                        L" Frame=" +
+                                        AnsiTextToWideText(frame->Name) +
+                                        L" Vertices=" +
+                                        std::to_wstring(meshData.positions.size()));
+                }
+
                 if (context != nullptr)
                 {
                     CollapsePhysicsSkinWeights(meshData, *context);
