@@ -1084,6 +1084,17 @@ void MeshMixSkinAnim2::UpdateActiveAnimationClip()
             clip.currentTime = std::fmod(clip.currentTime, clip.duration);
         }
     }
+    else if (clip.currentTime < 0.0)
+    {
+        if (clip.stopWhenEnd)
+        {
+            clip.currentTime = 0.0;
+        }
+        else
+        {
+            clip.currentTime = clip.duration + std::fmod(clip.currentTime, clip.duration);
+        }
+    }
 
     clip.controller->SetTrackPosition(0, clip.currentTime);
     clip.controller->AdvanceTime(0.0, nullptr);
