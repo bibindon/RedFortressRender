@@ -1268,7 +1268,7 @@ void MeshMix2::RenderMeshContainer(const MeshMix2Frame& frame,
                     effect->SetTexture("g_texture", container.m_textureList[subsetIndex]),
                     "MeshMix2 failed to set g_texture.");
                 hasTexture = true;
-                diffuse = D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
+                diffuse = D3DXVECTOR4(1.0f, 1.0f, 1.0f, diffuse.w);
             }
             else
             {
