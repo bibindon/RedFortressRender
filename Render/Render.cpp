@@ -6609,6 +6609,11 @@ bool Render::SetPointLightPositionByOwnerTag(const std::wstring& ownerTag,
     return Light::SetPointLightPositionByOwnerTag(ownerTag, pos);
 }
 
+void Render::RemovePointLightsByOwnerTag(const std::wstring& ownerTag)
+{
+    Light::RemovePointLightsByOwnerTag(ownerTag);
+}
+
 void Render::ClearPointLights()
 {
     Light::ClearPointLights();
