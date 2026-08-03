@@ -757,6 +757,25 @@ bool Render::SetCsvMeshPosition(const int csvId, const D3DXVECTOR3& position)
     return false;
 }
 
+bool Render::SetCsvMeshWorldMatrix(const int csvId, const D3DXMATRIX& matrix)
+{
+    const auto renderId = m_csvIdToRenderId.find(csvId);
+    if (renderId != m_csvIdToRenderId.end())
+    {
+        SetMeshMixWorldMatrix(renderId->second, matrix);
+        return true;
+    }
+
+    const auto meshMix2RenderId = m_csvIdToMeshMix2RenderId.find(csvId);
+    if (meshMix2RenderId != m_csvIdToMeshMix2RenderId.end())
+    {
+        SetMeshMixWorldMatrix(meshMix2RenderId->second, matrix);
+        return true;
+    }
+
+    return false;
+}
+
 bool Render::SetCsvMeshEnabled(const int csvId, const bool enabled)
 {
     const auto meshMixFound = m_csvIdToRenderId.find(csvId);

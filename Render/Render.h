@@ -391,6 +391,7 @@ public:
     void RegisterCsvMeshMix2IdMapping(int csvId, int renderId);
     bool TryGetCsvMeshPosition(int csvId, D3DXVECTOR3* position) const;
     bool SetCsvMeshPosition(int csvId, const D3DXVECTOR3& position);
+    bool SetCsvMeshWorldMatrix(int csvId, const D3DXMATRIX& matrix);
     bool SetCsvMeshEnabled(int csvId, bool enabled);
 
     struct MovingPlatform
