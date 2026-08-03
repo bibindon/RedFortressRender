@@ -389,6 +389,9 @@ public:
     void ResetMovingPlatforms();
     void RegisterCsvIdMapping(int csvId, int renderId);
     void RegisterCsvMeshMix2IdMapping(int csvId, int renderId);
+    bool TryGetCsvMeshPosition(int csvId, D3DXVECTOR3* position) const;
+    bool SetCsvMeshPosition(int csvId, const D3DXVECTOR3& position);
+    bool SetCsvMeshEnabled(int csvId, bool enabled);
 
     struct MovingPlatform
     {

@@ -714,6 +714,68 @@ void Render::RegisterCsvMeshMix2IdMapping(const int csvId, const int renderId)
     m_csvMeshMix2RenderIds.push_back(renderId);
 }
 
+bool Render::TryGetCsvMeshPosition(const int csvId, D3DXVECTOR3* position) const
+{
+    if (position == nullptr)
+    {
+        std::abort();
+    }
+
+    const auto meshMixFound = m_csvIdToRenderId.find(csvId);
+    if (meshMixFound != m_csvIdToRenderId.end())
+    {
+        *position = GetMeshMixPos(meshMixFound->second);
+        return true;
+    }
+
+    const auto meshMix2Found = m_csvIdToMeshMix2RenderId.find(csvId);
+    if (meshMix2Found != m_csvIdToMeshMix2RenderId.end())
+    {
+        *position = GetMeshMix2Pos(meshMix2Found->second);
+        return true;
+    }
+
+    return false;
+}
+
+bool Render::SetCsvMeshPosition(const int csvId, const D3DXVECTOR3& position)
+{
+    const auto meshMixFound = m_csvIdToRenderId.find(csvId);
+    if (meshMixFound != m_csvIdToRenderId.end())
+    {
+        SetMeshMixPos(meshMixFound->second, position);
+        return true;
+    }
+
+    const auto meshMix2Found = m_csvIdToMeshMix2RenderId.find(csvId);
+    if (meshMix2Found != m_csvIdToMeshMix2RenderId.end())
+    {
+        SetMeshMix2Pos(meshMix2Found->second, position);
+        return true;
+    }
+
+    return false;
+}
+
+bool Render::SetCsvMeshEnabled(const int csvId, const bool enabled)
+{
+    const auto meshMixFound = m_csvIdToRenderId.find(csvId);
+    if (meshMixFound != m_csvIdToRenderId.end())
+    {
+        SetMeshMixEnabled(meshMixFound->second, enabled);
+        return true;
+    }
+
+    const auto meshMix2Found = m_csvIdToMeshMix2RenderId.find(csvId);
+    if (meshMix2Found != m_csvIdToMeshMix2RenderId.end())
+    {
+        SetMeshMixEnabled(meshMix2Found->second, enabled);
+        return true;
+    }
+
+    return false;
+}
+
 const std::vector<Render::MovingPlatform>& Render::GetMovingPlatforms() const
 {
     return m_movingPlatforms;
