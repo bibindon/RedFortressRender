@@ -18,6 +18,16 @@ public:
     static void SetSharedMirrorViewProj(const D3DXMATRIX& matrix);
     static void SetSharedMirrorClipPlane(bool enabled, const D3DXVECTOR4& plane);
 
+    // 全インスタンスが共有するエフェクトを取得する。
+    static LPD3DXEFFECT GetSharedEffect();
+
+    // 共有エフェクトへ、フレームごとに1回だけ設定すればよい共通パラメータを反映する。
+    static void ApplySharedEffectParameters();
+
+    // 共有エフェクトの参照カウントを増減する。
+    static void AddSharedEffectReference();
+    static void ReleaseSharedEffectReference();
+
     MeshMix2(const std::wstring& filename,
              const D3DXVECTOR3& pos,
              const D3DXVECTOR3& rotate,
@@ -73,6 +83,13 @@ public:
 
 private:
     static constexpr const wchar_t* kShaderFilename = L".\\MeshMix2.cso";
+
+    static LPD3DXEFFECT s_sharedEffect;
+    static int s_sharedEffectReferenceCount;
+    static ULONGLONG s_lastCommonParameterFrameTick;
+    static float s_sharedEffectTime;
+
+    void ApplyIndividualEffectParameters();
 
     std::wstring m_meshName;
     MeshMix2MeshAlloc m_allocator;

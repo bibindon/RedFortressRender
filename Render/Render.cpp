@@ -6946,6 +6946,9 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
     m_lastFrameProfile.mainPassSkinAnimMilliseconds +=
         std::chrono::duration<double, std::milli>(ProfileClock::now() - skinAnimStartTime).count();
 
+    // 全 MeshMix2 が共有するエフェクトへ、共通パラメータをフレームごとに1回だけ反映する。
+    MeshMix2::ApplySharedEffectParameters();
+
     const auto meshMix2StartTime = ProfileClock::now();
     for (size_t i = 0; i < m_meshMix2List.size(); ++i)
     {

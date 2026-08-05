@@ -654,6 +654,11 @@ D3DXVECTOR4 g_meshMix2MirrorClipPlane(0.0f, 1.0f, 0.0f, 0.0f);
 
 }
 
+LPD3DXEFFECT MeshMix2::s_sharedEffect = nullptr;
+int MeshMix2::s_sharedEffectReferenceCount = 0;
+ULONGLONG MeshMix2::s_lastCommonParameterFrameTick = 0;
+float MeshMix2::s_sharedEffectTime = 0.0f;
+
 void MeshMix2::SetSharedThicknessTexture(LPDIRECT3DTEXTURE9 texture)
 {
     g_meshMix2ThicknessTexture = texture;
@@ -673,6 +678,267 @@ void MeshMix2::SetSharedMirrorClipPlane(const bool enabled, const D3DXVECTOR4& p
 {
     g_meshMix2MirrorClipEnabled = enabled;
     g_meshMix2MirrorClipPlane = plane;
+}
+
+LPD3DXEFFECT MeshMix2::GetSharedEffect()
+{
+    return s_sharedEffect;
+}
+
+void MeshMix2::AddSharedEffectReference()
+{
+    if (s_sharedEffectReferenceCount > 0)
+    {
+        ++s_sharedEffectReferenceCount;
+        return;
+    }
+
+    const std::wstring shaderPath = ResolveRuntimePath(kShaderFilename);
+    const HRESULT effectResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
+                                                           shaderPath.c_str(),
+                                                           nullptr,
+                                                           nullptr,
+                                                           0,
+                                                           nullptr,
+                                                           &s_sharedEffect,
+                                                           nullptr);
+    if (FAILED(effectResult) || s_sharedEffect == nullptr)
+    {
+        throw std::runtime_error("MeshMix2 failed to create its shared effect.");
+    }
+
+    s_sharedEffectReferenceCount = 1;
+    s_lastCommonParameterFrameTick = 0;
+}
+
+void MeshMix2::ReleaseSharedEffectReference()
+{
+    if (s_sharedEffectReferenceCount > 0)
+    {
+        --s_sharedEffectReferenceCount;
+    }
+
+    if (s_sharedEffectReferenceCount == 0 && s_sharedEffect != nullptr)
+    {
+        SAFE_RELEASE(s_sharedEffect);
+        s_sharedEffect = nullptr;
+        s_lastCommonParameterFrameTick = 0;
+    }
+}
+
+void MeshMix2::ApplySharedEffectParameters()
+{
+    if (s_sharedEffect == nullptr)
+    {
+        return;
+    }
+
+    const ULONGLONG currentTick = GetTickCount64();
+    if (currentTick == s_lastCommonParameterFrameTick)
+    {
+        return;
+    }
+    s_lastCommonParameterFrameTick = currentTick;
+
+    s_sharedEffectTime = static_cast<float>(currentTick) * 0.001f;
+
+    const D3DXVECTOR4 lightDirection = Light::GetLightDir();
+    const D3DXVECTOR4 lightColor(Light::GetLightColor());
+    const D3DXVECTOR4 ambientColor(Light::GetAmbientColor());
+    const D3DXVECTOR4 cameraPosition(Camera::GetEyePos(), 1.0f);
+    ThrowIfEffectCallFailed(s_sharedEffect->SetVector("g_lightDir", &lightDirection),
+                            "MeshMix2 failed to set g_lightDir.");
+    ThrowIfEffectCallFailed(s_sharedEffect->SetVector("g_lightColor", &lightColor),
+                            "MeshMix2 failed to set g_lightColor.");
+    ThrowIfEffectCallFailed(s_sharedEffect->SetVector("g_ambient", &ambientColor),
+                            "MeshMix2 failed to set g_ambient.");
+    ThrowIfEffectCallFailed(s_sharedEffect->SetVector("g_cameraPos", &cameraPosition),
+                            "MeshMix2 failed to set g_cameraPos.");
+    ThrowIfEffectCallFailed(s_sharedEffect->SetFloat("g_fSunLightIntensity", Light::GetBrightness()),
+                            "MeshMix2 failed to set g_fSunLightIntensity.");
+    ThrowIfEffectCallFailed(s_sharedEffect->SetFloat("g_fAmbientIntensity", Light::GetAmbientBrightness()),
+                            "MeshMix2 failed to set g_fAmbientIntensity.");
+    ThrowIfEffectCallFailed(s_sharedEffect->SetFloat("g_time", s_sharedEffectTime),
+                            "MeshMix2 failed to set g_time.");
+    const float screenSize[2] =
+    {
+        static_cast<float>(Common::ScreenW()),
+        static_cast<float>(Common::ScreenH())
+    };
+    ThrowIfEffectCallFailed(s_sharedEffect->SetFloatArray("g_screenSize", screenSize, 2),
+                            "MeshMix2 failed to set g_screenSize.");
+    ThrowIfEffectCallFailed(s_sharedEffect->SetTexture("g_texThickness", g_meshMix2ThicknessTexture),
+                            "MeshMix2 failed to set g_texThickness.");
+    ThrowIfEffectCallFailed(s_sharedEffect->SetTexture("g_texMirror", g_meshMix2MirrorTexture),
+                            "MeshMix2 failed to set g_texMirror.");
+    ThrowIfEffectCallFailed(s_sharedEffect->SetMatrix("g_matMirrorViewProj", &g_meshMix2MirrorViewProjection),
+                            "MeshMix2 failed to set g_matMirrorViewProj.");
+    ThrowIfEffectCallFailed(s_sharedEffect->SetBool("g_mirrorClipEnable", g_meshMix2MirrorClipEnabled),
+                            "MeshMix2 failed to set g_mirrorClipEnable.");
+    ThrowIfEffectCallFailed(s_sharedEffect->SetVector("g_mirrorClipPlane", &g_meshMix2MirrorClipPlane),
+                            "MeshMix2 failed to set g_mirrorClipPlane.");
+    ThrowIfEffectCallFailed(s_sharedEffect->SetTexture("g_texHeightMap", nullptr),
+                            "MeshMix2 failed to clear g_texHeightMap.");
+
+    const std::deque<PointLightInfo> pointLightList = Light::GetPointLightList();
+    D3DXVECTOR4 pointLightPositions[16];
+    float pointLightBrightness[16] { };
+    float pointLightRanges[16] { };
+    float pointLightShapes[16] { };
+    float pointLightLineLengths[16] { };
+    float pointLightSquareWidths[16] { };
+    float pointLightSquareHeights[16] { };
+    D3DXVECTOR4 pointLightRotations[16];
+    D3DXVECTOR4 pointLightColors[16];
+    ZeroMemory(pointLightPositions, sizeof(pointLightPositions));
+    ZeroMemory(pointLightRotations, sizeof(pointLightRotations));
+    ZeroMemory(pointLightColors, sizeof(pointLightColors));
+
+    for (std::size_t index = 0; index < 16; ++index)
+    {
+        if (index >= pointLightList.size())
+        {
+            continue;
+        }
+
+        const PointLightInfo& pointLight = pointLightList.at(index);
+        pointLightPositions[index].x = pointLight.m_pos.x;
+        pointLightPositions[index].y = pointLight.m_pos.y;
+        pointLightPositions[index].z = pointLight.m_pos.z;
+        pointLightBrightness[index] = pointLight.m_brightness;
+        pointLightRanges[index] = pointLight.m_range;
+        pointLightShapes[index] = PointLightShapeToShaderValue(pointLight.m_shape);
+        pointLightLineLengths[index] = pointLight.m_lineLength;
+        pointLightSquareWidths[index] = pointLight.m_squareWidth;
+        pointLightSquareHeights[index] = pointLight.m_squareHeight;
+        pointLightRotations[index].x = pointLight.m_rotation.x;
+        pointLightRotations[index].y = pointLight.m_rotation.y;
+        pointLightRotations[index].z = pointLight.m_rotation.z;
+        pointLightColors[index].x = pointLight.m_color.r;
+        pointLightColors[index].y = pointLight.m_color.g;
+        pointLightColors[index].z = pointLight.m_color.b;
+    }
+
+    ThrowIfEffectCallFailed(s_sharedEffect->SetVectorArray("g_pointLightPos",
+                                                            pointLightPositions,
+                                                            16),
+                            "MeshMix2 failed to set g_pointLightPos.");
+    ThrowIfEffectCallFailed(s_sharedEffect->SetFloatArray("g_pointLightBrightness",
+                                                           pointLightBrightness,
+                                                           16),
+                            "MeshMix2 failed to set g_pointLightBrightness.");
+    ThrowIfEffectCallFailed(s_sharedEffect->SetFloatArray("g_pointLightRange",
+                                                           pointLightRanges,
+                                                           16),
+                            "MeshMix2 failed to set g_pointLightRange.");
+    ThrowIfEffectCallFailed(s_sharedEffect->SetFloatArray("g_pointLightShape",
+                                                           pointLightShapes,
+                                                           16),
+                            "MeshMix2 failed to set g_pointLightShape.");
+    ThrowIfEffectCallFailed(s_sharedEffect->SetFloatArray("g_pointLightLineLength",
+                                                           pointLightLineLengths,
+                                                           16),
+                            "MeshMix2 failed to set g_pointLightLineLength.");
+    ThrowIfEffectCallFailed(s_sharedEffect->SetFloatArray("g_pointLightSquareWidth",
+                                                           pointLightSquareWidths,
+                                                           16),
+                            "MeshMix2 failed to set g_pointLightSquareWidth.");
+    ThrowIfEffectCallFailed(s_sharedEffect->SetFloatArray("g_pointLightSquareHeight",
+                                                           pointLightSquareHeights,
+                                                           16),
+                            "MeshMix2 failed to set g_pointLightSquareHeight.");
+    ThrowIfEffectCallFailed(s_sharedEffect->SetVectorArray("g_pointLightRotation",
+                                                            pointLightRotations,
+                                                            16),
+                            "MeshMix2 failed to set g_pointLightRotation.");
+    ThrowIfEffectCallFailed(s_sharedEffect->SetVectorArray("g_pointLightColor",
+                                                             pointLightColors,
+                                                             16),
+                            "MeshMix2 failed to set g_pointLightColor.");
+}
+
+void MeshMix2::ApplyIndividualEffectParameters()
+{
+    if (m_D3DEffect == nullptr)
+    {
+        return;
+    }
+
+    ThrowIfEffectCallFailed(m_D3DEffect->SetBool("g_damageFlash", m_damageFlash),
+                            "MeshMix2 failed to set g_damageFlash.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetBool("g_bSaturateShadow", m_param.saturateShadow),
+                            "MeshMix2 failed to set g_bSaturateShadow.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_fSaturateShadowIntensity", m_param.saturateShadowIntensity),
+                            "MeshMix2 failed to set g_fSaturateShadowIntensity.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_fShadowDarkness", m_param.shadowDarkness),
+                            "MeshMix2 failed to set g_fShadowDarkness.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetBool("g_fresnelEnable", m_param.fresnel),
+                            "MeshMix2 failed to set g_fresnelEnable.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_fresnelIntensity", m_param.fresnelIntensity),
+                            "MeshMix2 failed to set g_fresnelIntensity.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetBool("g_bPOM", m_param.parallaxOcclusionMapping),
+                            "MeshMix2 failed to set g_bPOM.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetBool("g_bNormalMapping", m_param.normalMapping),
+                            "MeshMix2 failed to set g_bNormalMapping.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetBool("g_bSSS", m_param.sss),
+                            "MeshMix2 failed to set g_bSSS.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_sssIntensity", m_param.sssIntensity),
+                            "MeshMix2 failed to set g_sssIntensity.");
+    D3DXVECTOR4 sssColor;
+    sssColor.x = static_cast<float>((m_param.sssColor >> 16) & 0xff) / 255.0f;
+    sssColor.y = static_cast<float>((m_param.sssColor >> 8) & 0xff) / 255.0f;
+    sssColor.z = static_cast<float>(m_param.sssColor & 0xff) / 255.0f;
+    sssColor.w = static_cast<float>((m_param.sssColor >> 24) & 0xff) / 255.0f;
+    ThrowIfEffectCallFailed(m_D3DEffect->SetVector("g_sssColor", &sssColor),
+                            "MeshMix2 failed to set g_sssColor.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_cubeMappingRate", m_param.cubeMappingRate),
+                            "MeshMix2 failed to set g_cubeMappingRate.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_cubeMappingGauss", m_param.cubeMappingGauss),
+                            "MeshMix2 failed to set g_cubeMappingGauss.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetBool("g_waterMirrorEnable", m_param.waterMirror),
+                            "MeshMix2 failed to set g_waterMirrorEnable.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_waterReflectionStrength", m_param.waterReflectionStrength),
+                            "MeshMix2 failed to set g_waterReflectionStrength.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_waterReflectionTint", m_param.waterReflectionTint),
+                            "MeshMix2 failed to set g_waterReflectionTint.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_emitIntensity", m_param.emitIntensity),
+                            "MeshMix2 failed to set g_emitIntensity.");
+    D3DXVECTOR4 emitColor;
+    emitColor.x = static_cast<float>((m_param.emitColor >> 16) & 0xff) / 255.0f;
+    emitColor.y = static_cast<float>((m_param.emitColor >> 8) & 0xff) / 255.0f;
+    emitColor.z = static_cast<float>(m_param.emitColor & 0xff) / 255.0f;
+    emitColor.w = 1.0f;
+    ThrowIfEffectCallFailed(m_D3DEffect->SetVector("g_emitColor", &emitColor),
+                            "MeshMix2 failed to set g_emitColor.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetBool("g_swayEnable", m_param.sway),
+                            "MeshMix2 failed to set g_swayEnable.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_swayAmount", m_param.swayIntensity),
+                            "MeshMix2 failed to set g_swayAmount.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_swaySpeed", 1.0f),
+                            "MeshMix2 failed to set g_swaySpeed.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetBool("g_waveEnable", m_param.wave),
+                            "MeshMix2 failed to set g_waveEnable.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_waveAmount", m_param.waveIntensity),
+                            "MeshMix2 failed to set g_waveAmount.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_waveSpeed", m_param.waveSpeed),
+                            "MeshMix2 failed to set g_waveSpeed.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_waveDensity", m_param.waveDensity),
+                            "MeshMix2 failed to set g_waveDensity.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetTexture("g_texCubeMap", m_csvCubeMap),
+                            "MeshMix2 failed to set g_texCubeMap.");
+    ThrowIfEffectCallFailed(m_D3DEffect->SetTexture("g_texNormalMap", m_csvNormalMap),
+                            "MeshMix2 failed to set g_texNormalMap.");
+
+    const std::deque<PointLightInfo> pointLightList = Light::GetPointLightList();
+    std::size_t activePointLightCount = 0;
+    if (m_param.pointLight && Light::IsPointLightEnabled())
+    {
+        activePointLightCount = (std::min)(pointLightList.size(), static_cast<std::size_t>(16));
+    }
+    const int pointLightShaderIndex = GetPointLightShaderIndex(activePointLightCount);
+    ThrowIfEffectCallFailed(m_D3DEffect->SetInt("g_currentPointLightShaderIndex",
+                                                pointLightShaderIndex),
+                            "MeshMix2 failed to set g_currentPointLightShaderIndex.");
 }
 
 MeshMix2::MeshMix2(const std::wstring& filename,
@@ -703,19 +969,7 @@ void MeshMix2::Initialize(const bool async)
         return;
     }
 
-    const std::wstring shaderPath = ResolveRuntimePath(kShaderFilename);
-    const HRESULT effectResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                                           shaderPath.c_str(),
-                                                           nullptr,
-                                                           nullptr,
-                                                           0,
-                                                           nullptr,
-                                                           &m_D3DEffect,
-                                                           nullptr);
-    if (FAILED(effectResult) || m_D3DEffect == nullptr)
-    {
-        throw std::runtime_error("MeshMix2 failed to create its effect.");
-    }
+    AddSharedEffectReference();
 
     if (async)
     {
@@ -733,6 +987,8 @@ void MeshMix2::Initialize(const bool async)
 
 void MeshMix2::InitializeInternal()
 {
+    m_D3DEffect = s_sharedEffect;
+
     const std::wstring meshPath = ResolveRuntimePath(m_meshName);
     const MeshCsvParam csvParam = ReadMeshCsvParam(meshPath);
     ApplyMeshCsvParam(csvParam, m_param);
@@ -856,7 +1112,8 @@ void MeshMix2::ReleaseOwnedResources()
 
     SAFE_RELEASE(m_csvCubeMap);
     SAFE_RELEASE(m_csvNormalMap);
-    SAFE_RELEASE(m_D3DEffect);
+    ReleaseSharedEffectReference();
+    m_D3DEffect = nullptr;
 }
 
 void MeshMix2::CorrectBlenderOfficialAxisTransforms(LPD3DXFRAME frame,
@@ -903,200 +1160,7 @@ void MeshMix2::Render(const bool renderAsMirrorSurface)
         }
     }
 
-    const D3DXVECTOR4 lightDirection = Light::GetLightDir();
-    const D3DXVECTOR4 lightColor(Light::GetLightColor());
-    const D3DXVECTOR4 ambientColor(Light::GetAmbientColor());
-    const D3DXVECTOR4 cameraPosition(Camera::GetEyePos(), 1.0f);
-    ThrowIfEffectCallFailed(m_D3DEffect->SetVector("g_lightDir", &lightDirection),
-                            "MeshMix2 failed to set g_lightDir.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetVector("g_lightColor", &lightColor),
-                            "MeshMix2 failed to set g_lightColor.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetVector("g_ambient", &ambientColor),
-                            "MeshMix2 failed to set g_ambient.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetVector("g_cameraPos", &cameraPosition),
-                            "MeshMix2 failed to set g_cameraPos.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_fSunLightIntensity", Light::GetBrightness()),
-                            "MeshMix2 failed to set g_fSunLightIntensity.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_fAmbientIntensity", Light::GetAmbientBrightness()),
-                            "MeshMix2 failed to set g_fAmbientIntensity.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetBool("g_damageFlash", m_damageFlash),
-                            "MeshMix2 failed to set g_damageFlash.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetBool("g_bSaturateShadow", m_param.saturateShadow),
-                            "MeshMix2 failed to set g_bSaturateShadow.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_fSaturateShadowIntensity", m_param.saturateShadowIntensity),
-                            "MeshMix2 failed to set g_fSaturateShadowIntensity.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_fShadowDarkness", m_param.shadowDarkness),
-                            "MeshMix2 failed to set g_fShadowDarkness.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetBool("g_fresnelEnable", m_param.fresnel),
-                            "MeshMix2 failed to set g_fresnelEnable.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_fresnelIntensity", m_param.fresnelIntensity),
-                            "MeshMix2 failed to set g_fresnelIntensity.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetBool("g_bPOM", m_param.parallaxOcclusionMapping),
-                            "MeshMix2 failed to set g_bPOM.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetBool("g_bNormalMapping", m_param.normalMapping),
-                            "MeshMix2 failed to set g_bNormalMapping.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetBool("g_bSSS", m_param.sss),
-                            "MeshMix2 failed to set g_bSSS.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_sssIntensity", m_param.sssIntensity),
-                            "MeshMix2 failed to set g_sssIntensity.");
-    D3DXVECTOR4 sssColor;
-    sssColor.x = static_cast<float>((m_param.sssColor >> 16) & 0xff) / 255.0f;
-    sssColor.y = static_cast<float>((m_param.sssColor >> 8) & 0xff) / 255.0f;
-    sssColor.z = static_cast<float>(m_param.sssColor & 0xff) / 255.0f;
-    sssColor.w = static_cast<float>((m_param.sssColor >> 24) & 0xff) / 255.0f;
-    ThrowIfEffectCallFailed(m_D3DEffect->SetVector("g_sssColor", &sssColor),
-                            "MeshMix2 failed to set g_sssColor.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_cubeMappingRate", m_param.cubeMappingRate),
-                            "MeshMix2 failed to set g_cubeMappingRate.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_cubeMappingGauss", m_param.cubeMappingGauss),
-                            "MeshMix2 failed to set g_cubeMappingGauss.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetBool("g_waterMirrorEnable", m_param.waterMirror),
-                            "MeshMix2 failed to set g_waterMirrorEnable.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_waterReflectionStrength", m_param.waterReflectionStrength),
-                            "MeshMix2 failed to set g_waterReflectionStrength.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_waterReflectionTint", m_param.waterReflectionTint),
-                            "MeshMix2 failed to set g_waterReflectionTint.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_emitIntensity", m_param.emitIntensity),
-                            "MeshMix2 failed to set g_emitIntensity.");
-    D3DXVECTOR4 emitColor;
-    emitColor.x = static_cast<float>((m_param.emitColor >> 16) & 0xff) / 255.0f;
-    emitColor.y = static_cast<float>((m_param.emitColor >> 8) & 0xff) / 255.0f;
-    emitColor.z = static_cast<float>(m_param.emitColor & 0xff) / 255.0f;
-    emitColor.w = 1.0f;
-    ThrowIfEffectCallFailed(m_D3DEffect->SetVector("g_emitColor", &emitColor),
-                            "MeshMix2 failed to set g_emitColor.");
-    static const ULONGLONG effectStartTick = GetTickCount64();
-    const ULONGLONG currentEffectTick = GetTickCount64();
-    const float effectTime = static_cast<float>(currentEffectTick - effectStartTick) * 0.001f;
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_time", effectTime),
-                            "MeshMix2 failed to set g_time.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetBool("g_swayEnable", m_param.sway),
-                            "MeshMix2 failed to set g_swayEnable.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_swayAmount", m_param.swayIntensity),
-                            "MeshMix2 failed to set g_swayAmount.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_swaySpeed", 1.0f),
-                            "MeshMix2 failed to set g_swaySpeed.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetBool("g_waveEnable", m_param.wave),
-                            "MeshMix2 failed to set g_waveEnable.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_waveAmount", m_param.waveIntensity),
-                            "MeshMix2 failed to set g_waveAmount.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_waveSpeed", m_param.waveSpeed),
-                            "MeshMix2 failed to set g_waveSpeed.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloat("g_waveDensity", m_param.waveDensity),
-                            "MeshMix2 failed to set g_waveDensity.");
-    const float screenSize[2] =
-    {
-        static_cast<float>(Common::ScreenW()),
-        static_cast<float>(Common::ScreenH())
-    };
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloatArray("g_screenSize", screenSize, 2),
-                            "MeshMix2 failed to set g_screenSize.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetTexture("g_texThickness", g_meshMix2ThicknessTexture),
-                            "MeshMix2 failed to set g_texThickness.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetTexture("g_texMirror", g_meshMix2MirrorTexture),
-                            "MeshMix2 failed to set g_texMirror.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetMatrix("g_matMirrorViewProj", &g_meshMix2MirrorViewProjection),
-                            "MeshMix2 failed to set g_matMirrorViewProj.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetBool("g_mirrorClipEnable", g_meshMix2MirrorClipEnabled),
-                            "MeshMix2 failed to set g_mirrorClipEnable.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetVector("g_mirrorClipPlane", &g_meshMix2MirrorClipPlane),
-                            "MeshMix2 failed to set g_mirrorClipPlane.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetTexture("g_texCubeMap", m_csvCubeMap),
-                            "MeshMix2 failed to set g_texCubeMap.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetTexture("g_texNormalMap", m_csvNormalMap),
-                            "MeshMix2 failed to set g_texNormalMap.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetTexture("g_texHeightMap", nullptr),
-                            "MeshMix2 failed to clear g_texHeightMap.");
-
-    const std::deque<PointLightInfo> pointLightList = Light::GetPointLightList();
-    std::size_t activePointLightCount = 0;
-    if (m_param.pointLight && Light::IsPointLightEnabled())
-    {
-        activePointLightCount = (std::min)(pointLightList.size(), static_cast<std::size_t>(16));
-    }
-    const int pointLightShaderIndex = GetPointLightShaderIndex(activePointLightCount);
-    ThrowIfEffectCallFailed(m_D3DEffect->SetInt("g_currentPointLightShaderIndex",
-                                                pointLightShaderIndex),
-                            "MeshMix2 failed to set g_currentPointLightShaderIndex.");
-    D3DXVECTOR4 pointLightPositions[16];
-    float pointLightBrightness[16] { };
-    float pointLightRanges[16] { };
-    float pointLightShapes[16] { };
-    float pointLightLineLengths[16] { };
-    float pointLightSquareWidths[16] { };
-    float pointLightSquareHeights[16] { };
-    D3DXVECTOR4 pointLightRotations[16];
-    D3DXVECTOR4 pointLightColors[16];
-    ZeroMemory(pointLightPositions, sizeof(pointLightPositions));
-    ZeroMemory(pointLightRotations, sizeof(pointLightRotations));
-    ZeroMemory(pointLightColors, sizeof(pointLightColors));
-
-    for (std::size_t index = 0; index < 16; ++index)
-    {
-        if (!m_param.pointLight || !Light::IsPointLightEnabled())
-        {
-            continue;
-        }
-
-        if (index >= pointLightList.size())
-        {
-            continue;
-        }
-
-        const PointLightInfo& pointLight = pointLightList.at(index);
-        pointLightPositions[index].x = pointLight.m_pos.x;
-        pointLightPositions[index].y = pointLight.m_pos.y;
-        pointLightPositions[index].z = pointLight.m_pos.z;
-        pointLightBrightness[index] = pointLight.m_brightness;
-        pointLightRanges[index] = pointLight.m_range;
-        pointLightShapes[index] = PointLightShapeToShaderValue(pointLight.m_shape);
-        pointLightLineLengths[index] = pointLight.m_lineLength;
-        pointLightSquareWidths[index] = pointLight.m_squareWidth;
-        pointLightSquareHeights[index] = pointLight.m_squareHeight;
-        pointLightRotations[index].x = pointLight.m_rotation.x;
-        pointLightRotations[index].y = pointLight.m_rotation.y;
-        pointLightRotations[index].z = pointLight.m_rotation.z;
-        pointLightColors[index].x = pointLight.m_color.r;
-        pointLightColors[index].y = pointLight.m_color.g;
-        pointLightColors[index].z = pointLight.m_color.b;
-    }
-
-    ThrowIfEffectCallFailed(m_D3DEffect->SetVectorArray("g_pointLightPos",
-                                                         pointLightPositions,
-                                                         16),
-                            "MeshMix2 failed to set g_pointLightPos.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloatArray("g_pointLightBrightness",
-                                                        pointLightBrightness,
-                                                        16),
-                            "MeshMix2 failed to set g_pointLightBrightness.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloatArray("g_pointLightRange",
-                                                        pointLightRanges,
-                                                        16),
-                            "MeshMix2 failed to set g_pointLightRange.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloatArray("g_pointLightShape",
-                                                        pointLightShapes,
-                                                        16),
-                            "MeshMix2 failed to set g_pointLightShape.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloatArray("g_pointLightLineLength",
-                                                        pointLightLineLengths,
-                                                        16),
-                            "MeshMix2 failed to set g_pointLightLineLength.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloatArray("g_pointLightSquareWidth",
-                                                        pointLightSquareWidths,
-                                                        16),
-                            "MeshMix2 failed to set g_pointLightSquareWidth.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetFloatArray("g_pointLightSquareHeight",
-                                                        pointLightSquareHeights,
-                                                        16),
-                            "MeshMix2 failed to set g_pointLightSquareHeight.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetVectorArray("g_pointLightRotation",
-                                                         pointLightRotations,
-                                                         16),
-                            "MeshMix2 failed to set g_pointLightRotation.");
-    ThrowIfEffectCallFailed(m_D3DEffect->SetVectorArray("g_pointLightColor",
-                                                         pointLightColors,
-                                                         16),
-                            "MeshMix2 failed to set g_pointLightColor.");
+    ApplyIndividualEffectParameters();
     ThrowIfEffectCallFailed(m_D3DEffect->SetTechnique("Technique1"),
                             "MeshMix2 failed to set Technique1.");
     GBuffer::ApplyIntegratedEffectParameters(m_D3DEffect, m_param.shadow);
@@ -1560,17 +1624,17 @@ void MeshMix2::UpdateAutoPointLightPosition()
 
 void MeshMix2::OnDeviceLost()
 {
-    if (m_D3DEffect != nullptr)
+    if (s_sharedEffect != nullptr)
     {
-        m_D3DEffect->OnLostDevice();
+        s_sharedEffect->OnLostDevice();
     }
 }
 
 void MeshMix2::OnDeviceReset()
 {
-    if (m_D3DEffect != nullptr)
+    if (s_sharedEffect != nullptr)
     {
-        m_D3DEffect->OnResetDevice();
+        s_sharedEffect->OnResetDevice();
     }
 }
 
