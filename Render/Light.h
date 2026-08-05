@@ -6,6 +6,7 @@
 #include <vector>
 #include <deque>
 #include <string>
+#include <mutex>
 
 namespace NSRender
 {
@@ -88,6 +89,9 @@ private:
 
     static std::deque<PointLightInfo> m_pointLightList;
     static bool m_pointLightEnabled;
+
+    // ポイントライトリストを複数スレッドから操作するための排他制御である。
+    static std::mutex m_pointLightMutex;
 };
 }
 

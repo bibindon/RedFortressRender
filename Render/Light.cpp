@@ -14,6 +14,7 @@ std::deque<PointLightInfo> Light::m_pointLightList;
 bool Light::m_pointLightEnabled = true;
 D3DXCOLOR Light::m_color = D3DXCOLOR(1.f, 1.f, 1.f, 1.f);
 D3DXCOLOR Light::m_ambientColor = D3DXCOLOR(0.2f, 0.2f, 0.2f, 1.f);
+std::mutex Light::m_pointLightMutex;
 
 D3DXVECTOR4 Light::GetLightDir()
 {
@@ -94,6 +95,7 @@ void Light::AddPointLight(const D3DXVECTOR3& pos,
     pointLightInfo.m_range = range;
     pointLightInfo.m_ownerTag = ownerTag;
 
+    std::lock_guard<std::mutex> lock(m_pointLightMutex);
     m_pointLightList.push_back(pointLightInfo);
 
     if (m_pointLightList.size() > 16)
@@ -104,6 +106,7 @@ void Light::AddPointLight(const D3DXVECTOR3& pos,
 
 bool Light::RemovePointLight(const size_t index)
 {
+    std::lock_guard<std::mutex> lock(m_pointLightMutex);
     if (index >= m_pointLightList.size())
     {
         return false;
@@ -120,6 +123,7 @@ void Light::RemovePointLightsByOwnerTag(const std::wstring& ownerTag)
         return;
     }
 
+    std::lock_guard<std::mutex> lock(m_pointLightMutex);
     for (auto it = m_pointLightList.begin(); it != m_pointLightList.end();)
     {
         if (it->m_ownerTag == ownerTag)
@@ -141,6 +145,7 @@ bool Light::SetPointLightPositionByOwnerTag(const std::wstring& ownerTag,
         return false;
     }
 
+    std::lock_guard<std::mutex> lock(m_pointLightMutex);
     bool updated = false;
     for (auto& pointLight : m_pointLightList)
     {
@@ -155,11 +160,13 @@ bool Light::SetPointLightPositionByOwnerTag(const std::wstring& ownerTag,
 
 void Light::ClearPointLights()
 {
+    std::lock_guard<std::mutex> lock(m_pointLightMutex);
     m_pointLightList.clear();
 }
 
 std::deque<PointLightInfo> Light::GetPointLightList()
 {
+    std::lock_guard<std::mutex> lock(m_pointLightMutex);
     return m_pointLightList;
 }
 
