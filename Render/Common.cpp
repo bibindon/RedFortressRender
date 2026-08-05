@@ -8,6 +8,7 @@ LPDIRECT3D9 Common::m_pD3D = NULL;
 LPDIRECT3DDEVICE9 Common::m_pD3DDev = NULL;
 
 std::vector<IDeviceResettable*> Common::m_resourceList;
+std::mutex Common::m_resourceListMutex;
 
 int Common::m_screenW = 1600;
 int Common::m_screenH = 900;
@@ -34,31 +35,41 @@ void Common::SetD3DDevice(LPDIRECT3DDEVICE9 arg)
 
 void Common::OnDeviceLostAll()
 {
-    const size_t count = m_resourceList.size();
-
-    for (size_t i = 0; i < count; ++i)
+    std::vector<IDeviceResettable*> resourceSnapshot;
     {
-        m_resourceList[i]->OnDeviceLost();
+        std::lock_guard<std::mutex> lock(m_resourceListMutex);
+        resourceSnapshot = m_resourceList;
+    }
+
+    for (size_t i = 0; i < resourceSnapshot.size(); ++i)
+    {
+        resourceSnapshot[i]->OnDeviceLost();
     }
 }
 
 void Common::OnDeviceResetAll()
 {
-    const size_t count = m_resourceList.size();
-
-    for (size_t i = 0; i < count; ++i)
+    std::vector<IDeviceResettable*> resourceSnapshot;
     {
-        m_resourceList[i]->OnDeviceReset();
+        std::lock_guard<std::mutex> lock(m_resourceListMutex);
+        resourceSnapshot = m_resourceList;
+    }
+
+    for (size_t i = 0; i < resourceSnapshot.size(); ++i)
+    {
+        resourceSnapshot[i]->OnDeviceReset();
     }
 }
 
 void Common::AddDeviceLostResource(IDeviceResettable* res)
 {
+    std::lock_guard<std::mutex> lock(m_resourceListMutex);
     m_resourceList.push_back(res);
 }
 
 void Common::RemoveDeviceLostResource(const IDeviceResettable* res)
 {
+    std::lock_guard<std::mutex> lock(m_resourceListMutex);
     Util::Remove(m_resourceList, res);
 }
 

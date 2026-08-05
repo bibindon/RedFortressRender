@@ -658,6 +658,29 @@ LPD3DXEFFECT MeshMix2::s_sharedEffect = nullptr;
 int MeshMix2::s_sharedEffectReferenceCount = 0;
 ULONGLONG MeshMix2::s_lastCommonParameterFrameTick = 0;
 float MeshMix2::s_sharedEffectTime = 0.0f;
+std::chrono::steady_clock::duration MeshMix2::s_profileParameterDuration = std::chrono::steady_clock::duration::zero();
+std::chrono::steady_clock::duration MeshMix2::s_profileDrawDuration = std::chrono::steady_clock::duration::zero();
+
+void MeshMix2::ResetFrameProfileAccumulators()
+{
+    s_profileParameterDuration = std::chrono::steady_clock::duration::zero();
+    s_profileDrawDuration = std::chrono::steady_clock::duration::zero();
+}
+
+void MeshMix2::GetFrameProfileAccumulators(double* outParameterMilliseconds,
+                                           double* outDrawMilliseconds)
+{
+    if (outParameterMilliseconds != nullptr)
+    {
+        *outParameterMilliseconds =
+            std::chrono::duration<double, std::milli>(s_profileParameterDuration).count();
+    }
+    if (outDrawMilliseconds != nullptr)
+    {
+        *outDrawMilliseconds =
+            std::chrono::duration<double, std::milli>(s_profileDrawDuration).count();
+    }
+}
 
 void MeshMix2::SetSharedThicknessTexture(LPDIRECT3DTEXTURE9 texture)
 {
@@ -1160,6 +1183,8 @@ void MeshMix2::Render(const bool renderAsMirrorSurface)
         }
     }
 
+    using ProfileClock = std::chrono::steady_clock;
+    const auto parameterStartTime = ProfileClock::now();
     ApplyIndividualEffectParameters();
     ThrowIfEffectCallFailed(m_D3DEffect->SetTechnique("Technique1"),
                             "MeshMix2 failed to set Technique1.");
@@ -1180,13 +1205,16 @@ void MeshMix2::Render(const bool renderAsMirrorSurface)
     Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE1, gBufferColorWrite);
     Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE2, gBufferColorWrite);
     Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE3, gBufferColorWrite);
+    s_profileParameterDuration += ProfileClock::now() - parameterStartTime;
 
+    const auto drawStartTime = ProfileClock::now();
     const D3DXMATRIX viewProjectionMatrix = Camera::GetViewMatrix() * Camera::GetProjMatrix();
     RenderFrameHierarchy(m_frameRoot,
                          m_D3DEffect,
                          viewProjectionMatrix,
                          true,
                          renderAsMirrorSurface);
+    s_profileDrawDuration += ProfileClock::now() - drawStartTime;
 
     Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE1, oldDepthColorWrite);
     Common::D3DDevice()->SetRenderState(D3DRS_COLORWRITEENABLE2, oldPositionColorWrite);

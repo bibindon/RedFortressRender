@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <cassert>
 #include <memory>
+#include <mutex>
 
 #if defined(_DEBUG)
 #define NEW ::new(_NORMAL_BLOCK, __FILE__, __LINE__)
@@ -63,6 +64,9 @@ private:
     static LPDIRECT3DDEVICE9 m_pD3DDev;
 
     static std::vector<IDeviceResettable*> m_resourceList;
+
+    // 非同期ロードのワーカースレッドからも呼ばれるため、リソースリストを保護する。
+    static std::mutex m_resourceListMutex;
 
     static int m_screenW;
     static int m_screenH;

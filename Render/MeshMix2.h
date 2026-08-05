@@ -6,6 +6,7 @@
 
 #include <atomic>
 #include <thread>
+#include <chrono>
 
 namespace NSRender
 {
@@ -27,6 +28,11 @@ public:
     // 共有エフェクトの参照カウントを増減する。
     static void AddSharedEffectReference();
     static void ReleaseSharedEffectReference();
+
+    // MeshMix2 描画の内訳計測用。フレームごとにリセットして読み取る。
+    static void ResetFrameProfileAccumulators();
+    static void GetFrameProfileAccumulators(double* outParameterMilliseconds,
+                                            double* outDrawMilliseconds);
 
     MeshMix2(const std::wstring& filename,
              const D3DXVECTOR3& pos,
@@ -88,6 +94,10 @@ private:
     static int s_sharedEffectReferenceCount;
     static ULONGLONG s_lastCommonParameterFrameTick;
     static float s_sharedEffectTime;
+
+    // フレームごとの描画内訳計測アキュムレータ。
+    static std::chrono::steady_clock::duration s_profileParameterDuration;
+    static std::chrono::steady_clock::duration s_profileDrawDuration;
 
     void ApplyIndividualEffectParameters();
 

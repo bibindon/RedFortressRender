@@ -6839,11 +6839,14 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
 
     m_lastFrameProfile.mainPassSkinAnimMilliseconds = 0.0;
     m_lastFrameProfile.mainPassMeshMix2Milliseconds = 0.0;
+    m_lastFrameProfile.mainPassMeshMix2ParameterMilliseconds = 0.0;
+    m_lastFrameProfile.mainPassMeshMix2DrawMilliseconds = 0.0;
     m_lastFrameProfile.mainPassInstancingMilliseconds = 0.0;
     m_lastFrameProfile.mainPassOtherMeshMilliseconds = 0.0;
     m_lastFrameProfile.mainPassSkinAnimDraws = 0;
     m_lastFrameProfile.mainPassMeshMix2Draws = 0;
     m_lastFrameProfile.mainPassInstancingDraws = 0;
+    MeshMix2::ResetFrameProfileAccumulators();
 
     const auto otherMeshStartTime = ProfileClock::now();
     for (size_t i = 0; i < m_meshList.size(); ++i)
@@ -6969,6 +6972,9 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
     }
     m_lastFrameProfile.mainPassMeshMix2Milliseconds +=
         std::chrono::duration<double, std::milli>(ProfileClock::now() - meshMix2StartTime).count();
+    MeshMix2::GetFrameProfileAccumulators(
+        &m_lastFrameProfile.mainPassMeshMix2ParameterMilliseconds,
+        &m_lastFrameProfile.mainPassMeshMix2DrawMilliseconds);
 
     const auto instancingStartTime = ProfileClock::now();
     for (auto& elem : m_meshInstancing2Map)

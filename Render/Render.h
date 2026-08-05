@@ -84,6 +84,8 @@ struct RenderFrameProfile
     double mainPassMilliseconds = 0.0;
     double mainPassSkinAnimMilliseconds = 0.0;
     double mainPassMeshMix2Milliseconds = 0.0;
+    double mainPassMeshMix2ParameterMilliseconds = 0.0;
+    double mainPassMeshMix2DrawMilliseconds = 0.0;
     double mainPassInstancingMilliseconds = 0.0;
     double mainPassOtherMeshMilliseconds = 0.0;
     unsigned int mainPassSkinAnimDraws = 0;
