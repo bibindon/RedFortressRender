@@ -82,6 +82,13 @@ struct RenderFrameProfile
     unsigned int gBufferThicknessObjectDraws = 0;
     double mirrorMilliseconds = 0.0;
     double mainPassMilliseconds = 0.0;
+    double mainPassSkinAnimMilliseconds = 0.0;
+    double mainPassMeshMix2Milliseconds = 0.0;
+    double mainPassInstancingMilliseconds = 0.0;
+    double mainPassOtherMeshMilliseconds = 0.0;
+    unsigned int mainPassSkinAnimDraws = 0;
+    unsigned int mainPassMeshMix2Draws = 0;
+    unsigned int mainPassInstancingDraws = 0;
     double postEffectMilliseconds = 0.0;
     double draw2DMilliseconds = 0.0;
     double frameWaitMilliseconds = 0.0;

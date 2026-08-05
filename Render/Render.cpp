@@ -6835,6 +6835,17 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
                                const bool renderActiveMirrorAsMirror,
                                const int skippedMeshMixIndex)
 {
+    using ProfileClock = std::chrono::steady_clock;
+
+    m_lastFrameProfile.mainPassSkinAnimMilliseconds = 0.0;
+    m_lastFrameProfile.mainPassMeshMix2Milliseconds = 0.0;
+    m_lastFrameProfile.mainPassInstancingMilliseconds = 0.0;
+    m_lastFrameProfile.mainPassOtherMeshMilliseconds = 0.0;
+    m_lastFrameProfile.mainPassSkinAnimDraws = 0;
+    m_lastFrameProfile.mainPassMeshMix2Draws = 0;
+    m_lastFrameProfile.mainPassInstancingDraws = 0;
+
+    const auto otherMeshStartTime = ProfileClock::now();
     for (size_t i = 0; i < m_meshList.size(); ++i)
     {
         if (i < m_meshEnabledList.size() && m_meshEnabledList[i])
@@ -6896,28 +6907,9 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
         }
     }
 
-    for (auto& elem : m_skinAnimMeshList)
-    {
-        if (elem != nullptr)
-        {
-            elem->Render(Camera::GetViewMatrix(),
-                         Camera::GetProjMatrix(),
-                         Light::GetLightDir(),
-                         Light::GetBrightness());
-        }
-    }
-
     for (auto& elem : m_meshPBRList)
     {
         elem.Render();
-    }
-
-    for (auto& elem : m_meshMixSkinAnimList)
-    {
-        if (elem != nullptr)
-        {
-            elem->Render();
-        }
     }
 
     for (auto& elem : m_meshMixAnimNoBone2List)
@@ -6927,7 +6919,34 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
             elem->Render();
         }
     }
+    m_lastFrameProfile.mainPassOtherMeshMilliseconds +=
+        std::chrono::duration<double, std::milli>(ProfileClock::now() - otherMeshStartTime).count();
 
+    const auto skinAnimStartTime = ProfileClock::now();
+    for (auto& elem : m_skinAnimMeshList)
+    {
+        if (elem != nullptr)
+        {
+            elem->Render(Camera::GetViewMatrix(),
+                         Camera::GetProjMatrix(),
+                         Light::GetLightDir(),
+                         Light::GetBrightness());
+            ++m_lastFrameProfile.mainPassSkinAnimDraws;
+        }
+    }
+
+    for (auto& elem : m_meshMixSkinAnimList)
+    {
+        if (elem != nullptr)
+        {
+            elem->Render();
+            ++m_lastFrameProfile.mainPassSkinAnimDraws;
+        }
+    }
+    m_lastFrameProfile.mainPassSkinAnimMilliseconds +=
+        std::chrono::duration<double, std::milli>(ProfileClock::now() - skinAnimStartTime).count();
+
+    const auto meshMix2StartTime = ProfileClock::now();
     for (size_t i = 0; i < m_meshMix2List.size(); ++i)
     {
         MeshMix2* elem = m_meshMix2List[i];
@@ -6942,15 +6961,22 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
                 renderActiveMirrorAsMirror &&
                 static_cast<int>(i) == activeMirrorMeshIndex;
             elem->Render(renderAsMirror);
+            ++m_lastFrameProfile.mainPassMeshMix2Draws;
         }
     }
+    m_lastFrameProfile.mainPassMeshMix2Milliseconds +=
+        std::chrono::duration<double, std::milli>(ProfileClock::now() - meshMix2StartTime).count();
 
+    const auto instancingStartTime = ProfileClock::now();
     for (auto& elem : m_meshInstancing2Map)
     {
         elem.second->Draw();
+        ++m_lastFrameProfile.mainPassInstancingDraws;
     }
 
     m_particleSystem.Draw(Camera::GetViewMatrix(), Camera::GetProjMatrix());
+    m_lastFrameProfile.mainPassInstancingMilliseconds +=
+        std::chrono::duration<double, std::milli>(ProfileClock::now() - instancingStartTime).count();
 }
 
 void Render::DrawPass1(const bool renderToSceneRenderTargets, const int activeMirrorMeshIndex)
