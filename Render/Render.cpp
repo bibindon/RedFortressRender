@@ -647,6 +647,11 @@ bool Render::LoadXFileListMoveFromCsv(const std::wstring& csvPath,
             platform.endPos = D3DXVECTOR3(std::stof(TrimCsvField(fields[13])),
                                           std::stof(TrimCsvField(fields[14])),
                                           std::stof(TrimCsvField(fields[15])));
+            platform.rotation = D3DXVECTOR3(std::stof(TrimCsvField(fields[6])),
+                                            std::stof(TrimCsvField(fields[7])),
+                                            std::stof(TrimCsvField(fields[8])));
+            const float uniformScale = std::stof(TrimCsvField(fields[9]));
+            platform.scale = D3DXVECTOR3(uniformScale, uniformScale, uniformScale);
             platform.duration = std::stof(TrimCsvField(fields[16]));
             platform.elapsed = 0.0f;
 

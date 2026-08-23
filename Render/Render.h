@@ -410,6 +410,8 @@ public:
         bool usesMeshMix2 = false;
         D3DXVECTOR3 startPos;
         D3DXVECTOR3 endPos;
+        D3DXVECTOR3 rotation;
+        D3DXVECTOR3 scale;
         float duration = 10.0f;
         float elapsed = 0.0f;
     };
