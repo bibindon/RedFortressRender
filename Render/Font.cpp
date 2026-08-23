@@ -176,6 +176,41 @@ void Font::AddTextCenterDirect(const std::wstring& text,
     m_textList.push_back(textInfo);
 }
 
+void Font::AddTextRight(const std::wstring& text,
+                        const int X,
+                        const int Y,
+                        const int Width,
+                        const int Height,
+                        const UINT fontColor)
+{
+    const POINT pt = Common::ScaledPoint(X, Y);
+    D3DXVECTOR2 size = Common::ScaledSize();
+    const int screenWidth = (int)(Width * size.x);
+    const int screenHeight = (int)(Height * size.y);
+    AddTextRightDirect(text, pt.x, pt.y, screenWidth, screenHeight, fontColor);
+}
+
+void Font::AddTextRightDirect(const std::wstring& text,
+                              const int screenX,
+                              const int screenY,
+                              const int screenWidth,
+                              const int screenHeight,
+                              const UINT fontColor)
+{
+    TextInfo textInfo;
+
+    textInfo.m_rect.left = screenX;
+    textInfo.m_rect.top = screenY;
+    textInfo.m_rect.right = screenX + screenWidth;
+    textInfo.m_rect.bottom = screenY + screenHeight;
+
+    textInfo.m_text = text;
+    textInfo.m_bRight = true;
+    textInfo.m_color = fontColor;
+
+    m_textList.push_back(textInfo);
+}
+
 void Font::Draw()
 {
     for (auto& textInfo : m_textList)
@@ -192,6 +227,17 @@ void Font::Draw()
 
                                                 &textInfo.m_rect,
                                                 DT_CENTER | DT_VCENTER | DT_NOCLIP,
+                                                textInfo.m_color);
+
+            assert(hResult >= 0);
+        }
+        else if (textInfo.m_bRight)
+        {
+            HRESULT hResult = m_pFont->DrawText(NULL,
+                                                textInfo.m_text.c_str(),
+                                                -1,
+                                                &textInfo.m_rect,
+                                                DT_RIGHT | DT_NOCLIP,
                                                 textInfo.m_color);
 
             assert(hResult >= 0);

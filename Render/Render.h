@@ -564,6 +564,14 @@ public:
                           const int Height,
                           const UINT color);
 
+    void DrawTextExRight(const int fontId,
+                         const std::wstring& text,
+                         const int X,
+                         const int Y,
+                         const int Width,
+                         const int Height,
+                         const UINT color);
+
     void DrawTextCenter(const int fontId,
                         const std::wstring& text,
                         const int X,

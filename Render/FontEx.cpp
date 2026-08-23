@@ -76,6 +76,37 @@ void FontEx::AddTextCenter(const std::wstring& text,
     m_mainFont.AddTextCenterDirect(text, mainPos.x, mainPos.y, screenWidth, screenHeight, fontColor);
 }
 
+void FontEx::AddTextRight(const std::wstring& text,
+                          const int X,
+                          const int Y,
+                          const int Width,
+                          const int Height,
+                          const UINT fontColor)
+{
+    const int outlineOffset = 1;
+    const UINT outlineColor = MakeOutlineColor(fontColor);
+
+    m_shadowFont.AddTextRight(text, X, Y, Width, Height, MakeBlurColor(fontColor));
+
+    const POINT mainPos = Common::ScaledPoint(X, Y);
+    D3DXVECTOR2 size = Common::ScaledSize();
+    const int screenWidth = (int)(Width * size.x);
+    const int screenHeight = (int)(Height * size.y);
+    m_mainFont.AddTextRightDirect(text,
+                                  mainPos.x - outlineOffset,
+                                  mainPos.y - outlineOffset,
+                                  screenWidth,
+                                  screenHeight,
+                                  outlineColor);
+    m_mainFont.AddTextRightDirect(text,
+                                  mainPos.x + outlineOffset,
+                                  mainPos.y + outlineOffset,
+                                  screenWidth,
+                                  screenHeight,
+                                  outlineColor);
+    m_mainFont.AddTextRightDirect(text, mainPos.x, mainPos.y, screenWidth, screenHeight, fontColor);
+}
+
 void FontEx::Draw()
 {
     m_postEffectFont.BeginShadowPass();

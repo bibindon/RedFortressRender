@@ -71,6 +71,20 @@ public:
                              const int screenHeight,
                              const UINT fontColor);
 
+    void AddTextRight(const std::wstring& text,
+                      const int X,
+                      const int Y,
+                      const int Width,
+                      const int Height,
+                      const UINT fontColor);
+
+    void AddTextRightDirect(const std::wstring& text,
+                            const int screenX,
+                            const int screenY,
+                            const int screenWidth,
+                            const int screenHeight,
+                            const UINT fontColor);
+
     void Draw();
     void Finalize();
 
@@ -86,6 +100,7 @@ private:
         RECT m_rect = { 0, 0, 0, 0 };
         std::wstring m_text;
         bool m_bCenter = false;
+        bool m_bRight = false;
         UINT m_color = D3DCOLOR_RGBA(255, 255, 255, 255);
     };
 

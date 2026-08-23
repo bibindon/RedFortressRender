@@ -37,6 +37,13 @@ public:
                        const int Height,
                        const UINT fontColor);
 
+    void AddTextRight(const std::wstring& text,
+                      const int X,
+                      const int Y,
+                      const int Width,
+                      const int Height,
+                      const UINT fontColor);
+
     void Draw();
     void Finalize();
 
