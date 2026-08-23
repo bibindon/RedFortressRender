@@ -656,7 +656,6 @@ D3DXVECTOR4 g_meshMix2MirrorClipPlane(0.0f, 1.0f, 0.0f, 0.0f);
 
 LPD3DXEFFECT MeshMix2::s_sharedEffect = nullptr;
 int MeshMix2::s_sharedEffectReferenceCount = 0;
-ULONGLONG MeshMix2::s_lastCommonParameterFrameTick = 0;
 float MeshMix2::s_sharedEffectTime = 0.0f;
 std::chrono::steady_clock::duration MeshMix2::s_profileParameterDuration = std::chrono::steady_clock::duration::zero();
 std::chrono::steady_clock::duration MeshMix2::s_profileDrawDuration = std::chrono::steady_clock::duration::zero();
@@ -731,7 +730,6 @@ void MeshMix2::AddSharedEffectReference()
     }
 
     s_sharedEffectReferenceCount = 1;
-    s_lastCommonParameterFrameTick = 0;
 }
 
 void MeshMix2::ReleaseSharedEffectReference()
@@ -745,7 +743,6 @@ void MeshMix2::ReleaseSharedEffectReference()
     {
         SAFE_RELEASE(s_sharedEffect);
         s_sharedEffect = nullptr;
-        s_lastCommonParameterFrameTick = 0;
     }
 }
 
@@ -756,13 +753,9 @@ void MeshMix2::ApplySharedEffectParameters()
         return;
     }
 
+    // 鏡面反射パスと通常描画パスは同じミリ秒内に実行されることがある。
+    // クリップ平面や反射テクスチャはパスごとに変わるため、毎回反映する。
     const ULONGLONG currentTick = GetTickCount64();
-    if (currentTick == s_lastCommonParameterFrameTick)
-    {
-        return;
-    }
-    s_lastCommonParameterFrameTick = currentTick;
-
     s_sharedEffectTime = static_cast<float>(currentTick) * 0.001f;
 
     const D3DXVECTOR4 lightDirection = Light::GetLightDir();

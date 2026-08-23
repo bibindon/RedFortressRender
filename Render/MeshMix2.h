@@ -92,7 +92,6 @@ private:
 
     static LPD3DXEFFECT s_sharedEffect;
     static int s_sharedEffectReferenceCount;
-    static ULONGLONG s_lastCommonParameterFrameTick;
     static float s_sharedEffectTime;
 
     // フレームごとの描画内訳計測アキュムレータ。
