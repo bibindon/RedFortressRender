@@ -73,7 +73,7 @@ private:
     int m_pcfTapCount = 1;
     int m_compositeTapCount = 1;
     int m_shadowTextureScaleDivisor = 1;
-    bool m_farCascadeEnabled = false;
+    bool m_farCascadeEnabled = true;
 
     LPD3DXEFFECT g_fxDepthBufferShadow = NULL;
 

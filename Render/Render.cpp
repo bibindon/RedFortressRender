@@ -1023,7 +1023,7 @@ void Render::ApplySettings()
         }
     }
 
-    bool farShadowEnabled = false;
+    bool farShadowEnabled = true;
     const auto farShadowEnable = m_settings.find(L"DepthBufferShadowFarEnable");
     if (farShadowEnable != m_settings.end())
     {

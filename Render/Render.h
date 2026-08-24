@@ -1162,7 +1162,7 @@ private:
     bool m_gBufferFrontBackfaceCullingEnabled = false;
     bool m_postEffectZShadowEnabled = true;
     bool m_postEffectZShadowDebugLightDepthEnabled = false;
-    bool m_postEffectZShadowFarEnabled = false;
+    bool m_postEffectZShadowFarEnabled = true;
     bool m_postEffectSSAOEnabled = true;
     bool m_postEffectSSGIEnabled = false;
     bool m_postEffectFogZEnabled = true;
