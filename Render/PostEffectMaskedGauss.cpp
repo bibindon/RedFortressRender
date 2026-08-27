@@ -41,7 +41,7 @@ void PostEffectMaskedGauss::Initialize()
         m_d3dEffect->OnResetDevice();
     }
 
-    if (m_texMask == nullptr)
+    if (m_texMask == nullptr || m_loadedMaskPath != m_maskPath)
     {
         LoadMaskTexture();
     }
@@ -228,6 +228,7 @@ void PostEffectMaskedGauss::ReleaseWorkTextures()
 void PostEffectMaskedGauss::LoadMaskTexture()
 {
     SAFE_RELEASE(m_texMask);
+    m_loadedMaskPath.clear();
 
     if (m_maskPath.empty())
     {
@@ -251,7 +252,10 @@ void PostEffectMaskedGauss::LoadMaskTexture()
     if (FAILED(hResult))
     {
         SAFE_RELEASE(m_texMask);
+        return;
     }
+
+    m_loadedMaskPath = m_maskPath;
 }
 
 void PostEffectMaskedGauss::DrawFullscreenQuad(LPDIRECT3DTEXTURE9 texSource,

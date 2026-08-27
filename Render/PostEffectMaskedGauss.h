@@ -34,6 +34,7 @@ private:
     LPDIRECT3DTEXTURE9 m_texBlurResult = nullptr;
     LPDIRECT3DTEXTURE9 m_texMask = nullptr;
     std::wstring m_maskPath;
+    std::wstring m_loadedMaskPath;
     int m_sampleSize = 101;
     float m_intensity = 1.0f;
     float m_amount = 1.0f;
