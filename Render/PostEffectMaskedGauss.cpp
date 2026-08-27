@@ -18,19 +18,35 @@ void PostEffectMaskedGauss::Initialize()
         return;
     }
 
-    const std::wstring effectPath = Util::GetExeDir() + L"PostEffectMaskedGaussian.cso";
-    HRESULT hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
-                                               effectPath.c_str(),
-                                               nullptr,
-                                               nullptr,
-                                               D3DXSHADER_DEBUG,
-                                               nullptr,
-                                               &m_d3dEffect,
-                                               nullptr);
-    assert(SUCCEEDED(hResult));
+    // エフェクトとマスクは Finalize() で破棄せずキャッシュしておく。
+    // メニューを開くたびに shader 生成や PNG 読み込みが入ると、初回フレームが重くなる。
+    if (m_d3dEffect == nullptr)
+    {
+        const std::wstring effectPath = Util::GetExeDir() + L"PostEffectMaskedGaussian.cso";
+        HRESULT hResult = D3DXCreateEffectFromFile(Common::D3DDevice(),
+                                                   effectPath.c_str(),
+                                                   nullptr,
+                                                   nullptr,
+                                                   D3DXSHADER_DEBUG,
+                                                   nullptr,
+                                                   &m_d3dEffect,
+                                                   nullptr);
+        assert(SUCCEEDED(hResult));
+    }
+    else
+    {
+        // キャッシュ再利用時は、閉じている間にデバイスリセットが起きている可能性がある。
+        // 未登録の期間は OnDeviceLost / OnDeviceReset 通知が届かないため、
+        // ここでリセット状態へ戻してから使用する。
+        m_d3dEffect->OnResetDevice();
+    }
+
+    if (m_texMask == nullptr)
+    {
+        LoadMaskTexture();
+    }
 
     CreateWorkTextures();
-    LoadMaskTexture();
     if (!m_isRegisteredForDeviceReset)
     {
         Common::AddDeviceLostResource(this);
@@ -77,9 +93,10 @@ void PostEffectMaskedGauss::Finalize()
         Common::RemoveDeviceLostResource(this);
         m_isRegisteredForDeviceReset = false;
     }
-    SAFE_RELEASE(m_texMask);
+    // 解放するのはワークテクスチャのみ。エフェクトとマスクは、
+    // メニューを再度開いたときのためにキャッシュを保持する。
+    // デバイスとの関連付けは OnDeviceLost / OnDeviceReset で行う。
     ReleaseWorkTextures();
-    SAFE_RELEASE(m_d3dEffect);
     m_isInitialized = false;
 }
 
