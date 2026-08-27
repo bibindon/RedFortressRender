@@ -91,6 +91,7 @@ float4 GaussianSparseV(float2 texCoord : TEXCOORD0) : COLOR
 
 float2 g_MaskTextureSize = float2(1600.0f, 900.0f);
 float2 g_MaskScreenSize = float2(1600.0f, 900.0f);
+float g_MaskAmount = 1.0f;
 
 float4 CompositeMaskedBlur(float2 uv : TEXCOORD0) : COLOR
 {
@@ -99,7 +100,8 @@ float4 CompositeMaskedBlur(float2 uv : TEXCOORD0) : COLOR
     const float2 screenPixel = uv * g_MaskScreenSize;
     const float2 maskUV = screenPixel / g_MaskTextureSize;
     const float maskValue = tex2D(MaskSampler, maskUV).r;
-    return lerp(originalColor, blurColor, maskValue);
+    const float appliedMaskValue = saturate(maskValue * g_MaskAmount);
+    return lerp(originalColor, blurColor, appliedMaskValue);
 }
 
 float4 Gaussian3x3(float2 uv)

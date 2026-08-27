@@ -16,6 +16,7 @@ public:
 
     void SetSampleSize(const int sampleSize);
     void SetIntensity(const float intensity);
+    void SetAmount(const float amount);
     void SetMaskPath(const std::wstring& maskPath);
 
     void OnDeviceLost() override;
@@ -35,6 +36,7 @@ private:
     std::wstring m_maskPath;
     int m_sampleSize = 101;
     float m_intensity = 1.0f;
+    float m_amount = 1.0f;
 
     struct ScreenVertex
     {

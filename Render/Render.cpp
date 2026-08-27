@@ -5681,6 +5681,12 @@ void Render::SetPostEffectMaskedGaussianMaskPath(const std::wstring& maskPath)
     m_postEffectMaskedGauss.SetMaskPath(maskPath);
 }
 
+void Render::SetPostEffectMaskedGaussianAmount(const float amount)
+{
+    m_maskedGaussianAmount = (std::max)(0.0f, (std::min)(amount, 1.0f));
+    m_postEffectMaskedGauss.SetAmount(m_maskedGaussianAmount);
+}
+
 void Render::SetPostEffectAA(const bool arg)
 {
     m_postEffectAAEnabled = arg;
@@ -5855,6 +5861,7 @@ float Render::GetPostEffectGaussianStrength() const { return m_gaussianStrength;
 int Render::GetPostEffectFontSampleSize() const { return m_fontExGaussianSampleSize; }
 bool Render::IsPostEffectMaskedGaussianFilterEnabled() const { return m_postEffectMaskedGaussEnabled; }
 std::wstring Render::GetPostEffectMaskedGaussianMaskPath() const { return m_maskedGaussianMaskPath; }
+float Render::GetPostEffectMaskedGaussianAmount() const { return m_maskedGaussianAmount; }
 bool Render::IsPostEffectAAEnabled() const { return m_postEffectAAEnabled; }
 bool Render::IsPostEffectFXAAEnabled() const { return m_postEffectFXAAEnabled; }
 int Render::GetPostEffectFXAAQuality() const { return m_fxaaQuality; }

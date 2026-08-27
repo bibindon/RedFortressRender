@@ -93,6 +93,11 @@ void PostEffectMaskedGauss::SetIntensity(const float intensity)
     m_intensity = (std::max)(0.0f, (std::min)(intensity, 1.0f));
 }
 
+void PostEffectMaskedGauss::SetAmount(const float amount)
+{
+    m_amount = (std::max)(0.0f, (std::min)(amount, 1.0f));
+}
+
 void PostEffectMaskedGauss::SetMaskPath(const std::wstring& maskPath)
 {
     m_maskPath = maskPath;
@@ -401,6 +406,7 @@ void PostEffectMaskedGauss::DrawCompositeQuad(LPDIRECT3DTEXTURE9 texBlurred,
     m_d3dEffect->SetTexture("g_SrcTex", texBlurred);
     m_d3dEffect->SetTexture("g_SrcTex2", texOriginal);
     m_d3dEffect->SetTexture("g_MaskTex", m_texMask);
+    m_d3dEffect->SetFloat("g_MaskAmount", m_amount);
 
     const float texelSize[2] = { 1.0f / static_cast<float>(targetDesc.Width),
                                  1.0f / static_cast<float>(targetDesc.Height) };

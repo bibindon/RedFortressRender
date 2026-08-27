@@ -728,6 +728,7 @@ public:
     void SetPostEffectMaskedGaussianFilter(const bool arg);
     void SetPostEffectMaskedGaussianSampleSize(const int sampleSize);
     void SetPostEffectMaskedGaussianMaskPath(const std::wstring& maskPath);
+    void SetPostEffectMaskedGaussianAmount(const float amount);
     void SetPostEffectAA(const bool arg);
     void SetPostEffectFXAA(const bool arg);
     void SetPostEffectFXAAQuality(const int quality);
@@ -743,6 +744,7 @@ public:
     int GetPostEffectFontSampleSize() const;
     bool IsPostEffectMaskedGaussianFilterEnabled() const;
     std::wstring GetPostEffectMaskedGaussianMaskPath() const;
+    float GetPostEffectMaskedGaussianAmount() const;
     bool IsPostEffectAAEnabled() const;
     bool IsPostEffectFXAAEnabled() const;
     int GetPostEffectFXAAQuality() const;
@@ -1139,6 +1141,7 @@ private:
     float m_gaussianStrength = 1.0f;
     int m_fontExGaussianSampleSize = 21;
     std::wstring m_maskedGaussianMaskPath;
+    float m_maskedGaussianAmount = 1.0f;
     int m_fxaaQuality = 4;
     float m_taaHistoryWeight = 0.85f;
     int m_motionBlurCameraQuality = 4;
