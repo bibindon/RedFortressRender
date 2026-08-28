@@ -158,6 +158,48 @@ bool Light::SetPointLightPositionByOwnerTag(const std::wstring& ownerTag,
     return updated;
 }
 
+bool Light::SetPointLightBrightnessByOwnerTag(const std::wstring& ownerTag,
+                                              const float brightness)
+{
+    if (ownerTag.empty())
+    {
+        return false;
+    }
+
+    std::lock_guard<std::mutex> lock(m_pointLightMutex);
+    bool updated = false;
+    for (auto& pointLight : m_pointLightList)
+    {
+        if (pointLight.m_ownerTag == ownerTag)
+        {
+            pointLight.m_brightness = brightness;
+            updated = true;
+        }
+    }
+    return updated;
+}
+
+bool Light::SetPointLightLineLengthByOwnerTag(const std::wstring& ownerTag,
+                                              const float lineLength)
+{
+    if (ownerTag.empty())
+    {
+        return false;
+    }
+
+    std::lock_guard<std::mutex> lock(m_pointLightMutex);
+    bool updated = false;
+    for (auto& pointLight : m_pointLightList)
+    {
+        if (pointLight.m_ownerTag == ownerTag)
+        {
+            pointLight.m_lineLength = lineLength;
+            updated = true;
+        }
+    }
+    return updated;
+}
+
 void Light::ClearPointLights()
 {
     std::lock_guard<std::mutex> lock(m_pointLightMutex);

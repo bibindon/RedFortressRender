@@ -953,6 +953,10 @@ public:
                        const std::wstring& ownerTag = L"");
     bool SetPointLightPositionByOwnerTag(const std::wstring& ownerTag,
                                          const D3DXVECTOR3& pos);
+    bool SetPointLightBrightnessByOwnerTag(const std::wstring& ownerTag,
+                                           float brightness);
+    bool SetPointLightLineLengthByOwnerTag(const std::wstring& ownerTag,
+                                           float lineLength);
     void RemovePointLightsByOwnerTag(const std::wstring& ownerTag);
     void ClearPointLights();
 

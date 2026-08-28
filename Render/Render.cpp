@@ -6647,6 +6647,18 @@ bool Render::SetPointLightPositionByOwnerTag(const std::wstring& ownerTag,
     return Light::SetPointLightPositionByOwnerTag(ownerTag, pos);
 }
 
+bool Render::SetPointLightBrightnessByOwnerTag(const std::wstring& ownerTag,
+                                               const float brightness)
+{
+    return Light::SetPointLightBrightnessByOwnerTag(ownerTag, brightness);
+}
+
+bool Render::SetPointLightLineLengthByOwnerTag(const std::wstring& ownerTag,
+                                               const float lineLength)
+{
+    return Light::SetPointLightLineLengthByOwnerTag(ownerTag, lineLength);
+}
+
 void Render::RemovePointLightsByOwnerTag(const std::wstring& ownerTag)
 {
     Light::RemovePointLightsByOwnerTag(ownerTag);

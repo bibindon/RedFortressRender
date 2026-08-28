@@ -72,6 +72,10 @@ public:
     static void RemovePointLightsByOwnerTag(const std::wstring& ownerTag);
     static bool SetPointLightPositionByOwnerTag(const std::wstring& ownerTag,
                                                 const D3DXVECTOR3& pos);
+    static bool SetPointLightBrightnessByOwnerTag(const std::wstring& ownerTag,
+                                                  float brightness);
+    static bool SetPointLightLineLengthByOwnerTag(const std::wstring& ownerTag,
+                                                  float lineLength);
     static void ClearPointLights();
 
     static std::deque<PointLightInfo> GetPointLightList();
