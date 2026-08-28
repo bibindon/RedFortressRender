@@ -376,6 +376,7 @@ public:
     void StartMeshMixSkinAnimBlink(int id, int durationFrames, int intervalFrames = 4,
                                    BlinkMode mode = BlinkMode::WhiteFlash);
     void StopMeshMixSkinAnimBlink(int id);
+    void SetMeshMixSkinAnimWhiteFlash(int id, bool enabled);
     void SetMeshMixSkinAnimEnabled(int id, bool enabled);
     bool IsMeshMixSkinAnimEnabled(int id) const;
     std::vector<RenderLoadedModelInfo> GetLoadedModelInfoList();
