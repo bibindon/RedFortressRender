@@ -92,6 +92,7 @@ private:
 
     static LPD3DXEFFECT s_sharedEffect;
     static int s_sharedEffectReferenceCount;
+    static bool s_sharedEffectLost;
     static float s_sharedEffectTime;
 
     // フレームごとの描画内訳計測アキュムレータ。

@@ -656,6 +656,7 @@ D3DXVECTOR4 g_meshMix2MirrorClipPlane(0.0f, 1.0f, 0.0f, 0.0f);
 
 LPD3DXEFFECT MeshMix2::s_sharedEffect = nullptr;
 int MeshMix2::s_sharedEffectReferenceCount = 0;
+bool MeshMix2::s_sharedEffectLost = false;
 float MeshMix2::s_sharedEffectTime = 0.0f;
 std::chrono::steady_clock::duration MeshMix2::s_profileParameterDuration = std::chrono::steady_clock::duration::zero();
 std::chrono::steady_clock::duration MeshMix2::s_profileDrawDuration = std::chrono::steady_clock::duration::zero();
@@ -730,6 +731,7 @@ void MeshMix2::AddSharedEffectReference()
     }
 
     s_sharedEffectReferenceCount = 1;
+    s_sharedEffectLost = false;
 }
 
 void MeshMix2::ReleaseSharedEffectReference()
@@ -743,6 +745,7 @@ void MeshMix2::ReleaseSharedEffectReference()
     {
         SAFE_RELEASE(s_sharedEffect);
         s_sharedEffect = nullptr;
+        s_sharedEffectLost = false;
     }
 }
 
@@ -1645,17 +1648,21 @@ void MeshMix2::UpdateAutoPointLightPosition()
 
 void MeshMix2::OnDeviceLost()
 {
-    if (s_sharedEffect != nullptr)
+    if (s_sharedEffect != nullptr && !s_sharedEffectLost)
     {
-        s_sharedEffect->OnLostDevice();
+        ThrowIfEffectCallFailed(s_sharedEffect->OnLostDevice(),
+                                "MeshMix2 failed to notify its shared effect of a lost device.");
+        s_sharedEffectLost = true;
     }
 }
 
 void MeshMix2::OnDeviceReset()
 {
-    if (s_sharedEffect != nullptr)
+    if (s_sharedEffect != nullptr && s_sharedEffectLost)
     {
-        s_sharedEffect->OnResetDevice();
+        ThrowIfEffectCallFailed(s_sharedEffect->OnResetDevice(),
+                                "MeshMix2 failed to reset its shared effect.");
+        s_sharedEffectLost = false;
     }
 }
 
