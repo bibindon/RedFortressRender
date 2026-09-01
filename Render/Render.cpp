@@ -49,7 +49,7 @@ namespace NSRender
 namespace
 {
 constexpr std::chrono::duration<double> kTargetFrameDuration(1.0 / 60.0);
-constexpr UINT kMirrorRenderTargetScaleDivisor = 4;
+constexpr UINT kMirrorRenderTargetScaleDivisor = 2;
 
 UINT GetMirrorRenderTargetDimension(const int screenDimension)
 {
