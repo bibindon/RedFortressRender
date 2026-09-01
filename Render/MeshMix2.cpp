@@ -210,7 +210,11 @@ MeshCsvParam ReadMeshCsvParam(const std::wstring& meshPath)
         const std::wstring value = NormalizeCsvText(rawValue);
         if (key == L"meshtype")
         {
-            if (value == L"pom")
+            if (value == L"normal")
+            {
+                result.meshType = MeshCsvType::None;
+            }
+            else if (value == L"pom")
             {
                 result.meshType = MeshCsvType::POM;
             }
