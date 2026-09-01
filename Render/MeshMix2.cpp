@@ -876,6 +876,19 @@ void MeshMix2::ApplySharedEffectParameters()
                             "MeshMix2 failed to set g_pointLightColor.");
 }
 
+void MeshMix2::ApplySharedMirrorEffectParameters()
+{
+    if (s_sharedEffect == nullptr)
+    {
+        return;
+    }
+
+    ThrowIfEffectCallFailed(s_sharedEffect->SetTexture("g_texMirror", g_meshMix2MirrorTexture),
+                            "MeshMix2 failed to set g_texMirror.");
+    ThrowIfEffectCallFailed(s_sharedEffect->SetMatrix("g_matMirrorViewProj", &g_meshMix2MirrorViewProjection),
+                            "MeshMix2 failed to set g_matMirrorViewProj.");
+}
+
 void MeshMix2::ApplyIndividualEffectParameters()
 {
     if (m_D3DEffect == nullptr)

@@ -24,6 +24,8 @@ public:
 
     // 共有エフェクトへ、フレームごとに1回だけ設定すればよい共通パラメータを反映する。
     static void ApplySharedEffectParameters();
+    // 複数の鏡面を描画する直前に、対応する反射映像だけを切り替える。
+    static void ApplySharedMirrorEffectParameters();
 
     // 共有エフェクトの参照カウントを増減する。
     static void AddSharedEffectReference();

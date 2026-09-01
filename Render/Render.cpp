@@ -2676,7 +2676,10 @@ void Render::Finalize()
     SAFE_RELEASE(m_pRenderTarget2);
     SAFE_RELEASE(m_pMirrorDepthStencil);
     SAFE_RELEASE(m_pLightEffectSourceTexture);
-    SAFE_RELEASE(m_pMirrorRenderTarget);
+    for (LPDIRECT3DTEXTURE9& mirrorRenderTarget : m_pMirrorRenderTargets)
+    {
+        SAFE_RELEASE(mirrorRenderTarget);
+    }
 
     Common::RemoveDeviceLostResource(this);
 
@@ -2784,25 +2787,37 @@ void Render::Draw()
         std::chrono::duration<double, std::milli>(gBufferEndTime - gBufferStartTime).count();
 
     const auto mirrorStartTime = ProfileClock::now();
-    int activeMirrorMeshIndex = FindActiveMirrorMeshIndex();
+    const std::vector<int> activeMirrorMeshIndices = FindActiveMirrorMeshIndices();
     D3DXMATRIX mirrorViewProj;
     D3DXMatrixIdentity(&mirrorViewProj);
     MeshMix2::SetSharedMirrorTexture(NULL);
     MeshMix2::SetSharedMirrorViewProj(mirrorViewProj);
-    if (activeMirrorMeshIndex >= 0 && RenderMirrorTexture(activeMirrorMeshIndex))
+    for (size_t mirrorSlotIndex = 0;
+         mirrorSlotIndex < kMaxMirrorSurfaceCount;
+         ++mirrorSlotIndex)
     {
-        MeshMix2::SetSharedMirrorTexture(m_pMirrorRenderTarget);
-    }
-    else
-    {
-        activeMirrorMeshIndex = -1;
+        MirrorFrameData& mirrorFrameData = m_mirrorFrameData[mirrorSlotIndex];
+        mirrorFrameData.meshIndex = -1;
+        mirrorFrameData.ready = false;
+        D3DXMatrixIdentity(&mirrorFrameData.viewProjection);
+
+        if (mirrorSlotIndex >= activeMirrorMeshIndices.size())
+        {
+            continue;
+        }
+
+        mirrorFrameData.meshIndex = activeMirrorMeshIndices[mirrorSlotIndex];
+        mirrorFrameData.ready = RenderMirrorTexture(
+            mirrorFrameData.meshIndex,
+            m_pMirrorRenderTargets[mirrorSlotIndex],
+            mirrorFrameData.viewProjection);
     }
     const auto mirrorEndTime = ProfileClock::now();
     m_lastFrameProfile.mirrorMilliseconds =
         std::chrono::duration<double, std::milli>(mirrorEndTime - mirrorStartTime).count();
 
     const auto mainPassStartTime = ProfileClock::now();
-    DrawPass1(true, activeMirrorMeshIndex);
+    DrawPass1(true);
     const auto mainPassEndTime = ProfileClock::now();
     m_lastFrameProfile.mainPassMilliseconds =
         std::chrono::duration<double, std::milli>(mainPassEndTime - mainPassStartTime).count();
@@ -6780,8 +6795,10 @@ void Render::RotateCamera(const D3DXVECTOR3& rot)
     Camera::SetLookAtPos(lookAt);
 }
 
-int Render::FindActiveMirrorMeshIndex() const
+std::vector<int> Render::FindActiveMirrorMeshIndices() const
 {
+    std::vector<int> result;
+    result.reserve(kMaxMirrorSurfaceCount);
     for (int i = static_cast<int>(m_meshMix2List.size()) - 1; i >= 0; --i)
     {
         const MeshMix2* mesh = m_meshMix2List[static_cast<size_t>(i)];
@@ -6792,19 +6809,25 @@ int Render::FindActiveMirrorMeshIndex() const
 
         if (mesh->IsEnabled() && mesh->IsLoaded() && mesh->IsMirror())
         {
-            return i;
+            result.push_back(i);
+            if (result.size() >= kMaxMirrorSurfaceCount)
+            {
+                break;
+            }
         }
     }
 
-    return -1;
+    return result;
 }
 
-bool Render::RenderMirrorTexture(const int activeMirrorMeshIndex)
+bool Render::RenderMirrorTexture(const int activeMirrorMeshIndex,
+                                 LPDIRECT3DTEXTURE9 mirrorRenderTarget,
+                                 D3DXMATRIX& mirrorViewProjection)
 {
     if (activeMirrorMeshIndex < 0 ||
         activeMirrorMeshIndex >= static_cast<int>(m_meshMix2List.size()) ||
         m_meshMix2List[static_cast<size_t>(activeMirrorMeshIndex)] == nullptr ||
-        m_pMirrorRenderTarget == NULL)
+        mirrorRenderTarget == NULL)
     {
         return false;
     }
@@ -6828,7 +6851,7 @@ bool Render::RenderMirrorTexture(const int activeMirrorMeshIndex)
     hResult = Common::D3DDevice()->GetDepthStencilSurface(&oldDepthStencil);
     assert(hResult == S_OK);
 
-    hResult = m_pMirrorRenderTarget->GetSurfaceLevel(0, &mirrorRenderSurface);
+    hResult = mirrorRenderTarget->GetSurfaceLevel(0, &mirrorRenderSurface);
     assert(hResult == S_OK);
 
     hResult = Common::D3DDevice()->GetViewport(&oldViewport);
@@ -6884,13 +6907,13 @@ bool Render::RenderMirrorTexture(const int activeMirrorMeshIndex)
     Camera::SetEyePos(reflectedEye);
     Camera::SetLookAtPos(reflectedTarget);
 
-    const D3DXMATRIX mirrorViewProj = Camera::GetViewMatrix() * Camera::GetProjMatrix();
-    MeshMix2::SetSharedMirrorViewProj(mirrorViewProj);
+    mirrorViewProjection = Camera::GetViewMatrix() * Camera::GetProjMatrix();
+    MeshMix2::SetSharedMirrorViewProj(mirrorViewProjection);
 
     MeshMix2::SetSharedMirrorClipPlane(true, clipPlane);
     MeshMixSkinAnim2::SetSharedMirrorClipPlane(true, clipPlane);
 
-    DrawPass1(false, activeMirrorMeshIndex);
+    DrawPass1(false);
 
     const D3DXVECTOR4 disabledClipPlane(0.0f, 1.0f, 0.0f, 0.0f);
     MeshMix2::SetSharedMirrorClipPlane(false, disabledClipPlane);
@@ -6912,9 +6935,21 @@ bool Render::RenderMirrorTexture(const int activeMirrorMeshIndex)
     return true;
 }
 
-void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
-                               const bool renderActiveMirrorAsMirror,
-                               const int skippedMeshMixIndex)
+const Render::MirrorFrameData* Render::FindMirrorFrameData(const int meshIndex) const
+{
+    for (const MirrorFrameData& mirrorFrameData : m_mirrorFrameData)
+    {
+        if (mirrorFrameData.ready && mirrorFrameData.meshIndex == meshIndex)
+        {
+            return &mirrorFrameData;
+        }
+    }
+
+    return nullptr;
+}
+
+void Render::DrawSceneGeometry(const bool renderMirrorSurfaces,
+                               const bool skipMirrorSurfaces)
 {
     using ProfileClock = std::chrono::steady_clock;
 
@@ -7039,14 +7074,37 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
         MeshMix2* elem = m_meshMix2List[i];
         if (elem != nullptr)
         {
-            if (static_cast<int>(i) == skippedMeshMixIndex)
+            if (skipMirrorSurfaces && elem->IsMirror())
             {
                 continue;
             }
 
-            const bool renderAsMirror =
-                renderActiveMirrorAsMirror &&
-                static_cast<int>(i) == activeMirrorMeshIndex;
+            bool renderAsMirror = false;
+            if (renderMirrorSurfaces && elem->IsMirror())
+            {
+                const MirrorFrameData* mirrorFrameData =
+                    FindMirrorFrameData(static_cast<int>(i));
+                if (mirrorFrameData != nullptr)
+                {
+                    size_t mirrorSlotIndex = 0;
+                    for (; mirrorSlotIndex < kMaxMirrorSurfaceCount; ++mirrorSlotIndex)
+                    {
+                        if (&m_mirrorFrameData[mirrorSlotIndex] == mirrorFrameData)
+                        {
+                            break;
+                        }
+                    }
+                    if (mirrorSlotIndex < kMaxMirrorSurfaceCount)
+                    {
+                        MeshMix2::SetSharedMirrorTexture(
+                            m_pMirrorRenderTargets[mirrorSlotIndex]);
+                        MeshMix2::SetSharedMirrorViewProj(
+                            mirrorFrameData->viewProjection);
+                        MeshMix2::ApplySharedMirrorEffectParameters();
+                        renderAsMirror = true;
+                    }
+                }
+            }
             elem->Render(renderAsMirror);
             ++m_lastFrameProfile.mainPassMeshMix2Draws;
         }
@@ -7069,7 +7127,7 @@ void Render::DrawSceneGeometry(const int activeMirrorMeshIndex,
         std::chrono::duration<double, std::milli>(ProfileClock::now() - instancingStartTime).count();
 }
 
-void Render::DrawPass1(const bool renderToSceneRenderTargets, const int activeMirrorMeshIndex)
+void Render::DrawPass1(const bool renderToSceneRenderTargets)
 {
     HRESULT hResult = E_FAIL;
 
@@ -7118,7 +7176,7 @@ void Render::DrawPass1(const bool renderToSceneRenderTargets, const int activeMi
     hResult = Common::D3DDevice()->BeginScene();
     assert(hResult == S_OK);
 
-    DrawSceneGeometry(activeMirrorMeshIndex, renderToSceneRenderTargets, renderToSceneRenderTargets ? -1 : activeMirrorMeshIndex);
+    DrawSceneGeometry(renderToSceneRenderTargets, !renderToSceneRenderTargets);
 
     hResult = Common::D3DDevice()->EndScene();
     assert(hResult == S_OK);
@@ -7699,7 +7757,10 @@ void Render::OnDeviceLost()
     SAFE_RELEASE(m_pRenderTarget2);
     SAFE_RELEASE(m_pMirrorDepthStencil);
     SAFE_RELEASE(m_pLightEffectSourceTexture);
-    SAFE_RELEASE(m_pMirrorRenderTarget);
+    for (LPDIRECT3DTEXTURE9& mirrorRenderTarget : m_pMirrorRenderTargets)
+    {
+        SAFE_RELEASE(mirrorRenderTarget);
+    }
     m_sprite.OnDeviceLost();
     m_particleSystem.OnDeviceLost();
     for (auto& mesh : m_meshInstancing2Map)
@@ -7762,15 +7823,18 @@ void Render::CreateTexture()
                            &m_pLightEffectSourceTexture);
     assert(hr == S_OK);
 
-    hr = D3DXCreateTexture(Common::D3DDevice(),
-                           mirrorWidth,
-                           mirrorHeight,
-                           1,
-                           D3DUSAGE_RENDERTARGET,
-                           D3DFMT_A16B16G16R16F,
-                           D3DPOOL_DEFAULT,
-                           &m_pMirrorRenderTarget);
-    assert(hr == S_OK);
+    for (LPDIRECT3DTEXTURE9& mirrorRenderTarget : m_pMirrorRenderTargets)
+    {
+        hr = D3DXCreateTexture(Common::D3DDevice(),
+                               mirrorWidth,
+                               mirrorHeight,
+                               1,
+                               D3DUSAGE_RENDERTARGET,
+                               D3DFMT_A16B16G16R16F,
+                               D3DPOOL_DEFAULT,
+                               &mirrorRenderTarget);
+        assert(hr == S_OK);
+    }
 
     LPDIRECT3DSURFACE9 currentDepthStencil = NULL;
     hr = Common::D3DDevice()->GetDepthStencilSurface(&currentDepthStencil);

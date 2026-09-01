@@ -12,6 +12,7 @@
 #include <string>
 #include <tchar.h>
 #include <cassert>
+#include <array>
 #include <crtdbg.h>
 #include <vector>
 #include <deque>
@@ -1038,13 +1039,22 @@ private:
     // マルチパスレンダリング関連
     //---------------------------------------------------------------
 
-    void DrawPass1(const bool renderToSceneRenderTargets = true,
-                   int activeMirrorMeshIndex = -1);
-    void DrawSceneGeometry(int activeMirrorMeshIndex,
-                           bool renderActiveMirrorAsMirror,
-                           int skippedMeshMixIndex = -1);
-    int FindActiveMirrorMeshIndex() const;
-    bool RenderMirrorTexture(int activeMirrorMeshIndex);
+    static constexpr size_t kMaxMirrorSurfaceCount = 2;
+    struct MirrorFrameData
+    {
+        int meshIndex = -1;
+        D3DXMATRIX viewProjection;
+        bool ready = false;
+    };
+
+    void DrawPass1(const bool renderToSceneRenderTargets = true);
+    void DrawSceneGeometry(bool renderMirrorSurfaces,
+                           bool skipMirrorSurfaces);
+    std::vector<int> FindActiveMirrorMeshIndices() const;
+    bool RenderMirrorTexture(int activeMirrorMeshIndex,
+                             LPDIRECT3DTEXTURE9 mirrorRenderTarget,
+                             D3DXMATRIX& mirrorViewProjection);
+    const MirrorFrameData* FindMirrorFrameData(int meshIndex) const;
     void ApplyTAAProjectionJitter();
     void ClearTAAProjectionJitter();
 
@@ -1259,7 +1269,8 @@ private:
     LPDIRECT3DTEXTURE9 m_pRenderTarget2 = NULL;
     LPDIRECT3DSURFACE9 m_pMirrorDepthStencil = NULL;
     LPDIRECT3DTEXTURE9 m_pLightEffectSourceTexture = NULL;
-    LPDIRECT3DTEXTURE9 m_pMirrorRenderTarget = NULL;
+    std::array<LPDIRECT3DTEXTURE9, kMaxMirrorSurfaceCount> m_pMirrorRenderTargets{};
+    std::array<MirrorFrameData, kMaxMirrorSurfaceCount> m_mirrorFrameData{};
 
     //-----------------------------------------------------------------
     // FPS表示
