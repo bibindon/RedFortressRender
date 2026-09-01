@@ -2878,9 +2878,10 @@ void Render::Draw()
     {
         EnsurePostEffectSSAOInitialized();
         m_postEffectSSAO.Draw(pTempTexture,
-                               pWorkTexture,
-                               pTexTempZ,
-                               pTexTempNoral,
+                                pWorkTexture,
+                                pTexTempZ,
+                                pTexTempPos,
+                                pTexTempNoral,
                                pTexTempThickness);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }

@@ -21,6 +21,7 @@ float g_minThickness = 0.10f;
 bool g_enableMaxDarknessClamp = true;
 
 texture texZ;
+texture texPosition;
 texture texNormal;
 texture texThickness;
 texture texAO;
@@ -29,6 +30,16 @@ texture texColor;
 sampler sampZ = sampler_state
 {
     Texture = (texZ);
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+
+sampler sampPosition = sampler_state
+{
+    Texture = (texPosition);
     MinFilter = POINT;
     MagFilter = POINT;
     MipFilter = NONE;
@@ -784,7 +795,7 @@ float4 PS_Composite(VS_OUT i) : COLOR0
 {
     float4 color = tex2D(sampColor, i.uv);
     float ao = tex2D(sampAO, i.uv).r;
-    float ssaoReceiverMask = tex2D(sampZ, i.uv).b;
+    float ssaoReceiverMask = tex2D(sampPosition, i.uv).a;
     float aoAdjusted = saturate(1.0f - (1.0f - saturate(ao)) * g_shadowStrength);
     if (g_enableMaxDarknessClamp)
     {
@@ -800,7 +811,7 @@ float4 PS_Composite(VS_OUT i) : COLOR0
 float4 PS_Composite3x3Gaussian(VS_OUT i) : COLOR0
 {
     float4 color = tex2D(sampColor, i.uv);
-    float ssaoReceiverMask = tex2D(sampZ, i.uv).b;
+    float ssaoReceiverMask = tex2D(sampPosition, i.uv).a;
     float2 texelSize = g_aoInvSize;
     float ao = 0.0f;
     ao += tex2D(sampAO, i.uv + float2(-texelSize.x, -texelSize.y)).r * 1.0f;

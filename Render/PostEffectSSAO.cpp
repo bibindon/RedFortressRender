@@ -99,6 +99,7 @@ void PostEffectSSAO::CreateResources()
 void PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
                            LPDIRECT3DTEXTURE9 texTarget,
                            LPDIRECT3DTEXTURE9 texRenderTargetZ,
+                           LPDIRECT3DTEXTURE9 texRenderTargetPosition,
                            LPDIRECT3DTEXTURE9 texRenderTargetNormal,
                            LPDIRECT3DTEXTURE9 texRenderTargetThickness)
 {
@@ -110,6 +111,7 @@ void PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
     ThrowIfSsaoResourceIsNull(renderTarget, "PostEffectSSAO source texture is null.");
     ThrowIfSsaoResourceIsNull(texTarget, "PostEffectSSAO target texture is null.");
     ThrowIfSsaoResourceIsNull(texRenderTargetZ, "PostEffectSSAO depth texture is null.");
+    ThrowIfSsaoResourceIsNull(texRenderTargetPosition, "PostEffectSSAO position texture is null.");
     ThrowIfSsaoResourceIsNull(texRenderTargetNormal, "PostEffectSSAO normal texture is null.");
     ThrowIfSsaoResourceIsNull(texRenderTargetThickness, "PostEffectSSAO thickness texture is null.");
     ThrowIfSsaoResourceIsNull(m_rtAoTex, "PostEffectSSAO AO texture is null.");
@@ -183,7 +185,9 @@ void PostEffectSSAO::Draw(LPDIRECT3DTEXTURE9 renderTarget,
         m_fxSSAO->SetFloatArray("g_invSize", reinterpret_cast<FLOAT*>(&invSize), 2),
         "PostEffectSSAO failed to set g_invSize.");
     ThrowIfSsaoCallFailed(m_fxSSAO->SetTexture("texZ", texRenderTargetZ),
-                          "PostEffectSSAO failed to set texZ.");
+                           "PostEffectSSAO failed to set texZ.");
+    ThrowIfSsaoCallFailed(m_fxSSAO->SetTexture("texPosition", texRenderTargetPosition),
+                          "PostEffectSSAO failed to set texPosition.");
     ThrowIfSsaoCallFailed(m_fxSSAO->SetTexture("texNormal", texRenderTargetNormal),
                           "PostEffectSSAO failed to set texNormal.");
     ThrowIfSsaoCallFailed(m_fxSSAO->SetTexture("texThickness", texRenderTargetThickness),

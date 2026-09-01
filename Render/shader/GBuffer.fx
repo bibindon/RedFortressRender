@@ -264,7 +264,7 @@ void PS_GBuffer(VS_OUTPUT inputData,
     float fogLinearZ = (inputData.viewSpaceZ - g_fogNear) / (g_fogFar - g_fogNear);
     fogLinearZ = saturate(fogLinearZ);
 
-    outRT0 = float4(linearZ, fogLinearZ, 1.0f, 1.0f);
+    outRT0 = float4(linearZ, fogLinearZ, 0.0f, 1.0f);
 
     float3 normalized = inputData.positionWorld / g_posRange;
     float3 world01 = normalized * 0.5f + 0.5f;

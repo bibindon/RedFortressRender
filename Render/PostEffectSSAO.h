@@ -15,6 +15,7 @@ public:
     void Draw(LPDIRECT3DTEXTURE9 texSource,
               LPDIRECT3DTEXTURE9 texTarget,
               LPDIRECT3DTEXTURE9 texRenderTargetZ,
+              LPDIRECT3DTEXTURE9 texRenderTargetPosition,
               LPDIRECT3DTEXTURE9 texRenderTargetNormal,
               LPDIRECT3DTEXTURE9 texRenderTargetThickness);
 

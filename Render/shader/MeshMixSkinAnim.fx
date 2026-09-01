@@ -241,10 +241,10 @@ void WriteIntegratedGBuffer(float3 worldPos,
     {
         ssaoReceiverMask = 1.0f;
     }
-    outDepth = float4(linearDepth, fogLinearDepth, ssaoReceiverMask, 1.0f);
+    outDepth = float4(linearDepth, fogLinearDepth, 0.0f, 1.0f);
 
     float3 world01 = saturate((worldPos / g_gBufferPositionRange) * 0.5f + 0.5f);
-    outPosition = float4(world01, 1.0f);
+    outPosition = float4(world01, ssaoReceiverMask);
 
     float shadowReceiverMask = 0.0f;
     if (g_gBufferShadowReceiverEnabled)
