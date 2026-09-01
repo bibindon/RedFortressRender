@@ -49,6 +49,17 @@ namespace NSRender
 namespace
 {
 constexpr std::chrono::duration<double> kTargetFrameDuration(1.0 / 60.0);
+constexpr UINT kMirrorRenderTargetScaleDivisor = 4;
+
+UINT GetMirrorRenderTargetDimension(const int screenDimension)
+{
+    int mirrorDimension = screenDimension / static_cast<int>(kMirrorRenderTargetScaleDivisor);
+    if (mirrorDimension < 1)
+    {
+        mirrorDimension = 1;
+    }
+    return static_cast<UINT>(mirrorDimension);
+}
 
 float ClampNormalizedTextPosition(const float value)
 {
@@ -6809,6 +6820,7 @@ bool Render::RenderMirrorTexture(const int activeMirrorMeshIndex)
     LPDIRECT3DSURFACE9 oldRenderTarget = NULL;
     LPDIRECT3DSURFACE9 oldDepthStencil = NULL;
     LPDIRECT3DSURFACE9 mirrorRenderSurface = NULL;
+    D3DVIEWPORT9 oldViewport{};
 
     hResult = Common::D3DDevice()->GetRenderTarget(0, &oldRenderTarget);
     assert(hResult == S_OK);
@@ -6819,9 +6831,26 @@ bool Render::RenderMirrorTexture(const int activeMirrorMeshIndex)
     hResult = m_pMirrorRenderTarget->GetSurfaceLevel(0, &mirrorRenderSurface);
     assert(hResult == S_OK);
 
+    hResult = Common::D3DDevice()->GetViewport(&oldViewport);
+    assert(hResult == S_OK);
+
+    D3DSURFACE_DESC mirrorDescription{};
+    hResult = mirrorRenderSurface->GetDesc(&mirrorDescription);
+    assert(hResult == S_OK);
+
     hResult = Common::D3DDevice()->SetRenderTarget(0, mirrorRenderSurface);
     assert(hResult == S_OK);
     hResult = Common::D3DDevice()->SetDepthStencilSurface(m_pMirrorDepthStencil);
+    assert(hResult == S_OK);
+
+    D3DVIEWPORT9 mirrorViewport{};
+    mirrorViewport.X = 0;
+    mirrorViewport.Y = 0;
+    mirrorViewport.Width = mirrorDescription.Width;
+    mirrorViewport.Height = mirrorDescription.Height;
+    mirrorViewport.MinZ = 0.0f;
+    mirrorViewport.MaxZ = 1.0f;
+    hResult = Common::D3DDevice()->SetViewport(&mirrorViewport);
     assert(hResult == S_OK);
 
     const D3DXVECTOR3 eye = Camera::GetEyePos();
@@ -6873,6 +6902,8 @@ bool Render::RenderMirrorTexture(const int activeMirrorMeshIndex)
     hResult = Common::D3DDevice()->SetRenderTarget(0, oldRenderTarget);
     assert(hResult == S_OK);
     hResult = Common::D3DDevice()->SetDepthStencilSurface(oldDepthStencil);
+    assert(hResult == S_OK);
+    hResult = Common::D3DDevice()->SetViewport(&oldViewport);
     assert(hResult == S_OK);
 
     SAFE_RELEASE(mirrorRenderSurface);
@@ -7698,6 +7729,8 @@ void Render::CreateTexture()
 {
     HRESULT hr = E_FAIL;
 
+    const UINT mirrorWidth = GetMirrorRenderTargetDimension(Common::ScreenW());
+    const UINT mirrorHeight = GetMirrorRenderTargetDimension(Common::ScreenH());
     hr = D3DXCreateTexture(Common::D3DDevice(),
                            Common::ScreenW(),
                            Common::ScreenH(),
@@ -7730,8 +7763,8 @@ void Render::CreateTexture()
     assert(hr == S_OK);
 
     hr = D3DXCreateTexture(Common::D3DDevice(),
-                           Common::ScreenW(),
-                           Common::ScreenH(),
+                           mirrorWidth,
+                           mirrorHeight,
                            1,
                            D3DUSAGE_RENDERTARGET,
                            D3DFMT_A16B16G16R16F,
@@ -7748,8 +7781,8 @@ void Render::CreateTexture()
     SAFE_RELEASE(currentDepthStencil);
 
     hr = Common::D3DDevice()->CreateDepthStencilSurface(
-        Common::ScreenW(),
-        Common::ScreenH(),
+        mirrorWidth,
+        mirrorHeight,
         depthDescription.Format,
         D3DMULTISAMPLE_NONE,
         0,
