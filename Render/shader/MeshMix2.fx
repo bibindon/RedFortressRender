@@ -981,12 +981,24 @@ void PixelShaderMirror(in float4 inMirrorProj : TEXCOORD0,
     float2 uv;
     uv.x = inMirrorProj.x / inMirrorProj.w * 0.5f + 0.5f;
     uv.y = -inMirrorProj.y / inMirrorProj.w * 0.5f + 0.5f;
+    if (g_waveEnable)
+    {
+        float horizontalWave = sin((inPosWorld.y * g_waveDensity * 1.15f) +
+                                   (g_time * g_waveSpeed * 1.9f));
+        float verticalWave = sin((inPosWorld.x * g_waveDensity * 0.9f) -
+                                 (g_time * g_waveSpeed * 1.4f));
+        float2 edgeDistance = min(uv, 1.0f.xx - uv);
+        float edgeFade = saturate(min(edgeDistance.x, edgeDistance.y) / 0.06f);
+        float distortionAmount = g_waveAmount * 0.22f * edgeFade;
+        uv.x += horizontalWave * distortionAmount;
+        uv.y += verticalWave * distortionAmount * 0.75f;
+    }
     float3 cameraDir = normalize(g_cameraPos.xyz - inPosWorld);
     float fresnel = g_fresnelEnable ? (CalcFresnelFactor(inNormalWorld, cameraDir) * g_fresnelIntensity) : 0.0f;
     float4 mirrorColor = tex2D(g_mirrorSampler, uv);
     WriteIntegratedGBuffer(inPosWorld, inNormalWorld, outDepth, outPosition, outNormal);
-    float mirrorBrightness = saturate(0.8f + fresnel);
-    outColor = saturate(float4((mirrorColor.rgb * mirrorBrightness) + fresnel.xxx, mirrorColor.a * mirrorBrightness));
+    float mirrorBrightness = 0.92f + (fresnel * 0.03f);
+    outColor = float4(mirrorColor.rgb * mirrorBrightness, 1.0f);
 }
 
 void PixelShaderWaterMirror(in float4 inMirrorProj : TEXCOORD0,
