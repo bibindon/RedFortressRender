@@ -10,6 +10,7 @@ float g_gBufferFogNear = 0.1f;
 float g_gBufferFogFar = 33000.0f;
 float g_gBufferPositionRange = 33000.0f;
 bool g_gBufferShadowReceiverEnabled = false;
+bool g_gBufferSsaoReceiverEnabled = true;
 
 float4 g_lightDir = { 0.3f, 1.0f, 0.5f, 0.0f };
 float4 g_lightPos = { -5.f, 7.f, -10.f, 0.0f };
@@ -414,7 +415,12 @@ void WriteIntegratedGBuffer(float3 worldPos,
                                  max(g_gBufferFar - g_gBufferNear, 0.0001f));
     float fogLinearDepth = saturate((viewSpaceZ - g_gBufferFogNear) /
                                     max(g_gBufferFogFar - g_gBufferFogNear, 0.0001f));
-    outDepth = float4(linearDepth, fogLinearDepth, 0.0f, 1.0f);
+    float ssaoReceiverMask = 0.0f;
+    if (g_gBufferSsaoReceiverEnabled)
+    {
+        ssaoReceiverMask = 1.0f;
+    }
+    outDepth = float4(linearDepth, fogLinearDepth, ssaoReceiverMask, 1.0f);
 
     float3 world01 = saturate((worldPos / g_gBufferPositionRange) * 0.5f + 0.5f);
     outPosition = float4(world01, 1.0f);

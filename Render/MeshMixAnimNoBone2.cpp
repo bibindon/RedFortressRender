@@ -822,7 +822,7 @@ void MeshMixAnimNoBone2::Render()
 
     D3DXMATRIX viewProjectionMatrix = Camera::GetViewMatrix() * Camera::GetProjMatrix();
     m_D3DEffect->SetMatrix("g_matViewProj", &viewProjectionMatrix);
-    GBuffer::ApplyIntegratedEffectParameters(m_D3DEffect, true);
+    GBuffer::ApplyIntegratedEffectParameters(m_D3DEffect, true, true);
     const char* techniqueName = "Technique1Integrated";
     if (m_alphaClipEnabled)
     {

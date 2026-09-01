@@ -1197,7 +1197,7 @@ void MeshMix2::Render(const bool renderAsMirrorSurface)
     ApplyIndividualEffectParameters();
     ThrowIfEffectCallFailed(m_D3DEffect->SetTechnique("Technique1"),
                             "MeshMix2 failed to set Technique1.");
-    GBuffer::ApplyIntegratedEffectParameters(m_D3DEffect, m_param.shadow);
+    GBuffer::ApplyIntegratedEffectParameters(m_D3DEffect, m_param.shadow, m_param.ssao);
 
     DWORD oldDepthColorWrite = 15;
     DWORD oldPositionColorWrite = 15;
@@ -1207,7 +1207,7 @@ void MeshMix2::Render(const bool renderAsMirrorSurface)
     Common::D3DDevice()->GetRenderState(D3DRS_COLORWRITEENABLE3, &oldNormalColorWrite);
 
     DWORD gBufferColorWrite = 0;
-    if (m_param.ssao)
+    if (m_param.ssao || m_param.emit)
     {
         gBufferColorWrite = 15;
     }

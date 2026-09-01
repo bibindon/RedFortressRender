@@ -63,7 +63,8 @@ public:
     void BindIntegratedRenderTargets();
     void UnbindIntegratedRenderTargets();
     static void ApplyIntegratedEffectParameters(LPD3DXEFFECT effect,
-                                                bool shadowReceiverEnabled);
+                                                 bool shadowReceiverEnabled,
+                                                 bool ssaoReceiverEnabled);
 
     void Draw(const std::vector<IMeshMixSkinAnim*>& meshMixSkinAnimList,
               const std::vector<MeshMixAnimNoBone2*>& meshMixAnimNoBone2List,

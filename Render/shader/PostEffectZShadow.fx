@@ -1070,6 +1070,7 @@ float4 FUNCTION_NAME(float4 inPos : POSITION, float2 inUV : TEXCOORD0) : COLOR0 
         } \
     } \
     float shadowPresence = FinalizeShadowAmount(shadowSum, sampleCount); \
+    shadowPresence *= centerEncodedNormal.a; \
     float shadowAmount = saturate(shadowPresence * g_shadowIntensity); \
     float3 shadowedColor = lerp(baseColor.rgb, float3(0.0f, 0.0f, 0.0f), shadowAmount); \
     float saturationAmount = lerp(1.0f, 1.0f + g_shadowSaturationBoost, saturate(shadowPresence)); \
@@ -1258,6 +1259,7 @@ float4 PS_DirectComposite1(float4 inPos : POSITION, float2 inUV : TEXCOORD0) : C
     float sceneDepth = tex2D(samplerSceneDepth, uv).r;
     float4 encodedNormal = tex2D(samplerSceneNormal, uv);
     float shadowPresence = EvaluateDirectShadow1(uv, encodedNormal.a, sceneDepth);
+    shadowPresence *= encodedNormal.a;
     float shadowAmount = saturate(shadowPresence * g_shadowIntensity);
     float3 shadowedColor = lerp(baseColor.rgb, float3(0.0f, 0.0f, 0.0f), shadowAmount);
     float saturationAmount = lerp(1.0f,
@@ -1312,6 +1314,7 @@ float4 PS_DirectComposite(float4 inPos : POSITION, float2 inUV : TEXCOORD0) : CO
     }
 
     float shadowPresence = FinalizeShadowAmount(shadowSum, sampleCount);
+    shadowPresence *= centerEncodedNormal.a;
     float shadowAmount = saturate(shadowPresence * g_shadowIntensity);
     float3 shadowedColor = lerp(baseColor.rgb, float3(0.0f, 0.0f, 0.0f), shadowAmount);
     float saturationAmount = lerp(1.0f,

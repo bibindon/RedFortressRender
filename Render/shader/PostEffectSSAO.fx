@@ -784,11 +784,13 @@ float4 PS_Composite(VS_OUT i) : COLOR0
 {
     float4 color = tex2D(sampColor, i.uv);
     float ao = tex2D(sampAO, i.uv).r;
+    float ssaoReceiverMask = tex2D(sampZ, i.uv).b;
     float aoAdjusted = saturate(1.0f - (1.0f - saturate(ao)) * g_shadowStrength);
     if (g_enableMaxDarknessClamp)
     {
         aoAdjusted = max(aoAdjusted, 0.5f);
     }
+    aoAdjusted = lerp(1.0f, aoAdjusted, ssaoReceiverMask);
     float shadowPresence = saturate(1.0f - aoAdjusted);
     float3 shadedColor = color.rgb * aoAdjusted;
     float saturationAmount = lerp(1.0f, 1.0f + g_aoSaturationBoost, shadowPresence);
@@ -798,6 +800,7 @@ float4 PS_Composite(VS_OUT i) : COLOR0
 float4 PS_Composite3x3Gaussian(VS_OUT i) : COLOR0
 {
     float4 color = tex2D(sampColor, i.uv);
+    float ssaoReceiverMask = tex2D(sampZ, i.uv).b;
     float2 texelSize = g_aoInvSize;
     float ao = 0.0f;
     ao += tex2D(sampAO, i.uv + float2(-texelSize.x, -texelSize.y)).r * 1.0f;
@@ -815,6 +818,7 @@ float4 PS_Composite3x3Gaussian(VS_OUT i) : COLOR0
     {
         aoAdjusted = max(aoAdjusted, 0.5f);
     }
+    aoAdjusted = lerp(1.0f, aoAdjusted, ssaoReceiverMask);
     float shadowPresence = saturate(1.0f - aoAdjusted);
     float3 shadedColor = color.rgb * aoAdjusted;
     float saturationAmount = lerp(1.0f, 1.0f + g_aoSaturationBoost, shadowPresence);

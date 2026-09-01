@@ -704,7 +704,7 @@ void MeshInstancing2::Draw()
 
     hResult = m_pEffect->SetFloat("g_time", static_cast<float>(GetTickCount64()) * 0.001f);
     assert(hResult == S_OK);
-    GBuffer::ApplyIntegratedEffectParameters(m_pEffect, false);
+    GBuffer::ApplyIntegratedEffectParameters(m_pEffect, false, true);
 
     LPDIRECT3DVERTEXBUFFER9 pVB = nullptr;
     m_pMesh->GetVertexBuffer(&pVB);

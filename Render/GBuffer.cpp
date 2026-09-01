@@ -539,7 +539,8 @@ void GBuffer::UnbindIntegratedRenderTargets()
 }
 
 void GBuffer::ApplyIntegratedEffectParameters(LPD3DXEFFECT effect,
-                                               const bool shadowReceiverEnabled)
+                                               const bool shadowReceiverEnabled,
+                                               const bool ssaoReceiverEnabled)
 {
     if (effect == NULL)
     {
@@ -566,6 +567,14 @@ void GBuffer::ApplyIntegratedEffectParameters(LPD3DXEFFECT effect,
         enabled = TRUE;
     }
     hResult = effect->SetBool("g_gBufferShadowReceiverEnabled", enabled);
+    assert(hResult == S_OK);
+
+    enabled = FALSE;
+    if (ssaoReceiverEnabled)
+    {
+        enabled = TRUE;
+    }
+    hResult = effect->SetBool("g_gBufferSsaoReceiverEnabled", enabled);
     assert(hResult == S_OK);
 }
 
