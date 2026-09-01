@@ -1872,6 +1872,12 @@ void MeshMixAnimNoBone2::SetIgnoreTransparentMaterial(const bool enabled)
     m_ignoreTransparentMaterial = enabled;
 }
 
+void MeshMixAnimNoBone2::SetRot(const D3DXVECTOR3& rotate)
+{
+    m_rotate = D3DXVECTOR3(rotate.x, rotate.y + D3DX_PI, rotate.z);
+    InvalidateBonePaletteCache();
+}
+
 void MeshMixAnimNoBone2::SetRotY(const float rotY)
 {
     m_rotate.y = rotY + D3DX_PI;

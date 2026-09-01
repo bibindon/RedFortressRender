@@ -3830,6 +3830,16 @@ void Render::SetMeshMixSkinAnimPos(const int id, const D3DXVECTOR3& pos)
     m_meshMixSkinAnimList.at(id)->SetPos(pos);
 }
 
+void Render::SetMeshMixSkinAnimRot(const int id, const D3DXVECTOR3& rotate)
+{
+    if (id < 0 || id >= static_cast<int>(m_meshMixSkinAnimList.size()) || m_meshMixSkinAnimList.at(id) == nullptr)
+    {
+        return;
+    }
+
+    m_meshMixSkinAnimList.at(id)->SetRot(rotate);
+}
+
 void Render::SetMeshMixSkinAnimRotY(const int id, const float rotY)
 {
     if (id < 0 || id >= static_cast<int>(m_meshMixSkinAnimList.size()) || m_meshMixSkinAnimList.at(id) == nullptr)

@@ -64,6 +64,7 @@ public:
     bool GetBoneWorldMatrix(const char* boneName, D3DXMATRIX& outMatrix) const;
     void SetAlphaClipEnabled(const bool enabled);
     void SetIgnoreTransparentMaterial(const bool enabled);
+    void SetRot(const D3DXVECTOR3& rotate);
     void SetRotY(const float rotY);
     void SetScale(const float scale);
 

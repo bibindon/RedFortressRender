@@ -45,25 +45,166 @@ bool TextureFormatHasAlpha(const D3DFORMAT format)
 }
 }
 
-SkinAnimMeshContainer* FindFirstMeshContainer(LPD3DXFRAME frame)
+struct InstancingMeshSelection
+{
+    SkinAnimMeshContainer* meshContainer = nullptr;
+    D3DXMATRIX meshTransform;
+};
+
+void CorrectBlenderOfficialAxisTransforms(LPD3DXFRAME frame,
+                                          const bool skipCurrentFrame)
 {
     if (frame == nullptr)
     {
-        return nullptr;
+        return;
+    }
+
+    if (!skipCurrentFrame)
+    {
+        D3DXMATRIX blenderAxisConversion;
+        D3DXMatrixIdentity(&blenderAxisConversion);
+        blenderAxisConversion._22 = 0.0f;
+        blenderAxisConversion._23 = 1.0f;
+        blenderAxisConversion._32 = 1.0f;
+        blenderAxisConversion._33 = 0.0f;
+        frame->TransformationMatrix = blenderAxisConversion * frame->TransformationMatrix;
+        frame->TransformationMatrix._43 = -frame->TransformationMatrix._43;
+    }
+
+    CorrectBlenderOfficialAxisTransforms(frame->pFrameSibling, false);
+    CorrectBlenderOfficialAxisTransforms(frame->pFrameFirstChild, false);
+}
+
+bool FindFirstMeshContainer(LPD3DXFRAME frame,
+                            const D3DXMATRIX* parentTransform,
+                            InstancingMeshSelection& selection)
+{
+    if (frame == nullptr)
+    {
+        return false;
+    }
+
+    D3DXMATRIX combinedTransform = frame->TransformationMatrix;
+    if (parentTransform != nullptr)
+    {
+        combinedTransform *= *parentTransform;
     }
 
     if (frame->pMeshContainer != nullptr)
     {
-        return reinterpret_cast<SkinAnimMeshContainer*>(frame->pMeshContainer);
+        selection.meshContainer =
+            reinterpret_cast<SkinAnimMeshContainer*>(frame->pMeshContainer);
+        selection.meshTransform = combinedTransform;
+        return true;
     }
 
-    SkinAnimMeshContainer* container = FindFirstMeshContainer(frame->pFrameFirstChild);
-    if (container != nullptr)
+    if (FindFirstMeshContainer(frame->pFrameFirstChild,
+                               &combinedTransform,
+                               selection))
     {
-        return container;
+        return true;
     }
 
-    return FindFirstMeshContainer(frame->pFrameSibling);
+    return FindFirstMeshContainer(frame->pFrameSibling,
+                                  parentTransform,
+                                  selection);
+}
+
+void BakeMeshTransform(LPD3DXMESH mesh, const D3DXMATRIX& meshTransform)
+{
+    if (mesh == nullptr)
+    {
+        throw std::runtime_error("MeshInstancing2 cannot bake a null mesh.");
+    }
+
+    D3DVERTEXELEMENT9 declaration[MAX_FVF_DECL_SIZE];
+    const HRESULT declarationResult = mesh->GetDeclaration(declaration);
+    if (FAILED(declarationResult))
+    {
+        throw std::runtime_error("MeshInstancing2 failed to read the mesh vertex declaration.");
+    }
+
+    WORD positionOffset = 0xffff;
+    WORD normalOffset = 0xffff;
+    for (UINT elementIndex = 0; elementIndex < MAX_FVF_DECL_SIZE; ++elementIndex)
+    {
+        const D3DVERTEXELEMENT9& element = declaration[elementIndex];
+        if (element.Stream == 0xff)
+        {
+            break;
+        }
+        if (element.Stream != 0)
+        {
+            continue;
+        }
+        if (element.Usage == D3DDECLUSAGE_POSITION && element.UsageIndex == 0)
+        {
+            if (element.Type != D3DDECLTYPE_FLOAT3)
+            {
+                throw std::runtime_error("MeshInstancing2 requires FLOAT3 mesh positions.");
+            }
+            positionOffset = element.Offset;
+        }
+        else if (element.Usage == D3DDECLUSAGE_NORMAL && element.UsageIndex == 0)
+        {
+            if (element.Type != D3DDECLTYPE_FLOAT3)
+            {
+                throw std::runtime_error("MeshInstancing2 requires FLOAT3 mesh normals.");
+            }
+            normalOffset = element.Offset;
+        }
+    }
+
+    if (positionOffset == 0xffff || normalOffset == 0xffff)
+    {
+        throw std::runtime_error("MeshInstancing2 requires position and normal vertex data.");
+    }
+
+    D3DXMATRIX normalTransform;
+    float determinant = 0.0f;
+    if (D3DXMatrixInverse(&normalTransform, &determinant, &meshTransform) == nullptr)
+    {
+        throw std::runtime_error("MeshInstancing2 received a non-invertible frame transform.");
+    }
+    D3DXMatrixTranspose(&normalTransform, &normalTransform);
+
+    BYTE* vertexData = nullptr;
+    const HRESULT lockResult = mesh->LockVertexBuffer(0,
+                                                       reinterpret_cast<void**>(&vertexData));
+    if (FAILED(lockResult) || vertexData == nullptr)
+    {
+        throw std::runtime_error("MeshInstancing2 failed to lock the mesh vertex buffer.");
+    }
+
+    const DWORD vertexCount = mesh->GetNumVertices();
+    const DWORD vertexStride = mesh->GetNumBytesPerVertex();
+    for (DWORD vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex)
+    {
+        BYTE* vertex = vertexData + (vertexIndex * vertexStride);
+        D3DXVECTOR3* position =
+            reinterpret_cast<D3DXVECTOR3*>(vertex + positionOffset);
+        D3DXVECTOR3 transformedPosition;
+        D3DXVec3TransformCoord(&transformedPosition, position, &meshTransform);
+        *position = transformedPosition;
+
+        D3DXVECTOR3* normal =
+            reinterpret_cast<D3DXVECTOR3*>(vertex + normalOffset);
+        D3DXVECTOR3 transformedNormal;
+        D3DXVec3TransformNormal(&transformedNormal, normal, &normalTransform);
+        if (D3DXVec3LengthSq(&transformedNormal) <= 0.0f)
+        {
+            mesh->UnlockVertexBuffer();
+            throw std::runtime_error("MeshInstancing2 encountered a zero-length transformed normal.");
+        }
+        D3DXVec3Normalize(&transformedNormal, &transformedNormal);
+        *normal = transformedNormal;
+    }
+
+    const HRESULT unlockResult = mesh->UnlockVertexBuffer();
+    if (FAILED(unlockResult))
+    {
+        throw std::runtime_error("MeshInstancing2 failed to unlock the mesh vertex buffer.");
+    }
 }
 
 std::wstring ResolvePathFromExeDir(const std::wstring& path)
@@ -316,7 +457,19 @@ void MeshInstancing2::InitializeInternal()
         throw std::runtime_error("MeshInstancing2 failed to parse the Blender 5.1.2 X file.");
     }
 
-    SkinAnimMeshContainer* meshContainer = FindFirstMeshContainer(frameRoot);
+    bool hasSyntheticRoot = false;
+    if (frameRoot->Name != nullptr &&
+        frameRoot->Name[0] == '\0' &&
+        frameRoot->pMeshContainer == nullptr)
+    {
+        hasSyntheticRoot = true;
+    }
+    CorrectBlenderOfficialAxisTransforms(frameRoot, hasSyntheticRoot);
+
+    InstancingMeshSelection meshSelection;
+    D3DXMatrixIdentity(&meshSelection.meshTransform);
+    FindFirstMeshContainer(frameRoot, nullptr, meshSelection);
+    SkinAnimMeshContainer* meshContainer = meshSelection.meshContainer;
     if (meshContainer == nullptr || meshContainer->MeshData.pMesh == nullptr)
     {
         DestroyCustomXFrameHierarchyWithAllocator(frameRoot, allocator);
@@ -325,6 +478,7 @@ void MeshInstancing2::InitializeInternal()
 
     m_pMesh = meshContainer->MeshData.pMesh;
     m_pMesh->AddRef();
+    BakeMeshTransform(m_pMesh, meshSelection.meshTransform);
     m_dwNumMaterials = meshContainer->NumMaterials;
     m_pMaterials.resize(m_dwNumMaterials);
     m_pTextures.resize(m_dwNumMaterials);
