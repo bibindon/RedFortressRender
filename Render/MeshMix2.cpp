@@ -50,6 +50,8 @@ struct MeshCsvParam
     CsvValue<float> emitPointLightRange;
     CsvValue<bool> fresnel;
     CsvValue<float> fresnelIntensity;
+    CsvValue<float> specularIntensity;
+    CsvValue<float> specularEdge;
     CsvValue<bool> smooth;
     CsvValue<bool> sss;
     CsvValue<float> sssIntensity;
@@ -274,6 +276,17 @@ MeshCsvParam ReadMeshCsvParam(const std::wstring& meshPath)
             result.fresnelIntensity.defined = true;
             result.fresnelIntensity.value = (std::max)(0.0f, ParseCsvFloat(value));
         }
+        else if (key == L"specularintensity")
+        {
+            result.specularIntensity.defined = true;
+            result.specularIntensity.value = (std::max)(0.0f, ParseCsvFloat(value));
+        }
+        else if (key == L"specularedge")
+        {
+            result.specularEdge.defined = true;
+            result.specularEdge.value =
+                (std::max)(0.0f, (std::min)(ParseCsvFloat(value), 1.0f));
+        }
         else if (key == L"smooth")
         {
             result.smooth.defined = true;
@@ -475,6 +488,16 @@ void ApplyMeshCsvParam(const MeshCsvParam& csvParam, stMeshParam& param)
     if (csvParam.fresnelIntensity.defined)
     {
         param.fresnelIntensity = csvParam.fresnelIntensity.value;
+    }
+    if (csvParam.specularIntensity.defined)
+    {
+        param.specularIntensity = csvParam.specularIntensity.value;
+        param.specularIntensityOverrideEnabled = true;
+    }
+    if (csvParam.specularEdge.defined)
+    {
+        param.specularEdge = csvParam.specularEdge.value;
+        param.specularEdgeOverrideEnabled = true;
     }
     if (csvParam.smooth.defined)
     {
