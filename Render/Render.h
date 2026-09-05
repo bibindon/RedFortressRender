@@ -651,6 +651,17 @@ public:
                             const int sourceHeight,
                             const int transparency = 255);
 
+    void DrawImageSizedRectBeforePostEffects(const std::wstring& filename,
+                                             const int X,
+                                             const int Y,
+                                             const int width,
+                                             const int height,
+                                             const int sourceX,
+                                             const int sourceY,
+                                             const int sourceWidth,
+                                             const int sourceHeight,
+                                             const int transparency = 255);
+
     void DrawImageStretched(const std::wstring& filename,
                             const int transparency = 255);
 
@@ -1033,6 +1044,7 @@ private:
     std::wstring m_loadingScreenTitleFontPath;
     bool m_loadingScreenTitleFontRegistered = false;
     Sprite m_sprite;
+    Sprite m_prePostEffectSprite;
     LoadingScreen m_loadingScreen;
     ParticleSystem m_particleSystem;
 
@@ -1130,6 +1142,7 @@ private:
     void EnsurePostEffectSaturateInitialized();
     void EnsurePostEffectGaussInitialized();
     void EnsurePostEffectMaskedGaussInitialized();
+    void FlushPrePostEffectImages(LPDIRECT3DTEXTURE9 texTarget);
     void EnsurePostEffectAAInitialized();
     void EnsurePostEffectFXAAInitialized();
     void EnsurePostEffectTAAInitialized();

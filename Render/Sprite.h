@@ -41,6 +41,8 @@ public:
 
     void Draw();
 
+    bool HasImages() const { return !m_spriteInfoList.empty(); }
+
     void OnDeviceLost();
     void OnDeviceReset();
 

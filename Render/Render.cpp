@@ -2494,6 +2494,7 @@ void Render::Initialize(HWND hWnd, const std::wstring& settingsCsvPath)
     m_windowManager.Initialize(hWnd);
 
     m_sprite.Initialize();
+    m_prePostEffectSprite.Initialize();
     m_particleSystem.Initialize();
 
     CreateTexture();
@@ -2669,6 +2670,7 @@ void Render::Finalize()
     }
 
     m_sprite.Finalize();
+    m_prePostEffectSprite.Finalize();
 
     m_GBuffer.Finalize();
 
@@ -2973,6 +2975,8 @@ void Render::Draw()
         m_postEffectGodRay.Draw(pTempTexture, pTexTempCameraZ, pWorkTexture);
         SwapPostEffectBuffers(pTempTexture, pWorkTexture);
     }
+
+    FlushPrePostEffectImages(pTempTexture);
 
     if (m_gBufferEnabled && m_postEffectGaussEnabled)
     {
@@ -5476,6 +5480,58 @@ void Render::DrawImageSizedRect(const std::wstring& filename,
     m_sprite.PlaceImage(filename, X, Y, width, height, sourceRect, transparency);
 }
 
+void Render::DrawImageSizedRectBeforePostEffects(const std::wstring& filename,
+                                                 const int X,
+                                                 const int Y,
+                                                 const int width,
+                                                 const int height,
+                                                 const int sourceX,
+                                                 const int sourceY,
+                                                 const int sourceWidth,
+                                                 const int sourceHeight,
+                                                 const int transparency)
+{
+    if (width <= 0 || height <= 0 || sourceWidth <= 0 || sourceHeight <= 0)
+    {
+        return;
+    }
+
+    RECT sourceRect;
+    sourceRect.left = sourceX;
+    sourceRect.top = sourceY;
+    sourceRect.right = sourceX + sourceWidth;
+    sourceRect.bottom = sourceY + sourceHeight;
+
+    m_prePostEffectSprite.LoadImage_(filename);
+    m_prePostEffectSprite.PlaceImage(filename, X, Y, width, height, sourceRect, transparency);
+}
+
+void Render::FlushPrePostEffectImages(LPDIRECT3DTEXTURE9 texTarget)
+{
+    if (!m_prePostEffectSprite.HasImages())
+    {
+        return;
+    }
+
+    HRESULT hResult = E_FAIL;
+    LPDIRECT3DSURFACE9 pSurface = NULL;
+    hResult = texTarget->GetSurfaceLevel(0, &pSurface);
+    assert(hResult == S_OK);
+
+    hResult = Common::D3DDevice()->SetRenderTarget(0, pSurface);
+    assert(hResult == S_OK);
+    hResult = Common::D3DDevice()->SetRenderTarget(1, NULL);
+    assert(hResult == S_OK);
+
+    hResult = Common::D3DDevice()->BeginScene();
+    assert(hResult == S_OK);
+    m_prePostEffectSprite.Draw();
+    hResult = Common::D3DDevice()->EndScene();
+    assert(hResult == S_OK);
+
+    SAFE_RELEASE(pSurface);
+}
+
 void Render::DrawImageStretched(const std::wstring& filename,
                                             const int transparency)
 {
@@ -7773,6 +7829,7 @@ void Render::OnDeviceLost()
         SAFE_RELEASE(mirrorRenderTarget);
     }
     m_sprite.OnDeviceLost();
+    m_prePostEffectSprite.OnDeviceLost();
     m_particleSystem.OnDeviceLost();
     for (auto& mesh : m_meshInstancing2Map)
     {
@@ -7787,6 +7844,7 @@ void Render::OnDeviceReset()
 {
     CreateTexture();
     m_sprite.OnDeviceReset();
+    m_prePostEffectSprite.OnDeviceReset();
     m_particleSystem.OnDeviceReset();
     for (auto& mesh : m_meshInstancing2Map)
     {
