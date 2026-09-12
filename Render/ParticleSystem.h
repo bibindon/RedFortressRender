@@ -44,6 +44,8 @@ public:
 
     void Update(float deltaTime);
     void Draw(const D3DXMATRIX& view, const D3DXMATRIX& proj);
+    // Additive, depth-tested glow submitted for one frame only.
+    void QueueGlow(const D3DXVECTOR3& position, float size, D3DCOLOR color);
     void RenderDustToGBufferEffect(LPD3DXEFFECT effect,
                                    const D3DXMATRIX& view,
                                    const D3DXMATRIX& proj,
@@ -161,6 +163,7 @@ private:
     ParticleEffectPreset m_lastPlacedPreset = ParticleEffectPreset::None;
     unsigned long long m_nextGeneration = 1;
     std::vector<EffectInstance> m_effects;
+    EffectInstance m_frameGlows;
     std::vector<ParticleVertex> m_vertices;
 
     LPDIRECT3DTEXTURE9 m_smokeTexture = NULL;

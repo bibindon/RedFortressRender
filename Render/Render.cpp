@@ -6762,6 +6762,11 @@ void Render::ClearPointLights()
     Light::ClearPointLights();
 }
 
+void Render::DrawWorldGlow(const D3DXVECTOR3& position, float size, D3DCOLOR color)
+{
+    m_particleSystem.QueueGlow(position, size, color);
+}
+
 void Render::PlaceParticleEffect(const ParticleEffectPreset preset, const D3DXVECTOR3& origin)
 {
     m_particleSystem.PlaceEffect(preset, origin);

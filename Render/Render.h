@@ -716,6 +716,7 @@ public:
     void SetLoadingScreenProgress(int progress);
     void SetLoadingScreenShowTitle(bool show);
 
+    void DrawWorldGlow(const D3DXVECTOR3& position, float size, D3DCOLOR color);
     void PlaceParticleEffect(const ParticleEffectPreset preset, const D3DXVECTOR3& origin);
     void PlaceDashParticleEffect(const D3DXVECTOR3& origin,
                                  const D3DXVECTOR3& direction,

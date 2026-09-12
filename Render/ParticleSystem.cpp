@@ -85,6 +85,7 @@ void ParticleSystem::Finalize()
         effect.generation = 0;
     }
 
+    m_frameGlows.particles.clear();
     m_effects.clear();
     m_vertices.clear();
     m_lastPlacedPreset = ParticleEffectPreset::None;
@@ -250,6 +251,7 @@ void ParticleSystem::PlaceDashEffect(const D3DXVECTOR3& origin,
 
 void ParticleSystem::ClearEffect()
 {
+    m_frameGlows.particles.clear();
     for (auto& effect : m_effects)
     {
         ClearParticles(effect);
@@ -305,6 +307,23 @@ void ParticleSystem::Update(const float deltaTime)
     }
 }
 
+void ParticleSystem::QueueGlow(const D3DXVECTOR3& position, float size, D3DCOLOR color)
+{
+    if (size <= 0.0f || m_frameGlows.particles.size() >= MAX_PARTICLES)
+    {
+        return;
+    }
+    // Reuse the core billboard geometry without spawning a damage effect.
+    m_frameGlows.preset = ParticleEffectPreset::Damage;
+    Particle particle;
+    particle.pos = position;
+    particle.size = size;
+    particle.color = color;
+    particle.visualType = ParticleVisualType::DamageCore;
+    particle.active = true;
+    m_frameGlows.particles.push_back(particle);
+}
+
 void ParticleSystem::Draw(const D3DXMATRIX& view, const D3DXMATRIX& proj)
 {
     if (!m_initialized)
@@ -320,6 +339,19 @@ void ParticleSystem::Draw(const D3DXMATRIX& view, const D3DXMATRIX& proj)
     for (const auto& effect : m_effects)
     {
         DrawEffect(effect, view, proj);
+    }
+    if (!m_frameGlows.particles.empty())
+    {
+        D3DXMATRIX invView;
+        D3DXMatrixInverse(&invView, NULL, &view);
+        const D3DXVECTOR3 cameraForward(invView._31, invView._32, invView._33);
+        for (auto& particle : m_frameGlows.particles)
+        {
+            // Put the core just in front of its mesh while retaining scene occlusion.
+            particle.pos -= cameraForward * (particle.size * 0.35f);
+        }
+        DrawEffect(m_frameGlows, view, proj);
+        m_frameGlows.particles.clear();
     }
 }
 
@@ -2161,7 +2193,11 @@ void ParticleSystem::DrawEffect(const EffectInstance& effectInstance, const D3DX
     HRESULT hResult = m_effect->SetMatrix("g_matWorldViewProj", &worldViewProj);
     assert(SUCCEEDED(hResult));
 
-    if (effectInstance.preset == ParticleEffectPreset::Dust)
+    if (&effectInstance == &m_frameGlows)
+    {
+        drawBatch(m_damageCoreTexture, ParticleVisualType::DamageCore, "ParticleGlowTechnique");
+    }
+    else if (effectInstance.preset == ParticleEffectPreset::Dust)
     {
         drawBatch(m_dustTexture, ParticleVisualType::Default, "ParticleAlphaTechnique");
         drawBatch(m_dustTexture2, ParticleVisualType::Default, "ParticleAlphaTechnique");
