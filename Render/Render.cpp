@@ -6467,6 +6467,12 @@ void Render::SetPostEffectDepthOfFieldAutoActivationDistance(const float distanc
     m_postEffectDepthOfField.SetAutoActivationDistance(distance);
 }
 
+void Render::SetPostEffectDepthOfFieldBlurRadiusPixels(const float radius)
+{
+    m_postEffectDepthOfFieldBlurRadiusPixels = radius;
+    m_postEffectDepthOfField.SetBlurRadiusPixels(radius);
+}
+
 void Render::SetPostEffectStarBurst(const bool arg)
 {
     m_postEffectStarBurstEnabled = arg;
@@ -6592,6 +6598,7 @@ float Render::GetPostEffectDepthOfFieldFocalDistance() const { return m_postEffe
 float Render::GetPostEffectDepthOfFieldStartNear() const { return m_postEffectDepthOfFieldStartNear; }
 float Render::GetPostEffectDepthOfFieldMaxBlurDistance() const { return m_postEffectDepthOfFieldMaxBlurDistance; }
 float Render::GetPostEffectDepthOfFieldAutoActivationDistance() const { return m_postEffectDepthOfFieldAutoActivationDistance; }
+float Render::GetPostEffectDepthOfFieldBlurRadiusPixels() const { return m_postEffectDepthOfFieldBlurRadiusPixels; }
 bool Render::IsPostEffectStarBurstEnabled() const { return m_postEffectStarBurstEnabled; }
 float Render::GetPostEffectStarBurstThreshold() const { return m_postEffectStarBurstThreshold; }
 float Render::GetPostEffectStarBurstDistanceFade() const { return m_postEffectStarBurstDistanceFade; }
@@ -7704,6 +7711,11 @@ void Render::SetLoadingScreenTitleFontPath(const std::wstring& fontPath)
 void Render::SetLoadingScreenProgress(const int progress)
 {
     m_loadingScreen.SetProgress(progress);
+}
+
+bool Render::IsLoadingScreenVisible() const
+{
+    return m_loadingScreen.IsVisible();
 }
 
 void Render::SetLoadingScreenShowTitle(const bool show)

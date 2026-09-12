@@ -715,6 +715,7 @@ public:
     void SetLoadingScreenTitleFontPath(const std::wstring& fontPath);
     void SetLoadingScreenProgress(int progress);
     void SetLoadingScreenShowTitle(bool show);
+    bool IsLoadingScreenVisible() const;
 
     void DrawWorldGlow(const D3DXVECTOR3& position, float size, D3DCOLOR color);
     void PlaceParticleEffect(const ParticleEffectPreset preset, const D3DXVECTOR3& origin);
@@ -873,6 +874,7 @@ public:
     void SetPostEffectDepthOfFieldStartNear(const float distance);
     void SetPostEffectDepthOfFieldMaxBlurDistance(const float distance);
     void SetPostEffectDepthOfFieldAutoActivationDistance(const float distance);
+    void SetPostEffectDepthOfFieldBlurRadiusPixels(const float radius);
     bool IsPostEffectBloomEnabled() const;
     float GetPostEffectBloomThreshold() const;
     float GetPostEffectBloomWeightSum() const;
@@ -883,6 +885,7 @@ public:
     float GetPostEffectDepthOfFieldStartNear() const;
     float GetPostEffectDepthOfFieldMaxBlurDistance() const;
     float GetPostEffectDepthOfFieldAutoActivationDistance() const;
+    float GetPostEffectDepthOfFieldBlurRadiusPixels() const;
 
     void SetPostEffectStarBurst(const bool arg);
     void SetPostEffectStarBurstThreshold(const float threshold);
@@ -1251,6 +1254,7 @@ private:
     float m_postEffectDepthOfFieldStartNear = 0.0f;
     float m_postEffectDepthOfFieldMaxBlurDistance = 16.0f;
     float m_postEffectDepthOfFieldAutoActivationDistance = 10.0f;
+    float m_postEffectDepthOfFieldBlurRadiusPixels = 1.0f;
     float m_postEffectStarBurstThreshold = 0.9f;
     float m_postEffectStarBurstDistanceFade = 0.0f;
     D3DXVECTOR3 m_postEffectGodRayLightPos = D3DXVECTOR3(1000.0f, 100.0f, 1000.0f);
