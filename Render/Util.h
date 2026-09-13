@@ -20,6 +20,13 @@ public:
                                      const std::wstring& source,
                                      const std::wstring& message);
 
+    // メッシュ読み込み失敗の記録。ワーカースレッド内の例外を外へ漏らすと
+    // std::terminate → abort() でプロセスごと落ちるため、各メッシュクラスは
+    // 読み込み例外をこれで記録して「描画されないだけ」に留める。
+    static void LogMeshLoadFailure(const std::wstring& source,
+                                   const std::wstring& meshPath,
+                                   const char* reason);
+
     // 値一致で削除：c から value をすべて取り除く（戻り値なし）
     template <class Seq, class T>
     static void Remove(Seq& c, const T& value)

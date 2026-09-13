@@ -7,6 +7,7 @@
 #include <Shlwapi.h>
 #include <algorithm>
 #include <cwctype>
+#include <exception>
 #include <sstream>
 #include <unordered_map>
 #include <utility>
@@ -538,7 +539,20 @@ void MeshPBRManager::Initialize(bool async)
         {
             m_loadThread.join();
         }
-        m_loadThread = std::thread([this]() { InitializeInternal(); });
+        m_loadThread = std::thread([this]() {
+            try
+            {
+                InitializeInternal();
+            }
+            catch (const std::exception& exception)
+            {
+                Util::LogMeshLoadFailure(L"MeshPBRManager", m_meshName, exception.what());
+            }
+            catch (...)
+            {
+                Util::LogMeshLoadFailure(L"MeshPBRManager", m_meshName, nullptr);
+            }
+        });
     }
     else
     {

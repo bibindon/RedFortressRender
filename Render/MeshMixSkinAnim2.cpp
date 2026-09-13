@@ -495,7 +495,20 @@ void MeshMixSkinAnim2::Initialize(bool async)
         {
             m_loadThread.join();
         }
-        m_loadThread = std::thread([this]() { InitializeInternal(); });
+        m_loadThread = std::thread([this]() {
+            try
+            {
+                InitializeInternal();
+            }
+            catch (const std::exception& exception)
+            {
+                Util::LogMeshLoadFailure(L"MeshMixSkinAnim2", m_meshName, exception.what());
+            }
+            catch (...)
+            {
+                Util::LogMeshLoadFailure(L"MeshMixSkinAnim2", m_meshName, nullptr);
+            }
+        });
     }
     else
     {

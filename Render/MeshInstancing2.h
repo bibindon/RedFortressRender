@@ -90,6 +90,7 @@ private:
     bool IsSubsetAlphaMaterial(DWORD subsetIndex) const;
     HRESULT DrawInstancedSubset(DWORD subsetIndex) const;
     void InitializeInternal();
+    void RunLoad();
 
     std::vector<InstanceData> m_allInstances;
     std::vector<InstanceData> m_instances;

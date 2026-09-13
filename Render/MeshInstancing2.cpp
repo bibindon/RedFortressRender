@@ -14,6 +14,7 @@
 #include <iterator>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 
 namespace NSRender
 {
@@ -110,6 +111,9 @@ bool FindFirstMeshContainer(LPD3DXFRAME frame,
                                   selection);
 }
 
+// この値以下の長さの法線は正規化できない(ゼロ法線・非正規化)とみなしてベイクをスキップする。
+const float kMinimumNormalLengthSquared = 1.0e-12f;
+
 void BakeMeshTransform(LPD3DXMESH mesh, const D3DXMATRIX& meshTransform)
 {
     if (mesh == nullptr)
@@ -178,6 +182,7 @@ void BakeMeshTransform(LPD3DXMESH mesh, const D3DXMATRIX& meshTransform)
 
     const DWORD vertexCount = mesh->GetNumVertices();
     const DWORD vertexStride = mesh->GetNumBytesPerVertex();
+    DWORD degenerateNormalCount = 0;
     for (DWORD vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex)
     {
         BYTE* vertex = vertexData + (vertexIndex * vertexStride);
@@ -191,10 +196,12 @@ void BakeMeshTransform(LPD3DXMESH mesh, const D3DXMATRIX& meshTransform)
             reinterpret_cast<D3DXVECTOR3*>(vertex + normalOffset);
         D3DXVECTOR3 transformedNormal;
         D3DXVec3TransformNormal(&transformedNormal, normal, &normalTransform);
-        if (D3DXVec3LengthSq(&transformedNormal) <= 0.0f)
+        if (D3DXVec3LengthSq(&transformedNormal) <= kMinimumNormalLengthSquared)
         {
-            mesh->UnlockVertexBuffer();
-            throw std::runtime_error("MeshInstancing2 encountered a zero-length transformed normal.");
+            // 公式Blenderエクスポータは一部の頂点を法線ゼロ(0,0,0)で出力することがある
+            // (例: ステージセレクト4の森プロップ)。正規化できないため元の値のまま残して続行する。
+            degenerateNormalCount += 1;
+            continue;
         }
         D3DXVec3Normalize(&transformedNormal, &transformedNormal);
         *normal = transformedNormal;
@@ -204,6 +211,14 @@ void BakeMeshTransform(LPD3DXMESH mesh, const D3DXMATRIX& meshTransform)
     if (FAILED(unlockResult))
     {
         throw std::runtime_error("MeshInstancing2 failed to unlock the mesh vertex buffer.");
+    }
+
+    if (degenerateNormalCount > 0)
+    {
+        std::wstring message = L"[MeshInstancing2] skipped ";
+        message += std::to_wstring(degenerateNormalCount);
+        message += L" zero-length normal(s).\r\n";
+        OutputDebugStringW(message.c_str());
     }
 }
 
@@ -390,11 +405,11 @@ void MeshInstancing2::Initialize(const std::wstring& filePath, bool async)
         {
             m_loadThread.join();
         }
-        m_loadThread = std::thread([this]() { InitializeInternal(); });
+        m_loadThread = std::thread([this]() { RunLoad(); });
     }
     else
     {
-        InitializeInternal();
+        RunLoad();
     }
 }
 
@@ -409,11 +424,30 @@ void MeshInstancing2::Initialize(const std::wstring& filePath, const std::wstrin
         {
             m_loadThread.join();
         }
-        m_loadThread = std::thread([this]() { InitializeInternal(); });
+        m_loadThread = std::thread([this]() { RunLoad(); });
     }
     else
     {
+        RunLoad();
+    }
+}
+
+void MeshInstancing2::RunLoad()
+{
+    // 読み込み中の例外はここで止める。ワーカースレッドから例外が外へ漏れると
+    // std::terminate → abort() でゲームごと落ちてしまうため、失敗したメッシュは
+    // 描画しないだけで処理を続ける。
+    try
+    {
         InitializeInternal();
+    }
+    catch (const std::exception& exception)
+    {
+        Util::LogMeshLoadFailure(L"MeshInstancing2", m_filePath, exception.what());
+    }
+    catch (...)
+    {
+        Util::LogMeshLoadFailure(L"MeshInstancing2", m_filePath, nullptr);
     }
 }
 

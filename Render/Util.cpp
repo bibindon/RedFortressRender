@@ -69,6 +69,24 @@ std::wstring Util::GetExeDir()
     return exePath.substr(0, pos + 1);
 }
 
+void Util::LogMeshLoadFailure(const std::wstring& source,
+                              const std::wstring& meshPath,
+                              const char* reason)
+{
+    std::wstring message = meshPath;
+    message += L": ";
+    if (reason != nullptr)
+    {
+        message += Utf8ToWstring(reason);
+    }
+    else
+    {
+        message += L"unknown exception";
+    }
+
+    WriteDebugAndFileLog(L"MeshLoadFailure.log", source, message);
+}
+
 void Util::WriteDebugAndFileLog(const std::wstring& fileName,
                                 const std::wstring& source,
                                 const std::wstring& message)
