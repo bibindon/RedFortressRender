@@ -111,6 +111,13 @@ void ParticleSystem::OnDeviceReset()
 
 void ParticleSystem::PlaceEffect(const ParticleEffectPreset preset, const D3DXVECTOR3& origin)
 {
+    PlaceEffect(preset, origin, 1.0f);
+}
+
+void ParticleSystem::PlaceEffect(const ParticleEffectPreset preset,
+                                 const D3DXVECTOR3& origin,
+                                 const float scaleMultiplier)
+{
     Initialize();
     if (!m_initialized || preset == ParticleEffectPreset::None)
     {
@@ -160,7 +167,7 @@ void ParticleSystem::PlaceEffect(const ParticleEffectPreset preset, const D3DXVE
     }
     else if (preset == ParticleEffectPreset::Explosion)
     {
-        EmitExplosion(*target);
+        EmitExplosion(*target, scaleMultiplier);
     }
     else if (preset == ParticleEffectPreset::Damage)
     {
@@ -1010,9 +1017,9 @@ void ParticleSystem::EmitRain(EffectInstance& effect, const float deltaTime)
     }
 }
 
-void ParticleSystem::EmitExplosion(EffectInstance& effect)
+void ParticleSystem::EmitExplosion(EffectInstance& effect, const float scaleMultiplier)
 {
-    const float scale = m_explosionScale;
+    const float scale = m_explosionScale * scaleMultiplier;
 
     for (int i = 0; i < 54; ++i)
     {

@@ -719,6 +719,9 @@ public:
 
     void DrawWorldGlow(const D3DXVECTOR3& position, float size, D3DCOLOR color);
     void PlaceParticleEffect(const ParticleEffectPreset preset, const D3DXVECTOR3& origin);
+    void PlaceParticleEffect(ParticleEffectPreset preset,
+                             const D3DXVECTOR3& origin,
+                             float scaleMultiplier);
     void PlaceDashParticleEffect(const D3DXVECTOR3& origin,
                                  const D3DXVECTOR3& direction,
                                  bool grounded,

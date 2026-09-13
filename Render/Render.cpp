@@ -7030,6 +7030,13 @@ void Render::PlaceParticleEffect(const ParticleEffectPreset preset, const D3DXVE
     m_particleSystem.PlaceEffect(preset, origin);
 }
 
+void Render::PlaceParticleEffect(const ParticleEffectPreset preset,
+                                 const D3DXVECTOR3& origin,
+                                 const float scaleMultiplier)
+{
+    m_particleSystem.PlaceEffect(preset, origin, scaleMultiplier);
+}
+
 void Render::PlaceDashParticleEffect(const D3DXVECTOR3& origin,
                                      const D3DXVECTOR3& direction,
                                      const bool grounded,

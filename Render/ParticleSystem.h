@@ -31,6 +31,9 @@ public:
     void OnDeviceReset();
 
     void PlaceEffect(ParticleEffectPreset preset, const D3DXVECTOR3& origin);
+    void PlaceEffect(ParticleEffectPreset preset,
+                     const D3DXVECTOR3& origin,
+                     float scaleMultiplier);
     void PlaceDashEffect(const D3DXVECTOR3& origin,
                          const D3DXVECTOR3& direction,
                          bool grounded,
@@ -144,7 +147,7 @@ private:
     void EmitDust(EffectInstance& effect, float deltaTime);
     void EmitFog(EffectInstance& effect, float deltaTime);
     void EmitRain(EffectInstance& effect, float deltaTime);
-    void EmitExplosion(EffectInstance& effect);
+    void EmitExplosion(EffectInstance& effect, float scaleMultiplier);
     void EmitDamage(EffectInstance& effect);
     void EmitDashStart(EffectInstance& effect, bool grounded);
     void EmitDashTrail(EffectInstance& effect, bool grounded);
