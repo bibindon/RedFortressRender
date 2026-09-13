@@ -2722,11 +2722,13 @@ void Render::Draw()
     }
 
     const auto sceneUpdateStartTime = ProfileClock::now();
-    const float frameDeltaSeconds = CalcFrameDeltaSeconds();
+    const float rawFrameDeltaSeconds = CalcFrameDeltaSeconds();
+    const float frameDeltaSeconds =
+        (std::max)(0.0f, (std::min)(rawFrameDeltaSeconds, 0.033f));
+    m_loadingScreen.Update(rawFrameDeltaSeconds);
     if (!m_sceneUpdatePaused)
     {
         m_particleSystem.Update(frameDeltaSeconds);
-        m_loadingScreen.Update(frameDeltaSeconds);
         UpdateMovingPlatforms(frameDeltaSeconds);
         UpdateFade(frameDeltaSeconds);
         if (m_skinAnimationUpdateEnabled)
@@ -7374,7 +7376,7 @@ float Render::CalcFrameDeltaSeconds()
     const float deltaSeconds =
         static_cast<float>(std::chrono::duration<double>(now - m_lastFrameTime).count());
     m_lastFrameTime = now;
-    return (std::max)(0.0f, (std::min)(deltaSeconds, 0.033f));
+    return (std::max)(0.0f, deltaSeconds);
 }
 
 void Render::WaitForTargetFrameRate()
