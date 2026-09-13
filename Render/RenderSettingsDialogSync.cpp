@@ -40,6 +40,9 @@ void SyncRenderSettingsDialogFromRender(HWND hWnd)
     SetSettingsCheckbox(hWnd,
                         IDC_RENDER_SETTINGS_FRAME_RATE_SLEEP_DISABLE,
                         !render->IsFrameRateSleepEnabled());
+    SetSettingsCheckbox(hWnd,
+                        IDC_RENDER_SETTINGS_BOSS_CRAB_COLLISION,
+                        render->IsBossCollisionDebugEnabled());
     SetSettingsCheckbox(hWnd, IDC_RENDER_SETTINGS_GBUFFER_ENABLE, render->IsGBufferEnabled());
     SetSettingsCheckbox(hWnd,
                         IDC_RENDER_SETTINGS_GBUFFER_FRONT_BACKFACE_CULLING_ENABLE,

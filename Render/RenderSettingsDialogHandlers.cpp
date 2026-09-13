@@ -736,6 +736,10 @@ void HandleRenderSettingsCommand(HWND hWnd, WPARAM wParam)
         {
             render->SetFrameRateSleepEnabled(!IsSettingsCheckboxChecked(hWnd, id));
         }
+        else if (id == IDC_RENDER_SETTINGS_BOSS_CRAB_COLLISION)
+        {
+            render->SetBossCollisionDebugEnabled(IsSettingsCheckboxChecked(hWnd, id));
+        }
         else if (id == IDC_RENDER_SETTINGS_SATURATE_ENABLE)
         {
             render->SetPostEffectSaturateEnable(IsSettingsCheckboxChecked(hWnd, id));

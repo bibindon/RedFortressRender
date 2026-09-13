@@ -912,6 +912,12 @@ public:
 
     void SetShowFPS(const bool arg);
     bool IsShowFPS() const;
+    void SetBossCollisionDebugEnabled(bool enabled);
+    bool IsBossCollisionDebugEnabled() const;
+    void QueueDebugCollisionCylinder(const D3DXVECTOR3& center,
+                                     float radius,
+                                     float height,
+                                     D3DCOLOR color);
     void SetPointLightEnabled(bool enabled);
     bool IsPointLightEnabled() const;
     void SetFrameRateSleepEnabled(bool enabled);
@@ -1028,6 +1034,15 @@ private:
     std::vector<WorldTextInfo> m_worldTextList;
     std::vector<WorldTextInfo> m_pendingWorldTexts;
 
+    struct DebugCollisionCylinder
+    {
+        D3DXVECTOR3 center = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+        float radius = 0.0f;
+        float height = 0.0f;
+        D3DCOLOR color = D3DCOLOR_ARGB(255, 0, 255, 64);
+    };
+    std::vector<DebugCollisionCylinder> m_debugCollisionCylinders;
+
     struct MeshMixSkinAnimBlinkInfo
     {
         int meshId = -1;
@@ -1131,6 +1146,7 @@ private:
     void DrawSettingsDialogText();
     void DrawWorldTexts();
     void DrawWorldTextImpl(const WorldTextInfo& worldText);
+    void DrawDebugCollisionCylinders();
     void UpdateMeshMixSkinAnimBlink();
     void EnsureLoadingScreenFont();
     void DrawLoadingScreen();
@@ -1296,6 +1312,7 @@ private:
     //-----------------------------------------------------------------
 
     bool m_bShowFPS = true;
+    bool m_bossCollisionDebugEnabled = false;
     bool m_skinAnimationUpdateEnabled = true;
     RenderFrameProfile m_lastFrameProfile;
     bool m_bShowCameraPosition = false;

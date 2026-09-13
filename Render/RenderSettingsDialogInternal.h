@@ -127,6 +127,7 @@ enum RenderSettingsControlId
     IDC_RENDER_SETTINGS_GBUFFER_FRONT_BACKFACE_CULLING_ENABLE,
     IDC_RENDER_SETTINGS_POINT_LIGHT_DISABLE,
     IDC_RENDER_SETTINGS_FRAME_RATE_SLEEP_DISABLE,
+    IDC_RENDER_SETTINGS_BOSS_CRAB_COLLISION,
 };
 void SetDefaultGuiFont(HWND hWnd);
 void CreateSettingsStatic(HWND parent, const wchar_t* text, int x, int y, int w, int h);

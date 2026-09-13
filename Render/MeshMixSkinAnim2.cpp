@@ -1090,7 +1090,8 @@ void MeshMixSkinAnim2::UpdateActiveAnimationClip()
     {
         if (clip.stopWhenEnd)
         {
-            clip.currentTime = clip.duration;
+            // D3DX はクリップ長ちょうどを先頭として評価するため、終端直前を保持する。
+            clip.currentTime = std::nextafter(clip.duration, 0.0);
         }
         else
         {

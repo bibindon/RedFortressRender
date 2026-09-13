@@ -50,6 +50,74 @@ namespace
 {
 constexpr std::chrono::duration<double> kTargetFrameDuration(1.0 / 60.0);
 constexpr UINT kMirrorRenderTargetScaleDivisor = 2;
+constexpr int kDebugCollisionCylinderSegments = 32;
+
+struct DebugCollisionLineVertex
+{
+    float x;
+    float y;
+    float z;
+    float rhw;
+    D3DCOLOR color;
+};
+
+const DWORD kDebugCollisionLineFvf = D3DFVF_XYZRHW | D3DFVF_DIFFUSE;
+
+bool ProjectDebugCollisionPoint(const D3DXVECTOR3& worldPosition,
+                                const D3DXMATRIX& viewProjection,
+                                const D3DVIEWPORT9& viewport,
+                                D3DXVECTOR3* screenPosition)
+{
+    const D3DXVECTOR4 worldPoint(worldPosition.x, worldPosition.y, worldPosition.z, 1.0f);
+    D3DXVECTOR4 clipPoint;
+    D3DXVec4Transform(&clipPoint, &worldPoint, &viewProjection);
+    if (clipPoint.w <= 0.001f)
+    {
+        return false;
+    }
+
+    const float inverseW = 1.0f / clipPoint.w;
+    const float normalizedX = clipPoint.x * inverseW;
+    const float normalizedY = clipPoint.y * inverseW;
+    screenPosition->x = static_cast<float>(viewport.X) +
+                        (normalizedX + 1.0f) * 0.5f * static_cast<float>(viewport.Width);
+    screenPosition->y = static_cast<float>(viewport.Y) +
+                        (1.0f - normalizedY) * 0.5f * static_cast<float>(viewport.Height);
+    screenPosition->z = 0.0f;
+    return true;
+}
+
+void AppendDebugCollisionLine(std::vector<DebugCollisionLineVertex>* vertices,
+                              const D3DXVECTOR3& worldStart,
+                              const D3DXVECTOR3& worldEnd,
+                              const D3DXMATRIX& viewProjection,
+                              const D3DVIEWPORT9& viewport,
+                              const D3DCOLOR color)
+{
+    D3DXVECTOR3 screenStart;
+    D3DXVECTOR3 screenEnd;
+    if (!ProjectDebugCollisionPoint(worldStart, viewProjection, viewport, &screenStart) ||
+        !ProjectDebugCollisionPoint(worldEnd, viewProjection, viewport, &screenEnd))
+    {
+        return;
+    }
+
+    DebugCollisionLineVertex startVertex;
+    startVertex.x = screenStart.x;
+    startVertex.y = screenStart.y;
+    startVertex.z = 0.0f;
+    startVertex.rhw = 1.0f;
+    startVertex.color = color;
+    vertices->push_back(startVertex);
+
+    DebugCollisionLineVertex endVertex;
+    endVertex.x = screenEnd.x;
+    endVertex.y = screenEnd.y;
+    endVertex.z = 0.0f;
+    endVertex.rhw = 1.0f;
+    endVertex.color = color;
+    vertices->push_back(endVertex);
+}
 
 UINT GetMirrorRenderTargetDimension(const int screenDimension)
 {
@@ -3052,6 +3120,7 @@ void Render::Draw()
     {
         m_postEffectEnd.Draw(pTempTexture);
     }
+    DrawDebugCollisionCylinders();
     const auto postEffectEndTime = ProfileClock::now();
     m_lastFrameProfile.postEffectMilliseconds =
         std::chrono::duration<double, std::milli>(postEffectEndTime - postEffectStartTime).count();
@@ -6619,6 +6688,186 @@ void Render::SetShowFPS(const bool arg)
 bool Render::IsShowFPS() const
 {
     return m_bShowFPS;
+}
+
+void Render::SetBossCollisionDebugEnabled(const bool enabled)
+{
+    m_bossCollisionDebugEnabled = enabled;
+}
+
+bool Render::IsBossCollisionDebugEnabled() const
+{
+    return m_bossCollisionDebugEnabled;
+}
+
+void Render::QueueDebugCollisionCylinder(const D3DXVECTOR3& center,
+                                         const float radius,
+                                         const float height,
+                                         const D3DCOLOR color)
+{
+    if (radius <= 0.0f || height <= 0.0f)
+    {
+        return;
+    }
+
+    DebugCollisionCylinder cylinder;
+    cylinder.center = center;
+    cylinder.radius = radius;
+    cylinder.height = height;
+    cylinder.color = color;
+    m_debugCollisionCylinders.push_back(cylinder);
+}
+
+void Render::DrawDebugCollisionCylinders()
+{
+    if (m_debugCollisionCylinders.empty())
+    {
+        return;
+    }
+
+    D3DVIEWPORT9 viewport;
+    const HRESULT viewportResult = Common::D3DDevice()->GetViewport(&viewport);
+    assert(viewportResult == S_OK);
+
+    const D3DXMATRIX viewProjection = Camera::GetViewMatrix() * Camera::GetProjMatrix();
+    std::vector<DebugCollisionLineVertex> vertices;
+    vertices.reserve(m_debugCollisionCylinders.size() *
+                     static_cast<std::size_t>(kDebugCollisionCylinderSegments * 6 + 16));
+
+    for (const DebugCollisionCylinder& cylinder : m_debugCollisionCylinders)
+    {
+        const float bottomY = cylinder.center.y - cylinder.height * 0.5f;
+        const float middleY = cylinder.center.y;
+        const float topY = cylinder.center.y + cylinder.height * 0.5f;
+        for (int segment = 0; segment < kDebugCollisionCylinderSegments; ++segment)
+        {
+            const int nextSegment = (segment + 1) % kDebugCollisionCylinderSegments;
+            const float angle = D3DX_PI * 2.0f *
+                                static_cast<float>(segment) /
+                                static_cast<float>(kDebugCollisionCylinderSegments);
+            const float nextAngle = D3DX_PI * 2.0f *
+                                    static_cast<float>(nextSegment) /
+                                    static_cast<float>(kDebugCollisionCylinderSegments);
+            const float x = cylinder.center.x + cosf(angle) * cylinder.radius;
+            const float z = cylinder.center.z + sinf(angle) * cylinder.radius;
+            const float nextX = cylinder.center.x + cosf(nextAngle) * cylinder.radius;
+            const float nextZ = cylinder.center.z + sinf(nextAngle) * cylinder.radius;
+
+            AppendDebugCollisionLine(&vertices,
+                                     D3DXVECTOR3(x, bottomY, z),
+                                     D3DXVECTOR3(nextX, bottomY, nextZ),
+                                     viewProjection,
+                                     viewport,
+                                     cylinder.color);
+            AppendDebugCollisionLine(&vertices,
+                                     D3DXVECTOR3(x, middleY, z),
+                                     D3DXVECTOR3(nextX, middleY, nextZ),
+                                     viewProjection,
+                                     viewport,
+                                     cylinder.color);
+            AppendDebugCollisionLine(&vertices,
+                                     D3DXVECTOR3(x, topY, z),
+                                     D3DXVECTOR3(nextX, topY, nextZ),
+                                     viewProjection,
+                                     viewport,
+                                     cylinder.color);
+
+            if (segment % 4 == 0)
+            {
+                AppendDebugCollisionLine(&vertices,
+                                         D3DXVECTOR3(x, bottomY, z),
+                                         D3DXVECTOR3(x, topY, z),
+                                         viewProjection,
+                                         viewport,
+                                         cylinder.color);
+            }
+        }
+    }
+    m_debugCollisionCylinders.clear();
+
+    if (vertices.empty())
+    {
+        return;
+    }
+
+    LPDIRECT3DDEVICE9 device = Common::D3DDevice();
+    DWORD previousZEnable = TRUE;
+    DWORD previousZWriteEnable = TRUE;
+    DWORD previousAlphaBlendEnable = FALSE;
+    DWORD previousSourceBlend = D3DBLEND_ONE;
+    DWORD previousDestinationBlend = D3DBLEND_ZERO;
+    DWORD previousColorOperation = D3DTOP_MODULATE;
+    DWORD previousColorArgument = D3DTA_TEXTURE;
+    DWORD previousAlphaOperation = D3DTOP_SELECTARG1;
+    DWORD previousAlphaArgument = D3DTA_TEXTURE;
+    DWORD previousFvf = 0;
+    device->GetRenderState(D3DRS_ZENABLE, &previousZEnable);
+    device->GetRenderState(D3DRS_ZWRITEENABLE, &previousZWriteEnable);
+    device->GetRenderState(D3DRS_ALPHABLENDENABLE, &previousAlphaBlendEnable);
+    device->GetRenderState(D3DRS_SRCBLEND, &previousSourceBlend);
+    device->GetRenderState(D3DRS_DESTBLEND, &previousDestinationBlend);
+    device->GetTextureStageState(0, D3DTSS_COLOROP, &previousColorOperation);
+    device->GetTextureStageState(0, D3DTSS_COLORARG1, &previousColorArgument);
+    device->GetTextureStageState(0, D3DTSS_ALPHAOP, &previousAlphaOperation);
+    device->GetTextureStageState(0, D3DTSS_ALPHAARG1, &previousAlphaArgument);
+    device->GetFVF(&previousFvf);
+
+    LPDIRECT3DBASETEXTURE9 previousTexture = nullptr;
+    LPDIRECT3DVERTEXSHADER9 previousVertexShader = nullptr;
+    LPDIRECT3DPIXELSHADER9 previousPixelShader = nullptr;
+    LPDIRECT3DVERTEXDECLARATION9 previousVertexDeclaration = nullptr;
+    device->GetTexture(0, &previousTexture);
+    device->GetVertexShader(&previousVertexShader);
+    device->GetPixelShader(&previousPixelShader);
+    device->GetVertexDeclaration(&previousVertexDeclaration);
+
+    HRESULT drawResult = device->BeginScene();
+    assert(drawResult == S_OK);
+    device->SetVertexShader(nullptr);
+    device->SetPixelShader(nullptr);
+    device->SetFVF(kDebugCollisionLineFvf);
+    device->SetTexture(0, nullptr);
+    device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+    device->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_DIFFUSE);
+    device->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
+    device->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_DIFFUSE);
+    device->SetRenderState(D3DRS_ZENABLE, FALSE);
+    device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+    device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+    device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+    device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+    drawResult = device->DrawPrimitiveUP(D3DPT_LINELIST,
+                                         static_cast<UINT>(vertices.size() / 2),
+                                         vertices.data(),
+                                         sizeof(DebugCollisionLineVertex));
+    assert(drawResult == S_OK);
+    drawResult = device->EndScene();
+    assert(drawResult == S_OK);
+
+    device->SetRenderState(D3DRS_ZENABLE, previousZEnable);
+    device->SetRenderState(D3DRS_ZWRITEENABLE, previousZWriteEnable);
+    device->SetRenderState(D3DRS_ALPHABLENDENABLE, previousAlphaBlendEnable);
+    device->SetRenderState(D3DRS_SRCBLEND, previousSourceBlend);
+    device->SetRenderState(D3DRS_DESTBLEND, previousDestinationBlend);
+    device->SetTextureStageState(0, D3DTSS_COLOROP, previousColorOperation);
+    device->SetTextureStageState(0, D3DTSS_COLORARG1, previousColorArgument);
+    device->SetTextureStageState(0, D3DTSS_ALPHAOP, previousAlphaOperation);
+    device->SetTextureStageState(0, D3DTSS_ALPHAARG1, previousAlphaArgument);
+    device->SetTexture(0, previousTexture);
+    if (previousVertexDeclaration != nullptr)
+    {
+        device->SetVertexDeclaration(previousVertexDeclaration);
+    }
+    else
+    {
+        device->SetFVF(previousFvf);
+    }
+    device->SetVertexShader(previousVertexShader);
+    device->SetPixelShader(previousPixelShader);
+    SAFE_RELEASE(previousTexture);
+    SAFE_RELEASE(previousVertexDeclaration);
+    SAFE_RELEASE(previousVertexShader);
+    SAFE_RELEASE(previousPixelShader);
 }
 
 void Render::SetPointLightEnabled(const bool enabled)
